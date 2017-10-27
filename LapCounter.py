@@ -468,7 +468,7 @@ class LapCounter( wx.Panel ):
 			self.lapCounterCycle = race.lapCounterCycle or None
 			self.lapElapsedClock = race.lapElapsedClock
 			if race.isUnstarted():
-				self.SetLabels( [getLapText(category) for category in race.getCategories(startWaveOnly=True)] )
+				self.SetLabels( [self.getLapText(category) for category in race.getCategories(startWaveOnly=True)] )
 			elif race.isFinished():
 				self.SetLabels()
 			else:

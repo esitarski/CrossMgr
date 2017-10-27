@@ -485,63 +485,80 @@ class NumKeypad( wx.Panel ):
 		
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
-		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeader=sys.float_info.max, tLapStart=None ):
-			if race.isTimeTrial or not(category == leaderCategory or race.getNumLapsFromCategory(category)):
+		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeaderArrival=sys.float_info.max, tLapStart=None ):
+			if not(category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			
 			lapsToGo = max( 0, lapMax - lapCur )
-			if secondsBeforeLeaderToFlipLapCounter < tLeader <= secondsBeforeLeaderToFlipLapCounter+5.0:
-				v = ('{}'.format(lapsToGo), True, tLapStart)
-			elif 0.0 <= tLeader <= secondsBeforeLeaderToFlipLapCounter:
-				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)
+			if secondsBeforeLeaderToFlipLapCounter < tLeaderArrival <= secondsBeforeLeaderToFlipLapCounter+5.0:
+				v = ('{}'.format(lapsToGo), True, tLapStart)				# Flash current lap (about to be flipped).
+			elif 0.0 <= tLeaderArrival <= secondsBeforeLeaderToFlipLapCounter:
+				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
 			else:
-				v = ('{}'.format(lapsToGo), False, tLapStart)
+				v = ('{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
 			lapCounter[categoryToLapCounterIndex[category]] = v
 		
 		for rr in results:
 			if rr.status != Finisher or not rr.raceTimes:
 				continue
 			category = getCategory( rr.num )
-			if category in categories_seen:			# If we have not seen this category, this is not the leader.
-				# Make sure we update the red lantern time.
+			if category in categories_seen:
+				# This is not the leader if we have seen this category before.
+				# Update the red lantern time.
 				newRaceTimes = categoryRaceTimes[category]
 				if rr.raceTimes[-1] > newRaceTimes[-1]:
 					newRaceTimes[-1] = rr.raceTimes[-1]
 				continue
-			if leaderCategory is None:
+			
+			if not leaderCategory:
 				leaderCategory = category
 			categories_seen.add( category )
 			leader.append( u'{} {}'.format(category.fullname if category else u'<{}>'.format(_('Missing')), rr.num) )
+			
 			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
 			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
 			categoryRaceTimes[category] = raceTimes[-1]
 			
+			# Find the next expected lap arrival.
 			try:
 				lapCur = bisect.bisect_left( rr.raceTimes, tCur )
-				tLeader = rr.raceTimes[lapCur] - tCur
+				# Time before leader's arrival.
+				tLeaderArrival = rr.raceTimes[lapCur] - tCur
 			except IndexError:
-				setLapCounter( leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1,
-					tLapStart = rr.raceTimes[-1] )
+				# At the end of the race, use the leader's race time.
+				# Make sure it is a recorded time, not a projected time.
+				try:
+					tLapStart = rr.raceTimes[-2] if rr.interp[-1] else rr.raceTimes[-1]
+				except:
+					tLapStart = None
+				
+				setLapCounter(
+					leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1,
+					tLapStart = tLapStart
+				)
 				continue
 			
 			if lapCur <= 1:
 				tLapStart = race.categoryStartOffset(category)
 			else:
 				lapPrev = lapCur-1
-				while lapPrev and rr.interp[lapPrev]:
+				# Make sure we use an actual recorded time - not a projected time.
+				# A projected time is possible if the leader has a slow lap.
+				if rr.interp[lapPrev]:
 					lapPrev -= 1
 				try:
 					tLapStart = rr.raceTimes[lapPrev] if lapPrev else race.categoryStartOffset(category)
 				except IndexError:
 					tLapStart = None
 			
-			setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeader, tLapStart )
-				
-			if 0.0 <= tLeader <= 3.0 and not race.isTimeTrial:
-				if category not in self.lapReminder:
-					self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
-			elif category in self.lapReminder:
-				del self.lapReminder[category]
+			setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeaderArrival, tLapStart )
+			
+			if tLeaderArrival is not None:
+				if 0.0 <= tLeaderArrival <= 3.0:
+					if category not in self.lapReminder:
+						self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
+				elif category in self.lapReminder:
+					del self.lapReminder[category]
 		
 		self.raceHUD.SetData( raceTimes, leader, tCur if race.isRunning() else None )
 		if Utils.mainWin:
