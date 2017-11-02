@@ -16,7 +16,6 @@ from GetResults import GetResults, GetResultsWithData, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
-@Model.memoize
 def getExpectedRecorded( tCutoff=0.0 ):
 	race = Model.race
 	if not race:
