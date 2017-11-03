@@ -531,7 +531,6 @@ class ForecastHistory( wx.Panel ):
 		# Highlight interpolated entries at race time.
 		leaderPrev, leaderNext = race.getPrevNextLeader( tRace )
 		averageLapTime = race.getAverageLapTime()
-		backSecs = averageLapTime
 		
 		expectedShowMax = 80
 		
