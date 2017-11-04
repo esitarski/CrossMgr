@@ -169,8 +169,8 @@ class Announcer( wx.Panel ):
 		evenBrush = wx.Brush(wx.Colour(255,255,255), wx.SOLID )
 		oddBrush = wx.Brush(wx.Colour(240,240,240), wx.SOLID )
 		
-		evenUnrecordedBrush = wx.Brush(wx.Colour(200,200,255), wx.SOLID )
-		oddUnrecordedBrush = wx.Brush(wx.Colour(185,185,255), wx.SOLID )
+		evenUnrecordedBrush = wx.Brush(wx.Colour(185,185,255), wx.SOLID )
+		oddUnrecordedBrush = wx.Brush(wx.Colour(170,170,255), wx.SOLID )
 
 		evenYellowBrush = yellowBrush
 		oddYellowBrush = wx.Brush( darkerYellow, wx.SOLID )
@@ -260,7 +260,7 @@ class Announcer( wx.Panel ):
 			groupLineWidth = 2
 			gc.SetPen( wx.Pen(groupColor, groupLineWidth) )
 			dc.SetFont( fontSmall )
-			dc.SetTextForeground( wx.Colour(118,118,118) )
+			dc.SetTextForeground( wx.Colour(64,64,64) )
 			gc.SetBrush( wx.TRANSPARENT_BRUSH )
 			
 			groupLineOffset = 6
