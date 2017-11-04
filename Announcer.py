@@ -116,7 +116,7 @@ class Announcer( wx.Panel ):
 		bibETA = {}
 
 		resultsData = [[] for col in self.cols]
-		isUpdated = set()
+		isRecorded = set()
 		
 		iGroup = -1
 		rowGroup = []
@@ -144,7 +144,7 @@ class Announcer( wx.Panel ):
 			
 			e = bibRecorded.get( rr.num, None )
 			if not isRunning or (leaderLap == 1 or (e and tLeader is not None and e.t >= tLeader)):
-				isUpdated.add( row )
+				isRecorded.add( row )
 		
 		firstPlace = toOrdinal(1)
 		
@@ -165,8 +165,13 @@ class Announcer( wx.Panel ):
 		yellowBrush = wx.Brush( yellow, wx.SOLID )
 		orangeBrush = wx.Brush( orange, wx.SOLID )
 		grayPen = wx.Pen(wx.Colour(128,128,128), 1) 
+		
 		evenBrush = wx.Brush(wx.Colour(255,255,255), wx.SOLID )
 		oddBrush = wx.Brush(wx.Colour(240,240,240), wx.SOLID )
+		
+		evenUnrecordedBrush = wx.Brush(wx.Colour(200,200,255), wx.SOLID )
+		oddUnrecordedBrush = wx.Brush(wx.Colour(185,185,255), wx.SOLID )
+
 		evenYellowBrush = yellowBrush
 		oddYellowBrush = wx.Brush( darkerYellow, wx.SOLID )
 		
@@ -180,20 +185,13 @@ class Announcer( wx.Panel ):
 		colorMap.update( {-alertETA-i:greenScale[i] for i in xrange(alertETA)} )
 		gc = wx.GraphicsContext.Create( dc )
 		
-		def drawRow( x, y, w, h, row, iRow, isUpdated=False, eta=60.0 ):
-			if not isUpdated:
-				dc.SetBrush( oddYellowBrush if iRow&1 else evenYellowBrush )
-				#dc.SetPen( grayPen )
-				dc.SetPen( wx.TRANSPARENT_PEN )
-				dc.DrawRectangle( x, y, w, h )
-			elif iRow&1:
-				dc.SetBrush( oddBrush )
-				dc.SetPen( wx.TRANSPARENT_PEN )
-				dc.DrawRectangle( x, y, w, h )
+		def drawRow( x, y, w, h, row, iRow, isRecorded=False, eta=60.0 ):
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			if not isRecorded:
+				dc.SetBrush( oddUnrecordedBrush if iRow&1 else evenUnrecordedBrush )
 			else:
-				dc.SetBrush( evenBrush )
-				dc.SetPen( wx.TRANSPARENT_PEN )
-				dc.DrawRectangle( x, y, w, h )
+				dc.SetBrush( oddBrush if iRow&1 else evenBrush )
+			dc.DrawRectangle( x, y, w, h )
 				
 			yText = y + (lineHeight - fontSize)//2
 			for c, v in enumerate(row):
@@ -248,7 +246,7 @@ class Announcer( wx.Panel ):
 		y = yResults
 		for i, rr in enumerate(results):
 			row = [resultsData[c][i] for c in xrange(len(self.cols))]
-			drawRow( x, y, width, lineHeight, row, i, i in isUpdated, bibETA.get(rr.num,60.0) )
+			drawRow( x, y, width, lineHeight, row, i, i in isRecorded, bibETA.get(rr.num,60.0) )
 			y += lineHeight
 			if y > height:
 				break
@@ -258,11 +256,11 @@ class Announcer( wx.Panel ):
 			fontSizeGroup = int(fontSize)
 			fontSmall = wx.Font( (0,fontSizeGroup), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			
-			groupColor = wx.Colour(160,160,160)
+			groupColor = wx.Colour(150,150,150)
 			groupLineWidth = 2
 			gc.SetPen( wx.Pen(groupColor, groupLineWidth) )
 			dc.SetFont( fontSmall )
-			dc.SetTextForeground( wx.Colour(128,128,128) )
+			dc.SetTextForeground( wx.Colour(118,118,118) )
 			gc.SetBrush( wx.TRANSPARENT_BRUSH )
 			
 			groupLineOffset = 6
