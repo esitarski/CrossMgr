@@ -13,6 +13,7 @@ grey = wx.Colour( 64, 64, 64 )
 yellow = wx.Colour( 255,255,150 )
 darkerYellow = wx.Colour( 240,240,140 )
 orange = wx.Colour( 255, 165, 0 )
+recordedChar = u"\u2190"
 
 reGender = re.compile( r'\(([^)]+)\)$' )
 
@@ -137,7 +138,7 @@ class Announcer( wx.Panel ):
 						numPrev = results[row-1].num
 						if abs(abs(eta - bibETA[results[row-1].num]) < 1.0):
 							iGroup -= 1
-					except Exception as xxx:
+					except:
 						pass
 			rowGroup.append( iGroup )			
 			resultsData[self.iCol[u'ETA']].append( Utils.formatTime(eta) if e else u'' )
@@ -145,7 +146,9 @@ class Announcer( wx.Panel ):
 			e = bibRecorded.get( rr.num, None )
 			if not isRunning or (leaderLap == 1 or (e and tLeader is not None and e.t >= tLeader)):
 				isRecorded.add( row )
-		
+			else:
+				resultsData[self.iCol[u'Pos']][-1] = u'{}{}'.format(resultsData[self.iCol[u'Pos']][-1], recordedChar)
+				
 		firstPlace = toOrdinal(1)
 		
 		iPos = self.iCol[u'Pos']
@@ -220,7 +223,10 @@ class Announcer( wx.Panel ):
 		except Exception as e:
 			lapsToGo = None
 		if lapsToGo is not None:
-			v += u' - {} {}'.format( lapsToGo, _('laps to go') )
+			if lapsToGo == 0:
+				v += u': {}'.format( _('Finish') )
+			else:
+				v += u': {} {}'.format( lapsToGo, _('laps to go') )
 		xText = x + borderWidth
 		dc.DrawText( v, xText, y )
 		
