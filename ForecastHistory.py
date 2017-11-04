@@ -16,6 +16,7 @@ from GetResults import GetResults, GetResultsWithData, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FtpWriteFile import realTimeFtpPublish
 
+@Model.memoize
 def getExpectedRecorded( tCutoff=0.0 ):
 	race = Model.race
 	if not race:
@@ -47,7 +48,7 @@ def getExpectedRecorded( tCutoff=0.0 ):
 			rider = race.riders[bib]
 			if rider.status == Finisher and rider.firstTime is not None:
 				e = Entry( rider.num, 0, rider.firstTime, interpValue )
-				if rider.firstTime > tCur and e.interp:
+				if rider.firstTime >= tCur and e.interp:
 					expected.append( e )
 				else:
 					recorded.append( e )
@@ -508,9 +509,7 @@ class ForecastHistory( wx.Panel ):
 		tRace = race.curRaceTime()
 		tRaceLength = race.minutes * 60.0
 		
-		tMin = tRace - max( race.getAverageLapTime(), 10*60.0 )
-		tMax = tRace + max( race.getAverageLapTime(), 10*60.0 )
-		expected, recorded = getExpectedRecorded( tMin )
+		expected, recorded = getExpectedRecorded()
 		
 		isTimeTrial = race.isTimeTrial
 		if isTimeTrial and expected:

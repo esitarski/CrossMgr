@@ -1113,6 +1113,8 @@ class Race( object ):
 	isTimeTrial = False
 	minPossibleLapTime = 0.0
 	
+	showFullNamesInChart = False
+	
 	city = ''
 	stateProv = ''
 	country = ''
@@ -2582,19 +2584,23 @@ class Race( object ):
 		var = 30
 		lapsTotal = 5
 		riders = 30
-		self.startTime = datetime.datetime.now() - datetime.timedelta(seconds=lapsTotal*mean + 4*60)
+		self.startTime = datetime.datetime.now()
+		tMax = 0.0
 		for num in xrange(100,100+riders+1):
 			t = 0
 			mu = random.normalvariate( mean, var )	# Rider's random average lap time.
 			for laps in xrange(lapsTotal):
 				t += random.normalvariate(mu, var )	# Rider's lap time.
+				tMax = max( tMax, t )
 				self.addTime( num, t )
-		if Utils.isMainWin():
-			Utils.getMainWin().startRaceClock()
-
 		for j, i in enumerate(xrange(100,100+riders+1,10)):
 			name = 'Cat{}'.format(j+1)
 			self.categories[name] = Category(True, name, '{}-{}'.format(i, i+9) )
+
+		self.startTime -= datetime.timedelta( seconds = tMax/2 )
+
+		if Utils.isMainWin():
+			Utils.getMainWin().startRaceClock()
 
 		self.setChanged()
 		

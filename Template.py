@@ -69,6 +69,7 @@ class Template( object ):
 			'minutes',
 			'notes',
 			'minPossibleLapTime',
+			'showFullNamesInChart',
 
 			'allCategoriesFinishAfterFastestRidersLastLap',
 		

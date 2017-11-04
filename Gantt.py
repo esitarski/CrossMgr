@@ -35,12 +35,15 @@ class Gantt( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, label = _('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind( wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice )
+		self.showFullNamesInChart = wx.CheckBox( self, label=_('Show Full Names') )
+		self.showFullNamesInChart.Bind( wx.EVT_CHECKBOX, self.doShowFullNames )
 		self.groupByStartWave = wx.CheckBox( self, label=_('Group by Start Wave') )
-		self.Bind( wx.EVT_CHECKBOX, self.doGroupByStartWave, self.groupByStartWave )
+		self.groupByStartWave.Bind( wx.EVT_CHECKBOX, self.doGroupByStartWave )
 		self.statsLabel = wx.StaticText( self )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showFullNamesInChart, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.EXPAND, border=4 )
 		self.hbs.Add( self.groupByStartWave, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.EXPAND, border=4 )
 		self.hbs.Add( self.statsLabel, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.EXPAND, border=4 )
 		
@@ -60,11 +63,16 @@ class Gantt( wx.Panel ):
 	def doChooseCategory( self, event ):
 		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
 		self.refresh()
+		
+	def doShowFullNames( self, event ):
+		if Model.race:
+			Model.race.showFullNamesInChart = self.showFullNamesInChart.GetValue()
+		wx.CallAfter( self.refresh )
 	
 	def doGroupByStartWave( self, event ):
 		if Model.race:
 			Model.race.groupByStartWave = self.groupByStartWave.GetValue()
-			wx.CallAfter( self.refresh )
+		wx.CallAfter( self.refresh )
 		
 	def reset( self ):
 		self.ganttChart.numSelect = None
@@ -485,6 +493,8 @@ class Gantt( wx.Panel ):
 		self.groupByStartWave.SetValue( race.groupByStartWave )
 		self.groupByStartWave.Enable( not category )
 		
+		self.showFullNamesInChart.SetValue( race.showFullNamesInChart )
+		
 		if race and race.isRunning():
 			if self.refreshTimer:
 				self.refreshTimer.Stop()
@@ -506,14 +516,17 @@ class Gantt( wx.Panel ):
 		else:
 			results = GetResults( category )
 		
+		if race.showFullNamesInChart:
+			def getLabel( r ):
+				return u'{} {} {}'.format( getattr(r, 'FirstName', u''), getattr(r, 'LastName', u''), r.num or u'' ).strip()
+		else:
+			def getLabel( r ):
+				return u'{} {}'.format( r.short_name(12), r.num or u'' ).strip()
+		
 		resultBest = (0, sys.float_info.max)
 		labels, status = [], []
 		for r in results:
-			label = r.short_name(12)
-			if r.num:
-				label += u' {}'.format(r.num)
-			labels.append( label )
-			
+			labels.append( getLabel(r) )
 			try:
 				riderStatus = race.riders[r.num].status
 				status.append( translate(statusNames[riderStatus]) if riderStatus != Finisher else '' )
