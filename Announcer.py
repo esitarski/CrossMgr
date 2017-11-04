@@ -135,7 +135,7 @@ class Announcer( wx.Panel ):
 				if row > 0:
 					numPrev = results[row-1].num
 					if (	numPrev not in bibETA or
-							eta - bibETA[numPrev] > 1.0 or
+							abs(eta - bibETA[numPrev]) > 1.0 or
 							eta < -1.0 or bibETA[numPrev] < -1.0
 						):
 						iGroup += 1
