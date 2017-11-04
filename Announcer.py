@@ -118,7 +118,7 @@ class Announcer( wx.Panel ):
 		resultsData = [[] for col in self.cols]
 		isUpdated = set()
 		
-		iGroup = 0
+		iGroup = -1
 		rowGroup = []
 		for row, rr in enumerate(results):
 			resultsData[self.iCol[u'Pos']].append( u'{}'.format(rr.pos) )
@@ -128,21 +128,18 @@ class Announcer( wx.Panel ):
 			)
 			resultsData[self.iCol[u'Gap']].append( rr.gap )
 			e = bibExpected.get(rr.num, None) if rr.status == Finisher else None
+			iGroup += 1
 			if e: 
 				eta = e.t - tRace
 				bibETA[rr.num] = eta
-				
 				if row > 0:
-					numPrev = results[row-1].num
-					if (	numPrev not in bibETA or
-							abs(eta - bibETA[numPrev]) > 1.0 or
-							eta < -1.0 or bibETA[numPrev] < -1.0
-						):
-						iGroup += 1
-			else:
-				iGroup += 1
-			rowGroup.append( iGroup )
-			
+					try:
+						numPrev = results[row-1].num
+						if abs(abs(eta - bibETA[results[row-1].num]) < 1.0):
+							iGroup -= 1
+					except Exception as xxx:
+						pass
+			rowGroup.append( iGroup )			
 			resultsData[self.iCol[u'ETA']].append( Utils.formatTime(eta) if e else u'' )
 			
 			e = bibRecorded.get( rr.num, None )
@@ -173,20 +170,15 @@ class Announcer( wx.Panel ):
 		evenYellowBrush = yellowBrush
 		oddYellowBrush = wx.Brush( darkerYellow, wx.SOLID )
 		
-		alertETA = 15.0
-		greenDelta = 75
-		greenTick = greenDelta / alertETA
-		def getETAColor( eta ):
-			# Shade the ETA according to how close we think the rider is.
-			if eta < 0.0:
-				eta = abs( eta )
-				if eta < alertETA:
-					eta = 0.0
-				else:
-					eta = min( alertETA, eta - alertETA )
-			if eta > alertETA:
-				return None
-			return wx.Colour(0, 255-int(greenTick*eta), 0)
+		alertETA = 15
+		greenDelta = 80
+		greenTick = greenDelta / float(alertETA)
+		greenScale = [wx.Colour(0,int(255-i*greenTick),0) for i in xrange(alertETA)]
+		colorMap = {}
+		colorMap.update( {i:greenScale[i] for i in xrange(alertETA)} )
+		colorMap.update( {-i:greenScale[0] for i in xrange(alertETA)} )
+		colorMap.update( {-alertETA-i:greenScale[i] for i in xrange(alertETA)} )
+		gc = wx.GraphicsContext.Create( dc )
 		
 		def drawRow( x, y, w, h, row, iRow, isUpdated=False, eta=60.0 ):
 			if not isUpdated:
@@ -210,19 +202,32 @@ class Announcer( wx.Panel ):
 				else:
 					xText = x + colWidths[c] - dc.GetTextExtent(v)[0]
 				if c == iETA:
-					etaColor = getETAColor( eta )
+					etaColor = colorMap.get(int(eta), None if eta >= 0.0 else greenScale[-1])
 					if etaColor is not None:
-						dc.SetBrush( wx.Brush(wx.Colour(0,255-max(0,int(greenTick*eta)),0), wx.SOLID) )
-						dc.SetPen( grayPen )
-						dc.DrawRectangle( x+borderWidth/2, y, colWidths[c], h )
+						gc.SetBrush( wx.Brush(etaColor, wx.SOLID) )
+						gc.SetPen( grayPen )
+						gc.DrawRoundedRectangle( x+borderWidth/2, y, colWidths[c], h, 4 )
 					
 				dc.DrawText( v, xText, y )
 				x += colWidths[c]
 		
-		# Draw the headers.
 		dc.SetFont( boldFont )
 		dc.SetTextForeground( wx.BLACK )
+		# Draw the category and laps to go.
 		y = 0
+		x = 0
+		v = category.fullname
+		try:
+			lapsToGo = len(results[0].raceTimes) - 1 - (leaderLap or 0)
+		except Exception as e:
+			lapsToGo = None
+		if lapsToGo is not None:
+			v += u' - {} {}'.format( lapsToGo, _('laps to go') )
+		xText = x + borderWidth
+		dc.DrawText( v, xText, y )
+		
+		# Draw the column headers.
+		y += lineHeight
 		x = 0
 		for c, v in enumerate(self.cols):
 			if c == iName:
@@ -232,13 +237,15 @@ class Announcer( wx.Panel ):
 			dc.DrawText( v, xText, y )
 			x += colWidths[c]
 		
+		yResults = y + lineHeight
+		
 		# Draw the results
 		xTextRight = sum( colWidths )
 		
 		dc.SetFont( font )
 		dc.SetTextForeground( wx.BLACK )
 		x = 0
-		y = lineHeight
+		y = yResults
 		for i, rr in enumerate(results):
 			row = [resultsData[c][i] for c in xrange(len(self.cols))]
 			drawRow( x, y, width, lineHeight, row, i, i in isUpdated, bibETA.get(rr.num,60.0) )
@@ -253,14 +260,14 @@ class Announcer( wx.Panel ):
 			
 			groupColor = wx.Colour(160,160,160)
 			groupLineWidth = 2
-			gc = wx.GraphicsContext.Create( dc )		
 			gc.SetPen( wx.Pen(groupColor, groupLineWidth) )
 			dc.SetFont( fontSmall )
 			dc.SetTextForeground( wx.Colour(128,128,128) )
+			gc.SetBrush( wx.TRANSPARENT_BRUSH )
 			
 			groupLineOffset = 6
 			x = 0
-			y = lineHeight
+			y = yResults
 			iStart = 0
 			for i, g in enumerate(rowGroup):
 				if g != rowGroup[iStart]:
