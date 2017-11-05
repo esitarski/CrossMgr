@@ -48,7 +48,10 @@ class Announcer( wx.Panel ):
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.Bind(wx.EVT_TIMER, self.OnTimer)
-	
+		self.Bind(wx.EVT_ERASE_BACKGROUND, self.onErase)
+	def onErase(self, event):
+		pass
+
 	def resetTimer( self ):
 		if self.timer.IsRunning():
 			return
