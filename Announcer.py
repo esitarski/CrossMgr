@@ -13,7 +13,7 @@ grey = wx.Colour( 64, 64, 64 )
 yellow = wx.Colour( 255,255,150 )
 darkerYellow = wx.Colour( 240,240,140 )
 orange = wx.Colour( 255, 165, 0 )
-recordedChar = u"\u2190"
+recordedChar = u"\u2192"
 
 reGender = re.compile( r'\(([^)]+)\)$' )
 
