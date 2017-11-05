@@ -42,6 +42,10 @@ class Announcer( wx.Panel ):
 		super(Announcer, self).__init__(parent, id)
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		
+		self.position = 0
+		self.scrollbar = wx.ScrollBar(self, style=wx.SB_VERTICAL )
+		self.scrollbar.Bind( wx.EVT_SCROLL, self.OnScroll )
+		
 		self.timer = wx.Timer( self )
 		self.expected = []
 		self.recorded = []
@@ -49,10 +53,23 @@ class Announcer( wx.Panel ):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.Bind(wx.EVT_TIMER, self.OnTimer)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnErase)
+		wx.CallAfter( self.DoLayout )
 	
 	def OnErase(self, event):
 		pass
 
+	def DoLayout( self ):
+		width, height = self.GetSize()
+		w = 16
+		self.scrollbar.SetSize( width-w, 0, w, height )
+	
+	def OnScroll( self, event ):
+		self.position = event.GetPosition()
+		self.Refresh()
+	
+	def SetScrollbar( self, shown, total ):
+		self.scrollbar.SetScrollbar(self.position, shown, total, shown, refresh=True)
+	
 	def resetTimer( self ):
 		if self.timer.IsRunning():
 			return
@@ -66,6 +83,7 @@ class Announcer( wx.Panel ):
 		self.resetTimer()
 	
 	def OnSize( self, event ):
+		self.DoLayout()
 		self.Refresh()
 	
 	def OnPaint( self, event ):
@@ -254,13 +272,15 @@ class Announcer( wx.Panel ):
 		dc.SetTextForeground( wx.BLACK )
 		x = 0
 		y = yResults
-		for i, rr in enumerate(results):
+		for i, rr in enumerate(results[self.position:], self.position):
 			row = [resultsData[c][i] for c in xrange(len(self.cols))]
 			drawRow( x, y, width, lineHeight, row, i, i in isRecorded, bibETA.get(rr.num,60.0) )
 			y += lineHeight
 			if y > height:
 				break
 
+		self.SetScrollbar( i+1 - self.position, len(results) )
+				
 		# Draw group indicators.
 		if not race.isTimeTrial:
 			fontSizeGroup = int(fontSize)
@@ -276,15 +296,18 @@ class Announcer( wx.Panel ):
 			groupLineOffset = 6
 			x = 0
 			y = yResults
-			iStart = 0
-			for i, g in enumerate(rowGroup):
+			iStart = rowGroup[self.position]
+			for i, g in enumerate(rowGroup[self.position:], self.position):
 				if g != rowGroup[iStart]:
 					if i - iStart > 1:
-						y1 = y + lineHeight*iStart
-						y2 = y + lineHeight*i
-						x1 = x2 = x + xTextRight + groupLineOffset*2
-						gc.DrawRoundedRectangle( x+groupLineWidth//2, y1, x2, y2-y1, 6 )
-						dc.DrawText( u'{}'.format(i-iStart), x1+groupLineOffset, y1 + (fontSize-fontSizeGroup) )
+						y1 = max( yResults, y + lineHeight*(iStart-self.position) )
+						if y1 > height:
+							break
+						y2 = min( height, y + lineHeight*(i-self.position) )
+						if y2 > y1:
+							x1 = x2 = x + xTextRight + groupLineOffset*2
+							gc.DrawRoundedRectangle( x+groupLineWidth//2, y1, x2, y2-y1, 6 )
+							dc.DrawText( u'{}'.format(i-iStart), x1+groupLineOffset, y1 + (fontSize-fontSizeGroup) )
 					iStart = i
 				
 	def refresh( self ):
