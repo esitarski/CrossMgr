@@ -1,5 +1,6 @@
 import requests
 import datetime
+import re
 import os
 import wx
 import wx.dataview as dataview
@@ -279,7 +280,7 @@ class RaceDB( wx.Dialog ):
 		
 		dNow = datetime.datetime.now() + datetime.timedelta(minutes=15)
 		def in_the_past( t ):
-			values = t.replace(u'-',u' ').replace(u':', u' ').split()[:6]	# get Y M D H M S
+			values = re.sub( '[^0-9]', ' ', t ).split()[:6]	# get Y M D H M S - ignore timezone
 			d = datetime.datetime( *[int(v) for v in values] )
 			return d < dNow
 			
