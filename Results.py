@@ -551,6 +551,15 @@ class Results( wx.Panel ):
 		FixCategories( self.categoryChoice, 0 )
 		Model.setCategoryChoice( 0, 'resultsCategory' )
 	
+	def setCategory( self, category ):
+		for i, c in enumerate(Model.race.getCategories( startWaveOnly=False ) if Model.race else [], 1):
+			if c == category:
+				SetCategory( self.categoryChoice, c )
+				Model.setCategoryChoice( i, 'resultsCategory' )
+				return
+		SetCategory( self.categoryChoice, None )
+		Model.setCategoryChoice( 0, 'resultsCategory' )
+	
 	def doChooseCategory( self, event ):
 		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
 		self.refresh()

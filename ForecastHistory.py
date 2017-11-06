@@ -14,6 +14,7 @@ import NumKeypad
 from PhotoFinish import TakePhoto, okTakePhoto
 from GetResults import GetResults, GetResultsWithData, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
+from FixCategories import SetCategory
 from FtpWriteFile import realTimeFtpPublish
 
 @Model.memoize
@@ -255,7 +256,10 @@ class ForecastHistory( wx.Panel ):
 				(None,				None,		None),
 				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupHistoryDNF),
 				(None,				None,		None),
-				(_('RiderDetail'),	wx.NewId(),self.OnPopupHistoryRiderDetail),
+				(_('RiderDetail'),				wx.NewId(),self.OnPopupHistoryRiderDetail),
+				(_('Results'),					wx.NewId(),self.OnPopupHistoryResults),
+				(_('Passings'),					wx.NewId(),self.OnPopupHistoryPassings),
+				(_('Chart'),					wx.NewId(),self.OnPopupHistoryChart),
 			]
 			for p in self.historyPopupInfo:
 				if p[2]:
@@ -309,14 +313,52 @@ class ForecastHistory( wx.Panel ):
 		except:
 			pass
 	
+	def SelectNumShowPage( self, num, pageName ):
+		race = Model.race
+		mainWin = Utils.getMainWin()
+		if not race or not mainWin or not num:
+			return
+		
+		mainWin.setNumSelect( num )
+			
+		# If this page supports a category, make sure we show it too.
+		category = None
+		CatComponent = Model.Category.CatComponent
+		if pageName != _('Passings'):
+			# Check Component categories first.
+			for c in race.getCategories( startWaveOnly=False ):
+				if c.catType == CatComponent and race.inCategory(num, c):
+					category = c
+					break
+			# Then check wave categories.
+			if not category:
+				for c in race.getCategories( startWaveOnly=True ):
+					if race.inCategory(num, c):
+						category = c
+						break
+
+		# Set the category of the num.
+		for a, cls, name in mainWin.attrClassName:
+			if name == pageName:
+				try:
+					getattr(mainWin, a).setCategory( category )
+				except AttributeError:
+					pass
+				break
+		
+		mainWin.showPageName( pageName )
+		
 	def OnPopupHistoryRiderDetail( self, event ):
-		try:
-			num = self.entryCur.num
-			mainWin = Utils.getMainWin()
-			mainWin.setNumSelect( num )
-			mainWin.showPageName( _('RiderDetail') )
-		except:
-			pass
+		self.SelectNumShowPage( self.entryCur.num, _('RiderDetail') )
+	
+	def OnPopupHistoryResults( self, event ):
+		self.SelectNumShowPage( self.entryCur.num, _('Results') )
+	
+	def OnPopupHistoryPassings( self, event ):
+		self.SelectNumShowPage( self.entryCur.num, _('Passings') )
+				
+	def OnPopupHistoryChart( self, event ):
+		self.SelectNumShowPage( self.entryCur.num, _('Chart') )
 				
 	#--------------------------------------------------------------------
 	
@@ -353,11 +395,13 @@ class ForecastHistory( wx.Panel ):
 		
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
-				(_('Enter'),		wx.NewId(), self.OnPopupExpectedEnter),
 				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupExpectedDNF),
 				(u'{}...'.format(_('Pull')),	wx.NewId(), self.OnPopupExpectedPull),
 				(None,				None,		None),
 				(_('RiderDetail'),	wx.NewId(),	self.OnPopupExpectedRiderDetail),
+				(_('Results'),		wx.NewId(),	self.OnPopupExpectedResults),
+				(_('Passings'),		wx.NewId(),	self.OnPopupExpectedPassings),
+				(_('Chart'),		wx.NewId(),	self.OnPopupExpectedChart),
 			]
 			for p in self.expectedPopupInfo:
 				if p[2]:
@@ -398,13 +442,16 @@ class ForecastHistory( wx.Panel ):
 			pass
 
 	def OnPopupExpectedRiderDetail( self, event ):
-		try:
-			num = self.entryCur.num
-			mainWin = Utils.getMainWin()
-			mainWin.setNumSelect( num )
-			mainWin.showPageName( _('RiderDetail') )
-		except:
-			pass
+		self.SelectNumShowPage( self.entryCur.num, _('RiderDetail') )
+	
+	def OnPopupExpectedResults( self, event ):
+		self.SelectNumShowPage( self.entryCur.num, _('Results') )
+	
+	def OnPopupExpectedPassings( self, event ):
+		self.SelectNumShowPage( self.entryCur.num, _('Passings') )
+				
+	def OnPopupExpectedChart( self, event ):
+		self.SelectNumShowPage( self.entryCur.num, _('Chart') )
 				
 	#--------------------------------------------------------------------
 	

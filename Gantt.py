@@ -2,7 +2,7 @@ import wx
 import sys
 import Model
 import Utils
-from FixCategories import FixCategories
+from FixCategories import FixCategories, SetCategory
 import GanttChartPanel
 from GetResults import GetResults, RidersCanSwap, RiderResult
 from Undo import undo
@@ -63,6 +63,15 @@ class Gantt( wx.Panel ):
 	def doChooseCategory( self, event ):
 		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'ganttCategory' )
 		self.refresh()
+		
+	def setCategory( self, category ):
+		for i, c in enumerate(Model.race.getCategories( startWaveOnly=False ) if Model.race else [], 1):
+			if c == category:
+				SetCategory( self.categoryChoice, c )
+				Model.setCategoryChoice( i, 'ganttCategory' )
+				return
+		SetCategory( self.categoryChoice, None )
+		Model.setCategoryChoice( 0, 'ganttCategory' )
 		
 	def doShowFullNames( self, event ):
 		if Model.race:
