@@ -5,7 +5,9 @@ import re
 from GetResults import GetResults
 from math import modf
 from ForecastHistory import getExpectedRecorded
+from GanttChartPanel import makePastelColours, lighterColour
 from bisect import bisect_left, bisect_right
+from collections import defaultdict
 
 green = wx.Colour( 0, 200, 0 )
 blue = wx.Colour( 0, 0, 200 )
@@ -13,15 +15,12 @@ grey = wx.Colour( 64, 64, 64 )
 yellow = wx.Colour( 255,255,150 )
 darkerYellow = wx.Colour( 240,240,140 )
 orange = wx.Colour( 255, 165, 0 )
+
+recordedColour = wx.WHITE
+unrecordedColour = wx.Colour(200, 200, 200)
 recordedChar = u"\u2192"
 
 reGender = re.compile( r'\(([^)]+)\)$' )
-
-def max_or_zero( seq ):
-	try:
-		return max( seq )
-	except ValueError:
-		return 0
 
 def toOrdinal( pos ):
 	try:
@@ -38,37 +37,66 @@ def find_ge( a, x ):
     return bisect_left(a, x)
 		
 class Announcer( wx.Panel ):
+	cols = (u'Pos', u'Name', u'Team', u'Bib', u'Gap', u'Group', u'ETA' )
+	iCol = {c:i for i, c in enumerate(cols)}
+	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(Announcer, self).__init__(parent, id)
-		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		
-		self.position = 0
-		self.scrollbar = wx.ScrollBar(self, style=wx.SB_VERTICAL )
-		self.scrollbar.Bind( wx.EVT_SCROLL, self.OnScroll )
-		
-		self.timer = wx.Timer( self )
+		self.iCategory = 0
+		self.tExpected = []
+		self.isRecorded = []
+		self.group = []
+		self.groupCount = defaultdict( int )
 		self.expected = []
 		self.recorded = []
-		self.Bind(wx.EVT_PAINT, self.OnPaint)
-		self.Bind(wx.EVT_SIZE, self.OnSize)
-		self.Bind(wx.EVT_TIMER, self.OnTimer)
-		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnErase)
-		wx.CallAfter( self.DoLayout )
-	
-	def OnErase(self, event):
-		pass
+		self.groupColours = [lighterColour(c) for c in makePastelColours()]
+		self.groupColours = self.groupColours[3:] + self.groupColours[:3]
+		
+		self.title = wx.StaticText( self )
+		
+		self.wrapCategories = wx.WrapSizer()
+		self.categoryButtons = []
+		self.iCategoryButtonMax = 0
+		
+		self.grid = wx.grid.Grid( self )
+		self.grid.CreateGrid( 0, len(self.cols) )
+		self.grid.SetRowLabelSize( 0 )
+		self.grid.SetMargins( 0, 0 )
+		self.grid.AutoSizeColumns( True )
+		self.grid.DisableDragColSize()
+		self.grid.DisableDragRowSize()
+		self.grid.SetGridLineColour( self.grid.GetBackgroundColour() )
+		
+		for i, c in enumerate(self.cols):
+			a = wx.grid.GridCellAttr()
+			a.SetAlignment( wx.ALIGN_RIGHT if c not in (u'Name', u'Team') else wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
+			a.SetReadOnly( True )
+			self.grid.SetColAttr( i, a )
+			self.grid.SetColLabelValue( i, c )
+		
+		self.timer = wx.Timer( self )
+		self.Bind( wx.EVT_TIMER, self.OnTimer )
 
-	def DoLayout( self ):
-		width, height = self.GetSize()
-		w = 16
-		self.scrollbar.SetSize( width-w, 0, w, height )
+		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( self.wrapCategories, 0, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( self.title, 0, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( self.grid, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		
+		self.grid.AutoSize()
+		
+		self.createGreenScale( 15 )
+		self.SetDoubleBuffered( True )
+		self.SetSizer( vs )
 	
-	def OnScroll( self, event ):
-		self.position = event.GetPosition()
-		self.Refresh()
-	
-	def SetScrollbar( self, shown, total ):
-		self.scrollbar.SetScrollbar(self.position, shown, total, shown, refresh=True)
+	def createGreenScale( self, alertETA ):
+		greenDelta = 80
+		greenTick = greenDelta / float(alertETA)
+		greenScale = [wx.Colour(0,int(255-i*greenTick),0) for i in xrange(alertETA)]
+		self.colourMap = {}
+		self.colourMap.update( {i:greenScale[i] for i in xrange(alertETA)} )
+		self.colourMap.update( {-i:greenScale[0] for i in xrange(alertETA)} )
+		self.colourMap.update( {-alertETA-i:greenScale[i] for i in xrange(alertETA)} )		
 	
 	def resetTimer( self ):
 		if self.timer.IsRunning():
@@ -79,53 +107,79 @@ class Announcer( wx.Panel ):
 			self.timer.StartOnce( int((1.0 - modf(tRace)[0]) * 1000.0) )
 	
 	def OnTimer( self, event ):
-		self.Refresh()
+		self.refreshETA()
 		self.resetTimer()
+		
+	def setICategory( self, iCategory ):
+		self.iCategory = iCategory
+		wx.CallAfter( self.refresh )
 	
-	def OnSize( self, event ):
-		self.DoLayout()
-		self.Refresh()
+	def updateCategories( self, race ):
+		categories = race.getCategories( startWaveOnly=False, publishOnly=True )
+		while len(categories) > len(self.categoryButtons):
+			b = wx.Button( self )
+			b.Bind( wx.EVT_BUTTON, lambda e, i=len(self.categoryButtons): self.setICategory(i) )
+			self.categoryButtons.append( b )
+		
+		if self.iCategoryButtonMax == len(categories) and all(c.fullname == b.GetLabel() for c, b in zip(categories, self.categoryButtons)):
+			return categories
+			
+		for b, c in zip(self.categoryButtons, categories):
+			b.SetLabel( c.fullname )
+		for b in self.categoryButtons[len(categories):]:
+			b.Show( False )
+			
+		self.wrapCategories.Clear()
+		for b in self.categoryButtons[:len(categories)]:
+			self.wrapCategories.Add( b, flag=wx.ALL, border=4 )
+		self.iCategoryButtonMax = len(categories)
+		self.wrapCategories.Layout()
+		return categories
 	
-	def OnPaint( self, event ):
-		dc = wx.PaintDC( self )
-		self.Draw( dc )
-	
-	cols = (u'Pos', u'Name', u'Bib', u'Gap', u'ETA', )
-	iCol = {c:i for i, c in enumerate(cols)}
-	def Draw( self, dc ):
-		backColour = self.GetBackgroundColour()
-		backBrush = wx.Brush(backColour, wx.SOLID)
-		dc.SetBackground(backBrush)
-		dc.Clear()
-
+	def refreshETA( self ):
 		race = Model.race
-		if not race:
-			return
+		if race and race.isRunning():
+			tRace = race.curRaceTime()
+		else:
+			self.tExpected = [None] * len(self.tExpected)
+		
+		backgroundColour = wx.WHITE
+		iCol = self.iCol[u'ETA']
+		for row, et in enumerate(self.tExpected):
+			if row >= self.grid.GetNumberRows():
+				break
+			colour = recordedColour if self.isRecorded[row] else unrecordedColour
+			if et is not None:
+				eta = et - tRace
+				etaColour = self.colourMap.get(int(eta), None)
+				colour = etaColour or colour
+			self.grid.SetCellValue( row, iCol, Utils.formatTime(eta) if et else u'' )				
+			self.grid.SetCellBackgroundColour( row, iCol, colour )
+	
+	def refresh( self ):
+		race = Model.race
+		if race and race.isRunning():
+			tRace = race.curRaceTime()
+			self.expected, self.recorded = getExpectedRecorded()
+		else:
+			self.expected = self.recorded = []
+		self.resetTimer()
 		
 		tRace = race.lastRaceTime()
 		isRunning = race.isRunning()
 		
-		width, height = self.GetClientSize()
+		categories = self.updateCategories( race )
 		
-		dc.SetPen( wx.TRANSPARENT_PEN )
-		dc.SetBrush( wx.WHITE_BRUSH )
-		dc.DrawRectangle( 0, 0, width, height )
+		if not categories:
+			self.grid.ClearGrid()
+			return
 		
-		fontSize = 18
-		font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		boldFont = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
-		dc.SetFont( font )
+		self.iCategory = min( self.iCategory, len(categories)-1 )
 		
-		lineHeight = int( fontSize * 1.4 )
-		yNow = int( height * 0.5 )
-
-		category = race.getCategories( startWaveOnly=True )[0]
+		category = categories[self.iCategory]
 		results = GetResults( category )
 		
 		Finisher = Model.Rider.Finisher
-		if not results:
-			return
-		
 		try:
 			leaderLap = find_le( results[0].raceTimes, tRace )
 			if results[0].interp[leaderLap]:
@@ -134,22 +188,43 @@ class Announcer( wx.Panel ):
 		except:
 			leaderLap = tLeader = None
 			
+		v = category.fullname
+		try:
+			lapsToGo = len(results[0].raceTimes) - 1 - (leaderLap or 0)
+		except Exception as e:
+			lapsToGo = None
+		if lapsToGo is not None:
+			if lapsToGo == 0:
+				v += u': {}'.format( _('Finish') )
+			else:
+				v += u': {} {}'.format( lapsToGo, _('laps to go') )
+		
+		self.title.SetLabel( v )
+		
+		if not results:
+			Utils.AdjustGridSize( self.grid, 0, None )
+			self.grid.ClearGrid()
+			return
+		
 		bibExpected = { e.num:e for e in self.expected }
 		bibRecorded = { e.num:e for e in self.recorded }
 		bibETA = {}
 
-		resultsData = [[] for col in self.cols]
-		isRecorded = set()
+		Utils.AdjustGridSize( self.grid, len(results), None )
+		self.isRecorded = []
 		
+		self.tExpected = []
 		iGroup = -1
-		rowGroup = []
+		self.groupCount.clear()
+		del self.group[:]
 		for row, rr in enumerate(results):
-			resultsData[self.iCol[u'Pos']].append( u'{}'.format(rr.pos) )
-			resultsData[self.iCol[u'Bib']].append( u'{}'.format(rr.num) )
-			resultsData[self.iCol[u'Name']].append(
+			self.grid.SetCellValue( row, self.iCol[u'Pos'], u'{}'.format(rr.pos) )
+			self.grid.SetCellValue( row, self.iCol[u'Bib'], u'{}'.format(rr.num) )
+			self.grid.SetCellValue( row, self.iCol[u'Name'],
 				u'{} {}'.format(getattr(rr,'FirstName',u''), getattr(rr,'LastName',u'')).strip()
 			)
-			resultsData[self.iCol[u'Gap']].append( rr.gap )
+			self.grid.SetCellValue( row, self.iCol[u'Team'], getattr(rr,'Team',u'') )
+			self.grid.SetCellValue( row, self.iCol[u'Gap'], rr.gap )
 			e = bibExpected.get(rr.num, None) if rr.status == Finisher else None
 			iGroup += 1
 			if e: 
@@ -162,164 +237,50 @@ class Announcer( wx.Panel ):
 							iGroup -= 1
 					except:
 						pass
-			rowGroup.append( iGroup )			
-			resultsData[self.iCol[u'ETA']].append( Utils.formatTime(eta) if e else u'' )
+			
+			self.tExpected.append( e.t if e else None )
+			self.group.append( iGroup+1 )
+			self.groupCount[iGroup+1] += 1
+			self.grid.SetCellValue( row, self.iCol[u'ETA'], Utils.formatTime(eta) if e else u'' )
 			
 			e = bibRecorded.get( rr.num, None )
 			if not isRunning or (leaderLap == 1 or (e and tLeader is not None and e.t >= tLeader)):
-				isRecorded.add( row )
+				self.isRecorded.append( True )
 			else:
-				resultsData[self.iCol[u'Pos']][-1] = u'{}{}'.format(resultsData[self.iCol[u'Pos']][-1], recordedChar)
+				self.grid.SetCellValue( row, self.iCol[u'Pos'], u'{}{}'.format(self.grid.GetCellValue(row, self.iCol[u'Pos']), recordedChar) )
+				self.isRecorded.append( False )
 				
-		firstPlace = toOrdinal(1)
-		
-		iPos = self.iCol[u'Pos']
-		iName = self.iCol[u'Name']
-		iETA = self.iCol[u'ETA']
-		borderWidth = dc.GetTextExtent(u'  ')[0]
-		colWidths = {
-			u'ETA':borderWidth + dc.GetTextExtent(u'1:00:00')[0],
-			u'Gap':borderWidth + dc.GetTextExtent(u'1:00:00')[0],
-			u'Pos':borderWidth + dc.GetTextExtent(u'9999')[0],
-			u'Name':borderWidth + max_or_zero(dc.GetTextExtent(n)[0] for n in resultsData[iName]),
-			u'Bib':borderWidth + dc.GetTextExtent(u'9999')[0],
-		}
-		colWidths = [colWidths[colName] for colName in self.cols]
-		
-		greenBrush = wx.Brush( wx.Colour(64,200,64), wx.SOLID )
-		yellowBrush = wx.Brush( yellow, wx.SOLID )
-		orangeBrush = wx.Brush( orange, wx.SOLID )
-		grayPen = wx.Pen(wx.Colour(128,128,128), 1) 
-		
-		evenBrush = wx.Brush(wx.Colour(255,255,255), wx.SOLID )
-		oddBrush = wx.Brush(wx.Colour(240,240,240), wx.SOLID )
-		
-		evenUnrecordedBrush = wx.Brush(wx.Colour(185,185,255), wx.SOLID )
-		oddUnrecordedBrush = wx.Brush(wx.Colour(170,170,255), wx.SOLID )
-
-		evenYellowBrush = yellowBrush
-		oddYellowBrush = wx.Brush( darkerYellow, wx.SOLID )
-		
-		alertETA = 15
-		greenDelta = 80
-		greenTick = greenDelta / float(alertETA)
-		greenScale = [wx.Colour(0,int(255-i*greenTick),0) for i in xrange(alertETA)]
-		colorMap = {}
-		colorMap.update( {i:greenScale[i] for i in xrange(alertETA)} )
-		colorMap.update( {-i:greenScale[0] for i in xrange(alertETA)} )
-		colorMap.update( {-alertETA-i:greenScale[i] for i in xrange(alertETA)} )
-		gc = wx.GraphicsContext.Create( dc )
-		
-		def drawRow( x, y, w, h, row, iRow, isRecorded=False, eta=60.0 ):
-			dc.SetPen( wx.TRANSPARENT_PEN )
-			if not isRecorded:
-				dc.SetBrush( oddUnrecordedBrush if iRow&1 else evenUnrecordedBrush )
+			if self.isRecorded[-1]:
+				for c in xrange(len(self.cols)):
+					self.grid.SetCellBackgroundColour( row, c, recordedColour )
 			else:
-				dc.SetBrush( oddBrush if iRow&1 else evenBrush )
-			dc.DrawRectangle( x, y, w, h )
+				for c in xrange(len(self.cols)):
+					self.grid.SetCellBackgroundColour( row, c, unrecordedColour )
+		
+		gCur = 0
+		gLast = None
+		gColIndex = 0
+		groupColour = None
+		iCol = self.iCol[u'Group']
+		for row, g in enumerate(self.group):
+			self.grid.SetCellValue( row, iCol, u'' )
+			if self.groupCount[g] == 1:
+				continue
+			if g == gLast:
+				self.grid.SetCellBackgroundColour( row, iCol, groupColour )
+				continue
 				
-			yText = y + (lineHeight - fontSize)//2
-			for c, v in enumerate(row):
-				if c == iName:
-					xText = x + borderWidth
-				else:
-					xText = x + colWidths[c] - dc.GetTextExtent(v)[0]
-				if c == iETA:
-					etaColor = colorMap.get(int(eta), None if eta >= 0.0 else greenScale[-1])
-					if etaColor is not None:
-						gc.SetBrush( wx.Brush(etaColor, wx.SOLID) )
-						gc.SetPen( grayPen )
-						gc.DrawRoundedRectangle( x+borderWidth/2, y, colWidths[c], h, 4 )
-					
-				dc.DrawText( v, xText, y )
-				x += colWidths[c]
+			gLast = g
+			groupColour = self.groupColours[gColIndex%len(self.groupColours)]
+			gColIndex += 1
+			gCur += 1
+			self.grid.SetCellValue( row, iCol, u'{} [{}]'.format(gCur, self.groupCount[g],) )
+			self.grid.SetCellBackgroundColour( row, iCol, groupColour )
 		
-		dc.SetFont( boldFont )
-		dc.SetTextForeground( wx.BLACK )
-		# Draw the category and laps to go.
-		y = 0
-		x = 0
-		v = category.fullname
-		try:
-			lapsToGo = len(results[0].raceTimes) - 1 - (leaderLap or 0)
-		except Exception as e:
-			lapsToGo = None
-		if lapsToGo is not None:
-			if lapsToGo == 0:
-				v += u': {}'.format( _('Finish') )
-			else:
-				v += u': {} {}'.format( lapsToGo, _('laps to go') )
-		xText = x + borderWidth
-		dc.DrawText( v, xText, y )
-		
-		# Draw the column headers.
-		y += lineHeight
-		x = 0
-		for c, v in enumerate(self.cols):
-			if c == iName:
-				xText = x + borderWidth
-			else:
-				xText = x + colWidths[c] - dc.GetTextExtent(v)[0]
-			dc.DrawText( v, xText, y )
-			x += colWidths[c]
-		
-		yResults = y + lineHeight
-		
-		# Draw the results
-		xTextRight = sum( colWidths )
-		
-		dc.SetFont( font )
-		dc.SetTextForeground( wx.BLACK )
-		x = 0
-		y = yResults
-		for i, rr in enumerate(results[self.position:], self.position):
-			row = [resultsData[c][i] for c in xrange(len(self.cols))]
-			drawRow( x, y, width, lineHeight, row, i, i in isRecorded, bibETA.get(rr.num,60.0) )
-			y += lineHeight
-			if y > height:
-				break
-
-		self.SetScrollbar( i+1 - self.position, len(results) )
+		self.refreshETA()
+		self.grid.AutoSize()
+		self.GetSizer().Layout()
 				
-		# Draw group indicators.
-		if not race.isTimeTrial:
-			fontSizeGroup = int(fontSize)
-			fontSmall = wx.Font( (0,fontSizeGroup), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-			
-			groupColor = wx.Colour(150,150,150)
-			groupLineWidth = 2
-			gc.SetPen( wx.Pen(groupColor, groupLineWidth) )
-			dc.SetFont( fontSmall )
-			dc.SetTextForeground( wx.Colour(64,64,64) )
-			gc.SetBrush( wx.TRANSPARENT_BRUSH )
-			
-			groupLineOffset = 6
-			x = 0
-			y = yResults
-			iStart = rowGroup[self.position]
-			for i, g in enumerate(rowGroup[self.position:], self.position):
-				if g != rowGroup[iStart]:
-					if i - iStart > 1:
-						y1 = max( yResults, y + lineHeight*(iStart-self.position) )
-						if y1 > height:
-							break
-						y2 = min( height, y + lineHeight*(i-self.position) )
-						if y2 > y1:
-							x1 = x2 = x + xTextRight + groupLineOffset*2
-							gc.DrawRoundedRectangle( x+groupLineWidth//2, y1, x2, y2-y1, 6 )
-							dc.DrawText( u'{}'.format(i-iStart), x1+groupLineOffset, y1 + (fontSize-fontSizeGroup) )
-					iStart = i
-				
-	def refresh( self ):
-		race = Model.race
-		if race and race.isRunning():
-			tRace = race.curRaceTime()
-			self.expected, self.recorded = getExpectedRecorded()
-		else:
-			self.expected = self.recorded = []
-		self.resetTimer()
-		self.Refresh()
-		
 	def commit( self ):
 		pass
 		
