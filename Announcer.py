@@ -121,11 +121,11 @@ class Announcer( wx.Panel ):
 			b.Bind( wx.EVT_BUTTON, lambda e, i=len(self.categoryButtons): self.setICategory(i) )
 			self.categoryButtons.append( b )
 		
-		if self.iCategoryButtonMax == len(categories) and all(c.fullname == b.GetLabel() for c, b in zip(categories, self.categoryButtons)):
+		if self.iCategoryButtonMax == len(categories) and all(b.GetLabel().endswith(c.fullname)  for c, b in zip(categories, self.categoryButtons)):
 			return categories
 			
 		for b, c in zip(self.categoryButtons, categories):
-			b.SetLabel( c.fullname )
+			b.SetLabel( u'0:00\n' + c.fullname )
 		for b in self.categoryButtons[len(categories):]:
 			b.Show( False )
 			
@@ -155,6 +155,18 @@ class Announcer( wx.Panel ):
 				colour = etaColour or colour
 			self.grid.SetCellValue( row, iCol, Utils.formatTime(eta) if et else u'' )				
 			self.grid.SetCellBackgroundColour( row, iCol, colour )
+	
+		categories = race.getCategories( startWaveOnly=False, publishOnly=True )
+		for c, b in zip(categories, self.categoryButtons):
+			results = GetResults( c )
+			colour = wx.WHITE
+			e = self.bibExpected.get( results[0].num, None ) if results else None
+			if e is not None:
+				eta = e.t - tRace
+				etaColour = self.colourMap.get(int(eta), None)
+				colour = etaColour or colour
+			b.SetLabel( '{}\n{}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
+			b.SetBackgroundColour( colour )
 	
 	def refresh( self ):
 		race = Model.race
@@ -206,7 +218,7 @@ class Announcer( wx.Panel ):
 			self.grid.ClearGrid()
 			return
 		
-		bibExpected = { e.num:e for e in self.expected }
+		self.bibExpected = { e.num:e for e in self.expected }
 		bibRecorded = { e.num:e for e in self.recorded }
 		bibETA = {}
 
@@ -225,7 +237,7 @@ class Announcer( wx.Panel ):
 			)
 			self.grid.SetCellValue( row, self.iCol[u'Team'], getattr(rr,'Team',u'') )
 			self.grid.SetCellValue( row, self.iCol[u'Gap'], rr.gap )
-			e = bibExpected.get(rr.num, None) if rr.status == Finisher else None
+			e = self.bibExpected.get(rr.num, None) if rr.status == Finisher else None
 			iGroup += 1
 			if e: 
 				eta = e.t - tRace
