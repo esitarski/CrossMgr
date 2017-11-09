@@ -657,6 +657,8 @@ var isRecorded = [];
 
 function getScaleColour( eta ) {
 	var colour = greenColourMap[Math.floor(eta)];
+	if( colour )
+		return colour;
 	return eta < 0.0 ? greenScale[greenScale.length-1] : null
 }
 
