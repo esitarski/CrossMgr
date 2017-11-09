@@ -132,7 +132,7 @@ class Announcer( wx.Panel ):
 			return categories
 			
 		for b, c in zip(self.categoryButtons, categories):
-			b.SetLabel( u'\n' + c.fullname )
+			b.SetLabel( u' ' + c.fullname )
 		for b in self.categoryButtons[len(categories):]:
 			b.Show( False )
 			
@@ -172,7 +172,7 @@ class Announcer( wx.Panel ):
 				eta = e.t - tRace
 				etaColour = self.colourMap.get(int(eta), None)
 				colour = etaColour or colour
-			b.SetLabel( '{}\n{}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
+			b.SetLabel( '{} {}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
 			b.SetBackgroundColour( colour )
 	
 	def refresh( self ):
