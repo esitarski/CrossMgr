@@ -618,18 +618,36 @@ var iCol = {};
 for( var i in cols.length )
 	iCol[cols[i]] = i;
 
-var groupColours = makePastelColours();
+/* var groupColours = makePastelColours(); */
+var groupColours = [
+	'#FF0000',
+	'#FF8000',
+	'#FFFF00',
+	'#FF0080',
+	'#FF00FF',
+	'#8000FF',
+	'#0080FF',
+	'#0000FF'
+];
 for( var i = 0; i < groupColours.length; ++i )
-	groupColours[i] = lighterColour( groupColours[i] );
-groupColours = groupColours.slice( 5 );
+	groupColours[i] = lighterColour( groupColours[i], 0.4 );
+/* groupColours = groupColours.slice( 5 ); */
 
 var alertETA = 15;
 var greenScale = [];
+var greenColourMap = {};
 (function () {
+	var i;
 	var greenDelta = 80;
 	var greenTick = greenDelta / alertETA;
-	for( var i = 0; i < alertETA; ++i )
+	for( i = 0; i < alertETA; ++i )
 		greenScale.push( RGB2Color(0, Math.floor(255-i*greenTick), 0) );
+	greenColourMap = {};
+	for( i = 0; i < alertETA; ++i ) {
+		greenColourMap[i] = greenScale[i];
+		greenColourMap[-i] = greenScale[0];
+		greenColourMap[-alertETA-i] = greenScale[i];
+	}
 })();
 
 var recordedColour = RGB2Color(255, 255, 255);
@@ -638,14 +656,8 @@ var recordedChar = "\u2192";
 var isRecorded = [];
 
 function getScaleColour( eta ) {
-	if( eta >= alertETA )
-		return null;
-	if( eta >= 0 )
-		return greenScale[Math.floor(eta)];
-	if( -alertETA <= eta)
-		return greenScale[0];
-	eta += alertETA;
-	return greenScale[Math.min(alertETA-1, -eta)];
+	var colour = greenColourMap[Math.floor(eta)];
+	return eta < 0.0 ? greenScale[greenScale.length-1] : null
 }
 
 function setCategory( i ) {
@@ -657,7 +669,7 @@ function setCategory( i ) {
 
 var categoryButtons = [];
 var categoryNames = [];
-function updateCategories() {
+function RefreshCategories() {
 	var rebuildButtons = ( catDetails.length-1 != categoryNames.length );
 	if( !rebuildButtons ) {
 		for( var i = 0; i < categoryNames.length; ++i ) {
@@ -676,6 +688,7 @@ function updateCategories() {
 			var b = document.createElement('BUTTON');
 			b.innerHTML = '<br/>' + catDetails[i].name;
 			b.style.margin = '8px';
+			b.style.fontSize = '120%';
 			b.onclick = (function( iCategory ) { return function() {setCategory(iCategory);} })( i );
 			categoryButtons.push( b );
 			categoryNames.push( catDetails[i].name );
@@ -693,7 +706,7 @@ function updateCategories() {
 				colour = getScaleColour( eta );
 			}
 			categoryButtons[i-1].innerHTML = v + '<br/>' + catDetails[i].name;
-			categoryButtons[i-1].style.background = (colour || 'initial');
+			categoryButtons[i-1].style.background = (colour || unrecordedColour);
 		}
 	}
 }
@@ -718,7 +731,7 @@ function RefreshETA() {
 		td.style.backgroundColor = colour ? colour : (isRecorded[r] ? recordedColour : unrecordedColour);
 	}
 	
-	updateCategories();
+	RefreshCategories();
 }
 
 function strToMillis( s ) {
@@ -770,7 +783,7 @@ function RefreshResultsTable()
 		lapsToGo = null;
 	}
 	if( lapsToGo != null ) {
-		if( lapsToGo == 0 )
+		if( lapsToGo <= 0 )
 			v += ' ' + 'Finish';
 		else
 			v += ' ' + lapsToGo + ' ' + 'laps to go';
@@ -906,11 +919,13 @@ function makeColourGradient(frequency1, frequency2, frequency3,
 	return grad.slice(1);  // Skip the first pink colour.
 }
 
-function lighterColour( k ) {
+function lighterColour( k, factor ) {
+	if( !factor )
+		factor = 0.6;
 	var s = '#';
 	for( var i = 0; i < 3; ++i ) {
 		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
-		c += (255 - c) * 0.6;
+		c += (255 - c) * factor;
 		c = ~~c;
 		s += (c < 16 ? '0' : '') + c.toString(16);
 	}

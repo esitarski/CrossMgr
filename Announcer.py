@@ -49,7 +49,7 @@ class Announcer( wx.Panel ):
 		self.expected = []
 		self.recorded = []
 		self.groupColours = [lighterColour(c) for c in makePastelColours()]
-		self.groupColours = self.groupColours[3:] + self.groupColours[:3]
+		self.groupColours = self.groupColours[5:]
 		
 		self.title = wx.StaticText( self )
 		
@@ -112,7 +112,7 @@ class Announcer( wx.Panel ):
 		self.iCategory = iCategory
 		wx.CallAfter( self.refresh )
 	
-	def updateCategories( self, race ):
+	def refreshCategories( self, race ):
 		categories = race.getCategories( startWaveOnly=False, publishOnly=True )
 		while len(categories) > len(self.categoryButtons):
 			b = wx.Button( self )
@@ -157,7 +157,7 @@ class Announcer( wx.Panel ):
 		categories = race.getCategories( startWaveOnly=False, publishOnly=True )
 		for c, b in zip(categories, self.categoryButtons):
 			results = GetResults( c )
-			colour = wx.WHITE
+			colour = unrecordedColour
 			e = self.bibExpected.get( results[0].num, None ) if results else None
 			if e is not None:
 				eta = e.t - tRace
@@ -178,7 +178,7 @@ class Announcer( wx.Panel ):
 		tRace = race.lastRaceTime()
 		isRunning = race.isRunning()
 		
-		categories = self.updateCategories( race )
+		categories = self.refreshCategories( race )
 		
 		if not categories:
 			self.grid.ClearGrid()
