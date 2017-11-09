@@ -646,7 +646,7 @@ function RefreshCategories() {
 		categoriesDiv.innerHTML = '';
 		for( var i = 1; i < catDetails.length; ++i ) {
 			var b = document.createElement('BUTTON');
-			b.innerHTML = '<br/>' + catDetails[i].name;
+			b.innerHTML = '<br/>' + catDetails[i].name.escapeHTML();
 			b.style.margin = '8px';
 			b.style.fontSize = '120%';
 			b.onclick = (function( iCategory ) { return function() {setCategory(iCategory);} })( i );
@@ -729,7 +729,7 @@ function RefreshResultsTable() {
 	var tRace = getRaceTime();
 
 	// Update the category information.
-	var leaderLap, leader, tLeader;
+	var leader, leaderLap, tLeader;
 	try {
 		leader = data[categoryCur.pos[0]];
 		leaderLap = Math.min( leader.raceTimes.binSearch(tRace), leader.raceTimes.length-1 );
@@ -738,12 +738,11 @@ function RefreshResultsTable() {
 		tLeader = leader.raceTimes[leaderLap];
 	}
 	catch( err ) {
-		console.log( err );
 		leader = leaderLap = tLeader = null;
 	}
 			
 	var v = categoryCur.name;
-	var lapsToGo = null;
+	var lapsToGo;
 	try {
 		lapsToGo = leader.raceTimes.length - 1 - (leaderLap || 0);
 	}
