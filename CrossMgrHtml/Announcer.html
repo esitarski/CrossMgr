@@ -624,8 +624,10 @@ function setCategory( i ) {
 	if( !catDetails || catDetails.length == 0 || i >= catDetails.length )
 		i = 1;
 	iCategoryCur = i;
-	for( var j = 0; j < categoryButtons.length; ++j )
+	for( var j = 0; j < categoryButtons.length; ++j ) {
 		categoryButtons[j].style.borderWidth = ((j == i-1 ) ? 4 : 1) + 'px';
+		categoryButtons[j].style.border = (j == i-1) ? 'dotted orange' : 'black';
+	}
 }
 
 var categoryButtons = [];
@@ -831,14 +833,14 @@ function RefreshResultsTable() {
 		createTextChild( td = createChild(tr, 'TD'), gap );										// Gap
 		td.style.backgroundColor = bg;
 		
-		createTextChild( td = createChild(tr, 'TD'), '' );									// Group
+		createTextChild( td = createChild(tr, 'TD'), '' );										// Group
 		td.style.backgroundColor = bg;
 		tdGroup.push( td );
 		
 		createTextChild( td = createChild(tr, 'TD'), '' );										// ETA
 		td.style.backgroundColor = bg;
 		td.id = 'eta' + r;
-		if( !(tExpected[num] && tExpected[numPrev] && Math.abs(tExpected[numPrev] - tExpected[num]) < 1.0) )
+		if( !(tExpected[num] && tExpected[numPrev] && Math.abs(tExpected[num] - tExpected[numPrev]) < 1.0) )
 			++iGroup;
 		rowGroup.push( iGroup );
 		groupCount[iGroup] = (groupCount[iGroup] || 0) + 1;
