@@ -754,10 +754,10 @@ function RefreshResultsTable() {
 	if( lapsToGo != null ) {
 		if( lapsToGo <= 0 ) {
 			lapsToGo = 0;
-			v += ' ' + 'Finish';
+			v += ': ' + 'Finish';
 		}
 		else
-			v += ' ' + lapsToGo + ' ' + (lapsToGo == 1 ? 'lap to go' : 'laps to go');
+			v += ': ' + lapsToGo + ' ' + (lapsToGo == 1 ? 'lap to go' : 'laps to go');
 	}
 	if( leader && leader.speed )
 		v += ', ' + leader.speed;
