@@ -544,7 +544,6 @@ function getExpectedRecorded() {
 			t = rr.interp[lap] ? rr.raceTimes[lap] + offset : null;
 		}
 		catch( err ) {
-			console.log( err );
 			t = null;
 		}
 		if( t != null && lap >= lapMin ) {
@@ -625,6 +624,8 @@ function setCategory( i ) {
 	if( !catDetails || catDetails.length == 0 || i >= catDetails.length )
 		i = 1;
 	iCategoryCur = i;
+	for( var j = 0; j < categoryButtons.length; ++j )
+		categoryButtons[j].style.borderWidth = ((j == i-1 ) ? 4 : 1) + 'px';
 }
 
 var categoryButtons = [];
@@ -676,9 +677,11 @@ function RefreshETA() {
 		return;
 	setCategory();
 
-	var tRace = getRaceTime();
-	
 	var categoryCur = catDetails[iCategoryCur];
+	if( !categoryCur )
+		return;
+	
+	var tRace = getRaceTime();
 	for( var r = 0; r < categoryCur.pos.length; ++r ) {
 		var num = categoryCur.pos[r];
 		var rr = data[num];
