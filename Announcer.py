@@ -5,7 +5,7 @@ import re
 from GetResults import GetResults
 from math import modf
 from ForecastHistory import getExpectedRecorded
-from GanttChartPanel import makePastelColours, lighterColour
+from GanttChartPanel import lighterColour
 from bisect import bisect_left, bisect_right
 from collections import defaultdict
 
@@ -39,6 +39,17 @@ def find_ge( a, x ):
 class Announcer( wx.Panel ):
 	cols = (u'Pos', u'Name', u'Team', u'Bib', u'Gap', u'Group', u'ETA' )
 	iCol = {c:i for i, c in enumerate(cols)}
+	groupColours = [lighterColour(wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)),0.4) for c in [
+			'#FF0000',
+			'#FF8000',
+			'#FFFF00',
+			'#FF0080',
+			'#FF00FF',
+			'#8000FF',
+			'#0080FF',
+			'#0000FF'
+		]
+	]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(Announcer, self).__init__(parent, id)
@@ -48,17 +59,6 @@ class Announcer( wx.Panel ):
 		self.isRecorded = []
 		self.expected = []
 		self.recorded = []
-		self.groupColors = [lighterColour(wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)),0.4) for c in [
-				'#FF0000',
-				'#FF8000',
-				'#FFFF00',
-				'#FF0080',
-				'#FF00FF',
-				'#8000FF',
-				'#0080FF',
-				'#0000FF'
-			]
-		]
 		
 		self.title = wx.StaticText( self )
 		
