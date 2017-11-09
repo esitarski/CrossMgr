@@ -647,29 +647,31 @@ function RefreshCategories() {
 		categoryButtons = [];
 		categoryNames = [];
 		categoriesDiv.innerHTML = '';
-		for( var i = 1; i < catDetails.length; ++i ) {
-			var b = document.createElement('BUTTON');
-			b.innerHTML = '<br/>' + catDetails[i].name.escapeHTML();
-			b.style.margin = '8px';
-			b.style.fontSize = '120%';
-			b.onclick = (function( iCategory ) { return function() {setCategory(iCategory); RefreshResultsTable();} })( i );
-			categoryButtons.push( b );
-			categoryNames.push( catDetails[i].name );
-			categoriesDiv.appendChild( b );
+		if( catDetails.length > 2 ) {
+			for( var i = 1; i < catDetails.length; ++i ) {
+				var b = document.createElement('BUTTON');
+				b.innerHTML = catDetails[i].name.escapeHTML();
+				b.style.margin = '8px';
+				b.style.fontSize = '120%';
+				b.onclick = (function( iCategory ) { return function() {setCategory(iCategory); RefreshResultsTable();} })( i );
+				categoryButtons.push( b );
+				categoryNames.push( catDetails[i].name );
+				categoriesDiv.appendChild( b );
+			}
 		}
 	}
 	
 	var tRace = getRaceTime();
 	if( tRace ) {
-		for( var i = 1; i < catDetails.length; ++i ) {
+		for( var i = 0; i < categoryButtons.length; ++i ) {
 			var v = '', colour = null;
-			if( catDetails[i].pos.length > 0 && tExpected[catDetails[i].pos[0]] ) {
-				var eta = tExpected[catDetails[i].pos[0]] - tRace;
+			if( catDetails[i+1].pos.length > 0 && tExpected[catDetails[i+1].pos[0]] ) {
+				var eta = tExpected[catDetails[i+1].pos[0]] - tRace;
 				v = FormatTime( eta );
 				colour = getScaleColour( eta );
 			}
-			categoryButtons[i-1].innerHTML = v + '<br/>' + catDetails[i].name;
-			categoryButtons[i-1].style.background = (colour || unrecordedColour);
+			categoryButtons[i].innerHTML = v + (v!='' ? ' ' : '') + catDetails[i+1].name.escapeHTML();
+			categoryButtons[i].style.background = (colour || unrecordedColour);
 		}
 	}
 }
