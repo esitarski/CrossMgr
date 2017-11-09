@@ -35,7 +35,6 @@ import Model
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
 from Synchronizer import syncfunc
 
-
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
     pass
@@ -60,6 +59,7 @@ icons = {
 	'LapCounterIconSrc':  readBase64('lapcounter.png'), 
 	'ResultsCurrentIconSrc': readBase64('results_current.png'),
 	'ResultsPreviousIconSrc': readBase64('results_previous.png'),
+	'AnnouncerIconSrc': readBase64('announcer.png'),
 }
 
 with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
@@ -93,6 +93,14 @@ with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='u
 	lapCounterTemplate = f.read()
 def getLapCounterHtml():
 	return lapCounterTemplate
+	
+#with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf-8') as f:
+#	announcerHTML = f.read()
+def getAnnouncerHtml():
+	# DEBUG DEBUG DEBUG
+	with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf-8') as f:
+		return f.read()
+#	return announcerHTML
 	
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
@@ -382,6 +390,9 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content_type = 'image/x-icon'
 			elif self.reLapCounterHtml.match( up.path ):
 				content = getLapCounterHtml()
+				content_type = self.html_content
+			elif up.path=='/Announcer.html':
+				content = getAnnouncerHtml()
 				content_type = self.html_content
 			elif up.path=='/qrcode.html':
 				urlPage = GetCrossMgrHomePage()

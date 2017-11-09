@@ -177,6 +177,7 @@ var raceIsUnstarted = null;
 var raceIsFinished = null;
 var data = null;
 var catDetails = null;
+var iCategoryCur = 1;
 var isTimeTrial = null;
 var winAndOut = null;
 var version = null;
@@ -210,8 +211,7 @@ Array.prototype.swap = function( x, y ) {
 }
 
 // Make a string html safe.
-String.prototype.escapeHTML = function ()
-{                                        
+String.prototype.escapeHTML = function () {                                        
 	var r =                                                               
 		this.replace(/&/g,'&amp;').
 			replace(/>/g,'&gt;').
@@ -300,11 +300,6 @@ function FormatTime( t ) {
 		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
 	else
 		tStr += m + (s < 10 ? ':0' : ':') + s;
-	if( showTimeDecimals )
-	{
-		var decimals = ~~((t - ~~t) * 100);
-		tStr += (decimals < 10 ? '.0' : '.') + decimals;
-	}
 	return tStr;
 }
 
@@ -324,11 +319,6 @@ function FormatTimeGap( t )
 		tStr += h + (m < 10 ? 'h0' : 'h') + m + (s < 10 ? "'0" : "'") + s;
 	else
 		tStr += m + (s < 10 ? "'0" : "'") + s;
-	if( showTimeDecimals )
-	{
-		var decimals = ~~((t - ~~t) * 100);
-		tStr += (decimals < 10 ? '.0' : '.') + decimals;
-	}
 	tStr += '"';
 	return tStr;
 }
@@ -350,14 +340,10 @@ function getRiderTeam( num ) {
 }
 
 // ---------------------------------------------------------------------
-var lastRaceTime = 0;
 function SetData( aData, tCur )
 {
 	if( !catDetails )
 		catDetails = [];
-	catDetailsByName = {};
-	for( var i = 0; i < catDetails.length; ++i )
-		catDetailsByName[catDetails[i].name] = catDetails[i];
 	
 	// Data is rider information indexed by number.  Info includes lap times and lastTime times.
 	// lap times should include the start offset.
@@ -366,80 +352,20 @@ function SetData( aData, tCur )
 	data = (aData || null);
 	if( tCur != undefined )
 		t = tCur;
-	
-	// Get some of the unique categories from the data.
-	var hasLapSpeeds = false;
-	var hasMultipleLaps = false;
-	lastRaceTime = 0;
-	for( var num in data )
-	{
-		var info = data[num];
-		info['iLast'] = 1;
-		if( info['raceTimes'] && info['raceTimes'].length > 2 )
-			hasMultipleLaps = true;
-		if( info['lapSpeeds'] )
-			hasLapSpeeds = true;
-		
-		// Adjust the finish time in case it has been modified from the last time with time penalties.
-		if( info['status'] == 'Finisher' && info['raceTimes'].length > 1 )
-			info['finishTime'] = info['raceTimes'].back()
-		else
-			info['finishTime'] = info['lastTime']
-		if( info['finishTime'] )
-			lastRaceTime = Math.max( info['finishTime'], lastRaceTime );
-	}
-	
-	// Create an array of the category names.  Skip "All'.
-	categories = [];
-	for( var i = 1; i < catDetails.length; ++i )
-		categories.push( catDetails[i].name );
-
-	var catHTML = '';
-	if( categories.length > 1 ) {
-	{
-		catHTML = '<div id="buttongroup">';
-		for( var i = 0; i < categories.length; ++i )
-		{
-			var cat = categories[i];
-			catHTML +=
-				'<label class="green">' +
-					'<input ' +
-							'type="radio" ' +
-							'name="categorySelect" ' +
-							'id="idCat' + i + '" ' +
-							'onClick="SelectCategory(\''+i+'\');" ' +
-							(cat == categoryCur ? 'checked="true"': '') +
-							'/>' +
-						'<span>' + cat.escapeHTML() + '</span>' +
-					'</input>' +
-				'</label>';
-		}
-		catHTML += '</div><hr class="invisible"/>';
-	}
-	categoriesDiv.innerHTML = catHTML;
 }
 
 // ---------------------------------------------------------------------
 
-function createChild( parent, tag )
-{
+function createChild( parent, tag ) {
 	var child = document.createElement(tag);
 	parent.appendChild( child );
 	return child;
 }
 
-function createTextChild( parent, s )
-{
+function createTextChild( parent, s ) {
 	var child = document.createTextNode(s);
 	parent.appendChild( child );
 	return child;
-}
-
-// ---------------------------------------------------------------------
-
-function getStartOffset( num ) {
-	var d = data[num];
-	return d.raceTimes && d.raceTimes.length > 0 ? d.raceTimes[0] : 0;
 }
 
 //----------------------------------------------------------------------
@@ -459,8 +385,6 @@ function applyRAM( dest, ram ) {
 
 function PostMessageRefresh() {
 	SetData( data, undefined );
-	SetRaceTime();
-	setCategory( categoryCur );			
 	RefreshResultsTable();
 }
 
@@ -592,6 +516,10 @@ function ResetWebSocket() {
 			RetryResetWebSocket();
 		};
 		
+		websocket.onopen = function(e) {
+			websocket.send( JSON.stringify({'cmd':'send_baseline', 'raceName':'CurrentResults'}) );
+		}
+		
 		websocket.onclose = function(e) {
 			console.log('WebSocket: Closed.  Scheduling reconnect in 5 seconds...');
 			RetryResetWebSocket();
@@ -611,35 +539,35 @@ function getExpectedRecorded() {
 	tExpected = {};
 	bibRecorded = {};
 	
-	if( !data || !categoryCur )
+	if( !data )
 		return;
 	
 	var tCur = getRaceTime();
 	if( !tCur )
 		return;
 	
-	var categoryAll = catDetails[0];
-	
-	if isTimeTrial {
+	if( isTimeTrial ) {
 		var interpValue = isTimeTrial;
-		for( var r = 0; r < categoryAll.pos.length; ++r ) {
-			var num = categoryAll.pos[rr];
+		for( num in data ) {
 			var rr = data[num];
-			if( isTimeTrial ? rr.status == 'NP' : (rr.status == 'Finisher' && (!rr.lapTimes || rr.lapTimes.length == 0)) ) {
+			if( rr && (isTimeTrial && rr.status == 'NP') || (rr.status == 'Finisher' && rr.lapTimes && rr.lapTimes.length == 0) ) {
 				if( r.firstTime != null ) {
 					var e = {'num':rider.num, 'lap':0, 't':rider.firstTime, 'interp':interpValue};
-					if( r.firstTime >= tCur && e.interp )
+					if( r.firstTime >= tCur && e.interp ) {
 						expected.push( e );
-					else:
+						tExpected[num] = t;
+					}
+					else {
 						recorded.push( e );
+						bibRecorded[num] = e;
+					}
 				}
 			}
 		}
 	}
 	
 	var lapMin = 1;
-	for( var r = 0; r < categoryAll.pos.length; ++r ) {
-		var num = categoryAll.pos[rr];
+	for( num in data ) {
 		var rr = data[num];
 		if( !rr || rr.status != 'Finisher' || !rr.raceTimes || rr.raceTimes.length < 2 )
 			continue;
@@ -655,32 +583,34 @@ function getExpectedRecorded() {
 				lap -= 1;
 			t = rr.interp[lap] ? rr.raceTimes[lap] + offset : null;
 		}
-		catch {
+		catch( err ) {
+			console.log( err );
 			t = null;
 		}
-		if( t != null && lap >= lapMin )
+		if( t != null && lap >= lapMin ) {
 			expected.push( {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]} );
+			tExpected[num] = t;
+		}
 		
 		// Get the last recorded lap.
-		try: {
+		try {
 			lap = i - 1;
 			while( lap > 0 && rr.interp[lap] )
 				--lap;
 			t = (lap == 0 || !rr.interp[lap]) ? rr.raceTimes[lap] + offset : null;
 		}
-		catch {
+		catch( err ) {
 			t = null;
 		}
-		if( t != null && lap >= lapMin )
-			recorded.push( {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]} );
+		if( t != null && lap >= lapMin ) {
+			var e = {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]};
+			recorded.push( e );
+			bibRecorded[num] = e;
+		}
 	}
 	
 	expected.sort( function(x, y) { return x.t - y.t; } );
 	recorded.sort( function(x, y) { return x.t - y.t; } );
-	for( var i = 0; i < expected.length; ++i )
-		tExpected[expected[i].num] = expected[i].t;
-	for( var i = 0; i < recorded.length; ++i )
-		bibRecorded[recorded[i].num] = recorded[i];
 }
 
 var cols = ['Pos', 'Name', 'Team', 'Bib', 'Gap', 'Group', 'ETA'];
@@ -691,7 +621,7 @@ for( var i in cols.length )
 var groupColours = makePastelColours();
 for( var i = 0; i < groupColours.length; ++i )
 	groupColours[i] = lighterColour( groupColours[i] );
-groupColours = groupColours.slice( 3 );
+groupColours = groupColours.slice( 5 );
 
 var alertETA = 15;
 var greenScale = [];
@@ -703,7 +633,7 @@ var greenScale = [];
 })();
 
 var recordedColour = RGB2Color(255, 255, 255);
-var unrecordedColour = RGB2Color(200, 200, 200);
+var unrecordedColour = RGB2Color(220, 220, 220);
 var recordedChar = "\u2192";
 var isRecorded = [];
 
@@ -716,6 +646,13 @@ function getScaleColour( eta ) {
 		return greenScale[0];
 	eta += alertETA;
 	return greenScale[Math.min(alertETA-1, -eta)];
+}
+
+function setCategory( i ) {
+	if( i >= catDetails.length )
+		i = 1;
+	iCategoryCur = i;
+	RefreshResultsTable();
 }
 
 var categoryButtons = [];
@@ -738,6 +675,8 @@ function updateCategories() {
 		for( var i = 1; i < catDetails.length; ++i ) {
 			var b = document.createElement('BUTTON');
 			b.innerHTML = '<br/>' + catDetails[i].name;
+			b.style.margin = '8px';
+			b.onclick = (function( iCategory ) { return function() {setCategory(iCategory);} })( i );
 			categoryButtons.push( b );
 			categoryNames.push( catDetails[i].name );
 			categoriesDiv.appendChild( b );
@@ -762,24 +701,24 @@ function updateCategories() {
 function RefreshETA() {
 	var tRace = getRaceTime();
 	
-	var resultsBody = document.getElementsByClassName('resultsBody');
-	if( resultsBody.length == 0 )
-		return;
-	var tbody = resultsBody[0];
-	
-	for( var r = 0, tr = tbody.firstChild; r < categoryCur.pos.length && tr != null; ++r, tr = tr.nextSibling ) {
+	var categoryCur = catDetails[iCategoryCur];
+	for( var r = 0; r < categoryCur.pos.length; ++r ) {
 		var num = categoryCur.pos[r];
 		var rr = data[num];
-		var td = tr.childNodes[iCol['ETA']];
 		var v = '', colour = null;
 		if( tExpected[num] ) {
 			var eta = tExpected[num] - tRace;
 			v = FormatTime( eta );
 			colour = getScaleColour( eta );
 		}
+		var td = document.getElementById( 'eta' + r );
+		if( !td )
+			break;
 		td.innerHTML = v;
-		td.style.backgroundColor = color ? color : (isRecorded[r] ? recordedColour : unrecordedColour);
+		td.style.backgroundColor = colour ? colour : (isRecorded[r] ? recordedColour : unrecordedColour);
 	}
+	
+	updateCategories();
 }
 
 function strToMillis( s ) {
@@ -799,9 +738,11 @@ function RefreshResultsTable()
 	titleDiv.innerHTML = '';
 	isRecorded = [];
 	
-	if( !data || !categoryCur )
+	if( !data )
 		return;
-		
+	
+	var categoryCur = catDetails[iCategoryCur];
+	
 	// Show results for this category.
 	getExpectedRecorded();
 	
@@ -816,26 +757,26 @@ function RefreshResultsTable()
 			--leaderLap;
 		tLeader = leader.raceTimes[leaderLap];
 	}
-	catch {
+	catch( err ) {
 		leader = leaderLap = tLeader = null;
 	}
 			
 	var v = categoryCur.name;
 	var lapsToGo = null;
 	try {
-		lapsToGo = leader.raceTimes.length - 1 - (leaderLap or 0);
+		lapsToGo = leader.raceTimes.length - 1 - (leaderLap || 0);
 	}
-	catch {
+	catch( err ) {
 		lapsToGo = null;
 	}
 	if( lapsToGo != null ) {
-		if lapsToGo == 0:
+		if( lapsToGo == 0 )
 			v += ' ' + 'Finish';
-		else:
+		else
 			v += ' ' + lapsToGo + ' ' + 'laps to go';
 	}
 	if( leader && leader.speed )
-		v += ' ' + leader.speed;
+		v += ', ' + leader.speed;
 		
 	titleDiv.innerHTML = v;
 	
@@ -845,54 +786,95 @@ function RefreshResultsTable()
 	var thead = createChild( table, 'THEAD' );
 	var tr = createChild( thead, 'TR' );
 	var td;
-	for( var i = 0; i < cols.length; ++i )
+	for( var i = 0; i < cols.length; ++i ) {
 		createTextChild( td = createChild(tr, 'TH'), cols[i] );
+		if( cols[i] == 'Name' || cols[i] == 'Team' )
+			td.style.textAlign = "left";
+	}
 	
 	var tbody = createChild( table, 'TBODY' );
-	tbody.className = 'resultsBody';
 	
+	var iGroup = -1;
+	var rowGroup = [], groupCount = {};
+	var tdGroup = [];
+	var numPrev = null;
 	for( var r = 0; r < categoryCur.pos.length; ++r ) {
 		var num = categoryCur.pos[r];
 		var rr = data[num];
 		if( rr.status != 'Finisher' )
-			continue;
+			break;
 		tr = createChild( tbody, 'TR' );
 		
 		var pos, bg;
-		var e = bibRecorded[rr.num];
-		if( !isRunning || (leaderLap == 1 || (e && tLeader != null && e.t >= tLeader)) ) {
+		var e = bibRecorded[num];
+		if( !raceIsRunning || (leaderLap == 1 || (e && tLeader != null && e.t >= tLeader)) ) {
 			pos = r + 1;
 			isRecorded.push( true );
 			bg = recordedColour;
 		}
 		else {
 			pos = (r+1) + recordedChar;
-			isRecorded.append( false );
+			isRecorded.push( false );
 			bg = unrecordedColour;
 		}
 			
-		createTextChild( td = createChild(tr, 'TD'), pos );											// Pos
+		createTextChild( td = createChild(tr, 'TD'), pos );										// Pos
 		td.style.backgroundColor = bg;
-		createTextChild( td = createChild(tr, 'TD'), getRiderName(rr.num) );						// Name
+		
+		createTextChild( td = createChild(tr, 'TD'), getRiderName(num) );						// Name
 		td.style.backgroundColor = bg;
-		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(rr.num) );						// Team
+		td.style.textAlign = "left";
+		
+		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(num) );						// Team
 		td.style.backgroundColor = bg;
-		createTextChild( td = createChild(tr, 'TD'), rr.num );										// Bib
+		td.style.textAlign = "left";
+		
+		createTextChild( td = createChild(tr, 'TD'), num );										// Bib
 		td.style.backgroundColor = bg;
+		
 		var gapValue = categoryCur.gapValue[r];
 		if( r == 0 )
 			gap = '';
 		else if ( gapValue > 0 )
-			gap = FormatGap( gapValue );
+			gap = FormatTimeGap( gapValue );
 		else
 			gap = gapValue + '';
-		createTextChild( td = createChild(tr, 'TD'), gap );											// Gap
+		createTextChild( td = createChild(tr, 'TD'), gap );										// Gap
 		td.style.backgroundColor = bg;
-		createTextChild( td = createChild(tr, 'TD'), rr.gap );										// Group
+		
+		createTextChild( td = createChild(tr, 'TD'), '' );									// Group
 		td.style.backgroundColor = bg;
-		createTextChild( td = createChild(tr, 'TD'), '' );											// ETA
-		td.style.backgroundColor = bg;		
+		tdGroup.push( td );
+		
+		createTextChild( td = createChild(tr, 'TD'), '' );										// ETA
+		td.style.backgroundColor = bg;
+		td.id = 'eta' + r;
+		if( !(tExpected[num] && tExpected[numPrev] && Math.abs(tExpected[numPrev] - tExpected[num]) < 1.0) )
+			++iGroup;
+		rowGroup.push( iGroup );
+		groupCount[iGroup] = (groupCount[iGroup] || 0) + 1;
+
+		numPrev = num;
 	}
+	
+	var iGroupColour = 0;
+	var r = 0;
+	while( r < rowGroup.length ) {
+		if( groupCount[rowGroup[r]] > 1 ) {
+			tdGroup[r].innerHTML = (iGroupColour + 1) + ' [' + groupCount[rowGroup[r]] + ']';
+
+			var iGroupCur = rowGroup[r];
+			var colour = groupColours[iGroupColour % groupColours.length];
+			while( rowGroup[r] == iGroupCur && r < rowGroup.length ) {
+				tdGroup[r].style.background = colour;
+				++r;
+			}
+			++iGroupColour;
+		}
+		else
+			++r;
+	}
+	
 	
 	resultsDiv.appendChild( table );
 	RefreshETA();
@@ -907,17 +889,15 @@ function RGB2Color(r,g,b) {
 	return '#' + byte2Hex(r) + byte2Hex(g) + byte2Hex(b);
 }
 
-function makeColorGradient(frequency1, frequency2, frequency3,
+function makeColourGradient(frequency1, frequency2, frequency3,
                              phase1, phase2, phase3,
-                             center, width, len)
-{
+                             center, width, len) {
 	if (len == undefined)      len = 50;
 	if (center == undefined)   center = 128;
 	if (width == undefined)    width = 127;
 
 	var grad = [];
-	for (var i = 0; i <= len; ++i)
-	{
+	for (var i = 0; i <= len; ++i) {
 		var red = Math.sin(frequency1*i + phase1) * width + center;
 		var grn = Math.sin(frequency2*i + phase2) * width + center;
 		var blu = Math.sin(frequency3*i + phase3) * width + center;
@@ -926,10 +906,9 @@ function makeColorGradient(frequency1, frequency2, frequency3,
 	return grad.slice(1);  // Skip the first pink colour.
 }
 
-function lighterColor( k ) {
+function lighterColour( k ) {
 	var s = '#';
-	for( var i = 0; i < 3; ++i )
-	{
+	for( var i = 0; i < 3; ++i ) {
 		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
 		c += (255 - c) * 0.6;
 		c = ~~c;
@@ -943,41 +922,13 @@ function makePastelColours( len ) {
 	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len+1);
 }
 
-function GetLapLE( raceTimes, t ) {
-	var lap = raceTimes.binSearch( t );
-	if( lap >= raceTimes.length )
-		lap = raceTimes.length - 1;
-	return raceTimes[lap] > t ? lap-1 : lap;
-}
-
 // ---------------------------------------------------------------------
-function SelectCategory( i )
-{
-	categoryCur = categories[i];
-	var catButton = document.getElementById('idCat' + i);
-	if( catButton )
-		catButton.checked = true;
-	RefreshResultsTable();
-}
-
-function setCategory( catName )
-{
-	var catNameDecode = decode_utf8( decodeURIComponent(catName) );
-	for( var i = 0; i < categories.length; ++i ) {
-		if( catName == categories[i] || catNameDecode == categories[i] ) {
-			SelectCategory( i );
-			return;
-		}
-	}
-	SelectCategory( 0 );
-}
-		
-function onLoad()
-{
+function onLoad() {
 	categoriesDiv = document.getElementById('idCategoriesDiv');
 	titleDiv = document.getElementById('idTitleDiv');
 	resultsDiv = document.getElementById('idResultsDiv');
 	ResetWebSocket();
+	setInterval( RefreshETA, 1000 );
 }
 
 </script>
@@ -985,6 +936,7 @@ function onLoad()
 </head>
 <body onload="onLoad()">
 <div id="idCategoriesDiv"></div>
+<p></p>
 <div id="idTitleDiv"></div>
 <div id="idResultsDiv"></div>
 </body>

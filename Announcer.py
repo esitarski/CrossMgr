@@ -17,7 +17,7 @@ darkerYellow = wx.Colour( 240,240,140 )
 orange = wx.Colour( 255, 165, 0 )
 
 recordedColour = wx.WHITE
-unrecordedColour = wx.Colour(200, 200, 200)
+unrecordedColour = wx.Colour(220, 220, 220)
 recordedChar = u"\u2192"
 
 reGender = re.compile( r'\(([^)]+)\)$' )
@@ -46,8 +46,6 @@ class Announcer( wx.Panel ):
 		self.iCategory = 0
 		self.tExpected = []
 		self.isRecorded = []
-		self.group = []
-		self.groupCount = defaultdict( int )
 		self.expected = []
 		self.recorded = []
 		self.groupColours = [lighterColour(c) for c in makePastelColours()]
@@ -230,8 +228,8 @@ class Announcer( wx.Panel ):
 		
 		self.tExpected = []
 		iGroup = -1
-		self.groupCount.clear()
-		del self.group[:]
+		groupCount = defaultdict( int )
+		group = []
 		for row, rr in enumerate(results):
 			self.grid.SetCellValue( row, self.iCol[u'Pos'], u'{}'.format(rr.pos) )
 			self.grid.SetCellValue( row, self.iCol[u'Bib'], u'{}'.format(rr.num) )
@@ -254,8 +252,8 @@ class Announcer( wx.Panel ):
 						pass
 			
 			self.tExpected.append( e.t if e else None )
-			self.group.append( iGroup+1 )
-			self.groupCount[iGroup+1] += 1
+			group.append( iGroup+1 )
+			groupCount[iGroup+1] += 1
 			self.grid.SetCellValue( row, self.iCol[u'ETA'], Utils.formatTime(eta) if e else u'' )
 			
 			e = bibRecorded.get( rr.num, None )
@@ -277,9 +275,9 @@ class Announcer( wx.Panel ):
 		gColIndex = 0
 		groupColour = None
 		iCol = self.iCol[u'Group']
-		for row, g in enumerate(self.group):
+		for row, g in enumerate(group):
 			self.grid.SetCellValue( row, iCol, u'' )
-			if self.groupCount[g] == 1:
+			if groupCount[g] == 1:
 				continue
 			if g == gLast:
 				self.grid.SetCellBackgroundColour( row, iCol, groupColour )
@@ -289,7 +287,7 @@ class Announcer( wx.Panel ):
 			groupColour = self.groupColours[gColIndex%len(self.groupColours)]
 			gColIndex += 1
 			gCur += 1
-			self.grid.SetCellValue( row, iCol, u'{} [{}]'.format(gCur, self.groupCount[g],) )
+			self.grid.SetCellValue( row, iCol, u'{} [{}]'.format(gCur, groupCount[g],) )
 			self.grid.SetCellBackgroundColour( row, iCol, groupColour )
 		
 		self.refreshETA()

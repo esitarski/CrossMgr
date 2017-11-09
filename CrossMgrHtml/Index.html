@@ -71,6 +71,8 @@ li ol,
 li ul {margin-top:6px;}
 ol ol li:last-child {margin-bottom:0;}
 
+a { white-space: nowrap; }
+
 .small-font {
 	font-size: 85%;
 }
@@ -103,6 +105,7 @@ function onLoad() {
 {% end %}
 	setIcons( "{{ResultsCurrentIconSrc}}", 'results_current' );
 	setIcons( "{{ResultsPreviousIconSrc}}", 'results_previous' );
+	setIcons( "{{AnnouncerIconSrc}}", 'announcer' );
 }
 </script>
 </head>
@@ -110,10 +113,11 @@ function onLoad() {
 <body onload="onLoad()">
 <img id="idImgHeader" alt="CrossMgr Logo" onclick="location.reload(true)" style="cursor: pointer;" src="{{logoSrc}}">
 {% if share %}
-	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./CurrentResults.html"><img class="results_current" title="Current Race Results">&nbsp;Current Race Results</a>
-	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./PreviousResults.html"><img class="results_previous" title="Previous Race Results">&nbsp;Previous Race Results</a>
-	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./qrcode.html"><img class="qrcode">&nbsp;Share</a>
-	&nbsp;&nbsp;&nbsp;&nbsp;<a href="./LapCounter.html"><img class="lapcounter" title="Lap Counter">&nbsp;Lap Counter</a>
+	&nbsp;&nbsp;&nbsp;<a href="./CurrentResults.html"><img class="results_current" title="Current Race Results">&nbsp;Current Race Results</a>
+	&nbsp;&nbsp;&nbsp;<a href="./PreviousResults.html"><img class="results_previous" title="Previous Race Results">&nbsp;Previous Race Results</a>
+	&nbsp;&nbsp;&nbsp;<a href="./qrcode.html"><img class="qrcode">&nbsp;Share</a>
+	&nbsp;&nbsp;&nbsp;<a href="./LapCounter.html"><img class="lapcounter" title="Lap Counter">&nbsp;Lap Counter</a>
+	&nbsp;&nbsp;&nbsp;<a href="./Announcer.html"><img class="announcer" title="Announcer">&nbsp;Announcer</a>
 {% end %}
 <h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
@@ -124,7 +128,7 @@ function onLoad() {
 	<li {% if g.raceIsRunning %} class=highlight {% end %} >
 		<a href="{{g.url}}" class=racename title="Results">{{g.name}}</a>
 		{% if g.raceScheduledStart %}<span style="white-space: nowrap;">{{g.raceScheduledStart.strftime('%H:%M %a %b %d, %Y')}}</span>{% end %}
-		<script>console.log( 'raceIsRunning=' + g.raceIsRunning + ', isTimeTrial=' + g.isTimeTrial, ' share=' + share );</script>
+		<script>console.log( 'raceIsRunning={{g.raceIsRunning}}, isTimeTrial={{g.isTimeTrial}}, share={{share}}' );</script>
 		{% if share %}
 			{% if g.isTimeTrial %}
 				&nbsp;&nbsp;<a href="{{g.urlTTStartList}}"><img class="startlist" title="Start List">Start List</a>
