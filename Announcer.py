@@ -125,7 +125,7 @@ class Announcer( wx.Panel ):
 			return categories
 			
 		for b, c in zip(self.categoryButtons, categories):
-			b.SetLabel( u'0:00\n' + c.fullname )
+			b.SetLabel( u'\n' + c.fullname )
 		for b in self.categoryButtons[len(categories):]:
 			b.Show( False )
 			
@@ -186,23 +186,24 @@ class Announcer( wx.Panel ):
 			self.grid.ClearGrid()
 			return
 		
-		self.iCategory = min( self.iCategory, len(categories)-1 )
 		
+		self.iCategory = min( self.iCategory, len(categories)-1 )
 		category = categories[self.iCategory]
 		results = GetResults( category )
 		
 		Finisher = Model.Rider.Finisher
 		try:
-			leaderLap = find_le( results[0].raceTimes, tRace )
-			if results[0].interp[leaderLap]:
+			leader = results[0]
+			leaderLap = find_le( leader.raceTimes, tRace )
+			if leader.interp[leaderLap]:
 				leaderLap -= 1
-			tLeader = results[0].raceTimes[leaderLap]
+			tLeader = leader.raceTimes[leaderLap]
 		except:
-			leaderLap = tLeader = None
+			leader = leaderLap = tLeader = None
 			
 		v = category.fullname
 		try:
-			lapsToGo = len(results[0].raceTimes) - 1 - (leaderLap or 0)
+			lapsToGo = len(leader.raceTimes) - 1 - (leaderLap or 0)
 		except Exception as e:
 			lapsToGo = None
 		if lapsToGo is not None:
@@ -210,6 +211,8 @@ class Announcer( wx.Panel ):
 				v += u': {}'.format( _('Finish') )
 			else:
 				v += u': {} {}'.format( lapsToGo, _('laps to go') )
+		if leader and hasattr(leader, 'speed'):
+			v += u' {}'.format( leader.speed )
 		
 		self.title.SetLabel( v )
 		

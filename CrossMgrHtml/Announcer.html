@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html>
+<!--
+	Html Template for Race Animation.
+	Generated from CrossMgr software.
+	Copyright 2011-2015, Edward Sitarski
+	For details, see sites.google.com/site/CrossMgrSoftware
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="author" content="Edward Sitarski">
+<meta name="copyright" content="Edward Sitarski, 2011-2017">
+<meta name="generator" content="CrossMgr">  
+<meta name="keywords" content="CrossMgr, Cycling, Race, Results">
+<!-- Meta -->
+<title id="idTitle">CrossMgr Announcer by Edward Sitarski</title>
+<style type="text/css">
+body { font-family: sans-serif; }
+
+#idRaceName {
+	font-size: 200%;
+	font-weight: bold;
+}
+
+#idImgHeader {
+	box-shadow: 4px 4px 4px #888888;
+}
+
+#detailTitle {
+	font-size: 110%;
+	font-weight: bold;
+}
+
+input[type=range]::-ms-tooltip {
+	display: none;
+}
+
+.smallfont	{ font-size: 75%; }
+.bigfont	{ font-size: 120%; }
+.biggerFont	{ font-size: 130%; }
+
+.hidden { display: none; }
+
+div label input {
+   margin-right:220px;
+}
+
+#buttongroup {
+	margin:4px;   
+	float:left;
+}
+
+#buttongroup label {
+	float:left;
+	margin:4px;
+	background-color:#EFEFEF;
+	border-radius:4px;
+	border:1px solid #D0D0D0;
+	overflow:auto;
+	cursor: pointer;
+}
+
+#buttongroup label span {
+	text-align:center;
+	padding:8px 8px;
+	display:block;
+}
+
+#buttongroup label input {
+	position:absolute;
+	top:-20px;
+}
+
+#buttongroup input:checked + span {
+	background-color:#404040;
+	color:#F7F7F7;
+}
+
+#buttongroup .green {
+	background-color:#7FE57F;
+	color:#333;
+}
+
+table.results {
+	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+	border-collapse:collapse;
+}
+table.results td, table.results th {
+	font-size:1em;
+	padding:3px 7px 2px 7px;
+	text-align: right;
+}
+table.results th {
+	font-size:1.1em;
+	text-align:right;
+	padding-top:5px;
+	padding-bottom:4px;
+	background-color:#7FE57F;
+	color:#000000;
+}
+table.results tr.odd {
+	color:#000000;
+	background-color:#EAF2D3;
+}
+table.results tr:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+table.results tr.odd:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+
+table.results tr td.fastest {
+	background-image: linear-gradient(
+		/* #FF6620, #FFAA20 25%, #FF6620 */
+		#00EE00, #00FF00 25%, #00EE00
+	);
+}
+table.results tr td.fastest-lap {
+	background-image: linear-gradient(
+		/* #FF6A7F, #FF9EAF 25%, #FF6A7F */
+		#FF8840, #FFCC40 25%, #FF8840
+	);
+}
+table.results tr td.slowest-lap {
+	background-image: linear-gradient(
+			#4496F7, #9CC7FB 25%, #4496F7
+	);
+}
+
+table.results tr td.highlight {
+	font-size: 120%;
+	font-weight: bold;
+}
+
+table.results td {
+	border-top:1px solid #98BF21;
+}
+
+table.results td.noborder {
+	border-top:0px solid #98BF21;
+}
+
+table.results td#idNonNumeric, table.results th#idNonNumeric {
+	text-align:left;
+}
+
+table.results tr td.same-value {
+	text-align:center;
+}
+
+.flag {
+    border: 1px solid #CCC;
+}
+
+hr { clear: both; }
+hr.invisible { clear: both; visibility: hidden; }
+
+@media print { .noprint { display: none; } }
+
+</style>
+<!-- Google Analytics -->
+
+<script type="text/javascript">
+
+// Results and race data.
+/* !!! payload begin !!! */
+var payload = null;
+/* !!! payload end !!! */
+var raceName = null;
+var organizer = null;
+var timestamp = null;
+var raceIsRunning = null;
+var raceWasRunning = null;
+var raceIsUnstarted = null;
+var raceIsFinished = null;
+var data = null;
+var catDetails = null;
+var isTimeTrial = null;
+var winAndOut = null;
+var version = null;
+var flags = null;
+
+var checkeredFlag = new Image();
+checkeredFlag.src =
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAgCAYAAAD5VeO1AAAEsklEQVRIibWVX0jTaxjHH//029lcVqvM0taNGUHNinGOnkGohJWtQ4KaFEVySlSSUixzTFwZxYnROv2ByisLgwqCIRRhF4EcKsjgeBrDgUqYDhvLJtoyt33OTZPCKLX83L0Xz+f78uV5eUVmiM/na/b7/TUznfsuL1++PM4nbt682V5VVbXkp4jLy8uP6/V6Hj58yPPnz1mwYAEGg2Hs6NGjuT8kttvtxuXLl4dFhNWrV3PhwgXi4uIQEaxW65jP58uflbijo2Phhw8f/m1tbSUpKYlnz54BcP/+fUpLSwmFQkQikbDX6z1ps9lipy222Wyxbre7LdpzU1MTPT09AHg8HrZs2YLb7QagsbGRnJyc/rq6Ov205Lt3725ftWoVT5484erVq4gIS5cuxel0YjQaERF0Oh3Xr1+frGnjxo3B3t5ewzfFTU1NtfPmzUNEKCgowGKxEBMTQ3x8PE6nk4aGBmJjYzGZTLx//57z58+jUqm4ceMGoVAo8ObNm+Kvint7ew0TExOBy5cvk5GRgc/nA+DWrVs4HI5oS7S0tEzWAnDt2jX8fj8Aw8PDrVPEJ06cSHv9+nUPwOjoKBUVFQwMDADgdDoxmUy8evWKjx8/snXrVtavX4/L5eLx48eo1WrS09Pp6OhwtbW1ab4QX7x4UTGZTENr166lq6uL/fv3IyLo9Xru3r2LTqdDRFixYgV2ux0RQUTIysqisrISESE1NTVcU1Pz+5RbHzt27EF04NSpU+zduxcRISUlBY/HQ1VVFSLCkSNHCIVCNDY2snjxYrq6uohEIpw9ezZ8+PDhyilir9d7IBQKcfr0afbs2UMkEgHAbrfz6NGjyV6vXLnCyMjI5PnMmTOMjo4SiUTwer1TxQ0NDcXv3r0bA+ju7ubgwYMEAgEA6urqyMvLY2hoiP7+flauXElmZiZ9fX2cO3cOEWHDhg08ffq0ZYq4trbWoNfrJ4xGIy9evMBgMCAiGAwGmpubiYmJQUTIyMigoqJisueysjJ27tyJiJCZmemvrq7+ZYr8D7O5Mz4+HkVRuHfv3uRATk4Ob9++Zd++fcTFxXHnzh2CwSBlZWVs2rSJkZERJiYmsFqtfovFsm6KWETEYDBo8rdt++fSpUtBgHA4jM1mY3Bw8Iuew+FwdH+pr69nfHycUCg05vF4fv2q+HN27dp1cnBwcGB8fJzs7GwKCwsZHh6mvb0dRVEwm834fD4KCgoQETZv3ozL5TrwXXGU34zG/Jrqam+018LCQnJzcyd7djgcmEwmRISioqKOaYuj6HS6VLPZ3JeSkkJ3dzeBQIDi4mIOHToEQDAYpL6+/j+bzRY/Y7mIyPbt25U/S0tvj42NDQN0dnZisVgIh8MEg0GX2+3WzUr8OTt27Kjt7OwcSEtLQ0QoKSkZd7vdX9+M2bBmzZrsvLw8v6IolJeXW3+aOEpycvISU1bWg/nz56f/dPknYrUajUWjUpnnKkC0anWhWlGOFxUVTf8zngmLtNp1apXKISIL5yZg0aLEBLXasTAh4duf8Y+QoFbXqBWlZM4CEjWafK1GYxWR2b3a7wYkJqapVaq/tVpt0pwELFu2TJOgVv8lIskiIv8DQ4HqhmfkzxMAAAAASUVORK5CYII=";
+
+// Convenience function to get the last element in an array.
+Array.prototype.back = function() {
+	return this[this.length-1];
+};
+
+Array.prototype.binSearch = function( v ) {
+	var L = this.length, i = -1, m;
+	while( L - i > 1 )
+	{
+		if( this[m = ((L + i)>>1)] < v )
+			i = m;
+		else
+			L = m;
+	}
+	return L;
+}
+
+Array.prototype.swap = function( x, y ) {
+	var tmp = this[x];
+	this[x] = this[y];
+	this[y] = tmp;
+}
+
+// Make a string html safe.
+String.prototype.escapeHTML = function ()
+{                                        
+	var r =                                                               
+		this.replace(/&/g,'&amp;').
+			replace(/>/g,'&gt;').
+			replace(/</g,'&lt;').
+			replace(/"/g,'&quot;').
+			replace(/'/g,'&rsquo;');
+	return r;
+};
+
+// Make a string id safe.
+String.prototype.escapeID = function() {
+	return this.replace(/[&<>"'(){}\[\]!@#$%^* ]/g,'_');
+};
+
+// Encode/decode utf8
+function encode_utf8( s ) {
+  return unescape( encodeURIComponent(s) );
+}
+
+function decode_utf8( s ) {
+  return decodeURIComponent( escape(s) );
+}
+
+function isEmptyObject( obj ) {
+    for ( var name in obj ) {
+        return false;
+    }
+    return true;
+}
+
+// Set the name of the hidden property and the change event for visibility
+var hidden, visibilityChange; 
+if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support 
+  hidden = "hidden";
+  visibilityChange = "visibilitychange";
+} else if (typeof document.mozHidden !== "undefined") {
+  hidden = "mozHidden";
+  visibilityChange = "mozvisibilitychange";
+} else if (typeof document.msHidden !== "undefined") {
+  hidden = "msHidden";
+  visibilityChange = "msvisibilitychange";
+} else if (typeof document.webkitHidden !== "undefined") {
+  hidden = "webkitHidden";
+  visibilityChange = "webkitvisibilitychange";
+}
+
+var flagImages = null;
+function GetFlagImage( uci ) {
+	if( !flagImages ) {
+		if( !flags )
+			return null;
+		flagImages = {};
+		for( var cc in flags ) {
+			img = new Image();
+			img.src = flags[cc];
+			img.className = 'flag';
+			flagImages[cc] = img;
+		}
+	}
+	return flagImages[uci.substring(0, 3)];
+}
+ 
+function ordinal( value ) {
+	value = parseInt( value );
+	
+	if( langCur == 1 ) return value == 1 ? (value+'er') : (value+'e');
+	if( langCur == 2 ) return value + '.&#xb0;';
+	
+	if( Math.floor((value % 100)/10) != 1 )
+		return value + ['th','st','nd','rd','th','th','th','th','th','th'][value%10];
+	return value + "th";
+}
+
+function FormatTime( t ) {
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = (~~(secs / 60) % 60);
+	var s = ~~(secs % 60);
+	if( h > 0 )
+		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
+	else
+		tStr += m + (s < 10 ? ':0' : ':') + s;
+	if( showTimeDecimals )
+	{
+		var decimals = ~~((t - ~~t) * 100);
+		tStr += (decimals < 10 ? '.0' : '.') + decimals;
+	}
+	return tStr;
+}
+
+function FormatTimeGap( t )
+{
+	var tStr = '';
+	if( t < 0 )
+	{
+		tStr = '-';
+		t = -t;
+	}
+	var secs = ~~t;
+	var h = ~~(secs / (60*60));
+	var m = (~~(secs / 60) % 60);
+	var s = ~~(secs % 60);
+	if( h > 0 )
+		tStr += h + (m < 10 ? 'h0' : 'h') + m + (s < 10 ? "'0" : "'") + s;
+	else
+		tStr += m + (s < 10 ? "'0" : "'") + s;
+	if( showTimeDecimals )
+	{
+		var decimals = ~~((t - ~~t) * 100);
+		tStr += (decimals < 10 ? '.0' : '.') + decimals;
+	}
+	tStr += '"';
+	return tStr;
+}
+
+function getRiderName( num ) {
+	var d = data[num + ''];
+	if( !d )
+		return '';
+	var s = (d['FirstName'] || '') + ' ' + (d['LastName'] || '');
+	return s.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+function getRiderTeam( num ) {
+	var team = '';
+	var d = data[num];
+	if( d && d['Team'] )
+		team = d['Team'];
+	return team;
+}
+
+// ---------------------------------------------------------------------
+var lastRaceTime = 0;
+function SetData( aData, tCur )
+{
+	if( !catDetails )
+		catDetails = [];
+	catDetailsByName = {};
+	for( var i = 0; i < catDetails.length; ++i )
+		catDetailsByName[catDetails[i].name] = catDetails[i];
+	
+	// Data is rider information indexed by number.  Info includes lap times and lastTime times.
+	// lap times should include the start offset.
+	// Example:
+	//    data = { 101: { raceTimes: [xx, yy, zz], lastTime: None, category: 'All' }, 102 { raceTimes: [aa, bb], lastTime: cc, category: 'Cat'} }
+	data = (aData || null);
+	if( tCur != undefined )
+		t = tCur;
+	
+	// Get some of the unique categories from the data.
+	var hasLapSpeeds = false;
+	var hasMultipleLaps = false;
+	lastRaceTime = 0;
+	for( var num in data )
+	{
+		var info = data[num];
+		info['iLast'] = 1;
+		if( info['raceTimes'] && info['raceTimes'].length > 2 )
+			hasMultipleLaps = true;
+		if( info['lapSpeeds'] )
+			hasLapSpeeds = true;
+		
+		// Adjust the finish time in case it has been modified from the last time with time penalties.
+		if( info['status'] == 'Finisher' && info['raceTimes'].length > 1 )
+			info['finishTime'] = info['raceTimes'].back()
+		else
+			info['finishTime'] = info['lastTime']
+		if( info['finishTime'] )
+			lastRaceTime = Math.max( info['finishTime'], lastRaceTime );
+	}
+	
+	// Create an array of the category names.  Skip "All'.
+	categories = [];
+	for( var i = 1; i < catDetails.length; ++i )
+		categories.push( catDetails[i].name );
+
+	var catHTML = '';
+	if( categories.length > 1 ) {
+	{
+		catHTML = '<div id="buttongroup">';
+		for( var i = 0; i < categories.length; ++i )
+		{
+			var cat = categories[i];
+			catHTML +=
+				'<label class="green">' +
+					'<input ' +
+							'type="radio" ' +
+							'name="categorySelect" ' +
+							'id="idCat' + i + '" ' +
+							'onClick="SelectCategory(\''+i+'\');" ' +
+							(cat == categoryCur ? 'checked="true"': '') +
+							'/>' +
+						'<span>' + cat.escapeHTML() + '</span>' +
+					'</input>' +
+				'</label>';
+		}
+		catHTML += '</div><hr class="invisible"/>';
+	}
+	categoriesDiv.innerHTML = catHTML;
+}
+
+// ---------------------------------------------------------------------
+
+function createChild( parent, tag )
+{
+	var child = document.createElement(tag);
+	parent.appendChild( child );
+	return child;
+}
+
+function createTextChild( parent, s )
+{
+	var child = document.createTextNode(s);
+	parent.appendChild( child );
+	return child;
+}
+
+// ---------------------------------------------------------------------
+
+function getStartOffset( num ) {
+	var d = data[num];
+	return d.raceTimes && d.raceTimes.length > 0 ? d.raceTimes[0] : 0;
+}
+
+//----------------------------------------------------------------------
+
+function applyRAM( dest, ram ) {
+	var src, i, k;
+	src = ram.a;
+	for( k in src )
+		dest[k] = src[k];
+	src = ram.m;
+	for( k in src )
+		dest[k] = src[k];
+	src = ram.r;
+	for( i = src.length-1; i >= 0; --i )
+		delete dest[src[i]];
+}
+
+function PostMessageRefresh() {
+	SetData( data, undefined );
+	SetRaceTime();
+	setCategory( categoryCur );			
+	RefreshResultsTable();
+}
+
+function SyncMsgPayload( msg ) {
+	for( f in msg.reference )
+		window[f] = msg.reference[f];
+	tNow = strToMillis( tNow );
+	raceStartTime = strToMillis( raceStartTime );
+	if( raceStartTime != null )
+		raceStartTime -= (new Date).getTime() - tNow;
+}
+
+function getRaceTime() {
+	return raceStartTime ? ((new Date).getTime() - raceStartTime) / 1000.0 : null;
+}
+
+function isCurrentResults() {
+	return true;
+}
+
+var versionCount = 0;
+function ProcessRAM( msg ) {
+	if( !isCurrentResults() ) {
+		if( raceName && msg.reference.raceName != raceName )
+			return true;
+	}
+	if( msg.cmd != 'ram' || msg.reference.versionCount != versionCount + 1 )
+		return false;
+		
+	if( !data )
+		data = {};
+	applyRAM( data, msg.infoRAM );
+	
+	var c, k, f;
+	var catDetailsCur = {};
+	if( catDetails )
+		for( c = 0; c < catDetails.length; ++c )
+			catDetailsCur[catDetails[c].name] = catDetails[c];
+	
+	applyRAM( catDetailsCur, msg.categoryRAM );
+	
+	catDetails = [];
+	for( k in catDetailsCur )
+		catDetails.push( catDetailsCur[k] );
+	catDetails.sort( function(a, b) {return a.iSort - b.iSort;} );
+
+	SyncMsgPayload( msg );
+	return true;
+}
+var baselinePending = false;
+function ProcessBaseline( msg ) {
+	if( !isCurrentResults() ) {
+		if( msg.reference.raceName != raceName )
+			return true;
+	}
+	if( msg.cmd != 'baseline' )
+		return false;
+	
+	data = msg.info;
+	
+	var c, k, f;
+	catDetails = [];
+	for( k in msg.categoryDetails )
+		catDetails.push( msg.categoryDetails[k] );
+	catDetails.sort( function(a, b) {return a.iSort - b.iSort;} );
+	
+	SyncMsgPayload( msg );
+	
+	baselinePending = false;	
+	return true;
+}
+var websocket = null;
+var timeoutID = null;
+function RetryResetWebSocket() {
+	if( timeoutID === null )
+		timeoutID = setTimeout( ResetWebSocket, 5000 );
+}
+function ResetWebSocket() {
+	if( window.location.port != '8765' )	// Set up a websocket only if we are connected to CrossMgr.
+		return;
+		
+	if( timeoutID !== null ) {
+		clearTimeout( timeoutID );
+		timeoutID = null;
+	}
+
+	if ("WebSocket" in window) {
+		if( websocket && websocket.readyState != websocket.CLOSED ) {
+			websocket.close();
+			websocket = null;
+		}
+
+		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 1) + '/';
+		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 1) + '/';
+		console.log( 'wsurl="' + wsurl + '"' );
+		websocket = new window.WebSocket( wsurl );
+
+		websocket.onmessage = function( evt ) {
+			var isCurResults = isCurrentResults();
+			var localRaceName = isCurResults ? 'CurrentResults' : raceName;
+			var msg = JSON.parse( evt.data );
+			if( !msg.reference ) {
+				console.log( evt.data );
+				return;
+			}
+			if( msg.reference.raceName == raceName || isCurResults ) {
+				if( msg.cmd == 'ram' ) {
+					if( ProcessRAM(msg) )
+						PostMessageRefresh();
+					else {
+						if( !baselinePending ) {
+							websocket.send( JSON.stringify({'cmd':'send_baseline', 'raceName':localRaceName}) );
+							baselinePending = true;
+						}
+					}
+				}
+				else if( msg.cmd == 'baseline' ) {
+					if( ProcessBaseline(msg) )
+						PostMessageRefresh();
+				}
+			}
+			else if( msg.cmd == 'reload_previous' && isPreviousResults() ) {
+				RefreshPayload();
+			}
+		};
+		
+		websocket.onerror = function(e) {
+			console.log('WebSocket: Error.  Scheduling reconnect in 5 seconds...');
+			RetryResetWebSocket();
+		};
+		
+		websocket.onclose = function(e) {
+			console.log('WebSocket: Closed.  Scheduling reconnect in 5 seconds...');
+			RetryResetWebSocket();
+		};
+	}
+}
+function CloseWebSocket() {
+	if( websocket )
+		websocket.close();
+	websocket = null;
+}
+
+var expected = [], recorded = [], tExpected = {}, bibRecorded = {}, isRecorded = [];
+function getExpectedRecorded() {
+	expected = [];
+	recorded = [];
+	tExpected = {};
+	bibRecorded = {};
+	
+	if( !data || !categoryCur )
+		return;
+	
+	var tCur = getRaceTime();
+	if( !tCur )
+		return;
+	
+	var categoryAll = catDetails[0];
+	
+	if isTimeTrial {
+		var interpValue = isTimeTrial;
+		for( var r = 0; r < categoryAll.pos.length; ++r ) {
+			var num = categoryAll.pos[rr];
+			var rr = data[num];
+			if( isTimeTrial ? rr.status == 'NP' : (rr.status == 'Finisher' && (!rr.lapTimes || rr.lapTimes.length == 0)) ) {
+				if( r.firstTime != null ) {
+					var e = {'num':rider.num, 'lap':0, 't':rider.firstTime, 'interp':interpValue};
+					if( r.firstTime >= tCur && e.interp )
+						expected.push( e );
+					else:
+						recorded.push( e );
+				}
+			}
+		}
+	}
+	
+	var lapMin = 1;
+	for( var r = 0; r < categoryAll.pos.length; ++r ) {
+		var num = categoryAll.pos[rr];
+		var rr = data[num];
+		if( !rr || rr.status != 'Finisher' || !rr.raceTimes || rr.raceTimes.length < 2 )
+			continue;
+		var offset = isTimeTrial ? (rr.startTime||0.0) : 0.0;
+		
+		var i = rr.raceTimes.binSearch( tCur - offset );
+		
+		// Get the next expected lap.  Consider that the rider could have been missed from the last lap.
+		var lap, t;
+		try {
+			lap = i;
+			if( lap > 1 && rr.interp[lap-1] )
+				lap -= 1;
+			t = rr.interp[lap] ? rr.raceTimes[lap] + offset : null;
+		}
+		catch {
+			t = null;
+		}
+		if( t != null && lap >= lapMin )
+			expected.push( {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]} );
+		
+		// Get the last recorded lap.
+		try: {
+			lap = i - 1;
+			while( lap > 0 && rr.interp[lap] )
+				--lap;
+			t = (lap == 0 || !rr.interp[lap]) ? rr.raceTimes[lap] + offset : null;
+		}
+		catch {
+			t = null;
+		}
+		if( t != null && lap >= lapMin )
+			recorded.push( {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]} );
+	}
+	
+	expected.sort( function(x, y) { return x.t - y.t; } );
+	recorded.sort( function(x, y) { return x.t - y.t; } );
+	for( var i = 0; i < expected.length; ++i )
+		tExpected[expected[i].num] = expected[i].t;
+	for( var i = 0; i < recorded.length; ++i )
+		bibRecorded[recorded[i].num] = recorded[i];
+}
+
+var cols = ['Pos', 'Name', 'Team', 'Bib', 'Gap', 'Group', 'ETA'];
+var iCol = {};
+for( var i in cols.length )
+	iCol[cols[i]] = i;
+
+var groupColours = makePastelColours();
+for( var i = 0; i < groupColours.length; ++i )
+	groupColours[i] = lighterColour( groupColours[i] );
+groupColours = groupColours.slice( 3 );
+
+var alertETA = 15;
+var greenScale = [];
+(function () {
+	var greenDelta = 80;
+	var greenTick = greenDelta / alertETA;
+	for( var i = 0; i < alertETA; ++i )
+		greenScale.push( RGB2Color(0, Math.floor(255-i*greenTick), 0) );
+})();
+
+var recordedColour = RGB2Color(255, 255, 255);
+var unrecordedColour = RGB2Color(200, 200, 200);
+var recordedChar = "\u2192";
+var isRecorded = [];
+
+function getScaleColour( eta ) {
+	if( eta >= alertETA )
+		return null;
+	if( eta >= 0 )
+		return greenScale[Math.floor(eta)];
+	if( -alertETA <= eta)
+		return greenScale[0];
+	eta += alertETA;
+	return greenScale[Math.min(alertETA-1, -eta)];
+}
+
+var categoryButtons = [];
+var categoryNames = [];
+function updateCategories() {
+	var rebuildButtons = ( catDetails.length-1 != categoryNames.length );
+	if( !rebuildButtons ) {
+		for( var i = 0; i < categoryNames.length; ++i ) {
+			if( categoryNames[i] != catDetails[i+1].name ) {
+				rebuildButtons = true;
+				break;
+			}
+		}
+	}
+	
+	if( rebuildButtons ) {
+		categoryButtons = [];
+		categoryNames = [];
+		categoriesDiv.innerHTML = '';
+		for( var i = 1; i < catDetails.length; ++i ) {
+			var b = document.createElement('BUTTON');
+			b.innerHTML = '<br/>' + catDetails[i].name;
+			categoryButtons.push( b );
+			categoryNames.push( catDetails[i].name );
+			categoriesDiv.appendChild( b );
+		}
+	}
+	
+	var tRace = getRaceTime();
+	if( tRace ) {
+		for( var i = 1; i < catDetails.length; ++i ) {
+			var v = '', colour = null;
+			if( catDetails[i].pos.length > 0 && tExpected[catDetails[i].pos[0]] ) {
+				var eta = tExpected[catDetails[i].pos[0]] - tRace;
+				v = FormatTime( eta );
+				colour = getScaleColour( eta );
+			}
+			categoryButtons[i-1].innerHTML = v + '<br/>' + catDetails[i].name;
+			categoryButtons[i-1].style.background = (colour || 'initial');
+		}
+	}
+}
+
+function RefreshETA() {
+	var tRace = getRaceTime();
+	
+	var resultsBody = document.getElementsByClassName('resultsBody');
+	if( resultsBody.length == 0 )
+		return;
+	var tbody = resultsBody[0];
+	
+	for( var r = 0, tr = tbody.firstChild; r < categoryCur.pos.length && tr != null; ++r, tr = tr.nextSibling ) {
+		var num = categoryCur.pos[r];
+		var rr = data[num];
+		var td = tr.childNodes[iCol['ETA']];
+		var v = '', colour = null;
+		if( tExpected[num] ) {
+			var eta = tExpected[num] - tRace;
+			v = FormatTime( eta );
+			colour = getScaleColour( eta );
+		}
+		td.innerHTML = v;
+		td.style.backgroundColor = color ? color : (isRecorded[r] ? recordedColour : unrecordedColour);
+	}
+}
+
+function strToMillis( s ) {
+	if( s == null )
+		return null;
+	s = s.replace(/[^0-9]/g,' ');
+	var v = s.split(' ');
+	return (new Date(
+		parseInt(v[0],10), parseInt(v[1],10)-1, parseInt(v[2],10),
+		parseInt(v[3],10), parseInt(v[4],10), parseInt(v[5],10), parseInt(v[6],10)
+	)).getTime();
+}
+
+function RefreshResultsTable()
+{
+	resultsDiv.innerHTML = '';
+	titleDiv.innerHTML = '';
+	isRecorded = [];
+	
+	if( !data || !categoryCur )
+		return;
+		
+	// Show results for this category.
+	getExpectedRecorded();
+	
+	var tRace = getRaceTime();
+
+	// Update the category information.
+	var leaderLap, leader, tLeader;
+	try {
+		leader = data[categoryCur.pos[0]];
+		leaderLap = leader.raceTimes.binSearch( tRace );
+		if( leader.interp[leaderLap] )
+			--leaderLap;
+		tLeader = leader.raceTimes[leaderLap];
+	}
+	catch {
+		leader = leaderLap = tLeader = null;
+	}
+			
+	var v = categoryCur.name;
+	var lapsToGo = null;
+	try {
+		lapsToGo = leader.raceTimes.length - 1 - (leaderLap or 0);
+	}
+	catch {
+		lapsToGo = null;
+	}
+	if( lapsToGo != null ) {
+		if lapsToGo == 0:
+			v += ' ' + 'Finish';
+		else:
+			v += ' ' + lapsToGo + ' ' + 'laps to go';
+	}
+	if( leader && leader.speed )
+		v += ' ' + leader.speed;
+		
+	titleDiv.innerHTML = v;
+	
+	// Update the results information.	
+	var table = document.createElement('TABLE');
+	table.className = 'results';
+	var thead = createChild( table, 'THEAD' );
+	var tr = createChild( thead, 'TR' );
+	var td;
+	for( var i = 0; i < cols.length; ++i )
+		createTextChild( td = createChild(tr, 'TH'), cols[i] );
+	
+	var tbody = createChild( table, 'TBODY' );
+	tbody.className = 'resultsBody';
+	
+	for( var r = 0; r < categoryCur.pos.length; ++r ) {
+		var num = categoryCur.pos[r];
+		var rr = data[num];
+		if( rr.status != 'Finisher' )
+			continue;
+		tr = createChild( tbody, 'TR' );
+		
+		var pos, bg;
+		var e = bibRecorded[rr.num];
+		if( !isRunning || (leaderLap == 1 || (e && tLeader != null && e.t >= tLeader)) ) {
+			pos = r + 1;
+			isRecorded.push( true );
+			bg = recordedColour;
+		}
+		else {
+			pos = (r+1) + recordedChar;
+			isRecorded.append( false );
+			bg = unrecordedColour;
+		}
+			
+		createTextChild( td = createChild(tr, 'TD'), pos );											// Pos
+		td.style.backgroundColor = bg;
+		createTextChild( td = createChild(tr, 'TD'), getRiderName(rr.num) );						// Name
+		td.style.backgroundColor = bg;
+		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(rr.num) );						// Team
+		td.style.backgroundColor = bg;
+		createTextChild( td = createChild(tr, 'TD'), rr.num );										// Bib
+		td.style.backgroundColor = bg;
+		var gapValue = categoryCur.gapValue[r];
+		if( r == 0 )
+			gap = '';
+		else if ( gapValue > 0 )
+			gap = FormatGap( gapValue );
+		else
+			gap = gapValue + '';
+		createTextChild( td = createChild(tr, 'TD'), gap );											// Gap
+		td.style.backgroundColor = bg;
+		createTextChild( td = createChild(tr, 'TD'), rr.gap );										// Group
+		td.style.backgroundColor = bg;
+		createTextChild( td = createChild(tr, 'TD'), '' );											// ETA
+		td.style.backgroundColor = bg;		
+	}
+	
+	resultsDiv.appendChild( table );
+	RefreshETA();
+}
+
+function byte2Hex(n) {
+	var nybHexString = "0123456789ABCDEF";
+	return String(nybHexString.substr((n >> 4) & 0x0F,1)) + nybHexString.substr(n & 0x0F,1);
+}
+
+function RGB2Color(r,g,b) {
+	return '#' + byte2Hex(r) + byte2Hex(g) + byte2Hex(b);
+}
+
+function makeColorGradient(frequency1, frequency2, frequency3,
+                             phase1, phase2, phase3,
+                             center, width, len)
+{
+	if (len == undefined)      len = 50;
+	if (center == undefined)   center = 128;
+	if (width == undefined)    width = 127;
+
+	var grad = [];
+	for (var i = 0; i <= len; ++i)
+	{
+		var red = Math.sin(frequency1*i + phase1) * width + center;
+		var grn = Math.sin(frequency2*i + phase2) * width + center;
+		var blu = Math.sin(frequency3*i + phase3) * width + center;
+		grad.push( RGB2Color(red,grn,blu) );
+	}
+	return grad.slice(1);  // Skip the first pink colour.
+}
+
+function lighterColor( k ) {
+	var s = '#';
+	for( var i = 0; i < 3; ++i )
+	{
+		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
+		c += (255 - c) * 0.6;
+		c = ~~c;
+		s += (c < 16 ? '0' : '') + c.toString(16);
+	}
+	return s;
+}
+
+function makePastelColours( len ) {
+	if( len == undefined )	len = 50;
+	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len+1);
+}
+
+function GetLapLE( raceTimes, t ) {
+	var lap = raceTimes.binSearch( t );
+	if( lap >= raceTimes.length )
+		lap = raceTimes.length - 1;
+	return raceTimes[lap] > t ? lap-1 : lap;
+}
+
+// ---------------------------------------------------------------------
+function SelectCategory( i )
+{
+	categoryCur = categories[i];
+	var catButton = document.getElementById('idCat' + i);
+	if( catButton )
+		catButton.checked = true;
+	RefreshResultsTable();
+}
+
+function setCategory( catName )
+{
+	var catNameDecode = decode_utf8( decodeURIComponent(catName) );
+	for( var i = 0; i < categories.length; ++i ) {
+		if( catName == categories[i] || catNameDecode == categories[i] ) {
+			SelectCategory( i );
+			return;
+		}
+	}
+	SelectCategory( 0 );
+}
+		
+function onLoad()
+{
+	categoriesDiv = document.getElementById('idCategoriesDiv');
+	titleDiv = document.getElementById('idTitleDiv');
+	resultsDiv = document.getElementById('idResultsDiv');
+	ResetWebSocket();
+}
+
+</script>
+
+</head>
+<body onload="onLoad()">
+<div id="idCategoriesDiv"></div>
+<div id="idTitleDiv"></div>
+<div id="idResultsDiv"></div>
+</body>
+</html>

@@ -941,6 +941,8 @@ def getReferenceInfo():
 		'raceIsUnstarted': race.isUnstarted(),
 		'raceIsFinished': race.isFinished(),
 		'timestamp': [tNow.ctime(), tLastRaceTime],
+		'tNow': tNow.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+		'raceStartTime': race.startTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] if race.startTime else None,
 		'raceTimeZone': race.timezone,
 	}
 
@@ -967,7 +969,8 @@ def GetResultsRAM():
 			resultsBaseline['categoryDetails'] == categoryDetails and
 			resultsBaseline['reference'].get('raceIsRunning',None) == race.isRunning() and
 			resultsBaseline['reference'].get('raceIsUnstarted',None) == race.isUnstarted() and
-			resultsBaseline['reference'].get('raceName',None) == raceName
+			resultsBaseline['reference'].get('raceName',None) == raceName and
+			resultsBaseline['reference'].get('raceStartTime',None) == race.startTime
 		):
 		return None
 
