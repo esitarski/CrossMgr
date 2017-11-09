@@ -48,8 +48,17 @@ class Announcer( wx.Panel ):
 		self.isRecorded = []
 		self.expected = []
 		self.recorded = []
-		self.groupColours = [lighterColour(c) for c in makePastelColours()]
-		self.groupColours = self.groupColours[5:]
+		self.groupColors = [lighterColour(wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)),0.4) for c in [
+				'#FF0000',
+				'#FF8000',
+				'#FFFF00',
+				'#FF0080',
+				'#FF00FF',
+				'#8000FF',
+				'#0080FF',
+				'#0000FF'
+			]
+		]
 		
 		self.title = wx.StaticText( self )
 		

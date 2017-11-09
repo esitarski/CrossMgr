@@ -19,9 +19,9 @@ def makeColourGradient(frequency1, frequency2, frequency3,
 def makePastelColours( len = 50 ):
 	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len+1)
 
-def lighterColour( c ):
+def lighterColour( c, factor = 0.6 ):
 	rgb = c.Get( False )
-	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
+	return wx.Colour( *[int(v + (255 - v) * factor) for v in rgb] )
 
 def numFromLabel( s ):
 	try:
