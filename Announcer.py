@@ -271,13 +271,10 @@ class Announcer( wx.Panel ):
 			else:
 				self.grid.SetCellValue( row, self.iCol[u'Pos'], u'{}{}'.format(self.grid.GetCellValue(row, self.iCol[u'Pos']), recordedChar) )
 				self.isRecorded.append( False )
-				
-			if self.isRecorded[-1]:
-				for c in xrange(len(self.cols)):
-					self.grid.SetCellBackgroundColour( row, c, recordedColour )
-			else:
-				for c in xrange(len(self.cols)):
-					self.grid.SetCellBackgroundColour( row, c, unrecordedColour )
+			
+			rowColour = recordedColour if self.isRecorded[-1] else unrecordedColour
+			for c in xrange(len(self.cols)):
+				self.grid.SetCellBackgroundColour( row, c, rowColour )
 		
 		gCur = 0
 		gLast = None
