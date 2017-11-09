@@ -924,7 +924,7 @@ def GetAnimationData( category=None, getExternalData=False ):
 	return animationData
 
 def GetRaceName():
-	return Model.race.getFileName()[:-4]
+	return Model.race.getFileName()[:-4] if Model.race else None
 
 versionCountStart = 10000
 versionCount = versionCountStart
@@ -932,18 +932,18 @@ resultsBaseline = { 'cmd': 'baseline', 'categoryDetails':{}, 'info':{}, 'referen
 def getReferenceInfo():
 	global versionCount
 	race = Model.race
-	tLastRaceTime = race.lastRaceTime()
+	tLastRaceTime = race.lastRaceTime() if race else 0.0;
 	tNow = datetime.now()	
 	return {
 		'versionCount': versionCount,
 		'raceName': GetRaceName(),
-		'raceIsRunning': race.isRunning(),
-		'raceIsUnstarted': race.isUnstarted(),
-		'raceIsFinished': race.isFinished(),
+		'raceIsRunning': race.isRunning() if race else False,
+		'raceIsUnstarted': race.isUnstarted() if race else False,
+		'raceIsFinished': race.isFinished() if race else False,
 		'timestamp': [tNow.ctime(), tLastRaceTime],
 		'tNow': tNow.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
-		'raceStartTime': race.startTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] if race.startTime else None,
-		'raceTimeZone': race.timezone,
+		'raceStartTime': race.startTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] if race and race.startTime else None,
+		'raceTimeZone': race.timezone if race else '',
 	}
 
 def ResetVersionRAM():

@@ -41,46 +41,6 @@ input[type=range]::-ms-tooltip {
 
 .hidden { display: none; }
 
-div label input {
-   margin-right:220px;
-}
-
-#buttongroup {
-	margin:4px;   
-	float:left;
-}
-
-#buttongroup label {
-	float:left;
-	margin:4px;
-	background-color:#EFEFEF;
-	border-radius:4px;
-	border:1px solid #D0D0D0;
-	overflow:auto;
-	cursor: pointer;
-}
-
-#buttongroup label span {
-	text-align:center;
-	padding:8px 8px;
-	display:block;
-}
-
-#buttongroup label input {
-	position:absolute;
-	top:-20px;
-}
-
-#buttongroup input:checked + span {
-	background-color:#404040;
-	color:#F7F7F7;
-}
-
-#buttongroup .green {
-	background-color:#7FE57F;
-	color:#333;
-}
-
 table.results {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse:collapse;
@@ -618,7 +578,6 @@ var iCol = {};
 for( var i in cols.length )
 	iCol[cols[i]] = i;
 
-/* var groupColours = makePastelColours(); */
 var groupColours = [
 	'#FF0000',
 	'#FF8000',
@@ -631,7 +590,6 @@ var groupColours = [
 ];
 for( var i = 0; i < groupColours.length; ++i )
 	groupColours[i] = lighterColour( groupColours[i], 0.4 );
-/* groupColours = groupColours.slice( 5 ); */
 
 var alertETA = 15;
 var greenScale = [];
@@ -714,6 +672,9 @@ function RefreshCategories() {
 }
 
 function RefreshETA() {
+	if( !catDetails || iCategoryCur === null )
+		return;
+
 	var tRace = getRaceTime();
 	
 	var categoryCur = catDetails[iCategoryCur];
@@ -747,14 +708,18 @@ function strToMillis( s ) {
 	)).getTime();
 }
 
-function RefreshResultsTable()
-{
+function RefreshResultsTable() {
+
 	resultsDiv.innerHTML = '';
 	titleDiv.innerHTML = '';
 	isRecorded = [];
-	
-	if( !data )
+
+	if( !data || !catDetails ) {
+		var tNow = new Date();
+		var tStr = tNow.getHours() + ':' + ('0'+tNow.getMinutes()).slice(-2) + ':' + ('0'+tNow.getSeconds()).slice(-2);
+		resultsDiv.innerHTML = '<p style="font-size=500%;">' + tStr + '</p>';
 		return;
+	}
 	
 	var categoryCur = catDetails[iCategoryCur];
 	
@@ -767,12 +732,13 @@ function RefreshResultsTable()
 	var leaderLap, leader, tLeader;
 	try {
 		leader = data[categoryCur.pos[0]];
-		leaderLap = leader.raceTimes.binSearch( tRace );
+		leaderLap = Math.min( leader.raceTimes.binSearch(tRace), leader.raceTimes.length-1 );
 		if( leader.interp[leaderLap] )
 			--leaderLap;
 		tLeader = leader.raceTimes[leaderLap];
 	}
 	catch( err ) {
+		console.log( err );
 		leader = leaderLap = tLeader = null;
 	}
 			
@@ -785,10 +751,12 @@ function RefreshResultsTable()
 		lapsToGo = null;
 	}
 	if( lapsToGo != null ) {
-		if( lapsToGo <= 0 )
+		if( lapsToGo <= 0 ) {
+			lapsToGo = 0;
 			v += ' ' + 'Finish';
+		}
 		else
-			v += ' ' + lapsToGo + ' ' + 'laps to go';
+			v += ' ' + lapsToGo + ' ' + (lapsToGo == 1 ? 'lap to go' : 'laps to go');
 	}
 	if( leader && leader.speed )
 		v += ', ' + leader.speed;
@@ -904,23 +872,6 @@ function RGB2Color(r,g,b) {
 	return '#' + byte2Hex(r) + byte2Hex(g) + byte2Hex(b);
 }
 
-function makeColourGradient(frequency1, frequency2, frequency3,
-                             phase1, phase2, phase3,
-                             center, width, len) {
-	if (len == undefined)      len = 50;
-	if (center == undefined)   center = 128;
-	if (width == undefined)    width = 127;
-
-	var grad = [];
-	for (var i = 0; i <= len; ++i) {
-		var red = Math.sin(frequency1*i + phase1) * width + center;
-		var grn = Math.sin(frequency2*i + phase2) * width + center;
-		var blu = Math.sin(frequency3*i + phase3) * width + center;
-		grad.push( RGB2Color(red,grn,blu) );
-	}
-	return grad.slice(1);  // Skip the first pink colour.
-}
-
 function lighterColour( k, factor ) {
 	if( !factor )
 		factor = 0.6;
@@ -932,11 +883,6 @@ function lighterColour( k, factor ) {
 		s += (c < 16 ? '0' : '') + c.toString(16);
 	}
 	return s;
-}
-
-function makePastelColours( len ) {
-	if( len == undefined )	len = 50;
-	return makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,len+1);
 }
 
 // ---------------------------------------------------------------------
@@ -954,7 +900,7 @@ function onLoad() {
 <body onload="onLoad()">
 <div id="idCategoriesDiv"></div>
 <p></p>
-<div id="idTitleDiv"></div>
+<div id="idTitleDiv" style="font-size: 150%;"></div>
 <div id="idResultsDiv"></div>
 </body>
 </html>
