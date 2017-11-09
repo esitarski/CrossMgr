@@ -143,9 +143,7 @@ function LapCounter( aCanvas ) {
 	}
 
 	this.onRefresh = function( msg ) {
-		this.tRaceStart = strToMillis(msg.raceStartTime);
-		if( this.tRaceStart != null )
-			this.tRaceStart -= (new Date).getTime() - strToMillis(msg.tNow);
+		this.tRaceStart = (new Date).getTime() - msg.curRaceTime * 1000.0;
 		this.foregrounds = msg.foregrounds;
 		this.backgrounds = msg.backgrounds;
 		this.lapElapsedClock = msg.lapElapsedClock;

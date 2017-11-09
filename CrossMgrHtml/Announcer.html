@@ -135,6 +135,8 @@ var raceIsRunning = null;
 var raceWasRunning = null;
 var raceIsUnstarted = null;
 var raceIsFinished = null;
+var raceStartTime = null;
+var curRaceTime = null;
 var data = null;
 var catDetails = null;
 var iCategoryCur = 1;
@@ -352,9 +354,7 @@ function SyncMsgPayload( msg ) {
 	for( f in msg.reference )
 		window[f] = msg.reference[f];
 	tNow = strToMillis( tNow );
-	raceStartTime = strToMillis( raceStartTime );
-	if( raceStartTime != null )
-		raceStartTime -= (new Date).getTime() - tNow;
+	raceStartTime = (new Date).getTime() - curRaceTime*1000;
 }
 
 function getRaceTime() {
@@ -621,10 +621,10 @@ function getScaleColour( eta ) {
 }
 
 function setCategory( i ) {
-	if( i >= catDetails.length )
+	i = i || iCategoryCur;
+	if( !catDetails || catDetails.length == 0 || i >= catDetails.length )
 		i = 1;
 	iCategoryCur = i;
-	RefreshResultsTable();
 }
 
 var categoryButtons = [];
@@ -649,7 +649,7 @@ function RefreshCategories() {
 			b.innerHTML = '<br/>' + catDetails[i].name.escapeHTML();
 			b.style.margin = '8px';
 			b.style.fontSize = '120%';
-			b.onclick = (function( iCategory ) { return function() {setCategory(iCategory);} })( i );
+			b.onclick = (function( iCategory ) { return function() {setCategory(iCategory); RefreshResultsTable();} })( i );
 			categoryButtons.push( b );
 			categoryNames.push( catDetails[i].name );
 			categoriesDiv.appendChild( b );
@@ -674,6 +674,7 @@ function RefreshCategories() {
 function RefreshETA() {
 	if( !catDetails || iCategoryCur === null )
 		return;
+	setCategory();
 
 	var tRace = getRaceTime();
 	
@@ -709,6 +710,7 @@ function strToMillis( s ) {
 }
 
 function RefreshResultsTable() {
+	setCategory();
 
 	resultsDiv.innerHTML = '';
 	titleDiv.innerHTML = '';
@@ -761,6 +763,8 @@ function RefreshResultsTable() {
 		v += ', ' + leader.speed;
 		
 	titleDiv.innerHTML = v;
+	if( lapsToGo == 0 )
+		titleDiv.appendChild( checkeredFlag );
 	
 	// Update the results information.	
 	var table = document.createElement('TABLE');

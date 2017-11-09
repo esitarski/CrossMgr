@@ -610,6 +610,7 @@ def WsLapCounterQueueListener( q ):
 			if wsLapCounterServer and wsLapCounterServer.hasClients():
 				race = Model.race
 				message['tNow'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+				message['curRaceTime'] = race.curRaceTime() if race and race.startTime else 0.0
 				wsLapCounterServer.send_message_to_all( json.dumps(message) )
 		elif cmd == 'exit':
 			keepGoing = False

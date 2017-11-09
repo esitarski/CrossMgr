@@ -942,8 +942,8 @@ def getReferenceInfo():
 		'raceIsFinished': race.isFinished() if race else False,
 		'timestamp': [tNow.ctime(), tLastRaceTime],
 		'tNow': tNow.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
-		'raceStartTime': race.startTime.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] if race and race.startTime else None,
 		'raceTimeZone': race.timezone if race else '',
+		'curRaceTime': race.curRaceTime() if race and race.isRunning() else 0.0,
 	}
 
 def ResetVersionRAM():
