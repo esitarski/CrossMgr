@@ -30,6 +30,7 @@
 [Properties]:		Properties.html
 [Facebook]:			Facebook.html
 [Para-Cycling]:		Para-Cycling.html
+[Announcer]:		Announcer.html
 [Primes]:			Primes.html
 [Histogram]:		Histogram.html
 [FAQ]:				FAQ.html
