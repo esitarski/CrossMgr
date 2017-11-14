@@ -1064,6 +1064,7 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.refresh )
 		
 	def menuAddBibNumber( self, event ):
+		race = Model.race
 		while 1:
 			newNum = self.getValidNum( _('Bib Number to Add'), False )
 			if newNum is None:
@@ -1081,7 +1082,6 @@ class MainWin( wx.Frame ):
 		if num is None:
 			return
 			
-		race = Model.race
 		if Utils.MessageOKCancel( self,
 				u'{} {}:  {}: {}\n\n{}\n\n{}?'.format(
 					_('Bib'), num,

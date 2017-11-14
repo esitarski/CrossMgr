@@ -2,22 +2,20 @@
 <head>
 <script>
 
-var tCos60 = [], tSin60 = [];
+function posToAngle( pos ) {
+	return pos*2.0*Math.PI-Math.PI/2.0;
+}
+
+var tCos60 = new Array(60), tSin60 = new Array(60);
 for( var i = 0; i < 60; ++i ) {
-	tCos60.push( Math.cos((i/60.0)*2.0*Math.PI-Math.PI/2.0) );
-	tSin60.push( Math.sin((i/60.0)*2.0*Math.PI-Math.PI/2.0) );
+	var a = posToAngle( i/60.0 );
+	tCos60[i] = Math.cos(a);
+	tSin60[i] = Math.sin(a);
 }
 
-function GetCosSin( pos ) {
-	var a = pos*2.0*Math.PI-Math.PI/2.0
-	return [Math.cos(a), Math.sin(a)];
-}
-
-function SetPen( ctx, attrs ) {
-	ctx.strokeStyle = (attrs.color || '#000000');
-	ctx.lineCap = (attrs.cap || 'round');
-	ctx.lineJoin = (attrs.join || 'round');
-	ctx.lineWidth = (attrs.width || 1);
+function circle( ctx, x, y, r ) {
+	ctx.beginPath();
+	ctx.arc( x, y, r, 0, 2*Math.PI );
 }
 
 function Clock( canvas ) {
@@ -47,6 +45,9 @@ function Clock( canvas ) {
 	};
 		
 	this.Draw = function() {
+		if( document.hidden )
+			return;
+		
 		var t = this.tCur || new Date();
 		var width = this.canvas.width;
 		var height = this.canvas.height-1;
@@ -58,9 +59,7 @@ function Clock( canvas ) {
 		
 		var backcolor = '#FFFFFF';
 		ctx.fillStyle = backcolor;
-		ctx.beginPath();
-		ctx.rect( 0, 0, width, height );
-		ctx.fill();
+		ctx.clearRect( 0, 0, this.canvas.width, this.canvas.height );
 		
 		var rOutside = radius * 0.98;
 		var rOutTicks = rOutside;
@@ -80,34 +79,17 @@ function Clock( canvas ) {
 		var wMinuteHand = wHourTicks;
 		var wSecondHand = wMinuteHand / 2.0;
 		
-		penSecond = {width:wMinuteTicks, cap:'butt'};
-		penHour = {width:wHourTicks, cap:'butt'};
-		
-		//-------------------------------------------------------------------
+		//--------------------------------------------------------------
 		// Draw the metal ring
 		//
 		var r = radius * 1.0/0.9;
-		function ellipse( ctx, x, y, w, h ) {
-			ctx.beginPath();
-			ctx.ellipse( x+w/2, y+h/2, w/2, y/2, 0, 0, 2*Math.PI );
-		}
-		function circle( ctx, x, y, r ) {
-			ctx.beginPath();
-			ctx.arc( x, y, r, 0, 2*Math.PI );
-		}
-		function drawLine( ctx, x1, y1, x2, y2 ) {
-			ctx.beginPath();
-			ctx.moveTo( x1, y1 );
-			ctx.lineTo( x2, y2 );
-			ctx.stroke();
-		}
 		
 		var rg = ctx.createRadialGradient(
 			xCenter, yCenter - r, 0.0,
 			xCenter, yCenter - r, r * 2
 		);
 		rg.addColorStop( 0, '#FFFFFF' );
-		rg.addColorStop( 1, 'rgb(33,33,33)' );
+		rg.addColorStop( 1, '#212121' );
 		ctx.fillStyle = rg;
 
 		circle( ctx, xCenter, yCenter, r );
@@ -120,93 +102,99 @@ function Clock( canvas ) {
 			xCenter, yCenter + rSmaller, rSmaller * 2
 		);
 		rg.addColorStop( 0, '#FFFFFF' );
-		rg.addColorStop( 1, 'rgb(33,33,33)' );
+		rg.addColorStop( 1, '#212121' );
 		ctx.fillStyle = rg;
 		circle( ctx, xCenter, yCenter, rSmaller )
 		ctx.fill();
 		
-		//--------------------------------------------------------------------
+		//--------------------------------------------------------------
 		// Draw the clock face.
 		//
-		SetPen( ctx, penSecond );
 		var rg = ctx.createRadialGradient(
 			xCenter, yCenter-radius*0.6, 0.0,
 			xCenter, yCenter, rOutside
 		);
-		rg.addColorStop( 0, 'rgb(252,252,252)' );
-		rg.addColorStop( 1, 'rgb(220,220,220)' );
+		rg.addColorStop( 0, '#FCFCFC' );
+		rg.addColorStop( 1, '#DCDCDC' );
 		ctx.fillStyle = rg;
-		circle( ctx, xCenter, yCenter, rOutside, rOutside );
+		circle( ctx, xCenter, yCenter, rOutside );
 		ctx.fill();
 
-		var penCur = null, pen = null;
-		var rIn;
-		for( var i = 0; i < 60; ++i ) {
-			if( i % 5 == 0 ) {
-				rIn = rInHourTicks;
-				pen = penHour;
+		ctx.strokeStyle = '#000000';
+		ctx.lineCap = 'butt';
+		ctx.lineWidth = wMinuteTicks;
+		ctx.beginPath();
+		for( var i = 1; i < 60; ++i ) {
+			if( i % 5 ) {
+				ctx.moveTo( xCenter + rInMinuteTicks * tCos60[i], yCenter + rInMinuteTicks * tSin60[i] );
+				ctx.lineTo( xCenter + rOutTicks * tCos60[i], yCenter + rOutTicks * tSin60[i] );
 			}
-			else {
-				rIn = rInMinuteTicks;
-				pen = penSecond;
-			}
-			if( pen !== penCur ) {
-				penCur = pen;
-				SetPen( ctx, pen );
-			}
-			drawLine(
-				ctx,
-				xCenter + rIn * tCos60[i], yCenter + rIn * tSin60[i],
-				xCenter + rOutTicks * tCos60[i], yCenter + rOutTicks * tSin60[i]
-			);
 		}
+		ctx.stroke();
+		
+		ctx.lineWidth = wHourTicks;
+		ctx.beginPath();
+		for( var i = 0; i < 60; i += 5 ) {
+			ctx.moveTo( xCenter + rInHourTicks * tCos60[i], yCenter + rInHourTicks * tSin60[i] );
+			ctx.lineTo( xCenter + rOutTicks * tCos60[i], yCenter + rOutTicks * tSin60[i] );
+		}
+		ctx.stroke();
 			
-		//-------------------------------------------------------------------
+		//--------------------------------------------------------------
 		// Draw the digital clock.
 		//
 		var textHeight = Math.max(1,radius*0.37);
 		ctx.font = textHeight + 'px Arial';
-		ctx.fillStyle = 'rgb(100,100,100)';
+		ctx.fillStyle = '#646464';
+		ctx.textAlign = 'end';
+		ctx.textBaseline = 'alphabetic';
 		var tStr = t.getHours() + ':' + ('0' + t.getMinutes()).slice(-2) + ':' + ('0' + t.getSeconds()).slice(-2);
-		var w = ctx.measureText( tStr ).width;
-		ctx.fillText( tStr, xCenter-w/2, yCenter+radius/2-textHeight/8 );
+		var w = ctx.measureText( '00:00:00' ).width;
+		ctx.fillText( tStr, xCenter+w/2, yCenter+radius/2-textHeight/8 );
 		
-		//-------------------------------------------------------------------
+		ctx.fillStyle = '#8C8C8C';
+		ctx.font = textHeight/3.5 + 'px Arial';
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'top';
+		ctx.fillText( 'CrossMgr', xCenter, yCenter-rInHourTicks/2 );
+		
+		//--------------------------------------------------------------
 		// Draw the hands.
 		//
 		var secondPos = (t.getSeconds() + t.getMilliseconds()/1000.0) / 60.0;
 		var minutePos = (t.getMinutes() + secondPos) / 60.0;
 		var hourPos = (t.getHours() % 12 + minutePos) / 12.0;
 		
-		SetPen(ctx, {color:'rgba(0,0,180,0.5)', width:wHourHand} );
-		var ret = GetCosSin( hourPos );
-		var cosCur = ret[0], sinCur = ret[1];
-		drawLine(
-			ctx,
-			xCenter + rBack * cosCur, yCenter + rBack * sinCur,
-			xCenter + rHour * cosCur, yCenter + rHour * sinCur
-		);
+		ctx.lineCap = 'round';
+		ctx.strokeStyle = 'rgba(0,0,180,0.5)';
+		ctx.lineWidth = wHourHand;
+		var a = posToAngle( hourPos );
+		var cosCur = Math.cos(a), sinCur = Math.sin(a);
+		ctx.beginPath();
+		ctx.moveTo( xCenter + rBack * cosCur, yCenter + rBack * sinCur );
+		ctx.lineTo( xCenter + rHour * cosCur, yCenter + rHour * sinCur );
+		ctx.stroke();
 		
-		SetPen( ctx, {color:'rgba(0,150,0,0.5)', width:wMinuteHand} );
-		var ret = GetCosSin( minutePos );
-		var cosCur = ret[0], sinCur = ret[1];
-		drawLine(
-			ctx,
-			xCenter + rBack * cosCur,   yCenter + rBack * sinCur,
-			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
-		);
+		ctx.strokeStyle = 'rgba(0,150,0,0.5)';
+		ctx.lineWidth = wMinuteHand;
+		var a = posToAngle( minutePos );
+		var cosCur = Math.cos(a), sinCur = Math.sin(a);
+		ctx.beginPath();
+		ctx.moveTo( xCenter + rBack * cosCur,   yCenter + rBack * sinCur );
+		ctx.lineTo( xCenter + rMinute * cosCur, yCenter + rMinute * sinCur );
+		ctx.stroke();
 		
-		SetPen( ctx, { color:'#FF0000', width:wSecondHand } );
+		ctx.strokeStyle = '#FF0000';
 		ctx.fillStyle = '#FF0000';
-		var ret = GetCosSin( secondPos );
-		var cosCur = ret[0], sinCur = ret[1];
-		drawLine(
-			ctx,
-			xCenter + rDot * cosCur,    yCenter + rDot * sinCur,
-			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
-		);
+		ctx.lineWidth = wSecondHand;
+		var a = posToAngle( secondPos );
+		var cosCur = Math.cos(a), sinCur = Math.sin(a);
 		var xDot = xCenter + rDot * cosCur;
 		var yDot = yCenter + rDot * sinCur;
+		ctx.beginPath();
+		ctx.moveTo( xDot, yDot );
+		ctx.lineTo( xCenter + rMinute * cosCur, yCenter + rMinute * sinCur );
+		ctx.stroke();
 		circle( ctx, xDot, yDot, dotSize );
 		ctx.fill();
 	};
@@ -220,6 +208,6 @@ function onLoad() {
 </script>
 </head>
 <body onload="onLoad()">
-<canvas id="myCanvas" width="400" height="400"></canvas>
+<canvas id="myCanvas" width="500" height="500"></canvas>
 </body>
 </html>
