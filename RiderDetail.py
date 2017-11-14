@@ -1513,6 +1513,9 @@ class RiderDetailDialog( wx.Dialog ):
 
 	def refresh( self ):
 		self.riderDetail.refresh()
+		
+	def setRider( self, num ):
+		self.riderDetail.setRider( num )
 	
 	def onUndo( self, event ):
 		undo.doUndo()
@@ -1526,15 +1529,19 @@ class RiderDetailDialog( wx.Dialog ):
 		self.riderDetail.commit()
 		self.EndModal( wx.ID_OK )
 
+dlgRiderDetail = None
 @logCall
 def ShowRiderDetailDialog( parent, num = None ):
-	dlg = RiderDetailDialog( parent, num )
-	if Utils.getMainWin():
-		Utils.getMainWin().riderDetailDialog = dlg
-	dlg.ShowModal()
-	dlg.Destroy()
-	if Utils.getMainWin():
-		Utils.getMainWin().riderDetailDialog = None
+	global dlgRiderDetail
+	mainWin = Utils.getMainWin()
+	if not dlgRiderDetail:
+		dlgRiderDetail = RiderDetailDialog( mainWin or parent, num )
+	if mainWin:
+		mainWin.riderDetailDialog = dlgRiderDetail
+	dlgRiderDetail.setRider( num )
+	dlgRiderDetail.ShowModal()
+	if mainWin:
+		mainWin.riderDetailDialog = None
 	wx.CallAfter( Utils.refresh )
 		
 if __name__ == '__main__':
