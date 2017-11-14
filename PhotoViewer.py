@@ -167,9 +167,9 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.takePhotoID = wx.NewId()
 		self.toolbar.AddTool( self.takePhotoID, _('Photo Test'), bitmap )
 		
-		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CheckeredFlagIcon.png'), wx.BITMAP_TYPE_PNG )
-		self.finishStripID = wx.NewId()
-		self.toolbar.AddTool( self.finishStripID, _('Composite Finish Photo'), bitmap )
+		#bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CheckeredFlagIcon.png'), wx.BITMAP_TYPE_PNG )
+		#self.finishStripID = wx.NewId()
+		#self.toolbar.AddTool( self.finishStripID, _('Composite Finish Photo'), bitmap )
 		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
