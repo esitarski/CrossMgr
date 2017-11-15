@@ -577,28 +577,14 @@ var iCol = {};
 for( var i in cols.length )
 	iCol[cols[i]] = i;
 
-var groupColours = [
-	'#FF0000',
-	'#FF8000',
-	'#FFFF00',
-	'#FF0080',
-	'#FF00FF',
-	'#8000FF',
-	'#0080FF',
-	'#0000FF'
-];
-for( var i = 0; i < groupColours.length; ++i )
-	groupColours[i] = lighterColour( groupColours[i], 0.4 );
+var groupColours = '#EA9363,#9F87BF,#F0CE69,#53BDB7'.split(',');
 
 var alertETA = 15;
-var greenScale = [];
+var greenScale = '#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17B,#8CD87F,#90DE83,#95E587,#99EB8B,#9EF28F,#A2F893,#A7FF96'.split(',');
+greenScale.reverse();
 var greenColourMap = {};
 (function () {
 	var i;
-	var greenDelta = 80;
-	var greenTick = greenDelta / alertETA;
-	for( i = 0; i < alertETA; ++i )
-		greenScale.push( RGB2Color(0, Math.floor(255-i*greenTick), 0) );
 	greenColourMap = {};
 	for( i = 0; i < alertETA; ++i ) {
 		greenColourMap[i] = greenScale[i];

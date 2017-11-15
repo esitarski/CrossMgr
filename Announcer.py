@@ -39,17 +39,7 @@ def find_ge( a, x ):
 class Announcer( wx.Panel ):
 	cols = (u'Pos', u'Name', u'Team', u'Bib', u'Gap', u'Group', u'ETA' )
 	iCol = {c:i for i, c in enumerate(cols)}
-	groupColours = [lighterColour(wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)),0.4) for c in [
-			'#FF0000',
-			'#FF8000',
-			'#FFFF00',
-			'#FF0080',
-			'#FF00FF',
-			'#8000FF',
-			'#0080FF',
-			'#0000FF'
-		]
-	]
+	groupColours = [wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in '#EA9363,#9F87BF,#F0CE69,#53BDB7'.split(',')]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(Announcer, self).__init__(parent, id)
@@ -59,6 +49,9 @@ class Announcer( wx.Panel ):
 		self.isRecorded = []
 		self.expected = []
 		self.recorded = []
+		
+		self.bibExpected = {}
+		self.tExpected = []
 		
 		self.title = wx.StaticText( self )
 		
@@ -97,13 +90,13 @@ class Announcer( wx.Panel ):
 		self.SetSizer( vs )
 	
 	def createGreenScale( self, alertETA ):
-		greenDelta = 80
-		greenTick = greenDelta / float(alertETA)
-		greenScale = [wx.Colour(0,int(255-i*greenTick),0) for i in xrange(alertETA)]
+		colours = '#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17B,#8CD87F,#90DE83,#95E587,#99EB8B,#9EF28F,#A2F893,#A7FF96';
+		greenScale = [wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in reversed(colours.split(','))]
 		self.colourMap = {}
-		self.colourMap.update( {i:greenScale[i] for i in xrange(alertETA)} )
-		self.colourMap.update( {-i:greenScale[0] for i in xrange(alertETA)} )
-		self.colourMap.update( {-alertETA-i:greenScale[i] for i in xrange(alertETA)} )		
+		for i in xrange(alertETA):
+			self.colourMap[i]			= greenScale[i]
+			self.colourMap[-i]			= greenScale[0]
+			self.colourMap[-alertETA-i]	= greenScale[i]
 	
 	def resetTimer( self ):
 		if self.timer.IsRunning():
