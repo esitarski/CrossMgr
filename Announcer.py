@@ -172,7 +172,7 @@ class Announcer( wx.Panel ):
 				eta = e.t - tRace
 				etaColour = self.colourMap.get(int(eta), None)
 				colour = etaColour or colour
-			b.SetLabel( '{} {}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
+			b.SetLabel( u'{} {}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
 			b.SetBackgroundColour( colour )
 	
 	def refresh( self ):
