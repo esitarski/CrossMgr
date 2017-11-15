@@ -358,6 +358,8 @@ class RfidProperties( wx.Panel ):
 		
 	def refresh( self ):
 		race = Model.race
+		if not race:
+			return
 		self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
 		resetStartClockOnFirstTag = getattr(race, 'resetStartClockOnFirstTag', True)
 		skipFirstTagRead = getattr(race, 'skipFirstTagRead', False)
@@ -372,6 +374,8 @@ class RfidProperties( wx.Panel ):
 		
 	def commit( self ):
 		race = Model.race
+		if not race:
+			return
 		race.enableJChipIntegration = self.jchip.IsChecked()
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
