@@ -89,14 +89,17 @@ class Announcer( wx.Panel ):
 		self.SetDoubleBuffered( True )
 		self.SetSizer( vs )
 	
+	greenScale = [
+		wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in reversed(
+			'#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17B,#8CD87F,#90DE83,#95E587,#99EB8B,#9EF28F,#A2F893,#A7FF96'.split(',')
+		)
+	]
 	def createGreenScale( self, alertETA ):
-		colours = '#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17B,#8CD87F,#90DE83,#95E587,#99EB8B,#9EF28F,#A2F893,#A7FF96';
-		greenScale = [wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in reversed(colours.split(','))]
 		self.colourMap = {}
 		for i in xrange(alertETA):
-			self.colourMap[i]			= greenScale[i]
-			self.colourMap[-i]			= greenScale[0]
-			self.colourMap[-alertETA-i]	= greenScale[i]
+			self.colourMap[i]			= self.greenScale[i]
+			self.colourMap[-i]			= self.greenScale[0]
+			self.colourMap[-alertETA-i]	= self.greenScale[i]
 	
 	def resetTimer( self ):
 		if self.timer.IsRunning():
@@ -151,7 +154,7 @@ class Announcer( wx.Panel ):
 			colour = recordedColour if self.isRecorded[row] else unrecordedColour
 			if et is not None:
 				eta = et - tRace
-				etaColour = self.colourMap.get(int(eta), None)
+				etaColour = self.colourMap.get(int(eta), self.greenScale[-1] if eta < 0.0 else None )
 				colour = etaColour or colour
 			self.grid.SetCellValue( row, iCol, Utils.formatTime(eta) if et else u'' )				
 			self.grid.SetCellBackgroundColour( row, iCol, colour )
