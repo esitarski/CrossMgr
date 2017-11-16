@@ -663,7 +663,7 @@ function RefreshCategories() {
 }
 
 function RefreshETA() {
-	if( !catDetails || iCategoryCur === null )
+	if( !catDetails || iCategoryCur === null || document.hidden )
 		return;
 	setCategory();
 
