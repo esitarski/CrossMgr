@@ -39,7 +39,8 @@ def find_ge( a, x ):
 class Announcer( wx.Panel ):
 	cols = (u'Pos', u'Name', u'Team', u'Bib', u'Gap', u'Group', u'ETA' )
 	iCol = {c:i for i, c in enumerate(cols)}
-	groupColours = [wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in '#EA9363,#9F87BF,#F0CE69,#53BDB7'.split(',')]
+	groupColours = [wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in '#66c2a5,#fc8d62,#8da0cb,#e78ac3,#a6d854,#ffd92f,#e5c494,#b3b3b3'.split(',')]
+	groupTextColours = [Utils.GetContrastTextColour(c) for c in groupColours]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(Announcer, self).__init__(parent, id)
@@ -185,6 +186,8 @@ class Announcer( wx.Panel ):
 		
 		categories = self.refreshCategories( race )
 		
+		gridLastX, gridLastY = self.grid.GetViewStart()
+		
 		if not categories:
 			self.grid.ClearGrid()
 			return
@@ -287,13 +290,16 @@ class Announcer( wx.Panel ):
 				
 			gLast = g
 			groupColour = self.groupColours[gColIndex%len(self.groupColours)]
+			groupTextColour = self.groupTextColours[gColIndex%len(self.groupTextColours)]
 			gColIndex += 1
 			gCur += 1
 			self.grid.SetCellValue( row, iCol, u'{} [{}]'.format(gCur, groupCount[g],) )
 			self.grid.SetCellBackgroundColour( row, iCol, groupColour )
+			self.grid.SetCellTextColour( row, iCol, groupTextColour )
 		
 		self.refreshETA()
 		self.grid.AutoSize()
+		self.grid.Scroll( gridLastX, gridLastY )
 		self.GetSizer().Layout()
 				
 	def commit( self ):

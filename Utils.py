@@ -803,6 +803,11 @@ def dict_compare(d_new, d_old):
 		'a':{o:d_new[o] for o in d_new_keys - d_old_keys},
 		'm':{o:d_new[o] for o in d_new_keys.intersection(d_old_keys) if d_new[o] != d_old[o]},
 	}
+
+def GetContrastTextColour( backgroundColour ):
+	r, g, b = backgroundColour.Get( False )
+	yiq = ((r*299)+(g*587)+(b*114))/1000.0
+	return  wx.BLACK if yiq >= 128.0 else wx.WHITE
 	
 if __name__ == '__main__':
 	initTranslation()

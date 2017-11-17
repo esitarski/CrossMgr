@@ -236,7 +236,7 @@ class RaceOptionsProperties( wx.Panel ):
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
 		
-		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=12, hgap=3 )
+		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=7, hgap=3 )
 		fgs.AddGrowableCol( 1 )
 
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL

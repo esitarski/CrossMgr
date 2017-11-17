@@ -572,12 +572,22 @@ function getExpectedRecorded() {
 	recorded.sort( function(x, y) { return x.t - y.t; } );
 }
 
+function GetContrastTextColour( backgroundColour ) {
+	var v = parseInt(backgroundColour.slice(1),16);
+	var r = v>>16, g = (v>>8) & 0xFF, b = v & 0xFF;
+	var yiq = ((r*299)+(g*587)+(b*114))/1000.0
+	return yiq >= 128.0 ? '#000000' : '#FFFFFF';
+}
+
 var cols = ['Pos', 'Name', 'Team', 'Bib', 'Gap', 'Group', 'ETA'];
 var iCol = {};
-for( var i in cols.length )
+for( var i = 0; i < cols.length; ++i )
 	iCol[cols[i]] = i;
 
-var groupColours = '#EA9363,#9F87BF,#F0CE69,#53BDB7'.split(',');
+var groupColours = '#66c2a5,#fc8d62,#8da0cb,#e78ac3,#a6d854,#ffd92f,#e5c494,#b3b3b3'.split(',');
+var groupTextColours = [];
+for( var i = 0; i < groupColours.length; ++i )
+	groupTextColours.push( GetContrastTextColour(groupColours[i]) );
 
 var alertETA = 15;
 var greenScale = '#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17B,#8CD87F,#90DE83,#95E587,#99EB8B,#9EF28F,#A2F893,#A7FF96'.split(',');
@@ -844,8 +854,10 @@ function RefreshResultsTable() {
 
 			var iGroupCur = rowGroup[r];
 			var colour = groupColours[iGroupColour % groupColours.length];
+			var colourText = groupTextColours[iGroupColour % groupColours.length];
 			while( rowGroup[r] == iGroupCur && r < rowGroup.length ) {
 				tdGroup[r].style.background = colour;
+				tdGroup[r].style.color = colourText;
 				++r;
 			}
 			++iGroupColour;
