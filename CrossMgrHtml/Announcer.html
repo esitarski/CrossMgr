@@ -681,19 +681,21 @@ function RefreshETA() {
 	if( !categoryCur )
 		return;
 	
+	var resultsBody = document.getElementById('idResultsBody');
+	var iETA = iCol['ETA'];
+	
 	var tRace = getRaceTime();
-	for( var r = 0; r < categoryCur.pos.length; ++r ) {
+	for( var r = 0, tr = resultsBody.firstChild; r < categoryCur.pos.length && tr; ++r, tr = tr.nextSibling ) {
 		var num = categoryCur.pos[r];
 		var rr = data[num];
+		
 		var v = '', colour = null;
 		if( tExpected[num] ) {
 			var eta = tExpected[num] - tRace;
 			v = FormatTime( eta );
 			colour = getScaleColour( eta );
 		}
-		var td = document.getElementById( 'eta' + r );
-		if( !td )
-			break;
+		var td = tr.childNodes[iETA];
 		td.innerHTML = v;
 		td.style.backgroundColor = colour ? colour : (isRecorded[r] ? recordedColour : unrecordedColour);
 	}
@@ -782,6 +784,7 @@ function RefreshResultsTable() {
 	}
 	
 	var tbody = createChild( table, 'TBODY' );
+	tbody.id = 'idResultsBody';
 	
 	var iGroup = -1;
 	var rowGroup = [], groupCount = {};
@@ -796,7 +799,7 @@ function RefreshResultsTable() {
 		
 		var pos, bg;
 		var e = bibRecorded[num];
-		if( !raceIsRunning || (leaderLap == 1 || (e && tLeader != null && e.t >= tLeader)) ) {
+		if( !raceIsRunning || (leaderLap == 1 || (e && tLeader !== null && e.t >= tLeader)) ) {
 			pos = r + 1;
 			isRecorded.push( true );
 			bg = recordedColour;
@@ -837,7 +840,6 @@ function RefreshResultsTable() {
 		
 		createTextChild( td = createChild(tr, 'TD'), '' );										// ETA
 		td.style.backgroundColor = bg;
-		td.id = 'eta' + r;
 		if( !(tExpected[num] && tExpected[numPrev] && Math.abs(tExpected[num] - tExpected[numPrev]) < 1.0) )
 			++iGroup;
 		rowGroup.push( iGroup );
