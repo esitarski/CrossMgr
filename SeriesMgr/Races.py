@@ -11,9 +11,10 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
 	RaceCol = 0
-	PointsCol = 1
-	RaceFileCol = 2
-	RaceStatusCol = 3
+	GradeCol = 1
+	PointsCol = 2
+	RaceFileCol = 3
+	RaceStatusCol = 4
 	
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -37,7 +38,7 @@ class Races(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Race', 'Points', 'Race File']
+		self.headerNames = ['Race', 'Grade', 'Points', 'Race File']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -54,6 +55,10 @@ class Races(wx.Panel):
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly( True )
 		self.grid.SetColAttr( self.RaceCol, attr )
+		
+		attr = gridlib.GridCellAttr()
+		attr.SetAlignment( wx.ALIGN_CENTRE, wx. ALIGN_CENTRE )
+		self.grid.SetColAttr( self.GradeCol, attr )
 		
 		'''
 		attr = gridlib.GridCellAttr()
@@ -170,6 +175,7 @@ class Races(wx.Panel):
 		for row, race in enumerate(model.races):
 			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
 			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
+			self.grid.SetCellValue( row, self.GradeCol, race.grade )
 			self.grid.SetCellValue( row, self.RaceFileCol, race.fileName )
 		wx.CallAfter( self.gridAutoSize )
 		
@@ -185,9 +191,12 @@ class Races(wx.Panel):
 			race = SeriesModel.model.races[row]
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
+			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()
+			if not (ord(u'A') <= ord(grade) <= ord(u'Z')):
+				grade = u'A'
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname) )
+			raceList.append( (fileName, pname, grade) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )

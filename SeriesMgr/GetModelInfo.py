@@ -3,6 +3,7 @@ import math
 import cPickle as pickle
 import datetime
 import operator
+import itertools
 from collections import defaultdict, namedtuple
 
 import trueskill
@@ -423,6 +424,10 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	if not raceResults:
 		return [], [], set()
 		
+	# Create a map for race filenames to grade.
+	raceGrade = { race.fileName:race.grade for race in SeriesModel.model.races }
+	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
+		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
 		r.iSequence = i
@@ -433,7 +438,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
 	
 	riderEventsCompleted = defaultdict( int )
-	riderPlaceCount = defaultdict( lambda : defaultdict(int) )
+	riderPlaceCount = defaultdict( lambda : defaultdict(int) )		# Indexed by (grade, rank).
 	riderTeam = defaultdict( lambda : u'' )
 	riderUpgrades = defaultdict( lambda : [False] * len(races) )
 	riderNameLicense = {}
@@ -484,7 +489,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = tFinish
 			riderTFinish[rider] += tFinish
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
-			riderPlaceCount[rider][rr.rank] += 1
+			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
 
 		# Adjust for the best times.
@@ -552,7 +557,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
-			riderPlaceCount[rider][rr.rank] += 1
+			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)]
 			riderEventsCompleted[rider] += 1
 
 		# Adjust for the best percents.
@@ -609,7 +614,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			if rr.rank != RaceResult.rankDNF:
 				riderResults[rider][raceSequence[rr.raceInSeries]] = (0, rr.rank, 0, 0)
 				riderFinishes[rider][raceSequence[rr.raceInSeries]] = rr.rank
-				riderPlaceCount[rider][rr.rank] += 1
+				riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)]
 
 		riderRating = { rider:tsEnv.Rating() for rider in riderResults.iterkeys() }
 		for iRace in xrange(len(races)):
@@ -675,7 +680,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderPoints[rider] += points
 			riderPoints[rider] = asInt( riderPoints[rider] )
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
-			riderPlaceCount[rider][rr.rank] += 1
+			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
 
 		# Adjust for the best scores.
@@ -700,7 +705,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderOrder.sort(
 			key = lambda r:	[-riderPoints[r]] +
 							([-riderEventsCompleted[r]] if useMostEventsCompleted else []) +
-							[-riderPlaceCount[r][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+							[-riderPlaceCount[r][(g,k)] for g,k in itertools.product(gradesUsed, range(1, numPlacesTieBreaker+1))] +
 							[rank if rank>0 else rankDNF for points, rank, primePoints, timeBonus in reversed(riderResults[r])]
 		)
 		
@@ -743,6 +748,10 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 	if not raceResults or not(scoreByPoints or scoreByTime):
 		return [], []
 		
+	# Create a map for race filenames to grade.
+	raceGrade = { race.fileName:race.grade for race in SeriesModel.model.races }
+	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
+		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
 		r.iSequence = i
@@ -762,7 +771,6 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		resultsByTeam[rr.raceInSeries][rr.keyTeam()].append( rr )
 		teamName[rr.keyTeam()] = rr.team
 	
-
 	teamResults = {r.raceInSeries:defaultdict(list) for r in races}
 	teamEventsCompleted = defaultdict( int )
 	teamPlaceCount = defaultdict( lambda : defaultdict(int) )
@@ -786,7 +794,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 				teamPoints[team] += sum( rt.points for rt in teamResults[raceInSeries][team] )
 				teamEventsCompleted[team] += 1
 				for rt in teamResults[raceInSeries][team]:
-					teamPlaceCount[team][rt.rank] += 1
+					teamPlaceCount[team][(raceGrade[raceInSeries.fileName],rt.rank)] += 1
 
 		# Sort by team points - greatest number of points first.  Break ties with place count, then
 		# most recent result.
@@ -802,7 +810,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		teamOrder.sort(
 			key = lambda t:	[-teamPoints[t]] +
 							([-teamEventsCompleted[t]] if useMostEventsCompleted else []) +
-							[-teamPlaceCount[t][k] for k in xrange(1, numPlacesTieBreaker+1)] +
+							[-teamPlaceCount[t][(g,k)] for g,k in itertools.product(gradesUsed,range(1, numPlacesTieBreaker+1))] +
 							getBestResults( t )
 		)
 		
@@ -864,9 +872,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 			return results
 		
 		teamOrder.sort(
-			key = lambda t:	[-teamEventsCompleted[t], teamTime[t]] +
-							[-teamPlaceCount[t][k] for k in xrange(1, numPlacesTieBreaker+1)] +
-							getBestResults( t )
+			key = lambda t:	[-teamEventsCompleted[t], teamTime[t]] + getBestResults( t )
 		)
 		
 		def formatEventCount( count ):

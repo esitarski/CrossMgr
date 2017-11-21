@@ -29,7 +29,7 @@ copyFiles = [
 	"ReadCategoriesFromExcel.py",
 	"ReadPropertiesFromExcel.py",
 	"ModuleUnpickler.py",
-	"GetMatchingExcelFile.py"
+	"GetMatchingExcelFile.py",
 	"SetGraphic.py",
 	"imagebrowser.py",
 	"scramble.py",

@@ -145,9 +145,12 @@ class PointStructure( object ):
 		return u'({}: {} + {}, dnf={})'.format( self.name, self.getStr(), self.participationPoints, self.dnfPoints )
 
 class Race( object ):
-	def __init__( self, fileName, pointStructure ):
+	grade = u'A'
+	
+	def __init__( self, fileName, pointStructure, grade=None ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
+		self.grade = grade or u'A'
 		
 	def getRaceName( self ):
 		return RaceNameFromPath( self.fileName )
@@ -269,15 +272,14 @@ class SeriesModel( object ):
 		self.setChanged()
 	
 	def setRaces( self, raceList ):
-		oldRaceList = [(r.fileName, r.pointStructure.name) for r in self.races]
-		if oldRaceList == raceList:
+		if [(r.fileName, r.pointStructure.name, r.grade) for r in self.races] == raceList:
 			return
 		
 		self.changed = True
 		
 		newRaces = []
-		ps = dict( (p.name, p) for p in self.pointStructures )
-		for fileName, pname in raceList:
+		ps = { p.name:p for p in self.pointStructures }
+		for fileName, pname, grade in raceList:
 			fileName = fileName.strip()
 			pname = pname.strip()
 			if not fileName:
@@ -286,7 +288,7 @@ class SeriesModel( object ):
 				p = ps[pname]
 			except KeyError:
 				continue
-			newRaces.append( Race(fileName, p) )
+			newRaces.append( Race(fileName, p, grade) )
 			
 		self.races = newRaces
 		memoize.clear()
