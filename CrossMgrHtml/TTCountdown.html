@@ -398,18 +398,7 @@ else if( performance.webkitNow )
 else
 	getTimestamp = function() { return Date.now(); };
 
-function ProcessServerTimestamp( ts ) {
-	var arrivaltimestamp = getTimestamp();
-	var clienttime = Date.now();
-	var latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
-	if( latency2Min > latency2 ) {
-		latency2Min = latency2;
-		millisDelta = ts.servertime + latency2 - clienttime;
-		SetRaceName();
-	}
-}
-
-function getJSON(url, successHandler, errorHandler) {
+function getJSON( url, successHandler, errorHandler ) {
 	var xhr = typeof XMLHttpRequest != 'undefined'
 		? new XMLHttpRequest()
 		: new ActiveXObject('Microsoft.XMLHTTP');
@@ -442,6 +431,17 @@ function SetRaceName() {
 	)
 }
 
+function ProcessServerTimestamp( ts ) {
+	var arrivaltimestamp = getTimestamp();
+	var clienttime = Date.now();
+	var latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
+	if( latency2Min > latency2 ) {
+		latency2Min = latency2;
+		millisDelta = ts.servertime + latency2 - clienttime;
+		SetRaceName();
+	}
+}
+
 function getTimeCorrection() {
 	// Schedule some ajax calls to improve the time sync.
 	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
@@ -461,12 +461,7 @@ function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	if( startList == null ) startList = [];
 	
-	// Get the initial timestamp on the server and compute a correction with our local time.
-	// This will get us within a second or two of the server's time.
-	if( (window.location.protocol == 'http:' || window.location.protocol == 'https:') && serverTimestamp != null )
-		millisDelta = serverTimestamp - Date.now();
-	
-	getTimeCorrection()
+	getTimeCorrection();
 	
 	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	
