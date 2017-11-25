@@ -565,7 +565,7 @@ def WsRefresh( updatePrevious=False ):
 		tTimerStart = now()
 	else:
 		# Check if it has been 5 seconds since the last update.
-		# If so, let the currently scheduled update run.
+		# If so, let the currently scheduled update fire.
 		if (now() - tTimerStart).total_seconds() > 5.0:
 			return
 		wsTimer.cancel()
