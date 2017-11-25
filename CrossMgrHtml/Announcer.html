@@ -904,6 +904,8 @@ function onLoad() {
 	categoriesDiv = document.getElementById('idCategoriesDiv');
 	titleDiv = document.getElementById('idTitleDiv');
 	resultsDiv = document.getElementById('idResultsDiv');
+	var s = '<p style="padding-top:10px; font-size:40px; color:#AAAAAA;"><img src="/favicon.ico" style="padding-left:30px; padding-right:30px" />Powered by CrossMgr</p>';
+	document.getElementById('idBrandingDiv').innerHTML = s;
 	ResetWebSocket();
 	setInterval( RefreshETA, 1000 );
 }
@@ -916,5 +918,6 @@ CrossMgr Live Results<br/>
 <div id="idCategoriesDiv"></div>
 <div id="idTitleDiv" style="font-size: 150%;"></div>
 <div id="idResultsDiv"></div>
+<div id="idBrandingDiv"></div>
 </body>
 </html>
