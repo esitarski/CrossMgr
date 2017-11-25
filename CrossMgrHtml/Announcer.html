@@ -673,8 +673,17 @@ function RefreshCategories() {
 }
 
 function RefreshETA() {
-	if( !catDetails || iCategoryCur === null || document.hidden )
+	if( document.hidden )
 		return;
+	if( !catDetails || catDetails.length == 0 || iCategoryCur === null )
+	{
+		categoriesDiv.innerHTML = '';
+		var tNow = new Date();
+		var tStr = tNow.getHours() + ':' + ('0'+tNow.getMinutes()).slice(-2) + ':' + ('0'+tNow.getSeconds()).slice(-2);
+		resultsDiv.innerHTML = '<p style="font-size:700%;">' + tStr + '</p>';
+		return;
+	}
+
 	setCategory();
 
 	var categoryCur = catDetails[iCategoryCur];
@@ -721,13 +730,8 @@ function RefreshResultsTable() {
 	titleDiv.innerHTML = '';
 	isRecorded = [];
 
-	if( !data || !catDetails ) {
-		var tNow = new Date();
-		var tStr = tNow.getHours() + ':' + ('0'+tNow.getMinutes()).slice(-2) + ':' + ('0'+tNow.getSeconds()).slice(-2);
-		resultsDiv.innerHTML = '<p style="font-size=500%;">' + tStr + '</p>';
+	if( !data || !catDetails || !catDetails.length )
 		return;
-	}
-	
 	var categoryCur = catDetails[iCategoryCur];
 	
 	// Show results for this category.
@@ -747,7 +751,7 @@ function RefreshResultsTable() {
 	catch( err ) {
 		leader = leaderLap = tLeader = null;
 	}
-			
+	
 	var v = categoryCur.name;
 	var lapsToGo;
 	try {

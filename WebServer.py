@@ -541,8 +541,7 @@ wsThread = threading.Thread( target=WsServerLaunch, name='WsServer' )
 wsThread.daemon = True
 wsThread.start()
 
-wsTimer = None
-tTimerStart = now()
+wsTimer = tTimerStart = None
 def WsPost():
 	global wsTimer, tTimerStart
 	if wsServer.hasClients():
