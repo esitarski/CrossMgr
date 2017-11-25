@@ -191,8 +191,8 @@ class Races(wx.Panel):
 			race = SeriesModel.model.races[row]
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
-			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()
-			if not (ord(u'A') <= ord(grade) <= ord(u'Z')):
+			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()[:1]
+			if not (grade and ord(u'A') <= ord(grade) <= ord(u'Z')):
 				grade = u'A'
 			if not fileName or not pname:
 				continue

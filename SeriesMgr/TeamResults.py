@@ -76,7 +76,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
-	raceResults = model.extractAllRaceResults( False )
+	raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 	
 	categoryNames = model.getCategoryNamesSortedTeamPublish()
 	if not categoryNames:
@@ -745,7 +745,7 @@ class TeamResults(wx.Panel):
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
 		wait = wx.BusyCursor()
-		self.raceResults = model.extractAllRaceResults( False )
+		self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 		del wait
 		
 		self.fixCategories()
@@ -849,7 +849,7 @@ class TeamResults(wx.Panel):
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
-		self.raceResults = model.extractAllRaceResults( False )
+		self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 		
 		categoryNames = model.getCategoryNamesSortedTeamPublish()
 		if not categoryNames:

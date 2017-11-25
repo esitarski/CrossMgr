@@ -6,14 +6,14 @@ import gzip
 import glob
 import time
 import json
-import threading
+import base64
+import urllib
+import socket
 import datetime
 import traceback
-import urllib
-import base64
+import threading
 from collections import defaultdict
 from Queue import Queue
-import socket
 try:
     # Python 2.x
     from SocketServer import ThreadingMixIn
@@ -39,8 +39,9 @@ from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
     pass
 
+now = datetime.datetime.now
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
-futureDate = datetime.datetime( datetime.datetime.now().year+20, 1, 1 )
+futureDate = datetime.datetime( now().year+20, 1, 1 )
 
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 	favicon = f.read()
@@ -541,34 +542,39 @@ wsThread.daemon = True
 wsThread.start()
 
 wsTimer = None
-wsTimerDur = None
-wsTimerDurMax = 4
+tTimerStart = now()
 def WsPost():
-	global wsTimer
+	global wsTimer, tTimerStart
 	if wsServer.hasClients():
 		ram = GetResultsRAM()
 		if ram:
 			wsQ.put( ram )
 	if wsTimer:
 		wsTimer.cancel()
-		wsTimer = None
+	wsTimer = tTimerStart = None
 
 def WsRefresh( updatePrevious=False ):
+	global wsTimer, tTimerStart
+	
 	if updatePrevious:
 		wsQ.put( {'cmd':'reload_previous'} )
 		return
 	
-	global wsTimer, wsTimerDur
-	if not wsTimer:
-		wsTimerDur = 1.0
-		wsTimer = threading.Timer( wsTimerDur, WsPost )
-		wsTimer.start()
+	# If we have a string of competitors, don't send the update
+	# until there is a gap of a second or more between arrivals.
+	if not tTimerStart:
+		tTimerStart = now()
 	else:
-		if wsTimerDur < wsTimerDurMax:
-			wsTimerDur *= 1.5
-			wsTimer.cancel()
-			wsTimer = threading.Timer( wsTimerDur, WsPost )
-			wsTimer.start()
+		# Check if it has been 5 seconds since the last update.
+		# If so, let the currently scheduled update run.
+		if (now() - tTimerStart).total_seconds() > 5.0:
+			return
+		wsTimer.cancel()
+
+	# Schedule an update to be sent in the next second.
+	# This either schedules the first update, or extends a pending update.
+	wsTimer = threading.Timer( 1.0, WsPost )
+	wsTimer.start()
 			
 #-------------------------------------------------------------------
 def GetLapCounterRefresh():

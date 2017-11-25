@@ -147,6 +147,13 @@ class PointStructure( object ):
 class Race( object ):
 	grade = u'A'
 	
+	IndividualResultsOnly = 0
+	TeamResultsOnly = 1
+	IndividualAndTeamResults = 2
+	resultsType = IndividualAndTeamResults
+	
+	pureTeam = False	# True if the results are by pure teams, that is, no individual results.
+	
 	def __init__( self, fileName, pointStructure, grade=None ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
@@ -275,15 +282,18 @@ class SeriesModel( object ):
 		if [(r.fileName, r.pointStructure.name, r.grade) for r in self.races] == raceList:
 			return
 		
-		self.changed = True
+		self.setChanged()
 		
+		racesSeen = set()
 		newRaces = []
 		ps = { p.name:p for p in self.pointStructures }
 		for fileName, pname, grade in raceList:
 			fileName = fileName.strip()
-			pname = pname.strip()
-			if not fileName:
+			if not fileName or fileName in racesSeen:
 				continue
+			racesSeen.add( fileName )
+			
+			pname = pname.strip()
 			try:
 				p = ps[pname]
 			except KeyError:
@@ -291,7 +301,6 @@ class SeriesModel( object ):
 			newRaces.append( Race(fileName, p, grade) )
 			
 		self.races = newRaces
-		memoize.clear()
 		
 	def setReferences( self, references ):
 		dNew = dict( references )
@@ -563,11 +572,17 @@ class SeriesModel( object ):
 		self.harmonizeCategorySequence( raceResults )
 		return raceResults
 	
-	def extractAllRaceResults( self, adjustForUpgrades=True ):
+	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
 		raceResults = self._extractAllRaceResultsCore()
 		if adjustForUpgrades:
 			raceResults = copy.deepcopy( raceResults )
 			GetModelInfo.AdjustForUpgrades( raceResults )
-		return raceResults
+		
+		rt = { r.fileName for r in self.races
+				if r.resultsType == Race.IndividualAndTeamResults or
+					(isIndividual and r.resultsType == Race.IndividualResultsOnly)
+					(not isIndividual and r.resultsType == Race.TeamResultsOnly)
+		}
+		return [rr for rr in raceResults if rr.fileName in rt]
 			
 model = SeriesModel()

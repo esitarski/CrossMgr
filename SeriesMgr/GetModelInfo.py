@@ -240,6 +240,10 @@ def ExtractRaceResultsExcel( raceInSeries ):
 			elif any( unicode(r).strip().lower() in posHeader for r in row ):
 				fm = standard_field_map()
 				fm.set_headers( row )
+				
+				# Check if this is a team-only sheet.
+				raceInSeries.pureTeam = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
+				raceInSeries.resultsType = Model.Race.TeamResultsOnly
 
 	return True, 'success', raceResults
 
@@ -308,7 +312,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				'raceInSeries':	raceInSeries,
 			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
-				info[fTo] = getattr(rr, fFrom, '')
+				info[fTo] = getattr(rr, fFrom, u'')
 				
 			if not info['firstName'] and not info['lastName']:
 				continue				
@@ -751,6 +755,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 	# Create a map for race filenames to grade.
 	raceGrade = { race.fileName:race.grade for race in SeriesModel.model.races }
 	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
+	pureTeam = { race.fileName for race in SeriesModel.model.races if race.pureTeam }
 		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
@@ -796,7 +801,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 				for rt in teamResults[raceInSeries][team]:
 					teamPlaceCount[team][(raceGrade[raceInSeries.fileName],rt.rank)] += 1
 
-		# Sort by team points - greatest number of points first.  Break ties with place count, then
+		# Sort by team points - greatest number of points first.  Break ties with place count by grade, then
 		# most recent result.
 		rankDNF = RaceResult.rankDNF
 		teamOrder = list( teamName.iterkeys() )
@@ -846,13 +851,13 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 					time = rr.tFinish - timeBonus
 					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
 
-				if len(teamResults[raceInSeries][team]) < teamResultsN:
+				if len(teamResults[raceInSeries][team]) < teamResultsN and raceInSeries.fileName not in pureTeam:
 					teamResults[raceInSeries][team] = []
 					continue
 				
 				teamResults[raceInSeries][team].sort( key=operator.attrgetter('time', 'rank') )
 				
-				if useNthScore:
+				if useNthScore and raceInSeries.fileName not in pureTeam:
 					teamResults[raceInSeries][team] = teamResults[raceInSeries][team][teamResultsN-1:teamResultsN]
 				else:
 					# Record best scores only.

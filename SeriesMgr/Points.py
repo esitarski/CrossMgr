@@ -129,7 +129,7 @@ class Points(wx.Panel):
 		])
 		self.numPlacesTieBreaker.SetLabel( u'If Riders are still Tied on Points:' )
 		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL|wx.EXPAND, border=2 )
-		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label=u'If Riders are still Tied on Points, use most Recent Results')
+		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label=u'Points are considered separately by Grade.  If Riders are still Tied on Points, use most Recent Results')
 		bsizer.Add( self.ifRidersAreStillTiedOnPoints, flag=wx.ALL, border=4 )
 
 		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position', 'Participation', 'DNF']
