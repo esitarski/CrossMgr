@@ -12,8 +12,9 @@
 <meta name="copyright" content="Edward Sitarski, 2011-2017">
 <meta name="generator" content="CrossMgr">  
 <meta name="keywords" content="CrossMgr, Cycling, Race, Results">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 <!-- Meta -->
-<title id="idTitle">CrossMgr Announcer by Edward Sitarski</title>
+<title id="idTitle">CrossMgr Announcer</title>
 <style type="text/css">
 body { font-family: sans-serif; }
 
@@ -904,7 +905,7 @@ function onLoad() {
 	categoriesDiv = document.getElementById('idCategoriesDiv');
 	titleDiv = document.getElementById('idTitleDiv');
 	resultsDiv = document.getElementById('idResultsDiv');
-	var s = '<p style="padding-top:10px; font-size:40px; color:#AAAAAA;"><img src="/favicon.ico" style="padding-left:30px; padding-right:30px" />Powered by CrossMgr</p>';
+	var s = '<p style="padding-top:10px; font-size:40px; color:#AAAAAA;"><img src="/favicon.ico" style="width:32px; height:32px; padding-left:30px; padding-right:30px" />Powered by CrossMgr</p>';
 	document.getElementById('idBrandingDiv').innerHTML = s;
 	ResetWebSocket();
 	setInterval( RefreshETA, 1000 );
@@ -914,6 +915,7 @@ function onLoad() {
 
 </head>
 <body onload="onLoad()">
+<link id="favicon" href="/favicon.ico" rel="shortcut icon" type="image/x-icon"  />
 CrossMgr Live Results<br/>
 <div id="idCategoriesDiv"></div>
 <div id="idTitleDiv" style="font-size: 150%;"></div>
