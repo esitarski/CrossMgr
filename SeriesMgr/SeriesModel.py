@@ -583,6 +583,6 @@ class SeriesModel( object ):
 					(isIndividual and r.resultsType == Race.IndividualResultsOnly)
 					(not isIndividual and r.resultsType == Race.TeamResultsOnly)
 		}
-		return [rr for rr in raceResults if rr.fileName in rt]
+		return [rr for rr in raceResults if rr.raceFileName in rt]
 			
 model = SeriesModel()
