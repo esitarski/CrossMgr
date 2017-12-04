@@ -121,20 +121,23 @@ def getHelpIndexFolder(): return helpIndexFolder
 #-----------------------------------------------------------------------
 # Get the user's default language.
 #
-import locale
-lang = 'en'
+# First check enviroment variable.
 try:
-	import ctypes
-	windll = ctypes.windll.kernel32
-	lang = locale.windows_locale[ windll.GetUserDefaultUILanguage() ]
-except:
-	lang = locale.getdefaultlocale()[0]
-
-try:
-	lang = os.environ['CrossMgrLanguage'] or 'en'
+	lang = os.environ['CrossMgrLanguage']
 except KeyError:
-	lang = 'en'
-	
+	lang = None
+
+# Then check default OS language.
+import locale
+if not lang:
+	try:
+		import ctypes
+		windll = ctypes.windll.kernel32
+		lang = locale.windows_locale[ windll.GetUserDefaultUILanguage() ]
+	except:
+		lang = locale.getdefaultlocale()[0]
+
+# If that doesn't work, default to English.
 lang = (lang or 'en')[:2]
 
 #-----------------------------------------------------------------------
