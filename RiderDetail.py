@@ -215,6 +215,9 @@ class ChangeOffsetDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 class RiderDetail( wx.Panel ):
+	yellowColour = wx.Colour( 255, 255, 0 )
+	orangeColour = wx.Colour( 255, 165, 0 )
+		
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
@@ -226,9 +229,6 @@ class RiderDetail( wx.Panel ):
 		self.firstCall = True
 		
 		self.visibleRow = None
-		
-		self.yellowColour = wx.Colour( 255, 255, 0 )
-		self.orangeColour = wx.Colour( 255, 165, 0 )
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		
