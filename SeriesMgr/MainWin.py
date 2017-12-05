@@ -431,7 +431,7 @@ class MainWin( wx.Frame ):
 		self.preview = wx.PrintPreview(printout, printout2, data)
 
 		self.preview.SetZoom( 110 )
-		if not self.preview.Ok():
+		if not self.preview.IsOk():
 			return
 
 		pfrm = wx.PreviewFrame(self.preview, self, "Print preview")

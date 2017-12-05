@@ -104,8 +104,8 @@ class ExportGrid( object ):
 	def _drawMultiLineText( self, dc, text, x, y ):
 		if not text:
 			return
-		lineHeightText = dc.GetTextExtent( 'PpJjYy' )[1]
-		for line in text.split( '\n' ):
+		lineHeightText = dc.GetTextExtent( u'PpJjYy' )[1]
+		for line in text.split( u'\n' ):
 			dc.DrawText( line, x, y )
 			y += lineHeightText
 
@@ -173,8 +173,8 @@ class ExportGrid( object ):
 		# Draw the table.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
-		textHeight = dc.GetMultiLineTextExtent( 'PpJjYy' )[1]
+		wSpace, hSpace = dc.GetMultiLineTextExtent( u'    ' )
+		textHeight = dc.GetMultiLineTextExtent( u'PpJjYy' )[1]
 		
 		# Get the max height per row.
 		rowHeight = [0] * (self.grid.GetNumberRows() + 1)
@@ -188,9 +188,9 @@ class ExportGrid( object ):
 			yPix = yPixTop
 			w, h = dc.GetMultiLineTextExtent( c )
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( dc, '{}'.format(c), xPix, yPix )					# left justify
+				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix )					# left justify
 			else:
-				self._drawMultiLineText( dc, '{}'.format(c), xPix + colWidth - w, yPix )	# right justify
+				self._drawMultiLineText( dc, u'{}'.format(c), xPix + colWidth - w, yPix )	# right justify
 			yPix += h + hSpace/4
 			if col == 0:
 				yLine = yPix - hSpace/8
@@ -200,7 +200,7 @@ class ExportGrid( object ):
 					dc.DrawLine( borderPix, yLine, widthPix - borderPix, yLine )
 					
 			for r, v in enumerate(self.data[col]):
-				vStr = '{}'.format(v)
+				vStr = u'{}'.format(v)
 				if vStr:
 					w, h = dc.GetMultiLineTextExtent( vStr )
 					if col in self.leftJustifyCols:
@@ -225,7 +225,7 @@ class ExportGrid( object ):
 		
 		rowTop = 0
 		if self.title:
-			for line in self.title.split('\n'):
+			for line in self.title.split(u'\n'):
 				sheet.write(rowTop, 0, line, titleStyle)
 				rowTop += 1
 			rowTop += 1

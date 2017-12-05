@@ -301,8 +301,8 @@ class ExportGrid( object ):
 				if vStr:
 					if isSpeed:
 						vStr = vStr.split()[0]
-						if vStr == '"':
-							vStr += '    '
+						if vStr == u'"':
+							vStr += u'    '
 					w, h = dc.GetMultiLineTextExtent( vStr )
 					if col in self.leftJustifyCols:
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify

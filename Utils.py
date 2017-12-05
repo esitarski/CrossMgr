@@ -122,10 +122,7 @@ def getHelpIndexFolder(): return helpIndexFolder
 # Get the user's default language.
 #
 # First check enviroment variable.
-try:
-	lang = os.environ['CrossMgrLanguage']
-except KeyError:
-	lang = None
+lang = os.environ.get('CrossMgrLanguage', None)
 
 # Then check default OS language.
 import locale
@@ -137,7 +134,7 @@ if not lang:
 	except:
 		lang = locale.getdefaultlocale()[0]
 
-# If that doesn't work, default to English.
+# Finally, if that doesn't work, default to English.
 lang = (lang or 'en')[:2]
 
 #-----------------------------------------------------------------------

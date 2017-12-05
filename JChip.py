@@ -6,20 +6,20 @@ import time
 import datetime
 import atexit
 import math
-import subprocess
 import re
 import os
 import wx
 import wx.lib.newevent
 import Utils
 import Model
-stripLeadingZeros = Utils.stripLeadingZeros
 import select
 from threading import Thread as Process
 from Queue import Queue
 from Queue import Empty
 
 ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
+
+stripLeadingZeros = Utils.stripLeadingZeros
 
 readerEventWindow = None
 def sendReaderEvent( tagTimes ):
@@ -110,7 +110,16 @@ def safeAppend( lst, x ):
 	if x not in lst:
 		lst.append( x )
 		
-readerComputerTimeDiff = None
+reUnprintable = re.compile( r'[\x00-\x19\x7f-\xff]' )
+def formatAscii( s ):
+	r = []
+	charsPerLine = 40
+	for i in xrange(0, len(s), charsPerLine):
+		line = s[i:i+charsPerLine]
+		r.append( ''.join( '.{}'.format(c) for c in reUnprintable.sub('.', line)) )
+		r.append( ''.join( '{:02x}'.format(ord(c)) for c in line ) )
+	return '\n'.join( r )
+	
 def Server( q, shutdownQ, HOST, PORT, startTime ):
 	global readerEventWindow
 	
@@ -200,6 +209,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				closeReader( s )
 				continue
 			
+			# qLog( 'connection', 'recv: \n{}\n'.format( formatAscii(data) ) )
+			
 			# Accumulate the data.
 			readerReadStr[s] += data
 			if not readerReadStr[s].endswith( CR ):
@@ -262,7 +273,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						tagTimes.append( (tag, t) )
 						
 					elif line.startswith( 'N' ):
-						name = line[5:].strip()
+						name = line[5:].strip()		# Skip the cmd and current number of recorded times.
 						
 						# Check if this reader is known to us already.
 						# If so, the reader has dropped its previous connection and is reconnecting.

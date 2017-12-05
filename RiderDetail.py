@@ -239,7 +239,9 @@ class RiderDetail( wx.Panel ):
 		self.numName = wx.StaticText( self, label = u'{} '.format(_('Number')) )
 		gbs.Add( self.numName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.num = intctrl.IntCtrl( self, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
-		self.Bind( wx.EVT_TEXT_ENTER, self.onNumChange, self.num )
+		self.num.Bind( wx.EVT_TEXT_ENTER, self.onNumChange )
+		#self.num.Bind( wx.EVT_TEXT, self.onNumChange )
+		#self.num.Bind( wx.EVT_KILL_FOCUS, self.onNumChange )
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
 		self.menu = wx.Menu()
@@ -904,8 +906,6 @@ class RiderDetail( wx.Panel ):
 	
 	def onNumChange( self, event = None ):
 		self.refresh()
-		if Utils.isMainWin():
-			Utils.getMainWin().setNumSelect( self.num.GetValue() )
 	
 	def onStatusChanged( self, event ):
 		num = self.num.GetValue()
@@ -1441,6 +1441,9 @@ class RiderDetail( wx.Panel ):
 	
 	def commitChange( self ):
 		num = self.num.GetValue()
+		if Utils.isMainWin():
+			Utils.getMainWin().setNumSelect( num )
+		
 		status = self.statusOption.GetSelection()
 		relegatedPosition = self.relegatedPosition.GetValue()
 		
