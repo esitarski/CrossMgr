@@ -3837,7 +3837,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		self.refreshCurrentPage()
 		self.forecastHistory.refresh()
 		if self.riderDetailDialog:
-			wx.CallAfter( self.riderDetailDialog.refresh )
+			self.riderDetailDialog.refresh()
 		race = Model.race
 		self.menuItemHighPrecisionTimes.Check( bool(race and race.highPrecisionTimes) )
 		self.menuItemSyncCategories.Check( bool(race and race.syncCategories) )
