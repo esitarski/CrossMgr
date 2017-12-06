@@ -240,7 +240,7 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.numName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.num = intctrl.IntCtrl( self, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
 		self.num.Bind( wx.EVT_TEXT_ENTER, self.onNumChange )
-		#self.num.Bind( wx.EVT_TEXT, self.onNumChange )
+		self.num.Bind( wx.EVT_TEXT, self.onNumChange )
 		#self.num.Bind( wx.EVT_KILL_FOCUS, self.onNumChange )
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
@@ -1187,7 +1187,7 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTimeName.Enable( editable )
 	
 	def refresh( self ):
-		self.num.SelectAll()
+		# self.num.SelectAll()
 		wx.CallAfter( self.num.SetFocus )
 		
 		visibleRow = self.visibleRow
