@@ -1198,11 +1198,12 @@ class Race( object ):
 		self.lastOpened = datetime.datetime.now()
 		memoize.clear()
 	
-	def getFileName( self ):
+	def getFileName( self, raceNum=None, includeMemo=True ):
 		rDate = self.date
 		rName = Utils.RemoveDisallowedFilenameChars( self.name )
-		rNum = self.raceNum
-		fname = u'{}-{}-r{}-.cmn'.format(rDate, rName, rNum)
+		rNum = self.raceNum if raceNum is None else raceNum
+		rMemo = Utils.RemoveDisallowedFilenameChars( self.memo ) if includeMemo else ''
+		fname = u'{}-{}-r{}-{}.cmn'.format(rDate, rName, rNum, rMemo)
 		return fname
 	
 	@property

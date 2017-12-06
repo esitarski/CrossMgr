@@ -3030,18 +3030,14 @@ class MainWin( wx.Frame ):
 				return
 			race.finishRaceNow()
 			self.writeRace()
+			
+		path, fnameCur = os.path.split( self.fileName )
+		prefix, suffix = os.path.splitext( race.getFileName(raceNum=race.raceNum+1, includeMemo=False) )
 
-		path, file = os.path.split( self.fileName )
-		patRE = re.compile( '\-r[0-9]+\-' )
 		try:
-			pos = patRE.search(file).start()
-			prefix = file[:pos+2] + '{}'.format(race.raceNum+1)
-			suffix = os.path.splitext(file)[1]
-			fileName = (f for f in os.listdir(path) if f.startswith(prefix) and f.endswith(suffix)).next()
-			fileName = os.path.join( path, fileName )
-			self.openRace( fileName )
-		except (AttributeError, IndexError, StopIteration) as e:
-			Utils.MessageOK(self, u'{}.\n\n{}'.format(_('No next race'),e), _('No next race'), iconMask=wx.ICON_ERROR )
+			self.openRace( sorted(glob.glob(os.path.join(path, prefix) + '*' + suffix, key=lambda v: -length(v)))[0] )
+		except IndexError:
+			Utils.MessageOK(self, u'{}.\n\n{}'.format(_('No next race found'),e), _('No next race found'), iconMask=wx.ICON_ERROR )
 
 	@logCall
 	def menuOpenRaceDB( self, event ):

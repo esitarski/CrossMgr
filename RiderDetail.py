@@ -239,8 +239,8 @@ class RiderDetail( wx.Panel ):
 		self.numName = wx.StaticText( self, label = u'{} '.format(_('Number')) )
 		gbs.Add( self.numName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.num = intctrl.IntCtrl( self, min=0, max=9999, allow_none=True, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
-		self.num.Bind( wx.EVT_TEXT_ENTER, self.onNumChange )
 		self.num.Bind( wx.EVT_TEXT, self.onNumChange )
+		#self.num.Bind( wx.EVT_TEXT_ENTER, self.onNumChange )
 		#self.num.Bind( wx.EVT_KILL_FOCUS, self.onNumChange )
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
@@ -1187,9 +1187,6 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTimeName.Enable( editable )
 	
 	def refresh( self ):
-		# self.num.SelectAll()
-		wx.CallAfter( self.num.SetFocus )
-		
 		visibleRow = self.visibleRow
 		self.visibleRow = None
 
@@ -1441,13 +1438,8 @@ class RiderDetail( wx.Panel ):
 	
 	def commitChange( self ):
 		num = self.num.GetValue()
-		if Utils.isMainWin():
-			Utils.getMainWin().setNumSelect( num )
-		
 		status = self.statusOption.GetSelection()
 		relegatedPosition = self.relegatedPosition.GetValue()
-		
-		wx.CallAfter( Utils.refreshForecastHistory )
 		
 		undo.pushState();
 		with Model.LockRace() as race:
@@ -1469,7 +1461,11 @@ class RiderDetail( wx.Panel ):
 			if oldValues != newValues:
 				race.setChanged()
 				wx.CallAfter( Utils.refresh )
-	
+		
+		if Utils.isMainWin():
+			Utils.getMainWin().setNumSelect( num )
+		wx.CallAfter( Utils.refreshForecastHistory )
+			
 	def commit( self ):
 		self.commitChange()
 		
@@ -1485,23 +1481,29 @@ class RiderDetailDialog( wx.Dialog ):
 		
 		vs.Add( self.riderDetail, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		
-		self.closeBtn = wx.Button( self, label = _('&Close (Ctrl-Q)') )
+		self.commitBtn = wx.Button( self, id=wx.ID_SAVE, label=_('Save (Ctrl-S)') )
+		self.commitBtn.Bind( wx.EVT_BUTTON, self.onSave )
+		
+		self.closeBtn = wx.Button( self, id=wx.ID_CLOSE, label = _('&Close (Ctrl-Q)') )
 		self.Bind( wx.EVT_BUTTON, self.onClose, self.closeBtn )
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.AddStretchSpacer()
-		hs.Add( self.closeBtn, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
-		vs.Add( hs, flag=wx.EXPAND )
+		hs.Add( self.commitBtn, flag=wx.ALIGN_RIGHT )
+		hs.Add( self.closeBtn, flag=wx.LEFT|wx.ALIGN_RIGHT, border=32 )
+		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizerAndFit(vs)
 		vs.Fit( self )
 		
 		# Add Ctrl-Q to close the dialog.
+		self.Bind(wx.EVT_MENU, self.onSave, id=wx.ID_SAVE)
 		self.Bind(wx.EVT_MENU, self.onClose, id=wx.ID_CLOSE)
 		self.Bind(wx.EVT_MENU, self.onUndo, id=wx.ID_UNDO)
 		self.Bind(wx.EVT_MENU, self.onRedo, id=wx.ID_REDO)
 		accel_tbl = wx.AcceleratorTable([
+			(wx.ACCEL_CTRL,  ord('S'), wx.ID_SAVE),
 			(wx.ACCEL_CTRL,  ord('Q'), wx.ID_CLOSE),
 			(wx.ACCEL_CTRL,  ord('Z'), wx.ID_UNDO),
 			(wx.ACCEL_CTRL,  ord('Y'), wx.ID_REDO),
@@ -1517,6 +1519,9 @@ class RiderDetailDialog( wx.Dialog ):
 	def refresh( self ):
 		self.riderDetail.refresh()
 		
+	def commit( self ):
+		self.riderDetail.commit()
+		
 	def setRider( self, num ):
 		self.riderDetail.setRider( num )
 	
@@ -1528,8 +1533,11 @@ class RiderDetailDialog( wx.Dialog ):
 		undo.doRedo()
 		self.refresh()
 	
+	def onSave( self, event ):
+		self.commit()
+	
 	def onClose( self, event ):
-		self.riderDetail.commit()
+		self.commit()
 		self.EndModal( wx.ID_OK )
 
 dlgRiderDetail = None
