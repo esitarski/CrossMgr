@@ -486,17 +486,22 @@ class NumKeypad( wx.Panel ):
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
 		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeaderArrival=sys.float_info.max, tLapStart=None ):
+			if not category:
+				return
 			if not(category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			
 			lapsToGo = max( 0, lapMax - lapCur )
 			if secondsBeforeLeaderToFlipLapCounter < tLeaderArrival <= secondsBeforeLeaderToFlipLapCounter+5.0:
-				v = ('{}'.format(lapsToGo), True, tLapStart)				# Flash current lap (about to be flipped).
+				v = (u'{}'.format(lapsToGo), True, tLapStart)				# Flash current lap (about to be flipped).
 			elif 0.0 <= tLeaderArrival <= secondsBeforeLeaderToFlipLapCounter:
-				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
+				v = (u'{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
 			else:
-				v = ('{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
-			lapCounter[categoryToLapCounterIndex[category]] = v
+				v = (u'{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
+			try:
+				lapCounter[categoryToLapCounterIndex[category]] = v
+			except (KeyError, IndexError):
+				pass
 		
 		for rr in results:
 			if rr.status != Finisher or not rr.raceTimes:
