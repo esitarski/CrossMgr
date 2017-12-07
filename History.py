@@ -360,6 +360,8 @@ class History( wx.Panel ):
 		if row < self.grid.GetNumberRows() and col < self.grid.GetNumberCols():
 			value = self.grid.GetCellValue( row, col )
 			if value:
+				if ',' in value:
+					value = value.split(',', 1)[0].strip()
 				if ':' in value:
 					value = value.split(':', 1)[1].strip()
 				
