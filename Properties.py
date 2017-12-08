@@ -1417,12 +1417,13 @@ class Properties( wx.Panel ):
 			fi = self.filesProperties
 		except ValueError:
 			return ''
-			
-		rDate = gi.date.GetValue().Format(Properties.dateFormat)
-		rName = Utils.RemoveDisallowedFilenameChars( gi.raceName.GetValue() )
-		rNum = gi.raceNum.GetValue()
-		
-		fname = u'{}-{}-r{}-.cmn'.format(rDate, rName, rNum)
+	
+		fname = Utils.GetFileName(
+			gi.date.GetValue().Format(Properties.dateFormat),
+			gi.raceName.GetValue(),
+			gi.raceNum.GetValue(),
+			gi.memo.GetValue(),
+		)
 		fi.fileName.SetLabel( fname )
 		return fname
 	
@@ -1431,7 +1432,7 @@ class Properties( wx.Panel ):
 			gi = self.generalInfoProperties
 		except AttributeError:
 			return ''		
-		for f in ('date', 'raceName', 'raceNum'):
+		for f in ('date', 'raceName', 'raceNum', 'memo'):
 			setattr(self, f + 'Original', getattr(gi, f).GetValue())
 		
 	def restoreFileNameFields( self ):
@@ -1439,7 +1440,7 @@ class Properties( wx.Panel ):
 			gi = self.generalInfoProperties
 		except AttributeError:
 			return ''
-		for f in ('date', 'raceName', 'raceNum'):
+		for f in ('date', 'raceName', 'raceNum', 'memo'):
 			getattr(gi, f).SetValue( getattr(self, f + 'Original') )
 	
 	def getFileName( self ):

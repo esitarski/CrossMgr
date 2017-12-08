@@ -1199,12 +1199,12 @@ class Race( object ):
 		memoize.clear()
 	
 	def getFileName( self, raceNum=None, includeMemo=True ):
-		rDate = self.date
-		rName = Utils.RemoveDisallowedFilenameChars( self.name )
-		rNum = self.raceNum if raceNum is None else raceNum
-		rMemo = Utils.RemoveDisallowedFilenameChars( self.memo ) if includeMemo else ''
-		fname = u'{}-{}-r{}-{}.cmn'.format(rDate, rName, rNum, rMemo)
-		return fname
+		return Utils.GetFileName(
+			rDate,
+			rName,
+			self.raceNum if raceNum is None else raceNum,
+			self.memo if includeMemo else ''
+		)
 	
 	@property
 	def title( self ):

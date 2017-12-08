@@ -295,7 +295,10 @@ def removeDiacritic(input):
 		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
 	else:
 		return input
-	
+
+def GetFileName( rDate, rName, rNum, rMemo ):
+	return u'{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
+		
 soundCache = {}
 def Play( soundFile ):
 	global soundCache
