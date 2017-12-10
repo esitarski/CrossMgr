@@ -3036,7 +3036,7 @@ class MainWin( wx.Frame ):
 		prefix, suffix = os.path.splitext( race.getFileName(raceNum=race.raceNum+1, includeMemo=False) )
 
 		try:
-			self.openRace( sorted(glob.glob(os.path.join(path, prefix) + '*' + suffix), key=lambda v: -len(v))[0] )
+			self.openRace( sorted(glob.glob(os.path.join(path, prefix) + '*' + suffix), reverse=True, key=lambda v: len(v))[0] )
 		except IndexError:
 			Utils.MessageOK(self, u'{}.\n\n{}'.format(_('No next race found'),e), _('No next race found'), iconMask=wx.ICON_ERROR )
 
