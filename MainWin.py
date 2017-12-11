@@ -3038,7 +3038,7 @@ class MainWin( wx.Frame ):
 		try:
 			self.openRace( sorted(glob.glob(os.path.join(path, prefix) + '*' + suffix), reverse=True, key=lambda v: len(v))[0] )
 		except IndexError:
-			Utils.MessageOK(self, u'{}.\n\n{}'.format(_('No next race found'),e), _('No next race found'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, _('No next race found'), _('No next race found'), iconMask=wx.ICON_ERROR )
 
 	@logCall
 	def menuOpenRaceDB( self, event ):
