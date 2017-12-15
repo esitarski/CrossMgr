@@ -737,8 +737,10 @@ class MainWin( wx.Frame ):
 		trigFirst, trigLast = self.db.getTimestampRange()
 		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, trigFirst, trigLast, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
-			tsLower, tsUpper = dlg.GetDates()
+			tsLower, tsUpper, vacuum = dlg.GetValues()
 			self.db.cleanBetween( tsLower, tsUpper )
+			if vacuum:
+				self.db.vacuum()
 			wx.CallAfter( self.finishStrip.Clear )
 			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()

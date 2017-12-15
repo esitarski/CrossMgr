@@ -46,7 +46,10 @@ class ManageDatabase( wx.Dialog ):
 
 		vs.Add( hs, flag=wx.ALL, border=4)
 		
-		vs.Add( wx.StaticText(self, label='Uncheck dates for min/max values.'), flag=wx.ALL, border=4 )
+		vs.Add( wx.StaticText(self, label='     (uncheck for min/max values)'), flag=wx.ALL, border=4 )
+		self.vacuum = wx.CheckBox( self, label='Vacuum Database (reduces file size but may take a few minutes)' )
+		self.vacuum.SetValue( False )
+		vs.Add( self.vacuum, flag=wx.ALL, border=4 )
 		vs.Add( wx.StaticText(self, label='Be Careful!  There is no undo.'), flag=wx.ALL, border=4 )
 		
 		btnsizer = wx.StdDialogButtonSizer()
@@ -64,12 +67,13 @@ class ManageDatabase( wx.Dialog ):
 		self.SetSizer(vs)
 		vs.Fit(self)
 		
-	def GetDates( self ):
+	def GetValues( self ):
 		v = self.dateFrom.GetValue()
 		dateFrom = datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) if v else None
 		v = self.dateTo.GetValue()
 		dateTo = datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) if v else None
-		return dateFrom, dateTo
+		vacuum = self.vacuum.GetValue()
+		return dateFrom, dateTo, vacuum
 
 if __name__ == '__main__':
 	app = wx.App(False)
