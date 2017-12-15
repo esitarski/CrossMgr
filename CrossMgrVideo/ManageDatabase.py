@@ -25,6 +25,8 @@ class ManageDatabase( wx.Dialog ):
 			flag=wx.ALL, border=4
 		)
 		
+		vs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.ALL|wx.EXPAND, border=4 )
+		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( wx.StaticText(self, label='Delete all data (inclusive) from'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=7)
@@ -46,10 +48,16 @@ class ManageDatabase( wx.Dialog ):
 
 		vs.Add( hs, flag=wx.ALL, border=4)
 		
-		vs.Add( wx.StaticText(self, label='     (uncheck for min/max values)'), flag=wx.ALL, border=4 )
+		vs.Add( wx.StaticText(self, label='(uncheck date fields to get min and max values)'), flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
+		
+		vs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.ALL|wx.EXPAND, border=4 )		
+
 		self.vacuum = wx.CheckBox( self, label='Vacuum Database (reduces file size but may take a few minutes)' )
 		self.vacuum.SetValue( False )
 		vs.Add( self.vacuum, flag=wx.ALL, border=4 )
+		
+		vs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.ALL|wx.EXPAND, border=4 )		
+
 		vs.Add( wx.StaticText(self, label='Be Careful!  There is no undo.'), flag=wx.ALL, border=4 )
 		
 		btnsizer = wx.StdDialogButtonSizer()
