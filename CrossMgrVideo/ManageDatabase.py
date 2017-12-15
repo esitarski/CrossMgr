@@ -17,7 +17,7 @@ class ManageDatabase( wx.Dialog ):
 			flag=wx.ALL, border=4 )
 		vs.Add( wx.StaticText(
 					self,
-					label='Triggers Recorded: first: {}  last: {} '.format(
+					label='Triggers Recorded from {}  to {} '.format(
 						trigFirst.strftime('%Y-%m-%d') if trigFirst else '',
 						trigLast.strftime('%Y-%m-%d') if trigLast else ''
 					),
