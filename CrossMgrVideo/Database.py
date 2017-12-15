@@ -1,11 +1,16 @@
 import wx
 import os
+import sys
 import time
 from datetime import datetime, timedelta
 import sqlite3
 import StringIO
 
 from Queue import Queue, Empty
+
+import unicodedata
+def removeDiacritic( s ):
+	return unicodedata.normalize('NFKD', unicode(s)).encode('ascii', 'ignore')
 
 now = datetime.now
 
@@ -78,16 +83,33 @@ class Database( object ):
 				)
 		else:
 			self.photoTsCache = set()
+		
+		self.triggerFieldsAll = ('id','ts','ts_start','bib','first_name','last_name','team','wave','race_name','kmh')
+		self.triggerFieldsInput = self.triggerFieldsAll[1:-1]
 			
 		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
+		self.deleteExistingTriggerDuplicates()
 
 	def getsize( self ):
 		try:
 			return os.path.getsize( self.fname )
 		except:
 			return None
+	
+	def purgeTriggerWriteDuplicates( self, tsTriggers ):
+		""" Remove all triggers that are already in the database. """
+		if not tsTriggers:
+			return tsTriggers
 		
+		tsTriggersUnique = []
+		for t in tsTriggers:
+			if not self.conn.execute(
+				'SELECT id FROM trigger WHERE {}'.format(' AND '.join('{}=?'.format(f) for f in self.triggerFieldsInput)), t).fetchone():
+				tsTriggersUnique.append( t )
+		return tsTriggersUnique
+	
 	def write( self, tsTriggers=None, tsJpgs=None ):
+		tsTriggers = self.purgeTriggerWriteDuplicates( tsTriggers )
 		if not tsTriggers and not tsJpgs:
 			return
 			
@@ -96,7 +118,9 @@ class Database( object ):
 		
 		with self.conn:
 			if tsTriggers:
-				self.conn.executemany( 'INSERT INTO trigger (ts,ts_start,bib,first_name,last_name,team,wave,race_name) VALUES (?,?,?,?,?,?,?,?)', tsTriggers )
+				self.conn.executemany(
+					'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(self.triggerFieldsInput), ','.join('?'*len(self.triggerFieldsInput))),
+					tsTriggers )
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
 		
@@ -116,12 +140,12 @@ class Database( object ):
 		with self.conn:
 			if not bib:
 				return list( self.conn.execute(
-					'SELECT id,ts,ts_start,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts',
+					'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(self.triggerFieldsAll)),
 					(tsLower, tsUpper)
 				))
 			else:
 				return list( self.conn.execute(
-					'SELECT id,ts,ts_start,bib,first_name,last_name,team,wave,race_name,kmh FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts',
+					'SELECT {} FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(self.triggerFieldsAll)),
 					(bib, tsLower, tsUpper)
 				))
 			
@@ -137,11 +161,37 @@ class Database( object ):
 	
 	def getLastTimestamp( self, tsLower, tsUpper ):
 		c = self.conn.cursor()
-		c.execute( 'SELECT max(ts) from trigger WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper) )
+		c.execute( 'SELECT ts FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) )
 		return c.fetchone()[0]
+		
+	def getTimestampRange( self ):
+		c = self.conn.cursor()
+		c.execute( 'SELECT ts FROM trigger ORDER BY ts ASC' )
+		row = c.fetchone()
+		if not row:
+			return None, None
+		trigFirst = row[0]
+		c.execute( 'SELECT ts FROM trigger ORDER BY ts DESC' )
+		trigLast = c.fetchone()[0]
+		return trigFirst, trigLast
 	
 	def isDup( self, ts ):
 		return ts in self.photoTsCache
+		
+	def deleteExistingTriggerDuplicates( self ):
+		rowPrev = None
+		duplicateIds = []
+		for row in self.conn.execute( 'SELECT id,{} from trigger ORDER BY ts ASC,kmh DESC'.format(','.join(self.triggerFieldsInput)) ):
+			if rowPrev is not None and row[1:] == rowPrev[1:]:
+				duplicateIds.append( rowPrev[0] )
+			else:
+				rowPrev = row
+		
+		chunkSize = 500
+		while duplicateIds:
+			ids = duplicateIds[:chunkSize]
+			self.conn.execute( 'DELETE FROM trigger WHERE id IN ({})'.format( ','.join('?'*len(ids)) ), ids )
+			del duplicateIds[:chunkSize]
 		
 	def cleanBetween( self, tsLower, tsUpper ):
 		if not tsLower and not tsUpper:
@@ -228,6 +278,29 @@ if __name__ == '__main__':
 	ts = d.getLastTimestamp(datetime(2000,1,1), datetime(2200,1,1))
 	print ts
 	
+	def printTriggers():
+		qTriggers = 'SELECT {} FROM trigger ORDER BY ts LIMIT 8'.format(','.join(d.triggerFieldsInput))
+		print '*******************'
+		for row in d.conn.execute(qTriggers):
+			print removeDiacritic(u','.join( u'{}'.format(v) for v in row ))
+	
+	# Create existing duplicates all the triggers.
+	tsTriggers = d.conn.execute('SELECT {} FROM trigger'.format(','.join(d.triggerFieldsInput))).fetchall()
+	d.conn.executemany(
+		'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(d.triggerFieldsInput), ','.join('?'*len(d.triggerFieldsInput))),
+		tsTriggers
+	)	
+	printTriggers()
+	
+	# Delete the existing duplicates.
+	d.deleteExistingTriggerDuplicates()
+	printTriggers()
+	
+	# Now, test for checking duplicate triggers on add.
+	d.write( tsTriggers, None )
+	printTriggers()
+	
+		
 	'''
 	tsTriggers = [((time.sleep(0.1) and False) or now(), 100+i, u'', u'', u'', u'', u'') for i in xrange(100)]
 	
