@@ -103,8 +103,8 @@ class Database( object ):
 		
 		tsTriggersUnique = []
 		for t in tsTriggers:
-			if not self.conn.execute(
-				'SELECT id FROM trigger WHERE {}'.format(' AND '.join('{}=?'.format(f) for f in self.triggerFieldsInput)), t).fetchone():
+			if self.conn.execute(
+				'SELECT id FROM trigger WHERE {}'.format(' AND '.join('{}=?'.format(f) for f in self.triggerFieldsInput)), t).fetchone() is None:
 				tsTriggersUnique.append( t )
 		return tsTriggersUnique
 	
