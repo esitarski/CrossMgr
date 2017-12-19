@@ -284,7 +284,8 @@ def RemoveDisallowedFilenameChars( filename ):
 	return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
 def RemoveDisallowedSheetChars( sheetName ):
-	return re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', unicodedata.normalize('NFKD', unicode(sheetName)).encode('ASCII', 'ignore'))[:31]
+	sheetName = unicodedata.normalize('NFKD', unicode(sheetName)).encode('ASCII', 'ignore'))
+	return re.sub('[+!#$%&+~`".:;|\\\\/?*\[\] ]+', ' ', sheetName)[:31]		# four backslashes required to match one backslash in re.
 	
 def removeDiacritic(input):
 	'''
