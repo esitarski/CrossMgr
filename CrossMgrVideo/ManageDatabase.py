@@ -2,6 +2,8 @@ import wx
 import wx.adv
 import datetime
 
+DatePickerCtrl = wx.adv.DatePickerCtrl
+
 class ManageDatabase( wx.Dialog ):
 	def __init__( self, parent, dbSize, dbName, trigFirst, trigLast, id=wx.ID_ANY, title='', size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE ):
 		super(ManageDatabase, self).__init__( parent, id, title=title, size=size, style=style )
@@ -30,7 +32,7 @@ class ManageDatabase( wx.Dialog ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( wx.StaticText(self, label='Delete all data (inclusive) from'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=7)
-		self.dateFrom = wx.adv.DatePickerCtrl(
+		self.dateFrom = DatePickerCtrl(
 			self,
 			dt=wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
 			style=wx.adv.DP_DROPDOWN|wx.adv.DP_SHOWCENTURY|wx.adv.DP_ALLOWNONE
@@ -39,7 +41,7 @@ class ManageDatabase( wx.Dialog ):
 		
 		hs.Add( wx.StaticText(self, label='to'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=1)
-		self.dateTo = wx.adv.DatePickerCtrl(
+		self.dateTo = DatePickerCtrl(
 			self,
 			dt=wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
 			style=wx.adv.DP_DROPDOWN|wx.adv.DP_SHOWCENTURY|wx.adv.DP_ALLOWNONE
@@ -88,9 +90,9 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="ManageDatabase", size=(200,100))
 	mainWin.Show()
 	
-	dlg = ManageDatabase( mainWin, 1000000, 'TestDatabase' )
+	dlg = ManageDatabase( mainWin, 1000000, 'TestDatabase', None, None )
 	print dlg.ShowModal() == wx.ID_OK
-	print dlg.GetDates()
+	print dlg.GetValues()
 	dlg.Destroy()
 	
 	app.MainLoop()

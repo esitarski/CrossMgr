@@ -19,6 +19,7 @@ import bisect
 import datetime
 import operator
 import webbrowser
+import platform
 import zipfile
 import base64
 import hashlib
@@ -2976,25 +2977,32 @@ class MainWin( wx.Frame ):
 			self.record.setTimeTrialInput( race.isTimeTrial )
 			self.showPageName( _('Results') if isFinished else _('Actions'))
 			self.refreshAll()
-			Utils.writeLog( 'call: openRace: "%s"' % fileName )
+			Utils.writeLog( u'{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
+			Utils.writeLog( u'call: openRace: "{}"'.format(fileName) )
 			
-			# Check if we have a missing spreadsheet, but can find one in the same folder as the race.
-			if getattr(race, 'excelLink', None):
-				excelLink = race.excelLink
-				if excelLink.fileName and not os.path.isfile(excelLink.fileName):
-					newFileName = GetMatchingExcelFile(fileName, excelLink.fileName)
-					if newFileName and Utils.MessageOKCancel(self,
-							u'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
-								_('Could not find Excel file'), excelLink.fileName,
-								_('Found this Excel file in the race folder with matching name'), newFileName, _('Use this Excel file from now on?')
-							),
-							_('Excel Link Not Found') ):
-						race.excelLink.fileName = newFileName
-						race.setChanged()
-						ResetExcelLinkCache()
-						Model.resetCache()
-						self.refreshAll()
-						Utils.writeLog( u'openRace: changed Excel file to "{}"'.format(newFileName) )
+			excelLink = getattr(race, 'excelLink', None)
+			if excelLink is None or not excelLink.fileName:
+				return
+				
+			if os.path.isfile(excelLink.fileName):
+				Utils.writeLog( u'openRace: Excel file "{}"'.format(excelLink.fileName) )
+				return
+				
+			# Check if we have a missing spreadsheet but can find one in the same folder as the race.
+			Utils.writeLog( u'openRace: cannot open Excel file "{}"'.format(excelLink.fileName) )
+			newFileName = GetMatchingExcelFile(fileName, excelLink.fileName)
+			if newFileName and Utils.MessageOKCancel(self,
+				u'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
+					_('Could not find Excel file'), excelLink.fileName,
+					_('Found this Excel file in the race folder with matching name'), newFileName, _('Use this Excel file from now on?')
+				),
+				_('Excel Link Not Found') ):
+				race.excelLink.fileName = newFileName
+				race.setChanged()
+				ResetExcelLinkCache()
+				Model.resetCache()
+				self.refreshAll()
+				Utils.writeLog( u'openRace: changed Excel file to "{}"'.format(newFileName) )
 
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
