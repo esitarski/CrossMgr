@@ -113,6 +113,49 @@ class MessageManager( object ):
 		self.messageList.ChangeValue( '' )
 		self.messageList.SetInsertionPointEnd()
 
+class DateSelectDialog( wx.Dialog ):
+	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
+		wx.Dialog.__init__( self, parent, id, title=_("Date Select") )
+		
+		sizer = wx.BoxSizer( wx.VERTICAL )
+		self.dateSelect = None
+		
+		self.triggerDates = triggerDates
+		self.triggerDatesList = wx.ListCtrl( self, style=wx.LC_REPORT, size=(-1,400) )
+		
+		self.triggerDatesList.InsertColumn( 0, 'Date' )
+		self.triggerDatesList.InsertColumn( 1, 'Entries', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
+		for i, (d, c) in enumerate(triggerDates):
+			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
+			self.triggerDatesList.SetItem( i, 1, unicode(c) )
+		
+		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelect )
+		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivate )
+		
+		self.ok = wx.Button( self, wx.ID_OK )
+		self.cancel = wx.Button( self, wx.ID_CANCEL )		
+		
+		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.ok, flag=wx.ALL, border=4 )
+		hs.Add( self.cancel, flag=wx.ALL, border=4 )
+		
+		sizer.Add( hs )
+		
+		self.SetSizer( sizer )
+		wx.CallAfter( self.Fit )
+
+	def onItemSelect( self, event ):
+		self.dateSelect = self.triggerDates[event.GetIndex()][0]
+		
+	def onItemActivate( self, event ):
+		self.onItemSelect( event )
+		self.EndModal( wx.ID_OK )		
+		
+	def GetDate( self ):
+		return self.dateSelect
+
 cameraResolutionChoices = (
 	'640x480',
 	'1280x720',
@@ -204,7 +247,7 @@ class FocusDialog( wx.Dialog ):
 		self.SetSizerAndFit( sizer )
 	
 	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )		
+		self.EndModal( wx.ID_OK )
 	
 	def SetImage( self, image ):
 		sz = image.GetSize()
@@ -363,6 +406,10 @@ class MainWin( wx.Frame ):
 		self.date.Bind( wx.adv.EVT_DATE_CHANGED, self.onQueryDateChanged )
 		hsDate.Add( self.date, flag=wx.LEFT, border=2 )
 		
+		self.dateSelect = wx.Button( self, label='Select Date' )
+		hsDate.Add( self.dateSelect, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2 )
+		self.dateSelect.Bind( wx.EVT_BUTTON, self.onDateSelect )
+		
 		hsDate.Add( wx.StaticText(self, label='Filter by Bib'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=12 )
 		self.bib = wx.lib.intctrl.IntCtrl( self, style=wx.TE_PROCESS_ENTER, size=(64,-1), min=1, allow_none=True, value=None )
 		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
@@ -436,11 +483,20 @@ class MainWin( wx.Frame ):
 		
 		wx.CallLater( 300, self.refreshTriggers )
 	
-	def onQueryDateChanged( self, event ):
-		v = self.date.GetValue()
-		self.tsQueryLower = datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() )
+	def setQueryDate( self, d ):
+		self.tsQueryLower = d
 		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
 		self.refreshTriggers( True )
+		
+	def onDateSelect( self, event ):
+		triggerDates = self.db.getTriggerDates()
+		with DateSelectDialog( self, triggerDates ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK and dlg.GetDate():
+				self.setQueryDate( dlg.GetDate() )
+			
+	def onQueryDateChanged( self, event ):
+		v = self.date.GetValue()
+		self.setQueryDate( datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) )
 	
 	def onQueryBibChanged( self, event ):
 		self.bibQuery = self.bib.GetValue()

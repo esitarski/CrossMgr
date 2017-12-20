@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 import sqlite3
 import StringIO
+from collections import defaultdict
 
 from Queue import Queue, Empty
 
@@ -175,6 +176,12 @@ class Database( object ):
 		trigLast = c.fetchone()[0]
 		return trigFirst, trigLast
 	
+	def getTriggerDates( self ):
+		dates = defaultdict( int )
+		for row in self.conn.execute( 'SELECT ts FROM trigger' ):
+			dates[row[0].date()] += 1
+		return sorted( dates.items() )
+	
 	def isDup( self, ts ):
 		return ts in self.photoTsCache
 		
@@ -293,6 +300,8 @@ if __name__ == '__main__':
 	# Now, test for checking duplicate triggers on add.
 	d.write( tsTriggers, None )
 	printTriggers()
+	
+	print d.getTriggerDates()
 	
 		
 	'''
