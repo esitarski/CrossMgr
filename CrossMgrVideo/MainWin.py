@@ -14,7 +14,7 @@ import platform
 import cStringIO as StringIO
 from Queue import Queue, Empty, Full
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 now = datetime.now
 
@@ -113,6 +113,7 @@ class MessageManager( object ):
 		self.messageList.ChangeValue( '' )
 		self.messageList.SetInsertionPointEnd()
 
+from CalendarHeatmap import CalendarHeatmap
 class DateSelectDialog( wx.Dialog ):
 	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
 		wx.Dialog.__init__( self, parent, id, title=_("Date Select") )
@@ -121,7 +122,11 @@ class DateSelectDialog( wx.Dialog ):
 		self.dateSelect = None
 		
 		self.triggerDates = triggerDates
-		self.triggerDatesList = wx.ListCtrl( self, style=wx.LC_REPORT, size=(-1,400) )
+		
+		self.chm = CalendarHeatmap( self, dates=self.triggerDates )
+		self.chm.Bind( wx.EVT_BUTTON, self.onCHMSelect )
+		
+		self.triggerDatesList = wx.ListCtrl( self, style=wx.LC_REPORT|wx.LC_SINGLE_SEL, size=(-1,230) )
 		
 		self.triggerDatesList.InsertColumn( 0, 'Date' )
 		self.triggerDatesList.InsertColumn( 1, 'Entries', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
@@ -129,12 +134,17 @@ class DateSelectDialog( wx.Dialog ):
 			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
 			self.triggerDatesList.SetItem( i, 1, unicode(c) )
 		
+		if self.triggerDates:
+			self.triggerDatesList.Select( 0 )
+			self.chm.SetDate( self.triggerDates[0][0] )
+		
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelect )
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivate )
 		
 		self.ok = wx.Button( self, wx.ID_OK )
 		self.cancel = wx.Button( self, wx.ID_CANCEL )		
 		
+		sizer.Add( self.chm, flag=wx.ALL, border=4 )
 		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -146,8 +156,16 @@ class DateSelectDialog( wx.Dialog ):
 		self.SetSizer( sizer )
 		wx.CallAfter( self.Fit )
 
+	def onCHMSelect( self, event ):
+		dSelect = event.GetDate()
+		for i, (d, c) in enumerate(self.triggerDates):
+			if d == dSelect:
+				self.triggerDatesList.Select( i )
+				break
+		
 	def onItemSelect( self, event ):
 		self.dateSelect = self.triggerDates[event.GetIndex()][0]
+		self.chm.SetDate( self.dateSelect )
 		
 	def onItemActivate( self, event ):
 		self.onItemSelect( event )
@@ -490,6 +508,7 @@ class MainWin( wx.Frame ):
 		
 	def onDateSelect( self, event ):
 		triggerDates = self.db.getTriggerDates()
+		triggerDates.sort( reverse=True )
 		with DateSelectDialog( self, triggerDates ) as dlg:
 			if dlg.ShowModal() == wx.ID_OK and dlg.GetDate():
 				self.setQueryDate( dlg.GetDate() )
@@ -735,7 +754,7 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( (
 				'trigger',
 				tSearch - timedelta(seconds=advanceSeconds),
-				message.get('ts_start', None) or datetime.now(),
+				message.get('ts_start', None) or now(),
 				message.get('bib', 99999),
 				message.get('firstName',u''),
 				message.get('lastName',u''),
@@ -794,6 +813,8 @@ class MainWin( wx.Frame ):
 		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, trigFirst, trigLast, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
 			tsLower, tsUpper, vacuum = dlg.GetValues()
+			if tsUpper:
+				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
 			self.db.cleanBetween( tsLower, tsUpper )
 			if vacuum:
 				self.db.vacuum()
@@ -876,7 +897,7 @@ def MainLoop():
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
-				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
+				pf.write( '{}: {} Started.\n'.format(now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except:
 			pass
 	
