@@ -83,7 +83,7 @@ writeToFile( changes, 'CHANGES.txt' )
 	
 #--------------------------------------------------------
 license = '''
-Copyright (C) 2008-%d Edward Sitarski
+Copyright (C) 2008-{} Edward Sitarski
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without
@@ -99,17 +99,17 @@ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR P
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-''' % datetime.datetime.now().year
+'''.format( datetime.datetime.now().year )
 
 writeToFile( license, 'License.txt' )
 
 #--------------------------------------------------------
 
 manifest = '''include *.txt
-include doc *
-include CrossMgrImpinjHtmldoc *.html
-include CrossMgrImpinjHtml *.html
-include CrossMgrImpinjImages *
+recursive-include doc *
+recursive-include CrossMgrImpinjHtmldoc *.html
+recursive-include CrossMgrImpinjHtml *.html
+recursive-include CrossMgrImpinjImages *
 '''
 
 writeToFile( manifest, 'MANIFEST.in' )
@@ -186,7 +186,7 @@ setup = {
 	'include_package_data': True,
 	'description':	'CrossMgrImpinj: interface to Impinj RFID reader for CrossMgr.',
 	'install_requires':	[
-		# 'wxPython >= 3.0.0',
+		'wxPython',
 	],
 }
 
@@ -194,7 +194,7 @@ with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
 	for key, value in setup.iteritems():
-		f.write( '    %s=%s,\n' % (key, repr(value)) )
+		f.write( '    {}={},\n'.format(key, repr(value)) )
 	f.write( "    long_description=open('README.txt').read(),\n" )
 	f.write( ')\n' )
 
@@ -204,12 +204,12 @@ subprocess.call( ['python', 'setup.py', 'sdist'] )
 
 os.chdir( 'dist' )
 try:
-	shutil.move( 'CrossMgrImpinj-%s.zip' % version, 'PIP-Install-CrossMgrImpinj-%s.zip' % version )
+	shutil.move( 'CrossMgrImpinj-{}.zip'.format(version), 'PIP-Install-CrossMgrImpinj-{}.zip'.format(version) )
 except:
-	pipName = 'PIP-Install-CrossMgrImpinj-%s.tar.gz' % version
+	pipName = 'PIP-Install-CrossMgrImpinj-{}.tar.gz'.format(version)
 	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'Mac', 'CrossMgrImpinj')
     
-	shutil.move( 'CrossMgrImpinj-%s.tar.gz' % version, pipName )
+	shutil.move( 'CrossMgrImpinj-{}.tar.gz'.format(version), pipName )
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
 	print
 	print '********************'

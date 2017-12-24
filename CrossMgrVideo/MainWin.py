@@ -125,6 +125,7 @@ class DateSelectDialog( wx.Dialog ):
 		
 		self.chm = CalendarHeatmap( self, dates=self.triggerDates )
 		self.chm.Bind( wx.EVT_BUTTON, self.onCHMSelect )
+		self.chm.Bind( wx.EVT_COMMAND_LEFT_DCLICK, self.onCHMChoose )
 		
 		self.triggerDatesList = wx.ListCtrl( self, style=wx.LC_REPORT|wx.LC_SINGLE_SEL, size=(-1,230) )
 		
@@ -163,13 +164,18 @@ class DateSelectDialog( wx.Dialog ):
 				self.triggerDatesList.Select( i )
 				break
 		
+	def onCHMChoose( self, event ):
+		self.onCHMSelect( event )
+		self.dateSelect = event.GetDate()
+		self.EndModal( wx.ID_OK )	
+		
 	def onItemSelect( self, event ):
 		self.dateSelect = self.triggerDates[event.GetIndex()][0]
 		self.chm.SetDate( self.dateSelect )
 		
 	def onItemActivate( self, event ):
 		self.onItemSelect( event )
-		self.EndModal( wx.ID_OK )		
+		self.EndModal( wx.ID_OK )	
 		
 	def GetDate( self ):
 		return self.dateSelect

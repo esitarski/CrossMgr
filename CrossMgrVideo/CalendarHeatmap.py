@@ -194,7 +194,7 @@ class CalendarHeatmap(wx.Control):
 		
 		self.dateSelect = self.date
 		if self.date:
-			self.Notify()
+			self.Notify(wx.wxEVT_COMMAND_LEFT_DCLICK)
 		self.Refresh()
 		event.Skip()
 
@@ -299,10 +299,10 @@ class CalendarHeatmap(wx.Control):
 	def SetValue( self, d ):
 		self.dateSelect = d
 		
-	def Notify(self):
+	def Notify(self, type=wx.wxEVT_COMMAND_BUTTON_CLICKED):
 		""" Actually sends a ``wx.EVT_BUTTON`` event to the listener (if any). """
 		
-		evt = CalendarHeatmapEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED, self.GetId())
+		evt = CalendarHeatmapEvent(type, self.GetId())
 		evt.SetEventObject( self )
 		evt.SetDate( self.dateSelect )
 		self.GetEventHandler().ProcessEvent(evt)
