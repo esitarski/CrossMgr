@@ -229,14 +229,24 @@ class PhotoViewerDialog( wx.Dialog ):
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
 		except:
 			return
+		
+		if not wx.TheClipboard.Open(): 
+			Utils.MessageOK( self, _('Cannot open Clipboard.'), _('Copy Failed'), iconMask=wx.ICON_ERROR )
+			return
+
 		d = wx.BitmapDataObject( bitmap )
-		if wx.TheClipboard.Open(): 
+		
+		try:
 			wx.TheClipboard.SetData( d ) 
 			wx.TheClipboard.Flush() 
+			Utils.MessageOK( self, u'\n\n'.join([_('Photo Copied to Clipboard.'), _('You can now Paste it into another program.')]),
+				_('Copy to Clipboard Succeeded')
+			)
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
+			Utils.MessageOK( self, u'{}:\n\n{}'.format( _('Error copying Clipboard'), e ), _('Copy Failed'), iconMask=wx.ICON_ERROR )
+		finally:
 			wx.TheClipboard.Close() 
-			Utils.MessageOK( self, u'\n\n'.join([_('Photo Copied to Clipboard.'), _('You can now Paste it into another program.')]), _('Copy to Clipboard Succeeded') )
-		else: 
-			Utils.MessageOK( self, _('Unable to Copy Photo to Clipboard.'), _('Copy Failed'), iconMask=wx.ICON_ERROR )
 	
 	def OnLaunchFileBrowser( self, event ):
 		dir = getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' )

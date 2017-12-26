@@ -627,7 +627,7 @@ def logException( e, exc_info ):
 		for line in d.split( '\n' ):
 			writeLog( line )
 	writeLog( '**** End Exception ****' )
-	
+
 #------------------------------------------------------------------------
 mainWin = None
 def setMainWin( mw ):

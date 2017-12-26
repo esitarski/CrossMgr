@@ -205,7 +205,7 @@ def _initFieldDefs( self, *args, **kwargs ):
 		pass
 	
 	# For convenience, Messages and Parameters with only one field can be initialized with a positional argument.
-	# For example, it is posssible to write ROSpecID_Parameter(123) as it only has one field (ROSpecID).
+	# For example, it is possible to write ROSpecID_Parameter(123) as it only has one field (ROSpecID).
 	# For objects with multiple values, each values must be specified with kwargs.
 	if args:
 		assert self.FieldCount == 1, 'Object can only have one field to initialize with positional argument'
