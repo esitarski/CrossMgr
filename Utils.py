@@ -738,7 +738,7 @@ def ParsePhotoFName( fname ):
 	
 	try:
 		count = int(fields[-1])
-	except:
+	except Exception as e:
 		writeLog( 'ParsePhotoFName: count fname="{}"'.format(fname) )
 		logException( e, sys.exc_info() )
 		raise

@@ -282,7 +282,6 @@ class PhotoViewerDialog( wx.Dialog ):
 			self.showFilesID:		self.OnLaunchFileBrowser,
 			self.printID:			self.OnPrint,
 			self.takePhotoID:		self.OnTakePhoto,
-			self.finishStripID:		self.OnFinishStrip,
 		}[event.GetId()]( event )
 	
 	def drawMainPhoto( self ):
