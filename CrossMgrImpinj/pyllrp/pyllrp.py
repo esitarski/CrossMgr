@@ -8,10 +8,17 @@ llrpdef.choiceDefinitions = { k + '_Parameter' : v + '_Parameter' for k, v in ll
 
 #----------------------------------------------------------------------------------
 # Python support for LLRP (Low Level Reader Protocol).
+# Includes all Impinj extensions.
 #
 # Edward Sitarski, 2013 (edward.sitarski@gmail.com)
 #
-# All integer fields are intialized to zero, all boolean fields are intialized to False, all strings to empty.
+# This code parses the LLRP definitions in XML to a python-friendly form.
+# It then reads the compiled specs and dynamically generates Python classes for all the reader messages.
+# For an example, see TagInventory.py and TagWriter.py.
+#
+# All constraints on the messages are enforced including parameter ordering and values.
+#
+# All unspecified integer fields are initialized to zero, all boolean fields are initialized to False, all strings to empty.
 #
 # The PackUnpack classes handle the variable number of Parameters in Messages, in Parameters,
 # and Parameters nested in Parameters.
