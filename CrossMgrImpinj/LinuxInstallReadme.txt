@@ -98,4 +98,3 @@ This will clean up all the installed files.
 Step 9:  Upgrading CrossMgrImpinj.
 
 Follow instructions 4 and 5.
-You do not need to install wxPython or CrossMgr again.
