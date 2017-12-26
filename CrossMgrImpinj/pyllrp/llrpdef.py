@@ -2,7 +2,6 @@
 # DO NOT EDIT!
 # MACHINE GENERATED from "llrp-1x0-def.xml" and "Impinjdef-1.18-private.xml"
 #
-# Created: 2017-12-26 10:27:56.786000
 #-----------------------------------------------------------
 vendors={'Impinj': 25882}
 
