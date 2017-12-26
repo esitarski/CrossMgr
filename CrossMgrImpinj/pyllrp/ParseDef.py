@@ -142,7 +142,6 @@ with open('llrpdef.py', 'w') as fp:
 	fp.write( '# DO NOT EDIT!\n' )
 	fp.write( '# MACHINE GENERATED from "{}" and "{}"\n'.format(llrpDefXml, llrpCustomDefXml) )
 	fp.write( '#\n' )
-	fp.write( '# Created: {}\n'.format(datetime.datetime.now()) )
 	fp.write( '#-----------------------------------------------------------\n' )
 	for n in ['vendors', 'enums', 'parameters', 'messages', 'choiceDefinitions']:
 		fp.write( '{}='.format(n) )
