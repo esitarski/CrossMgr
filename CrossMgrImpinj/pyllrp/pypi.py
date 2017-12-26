@@ -146,6 +146,7 @@ setup = {
 	'version':		version,
 	'author':		'Edward Sitarski',
 	'author_email':	'edward.sitarski@gmail.com',
+	'url':			'http://www.sites.google.com/site/crossmgrsoftware/',
 	'packages':		['pyllrp'],
 	'license':		'License.txt',
 	'include_package_data': True,
@@ -159,7 +160,7 @@ with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
 	for key, value in setup.iteritems():
-		f.write( '    %s=%s,\n' % (key, repr(value)) )
+		f.write( '    {}={},\n'.format(key, repr(value)) )
 	f.write( "    long_description=open('README.txt').read(),\n" )
 	f.write( ')\n' )
 
@@ -169,8 +170,8 @@ subprocess.call( ['python', 'setup.py', 'sdist'] )
 
 os.chdir( 'dist' )
 try:
-	shutil.move( 'pyllrp-%s.zip' % version, 'pip-install-pyllrp-%s.zip' % version )
+	shutil.move( 'pyllrp-{}.zip'.format(version), 'pip-install-pyllrp-{}.zip'.format(version) )
 except:
-	shutil.move( 'pyllrp-%s.tar.gz' % version, 'pip-install-pyllrp-%s.tar.gz' % version )
+	shutil.move( 'pyllrp-{}.tar.gz'.format(version), 'pip-install-pyllrp-{}.tar.gz'.format(version) )
 	
 print 'Done.'

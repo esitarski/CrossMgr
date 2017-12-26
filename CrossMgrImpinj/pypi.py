@@ -203,11 +203,17 @@ os.chdir( pypiDir )
 subprocess.call( ['python', 'setup.py', 'sdist'] )
 
 os.chdir( 'dist' )
+installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'All Platforms', 'CrossMgrImpinj')
+
 try:
-	shutil.move( 'CrossMgrImpinj-{}.zip'.format(version), 'PIP-Install-CrossMgrImpinj-{}.zip'.format(version) )
-except:
-	pipName = 'PIP-Install-CrossMgrImpinj-{}.tar.gz'.format(version)
+	pipName = 'PIP-Install-CrossMgrImpinj-{}.zip'.format(version)
+	shutil.move( 'CrossMgrImpinj-{}.zip'.format(version), pipName )
+	shutil.copyfile( pipName, os.path.join(installDir, pipName) )
+except Exception as e:
+	print '**** Exception ****', e
+	installDirSave = installDir
 	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'Mac', 'CrossMgrImpinj')
+	pipName = 'PIP-Install-CrossMgrImpinj-{}.tar.gz'.format(version)
     
 	shutil.move( 'CrossMgrImpinj-{}.tar.gz'.format(version), pipName )
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
@@ -217,7 +223,6 @@ except:
 	print '********************'
 	print '\n'.join( os.listdir(installDir) )
 	
-	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'All Platforms', 'CrossMgrImpinj')
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
 	shutil.copyfile( '../../LinuxInstallReadme.txt', os.path.join(installDir, 'LinuxInstallReadme.txt') )
 	print
@@ -226,4 +231,18 @@ except:
 	print '********************'
 	print '\n'.join( os.listdir(installDir) )
 	
+os.chdir( '..' )
+os.chdir( '..' )
+
+print '************', os.getcwd()
+
+print 'Creating pyllrp install...'
+os.chdir( 'pyllrp' )
+subprocess.call( ['python', 'pypi.py'] )
+	
+for f in glob.glob('pypi/dist/*'):
+	shutil.copyfile( f, os.path.join(installDir, os.path.basename(f)) )
+
+os.chdir( '..' )
+
 print 'Done.'
