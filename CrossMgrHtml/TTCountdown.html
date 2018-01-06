@@ -353,7 +353,7 @@ function updateCountdown() {
 			var td = document.createElement('TD'); tr.appendChild( td );
 			var tStr = '';
 			if( raceStarted ) {
-				tStr = (new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0)).toLocaleTimeString();
+				tStr = toInternationalTimeString(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0));
 			}
 			td.innerHTML = tStr;
 		}
@@ -424,8 +424,8 @@ function SetRaceName() {
 	var e = document.getElementById('race-name');
 	e.innerHTML = (
 		escapeHTML(raceName?raceName:'') + ' ' +
-		raceStart.toLocaleString() + '  Last Updated ' +
-		lastUpdated.toLocaleString() + ' ' + 
+		toInternationalString(raceStart) + '  Last Updated ' +
+		toInternationalString(lastUpdated) + ' ' + 
 		'(&delta;=' + (millisDelta/1000.0).toFixed(3) + 's, ' +
 		'&lambda;=' + Math.min(999.0,latency2Min/1000.0).toFixed(3) + 's)'
 	)
@@ -457,6 +457,20 @@ function getTimeCorrection() {
 	}
 }
 
+function digit2( v ) { return (v < 10 ? "0" : "") + v; }
+function toInternationalString( d ) {
+	return (
+		d.getFullYear() + '-' + digit2(d.getMonth()+1) + '-' + digit2(d.getDay()) + ' ' +
+		digit2(d.getHours()) + ':' + digit2(d.getMinutes()) + ':' + digit2(d.getSeconds())
+	);
+}
+
+function toInternationalTimeString( d ) {
+	return (
+		digit2(d.getHours()) + ':' + digit2(d.getMinutes()) + ':' + digit2(d.getSeconds())
+	);
+}
+
 function onload() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 	if( startList == null ) startList = [];
@@ -484,7 +498,7 @@ function onload() {
 		raceStart = dateFromTuple( raceScheduledStartTuple );
 		startList.push( [0,
 						 999999,
-						 raceName + ' (not started)', "Countdown to Scheduled Start at " + raceStart.toLocaleString() + ' (' + startList.length + ' Starters)',
+						 raceName + ' (not started)', "Countdown to Scheduled Start at " + toInternationalString(raceStart) + ' (' + startList.length + ' Starters)',
 						 '',
 						 '',
 						 ''] );
