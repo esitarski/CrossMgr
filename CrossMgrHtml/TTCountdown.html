@@ -36,7 +36,6 @@ body { font-family: Arial, Helvetica, sans-serif; }
 
 #rider-starting-div {
 	width: 100%;
-	background: linear-gradient(rgb(194,199,248), rgb(240,240,255), rgb(194,199,248)); 
 	border-width: 1px;
 	border-color: rgb(121, 125, 172);
 	border-style: solid;
@@ -45,7 +44,6 @@ body { font-family: Arial, Helvetica, sans-serif; }
 
 #team-starting-div {
 	width: 100%;
-	background: linear-gradient(rgb(194,199,248), rgb(240,240,255), rgb(194,199,248)); 
 	border-width: 1px;
 	border-color: rgb(121, 125, 172);
 	border-style: solid;
@@ -85,7 +83,6 @@ body { font-family: Arial, Helvetica, sans-serif; }
 table {
 	border-collapse: collapse;
 	width: 100%;
-	background: linear-gradient(rgb(194,199,248), rgb(240,240,255), rgb(194,199,248)); 
 }
 
 .border-top { border-top: 1px solid rgb(121, 125, 172); }
@@ -143,6 +140,25 @@ var startListTest = [/*(-*/
 /*-)*/];
 var flags = {"GBR":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAOCAYAAAArMezNAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oDBAo1B4Zxqq0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADv0lEQVQ4y02Tf0zVZRTGP+/7fuGSiQoIMhTBMHUjA1O5sRJNnLOcTVcunfi7FrXZVqZMcmnRhMj1jxU0wMo0JwtqJWtozoQwkNR0osuxEoRxRfAORAfc+31Pf3yt9d85z9k5z55znqNOP5937skPCudHps9if2UTxZ834IYFQRCB4ZEQJ/YtJXHvbgACe4rILagnItJBBASLQrN7cxbrzn+P7Q8i+3a06s75C2zgw0/pLihi56a5NBx7hYVZKYRCLsYojFEoQBmDMhqUQhuF0YpwOEzughnUr45na8Mhxi9dyIxT1VwMDFv98a+32RGbwxj/E1zNXskjgwF+rMij7P0VWGsx2huG1qA0CjBGY0WoKFpB+cAZpradJ6m6krgta1m25Wve2X8SLVhONF5nbvlftOa9Tk/JAboKS9i8OJULx7exyD8NEQGjUUZjBRZlpXBmQzK5Bz8i+tnFTK+t4sjJduLmFVP/y5+ICOrN9440ixPjtxa0UaSnxPBS7BBDF66Q8Op6wuPGE+rspnNtPoiQUlPF4Omz6Nu9TMzfiBn7MGVHW7l8LYBrBVA4Ntji5GdEkxYfi1gBBNe6jLoPEZ2Tzb2LbWAtob5+xFqUCMONvzE2JQlSJzPUdA4EtiQ6mKQYREAraO9zUT8vXtWc2D/oRwAErPVCK/AA4sEqRATcsJdbQQAl4uGeRUCEW5NiWhy0tzsRTwbKcwH6fw0o0AYtFhEDIogSFF5dPRgo/8ZK4UzZtom0iQl4/GCtZWTEBQTt84EIo90Bbh2oAhEmvbEVJy7Ws53Phw2F8BlBKwWAQhHZdxvni7b7aN+gJ10pZqXFs2FlBu69+9z5qhobF0v00350xWEQweefS8SUJMzdQXorviE6M53DvWNouxHEhq1HGL6HuTUy8+UTTTendAUG2PTCHNYsn02wpo7+0k/oSZ7OnkthJo/RRLe2oLTi+rTZ7Co7yzz/o0z1P0ZfTR3JLQ2EUlKpPPU3LRc6CAaD3Xo0FCY7czIXf8hn6ZwErizPo7/2OD89t5GVx7povtSNNvq/BzFG0fxHF0vWVXK06SZJe98mcXs+WbUHaclPY9mimUQ4GqforSWsefEZAuWHGP7uOB2ZT1HaM46Gnd9CpIERl2B/kKgbnSituTswRFfPHaJ8Duu3V1NVfY59BcvIqvuS9l2l7O64SePj83AyJkXpa7mrURMmcCxnHSWHfsfaXoiK8OxmrHdx10Vcl3A4hB0e5b61AJw62072qs8ofC2HguJCRi5fJfndYv0Pm/a+HCONOTIAAAAASUVORK5CYII="};
 var version = '';
+
+var startedBackground    = "linear-gradient(rgb(194,199,248), rgb(240,240,255), rgb(194,199,248))";
+var notStartedBackground = "linear-gradient(rgb(255,224,136), rgb(255,248,229), rgb(255,224,136))";
+function GetBackground() {
+	return raceStarted ? startedBackground : notStartedBackground;
+}
+var backgroundLast = "";
+function SetStartedBackground( forceUpdate ) {
+	var background = GetBackground();
+	if( backgroundLast !== background || forceUpdate ) {
+		backgroundLast = background;
+		var ids = ['rider-starting-div', 'team-starting-div'];
+		for( var i = 0; i < ids.length; ++i )
+			document.getElementById(ids[i]).style.background = background;
+		var tables = document.getElementsByTagName("table");
+		for( var i = 0; i < tables.length; ++i )
+			tables[i].style.background = background;
+	}
+}
 
 var maxNext = 8000;
 var resetSecond = 20;
@@ -324,6 +340,7 @@ function updateCountdown() {
 		
 		var iIndex = btgNext.index;
 		var table = document.createElement('TABLE');
+		table.style.background = GetBackground();
 		var tbody = document.createElement('TBODY'); table.appendChild( tbody );
 		for( var i = 0; i < startEntryNext.length; ++i ) {
 			var tr = document.createElement('TR'); tbody.appendChild( tr );
@@ -429,6 +446,7 @@ function SetRaceName() {
 		'(&delta;=' + (millisDelta/1000.0).toFixed(3) + 's, ' +
 		'&lambda;=' + Math.min(999.0,latency2Min/1000.0).toFixed(3) + 's)'
 	)
+	SetStartedBackground();
 }
 
 function ProcessServerTimestamp( ts ) {
