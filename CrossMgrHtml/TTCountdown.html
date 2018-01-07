@@ -522,8 +522,9 @@ function onload() {
 						 ''] );
 		
 		// Set up a callback to automatically refresh the page on or after the race start time.
-		setTimeout( Math.max(0, raceStart.getTime() - tServer.getTime()) + 5*1000, function() { location.reload(true); } );
-		if( raceStart.getTime() > tServer.getTime() )
+		var waitTime = Math.max(0, raceStart.getTime() - tServer.getTime()) + 10*1000;
+		setTimeout( function() { location.reload(true); }, waitTime );
+		if( raceStart.getTime() >= tServer.getTime() )
 			playBeep( 1 );
 		enableBeeps = false;
 		raceStarted = false;
