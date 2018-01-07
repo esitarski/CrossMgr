@@ -521,7 +521,7 @@ function onload() {
 						 '',
 						 ''] );
 		
-		// Set up a callback to automatically refresh the page on or after the race start time.
+		// Set up a callback to automatically refresh the page shortly after the race start time.
 		var waitTime = Math.max(0, raceStart.getTime() - tServer.getTime()) + 10*1000;
 		setTimeout( function() { location.reload(true); }, waitTime );
 		if( raceStart.getTime() >= tServer.getTime() )
