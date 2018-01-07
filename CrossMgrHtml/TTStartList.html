@@ -147,10 +147,6 @@ function FormatTime( t )
 	return tStr;
 }
 
-function FormatTOD( d ) {
-	return d.toLocaleTimeString().toLowerCase();
-}
-
 function dateFromTuple( t ) {
 	return new Date(t[0], t[1], t[2], t[3], t[4], t[5], t[6]);
 }
@@ -169,6 +165,20 @@ function GetFlagImage( nation_code ) {
 		}
 	}
 	return flagImages[nation_code.substring(0, 3)];
+}
+
+function digit2( v ) { return (v < 10 ? "0" : "") + v; }
+function toInternationalString( d ) {
+	return (
+		d.getFullYear() + '-' + digit2(d.getMonth()+1) + '-' + digit2(d.getDay()) + ' ' +
+		digit2(d.getHours()) + ':' + digit2(d.getMinutes()) + ':' + digit2(d.getSeconds())
+	);
+}
+
+function toInternationalTimeString( d ) {
+	return (
+		digit2(d.getHours()) + ':' + digit2(d.getMinutes()) + ':' + digit2(d.getSeconds())
+	);
 }
 
 function createChild( parent, tag ) {
@@ -220,7 +230,7 @@ function updateStartList() {
 		
 		gap = (i > 0 ? sle[0] - startList[i-1][0] : null);
 		var tClock = (raceStart ? new Date(raceStart.getTime() + sle[0]*1000) : None);
-		var clock = (tClock ? FormatTOD(tClock) : '');		
+		var clock = (tClock ? toInternationalTimeString(tClock) : '');		
 		var stopwatch = FormatTime( sle[0] );
 		var bib = sle[1];
 		var name = sle[2];
@@ -254,8 +264,8 @@ function updateStartList() {
 	}
 	
 	startlistDiv = document.getElementById('startlist');
-	startList.innerHTML = '';
-	startlist.appendChild( table );
+	startlistDiv.innerHTML = '';
+	startlistDiv.appendChild( table );
 }
 
 function doReload() {
@@ -283,7 +293,7 @@ function onload() {
 	
 	if( raceName ) {
 		document.getElementById('idRaceName').appendChild( document.createTextNode(raceName) );
-		document.getElementById('idRaceNameFooter').appendChild( document.createTextNode(raceName + '    ' + raceStart.toLocaleString() + '    Last Updated ' + lastUpdated.toLocaleString()) );
+		document.getElementById('idRaceNameFooter').appendChild( document.createTextNode(raceName + '    ' + toInternationalString(raceStart) + '    Last Updated ' + toInternationalString(lastUpdated)) );
 	}
 	if( organizer ) {
 		document.getElementById('idOrganizer').appendChild( document.createTextNode('by ' + organizer) );
