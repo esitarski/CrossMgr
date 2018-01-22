@@ -249,7 +249,7 @@ def _GetResultsCore( category ):
 	
 	highPrecision = Model.highPrecisionTimes()
 	getCategory = race.getCategory
-	for rider in race.riders.itervalues():
+	for rider in list(race.riders.itervalues()):
 		riderCategory = getCategory( rider.num )
 		
 		if category and riderCategory != category:

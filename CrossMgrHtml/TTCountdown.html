@@ -275,6 +275,13 @@ function startIntervalTimer() {
 	secondsBetweenUpdate = 0;
 }
 
+function replaceChildrenWithChild( element, child ) {
+	while( element.lastChild ) {
+	  element.removeChild( element.lastChild );
+	}
+	element.appendChild( child );
+}
+
 function updateCountdown() {
 	var tNow = ServerDate();
 	var btg = null;
@@ -312,19 +319,17 @@ function updateCountdown() {
 	if( bibCur != bibLast ) {
 		
 		var rider_starting = document.getElementById('rider-starting');
-		rider_starting.innerHTML = '';
-		rider_starting.appendChild( document.createTextNode(
+		replaceChildrenWithChild( rider_starting, document.createTextNode(
 				(bibCur < 99999 ? (bibCur + ' ') : '') + btgNext.startEntry[2]
 			)
 		);
 		
 		var team_starting = document.getElementById('team-starting');
-		team_starting.innerHTML = '';
 		var dataFields = [];
 		for( var f = 3; f < btgNext.startEntry.length; ++f )
 			if( btgNext.startEntry[f] )
 				dataFields.push( btgNext.startEntry[f] );
-		team_starting.appendChild( document.createTextNode( dataFields.join(', ') ) );
+		replaceChildrenWithChild( team_starting, document.createTextNode( dataFields.join(', ') ) );
 		
 		var rider_next = document.getElementById('rider-next');
 		var startEntryNext = [btgNext.startEntry];
@@ -374,8 +379,7 @@ function updateCountdown() {
 			}
 			td.innerHTML = tStr;
 		}
-		rider_next.innerHTML = '';
-		rider_next.appendChild( table );
+		replaceChildrenWithChild( rider_next, table );
 		
 		bibLast = bibCur;
 	}

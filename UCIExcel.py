@@ -1,6 +1,6 @@
 import Model
 import Utils
-from GetResults import GetResults
+from GetResults import GetResults, UnstartedRaceWrapper
 
 import copy
 import xlsxwriter

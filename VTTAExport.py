@@ -4,7 +4,7 @@ import Model
 import Utils
 import datetime
 from GetResults import GetResults, GetCategoryDetails
-from FitSheetWrapper import FitSheetWrapperXLSX
+from FitSheetWrapper import FitSheetWrapper, FitSheetWrapperXLSX
 from ReadSignOnSheet import SyncExcelLink
 
 VTTAFields = (

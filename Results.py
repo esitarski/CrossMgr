@@ -731,17 +731,26 @@ class Results( wx.Panel ):
 		if self.selectDisplay == Results.DisplayRaceTimes:
 			for r, result in enumerate(results):
 				for i, t in enumerate(result.raceTimes[1:]):
-					data[i+firstLapCol][r] = Utils.formatTimeCompressed(t, highPrecision)
+					try:
+						data[i+firstLapCol][r] = Utils.formatTimeCompressed(t, highPrecision)
+					except IndexError:
+						pass
 		elif self.selectDisplay == Results.DisplayLapSpeeds:
 			for r, result in enumerate(results):
 				if getattr(result, 'lapSpeeds', None):
 					for i, s in enumerate(result.lapSpeeds):
-						data[i+firstLapCol][r] = '%.2f' % s
+						try:
+							data[i+firstLapCol][r] = u'{:.2f}'.format(s)
+						except IndexError:
+							pass
 		elif self.selectDisplay == Results.DisplayRaceSpeeds:
 			for r, result in enumerate(results):
 				if getattr(result, 'raceSpeeds', None):
 					for i, s in enumerate(result.raceSpeeds):
-						data[i+firstLapCol][r] = '%.2f' % s
+						try:
+							data[i+firstLapCol][r] = u'{:.2f}'.format(s)
+						except IndexError:
+							pass
 		
 		# Sort by the given lap, if there is one.
 		# Also, add a position for the lap itself.

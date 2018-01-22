@@ -114,7 +114,7 @@ class Template( object ):
 		try:
 			firstLapDistance = (
 				max( c.firstLapDistance for c in race.getCategories( startWaveOnly=True ) if c.firstLapDistance )
-					* (1000.0 if race.distanceUnit == UnitKm else 1609.344) )
+					* (1000.0 if race.distanceUnit == race.UnitKm else 1609.344) )
 		except ValueError:
 			firstLapDistance = None
 		

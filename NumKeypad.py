@@ -224,18 +224,6 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 		info.append( (u'', u'{:.02f} {}'.format(sLap, 'km/h')) )
 	return info
 
-def getLapCounterInfo():
-	race = Model.race
-	results = GetResults()
-	lapCounter = []
-	if not results:
-		for category in race.getCategories(startWaveOnly=True):
-			if race.getNumLapsFromCategory(category):
-				lapCounter.append( (u'{}'.format(race.getNumLapsFromCategory(category)),False) )
-			else:
-				lapCounter.append( (u'-',False) )
-		return lapCounter
-
 class NumKeypad( wx.Panel ):
 	SwitchToTimeTrialEntryMessage = _('Switch to Time Trial Entry')
 	SwitchToNumberEntryMessage = _('Switch to Regular Number Entry')

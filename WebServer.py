@@ -190,7 +190,7 @@ class ContentBuffer( object ):
 	
 	def reset( self ):
 		if self.fnameRace:
-			self.setFolder( self.fnameRace )
+			self.setFNameRace( self.fnameRace )
 	
 	def setFNameRace( self, fnameRace ):
 		with self.lock:

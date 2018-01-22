@@ -168,16 +168,8 @@ class ChipImportDialog( wx.Dialog ):
 		gs.Add( wx.StaticText(self, label = _('Import Data Time Adjustment:') ), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.timeAdjustment = HighPrecisionTimeEdit( self, size=(120,-1) )
 		self.behindAhead = wx.Choice( self, choices=[_('Behind'), _('Ahead')] )
-		if JChip.readerComputerTimeDiff:
-			rtAdjust = JChip.readerComputerTimeDiff.total_seconds()
-			if rtAdjust >= 0.0:
-				self.behindAhead.SetSelection( 0 )
-			else:
-				self.behindAhead.SetSelection( 1 )
-				rtAdjust *= -1.0
-			self.timeAdjustment.SetSeconds( rtAdjust )
-		else:
-			self.behindAhead.SetSelection( 0 )
+		self.behindAhead.SetSelection( 0 )
+		self.timeAdjustment.SetSeconds( 0.0 )
 		hb = wx.BoxSizer()
 		hb.Add( self.behindAhead, flag=wx.ALIGN_BOTTOM|wx.BOTTOM, border=4 )
 		hb.Add( self.timeAdjustment, flag=wx.ALL, border=4 )
