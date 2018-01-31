@@ -645,7 +645,20 @@ class TeamResults(wx.Panel):
 		self.refresh()
 	
 	def onCategoryChoice( self, event ):
+		try:
+			Utils.getMainWin().results.setCategory( self.categoryChoice.GetString(self.categoryChoice.GetSelection()) )
+		except AttributeError:
+			pass
 		wx.CallAfter( self.refresh )
+		
+	def setCategory( self, catName ):
+		self.fixCategories()
+		model = SeriesModel.model
+		categoryNames = model.getCategoryNamesSortedTeamPublish()
+		for i, n in enumerate(categoryNames):
+			if n == catName:
+				self.categoryChoice.SetSelection( i )
+				break
 	
 	def readReset( self ):
 		self.sortCol = None
