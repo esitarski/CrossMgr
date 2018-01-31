@@ -306,6 +306,8 @@ class SeriesModel( object ):
 			newRaces.append( Race(fileName, p, pt, grade) )
 			
 		self.races = newRaces
+		for i, r in enumerate(self.races):
+			r.iSequence = i
 		
 	def setReferences( self, references ):
 		dNew = dict( references )
