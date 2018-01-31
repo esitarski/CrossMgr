@@ -157,8 +157,8 @@ def ExtractRaceResultsExcel( raceInSeries ):
 	getReferenceLicense = SeriesModel.model.getReferenceLicense
 	getReferenceTeam = SeriesModel.model.getReferenceTeam
 	
-	excel = GetExcelReader( raceInSeries.fileName )
-	raceName = os.path.splitext(os.path.basename(raceInSeries.fileName))[0]
+	excel = GetExcelReader( raceInSeries.getFileName() )
+	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
 	raceResults = []
 	
 	# Search for a "Pos" field to indicate the start of the data.
@@ -174,7 +174,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				f = fm.finder( row )
 				info = {
 					'raceDate':		None,
-					'raceFileName':	raceInSeries.fileName,
+					'raceFileName':	raceInSeries.getFileName(),
 					'raceName':		raceName,
 					'raceOrganizer': u'',
 					'raceInSeries': raceInSeries,					
@@ -257,7 +257,7 @@ def FixExcelSheetLocal( fileName, race ):
 				race.excelLink.fileName = newFileName
 
 def ExtractRaceResultsCrossMgr( raceInSeries ):
-	fileName = raceInSeries.fileName
+	fileName = raceInSeries.getFileName()
 	try:
 		with open(fileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp )
@@ -429,7 +429,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		return [], [], set()
 		
 	# Create a map for race filenames to grade.
-	raceGrade = { race.fileName:race.grade for race in SeriesModel.model.races }
+	raceGrade = { race.getFileName():race.grade for race in SeriesModel.model.races }
 	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
 		
 	# Assign a sequence number to the races in the specified order.
@@ -595,7 +595,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 	
 	elif scoreByTrueSkill:
-		# Get an intial Rating for all riders.
+		# Get an initial Rating for all riders.
 		tsEnv = trueskill.TrueSkill( draw_probability=0.0 )
 		
 		sigmaMultiple = 3.0
@@ -737,7 +737,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 RaceTuple = namedtuple('RaceTuple', ['date', 'name', 'url', 'raceInSeries'] )
 ResultTuple = namedtuple('ResultTuple', ['points', 'time', 'rank', 'primePoints', 'timeBonus', 'rr'] )
 
-def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
+def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByPoints = SeriesModel.model.scoreByPoints
 	scoreByTime = SeriesModel.model.scoreByTime
 	
@@ -753,9 +753,9 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		return [], []
 		
 	# Create a map for race filenames to grade.
-	raceGrade = { race.fileName:race.grade for race in SeriesModel.model.races }
+	raceGrade = { race.getFileName():race.grade for race in SeriesModel.model.races }
 	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
-	pureTeam = { race.fileName for race in SeriesModel.model.races if race.pureTeam }
+	pureTeam = { race.getFileName() for race in SeriesModel.model.races if race.pureTeam }
 		
 	# Assign a sequence number to the races in the specified order.
 	for i, r in enumerate(SeriesModel.model.races):
@@ -777,8 +777,10 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 		teamName[rr.keyTeam()] = rr.team
 	
 	teamResults = {r.raceInSeries:defaultdict(list) for r in races}
+	teamResultsPoints = {r.raceInSeries:defaultdict(int) for r in races}
 	teamEventsCompleted = defaultdict( int )
 	teamPlaceCount = defaultdict( lambda : defaultdict(int) )
+	teamRanks = defaultdict( lambda : defaultdict(int) )
 	
 	if scoreByPoints:
 		# Score by points.
@@ -796,27 +798,43 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 				teamResults[raceInSeries][team].sort( key=lambda rt: (-rt.points, rt.rank) )
 				# Record best scores only.
 				teamResults[raceInSeries][team] = teamResults[raceInSeries][team][:teamResultsN]
+				teamResultsPoints[raceInSeries][team] += sum( rt.points for rt in teamResults[raceInSeries][team] )
 				teamPoints[team] += sum( rt.points for rt in teamResults[raceInSeries][team] )
 				teamEventsCompleted[team] += 1
-				for rt in teamResults[raceInSeries][team]:
-					teamPlaceCount[team][(raceGrade[raceInSeries.fileName],rt.rank)] += 1
+			
+			# Rank teams by sum of individual points.  Use individual rank to break ties.
+			tr = sorted(
+				(t for t in teamResultsPoints[raceInSeries].iterkeys()),
+				key = lambda t: (-teamResultsPoints[raceInSeries][t],) + tuple(rt.rank for rt in teamResults[raceInSeries][t])
+			)
+			
+			# Correct the earned team points based on the team points structure, not the sum of the individual points.
+			if teamPointsForRank[raceInSeries.getFileName()]:
+				def getTeamPointsForRank(team, rank):
+					return teamPointsForRank[raceInSeries.getFileName()][rank]
+			else:
+				def getTeamPointsForRank(team, rank):
+					return teamResultsPoints[raceInSeries][team]
+				
+			# Get the points for the team rank as specified.  Adjust race results and total.
+			for rank, t in enumerate(tr, 1):
+				newTeamPoints = getTeamPointsForRank(t, rank)
+				teamPoints[t] += newTeamPoints - teamResultsPoints[raceInSeries][t]
+				teamResultsPoints[raceInSeries][t] = newTeamPoints
+				teamPlaceCount[t][(raceGrade[raceInSeries.getFileName()],rank)] += 1
+				teamRanks[raceInSeries][t] = rank
 
-		# Sort by team points - greatest number of points first.  Break ties with place count by grade, then
-		# most recent result.
+		# Sort by team points - greatest number of points first.  Break ties with the number of place count by race grade, then the last result.
 		rankDNF = RaceResult.rankDNF
 		teamOrder = list( teamName.iterkeys() )
 		def getBestResults( t ):
-			results = []
-			for r in reversed(races):
-				tr = teamResults[r.raceInSeries][t]
-				results.append( tr[0].rank if tr else rankDNF )
-			return results
+			return [-teamResultsPoints[r.raceInSeries][t] for r in reversed(races)]
 		
 		teamOrder.sort(
 			key = lambda t:	[-teamPoints[t]] +
 							([-teamEventsCompleted[t]] if useMostEventsCompleted else []) +
 							[-teamPlaceCount[t][(g,k)] for g,k in itertools.product(gradesUsed,range(1, numPlacesTieBreaker+1))] +
-							getBestResults( t )
+							getBestResults(t)
 		)
 		
 		# Compute the points gap.
@@ -832,8 +850,12 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 			races.reverse()
 		
 		# List of:
-		# team, points, gap, [list of ResultTuple for each race in series]
-		categoryResult = [[teamName[t], teamPoints[t], teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
+		# team, points, gap, [list of teamResultsPoints for each race in series]
+		# Note: only the team results are returned - the individual results are not returned.
+		categoryResult = [
+			[teamName[t], teamPoints[t], teamGap[t]] + [[(teamResultsPoints[r.raceInSeries][t], teamRanks[r.raceInSeries][t]) for r in races]]
+			for t in teamOrder
+		]
 		return categoryResult, races
 		
 	elif scoreByTime:
@@ -851,13 +873,13 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, useMostEve
 					time = rr.tFinish - timeBonus
 					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
 
-				if len(teamResults[raceInSeries][team]) < teamResultsN and raceInSeries.fileName not in pureTeam:
+				if len(teamResults[raceInSeries][team]) < teamResultsN and raceInSeries.getFileName() not in pureTeam:
 					teamResults[raceInSeries][team] = []
 					continue
 				
 				teamResults[raceInSeries][team].sort( key=operator.attrgetter('time', 'rank') )
 				
-				if useNthScore and raceInSeries.fileName not in pureTeam:
+				if useNthScore and raceInSeries.getFileName() not in pureTeam:
 					teamResults[raceInSeries][team] = teamResults[raceInSeries][team][teamResultsN-1:teamResultsN]
 				else:
 					# Record best scores only.

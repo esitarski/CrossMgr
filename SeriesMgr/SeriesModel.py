@@ -153,10 +153,12 @@ class Race( object ):
 	resultsType = IndividualAndTeamResults
 	
 	pureTeam = False	# True if the results are by pure teams, that is, no individual results.
+	teamPointStructure = None	# If specified, team points will be recomputed from the top individual results.
 	
-	def __init__( self, fileName, pointStructure, grade=None ):
+	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
+		self.teamPointStructure = teamPointStructure
 		self.grade = grade or u'A'
 		
 	def getRaceName( self ):
@@ -274,12 +276,14 @@ class SeriesModel( object ):
 			
 		for r in self.races:
 			r.pointStructure = newPS.get( oldToNewName.get(r.pointStructure.name, ''), newPointStructures[0] )
+			if r.teamPointStructure:
+				r.teamPointStructure = newPS.get( oldToNewName.get(r.teamPointStructure.name, ''), None )
 			
 		self.pointStructures = newPointStructures
 		self.setChanged()
 	
 	def setRaces( self, raceList ):
-		if [(r.fileName, r.pointStructure.name, r.grade) for r in self.races] == raceList:
+		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
 			return
 		
 		self.setChanged()
@@ -287,7 +291,7 @@ class SeriesModel( object ):
 		racesSeen = set()
 		newRaces = []
 		ps = { p.name:p for p in self.pointStructures }
-		for fileName, pname, grade in raceList:
+		for fileName, pname, pteamname, grade in raceList:
 			fileName = fileName.strip()
 			if not fileName or fileName in racesSeen:
 				continue
@@ -298,7 +302,8 @@ class SeriesModel( object ):
 				p = ps[pname]
 			except KeyError:
 				continue
-			newRaces.append( Race(fileName, p, grade) )
+			pt = ps.get( pteamname, None )
+			newRaces.append( Race(fileName, p, pt, grade) )
 			
 		self.races = newRaces
 		

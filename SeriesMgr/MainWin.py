@@ -637,10 +637,10 @@ table.results tr td.fastest{
 			with open(htmlfileName, 'wb') as fp:
 				fp.write( html )
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html file written to:\n\n   %s' % htmlfileName, 'Html Write')
+			Utils.MessageOK(self, 'Html file written to:\n\n  [}'.format(htmlfileName), 'Html Write')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
+						'Cannot write "{}".\n\nCheck if this file is open.\nIf so, close it, and try again.'.format(htmlfileName),
 						'Html File Error', iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------
@@ -741,7 +741,7 @@ table.results tr td.fastest{
 		try:
 			self.refreshAll()
 		except Exception as e:
-			Utils.MessageOK(self, 'Error:\n\n"{}".'.format(e), 'Error', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, 'Error:\n\n"{}\n\n{}".'.format(e, traceback.format_exc()), 'Error', iconMask=wx.ICON_ERROR )
 		self.showPageName( 'Races' )
 
 	def menuOpen( self, event ):

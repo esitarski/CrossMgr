@@ -10,11 +10,14 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
+	headerNames = ['Race', 'Grade', 'Points', 'Team Pts', 'Race File']
+	
 	RaceCol = 0
 	GradeCol = 1
 	PointsCol = 2
-	RaceFileCol = 3
-	RaceStatusCol = 4
+	TeamPointsCol = 3
+	RaceFileCol = 4
+	RaceStatusCol = 5
 	
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -38,7 +41,7 @@ class Races(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Race', 'Grade', 'Points', 'Race File']
+		
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -51,6 +54,11 @@ class Races(wx.Panel):
 		attr = gridlib.GridCellAttr()
 		attr.SetEditor( self.pointsChoiceEditor )
 		self.grid.SetColAttr( self.PointsCol, attr )
+		
+		self.teamPointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
+		attr = gridlib.GridCellAttr()
+		attr.SetEditor( self.teamPointsChoiceEditor )
+		self.grid.SetColAttr( self.TeamPointsCol, attr )
 		
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly( True )
@@ -153,10 +161,20 @@ class Races(wx.Panel):
 			return
 		comboBox.SetItems( [p.name for p in SeriesModel.model.pointStructures] )
 	
+	def updateTeamPointsChoices( self ):
+		try:
+			teamComboBox = self.teamComboBox
+		except AttributeError:
+			return
+		teamComboBox.SetItems( [''] + [p.name for p in SeriesModel.model.pointStructures] )
+	
 	def onGridEditorCreated(self, event):
 		if event.GetCol() == self.PointsCol:
 			self.comboBox = event.GetControl()
 			self.updatePointsChoices()
+		elif event.GetCol() == self.TeamPointsCol:
+			self.teamComboBox = event.GetControl()
+			self.updateTeamPointsChoices()
 		event.Skip()
 
 	def gridAutoSize( self ):
@@ -174,8 +192,9 @@ class Races(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(model.races) )
 		for row, race in enumerate(model.races):
 			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
-			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
 			self.grid.SetCellValue( row, self.GradeCol, race.grade )
+			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
+			self.grid.SetCellValue( row, self.TeamPointsCol, race.teamPointStructure.name if race.teamPointStructure else u'' )
 			self.grid.SetCellValue( row, self.RaceFileCol, race.fileName )
 		wx.CallAfter( self.gridAutoSize )
 		
@@ -191,12 +210,13 @@ class Races(wx.Panel):
 			race = SeriesModel.model.races[row]
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
+			pteamname = self.grid.GetCellValue( row, self.TeamPointsCol ) or None
 			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()[:1]
 			if not (grade and ord(u'A') <= ord(grade) <= ord(u'Z')):
 				grade = u'A'
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname, grade) )
+			raceList.append( (fileName, pname, pteamname, grade) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )

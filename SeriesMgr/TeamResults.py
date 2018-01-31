@@ -44,14 +44,10 @@ def getHeaderGraphicBase64():
 
 def formatTeamResults( scoreByPoints, rt ):
 	if scoreByPoints:
-		rt = [r for r in rt if r.points]
-		if not rt:
-			return u''
-		total = sum( r.points for r in rt )
-		if len(rt) == 1:
-			r = rt[0]
-			return u'{}({})'.format(r.points, Utils.ordinal(r.rank))
-		return u'{} = {}'.format(total, ' + '.join( u'{}({})'.format(r.points, Utils.ordinal(r.rank)) for r in rt) )
+		# The first value is the team score.  Subsequent values are the individual ranks.
+		if not rt[0]:
+			return u'';
+		return u'{} ({})'.format(rt[0], Utils.ordinal(rt[1]))
 	else:
 		rt = [r for r in rt if r.time]
 		if not rt:
@@ -61,7 +57,6 @@ def formatTeamResults( scoreByPoints, rt ):
 			r = rt[0]
 			return u'{}'.format(Utils.formatTime(r.time))
 		return u'{} = {}'.format(Utils.formatTime(total), '+'.join( u'{}'.format(Utils.formatTime(r.time)) for r in rt) )
-		
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -84,6 +79,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	
 	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
+	teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 
 	if not seriesFileName:
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
@@ -432,6 +428,7 @@ function sortTableId( iTable, iCol ) {
 					categoryName,
 					raceResults,
 					pointsForRank,
+					teamPointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				results = [rr for rr in results if rr[1] > 0]
@@ -758,11 +755,13 @@ class TeamResults(wx.Panel):
 		self.grid.ClearGrid()
 			
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
+		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 
 		results, races = GetModelInfo.GetCategoryResultsTeam(
 			categoryName,
 			self.raceResults,
 			pointsForRank,
+			teamPointsForRank,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
@@ -856,6 +855,7 @@ class TeamResults(wx.Panel):
 			return
 			
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
+		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 		
 		wb = xlwt.Workbook()
 
@@ -864,6 +864,7 @@ class TeamResults(wx.Panel):
 				categoryName,
 				self.raceResults,
 				pointsForRank,
+				teamPointsForRank,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
