@@ -113,9 +113,16 @@ class Database( object ):
 		tsTriggers = self.purgeTriggerWriteDuplicates( tsTriggers )
 		if not tsTriggers and not tsJpgs:
 			return
-			
+		
 		if tsJpgs:
-			tsJpgs = [(ts, jpg) for ts, jpg in tsJpgs if ts not in self.photoTsCache]
+			# Purge duplicate photos, or with the same timestamp.
+			jpgSeen = set()
+			tsJpgsUnique = []
+			for ts_jpg in tsJpgs:
+				if ts_jpg[1] and ts_jpg[0] not in self.photoTsCache and ts_jpg[1] not in jpgSeen:
+					jpsSeen.add( ts_jpg[1] )
+					tsJpgsUnique.append( ts_jpg )
+			tsJpgs = tsJpgsUnique
 		
 		with self.conn:
 			if tsTriggers:

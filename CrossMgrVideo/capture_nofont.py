@@ -93,6 +93,7 @@ class Device(object):
 
 		self.grabber.SetBufferSamples(True)
 		self.grabber.SetOneShot(False)
+		self.getImage = self.get_image
 
 	def teardown(self):
 		if hasattr(self, 'control'):
@@ -200,6 +201,13 @@ class Device(object):
 		#self.teardown()
 		#self.initialize()
 
+	error_map = dict(
+		E_INVALIDARG="Samples are not being buffered",
+		E_POINTER="NULL pointer argument",
+		VFW_E_NOT_CONNECTED="The filter is not connected",
+		VFW_E_WRONG_STATE="The filter did not buffer a sample yet",
+	)
+
 	def get_buffer(self):
 		media_type = tag_AMMediaType()
 		self.grabber.GetConnectedMediaType(media_type)
@@ -220,8 +228,8 @@ class Device(object):
 		self.control.Run()
 
 		try:
-			while(True):
-				# call the function directly, as the in/out symantics of
+			while 1:
+				# call the function directly, as the in/out semantics of
 				# argtypes isn't working here.
 				try:
 					GetCurrentBuffer = self.grabber._ISampleGrabber__com_GetCurrentBuffer
@@ -234,41 +242,19 @@ class Device(object):
 				else:
 					break
 		except COMError as e:
-
-			error_map = dict(
-				E_INVALIDARG="Samples are not being buffered",
-				E_POINTER="NULL pointer argument",
-				VFW_E_NOT_CONNECTED="The filter is not connected",
-				VFW_E_WRONG_STATE="The filter did not buffer a sample yet",
-			)
 			code = e[0]
 			unknown_error = 'Unknown Error ({0:x})'.format(code)
-			msg = "Getting the sample grabber's current buffer failed ({0}).".format(error_map.get(code, unknown_error))
+			msg = "Getting the sample grabber's current buffer failed ({0}).".format(self.error_map.get(code, unknown_error))
 			raise VidCapError(msg)
 
 		return bytes(buffer[:size.value]), (width, height)
 
 	def get_image(self):
-		"""Returns a PIL Image instance.
-
-		textpos:
-			The position of the timestamp can be specified by a string
-			containing a combination of two words specifying the vertical
-			and horizontal position of the timestamp.  Abbreviations
-			are allowed.
-			Vertical positions: top or bottom
-			Horizontal positions: left, center, right
-
-			defaults to 'bottom-left'
-		"""
+		"""Returns a PIL Image instance."""
 		buffer, dimensions = self.get_buffer()
 		# todo, what is 'BGR', 0, -1 ?
-		img = PIL.Image.frombytes('RGB', dimensions, buffer, 'raw', 'BGR', 0, -1)
-		return img
-		
-	def getImage( self ):
-		return self.get_image()
-
+		return PIL.Image.frombytes('RGB', dimensions, buffer, 'raw', 'BGR', 0, -1)
+	
 	@staticmethod
 	def _get_shadow_draw_locations(origin, shadow_style):
 		x, y = origin

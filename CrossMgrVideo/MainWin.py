@@ -724,13 +724,13 @@ class MainWin( wx.Frame ):
 		if not image:
 			return
 		
-		image = PilImageToWxImage( image )
+		image = wx.Image( image.size[0], image.size[1], image.convert('RGB').tobytes() )
 		
 		# Add the image to the circular buffer.
 		self.fcb.append( tNow, image )
 		
 		# Update the monitor screen.
-		if self.frameCount & 3 == 0:
+		if self.frameCount & 8 == 0:
 			wx.CallAfter( self.primaryImage.SetImage, image )
 		if self.focusDialog.IsShown():
 			wx.CallAfter( self.focusDialog.SetImage, image )

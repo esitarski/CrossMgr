@@ -17,9 +17,7 @@ def formatTime( secs ):
 	return '{:02d}:{:02d}:{:06.3f}'.format( hours, minutes, secs )
 	
 def PilImageToWxImage( pil ):
-	image = wx.Image( *pil.size )
-	image.SetData( pil.convert('RGB').tobytes() )
-	return image
+	return wx.Image( pil.size[0], pil.size[1], pil.convert('RGB').tobytes() )
 
 drawResources = None		# Cached resource for drawing the photo header.
 def setDrawResources( dc, w, h ):
