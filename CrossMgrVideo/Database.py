@@ -120,7 +120,7 @@ class Database( object ):
 			tsJpgsUnique = []
 			for ts_jpg in tsJpgs:
 				if ts_jpg[1] and ts_jpg[0] not in self.photoTsCache and ts_jpg[1] not in jpgSeen:
-					jpsSeen.add( ts_jpg[1] )
+					jpgSeen.add( ts_jpg[1] )
 					tsJpgsUnique.append( ts_jpg )
 			tsJpgs = tsJpgsUnique
 		

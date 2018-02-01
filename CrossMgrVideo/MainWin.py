@@ -1,6 +1,7 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
+from wx.lib.agw.floatspin import FloatSpin
 import sys
 import os
 import re
@@ -196,9 +197,10 @@ def getCameraResolutionChoice( resolution ):
 	return 0
 		
 class ConfigDialog( wx.Dialog ):
-	def __init__( self, parent, cameraDeviceNum=0, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
+	def __init__( self, parent, cameraDeviceNum=0, fps=25.0, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Configuration') )
 		
+		fps = float( fps )
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label='CrossMgr Video Configuration' )
@@ -218,6 +220,10 @@ class ConfigDialog( wx.Dialog ):
 		self.cameraResolution = wx.Choice( self, choices=cameraResolutionChoices )
 		self.cameraResolution.SetSelection( getCameraResolutionChoice(cameraResolution) )
 		pfgs.Add( self.cameraResolution )
+		
+		pfgs.Add( wx.StaticText(self, label='Frames per second'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		self.fps = FloatSpin( self, value=fps, min_val=10.0, max_val=1000.0, digits=3, increment=1.0 )
+		pfgs.Add( self.fps )
 		
 		pfgs.AddSpacer( 1 )
 		pfgs.Add( wx.StaticText(self, label='Your camera may not support all resolutions.\nYour Camera may not support the required frame rate at high resolutions.\nCheck your Camera specs for details.'), flag=wx.RIGHT, border=4 )
@@ -253,6 +259,9 @@ class ConfigDialog( wx.Dialog ):
 	def GetCameraResolution( self ):
 		return tuple(int(v) for v in cameraResolutionChoices[self.cameraResolution.GetSelection()].split('x'))
 
+	def GetFPS( self ):
+		return self.fps.GetValue()
+		
 	def onOK( self, event ):
 		self.EndModal( wx.ID_OK )
 		
@@ -292,14 +301,12 @@ class MainWin( wx.Frame ):
 		
 		self.db = Database()
 		
-		self.fps = 25
-		self.frameDelay = 1.0 / self.fps
 		self.bufferSecs = 10
+		self.setFPS( 25 )
 		self.xFinish = None
 		
 		self.tFrameCount = self.tLaunch = self.tLast = now()
 		self.frameCount = 0
-		self.frameCountUpdate = int(self.fps * 2)
 		self.fpsActual = 0.0
 		self.fpt = timedelta(seconds=0)
 		self.iTriggerSelect = None
@@ -307,7 +314,6 @@ class MainWin( wx.Frame ):
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
-		self.fcb = FrameCircBuf( self.bufferSecs * self.fps )
 		
 		self.config = wx.Config(appName="CrossMgrVideo",
 						vendorName="SmartCyclingSolutions",
@@ -363,10 +369,10 @@ class MainWin( wx.Frame ):
 		cameraDeviceSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 
 		#------------------------------------------------------------------------------
-		self.targetProcessingTimeLabel = wx.StaticText(self, label='Target Frames:')
-		self.targetProcessingTime = wx.StaticText(self, label=u'{:.3f}'.format(self.fps))
-		self.targetProcessingTime.SetFont( boldFont )
-		self.targetProcessingTimeUnit = wx.StaticText(self, label='/ sec')
+		self.targetFPSLabel = wx.StaticText(self, label='Target Frames:')
+		self.targetFPS = wx.StaticText(self, label=u'{:.3f}'.format(self.fps))
+		self.targetFPS.SetFont( boldFont )
+		self.targetFPSUnit = wx.StaticText(self, label='/ sec')
 		
 		self.framesPerSecondLabel = wx.StaticText(self, label='Actual Frames:')
 		self.framesPerSecond = wx.StaticText(self, label='25.000')
@@ -388,9 +394,9 @@ class MainWin( wx.Frame ):
 		fLeft = wx.ALIGN_CENTRE_VERTICAL
 		
 		#------------------- Row 1 ------------------------------
-		pfgs.Add( self.targetProcessingTimeLabel, flag=fRight )
-		pfgs.Add( self.targetProcessingTime, flag=fRight )
-		pfgs.Add( self.targetProcessingTimeUnit, flag=fLeft )
+		pfgs.Add( self.targetFPSLabel, flag=fRight )
+		pfgs.Add( self.targetFPS, flag=fRight )
+		pfgs.Add( self.targetFPSUnit, flag=fLeft )
 		pfgs.Add( self.availableMsPerFrameLabel, flag=fRight )
 		pfgs.Add( self.availableMsPerFrame, flag=fRight )
 		pfgs.Add( self.availableMsPerFrameUnit, flag=fLeft )
@@ -490,6 +496,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
 		self.readOptions()
+		self.updateFPS( float(self.targetFPS.GetLabel()) )
 		self.SetSizerAndFit( mainSizer )
 		
 		# Start the message reporting thread so we can see what is going on.
@@ -506,6 +513,17 @@ class MainWin( wx.Frame ):
 		self.timer.Start( ms, False )
 		
 		wx.CallLater( 300, self.refreshTriggers )
+	
+	def setFPS( self, fps ):
+		self.fps = fps if fps > 0.0 else 25.0
+		self.frameDelay = 1.0 / self.fps
+		self.frameCountUpdate = int(self.fps * 2)
+		self.fcb = FrameCircBuf( int(self.bufferSecs * self.fps) )
+	
+	def updateFPS( self, fps ):
+		self.setFPS( fps )
+		self.targetFPS.SetLabel( u'{:.3f}'.format(self.fps) )
+		self.availableMsPerFrame.SetLabel( u'{:.0f}'.format(1000.0*self.frameDelay) )
 	
 	def setQueryDate( self, d ):
 		self.tsQueryLower = d
@@ -799,16 +817,18 @@ class MainWin( wx.Frame ):
 			self.dbReaderThread.join()
 	
 	def resetCamera( self, event=None ):
-		dlg = ConfigDialog( self, self.getCameraDeviceNum(), self.getCameraResolution() )
+		dlg = ConfigDialog( self, self.getCameraDeviceNum(), self.fps, self.getCameraResolution() )
 		ret = dlg.ShowModal()
 		cameraDeviceNum = dlg.GetCameraDeviceNum()
 		cameraResolution = dlg.GetCameraResolution()
+		fps = dlg.GetFPS()
 		dlg.Destroy()
 		if ret != wx.ID_OK:
 			return False
 		
 		self.setCameraDeviceNum( cameraDeviceNum )
 		self.setCameraResolution( *cameraResolution )
+		self.updateFPS( fps )
 		self.writeOptions()
 
 		self.grabFrameOK = self.startCamera()
@@ -851,11 +871,13 @@ class MainWin( wx.Frame ):
 	def writeOptions( self ):
 		self.config.Write( 'CameraDevice', self.cameraDevice.GetLabel() )
 		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
+		self.config.Write( 'FPS', self.targetFPS.GetLabel() )
 		self.config.Flush()
 	
 	def readOptions( self ):
 		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
 		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x480') )
+		self.targetFPS.SetLabel( self.config.Read('FPS', u'25.000') )
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()
