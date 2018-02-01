@@ -226,7 +226,12 @@ class ConfigDialog( wx.Dialog ):
 		pfgs.Add( self.fps )
 		
 		pfgs.AddSpacer( 1 )
-		pfgs.Add( wx.StaticText(self, label='Your camera may not support all resolutions.\nYour Camera may not support the required frame rate at high resolutions.\nCheck your Camera specs for details.'), flag=wx.RIGHT, border=4 )
+		pfgs.Add( wx.StaticText(self, label='\n'.join([
+				'Your camera may not support all resolutions.',
+				'Your Camera/Computer may not support the frame rate in low light.',
+				'Check that the "Frame Processing Time" does not exceed the "Available Time Per Frame".',
+				'If so, you will have to choose a lower Frames Per Second".',
+			])), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )
 		for i, e in enumerate(self.explanation):
