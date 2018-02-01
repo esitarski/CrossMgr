@@ -289,8 +289,18 @@ class FocusDialog( wx.Dialog ):
 	
 	def SetImage( self, image ):
 		sz = image.GetSize()
-		if self.GetSize() != sz:
-			self.SetSize( sz )
+		iWidth, iHeight = sz
+		r = wx.GetClientDisplayRect()
+		dWidth, dHeight = r.GetWidth(), r.GetHeight()
+		if iWidth > dWidth or iHeight > dHeight:
+			if float(iHeight)/float(iWidth) < float(dHeight)/float(dWidth):
+				wSize = (dWidth, int(iHeight * float(dWidth)/float(iWidth)))
+			else:
+				wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
+		else:
+			wSize = sz
+		if self.GetSize() != wSize:
+			self.SetSize( wSize )
 			self.SetTitle( u'{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
 		return self.image.SetImage( image )
 
