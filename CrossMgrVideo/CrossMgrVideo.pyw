@@ -7,5 +7,7 @@ try:
 except ImportError:
 	from CrossMgrCamera import MainWin
 
+import multiprocessing
 if __name__ == '__main__':
+	multiprocessing.freeze_support()
 	MainWin.MainLoop()

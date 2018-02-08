@@ -4,7 +4,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 import sqlite3
-import StringIO
+import CVUtil
 from collections import defaultdict
 
 from Queue import Queue, Empty
@@ -221,7 +221,7 @@ class Database( object ):
 	def vacuum( self ):
 		self.conn.execute( 'VACUUM' )
 		
-def DBWriter( q, fps=25 ):
+def DBWriter( q, fps=30 ):
 	db = Database( fps=fps )
 	tsJpgs = []
 	tsTriggers = []
@@ -242,9 +242,7 @@ def DBWriter( q, fps=25 ):
 			
 		if v[0] == 'photo':
 			if not db.isDup( v[1] ):
-				outStream = StringIO.StringIO()
-				v[2].SaveFile( outStream, wx.BITMAP_TYPE_JPEG )
-				tsJpgs.append( (v[1], sqlite3.Binary(outStream.getvalue())) )
+				tsJpgs.append( (v[1], sqlite3.Binary(CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
 			tsTriggers.append( (list(v[1:]) + [u''] * 7)[:8] )
 		elif v[0] == 'kmh':

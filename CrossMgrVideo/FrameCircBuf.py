@@ -1,5 +1,20 @@
 import types
 import datetime
+from bisect import bisect_left
+
+class CircAsFlat( object ):
+	__slots__ = ('arr', 'iStart', 'iMax')
+
+	def __init__( self, arr, iStart, iMax ):
+		self.arr = arr
+		self.iStart = iStart
+		self.iMax = iMax
+		
+	def __getitem__( self, i ):
+		return self.arr[(i + self.iStart) % self.iMax]
+		
+	def __len__( self ):
+		return self.iMax
 
 class FrameCircBuf( object ):
 	def __init__( self, bufSize = 75 ):
@@ -9,7 +24,7 @@ class FrameCircBuf( object ):
 		if bufSize is None:
 			bufSize = self.bufSize
 		t = datetime.datetime.now() - datetime.timedelta( seconds = bufSize )
-		dt = datetime.timedelta( seconds = 1 )
+		dt = datetime.timedelta( seconds = 0.001 )
 		times = []
 		for i in xrange(bufSize):
 			times.append( t )
@@ -30,32 +45,30 @@ class FrameCircBuf( object ):
 
 	def append( self, t, frame ):
 		''' Replace the oldest frame and time. '''
-		iStart = self.iStart
-		self.times[iStart] = t
-		self.frames[iStart] = frame
-		self.iStart = (iStart + 1) % self.bufSize
+		if frame is not None:
+			iStart = self.iStart
+			self.times[iStart] = t
+			self.frames[iStart] = frame
+			self.iStart = (iStart + 1) % self.bufSize
 
-	def getBackFrames( self, t ):
+	def getTimeFrames( self, tStart, tEnd, tsSeen ):
 		iStart = self.iStart
-		times = self.times
-		frames = self.frames
 		bufSize = self.bufSize
-		bufSizeMinus1 = bufSize - 1
 		
-		retTimes = []
-		retFrames = []
-		
-		iPrev = iStart
-		while 1:
-			iPrev = (iPrev + bufSizeMinus1) % bufSize
-			if iPrev == iStart or times[iPrev] < t:
+		i = bisect_left( CircAsFlat(self.times, iStart, bufSize), tStart )
+		if i >= bufSize:
+			return [], []
+		times = []
+		frames = []
+		for j in xrange(i, bufSize):
+			k = (j+iStart)%bufSize
+			t = self.times[k]
+			if t > tEnd:
 				break
-			retTimes.append( times[iPrev] )
-			retFrames.append( frames[iPrev] )
-		
-		retTimes.reverse()
-		retFrames.reverse()
-		return retTimes, retFrames
+			if t not in tsSeen and self.frames[k] is not None:
+				times.append( t )
+				frames.append( self.frames[k] )
+		return times, frames
 		
 if __name__ == '__main__':
 	bufSize = 5*75

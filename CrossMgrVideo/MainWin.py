@@ -1,7 +1,6 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
-from wx.lib.agw.floatspin import FloatSpin
 import sys
 import os
 import re
@@ -12,17 +11,17 @@ import socket
 import atexit
 import time
 import platform
-import cStringIO as StringIO
-from Queue import Queue, Empty, Full
+from Queue import Queue, Empty
+import CamServer
 
 from datetime import datetime, timedelta, time
 
 now = datetime.now
 
 import Utils
+import CVUtil
 from SocketListener import SocketListener
 from Database import Database, DBWriter, DBReader
-from FrameCircBuf import FrameCircBuf
 from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
@@ -32,7 +31,7 @@ from PhotoDialog import PhotoDialog
 imageWidth, imageHeight = 640, 480
 
 tdCaptureBefore = timedelta(seconds=0.5)
-tdCaptureAfter = timedelta(seconds=3.5)
+tdCaptureAfter = timedelta(seconds=2.0)
 
 closeFinishThreshold = 3.0/24.0
 closeColors = ('E50000','D1D200','00BF00')
@@ -197,10 +196,10 @@ def getCameraResolutionChoice( resolution ):
 	return 0
 		
 class ConfigDialog( wx.Dialog ):
-	def __init__( self, parent, cameraDeviceNum=0, fps=25.0, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
+	def __init__( self, parent, cameraDeviceNum=0, fps=30, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Configuration') )
 		
-		fps = float( fps )
+		fps = int( fps )
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label='CrossMgr Video Configuration' )
@@ -222,7 +221,7 @@ class ConfigDialog( wx.Dialog ):
 		pfgs.Add( self.cameraResolution )
 		
 		pfgs.Add( wx.StaticText(self, label='Frames per second'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.fps = FloatSpin( self, value=fps, min_val=10.0, max_val=1000.0, digits=3, increment=1.0 )
+		self.fps = wx.lib.intctrl.IntCtrl( self, value=fps, min=10, max=1000 )
 		pfgs.Add( self.fps )
 		
 		pfgs.AddSpacer( 1 )
@@ -326,6 +325,7 @@ class MainWin( wx.Frame ):
 		self.fpt = timedelta(seconds=0)
 		self.iTriggerSelect = None
 		self.triggerInfo = None
+		self.tsMax = None
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
@@ -385,7 +385,7 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		self.targetFPSLabel = wx.StaticText(self, label='Target Frames:')
-		self.targetFPS = wx.StaticText(self, label=u'{:.3f}'.format(self.fps))
+		self.targetFPS = wx.StaticText(self, label=u'{}'.format(self.fps))
 		self.targetFPS.SetFont( boldFont )
 		self.targetFPSUnit = wx.StaticText(self, label='/ sec')
 		
@@ -501,17 +501,11 @@ class MainWin( wx.Frame ):
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		row1Sizer.Add( self.messagesText, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, flag=wx.EXPAND )
-		
-		#------------------------------------------------------------------------------------------------
-		# Create a timer to update the frame loop.
-		#
-		self.timer = wx.Timer()
-		self.timer.Bind( wx.EVT_TIMER, self.frameLoop )
-		
+				
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
 		self.readOptions()
-		self.updateFPS( float(self.targetFPS.GetLabel()) )
+		self.updateFPS( int(float(self.targetFPS.GetLabel())) )
 		self.SetSizerAndFit( mainSizer )
 		
 		# Start the message reporting thread so we can see what is going on.
@@ -519,25 +513,16 @@ class MainWin( wx.Frame ):
 		self.messageThread.daemon = True
 		self.messageThread.start()
 		
-		self.grabFrameOK = False
-		self.tsMax = None
-		
-		# Start the frame loop.
-		delayAdjustment = 0.80 if 'win' in sys.platform else 0.98
-		ms = int(1000 * self.frameDelay * delayAdjustment)
-		self.timer.Start( ms, False )
-		
 		wx.CallLater( 300, self.refreshTriggers )
 	
 	def setFPS( self, fps ):
-		self.fps = fps if fps > 0.0 else 25.0
+		self.fps = int(fps if fps > 0 else 30)
 		self.frameDelay = 1.0 / self.fps
 		self.frameCountUpdate = int(self.fps * 2)
-		self.fcb = FrameCircBuf( int(self.bufferSecs * self.fps) )
 	
 	def updateFPS( self, fps ):
 		self.setFPS( fps )
-		self.targetFPS.SetLabel( u'{:.3f}'.format(self.fps) )
+		self.targetFPS.SetLabel( u'{}'.format(self.fps) )
 		self.availableMsPerFrame.SetLabel( u'{:.0f}'.format(1000.0*self.frameDelay) )
 	
 	def setQueryDate( self, d ):
@@ -627,7 +612,6 @@ class MainWin( wx.Frame ):
 		self.messageQ.put( ('', '************************************************') )
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startThreads()
-		self.startCamera()
 
 	def onTest( self, event ):
 		self.testCount = getattr(self, 'testCount', 0) + 1
@@ -643,12 +627,12 @@ class MainWin( wx.Frame ):
 				'raceName':u'Test',				
 			}
 		)
-		wx.CallLater( 500, self.dbWriterQ.put, ('flush',) )
-		wx.CallLater( int(100+1000*int(tdCaptureBefore.total_seconds())), self.refreshTriggers )
 	
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))
+		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.ShowModal()
+		self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 	
 	def onRightClick( self, event ):
 		if not self.triggerInfo:
@@ -683,23 +667,6 @@ class MainWin( wx.Frame ):
 			cmd, info = message
 			wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 		
-	def startCamera( self ):
-		self.camera = None
-		try:
-			self.camera = Device( max(self.getCameraDeviceNum(), 0) )
-		except Exception as e:
-			self.messageQ.put( ('camera', 'Error: {}'.format(e)) )
-			return False
-		
-		try:
-			self.camera.set_resolution( *self.getCameraResolution() )
-			self.messageQ.put( ('camera', '{}x{} Supported'.format(*self.getCameraResolution())) )
-		except Exception as e:
-			self.messageQ.put( ('camera', '{}x{} Unsupported Resolution'.format(*self.getCameraResolution())) )
-			
-		self.messageQ.put( ('camera', 'Successfully Connected: Device: {}'.format(self.getCameraDeviceNum()) ) )
-		return True
-	
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
@@ -712,120 +679,83 @@ class MainWin( wx.Frame ):
 			)
 			wx.Exit()
 		
+		self.camInQ, self.camOutQ = CamServer.getCamServer( self.getCameraInfo() )
+		self.cameraThread = threading.Thread( target=self.processCamera )
+		self.cameraThread.daemon = True
+		
+		self.eventThread = threading.Thread( target=self.processRequests )
+		self.eventThread.daemon = True
+		
 		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ,) )
 		self.dbWriterThread.daemon = True
 		
 		self.dbReaderThread = threading.Thread( target=DBReader, args=(self.dbReaderQ, self.setFinishStripJpgs) )
 		self.dbReaderThread.daemon = True
 		
-		self.fcb = FrameCircBuf( int(self.bufferSecs * self.fps) )
-		
-		self.listenerThread.start()
+		self.cameraThread.start()
+		self.eventThread.start()
 		self.dbWriterThread.start()
 		self.dbReaderThread.start()
 		
 		self.grabFrameOK = True
 		self.messageQ.put( ('threads', 'Successfully Launched') )
+		
+		self.camInQ.put( {'cmd':'send_update', 'name':'primary', 'freq':5} )
 		return True
 	
 	def stopCapture( self ):
 		self.dbWriterQ.put( ('flush',) )
 	
-	def frameLoop( self, event=None ):
-		if not self.grabFrameOK:
-			return
-			
-		self.frameCount += 1
-		tNow = now()
-		
-		# Compute frame rate statistics.
-		if self.frameCount == self.frameCountUpdate:
-			self.fpsActual = self.frameCount / (tNow - self.tFrameCount).total_seconds()
-			self.frameCount = 0
-			self.tFrameCount = tNow
-			self.framesPerSecond.SetLabel( u'{:.3f}'.format(self.fpsActual) )
-			self.availableMsPerFrame.SetLabel( u'{:.0f}'.format(1000.0/self.fpsActual) )
-			self.frameProcessingTime.SetLabel( u'{:.0f}'.format(1000.0*self.fpt.total_seconds()) )
-		
-		try:
-			image = self.camera.getImage()
-		except Exception as e:
-			self.messageQ.put( ('error', 'Webcam Failure: {}'.format(e) ) )
-			self.grabFrameOK = False
-			return
-		
-		if not image:
-			return
-		
-		image = wx.Image( image.size[0], image.size[1], image.convert('RGB').tobytes() )
-		
-		# Add the image to the circular buffer.
-		self.fcb.append( tNow, image )
-		
-		# Update the monitor screen.
-		if self.frameCount & 8 == 0:
-			wx.CallAfter( self.primaryImage.SetImage, image )
-		if self.focusDialog.IsShown():
-			wx.CallAfter( self.focusDialog.SetImage, image )
-		
-		# Record images if the timer is running.
-		if self.captureTimer.IsRunning():
-			self.dbWriterQ.put( ('photo', tNow, image) )
-		
-		# Periodically update events.
-		if (tNow - self.lastTriggerRefresh).total_seconds() > 5.0:
-			self.refreshTriggers()
-			self.lastTriggerRefresh = tNow
-			return
-		
-		# Process event messages
+	def processCamera( self ):
 		while 1:
-			try:
-				message = self.requestQ.get(False)
-			except Empty:
-				break
+			msg = self.camOutQ.get()
 			
-			tSearch = message['time']
-			advanceSeconds = message.get('advanceSeconds', 0.0)
+			cmd = msg['cmd']
+			if cmd == 'response':
+				for t, f in msg['ts_frames']:
+					self.dbWriterQ.put( ('photo', t, f) )
+			elif cmd == 'update':
+				if msg['name'] == 'focus':
+					if self.focusDialog.IsShown():
+						wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(msg['frame']) )
+				elif msg['name'] == 'primary':
+					wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(msg['frame']) )
+			elif cmd == 'terminate':
+				break
+		
+	def processRequests( self ):
+		def refresh():
+			self.dbWriterQ.put( ('flush',) )
+			wx.CallLater( 300, self.refreshTriggers )
+	
+		while 1:
+			msg = self.requestQ.get()
+			
+			tSearch = msg['time']
+			advanceSeconds = msg.get('advanceSeconds', 0.0)
 			tSearch += timedelta(seconds=advanceSeconds)
 			
 			# Record this trigger.
 			self.dbWriterQ.put( (
 				'trigger',
 				tSearch - timedelta(seconds=advanceSeconds),
-				message.get('ts_start', None) or now(),
-				message.get('bib', 99999),
-				message.get('firstName',u''),
-				message.get('lastName',u''),
-				message.get('team',u''),
-				message.get('wave',u''),
-				message.get('raceName',u'')
+				msg.get('ts_start', None) or now(),
+				msg.get('bib', 99999),
+				msg.get('firstName',u''),
+				msg.get('lastName',u''),
+				msg.get('team',u''),
+				msg.get('wave',u''),
+				msg.get('raceName',u'')
 			) )
-
-			# If we are not currently capturing, make sure we record past frames.
-			if not self.captureTimer.IsRunning():
-				times, frames = self.fcb.getBackFrames( tSearch - tdCaptureBefore )
-				for t, f in zip(times, frames):
-					if f:
-						self.dbWriterQ.put( ('photo', t, f) )
-			else:
-				self.captureTimer.Stop()
-			
-			# Set a timer to stop recording after the capture window.
-			millis = int((tSearch - now() + tdCaptureAfter).total_seconds() * 1000.0)
-			if millis > 0:
-				self.captureTimer.Start( millis )
-			
-			if (now() - tNow).total_seconds() > self.frameDelay / 2.0:
-				break
-				
-		self.fpt = now() - tNow
-		self.tLast = tNow
+			# Record the video frames for the trigger.
+			tStart, tEnd = tSearch-tdCaptureBefore, tSearch+tdCaptureAfter
+			self.camInQ.put( { 'cmd':'query', 'tStart':tStart, 'tEnd':tEnd,} )
+			wx.CallAfter( wx.CallLater, max(100, int(100+1000*(tEnd-now()).total_seconds())), refresh )
 	
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
-		self.grabFrameOK = False
 		if hasattr(self, 'dbWriterThread'):
+			self.camInQ.put( {'cmd':'terminate'} )
 			self.dbWriterQ.put( ('terminate', ) )
 			self.dbWriterThread.join()
 			self.dbReaderQ.put( ('terminate', ) )
@@ -845,8 +775,9 @@ class MainWin( wx.Frame ):
 		self.setCameraResolution( *cameraResolution )
 		self.updateFPS( fps )
 		self.writeOptions()
-
-		self.grabFrameOK = self.startCamera()
+		
+		if hasattr(self, 'camInQ'):
+			self.camInQ.put( {'cmd':'cam_info', 'info':self.getCameraInfo(),} )
 		return True
 	
 	def manageDatabase( self, event ):
@@ -872,12 +803,15 @@ class MainWin( wx.Frame ):
 	def getCameraDeviceNum( self ):
 		return int(self.cameraDevice.GetLabel())
 		
+	def getCameraFPS( self ):
+		return int(float(self.targetFPS.GetLabel()))
+		
 	def getCameraResolution( self ):
 		try:
 			resolution = [int(v) for v in self.cameraResolution.GetLabel().split('x')]
 			return resolution[0], resolution[1]
 		except:
-			return 640, 400
+			return 640, 480
 		
 	def onCloseWindow( self, event ):
 		self.shutdown()
@@ -893,6 +827,10 @@ class MainWin( wx.Frame ):
 		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
 		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x480') )
 		self.targetFPS.SetLabel( self.config.Read('FPS', u'25.000') )
+		
+	def getCameraInfo( self ):
+		width, height = self.getCameraResolution()
+		return {'usb':self.getCameraDeviceNum(), 'fps':self.getCameraFPS(), 'width':width, 'height':height}
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()
