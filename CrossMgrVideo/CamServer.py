@@ -40,7 +40,11 @@ def CamServer( qIn, qOut, camInfo=None ):
 			
 			while 1:
 				# Capture frame-by-frame
-				ret, frame = cap.read()
+				try:
+					ret, frame = cap.read()
+				except KeyboardInterrupt:
+					return
+				
 				ts = now()
 				if not ret:
 					break

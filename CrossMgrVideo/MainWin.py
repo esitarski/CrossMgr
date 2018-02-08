@@ -362,11 +362,6 @@ class MainWin( wx.Frame ):
 		self.cameraDevice.SetFont( boldFont )
 		self.cameraResolution = wx.StaticText( self )
 		self.cameraResolution.SetFont( boldFont )
-		self.reset = wx.Button( self, label="Reset Camera" )
-		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
-		
-		self.manage = wx.Button( self, label="Manage Database" )
-		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
 		
 		self.test = wx.Button( self, label="Test" )
 		self.test.Bind( wx.EVT_BUTTON, self.onTest )
@@ -374,14 +369,20 @@ class MainWin( wx.Frame ):
 		self.focus = wx.Button( self, label="Focus..." )
 		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
 		
+		self.reset = wx.Button( self, label="Reset Camera" )
+		self.reset.Bind( wx.EVT_BUTTON, self.resetCamera )
+		
+		self.manage = wx.Button( self, label="Manage Database" )
+		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
+		
 		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
-		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		cameraDeviceSizer.Add( self.test, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		cameraDeviceSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
+		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 
 		#------------------------------------------------------------------------------
 		self.targetFPSLabel = wx.StaticText(self, label='Target Frames:')
@@ -630,7 +631,7 @@ class MainWin( wx.Frame ):
 	
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))
-		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
+		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':3} )
 		self.focusDialog.ShowModal()
 		self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 	
@@ -707,21 +708,30 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('flush',) )
 	
 	def processCamera( self ):
+		updatePhotos = {}
 		while 1:
 			msg = self.camOutQ.get()
+			while 1:
+				cmd = msg['cmd']
+				if cmd == 'response':
+					for t, f in msg['ts_frames']:
+						self.dbWriterQ.put( ('photo', t, f) )
+				elif cmd == 'update':
+					updatePhotos[msg['name']] = msg['frame']
+				elif cmd == 'terminate':
+					break
+				
+				try:
+					msg = self.camOutQ.get(False)
+				except Empty:
+					break
 			
-			cmd = msg['cmd']
-			if cmd == 'response':
-				for t, f in msg['ts_frames']:
-					self.dbWriterQ.put( ('photo', t, f) )
-			elif cmd == 'update':
-				if msg['name'] == 'focus':
-					if self.focusDialog.IsShown():
-						wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(msg['frame']) )
-				elif msg['name'] == 'primary':
-					wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(msg['frame']) )
-			elif cmd == 'terminate':
-				break
+			for name, frame in updatePhotos.iteritems():
+				if name == 'primary':
+					wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(frame) )
+				elif name == 'focus' and self.focusDialog.IsShown():
+					wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(frame) )
+			updatePhotos.clear()
 		
 	def processRequests( self ):
 		def refresh():
