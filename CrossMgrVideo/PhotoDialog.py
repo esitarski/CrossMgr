@@ -6,6 +6,7 @@ from AddPhotoHeader import AddPhotoHeader
 from ScaledImage import ScaledImage, RescaleImage
 from ComputeSpeed import ComputeSpeed
 import Utils
+import CVUtil
 
 def _( x ):
 	return x
@@ -89,6 +90,10 @@ class PhotoDialog( wx.Dialog ):
 		self.photoHeader.SetValue( photoHeaderState )
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+		
+		self.contrast = wx.ToggleButton( self, label='Contrast')
+		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
+		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
 		btn.SetToolTip( wx.ToolTip('Print Image') )
@@ -136,6 +141,12 @@ class PhotoDialog( wx.Dialog ):
 
 		self.SetSizer(vs)
 		vs.Fit(self)
+	
+	def onContrast( self, event ):
+		self.scaledImage.SetImage( CVUtil.adjustContrastImage(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )
+	
+	def onBrightness( self, event ):
+		pass
 	
 	def onPhotoHeader( self, event=None ):
 		global photoHeaderState

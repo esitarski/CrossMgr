@@ -51,9 +51,11 @@ def adjustContrastFrame( frame ):
 	# convert the YUV image back to RGB format
 	return cv2.cvtColor(frame_yuv, cv2.COLOR_YUV2BGR)
 
+from StringIO import StringIO
 def imageToFrame( image ):
-	frame = np.frombuffer( image.GetDataBuffer(), dtype='B' )
-	return frame.reshape( frame, (image.GetHeight(), image.GetWidth()) )
+	s = StringIO()
+	image.SaveFile( s, wx.BITMAP_TYPE_BMP )
+	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
 	
 def adjustGammaImage( image, gamma=1.0 ):
 	return frameToImage( adjustGammaFrame(imageToFrame(image), gamma) )
