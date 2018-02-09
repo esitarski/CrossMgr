@@ -68,6 +68,7 @@ class FrameCircBuf( object ):
 			if t not in tsSeen and self.frames[k] is not None:
 				times.append( t )
 				frames.append( self.frames[k] )
+				tsSeen.add( t )
 		return times, frames
 		
 if __name__ == '__main__':

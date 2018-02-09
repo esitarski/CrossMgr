@@ -385,27 +385,12 @@ class MainWin( wx.Frame ):
 		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 
 		#------------------------------------------------------------------------------
-		self.targetFPSLabel = wx.StaticText(self, label='Target Frames:')
+		self.targetFPSLabel = wx.StaticText(self, label='Frames Per Second:')
 		self.targetFPS = wx.StaticText(self, label=u'{}'.format(self.fps))
 		self.targetFPS.SetFont( boldFont )
 		self.targetFPSUnit = wx.StaticText(self, label='/ sec')
 		
-		self.framesPerSecondLabel = wx.StaticText(self, label='Actual Frames:')
-		self.framesPerSecond = wx.StaticText(self, label='25.000')
-		self.framesPerSecond.SetFont( boldFont )
-		self.framesPerSecondUnit = wx.StaticText(self, label='/ sec')
-		
-		self.availableMsPerFrameLabel = wx.StaticText(self, label='Available Time Per Frame:')
-		self.availableMsPerFrame = wx.StaticText(self, label=u'{:.0f}'.format(1000.0*self.frameDelay))
-		self.availableMsPerFrame.SetFont( boldFont )
-		self.availableMsPerFrameUnit = wx.StaticText(self, label='ms')
-		
-		self.frameProcessingTimeLabel = wx.StaticText(self, label='Frame Processing Time:')
-		self.frameProcessingTime = wx.StaticText(self, label='20')
-		self.frameProcessingTime.SetFont( boldFont )
-		self.frameProcessingTimeUnit = wx.StaticText(self, label='ms')
-		
-		pfgs = wx.FlexGridSizer( rows=0, cols=6, vgap=4, hgap=8 )
+		pfgs = wx.FlexGridSizer( rows=0, cols=3, vgap=4, hgap=8 )
 		fRight = wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT
 		fLeft = wx.ALIGN_CENTRE_VERTICAL
 		
@@ -413,17 +398,6 @@ class MainWin( wx.Frame ):
 		pfgs.Add( self.targetFPSLabel, flag=fRight )
 		pfgs.Add( self.targetFPS, flag=fRight )
 		pfgs.Add( self.targetFPSUnit, flag=fLeft )
-		pfgs.Add( self.availableMsPerFrameLabel, flag=fRight )
-		pfgs.Add( self.availableMsPerFrame, flag=fRight )
-		pfgs.Add( self.availableMsPerFrameUnit, flag=fLeft )
-		
-		#------------------- Row 2 ------------------------------
-		pfgs.Add( self.framesPerSecondLabel, flag=fRight )
-		pfgs.Add( self.framesPerSecond, flag=fRight )
-		pfgs.Add( self.framesPerSecondUnit, flag=fLeft )
-		pfgs.Add( self.frameProcessingTimeLabel, flag=fRight )
-		pfgs.Add( self.frameProcessingTime, flag=fRight )
-		pfgs.Add( self.frameProcessingTimeUnit, flag=fLeft )
 
 		statsSizer = wx.BoxSizer( wx.VERTICAL )
 		statsSizer.Add( cameraDeviceSizer )
@@ -524,7 +498,6 @@ class MainWin( wx.Frame ):
 	def updateFPS( self, fps ):
 		self.setFPS( fps )
 		self.targetFPS.SetLabel( u'{}'.format(self.fps) )
-		self.availableMsPerFrame.SetLabel( u'{:.0f}'.format(1000.0*self.frameDelay) )
 	
 	def setQueryDate( self, d ):
 		self.tsQueryLower = d
@@ -631,7 +604,7 @@ class MainWin( wx.Frame ):
 	
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))
-		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':3} )
+		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.ShowModal()
 		self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 	
@@ -680,7 +653,7 @@ class MainWin( wx.Frame ):
 			)
 			wx.Exit()
 		
-		self.camInQ, self.camOutQ = CamServer.getCamServer( self.getCameraInfo() )
+		self.camInQ, self.camReader = CamServer.getCamServer( self.getCameraInfo() )
 		self.cameraThread = threading.Thread( target=self.processCamera )
 		self.cameraThread.daemon = True
 		
@@ -710,21 +683,19 @@ class MainWin( wx.Frame ):
 	def processCamera( self ):
 		updatePhotos = {}
 		while 1:
-			msg = self.camOutQ.get()
-			while 1:
-				cmd = msg['cmd']
-				if cmd == 'response':
-					for t, f in msg['ts_frames']:
-						self.dbWriterQ.put( ('photo', t, f) )
-				elif cmd == 'update':
-					updatePhotos[msg['name']] = msg['frame']
-				elif cmd == 'terminate':
-					break
-				
-				try:
-					msg = self.camOutQ.get(False)
-				except Empty:
-					break
+			try:
+				msg = self.camReader.recv()
+			except EOFError:
+				break
+			
+			cmd = msg['cmd']
+			if cmd == 'response':
+				for t, f in msg['ts_frames']:
+					self.dbWriterQ.put( ('photo', t, f) )
+			elif cmd == 'update':
+				updatePhotos[msg['name']] = msg['frame']
+			elif cmd == 'terminate':
+				break
 			
 			for name, frame in updatePhotos.iteritems():
 				if name == 'primary':

@@ -2,8 +2,9 @@ import numpy as np
 import cv2
 from datetime import datetime, timedelta
 import time
+from collections import deque
 from Queue import Empty
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Pipe, Queue
 from threading import Thread, Timer
 from FrameCircBuf import FrameCircBuf
 
@@ -24,15 +25,16 @@ class VideoCaptureManager( object ):
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
-def CamServer( qIn, qOut, camInfo=None ):
+def CamServer( qIn, pWriter, camInfo=None ):
 	sendUpdates = {}
 	tsSeen = set()
 	camInfo = camInfo or {}
 	bufferSeconds = 10
+	backlog = deque()
 	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:
-			time.sleep( 0.5 )
+			time.sleep( 0.25 )
 			frameCount = 0
 			tsSeen.clear()
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
@@ -50,10 +52,6 @@ def CamServer( qIn, qOut, camInfo=None ):
 					break
 				fcb.append( ts, frame )
 				
-				if tsMax > ts:
-					tsSeen.add( ts )
-					qOut.put( { 'cmd':'response', 'ts_frames': [(ts, frame)], } )
-
 				try:
 					m = qIn.get_nowait()
 					while 1:
@@ -69,12 +67,7 @@ def CamServer( qIn, qOut, camInfo=None ):
 							tsQuery = ts
 
 							times, frames = fcb.getTimeFrames( m['tStart'], m['tEnd'], tsSeen )
-							tsSeen.update( times )
-							if times:
-								qOut.put( {
-									'cmd':'response',
-									'ts_frames': [(t, f) for t, f in zip(times,frames)],
-								} )
+							backlog.extend( (t, f) for t, f in zip(times, frames) )
 							
 							if m['tEnd'] > tsMax:
 								tsMax = m['tEnd']
@@ -89,7 +82,7 @@ def CamServer( qIn, qOut, camInfo=None ):
 							camInfo = m['info'] or {}
 							break
 						elif cmd == 'terminate':
-							qOut.put( {'cmd':'terminate'} )
+							pWriter.send( {'cmd':'terminate'} )
 							return
 						else:
 							assert False, 'Unknown Command'
@@ -97,19 +90,27 @@ def CamServer( qIn, qOut, camInfo=None ):
 				except Empty:
 					pass
 				
+				if tsMax > ts:
+					backlog.append( (ts, frame) )
+					tsSeen.add( ts )
+
 				for name, f in sendUpdates.iteritems():
 					if frameCount % f == 0:
-						qOut.put( {'cmd':'update', 'name':name, 'frame':frame } )
+						pWriter.send( {'cmd':'update', 'name':name, 'frame':frame } )
+				
+				# Don't send too many frames so as not to do too much processing and lose frames.
+				if backlog:
+					pWriter.send( { 'cmd':'response', 'ts_frames': [backlog.popleft() for i in xrange(min(4, len(backlog)))] } )
 						
 				frameCount += 1
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
-	qOut = Queue()
-	p = Process( target=CamServer, args=(qIn, qOut, camInfo), name='CamServer' )
+	pReader, pWriter = Pipe( False )
+	p = Process( target=CamServer, args=(qIn, pWriter, camInfo), name='CamServer' )
 	p.daemon = True
 	p.start()
-	return qIn, qOut
+	return qIn, pReader
 	
 def callCamServer( qIn, cmd, **kwargs ):
 	kwargs['cmd'] = cmd
@@ -121,8 +122,8 @@ if __name__ == '__main__':
 			m = q.get()
 			print ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.iteritems())
 	
-	qIn, qOut = getCamServer( dict(usb=1, width=1920, height=1080, fps=30) )
-	thread = Thread( target=handleMessages, args=(qOut,) )
+	qIn, pWriter = getCamServer( dict(usb=1, width=1920, height=1080, fps=30) )
+	thread = Thread( target=handleMessages, args=(pWriter,) )
 	thread.daemon = True
 	thread.start()
 	

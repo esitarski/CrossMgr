@@ -221,26 +221,28 @@ class Database( object ):
 	def vacuum( self ):
 		self.conn.execute( 'VACUUM' )
 		
+tsJpgs = []
+tsTriggers = []
+def flush( db ):
+	db.write( tsTriggers, tsJpgs )
+	del tsTriggers[:]
+	del tsJpgs[:]
+		
 def DBWriter( q, fps=30 ):
 	db = Database( fps=fps )
-	tsJpgs = []
-	tsTriggers = []
 	
-	def flush():
-		db.write( tsTriggers, tsJpgs )
-		del tsTriggers[:]
-		del tsJpgs[:]
-		
 	keepGoing = True
 	while keepGoing:
 		try:
 			v = q.get( timeout=1 )
 		except Empty:
 			if tsTriggers or tsJpgs:
-				flush()
+				flush( db )
 			continue
-			
+		
+		doFlush = True
 		if v[0] == 'photo':
+			doFlush = False
 			if not db.isDup( v[1] ):
 				tsJpgs.append( (v[1], sqlite3.Binary(CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
@@ -248,16 +250,15 @@ def DBWriter( q, fps=30 ):
 		elif v[0] == 'kmh':
 			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
 		elif v[0] == 'flush':
-			flush()
+			pass
 		elif v[0] == 'terminate':
-			flush()
 			keepGoing = False
 		
+		if doFlush or len(tsJpgs) >= db.fps*3:
+			flush( db )
 		q.task_done()
 		
-		if len(tsJpgs) >= db.fps*4:
-			flush()
-	flush()
+	flush( db )
 	
 def DBReader( q, callback ):
 	db = Database( initTables=False )
@@ -266,6 +267,7 @@ def DBReader( q, callback ):
 	while keepGoing:
 		v = q.get()
 		if v[0] == 'getphotos':
+			flush( db )
 			callback( db.getPhotos(v[1], v[2]) )
 		elif v[0] == 'terminate':
 			keepGoing = False
