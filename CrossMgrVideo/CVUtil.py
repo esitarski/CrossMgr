@@ -1,5 +1,6 @@
 import wx
 import cv2
+import numpy as np
 
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
@@ -32,6 +33,33 @@ def resizeFrame( frame, w_req, h_req ):
 	
 def frameToJPeg( frame ):
 	return cv2.imencode('.jpg', frame)[1].tostring()
+
+def adjustGammaFrame( frame, gamma=1.0 ):
+	# build a lookup table mapping the pixel values [0, 255] to
+	# their adjusted gamma values
+	invGamma = 1.0 / gamma
+	table = np.array([((i / 255.0) ** invGamma) * 255
+		for i in np.arange(0, 256)]).astype("uint8")
+
+	# apply gamma correction using the lookup table
+	return cv2.LUT(frame, table)
+
+def adjustContrastFrame( frame ):
+	frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
+	# equalize the histogram of the Y channel
+	frame_yuv[:,:,0] = cv2.equalizeHist(frame_yuv[:,:,0])
+	# convert the YUV image back to RGB format
+	return cv2.cvtColor(frame_yuv, cv2.COLOR_YUV2BGR)
+
+def imageToFrame( image ):
+	frame = np.frombuffer( image.GetDataBuffer(), dtype='B' )
+	return frame.reshape( frame, (image.GetHeight(), image.GetWidth()) )
+	
+def adjustGammaImage( image, gamma=1.0 ):
+	return frameToImage( adjustGammaFrame(imageToFrame(image), gamma) )
+
+def adjustContrastImage( image ):
+	return frameToImage( adjustContrastFrame(imageToFrame(image)) )
 
 if __name__ == '__main__':
 	print rescaleToRect( 200, 100, 100, 50 )
