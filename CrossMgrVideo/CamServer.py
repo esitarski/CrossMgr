@@ -94,8 +94,9 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					backlog.append( (ts, frame) )
 					tsSeen.add( ts )
 
+				# Slow updates if we have a backlog.
 				for name, f in sendUpdates.iteritems():
-					if frameCount % f == 0:
+					if frameCount % (11 if backlog else f) == 0:
 						pWriter.send( {'cmd':'update', 'name':name, 'frame':frame } )
 				
 				# Don't send too many frames so as not to do too much processing and lose frames.
