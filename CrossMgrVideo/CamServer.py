@@ -29,7 +29,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 	sendUpdates = {}
 	tsSeen = set()
 	camInfo = camInfo or {}
-	bufferSeconds = 10
+	bufferSeconds = 8
 	backlog = deque()
 	
 	while 1:
