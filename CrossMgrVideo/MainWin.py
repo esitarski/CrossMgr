@@ -412,6 +412,7 @@ class MainWin( wx.Frame ):
 		
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
 		self.primaryImage.SetTestImage()
+		self.primaryImage.Bind( wx.EVT_LEFT_UP, self.onFocus )
 		
 		self.focusDialog = FocusDialog( self )
 		
