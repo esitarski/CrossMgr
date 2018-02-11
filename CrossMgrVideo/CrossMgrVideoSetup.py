@@ -1,5 +1,6 @@
 from distutils.core import setup
 import os
+import glob
 import shutil
 import zipfile
 import datetime
@@ -41,6 +42,9 @@ subprocess.call( [
 	'--windowed',
 	'--noconfirm',
 	
+	'--hiddenimport=cv2',
+	'--hidden-import=numpy',
+	
 	'--exclude-module=tcl',
 	'--exclude-module=tk',
 	'--exclude-module=Tkinter',
@@ -57,6 +61,10 @@ try:
 	shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
 except:
 	pass
+	
+cv2 = r'C:\Python27\Lib\site-packages\cv2'
+for f in glob.glob( os.path.join(cv2, '*.dll') ):
+	shutil.copy( f, distDir )
 
 # Add images and ffmpeg to the distribution folder.
 
