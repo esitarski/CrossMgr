@@ -22,6 +22,7 @@ googleDrive = os.path.join( googleDrive, 'CrossMgrVideo' )
 # Copy all dependent files into this folder.
 copyFiles = [
 	"MultiCast.py",
+	"roundbutton.py",
 ]
 for f in copyFiles:
 	shutil.copy( os.path.join( '..', f), f )

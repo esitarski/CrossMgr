@@ -33,7 +33,10 @@ class Database( object ):
 
 	UpdateSeconds = 10*60*60
 
-	def __init__( self, fname=None, initTables=True, fps=25 ):
+	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','kmh')
+	triggerFieldsInput = self.triggerFieldsAll[1:-1]
+			
+	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
 		self.fps = fps
 		
@@ -46,7 +49,7 @@ class Database( object ):
 		
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES )
 		
-		# Add kmh and ts_start to the trigger table if necessary.
+		# Add kmh, ts_start, sBefore and sAfter to the trigger table if necessary.
 		with self.conn:
 			cur = self.conn.cursor()
 			cur.execute( 'PRAGMA table_info(trigger)' )
@@ -56,6 +59,10 @@ class Database( object ):
 			if cols and not any( col[1] == 'ts_start' for col in cols ):
 				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT 0' )
 				self.conn.execute( 'UPDATE trigger SET ts_start=ts' )
+			# Seconds before and after the ts time that frames were captured.
+			if cols and not any( col[1] == 's_before' for col in cols ):
+				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_before DOUBLE DEFAULT 0.0' )
+				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_after DOUBLE DEFAULT 0.0' )
 		
 		if initTables:
 			with self.conn:
@@ -67,8 +74,10 @@ class Database( object ):
 				)		
 				createTable( self.conn, 'trigger', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
-						('ts', 'timestamp', 'ASC', None),
-						('ts_start', 'timestamp', False, None),
+						('ts', 'timestamp', 'ASC', None),			# Capture timestamp.
+						('s_before', 'DOUBLE', False, None),		# Seconds before ts of capture.
+						('s_after', 'DOUBLE', False, None),			# Seconds after ts of capture.
+						('ts_start', 'timestamp', False, None),		# race timestamp.
 						('bib', 'INTEGER', 'ASC', None),
 						('first_name', 'TEXT', 'ASC', None),
 						('last_name', 'TEXT', 'ASC', None),
@@ -85,9 +94,6 @@ class Database( object ):
 		else:
 			self.photoTsCache = set()
 		
-		self.triggerFieldsAll = ('id','ts','ts_start','bib','first_name','last_name','team','wave','race_name','kmh')
-		self.triggerFieldsInput = self.triggerFieldsAll[1:-1]
-			
 		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
 		self.deleteExistingTriggerDuplicates()
 
@@ -143,6 +149,10 @@ class Database( object ):
 	def updateTriggerKMH( self, id, kmh ):
 		with self.conn:
 			self.conn.execute( 'UPDATE trigger SET kmh=? WHERE id=?', (kmh,id) )
+	
+	def updateTriggerBeforeAfter( self, id, s_before, s_after ):
+		with self.conn:
+			self.conn.execute( 'UPDATE trigger SET s_before=? s_after=? WHERE id=?', (s_before,s_after,id) )
 	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.conn:
@@ -246,7 +256,8 @@ def DBWriter( q, fps=30 ):
 			if not db.isDup( v[1] ):
 				tsJpgs.append( (v[1], sqlite3.Binary(CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
-			tsTriggers.append( (list(v[1:]) + [u''] * 7)[:8] )
+			fieldLen = len(Database.triggerFieldsInput)
+			tsTriggers.append( (list(v[1:]) + [u''] * fieldLen)[:fieldLen] )
 		elif v[0] == 'kmh':
 			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
 		elif v[0] == 'flush':

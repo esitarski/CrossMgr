@@ -36,6 +36,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 		with VideoCaptureManager(**camInfo) as cap:
 			time.sleep( 0.25 )
 			frameCount = 0
+			inCapture = False
 			tsSeen.clear()
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			tsQuery = tsMax = now()
@@ -71,6 +72,13 @@ def CamServer( qIn, pWriter, camInfo=None ):
 							
 							if m['tEnd'] > tsMax:
 								tsMax = m['tEnd']
+						elif cmd == 'start_capture':
+							if 'tStart' in m:
+								times, frames = fcb.getTimeFrames( m['tStart'], ts, tsSeen )
+								backlog.extend( (t, f) for t, f in zip(times, frames) )
+								inCapture = True
+						elif cmd == 'stop_capture':
+							inCapture = False
 						elif cmd == 'send_update':
 							sendUpdates[m['name']] = m['freq']
 						elif cmd == 'cancel_update':
@@ -90,7 +98,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				except Empty:
 					pass
 				
-				if tsMax > ts:
+				if tsMax > ts or inCapture:
 					backlog.append( (ts, frame) )
 					tsSeen.add( ts )
 

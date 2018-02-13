@@ -13,6 +13,7 @@ import time
 import platform
 from Queue import Queue, Empty
 import CamServer
+from roundbutton import RoundButton
 
 from datetime import datetime, timedelta, time
 
@@ -362,9 +363,14 @@ class MainWin( wx.Frame ):
 		self.cameraDevice.SetFont( boldFont )
 		self.cameraResolution = wx.StaticText( self )
 		self.cameraResolution.SetFont( boldFont )
+		self.targetFPS = wx.StaticText( self )
+		self.targetFPSLabel = wx.StaticText( self, label='fps' )
 		
-		self.test = wx.Button( self, label="Test" )
-		self.test.Bind( wx.EVT_BUTTON, self.onTest )
+		self.capture = RoundButton( self, label="Capture", size=(90,90) )
+		self.capture.SetBackgroundColour( wx.WHITE )
+		self.capture.SetForegroundColour( wx.Colour(128,0,0) )
+		self.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
+		self.capture.Bind( wx.EVT_LEFT_UP, self.onStopCapture )
 		
 		self.focus = wx.Button( self, label="Focus..." )
 		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
@@ -379,29 +385,16 @@ class MainWin( wx.Frame ):
 		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		cameraDeviceSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.test, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		cameraDeviceSizer.Add( self.targetFPS, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		cameraDeviceSizer.Add( self.targetFPSLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
+		cameraDeviceSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		cameraDeviceSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
 		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 
 		#------------------------------------------------------------------------------
-		self.targetFPSLabel = wx.StaticText(self, label='Frames Per Second:')
-		self.targetFPS = wx.StaticText(self, label=u'{}'.format(self.fps))
-		self.targetFPS.SetFont( boldFont )
-		self.targetFPSUnit = wx.StaticText(self, label='/ sec')
-		
-		pfgs = wx.FlexGridSizer( rows=0, cols=3, vgap=4, hgap=8 )
-		fRight = wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT
-		fLeft = wx.ALIGN_CENTRE_VERTICAL
-		
-		#------------------- Row 1 ------------------------------
-		pfgs.Add( self.targetFPSLabel, flag=fRight )
-		pfgs.Add( self.targetFPS, flag=fRight )
-		pfgs.Add( self.targetFPSUnit, flag=fLeft )
-
 		statsSizer = wx.BoxSizer( wx.VERTICAL )
 		statsSizer.Add( cameraDeviceSizer )
-		statsSizer.Add( pfgs, flag=wx.TOP, border=8 )
 		headerSizer.Add( statsSizer, flag=wx.ALL, border=4 )
 		
 		mainSizer.Add( headerSizer )
@@ -554,7 +547,7 @@ class MainWin( wx.Frame ):
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		self.tsMax = triggers[-1][1] # id,ts,bib,first_name,last_name,team,wave,race_name,kmh
 		
-		for i, (id,ts,ts_start,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
+		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
 			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
@@ -571,7 +564,7 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetItem( row, 6, mph_text )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,ts_start,bib,name,team,wave,race_name,first_name,last_name,kmh)
+			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,kmh)
 			tsPrev = ts
 			
 		for i in xrange(5):
@@ -588,20 +581,30 @@ class MainWin( wx.Frame ):
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startThreads()
 
-	def onTest( self, event ):
-		self.testCount = getattr(self, 'testCount', 0) + 1
+	def onStartCapture( self, event ):
+		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		tNow = now()
 		self.requestQ.put( {
 				'time':tNow,
+				's_before':tdCaptureBefore.total_seconds(),
+				's_after':tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
-				'bib':self.testCount,
-				'firstName':u'Test',
-				'lastName':u'Test',
-				'team':u'Test',
-				'wave':u'Test',
-				'raceName':u'Test',				
+				'bib':self.captureCount,
+				'firstName':u'Capture',
+				'lastName':u'Capture',
+				'team':u'Capture',
+				'wave':u'Capture',
+				'raceName':u'Capture',				
 			}
 		)
+		self.tStartCapture = tNow
+		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-tdCaptureBefore} )
+		
+	def onStopCapture( self, event ):
+		self.camInQ.put( {'cmd':'stop_capture'} )
+		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
+		if triggers:
+			self.db.updateTriggerBeforeAfter( triggers[0], tdCaptureBefore.total_seconds(), (now() - self.tStartCapture).total_seconds() )
 	
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))
@@ -629,7 +632,9 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
-			a:data[i] for i, a in enumerate(('id','ts','ts_start','bib','name','team','wave','raceName',
+			a:data[i] for i, a in enumerate((
+				'id','ts','s_before','s_after','ts_start',
+				'bib','name','team','wave','raceName',
 				'firstName','lastName','kmh'))
 		}
 		self.ts = self.triggerInfo['ts']
@@ -721,6 +726,8 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( (
 				'trigger',
 				tSearch - timedelta(seconds=advanceSeconds),
+				msg.get('s_before', tdCaptureBefore.total_seconds()),
+				msg.get('s_after', tdCaptureAfter.total_seconds()),
 				msg.get('ts_start', None) or now(),
 				msg.get('bib', 99999),
 				msg.get('firstName',u''),
