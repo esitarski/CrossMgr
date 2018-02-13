@@ -604,7 +604,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
 		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
 		if triggers:
-			self.db.updateTriggerBeforeAfter( triggers[0], tdCaptureBefore.total_seconds(), (now() - self.tStartCapture).total_seconds() )
+			self.db.updateTriggerBeforeAfter( triggers[0][0], tdCaptureBefore.total_seconds(), (now() - self.tStartCapture).total_seconds() )
 	
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))

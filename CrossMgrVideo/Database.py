@@ -34,7 +34,7 @@ class Database( object ):
 	UpdateSeconds = 10*60*60
 
 	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','kmh')
-	triggerFieldsInput = self.triggerFieldsAll[1:-1]
+	triggerFieldsInput = triggerFieldsAll[1:-1]
 			
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
@@ -152,7 +152,7 @@ class Database( object ):
 	
 	def updateTriggerBeforeAfter( self, id, s_before, s_after ):
 		with self.conn:
-			self.conn.execute( 'UPDATE trigger SET s_before=? s_after=? WHERE id=?', (s_before,s_after,id) )
+			self.conn.execute( 'UPDATE trigger SET s_before=?, s_after=? WHERE id=?', (s_before,s_after,id) )
 	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.conn:
