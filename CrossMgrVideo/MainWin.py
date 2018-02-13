@@ -650,7 +650,7 @@ class MainWin( wx.Frame ):
 		self.ts = self.triggerInfo['ts']
 		s_before = max( self.triggerInfo['s_before'] or 0.0, tdCaptureBefore.total_seconds() )
 		s_after = max( self.triggerInfo['s_after'] or 0.0, tdCaptureAfter.total_seconds() )
-		self.dbReaderQ.put( ('getphotos', self.ts - timedelta(seconds=s_before), self.ts + timedelte(seconds=s_after) ) )
+		self.dbReaderQ.put( ('getphotos', self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) ) )
 		
 	def showMessages( self ):
 		while 1:

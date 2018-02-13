@@ -149,6 +149,7 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 	
 	def refreshCompositeBitmap( self ):
+		wait = wx.BusyCursor()
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
