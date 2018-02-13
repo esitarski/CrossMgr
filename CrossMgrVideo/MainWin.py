@@ -366,12 +366,6 @@ class MainWin( wx.Frame ):
 		self.targetFPS = wx.StaticText( self )
 		self.targetFPSLabel = wx.StaticText( self, label='fps' )
 		
-		self.capture = RoundButton( self, label="Capture", size=(90,90) )
-		self.capture.SetBackgroundColour( wx.WHITE )
-		self.capture.SetForegroundColour( wx.Colour(128,0,0) )
-		self.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
-		self.capture.Bind( wx.EVT_LEFT_UP, self.onStopCapture )
-		
 		self.focus = wx.Button( self, label="Focus..." )
 		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
 		
@@ -381,23 +375,28 @@ class MainWin( wx.Frame ):
 		self.manage = wx.Button( self, label="Manage Database" )
 		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
 		
-		cameraDeviceSizer = wx.BoxSizer( wx.HORIZONTAL )
-		cameraDeviceSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		cameraDeviceSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.targetFPS, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		cameraDeviceSizer.Add( self.targetFPSLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
-		cameraDeviceSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		cameraDeviceSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		cameraDeviceSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
-		cameraDeviceSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		self.capture = RoundButton( self, label="CAPTURE", size=(90,90) )
+		self.capture.SetBackgroundColour( wx.WHITE )
+		self.captureEnableColour = wx.Colour(0,100,0)
+		self.captureDisableColour = wx.Colour(100,0,0)
+		self.capture.SetForegroundColour( self.captureEnableColour )
+		self.capture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		self.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
+		self.capture.Bind( wx.EVT_LEFT_UP, self.onStopCapture )
+		
+		headerSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		headerSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		headerSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		headerSizer.Add( self.targetFPS, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		headerSizer.Add( self.targetFPSLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
+		headerSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		headerSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
+		headerSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		headerSizer.AddStretchSpacer()
+		headerSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
 
 		#------------------------------------------------------------------------------
-		statsSizer = wx.BoxSizer( wx.VERTICAL )
-		statsSizer.Add( cameraDeviceSizer )
-		headerSizer.Add( statsSizer, flag=wx.ALL, border=4 )
-		
-		mainSizer.Add( headerSizer )
+		mainSizer.Add( headerSizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
 		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2) )
@@ -582,6 +581,10 @@ class MainWin( wx.Frame ):
 		self.startThreads()
 
 	def onStartCapture( self, event ):
+		self.capture.SetForegroundColour( self.captureDisableColour )
+		wx.CallAfter( self.capture.Refresh )
+		wx.BeginBusyCursor()
+		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		tNow = now()
 		self.requestQ.put( {
@@ -604,7 +607,14 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
 		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
 		if triggers:
-			self.db.updateTriggerBeforeAfter( triggers[0][0], tdCaptureBefore.total_seconds(), (now() - self.tStartCapture).total_seconds() )
+			self.db.updateTriggerBeforeAfter(
+				triggers[0][0],
+				tdCaptureBefore.total_seconds(),
+				(now() - self.tStartCapture).total_seconds()
+			)
+		wx.EndBusyCursor()
+		self.capture.SetForegroundColour( self.captureEnableColour )
+		wx.CallAfter( self.capture.Refresh )
 	
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))
@@ -638,7 +648,9 @@ class MainWin( wx.Frame ):
 				'firstName','lastName','kmh'))
 		}
 		self.ts = self.triggerInfo['ts']
-		self.dbReaderQ.put( ('getphotos', self.ts-tdCaptureBefore, self.ts+tdCaptureAfter) )
+		s_before = max( self.triggerInfo['s_before'] or 0.0, tdCaptureBefore.total_seconds() )
+		s_after = max( self.triggerInfo['s_after'] or 0.0, tdCaptureAfter.total_seconds() )
+		self.dbReaderQ.put( ('getphotos', self.ts - timedelta(seconds=s_before), self.ts + timedelte(seconds=s_after) ) )
 		
 	def showMessages( self ):
 		while 1:
