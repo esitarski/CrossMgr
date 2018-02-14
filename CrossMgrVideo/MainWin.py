@@ -49,6 +49,7 @@ def getCloseFinishBitmaps( size=(16,16) ):
 		bm.append( bitmap )
 	return bm
 
+'''
 try:
 	#from VideoCapture import Device
 	from jaraco.video.capture_nofont import Device
@@ -82,6 +83,7 @@ except:
 			draw.rectangle( ((x, self.yLast), (imageWidth, self.yLast+s)), fill=(128,128,128) )
 			
 			return image
+'''
 
 from Version import AppVerName
 
@@ -304,6 +306,61 @@ class FocusDialog( wx.Dialog ):
 			self.SetTitle( u'{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
 		return self.image.SetImage( image )
 
+class TriggerDialog( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Trigger Editor') )
+		
+		self.db = None
+		self.triggerId = None
+		
+		sizer = wx.BoxSizer( wx.VERTICAL )
+		gs = wx.FlexGridSizer( 2, 2, 4 )
+		gs.AddGrowableCol( 1 )
+		fieldNames = [h.replace('_', ' ').title() for h in Database.triggerEditFields]
+		self.editFields = []
+		for f in fieldNames:
+			gs.Add( wx.StaticText(self, label=f), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			e = wx.TextCtrl(self)
+			gs.Add( e )
+			self.editFields.append(e)
+		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.ok = wx.Button( self, wx.ID_OK )
+		self.ok.Bind( wx.EVT_BUTTON, self.onOK )
+		self.cancel = wx.Button( self, wx.ID_CANCEL )
+		btnSizer.Add( self.ok )
+		btnSizer.Add( self.cancel )
+		
+		sizer.Add( gs, flag=wx.ALL, border=4 )
+		sizer.Add( btnSizer, flag=wx.ALL, border=4 )
+		self.SetSizerAndFit( sizer )
+	
+	def set( self, db, triggerId ):
+		self.db = db
+		self.triggerId = triggerId
+		ef = db.getTriggerEditFields( self.triggerId )
+		ef = ef or ['' for f in Database.triggerEditFields]
+		for e, v in zip(self.editFields, ef):
+			e.SetValue( unicode(v) )
+	
+	def get( self ):
+		values = []
+		for f, e in zip(Database.triggerEditFields, self.editFields):
+			v = e.GetValue()
+			if f == 'bib':
+				try:
+					v = int(v)
+				except:
+					v = 99999
+			values.append( v )
+		return values
+	
+	def commit( self ):
+		self.db.setTriggerEditFields( self.triggerId, *self.get() )
+	
+	def onOK( self, event ):
+		self.commit()
+		self.EndModal( wx.ID_OK )
+		
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=0):
@@ -342,6 +399,8 @@ class MainWin( wx.Frame ):
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
+		
+		self.triggerDialog = TriggerDialog( self )
 		
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
@@ -443,7 +502,7 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'km/h', 'mph']
+		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'km/h', 'mph']
 		for i, h in enumerate(headers):
 			self.triggerList.InsertColumn(
 				i, h,
@@ -452,6 +511,8 @@ class MainWin( wx.Frame ):
 		self.itemDataMap = {}
 		
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
+		self.triggerList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onTriggerEdit )
+		self.triggerList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onTriggerRightClick )
 		
 		self.messagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(250,-1) )
 		self.messageManager = MessageManager( self.messagesText )
@@ -555,12 +616,13 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetItem( row, 2, name )
 			self.triggerList.SetItem( row, 3, team )
 			self.triggerList.SetItem( row, 4, wave )
+			self.triggerList.SetItem( row, 5, race_name )
 			if kmh:
 				kmh_text, mph_text = u'{:.2f}'.format(kmh), u'{:.2f}'.format(kmh * 0.621371)
 			else:
 				kmh_text = mph_text = u''
-			self.triggerList.SetItem( row, 5, kmh_text )
-			self.triggerList.SetItem( row, 6, mph_text )
+			self.triggerList.SetItem( row, 6, kmh_text )
+			self.triggerList.SetItem( row, 7, mph_text )
 			
 			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,kmh)
@@ -593,11 +655,11 @@ class MainWin( wx.Frame ):
 				's_after':tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
 				'bib':self.captureCount,
-				'firstName':u'Capture',
+				'firstName':u'',
 				'lastName':u'Capture',
-				'team':u'Capture',
-				'wave':u'Capture',
-				'raceName':u'Capture',				
+				'team':u'',
+				'wave':u'',
+				'raceName':u'',				
 			}
 		)
 		self.tStartCapture = tNow
@@ -607,11 +669,13 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
 		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
 		if triggers:
+			id = triggers[0][0]
 			self.db.updateTriggerBeforeAfter(
-				triggers[0][0],
+				id,
 				tdCaptureBefore.total_seconds(),
 				(now() - self.tStartCapture).total_seconds()
 			)
+			self.db.initCaptureTriggerData( id, self.tStartCapture )
 		wx.EndBusyCursor()
 		self.capture.SetForegroundColour( self.captureEnableColour )
 		wx.CallAfter( self.capture.Refresh )
@@ -651,7 +715,26 @@ class MainWin( wx.Frame ):
 		s_before = max( self.triggerInfo['s_before'] or 0.0, tdCaptureBefore.total_seconds() )
 		s_after = max( self.triggerInfo['s_after'] or 0.0, tdCaptureAfter.total_seconds() )
 		self.dbReaderQ.put( ('getphotos', self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) ) )
-		
+	
+	def onTriggerEdit( self, event ):
+		self.iTriggerSelect = event.Index
+		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
+		self.triggerDialog.set( self.db, data[0] )
+		self.triggerDialog.CenterOnParent()
+		if self.triggerDialog.ShowModal() == wx.ID_OK:
+			row = event.Index
+			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
+			self.triggerList.SetItem( row, 1, u'{:>6}'.format(fields['bib']) )
+			name = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
+			self.triggerList.SetItem( row, 2, name )
+			self.triggerList.SetItem( row, 3, fields['team'] )
+			self.triggerList.SetItem( row, 4, fields['wave'] )
+			self.triggerList.SetItem( row, 5, fields['race_name'] )
+	
+	def onTriggerRightClick( self, event ):
+		self.iTriggerSelect = event.Index
+		# Add menu for delete.
+	
 	def showMessages( self ):
 		while 1:
 			message = self.messageQ.get()

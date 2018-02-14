@@ -35,6 +35,8 @@ class Database( object ):
 
 	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','kmh')
 	triggerFieldsInput = triggerFieldsAll[1:-1]
+	triggerFieldsUpdate = tuple( ['wave','race_name'] )
+	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name')
 			
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
@@ -154,6 +156,20 @@ class Database( object ):
 		with self.conn:
 			self.conn.execute( 'UPDATE trigger SET s_before=?, s_after=? WHERE id=?', (s_before,s_after,id) )
 	
+	def initCaptureTriggerData( self, id, ts ):
+		with self.conn:
+			tsLower, tsUpper = ts, ts - timedelta( days=1 )
+			rows = list( self.conn.execute( 
+				'SELECT {} FROM trigger WHERE ts > ? and ts < ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
+					(tsLower, tsUpper)
+				)
+			)
+			if rows:
+				self.conn.execute(
+					'UPDATE trigger SET {} WHERE id = ?'.format(','.join('{}=?'.format(f) for f in self.triggerFieldsUpdate)),
+						rows[0] + [id]
+				)
+	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.conn:
 			if not bib:
@@ -198,6 +214,18 @@ class Database( object ):
 		for row in self.conn.execute( 'SELECT ts FROM trigger' ):
 			dates[row[0].date()] += 1
 		return sorted( dates.items() )
+	
+	def getTriggerEditFields( self, id ):
+		with self.conn:
+			rows = list( self.conn.execute('SELECT {} FROM trigger WHERE id=?'.format(','.join(self.triggerEditFields)), (id,) ) )
+		return rows[0] if rows else []
+		
+	def setTriggerEditFields( self, id, *args ):
+		with self.conn:
+			self.conn.execute(
+				'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in self.triggerEditFields)),
+				list(args) + [id]
+			)
 	
 	def isDup( self, ts ):
 		return ts in self.photoTsCache
