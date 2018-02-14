@@ -148,13 +148,18 @@ class Database( object ):
 			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
 			self.lastUpdate = now()
 	
-	def updateTriggerKMH( self, id, kmh ):
+	def updateTriggerRecord( id, data ):
+		data = [(k,v) for k,v in data.iteritems()]
 		with self.conn:
-			self.conn.execute( 'UPDATE trigger SET kmh=? WHERE id=?', (kmh,id) )
+			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f,v in data)),
+				[v for f,v in data] + [id]
+			)
+	
+	def updateTriggerKMH( self, id, kmh ):
+		self.updateTriggerRecord(id, {'kmh':kmh})
 	
 	def updateTriggerBeforeAfter( self, id, s_before, s_after ):
-		with self.conn:
-			self.conn.execute( 'UPDATE trigger SET s_before=?, s_after=? WHERE id=?', (s_before,s_after,id) )
+		self.updateTriggerRecord(id, {'s_before':s_before, 's_after':s_after})
 	
 	def initCaptureTriggerData( self, id, ts ):
 		with self.conn:
