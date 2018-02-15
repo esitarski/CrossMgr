@@ -150,11 +150,9 @@ class FinishStrip( wx.Panel ):
 	
 	def refreshCompositeBitmap( self ):
 		wait = wx.BusyCursor()
-		ts = datetime.datetime.now()
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
-		print 'composite time:', (datetime.datetime.now() - ts).total_seconds()
 		self.zoomBitmap = {}
 		
 	def OnErase( self, event ):
