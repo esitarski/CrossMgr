@@ -23,7 +23,6 @@ import Utils
 import CVUtil
 from SocketListener import SocketListener
 from Database import Database, DBWriter, DBReader
-from AddPhotoHeader import PilImageToWxImage
 from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase

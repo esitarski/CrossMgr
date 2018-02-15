@@ -15,10 +15,9 @@ def _( s ):
 	
 def PilImageToWxImage(pil, alpha=False):
 	"""Convert PIL Image to wx.Image."""
-	image = wx.Image( *pil.size )
-	image.SetData( pil.convert("RGB").tobytes() )
+	image = wx.Image( pil.size[0], pil.size[1], pil.convert("RGB").tobytes() )
 
-	if alpha and pilImage.mode[-1] == 'A':
+	if alpha and pil.mode[-1] == 'A':
 		image.SetAlphaData(pil.convert("RGBA").tobytes()[3::4])
 
 	return image
@@ -342,7 +341,7 @@ class FinishStrip( wx.Panel ):
 		self.xMotionLast = None
 		
 	def draw( self, dc ):
-		dc.SetBackground( wx.Brush(wx.BLACK, wx.SOLID) )
+		dc.SetBackground( wx.Brush(wx.Colour(0xd3,0xd3,0xd3), wx.SOLID) )
 		dc.Clear()
 	
 		self.xMotionLast = None
