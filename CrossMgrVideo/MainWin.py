@@ -689,7 +689,7 @@ class MainWin( wx.Frame ):
 		wx.EndBusyCursor()
 		
 		def updateFS():
-			# Force all the photos to be written.
+			# Wait for all the photos to be written.
 			self.dbWriterQ.put( ('flush',) )
 			self.dbWriterQ.join()
 			# Update the finish strip.
@@ -728,7 +728,7 @@ class MainWin( wx.Frame ):
 		s_before = max( self.triggerInfo['s_before'] or 0.0, tdCaptureBefore.total_seconds() )
 		s_after = max( self.triggerInfo['s_after'] or 0.0, tdCaptureAfter.total_seconds() )
 		
-		# Update the screen in the background so as not to freeze the UI.
+		# Update the screen in the background so we don't freeze the UI.
 		def updateFS():
 			self.tsJpg = self.db.clone().getPhotos(
 				self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after)
