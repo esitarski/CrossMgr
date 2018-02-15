@@ -51,22 +51,24 @@ class Database( object ):
 		
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES )
 		
-		# Add kmh, ts_start, sBefore and sAfter to the trigger table if necessary.
-		with self.conn:
-			cur = self.conn.cursor()
-			cur.execute( 'PRAGMA table_info(trigger)' )
-			cols = cur.fetchall()
-			if cols and not any( col[1] == 'kmh' for col in cols ):
-				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN kmh DOUBLE DEFAULT 0.0' )
-			if cols and not any( col[1] == 'ts_start' for col in cols ):
-				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT 0' )
-				self.conn.execute( 'UPDATE trigger SET ts_start=ts' )
-			# Seconds before and after the ts time that frames were captured.
-			if cols and not any( col[1] == 's_before' for col in cols ):
-				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_before DOUBLE DEFAULT 0.0' )
-				self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_after DOUBLE DEFAULT 0.0' )
-		
 		if initTables:
+			# Add kmh, ts_start, sBefore and sAfter to the trigger table if necessary.
+			with self.conn:
+				cur = self.conn.cursor()
+				cur.execute( 'PRAGMA table_info(trigger)' )
+				cols = cur.fetchall()
+				if cols:
+					col_names = [col[1] for col in cols]
+					if 'kmh' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN kmh DOUBLE DEFAULT 0.0' )
+					if 'ts_start' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN ts_start timestamp DEFAULT 0' )
+						self.conn.execute( 'UPDATE trigger SET ts_start=ts' )
+					# Seconds before and after the ts time that frames were captured.
+					if 's_before' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_before DOUBLE DEFAULT 0.0' )
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_after DOUBLE DEFAULT 0.0' )
+		
 			with self.conn:
 				createTable( self.conn, 'photo', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
@@ -99,6 +101,12 @@ class Database( object ):
 		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
 		self.deleteExistingTriggerDuplicates()
 
+	def clone( self ):
+		return Database( self.fname, initTables=False, fps=self.fps )
+		
+	def getfname( self ):
+		return self.fname
+		
 	def getsize( self ):
 		try:
 			return os.path.getsize( self.fname )
@@ -148,7 +156,7 @@ class Database( object ):
 			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
 			self.lastUpdate = now()
 	
-	def updateTriggerRecord( id, data ):
+	def updateTriggerRecord( self, id, data ):
 		data = [(k,v) for k,v in data.iteritems()]
 		with self.conn:
 			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f,v in data)),

@@ -395,7 +395,6 @@ class MainWin( wx.Frame ):
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
-		self.dbReaderQ = Queue()	# Photos read as requested from user.
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
@@ -631,7 +630,8 @@ class MainWin( wx.Frame ):
 		for i in xrange(5):
 			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
-		if iTriggerRow is not None and (0 <= iTriggerRow < self.triggerList.GetItemCount()):
+		if iTriggerRow is not None:
+			iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
 			self.triggerList.EnsureVisible( iTriggerRow )
 			self.triggerList.Select( iTriggerRow )
 		else:
@@ -676,10 +676,27 @@ class MainWin( wx.Frame ):
 				(now() - self.tStartCapture).total_seconds()
 			)
 			self.db.initCaptureTriggerData( id, self.tStartCapture )
-		wx.EndBusyCursor()
+			self.refreshTriggers( iTriggerRow=999999 )
+		
+		iTriggerRow = self.triggerList.GetItemCount() - 1
+		self.triggerList.EnsureVisible( iTriggerRow )
+		for r in xrange(self.triggerList.GetItemCount()):
+			self.triggerList.Select(r, 0)
+		self.triggerList.Select( iTriggerRow )
+		
 		self.capture.SetForegroundColour( self.captureEnableColour )
-		wx.CallAfter( self.capture.Refresh )
-	
+		wx.CallAfter( self.capture.Refresh )		
+		wx.EndBusyCursor()
+		
+		def updateFS():
+			# Force all the photos to be written.
+			self.dbWriterQ.put( ('flush',) )
+			self.dbWriterQ.join()
+			# Update the finish strip.
+			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow )
+
+		threading.Thread( target=updateFS ).start()
+			
 	def onFocus( self, event ):
 		self.focusDialog.Move((4,4))
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
@@ -694,16 +711,12 @@ class MainWin( wx.Frame ):
 		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		pd.ShowModal()
 		if self.triggerInfo['kmh'] != (pd.kmh or 0.0):
-			self.dbWriterQ.put( ('kmh', self.triggerInfo['id'], pd.kmh or 0.0) )
-			wx.CallLater( 300, self.refreshTriggers, replace=True, iTriggerRow=self.iTriggerSelect )
+			self.db.updateTriggerKMH( self.triggerInfo['id'], pd.kmh or 0.0 )
+			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
 		pd.Destroy()
 
-	def setFinishStripJpgs( self, jpgs ):
-		self.tsJpg = jpgs
-		wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, self.triggerInfo )
-
-	def onTriggerSelected( self, event ):
-		self.iTriggerSelect = event.Index
+	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
+		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
 			a:data[i] for i, a in enumerate((
@@ -714,7 +727,15 @@ class MainWin( wx.Frame ):
 		self.ts = self.triggerInfo['ts']
 		s_before = max( self.triggerInfo['s_before'] or 0.0, tdCaptureBefore.total_seconds() )
 		s_after = max( self.triggerInfo['s_after'] or 0.0, tdCaptureAfter.total_seconds() )
-		self.dbReaderQ.put( ('getphotos', self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) ) )
+		
+		# Update the screen in the background so as not to freeze the UI.
+		def updateFS():
+			self.tsJpg = self.db.clone().getPhotos(
+				self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after)
+			)
+			wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, self.triggerInfo )
+			
+		threading.Thread( target=updateFS ).start()
 	
 	def onTriggerEdit( self, event ):
 		self.iTriggerSelect = event.Index
@@ -764,13 +785,9 @@ class MainWin( wx.Frame ):
 		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ,) )
 		self.dbWriterThread.daemon = True
 		
-		self.dbReaderThread = threading.Thread( target=DBReader, args=(self.dbReaderQ, self.setFinishStripJpgs) )
-		self.dbReaderThread.daemon = True
-		
 		self.cameraThread.start()
 		self.eventThread.start()
 		self.dbWriterThread.start()
-		self.dbReaderThread.start()
 		
 		self.grabFrameOK = True
 		self.messageQ.put( ('threads', 'Successfully Launched') )
@@ -842,8 +859,6 @@ class MainWin( wx.Frame ):
 			self.camInQ.put( {'cmd':'terminate'} )
 			self.dbWriterQ.put( ('terminate', ) )
 			self.dbWriterThread.join()
-			self.dbReaderQ.put( ('terminate', ) )
-			self.dbReaderThread.join()
 	
 	def resetCamera( self, event=None ):
 		dlg = ConfigDialog( self, self.getCameraDeviceNum(), self.fps, self.getCameraResolution() )
@@ -868,6 +883,7 @@ class MainWin( wx.Frame ):
 		trigFirst, trigLast = self.db.getTimestampRange()
 		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, trigFirst, trigLast, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
+			work = wx.BusyCursor()
 			tsLower, tsUpper, vacuum = dlg.GetValues()
 			if tsUpper:
 				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )

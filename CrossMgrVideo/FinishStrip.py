@@ -7,6 +7,7 @@ import datetime
 import cStringIO as StringIO
 from bisect import bisect_left
 from MakeComposite import MakeComposite
+from CVUtil import frameToBitmap
 from AddPhotoHeader import AddPhotoHeader
 import Utils
 
@@ -153,8 +154,8 @@ class FinishStrip( wx.Panel ):
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
-		if self.compositeBitmap:
-			self.compositeBitmap = wx.Bitmap( PilImageToWxImage(self.compositeBitmap) )
+		if self.compositeBitmap is not None:
+			self.compositeBitmap = frameToBitmap( self.compositeBitmap )
 		self.zoomBitmap = {}
 		
 	def OnErase( self, event ):
