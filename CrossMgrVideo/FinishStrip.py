@@ -588,7 +588,8 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetTsJpgs( [] )
 
 class FinishStripDialog( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
+			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
 			dir=None, fps=25.0, leftToRight=True, pixelsPerSec=None ):
 			
 		if size == wx.DefaultSize:
