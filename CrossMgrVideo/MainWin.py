@@ -646,6 +646,8 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.capture.Refresh )
 		wx.BeginBusyCursor()
 		
+		CVUtil.clearCache()
+		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		tNow = now()
 		self.requestQ.put( {

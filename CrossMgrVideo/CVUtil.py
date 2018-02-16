@@ -30,9 +30,28 @@ def resizeFrame( frame, w_req, h_req ):
 	if w_fix != w_req or h_fix != h_req:
 		frame = cv2.resize( frame, w_fix, h_fix )
 	return frame
-	
+
+jpegFramesCache = {}
+jpegFramesCacheMax = 30*60
 def frameToJPeg( frame ):
-	return cv2.imencode('.jpg', frame)[1].tostring()
+	jpeg = cv2.imencode('.jpg', frame)[1].tostring()
+	if len(jpegFramesCache) >= jpegFramesCacheMax:
+		jpegFramesCache.clear()
+	jpegFramesCache[bytes(jpeg)] = frame
+	return jpeg
+
+def jpegToFrame( jpeg ):
+	key = bytes( jpeg )
+	if key in jpegFramesCache:
+		return jpegFramesCache[key]
+	frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), 1)
+	if len(jpegFramesCache) >= jpegFramesCacheMax:
+		jpegFramesCache.clear()
+	jpegFramesCache[key] = frame
+	return frame
+
+def clearCache():
+	jpegFramesCache.clear()
 
 def adjustGammaFrame( frame, gamma=1.0 ):
 	# build a lookup table mapping the pixel values [0, 255] to
