@@ -652,7 +652,7 @@ class MainWin( wx.Frame ):
 		tNow = now()
 		self.requestQ.put( {
 				'time':tNow,
-				's_before':tdCaptureBefore.total_seconds(),
+				's_before':0.0,
 				's_after':tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
 				'bib':self.captureCount,
@@ -673,7 +673,7 @@ class MainWin( wx.Frame ):
 			id = triggers[0][0]
 			self.db.updateTriggerBeforeAfter(
 				id,
-				tdCaptureBefore.total_seconds(),
+				0.0,
 				(now() - self.tStartCapture).total_seconds()
 			)
 			self.db.initCaptureTriggerData( id, self.tStartCapture )

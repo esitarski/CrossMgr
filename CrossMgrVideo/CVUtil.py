@@ -1,6 +1,7 @@
 import wx
 import cv2
 import numpy as np
+from LRUCache import LRUCache
 
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
@@ -31,12 +32,10 @@ def resizeFrame( frame, w_req, h_req ):
 		frame = cv2.resize( frame, w_fix, h_fix )
 	return frame
 
-jpegFramesCache = {}
 jpegFramesCacheMax = 30*60
+jpegFramesCache = LRUCache( jpegFramesCacheMax )
 def frameToJPeg( frame ):
 	jpeg = cv2.imencode('.jpg', frame)[1].tostring()
-	if len(jpegFramesCache) >= jpegFramesCacheMax:
-		jpegFramesCache.clear()
 	jpegFramesCache[bytes(jpeg)] = frame
 	return jpeg
 
@@ -45,13 +44,11 @@ def jpegToFrame( jpeg ):
 	if key in jpegFramesCache:
 		return jpegFramesCache[key]
 	frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), 1)
-	if len(jpegFramesCache) >= jpegFramesCacheMax:
-		jpegFramesCache.clear()
 	jpegFramesCache[key] = frame
 	return frame
 
 def clearCache():
-	jpegFramesCache.clear()
+	pass
 
 def adjustGammaFrame( frame, gamma=1.0 ):
 	# build a lookup table mapping the pixel values [0, 255] to
