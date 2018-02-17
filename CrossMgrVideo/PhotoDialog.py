@@ -65,23 +65,15 @@ def PrintPhoto( parent, image ):
 
 photoHeaderState = True
 class PhotoDialog( wx.Dialog ):
-	def __init__( self, parent, jpg, triggerInfo, tsJpg, fps=25, id=wx.ID_ANY, size=wx.DefaultSize,
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
 			
 		super(PhotoDialog, self).__init__( parent, id, size=size, style=style, title=_('Photo') )
 		
-		self.jpg = jpg
-		self.triggerInfo = triggerInfo
-		self.tsJpg = tsJpg
-		self.fps = fps
-		
-		self.kmh = triggerInfo['kmh'] or 0.0
-		self.mps = self.kmh / 3.6
-		self.mph = self.kmh * 0.621371
-		self.pps = 2000.0
+		self.clear()
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		self.scaledImage = ScaledImage( self, image=self.getPhoto() )
+		self.scaledImage = ScaledImage( self )
 		vs.Add( self.scaledImage, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -141,6 +133,39 @@ class PhotoDialog( wx.Dialog ):
 
 		self.SetSizer(vs)
 		vs.Fit(self)
+	
+	def set( self, jpg, triggerInfo, tsJpg, fps=25 ):
+		self.jpg = jpg
+		self.triggerInfo = triggerInfo
+		self.tsJpg = tsJpg
+		self.fps = fps
+		
+		self.kmh = triggerInfo['kmh'] or 0.0
+		self.mps = self.kmh / 3.6
+		self.mph = self.kmh * 0.621371
+		self.pps = 2000.0
+		
+		self.scaledImage.SetImage( self.getPhoto() )
+		
+		sz = self.scaledImage.GetImage().GetSize()
+		iWidth, iHeight = sz
+		r = wx.GetClientDisplayRect()
+		dWidth, dHeight = r.GetWidth(), r.GetHeight()
+		if iWidth > dWidth or iHeight > dHeight:
+			if float(iHeight)/float(iWidth) < float(dHeight)/float(dWidth):
+				wSize = (dWidth, int(iHeight * float(dWidth)/float(iWidth)))
+			else:
+				wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
+		else:
+			wSize = sz
+		if self.GetSize() != wSize:
+			self.SetSize( wSize )
+	
+	def clear( self ):
+		self.jpg = None
+		self.triggerInfo = None
+		self.tsJpg = None
+		self.fps = None
 	
 	def onContrast( self, event ):
 		self.scaledImage.SetImage( CVUtil.adjustContrastImage(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )

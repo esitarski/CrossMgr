@@ -144,17 +144,14 @@ class DateSelectDialog( wx.Dialog ):
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelect )
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivate )
 		
-		self.ok = wx.Button( self, wx.ID_OK )
-		self.cancel = wx.Button( self, wx.ID_CANCEL )		
+		btns = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
+		self.ok = wx.FindWindowById(wx.ID_OK, self)
+		self.cancel = wx.FindWindowById(wx.ID_CANCEL, self )		
 		
 		sizer.Add( self.chm, flag=wx.ALL, border=4 )
 		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.ok, flag=wx.ALL, border=4 )
-		hs.Add( self.cancel, flag=wx.ALL, border=4 )
-		
-		sizer.Add( hs )
+		sizer.Add( btns, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizer( sizer )
 		wx.CallAfter( self.Fit )
@@ -400,6 +397,7 @@ class MainWin( wx.Frame ):
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
 		self.triggerDialog = TriggerDialog( self )
+		self.photoDialog = PhotoDialog( self )
 		
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
@@ -708,14 +706,15 @@ class MainWin( wx.Frame ):
 	def onRightClick( self, event ):
 		if not self.triggerInfo:
 			return
-		self.xFinish = event.GetX()
 		
-		pd = PhotoDialog( self, self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
-		pd.ShowModal()
+		self.xFinish = event.GetX()
+		self.photoDialog.set( self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
+		self.photoDialog.CenterOnParent()
+		self.photoDialog.ShowModal()
 		if self.triggerInfo['kmh'] != (pd.kmh or 0.0):
 			self.db.updateTriggerKMH( self.triggerInfo['id'], pd.kmh or 0.0 )
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
-		pd.Destroy()
+		self.photoDialog.clear()
 
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
