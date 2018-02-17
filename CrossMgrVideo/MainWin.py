@@ -510,6 +510,7 @@ class MainWin( wx.Frame ):
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onTriggerEdit )
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onTriggerRightClick )
+		#self.triggerList.Bind( wx.EVT_LIST_DELETE_ITEM, self.onTriggerDelete )
 		
 		self.messagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(250,-1) )
 		self.messageManager = MessageManager( self.messagesText )
@@ -758,7 +759,7 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewId()
-			self.Bind(wx.EVT_MENU, self.onTriggerDelete, id=self.triggerDeleteID)
+			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerDelete, id=self.triggerDeleteID)
 
 		menu = wx.Menu()
 		menu.Append(self.triggerDeleteID, "Delete...")
@@ -767,6 +768,10 @@ class MainWin( wx.Frame ):
 		menu.Destroy()
 
 	def onTriggerDelete( self, event ):
+		self.iTriggerSelect = event.Index
+		self.doTriggerDelete()
+		
+	def doTriggerDelete( self ):
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.db.deleteTrigger( data[0], tdCaptureBefore.total_seconds(), tdCaptureAfter.total_seconds() )
 		self.refreshTriggers( replace=False, iTriggerRow=self.iTriggerSelect )

@@ -95,11 +95,15 @@ class Database( object ):
 						'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (now() - timedelta(seconds=self.UpdateSeconds), now())
 					)
 				)
+			
+			self.deleteExistingTriggerDuplicates()
 		else:
 			self.photoTsCache = set()
 		
 		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
-		self.deleteExistingTriggerDuplicates()
+		
+		self.tsJpgsKeyLast = None
+		self.tsJpgsLast = None
 
 	def clone( self ):
 		return Database( self.fname, initTables=False, fps=self.fps )
@@ -197,8 +201,15 @@ class Database( object ):
 				))
 			
 	def getPhotos( self, tsLower, tsUpper ):
+		# Cache the results of the last query.
+		key = (tsLower, tsUpper)
+		if key == self.tsJpgsKeyLast:
+			return self.tsJpgsLast
+		
 		with self.conn:
-			return list( self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper)) )
+			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper)) )
+		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
+		return tsJpgs
 	
 	def getLastPhotos( self, count ):
 		with self.conn:
