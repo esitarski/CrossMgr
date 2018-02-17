@@ -710,6 +710,7 @@ class MainWin( wx.Frame ):
 		self.xFinish = event.GetX()
 		self.photoDialog.set( self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		self.photoDialog.CenterOnParent()
+		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
 		self.photoDialog.ShowModal()
 		if self.triggerInfo['kmh'] != (pd.kmh or 0.0):
 			self.db.updateTriggerKMH( self.triggerInfo['id'], pd.kmh or 0.0 )
