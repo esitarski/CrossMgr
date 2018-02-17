@@ -319,7 +319,7 @@ class TriggerDialog( wx.Dialog ):
 		self.editFields = []
 		for f in fieldNames:
 			gs.Add( wx.StaticText(self, label=f), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-			e = wx.TextCtrl(self)
+			e = wx.TextCtrl(self, size=(500,-1) )
 			gs.Add( e )
 			self.editFields.append(e)
 		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -755,7 +755,20 @@ class MainWin( wx.Frame ):
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
-		# Add menu for delete.
+		if not hasattr(self, "triggerDeleteID"):
+			self.triggerDeleteID = wx.NewId()
+			self.Bind(wx.EVT_MENU, self.onTriggerDelete, id=self.triggerDeleteID)
+
+		menu = wx.Menu()
+		menu.Append(self.triggerDeleteID, "Delete...")
+
+		self.PopupMenu(menu)
+		menu.Destroy()
+
+	def onTriggerDelete( self, event ):
+		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
+		self.db.deleteTrigger( data[0], tdCaptureBefore.total_seconds(), tdCaptureAfter.total_seconds() )
+		self.refreshTriggers( replace=False, iTriggerRow=self.iTriggerSelect )
 	
 	def showMessages( self ):
 		while 1:

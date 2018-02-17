@@ -268,7 +268,57 @@ class Database( object ):
 		with self.conn:
 			self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
 			self.conn.execute( 'DELETE from trigger WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
+	
+	def deleteTrigger( self, id, s_before_default=0.5,  s_after_default=2.0 ):
+		with self.conn:
+			rows = list( self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE id=?', (id,) ) )
+			if not rows:
+				return
 		
+		ts, s_before, s_after = rows[0]
+		with self.conn:
+			self.conn.execute( 'DELETE FROM trigger WHERE id=?', (id,) )
+			
+		tsLower, tsUpper = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
+			
+		# Get all other intervals that intersect this one.
+		intervals = []
+		with self.conn:
+			for ts,s_before,s_after in self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE ts BETWEEN ? AND ?',
+					(tsLower - timedelta(minutes=15),tsUpper + timedelta(minutes=15)) ):
+				if s_before == 0.0 and s_after == 0.0:
+					s_before, s_after = s_before_default, s_after_default
+				tsStart, tsEnd = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
+				if tsEnd <= tsLower or tsUpper <= tsStart:
+					continue
+				intervals.append( (max(tsLower,tsStart), min(tsUpper,tsEnd)) )
+		
+		# Merge overlapping and adjacent intervals together.
+		if intervals:
+			intervals.sort()
+			intervalsNormal = [intervals[0]]
+			for a, b in intervals[1:]:
+				if a <= intervalsNormal[-1][1]:
+					if b > intervalsNormal[-1][1]:
+						intervalsNormal[-1] = (intervalsNormal[-1][0], b)
+				elif a != b:
+					intervalsNormal.append( (a, b) )
+			intervals = intervalsNormal
+
+		toRemove = [(tsLower, tsUpper)]
+		for a, b in intervals:
+			# Split the last interval to accommodate the interval.
+			u, v = toRemove.pop()
+			if u != a:
+				toRemove.append( (u, a) )
+			if b != v:
+				toRemove.append( (b, v) )
+
+		if toRemove:
+			with self.conn:
+				for a, b in toRemove:
+					self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (a,b) )
+			
 	def vacuum( self ):
 		self.conn.execute( 'VACUUM' )
 		
