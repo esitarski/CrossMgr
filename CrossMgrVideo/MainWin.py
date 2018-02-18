@@ -821,7 +821,7 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewId()
-			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerDelete, id=self.triggerDeleteID)
+			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerDelete(), id=self.triggerDeleteID)
 
 		menu = wx.Menu()
 		menu.Append(self.triggerDeleteID, "Delete...")
@@ -829,15 +829,15 @@ class MainWin( wx.Frame ):
 		self.PopupMenu(menu)
 		menu.Destroy()
 
+	def doTriggerDelete( self ):
+		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
+		self.db.deleteTrigger( data[0], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+		self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
+	
 	def onTriggerDelete( self, event ):
 		self.iTriggerSelect = event.Index
 		self.doTriggerDelete()
 		
-	def doTriggerDelete( self ):
-		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.db.deleteTrigger( data[0], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
-		self.refreshTriggers( replace=False, iTriggerRow=self.iTriggerSelect )
-	
 	def showMessages( self ):
 		while 1:
 			message = self.messageQ.get()
