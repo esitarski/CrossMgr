@@ -275,6 +275,7 @@ class FocusDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Focus') )
 		
+		self.imageSz = None
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.image = ScaledImage( self )
@@ -287,19 +288,21 @@ class FocusDialog( wx.Dialog ):
 	
 	def SetImage( self, image ):
 		sz = image.GetSize()
-		iWidth, iHeight = sz
-		r = wx.GetClientDisplayRect()
-		dWidth, dHeight = r.GetWidth(), r.GetHeight()
-		if iWidth > dWidth or iHeight > dHeight:
-			if float(iHeight)/float(iWidth) < float(dHeight)/float(dWidth):
-				wSize = (dWidth, int(iHeight * float(dWidth)/float(iWidth)))
+		if sz != self.imageSz:
+			self.imageSz = sz
+			iWidth, iHeight = sz
+			r = wx.GetClientDisplayRect()
+			dWidth, dHeight = r.GetWidth(), r.GetHeight()
+			if iWidth > dWidth or iHeight > dHeight:
+				if float(iHeight)/float(iWidth) < float(dHeight)/float(dWidth):
+					wSize = (dWidth, int(iHeight * float(dWidth)/float(iWidth)))
+				else:
+					wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
 			else:
-				wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
-		else:
-			wSize = sz
-		if self.GetSize() != wSize:
+				wSize = sz
 			self.SetSize( wSize )
 			self.SetTitle( u'{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
+		
 		return self.image.SetImage( image )
 
 class TriggerDialog( wx.Dialog ):
@@ -699,10 +702,11 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=updateFS ).start()
 			
 	def onFocus( self, event ):
+		if self.focusDialog.IsShown():
+			return
 		self.focusDialog.Move((4,4))
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
-		self.focusDialog.ShowModal()
-		self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+		self.focusDialog.Show()
 	
 	def onRightClick( self, event ):
 		if not self.triggerInfo:
@@ -819,7 +823,7 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('flush',) )
 	
 	def processCamera( self ):
-		updatePhotos = {}
+		lastFrame = None
 		while 1:
 			try:
 				msg = self.camReader.recv()
@@ -830,17 +834,18 @@ class MainWin( wx.Frame ):
 			if cmd == 'response':
 				for t, f in msg['ts_frames']:
 					self.dbWriterQ.put( ('photo', t, f) )
+					lastFrame = f
 			elif cmd == 'update':
-				updatePhotos[msg['name']] = msg['frame']
+				name, lastFrame = msg['name'], msg['frame'] if msg['frame'] is not None else lastFrame
+				if name == 'primary':
+					wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(lastFrame) )
+				elif name == 'focus':
+					if self.focusDialog.IsShown():
+						wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(lastFrame) )
+					else:
+						self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 			elif cmd == 'terminate':
 				break
-			
-			for name, frame in updatePhotos.iteritems():
-				if name == 'primary':
-					wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(frame) )
-				elif name == 'focus' and self.focusDialog.IsShown():
-					wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(frame) )
-			updatePhotos.clear()
 		
 	def processRequests( self ):
 		def refresh():

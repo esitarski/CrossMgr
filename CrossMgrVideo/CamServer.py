@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from datetime import datetime, timedelta
 import time
-from collections import deque
 from Queue import Empty
 from multiprocessing import Process, Pipe, Queue
 from threading import Thread, Timer
@@ -30,7 +29,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 	tsSeen = set()
 	camInfo = camInfo or {}
 	bufferSeconds = 8
-	backlog = deque()
+	backlog = []
+	transmitFramesMax = 4
 	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:
@@ -102,15 +102,19 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					backlog.append( (ts, frame) )
 					tsSeen.add( ts )
 
-				# Slow updates if we have a backlog.
-				for name, f in sendUpdates.iteritems():
-					if frameCount % (11 if backlog else f) == 0:
-						pWriter.send( {'cmd':'update', 'name':name, 'frame':frame } )
-				
-				# Don't send too many frames so as not to do too much processing and lose frames.
+				# Don't send too many frames at a time.  We don't want to overwhelm the pipe and lose frames.
+				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
-					pWriter.send( { 'cmd':'response', 'ts_frames': [backlog.popleft() for i in xrange(min(4, len(backlog)))] } )
+					pWriter.send( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )
 						
+				# Send update messages.  If there was a backlog, don't send the frame as we can use the last frame sent.
+				updateFrame = None if backlog else frame
+				for name, f in sendUpdates.iteritems():
+					if frameCount % f == 0:
+						pWriter.send( {'cmd':'update', 'name':name, 'frame':updateFrame} )
+						updateFrame = None
+						
+				del backlog[-transmitFramesMax:]
 				frameCount += 1
 				
 def getCamServer( camInfo=None ):
