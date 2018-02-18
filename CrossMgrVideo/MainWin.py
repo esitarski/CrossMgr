@@ -434,10 +434,21 @@ class MainWin( wx.Frame ):
 		self.manage = wx.Button( self, label="Manage Database" )
 		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
 		
-		self.capture = RoundButton( self, label="CAPTURE", size=(90,90) )
-		self.capture.SetBackgroundColour( wx.WHITE )
+		self.eventRecordEnableColour = wx.Colour(0,0,100)
+		self.eventRecordDisableColour = wx.Colour(100,0,0)
+		
+		self.eventRecord = RoundButton( self, label="EVENT", size=(90,90) )
+		self.eventRecord.SetBackgroundColour( wx.WHITE )
+		self.eventRecord.SetForegroundColour( self.eventRecordEnableColour )
+		self.eventRecord.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		self.eventRecord.Bind( wx.EVT_LEFT_DOWN, self.onStartEventRecord )
+		self.eventRecord.Bind( wx.EVT_LEFT_UP, self.onStopEventRecord )
+		
 		self.captureEnableColour = wx.Colour(0,100,0)
 		self.captureDisableColour = wx.Colour(100,0,0)
+		
+		self.capture = RoundButton( self, label="CAPTURE", size=(90,90) )
+		self.capture.SetBackgroundColour( wx.WHITE )
 		self.capture.SetForegroundColour( self.captureEnableColour )
 		self.capture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
 		self.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
@@ -452,6 +463,7 @@ class MainWin( wx.Frame ):
 		headerSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
 		headerSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		headerSizer.AddStretchSpacer()
+		headerSizer.Add( self.eventRecord, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
 		headerSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
 
 		#------------------------------------------------------------------------------
@@ -644,31 +656,67 @@ class MainWin( wx.Frame ):
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startThreads()
 
+	def onStartEventRecord( self, event ):
+		tNow = now()
+		
+		self.eventRecord.SetForegroundColour( self.eventRecordDisableColour )
+		wx.CallAfter( self.eventRecord.Refresh )
+		wx.BeginBusyCursor()
+		
+		s_before, s_after = 2.0, 1.0
+		
+		self.eventRecordCount = getattr(self, 'eventRecordCount', 0) + 1
+		self.requestQ.put( {
+				'time':tNow,
+				's_before':s_before,
+				's_after':s_after,
+				'ts_start':tNow,
+				'bib':self.eventRecordCount,
+				'lastName':u'Event',
+			}
+		)
+		
+		def doUpdate():
+			self.dbWriterQ.put( ('flush',) )
+			self.dbWriterQ.join()
+			wx.CallAfter( self.refreshTriggers, iTriggerRow=999999 )
+			wx.CallAfter( self.showLastTrigger )
+			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
+
+		wx.CallLater( int(s_after*1000.0) + 100, doUpdate )
+		
+	def onStopEventRecord( self, event ):
+		self.eventRecord.SetForegroundColour( self.eventRecordEnableColour )
+		wx.CallAfter( self.eventRecord.Refresh )		
+		wx.EndBusyCursor()
+		
 	def onStartCapture( self, event ):
+		tNow = now()
+		
 		self.capture.SetForegroundColour( self.captureDisableColour )
 		wx.CallAfter( self.capture.Refresh )
 		wx.BeginBusyCursor()
 		
-		CVUtil.clearCache()
-		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
-		tNow = now()
 		self.requestQ.put( {
 				'time':tNow,
 				's_before':0.0,
 				's_after':tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
 				'bib':self.captureCount,
-				'firstName':u'',
 				'lastName':u'Capture',
-				'team':u'',
-				'wave':u'',
-				'raceName':u'',				
 			}
 		)
 		self.tStartCapture = tNow
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-tdCaptureBefore} )
-		
+	
+	def showLastTrigger( self ):
+		iTriggerRow = self.triggerList.GetItemCount() - 1
+		self.triggerList.EnsureVisible( iTriggerRow )
+		for r in xrange(self.triggerList.GetItemCount()):
+			self.triggerList.Select(r, 0)
+		self.triggerList.Select( iTriggerRow )		
+	
 	def onStopCapture( self, event ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
 		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
@@ -682,11 +730,7 @@ class MainWin( wx.Frame ):
 			self.db.initCaptureTriggerData( id, self.tStartCapture )
 			self.refreshTriggers( iTriggerRow=999999 )
 		
-		iTriggerRow = self.triggerList.GetItemCount() - 1
-		self.triggerList.EnsureVisible( iTriggerRow )
-		for r in xrange(self.triggerList.GetItemCount()):
-			self.triggerList.Select(r, 0)
-		self.triggerList.Select( iTriggerRow )
+		self.showLastTrigger()
 		
 		self.capture.SetForegroundColour( self.captureEnableColour )
 		wx.CallAfter( self.capture.Refresh )		
@@ -697,7 +741,7 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( ('flush',) )
 			self.dbWriterQ.join()
 			# Update the finish strip.
-			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow )
+			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
 
 		threading.Thread( target=updateFS ).start()
 			

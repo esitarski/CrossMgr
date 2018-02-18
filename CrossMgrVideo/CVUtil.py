@@ -47,9 +47,6 @@ def jpegToFrame( jpeg ):
 	jpegFramesCache[key] = frame
 	return frame
 
-def clearCache():
-	pass
-
 def adjustGammaFrame( frame, gamma=1.0 ):
 	# build a lookup table mapping the pixel values [0, 255] to
 	# their adjusted gamma values
