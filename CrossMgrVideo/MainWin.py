@@ -837,7 +837,7 @@ class MainWin( wx.Frame ):
 					lastFrame = f
 			elif cmd == 'update':
 				name, lastFrame = msg['name'], lastFrame if msg['frame'] is None else msg['frame']
-				if lastFrame:
+				if lastFrame is not None:
 					if name == 'primary':
 						wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(lastFrame) )
 					elif name == 'focus':
