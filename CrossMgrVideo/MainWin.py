@@ -676,14 +676,14 @@ class MainWin( wx.Frame ):
 			}
 		)
 		
-		def doUpdate():
+		def doUpdateEventRecord():
 			self.dbWriterQ.put( ('flush',) )
 			self.dbWriterQ.join()
 			wx.CallAfter( self.refreshTriggers, iTriggerRow=999999 )
 			wx.CallAfter( self.showLastTrigger )
 			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
 
-		wx.CallLater( int(s_after*1000.0) + 100, doUpdate )
+		wx.CallLater( int(s_after*1000.0) + 100, doUpdateEventRecord )
 		
 	def onStopEventRecord( self, event ):
 		self.eventRecord.SetForegroundColour( self.eventRecordEnableColour )
