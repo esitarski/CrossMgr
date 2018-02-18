@@ -836,14 +836,15 @@ class MainWin( wx.Frame ):
 					self.dbWriterQ.put( ('photo', t, f) )
 					lastFrame = f
 			elif cmd == 'update':
-				name, lastFrame = msg['name'], msg['frame'] if msg['frame'] is not None else lastFrame
-				if name == 'primary':
-					wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(lastFrame) )
-				elif name == 'focus':
-					if self.focusDialog.IsShown():
-						wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(lastFrame) )
-					else:
-						self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+				name, lastFrame = msg['name'], lastFrame if msg['frame'] is None else msg['frame']
+				if lastFrame:
+					if name == 'primary':
+						wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(lastFrame) )
+					elif name == 'focus':
+						if self.focusDialog.IsShown():
+							wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(lastFrame) )
+						else:
+							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 			elif cmd == 'terminate':
 				break
 		
