@@ -231,12 +231,12 @@ class PhotoDialog( wx.Dialog ):
 		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
-		PrintPhoto( self, self.scaledImage.GetImage() )
+		PrintPhoto( self, self.scaledImage.GetDisplayImage() )
 		
 	def onCopyToClipboard( self, event ):
 		if wx.TheClipboard.Open():
 			bmData = wx.BitmapDataObject()
-			bmData.SetBitmap( self.scaledImage.GetImage().ConvertToBitmap() )
+			bmData.SetBitmap( self.scaledImage.GetDisplayImage().ConvertToBitmap() )
 			wx.TheClipboard.SetData( bmData )
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close()
@@ -248,7 +248,7 @@ class PhotoDialog( wx.Dialog ):
 		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
-				self.scaledImage.GetImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+				self.scaledImage.GetDisplayImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
 				wx.MessageBox( _('Photo Save Successful'), _('Success') )
 			except Exception as e:
 				wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )

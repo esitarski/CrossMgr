@@ -9,10 +9,11 @@ def RescaleImage( image, width, height, imageQuality=wx.IMAGE_QUALITY_NORMAL ):
 	wImage, hImage = image.GetWidth(), image.GetHeight()
 	ratio = GetScaleRatio( wImage, hImage, width, height )
 	return image.Scale( int(wImage*ratio), int(hImage*ratio), imageQuality )
-	
-class ScaledImage( wx.Panel ):
-	NW, NE, SE, SW = (0,1,2,3)
 
+def intervalsOverlap( a0, a1, b0, b1 ):
+	return a0 <= b1 and b0 <= a1
+
+class ScaledImage( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, drawFinishLine=False ):
 		super(ScaledImage, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
@@ -55,18 +56,18 @@ class ScaledImage( wx.Panel ):
 		self.xEnd, self.yEnd = x, y
 		wx.CallAfter( self.Refresh )
 	
-	def getInsetRect( self, isWest, isNorth ):
-		width, height = self.GetSize()
-		insetWidth = width//2
-		insetHeight = height//2
+	def getInsetRect( self, dc, isWest, isNorth ):
+		width, height = dc.GetSize()
+		r = 2.0/3.0
+		insetWidth = int(width*r)
+		insetHeight = int(height*r)
 		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight, insetWidth, insetHeight )
 	
-	def OnPaint( self, event=None ):
-		dc = wx.AutoBufferedPaintDC( self )
+	def draw( self, dc ):
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		width, height = self.GetSize()
+		width, height = dc.GetSize()
 		try:
 			bitmap = wx.Bitmap( RescaleImage(self.image, width, height) )
 		except Exception as e:
@@ -92,7 +93,9 @@ class ScaledImage( wx.Panel ):
 			
 		xCenter = sourceRect.GetX() + sourceRect.GetWidth() // 2
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2
-		insetRect = self.getInsetRect( xCenter < self.image.GetWidth()//2, yCenter < self.image.GetHeight()//2 )
+		isWest = xCenter < self.image.GetWidth()//2
+		isNorth = yCenter < self.image.GetHeight()//2
+		insetRect = self.getInsetRect( dc, isWest, isNorth )
 		
 		magRatio = GetScaleRatio( sourceRect.GetWidth(), sourceRect.GetHeight(), insetRect.GetWidth(), insetRect.GetHeight() )
 		iWidth, iHeight = int(sourceRect.GetWidth() * magRatio), int(sourceRect.GetHeight() * magRatio)
@@ -102,12 +105,7 @@ class ScaledImage( wx.Panel ):
 			iWidth, iHeight
 		)
 		
-		dc.SetPen( wx.Pen(wx.Colour(200,200,200), 2) )
-		dc.DrawLine( magnifyRect.GetBottomRight(), insetRect.GetBottomRight() )
-		dc.DrawLine( magnifyRect.GetBottomLeft(),  insetRect.GetBottomLeft() )
-		dc.DrawLine( magnifyRect.GetTopRight(),    insetRect.GetTopRight() )
-		dc.DrawLine( magnifyRect.GetTopLeft(),     insetRect.GetTopLeft() )
-		
+		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
 		sourceBM = wx.Bitmap( self.image )
 		sourceDC = wx.MemoryDC( sourceBM )
 		dc.StretchBlit( *(list(insetRect.Get()) + [sourceDC] + list(sourceRect.Get())) )
@@ -116,6 +114,27 @@ class ScaledImage( wx.Panel ):
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.DrawRectangle( insetRect )
 		dc.DrawRectangle( magnifyRect )
+
+		if intervalsOverlap(magnifyRect.GetLeft(), magnifyRect.GetRight(), insetRect.GetLeft(), insetRect.GetRight()):
+			if intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom()):
+				return
+			
+			if isNorth:
+				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetTopLeft() )
+				dc.DrawLine( magnifyRect.GetBottomRight(),insetRect.GetTopRight() )
+			else:
+				dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetBottomLeft() )
+				dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetBottomRight() )
+		else:
+			if isWest:
+				dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetTopLeft() )
+				dc.DrawLine( magnifyRect.GetBottomRight(),insetRect.GetBottomLeft() )
+			else:
+				dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetTopRight() )
+				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetBottomRight() )
+	
+	def OnPaint( self, event=None ):
+		self.draw( wx.AutoBufferedPaintDC( self ) )
 		
 	def SetImage( self, image ):
 		self.image = image
@@ -124,6 +143,13 @@ class ScaledImage( wx.Panel ):
 		
 	def GetImage( self ):
 		return self.image
+		
+	def GetDisplayImage( self ):
+		width, height = self.GetSize()
+		bitmap = wx.Bitmap( width, height )
+		dc = wx.MemoryDC( bitmap )
+		self.draw( dc )
+		return bitmap.ConvertToImage()
 		
 	def SetToEmpty( self ):
 		width, height = self.GetSize()
