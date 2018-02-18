@@ -27,13 +27,11 @@ from ScaledImage import ScaledImage
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoDialog
+from Version import AppVerName
 
 imageWidth, imageHeight = 640, 480
 
-tdCaptureBefore = timedelta(seconds=0.5)
-tdCaptureAfter = timedelta(seconds=2.0)
-
-closeFinishThreshold = 3.0/24.0
+closeFinishThreshold = 3.0/30.0
 closeColors = ('E50000','D1D200','00BF00')
 def getCloseFinishBitmaps( size=(16,16) ):
 	bm = []
@@ -47,44 +45,6 @@ def getCloseFinishBitmaps( size=(16,16) ):
 		dc.SelectObject( wx.NullBitmap )
 		bm.append( bitmap )
 	return bm
-
-'''
-try:
-	#from VideoCapture import Device
-	from jaraco.video.capture_nofont import Device
-except:
-	if platform.system() == 'Windows':
-		raise
-	from PIL import Image, ImageDraw
-	class Device( object ):
-		def __init__( self, cameraDeviceNum = 0 ):
-			self.cameraDeviceNum = cameraDeviceNum
-			self.yLast = 0
-			
-		def getImage( self ):
-			# Return a test image.
-			image = Image.new('RGB', (imageWidth, imageHeight), (255,255,255))
-			draw = ImageDraw.Draw( image )
-			y1 = 0
-			y2 = imageHeight
-			colours = ((0,0,0), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (255,255,255))
-			rWidth = int(float(imageWidth) / len(colours) + 0.5)
-			for i, c in enumerate(colours):
-				x1, x2 = rWidth * i, rWidth * (i+1)
-				draw.rectangle( ((x1, y1), (x2, y2)), fill=c )
-			draw.rectangle( ((0, 0), (imageWidth-1, imageHeight-1)), outline=(255,255,0) )
-			
-			s = imageHeight // 10
-			self.yLast += 4
-			if not self.yLast <= imageHeight-s:
-				self.yLast = 0
-			x = 0
-			draw.rectangle( ((x, self.yLast), (imageWidth, self.yLast+s)), fill=(128,128,128) )
-			
-			return image
-'''
-
-from Version import AppVerName
 
 def setFont( font, w ):
 	w.SetFont( font )
@@ -361,6 +321,43 @@ class TriggerDialog( wx.Dialog ):
 		self.commit()
 		self.EndModal( wx.ID_OK )
 		
+class AutoCaptureDialog( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY ):
+		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Auto Capture') )
+		
+		sizer = wx.BoxSizer( wx.VERTICAL )
+		gs = wx.FlexGridSizer( 2, 2, 4 )
+		gs.AddGrowableCol( 1 )
+		fieldNames = ['Seconds Before', 'Seconds After']
+		self.editFields = []
+		for f in fieldNames:
+			gs.Add( wx.StaticText(self, label=f), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			e = wx.TextCtrl(self, size=(60,-1) )
+			gs.Add( e )
+			self.editFields.append(e)
+		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.ok = wx.Button( self, wx.ID_OK )
+		self.cancel = wx.Button( self, wx.ID_CANCEL )
+		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
+		btnSizer.AddStretchSpacer()
+		btnSizer.Add( self.cancel, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
+		
+		sizer.Add( gs, flag=wx.ALL, border=4 )
+		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		self.SetSizerAndFit( sizer )
+	
+	def set( self, s_before, s_after ):
+		self.editFields[0].SetValue( '{:.2f}'.format(s_before) )
+		self.editFields[1].SetValue( '{:.2f}'.format(s_after) )
+	
+	def get( self ):
+		def fixValue( v ):
+			try:
+				return abs(float(v))
+			except:
+				return None
+		return [fixValue(e.GetValue()) for e in seld.editFields]
+		
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=0):
@@ -387,7 +384,9 @@ class MainWin( wx.Frame ):
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
-		
+		self.tdCaptureBefore = timedelta(seconds=0.5)
+		self.tdCaptureAfter = timedelta(seconds=2.0)
+
 		self.config = wx.Config(appName="CrossMgrVideo",
 						vendorName="SmartCyclingSolutions",
 						#style=wx.CONFIG_USE_LOCAL_FILE
@@ -401,6 +400,7 @@ class MainWin( wx.Frame ):
 		
 		self.triggerDialog = TriggerDialog( self )
 		self.photoDialog = PhotoDialog( self )
+		self.autoCaptureDialog = AutoCaptureDialog( self )
 		
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
@@ -434,15 +434,18 @@ class MainWin( wx.Frame ):
 		self.manage = wx.Button( self, label="Manage Database" )
 		self.manage.Bind( wx.EVT_BUTTON, self.manageDatabase )
 		
-		self.eventRecordEnableColour = wx.Colour(0,0,100)
-		self.eventRecordDisableColour = wx.Colour(100,0,0)
+		self.autoCaptureBtn = wx.Button( self, label="Config Auto Capture" )
+		self.autoCaptureBtn.Bind( wx.EVT_BUTTON, self.autoCaptureConfig )
 		
-		self.eventRecord = RoundButton( self, label="EVENT", size=(90,90) )
-		self.eventRecord.SetBackgroundColour( wx.WHITE )
-		self.eventRecord.SetForegroundColour( self.eventRecordEnableColour )
-		self.eventRecord.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
-		self.eventRecord.Bind( wx.EVT_LEFT_DOWN, self.onStartEventRecord )
-		self.eventRecord.Bind( wx.EVT_LEFT_UP, self.onStopEventRecord )
+		self.autoCaptureEnableColour = wx.Colour(100,0,100)
+		self.autoCaptureDisableColour = wx.Colour(100,0,0)
+		
+		self.autoCapture = RoundButton( self, label="AUTO\nCAPTURE", size=(90,90) )
+		self.autoCapture.SetBackgroundColour( wx.WHITE )
+		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
+		self.autoCapture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		self.autoCapture.Bind( wx.EVT_LEFT_DOWN, self.onStartAutoCapture )
+		self.autoCapture.Bind( wx.EVT_LEFT_UP, self.onStopAutoCapture )
 		
 		self.captureEnableColour = wx.Colour(0,100,0)
 		self.captureDisableColour = wx.Colour(100,0,0)
@@ -462,8 +465,9 @@ class MainWin( wx.Frame ):
 		headerSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		headerSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
 		headerSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		headerSizer.Add( self.autoCaptureBtn, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		headerSizer.AddStretchSpacer()
-		headerSizer.Add( self.eventRecord, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
+		headerSizer.Add( self.autoCapture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
 
 		#------------------------------------------------------------------------------
@@ -656,38 +660,40 @@ class MainWin( wx.Frame ):
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startThreads()
 
-	def onStartEventRecord( self, event ):
+	def onStartAutoCapture( self, event ):
 		tNow = now()
 		
-		self.eventRecord.SetForegroundColour( self.eventRecordDisableColour )
-		wx.CallAfter( self.eventRecord.Refresh )
+		self.autoCapture.SetForegroundColour( self.autoCaptureDisableColour )
+		wx.CallAfter( self.autoCapture.Refresh )
 		wx.BeginBusyCursor()
 		
-		s_before, s_after = 2.0, 1.0
-		
-		self.eventRecordCount = getattr(self, 'eventRecordCount', 0) + 1
+		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
 		self.requestQ.put( {
 				'time':tNow,
-				's_before':s_before,
-				's_after':s_after,
+				's_before':self.tdCaptureBefore.total_seconds(),
+				's_after':self.tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
-				'bib':self.eventRecordCount,
+				'bib':self.autoCaptureCount,
 				'lastName':u'Event',
 			}
 		)
 		
-		def doUpdateEventRecord():
+		def doUpdateAutoCapture( tStartCapture, autoCaptureCount ):
 			self.dbWriterQ.put( ('flush',) )
 			self.dbWriterQ.join()
-			wx.CallAfter( self.refreshTriggers, iTriggerRow=999999 )
-			wx.CallAfter( self.showLastTrigger )
-			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
+			triggers = self.db.getTriggers( tStartCapture, tStartCapture, autoCaptureCount )
+			if triggers:
+				id = triggers[0][0]
+				self.db.initCaptureTriggerData( id, tStartCapture )
+				wx.CallAfter( self.refreshTriggers, iTriggerRow=999999 )
+				wx.CallAfter( self.showLastTrigger )
+				wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
 
-		wx.CallLater( int(s_after*1000.0) + 100, doUpdateEventRecord )
+		wx.CallLater( int(self.tdCaptureAfter.total_seconds()*1000.0) + 100, doUpdateAutoCapture, tNow, self.autoCaptureCount )
 		
-	def onStopEventRecord( self, event ):
-		self.eventRecord.SetForegroundColour( self.eventRecordEnableColour )
-		wx.CallAfter( self.eventRecord.Refresh )		
+	def onStopAutoCapture( self, event ):
+		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
+		wx.CallAfter( self.autoCapture.Refresh )		
 		wx.EndBusyCursor()
 		
 	def onStartCapture( self, event ):
@@ -701,14 +707,14 @@ class MainWin( wx.Frame ):
 		self.requestQ.put( {
 				'time':tNow,
 				's_before':0.0,
-				's_after':tdCaptureAfter.total_seconds(),
+				's_after':self.tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
 				'bib':self.captureCount,
 				'lastName':u'Capture',
 			}
 		)
 		self.tStartCapture = tNow
-		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-tdCaptureBefore} )
+		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-self.tdCaptureBefore} )
 	
 	def showLastTrigger( self ):
 		iTriggerRow = self.triggerList.GetItemCount() - 1
@@ -744,7 +750,15 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
 
 		threading.Thread( target=updateFS ).start()
-			
+
+	def autoCaptureConfig( self, event ):
+		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+		if self.autoCaptureDialog.ShowModal() == wx.ID_OK:
+			s_before, s_after = self.autoCaptureDialog.get()
+			self.tdCaptureBefore = timedelta( seconds=s_before if s_before else 0.5 )
+			self.tdCaptureAfter = timedelta( seconds=s_after if s_after else 2.0 )
+			self.writeOptions()
+		
 	def onFocus( self, event ):
 		if self.focusDialog.IsShown():
 			return
@@ -761,8 +775,8 @@ class MainWin( wx.Frame ):
 		self.photoDialog.CenterOnParent()
 		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
 		self.photoDialog.ShowModal()
-		if self.triggerInfo['kmh'] != (pd.kmh or 0.0):
-			self.db.updateTriggerKMH( self.triggerInfo['id'], pd.kmh or 0.0 )
+		if self.triggerInfo['kmh'] != (self.photoDialog.kmh or 0.0):
+			self.db.updateTriggerKMH( self.triggerInfo['id'], self.photoDialog.kmh or 0.0 )
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
 		self.photoDialog.clear()
 
@@ -776,8 +790,8 @@ class MainWin( wx.Frame ):
 				'firstName','lastName','kmh'))
 		}
 		self.ts = self.triggerInfo['ts']
-		s_before = max( self.triggerInfo['s_before'] or 0.0, tdCaptureBefore.total_seconds() )
-		s_after = max( self.triggerInfo['s_after'] or 0.0, tdCaptureAfter.total_seconds() )
+		s_before = max( self.triggerInfo['s_before'] or 0.0, self.tdCaptureBefore.total_seconds() )
+		s_after = max( self.triggerInfo['s_after'] or 0.0, self.tdCaptureAfter.total_seconds() )
 		
 		# Update the screen in the background so we don't freeze the UI.
 		def updateFS():
@@ -821,7 +835,7 @@ class MainWin( wx.Frame ):
 		
 	def doTriggerDelete( self ):
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.db.deleteTrigger( data[0], tdCaptureBefore.total_seconds(), tdCaptureAfter.total_seconds() )
+		self.db.deleteTrigger( data[0], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
 		self.refreshTriggers( replace=False, iTriggerRow=self.iTriggerSelect )
 	
 	def showMessages( self ):
@@ -908,8 +922,8 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( (
 				'trigger',
 				tSearch - timedelta(seconds=advanceSeconds),
-				msg.get('s_before', tdCaptureBefore.total_seconds()),
-				msg.get('s_after', tdCaptureAfter.total_seconds()),
+				msg.get('s_before', self.tdCaptureBefore.total_seconds()),
+				msg.get('s_after', self.tdCaptureAfter.total_seconds()),
 				msg.get('ts_start', None) or now(),
 				msg.get('bib', 99999),
 				msg.get('firstName',u''),
@@ -919,7 +933,7 @@ class MainWin( wx.Frame ):
 				msg.get('raceName',u'')
 			) )
 			# Record the video frames for the trigger.
-			tStart, tEnd = tSearch-tdCaptureBefore, tSearch+tdCaptureAfter
+			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter
 			self.camInQ.put( { 'cmd':'query', 'tStart':tStart, 'tEnd':tEnd,} )
 			wx.CallAfter( wx.CallLater, max(100, int(100+1000*(tEnd-now()).total_seconds())), refresh )
 	
@@ -991,12 +1005,24 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'CameraDevice', self.cameraDevice.GetLabel() )
 		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
 		self.config.Write( 'FPS', self.targetFPS.GetLabel() )
+		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
+		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.Flush()
 	
 	def readOptions( self ):
 		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
 		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x480') )
-		self.targetFPS.SetLabel( self.config.Read('FPS', u'25.000') )
+		self.targetFPS.SetLabel( self.config.Read('FPS', u'30.000') )
+		s_before = self.config.Read('SecondsBefore', u'0.5')
+		s_after = self.config.Read('SecondsAfter', u'2.0')
+		try:
+			self.tdCaptureBefore = timedelta(seconds=abs(float(s_before)))
+		except:
+			pass
+		try:
+			self.tdCaptureAfter = timedelta(seconds=abs(float(s_after)))
+		except:
+			pass
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()
