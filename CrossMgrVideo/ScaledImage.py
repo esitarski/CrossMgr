@@ -16,7 +16,7 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 class ScaledImage( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, drawFinishLine=False, inset=False ):
 		super(ScaledImage, self).__init__( parent, id, size=size, style=style )
-		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
+		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		self.image = image
 		self.drawFinishLine = drawFinishLine
 		self.buttonDown = False
@@ -64,11 +64,10 @@ class ScaledImage( wx.Panel ):
 		insetHeight = int(height*r)
 		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight, insetWidth, insetHeight )
 	
-	def draw( self, dc ):
+	def draw( self, dc, width, height ):
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		width, height = dc.GetSize()
 		try:
 			bitmap = wx.Bitmap( RescaleImage(self.image, width, height) )
 		except Exception as e:
@@ -135,7 +134,8 @@ class ScaledImage( wx.Panel ):
 				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetBottomRight() )
 	
 	def OnPaint( self, event=None ):
-		self.draw( wx.AutoBufferedPaintDC( self ) )
+		width, height = self.GetSize()
+		self.draw( wx.AutoBufferedPaintDC(self), width, height )
 		
 	def SetImage( self, image ):
 		self.image = image
@@ -153,7 +153,7 @@ class ScaledImage( wx.Panel ):
 		self.xEnd *= 2
 		self.yEnd *= 2
 		dc = wx.MemoryDC( bitmap )
-		self.draw( dc )
+		self.draw( dc, width*2, height*2 )
 		self.xBegin //= 2
 		self.yBegin //= 2
 		self.xEnd //= 2
