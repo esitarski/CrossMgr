@@ -73,7 +73,7 @@ class PhotoDialog( wx.Dialog ):
 		self.clear()
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		self.scaledImage = ScaledImage( self )
+		self.scaledImage = ScaledImage( self, inset=True )
 		vs.Add( self.scaledImage, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )

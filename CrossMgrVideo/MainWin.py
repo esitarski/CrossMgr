@@ -666,7 +666,6 @@ class MainWin( wx.Frame ):
 		
 		self.autoCapture.SetForegroundColour( self.autoCaptureDisableColour )
 		wx.CallAfter( self.autoCapture.Refresh )
-		wx.BeginBusyCursor()
 		
 		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
 		self.requestQ.put( {
@@ -688,13 +687,13 @@ class MainWin( wx.Frame ):
 				self.db.initCaptureTriggerData( id, tStartCapture )
 				self.refreshTriggers( iTriggerRow=999999 )
 				self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
+			self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
+			self.autoCapture.Refresh()		
 
 		wx.CallLater( int(self.tdCaptureAfter.total_seconds()*1000.0) + 100, doUpdateAutoCapture, tNow, self.autoCaptureCount )
 		
 	def onStopAutoCapture( self, event ):
-		wx.EndBusyCursor()
-		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
-		self.autoCapture.Refresh()		
+		pass
 		
 	def onStartCapture( self, event ):
 		tNow = now()

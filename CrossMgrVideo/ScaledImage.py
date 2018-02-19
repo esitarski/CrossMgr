@@ -14,7 +14,7 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 	return a0 <= b1 and b0 <= a1
 
 class ScaledImage( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, drawFinishLine=False ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, drawFinishLine=False, inset=False ):
 		super(ScaledImage, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		self.image = image
@@ -23,9 +23,10 @@ class ScaledImage( wx.Panel ):
 		self.resetMagRect()
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
-		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
-		self.Bind( wx.EVT_MOTION, self.OnMotion )
-		self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
+		if inset:
+			self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
+			self.Bind( wx.EVT_MOTION, self.OnMotion )
+			self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
 	
 	def resetMagRect( self ):
 		self.xBegin = 0
