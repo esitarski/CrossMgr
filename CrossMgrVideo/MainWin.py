@@ -604,6 +604,7 @@ class MainWin( wx.Frame ):
 		tNow = now()
 		self.lastTriggerRefresh = tNow
 		
+		# replace = True
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
@@ -612,17 +613,16 @@ class MainWin( wx.Frame ):
 			self.tsMax = None
 			self.iTriggerSelect = None
 			self.triggerInfo = {}
+			self.finishStrip.SetTsJpgs( None, None )
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
 
 		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )
-		
-		if not triggers:
-			return
 			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
-		self.tsMax = triggers[-1][1] # id,ts,bib,first_name,last_name,team,wave,race_name,kmh
+		if triggers:
+			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,kmh
 		
 		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
 			dtFinish = (ts-tsPrev).total_seconds()
@@ -686,16 +686,15 @@ class MainWin( wx.Frame ):
 			if triggers:
 				id = triggers[0][0]
 				self.db.initCaptureTriggerData( id, tStartCapture )
-				wx.CallAfter( self.refreshTriggers, iTriggerRow=999999 )
-				wx.CallAfter( self.showLastTrigger )
-				wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
+				self.refreshTriggers( iTriggerRow=999999 )
+				self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
 
 		wx.CallLater( int(self.tdCaptureAfter.total_seconds()*1000.0) + 100, doUpdateAutoCapture, tNow, self.autoCaptureCount )
 		
 	def onStopAutoCapture( self, event ):
-		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
-		wx.CallAfter( self.autoCapture.Refresh )		
 		wx.EndBusyCursor()
+		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
+		self.autoCapture.Refresh()		
 		
 	def onStartCapture( self, event ):
 		tNow = now()
@@ -719,6 +718,8 @@ class MainWin( wx.Frame ):
 	
 	def showLastTrigger( self ):
 		iTriggerRow = self.triggerList.GetItemCount() - 1
+		if iTriggerRow < 0:
+			return
 		self.triggerList.EnsureVisible( iTriggerRow )
 		for r in xrange(self.triggerList.GetItemCount()):
 			self.triggerList.Select(r, 0)
@@ -739,9 +740,9 @@ class MainWin( wx.Frame ):
 		
 		self.showLastTrigger()
 		
-		self.capture.SetForegroundColour( self.captureEnableColour )
-		wx.CallAfter( self.capture.Refresh )		
 		wx.EndBusyCursor()
+		self.capture.SetForegroundColour( self.captureEnableColour )
+		self.capture.Refresh()		
 		
 		def updateFS():
 			# Wait for all the photos to be written.
@@ -784,7 +785,11 @@ class MainWin( wx.Frame ):
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
 		if self.iTriggerSelect >= self.triggerList.GetItemCount():
+			self.ts = None
+			self.tsJpg = []
+			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, {} )
 			return
+		
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
 			a:data[i] for i, a in enumerate((
