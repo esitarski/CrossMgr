@@ -133,7 +133,7 @@ class PhotoDialog( wx.Dialog ):
 
 		self.SetSizer(vs)
 		vs.Fit(self)
-	
+
 	def set( self, jpg, triggerInfo, tsJpg, fps=25 ):
 		self.jpg = jpg
 		self.triggerInfo = triggerInfo
@@ -269,7 +269,7 @@ class PhotoDialog( wx.Dialog ):
 					'-i', '-', # Input comes from a pipe
 					'-an', # Do not to expect any audio
 					'-filter:v', 'setpts=5.0*PTS',	# Slow down the output.
-					'-vcodec', 'mpeg1video',
+					'-vcodec', 'mpeg2video',
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )

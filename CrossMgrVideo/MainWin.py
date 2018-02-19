@@ -653,7 +653,8 @@ class MainWin( wx.Frame ):
 			self.triggerList.EnsureVisible( iTriggerRow )
 			self.triggerList.Select( iTriggerRow )
 		else:
-			self.triggerList.EnsureVisible( self.triggerList.GetItemCount() - 1 )
+			if self.triggerList.GetItemCount() >= 1:
+				self.triggerList.EnsureVisible( self.triggerList.GetItemCount()-1 )
 
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
@@ -782,6 +783,8 @@ class MainWin( wx.Frame ):
 
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
+		if self.iTriggerSelect >= self.triggerList.GetItemCount():
+			return
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = {
 			a:data[i] for i, a in enumerate((

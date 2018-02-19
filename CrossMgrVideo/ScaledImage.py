@@ -38,7 +38,7 @@ class ScaledImage( wx.Panel ):
 	
 	def OnSize( self, event ):
 		self.resetMagRect()
-		self.Refresh()
+		wx.CallAfter( self.Refresh )
 	
 	def OnLeftDown( self, event ):
 		self.buttonDown = True
@@ -58,7 +58,7 @@ class ScaledImage( wx.Panel ):
 	
 	def getInsetRect( self, dc, isWest, isNorth ):
 		width, height = dc.GetSize()
-		r = 2.0/3.0
+		r = 0.75
 		insetWidth = int(width*r)
 		insetHeight = int(height*r)
 		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight, insetWidth, insetHeight )
@@ -146,9 +146,17 @@ class ScaledImage( wx.Panel ):
 		
 	def GetDisplayImage( self ):
 		width, height = self.GetSize()
-		bitmap = wx.Bitmap( width, height )
+		bitmap = wx.Bitmap( width*2, height*2 )
+		self.xBegin *= 2
+		self.yBegin *= 2
+		self.xEnd *= 2
+		self.yEnd *= 2
 		dc = wx.MemoryDC( bitmap )
 		self.draw( dc )
+		self.xBegin //= 2
+		self.yBegin //= 2
+		self.xEnd //= 2
+		self.yEnd //= 2
 		return bitmap.ConvertToImage()
 		
 	def SetToEmpty( self ):
