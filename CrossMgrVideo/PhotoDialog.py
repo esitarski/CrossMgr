@@ -265,15 +265,17 @@ class PhotoDialog( wx.Dialog ):
 					'-vcodec','rawvideo',
 					'-s', '{}x{}'.format(*self.scaledImage.GetImage().GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
-					'-r', '{}'.format(self.fps), # frames per second
-					'-i', '-', # The imput comes from a pipe
-					'-an', # Tells FFMPEG not to expect any audio
+					'-r', '{}'.format(self.fps), # input frames per second
+					'-i', '-', # Input comes from a pipe
+					'-an', # Do not to expect any audio
+					'-filter:v', 'setpts=5.0*PTS',	# Slow down the output.
 					'-vcodec', 'mpeg1video',
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
 					proc.stdin.write( self.addPhotoHeaderToImage(wx.Image(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+				proc.stdin.close()
 				proc.terminate()
 				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
 			except Exception as e:

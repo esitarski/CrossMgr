@@ -315,6 +315,8 @@ class FinishStrip( wx.Panel ):
 			self.mouseWheelCallback( event )
 	
 	def OnMotion( self, event ):		
+		if not self.compositeBitmap:
+			return
 		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
 		
 		winWidth, winHeight = self.GetClientSize()
