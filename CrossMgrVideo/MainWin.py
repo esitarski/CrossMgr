@@ -438,7 +438,7 @@ class MainWin( wx.Frame ):
 		self.autoCaptureBtn.Bind( wx.EVT_BUTTON, self.autoCaptureConfig )
 		
 		self.autoCaptureEnableColour = wx.Colour(100,0,100)
-		self.autoCaptureDisableColour = wx.Colour(100,0,0)
+		self.autoCaptureDisableColour = wx.Colour(100,100,0)
 		
 		self.autoCapture = RoundButton( self, label="AUTO\nCAPTURE", size=(90,90) )
 		self.autoCapture.SetBackgroundColour( wx.WHITE )
@@ -552,6 +552,7 @@ class MainWin( wx.Frame ):
 
 		self.readOptions()
 		self.updateFPS( int(float(self.targetFPS.GetLabel())) )
+		self.updateAutoCaptureLabel()
 		self.SetSizerAndFit( mainSizer )
 		
 		# Start the message reporting thread so we can see what is going on.
@@ -569,7 +570,17 @@ class MainWin( wx.Frame ):
 	def updateFPS( self, fps ):
 		self.setFPS( fps )
 		self.targetFPS.SetLabel( u'{}'.format(self.fps) )
-	
+
+	def updateAutoCaptureLabel( self ):
+		def f( n ):
+			s = '{:0.1f}'.format( n )
+			return s[:-2] if s.endswith('.0') else s
+		
+		label = '\n'.join( ['AUTO','CAPTURE','{}..{}'.format(-self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds())] )
+		self.autoCapture.SetLabel( label )
+		self.autoCapture.SetFontToFitLabel()
+		self.autoCapture.Refresh()
+
 	def setQueryDate( self, d ):
 		self.tsQueryLower = d
 		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
@@ -754,12 +765,9 @@ class MainWin( wx.Frame ):
 
 	def autoCaptureConfig( self, event ):
 		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
-		if self.autoCaptureDialog.ShowModal() == wx.ID_OK:
-			s_before, s_after = self.autoCaptureDialog.get()
-			self.tdCaptureBefore = timedelta( seconds=s_before if s_before else 0.5 )
-			self.tdCaptureAfter = timedelta( seconds=s_after if s_after else 2.0 )
-			self.writeOptions()
-		
+		if self.autoCaptureDialog.ShowModal() != wx.ID_OK:
+			return
+ 		
 	def onFocus( self, event ):
 		if self.focusDialog.IsShown():
 			return
