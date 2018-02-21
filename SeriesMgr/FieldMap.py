@@ -112,6 +112,10 @@ standard_field_aliases = (
 		('Team','Team Name','TeamName','Rider Team','Club','Club Name','ClubName','Rider Club','Rider Club/Team',),
 		"Team",
 	),
+	('discipline',
+		('Discipline',),
+		"Discipline",
+	),
 	('license_code',
 		(
 			'Lic', 'Lic #',

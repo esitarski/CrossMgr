@@ -201,7 +201,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 						isUSAC = True
 						g = unicode(f('gender', u'')).strip()
 						if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
-							cn += u' ({})'.format( u'F' if g.upper() in u'FW' else u'M' )
+							cn += u' ({})'.format( u'Women' if g.upper() in u'FW' else u'Men' )
 						info['categoryName'] = cn
 					else:
 						info['categoryName'] = categoryNameSheet
