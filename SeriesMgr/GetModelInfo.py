@@ -193,18 +193,34 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				if not info['rank']:	# If missing rank, assume end of input.
 					break
 				
+				isUSAC = False
 				if info['categoryName'] is None:
-					info['categoryName'] = categoryNameSheet
+					# Hack for USAC cycling input spreadsheet.
+					cn = unicode(f('category_name',u'')).strip()
+					if cn and categoryNameSheet.startswith(u'Sheet'):
+						isUSAC = True
+						g = unicode(f('gender', u'')).strip()
+						if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
+							cn += u' ({})'.format( u'F' if g.upper() in u'FW' else u'M' )
+						info['categoryName'] = cn
+					else:
+						info['categoryName'] = categoryNameSheet
 				info['categoryName'] = unicode(info['categoryName']).strip()
 				
 				try:
 					info['rank'] = toInt(info['rank'])
 				except ValueError:
 					pass
-					
+				
+				if info['rank'] == 'DNF':
+					info['rank'] = RaceResult.rankDNF
+				
 				if not isinstance(info['rank'], (long,int)):
 					continue
 
+				if isUSAC and info['rank'] >= 999:
+					info['rank'] = RaceResult.rankDNF
+					
 				# Check for comma-separated name.
 				name = unicode(f('name', u'')).strip()
 				if name and not info['firstName'] and not info['lastName']:
@@ -243,7 +259,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				# Check if this is a team-only sheet.
 				raceInSeries.pureTeam = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
-				raceInSeries.resultsType = SeriesModel.Race.TeamResultsOnly
+				raceInSeries.resultsType = SeriesModel.Race.TeamResultsOnly if raceInSeries.pureTeam else SeriesModel.Race.IndividualAndTeamResults
 
 	return True, 'success', raceResults
 
