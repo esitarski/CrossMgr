@@ -243,7 +243,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				# Check if this is a team-only sheet.
 				raceInSeries.pureTeam = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
-				raceInSeries.resultsType = Model.Race.TeamResultsOnly
+				raceInSeries.resultsType = SeriesModel.Race.TeamResultsOnly
 
 	return True, 'success', raceResults
 

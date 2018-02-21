@@ -81,7 +81,7 @@ class FieldMap( object ):
 
 standard_field_aliases = (
 	('pos',
-		('Pos','Pos.','Rank', 'Rider Place',),
+		('Pos','Pos.','Rank', 'Rider Place','Place',),
 		"Finish position",
 	),
 	('time',

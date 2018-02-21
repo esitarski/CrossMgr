@@ -587,7 +587,7 @@ class SeriesModel( object ):
 		
 		rt = { r.fileName for r in self.races
 				if r.resultsType == Race.IndividualAndTeamResults or
-					(isIndividual and r.resultsType == Race.IndividualResultsOnly)
+					(isIndividual and r.resultsType == Race.IndividualResultsOnly) or
 					(not isIndividual and r.resultsType == Race.TeamResultsOnly)
 		}
 		return [rr for rr in raceResults if rr.raceFileName in rt]
