@@ -176,7 +176,7 @@ standard_field_aliases = (
 		"Postal or Zip code",
 	),
 	('category_code',
-		('Race Category','RaceCategory','Race_Category',),
+		('Race Category','RaceCategory','Race_Category','Category'),
 		"Race Category",
 	),
 	('est_kmh',
