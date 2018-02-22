@@ -31,6 +31,9 @@ from Version import AppVerName
 
 imageWidth, imageHeight = 640, 480
 
+tdCaptureBeforeDefault = timedelta(seconds=0.5)
+tdCaptureAfterDefault = timedelta(seconds=2.0)
+
 closeFinishThreshold = 3.0/30.0
 closeColors = ('E50000','D1D200','00BF00')
 def getCloseFinishBitmaps( size=(16,16) ):
@@ -356,7 +359,7 @@ class AutoCaptureDialog( wx.Dialog ):
 				return abs(float(v))
 			except:
 				return None
-		return [fixValue(e.GetValue()) for e in seld.editFields]
+		return [fixValue(e.GetValue()) for e in self.editFields]
 		
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
@@ -384,8 +387,8 @@ class MainWin( wx.Frame ):
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		
-		self.tdCaptureBefore = timedelta(seconds=0.5)
-		self.tdCaptureAfter = timedelta(seconds=2.0)
+		self.tdCaptureBefore = tdCaptureBeforeDefault
+		self.tdCaptureAfter = tdCaptureAfterDefault
 
 		self.config = wx.Config(appName="CrossMgrVideo",
 						vendorName="SmartCyclingSolutions",
@@ -576,7 +579,7 @@ class MainWin( wx.Frame ):
 			s = '{:0.1f}'.format( n )
 			return s[:-2] if s.endswith('.0') else s
 		
-		label = '\n'.join( ['AUTO','CAPTURE','{}..{}'.format(-self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds())] )
+		label = u'\n'.join( [u'AUTO',u'CAPTURE',u'{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
 		self.autoCapture.SetLabel( label )
 		self.autoCapture.SetFontToFitLabel()
 		self.autoCapture.Refresh()
@@ -765,8 +768,12 @@ class MainWin( wx.Frame ):
 
 	def autoCaptureConfig( self, event ):
 		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
-		if self.autoCaptureDialog.ShowModal() != wx.ID_OK:
-			return
+		if self.autoCaptureDialog.ShowModal() == wx.ID_OK:
+			s_before, s_after = self.autoCaptureDialog.get()
+			self.tdCaptureBefore = timedelta(seconds=s_before) if s_before is not None else tdCaptureBeforeDefault
+			self.tdCaptureAfter  = timedelta(seconds=s_after)  if s_after  is not None else tdCaptureAfterDefault
+			self.writeOptions()
+			self.updateAutoCaptureLabel()
  		
 	def onFocus( self, event ):
 		if self.focusDialog.IsShown():
