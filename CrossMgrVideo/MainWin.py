@@ -11,6 +11,7 @@ import socket
 import atexit
 import time
 import platform
+import webbrowser
 from Queue import Queue, Empty
 import CamServer
 from roundbutton import RoundButton

@@ -3,89 +3,166 @@
 # Quick Start
 Welcome to __CrossMgrVideo!__
 
-__CrossMgrVideo__ makes it easy to capture and analyze finish line video.
-Video frames can be triggered manually, or automatically by CrossMgr.
+__CrossMgrVideo__ makes it easy to capture and analyze finish line video taken from inexpensive USB webcams.
+Video can be triggered manually, or automatically by CrossMgr.
+
+## Overview
+
+In __CrossMgrVideo__ you primarily work in two screen panels.
+
+1. Finish Strip (top)
+2. Trigger List (middle of the bottom)
+
+The __Finish Stip__ shows photos captured by triggers spread out by time.  Triggers are shown in the __Trigger List__.
+
+A trigger event could be a race finish, a close finish, a points lap, or potentially a race incident from a live feed.
+
+__CrossMgr__ can automatically generate triggers for __CrossMgrVideo__ evey time a bib number is entered (can be RFID or manual entry).
+Alternatively, you can generate triggers in __CrossMgrVideo__ manually with the __AUTO CAPTURE__ and __CAPTURE__ buttons.
+
+### Typical Scenarios
+
+#### Conventional Finish Line
+You want to check finishes quickly.  You are not using __CrossMgr__.
+
+On each finish, press the __CAPTURE__ button until all the riders have passed.  Then use the __Finish Strip__ and __Photo Dialog__ (with Zoom) to check the finish order of the bib numbers.
+Since each __CAPTURE__ is a trigger, it is easy to jump to different finishes.
+
+#### Finish Line with CrossMgr
+You have __CrossMgr__, but only want to check close finishes that RFID may not have gotten right.
+
+Set the option in __CrossMgr__ to support a Camera (this can be done for every passing, or just the end of the race).
+__CrossMgr__ will then send triggers to __CrossMgrVideo__.
+Check the __Trigger List__ for close finishes marked in red and make corrections as necessary.
+
+#### Live Feed (example: Velodrome)
+You have a live feed of an event.  You see "something" in real-time but want to check it in detail later for an infraction.
+
+Use a second monitor.  Open the __Focus__ screen and drag it to the second monitor.  The camera operator watches the __Focus__ window and uses it to follow the race with a tripod mounted camera.  When a disturbance is seen, press the __AUTO CAPTURE__ button.  This will capture the action.  Make sure it is configured to capture before the press (__Seconds Before__ > 0).  Capturing video before the incident gives you time to press the button as well as recording what lead up to the incident.
 
 ## Starting CrossMgr Video
 
 When __CrossMgrVideo__ starts, you are prompted for the USB port and camera resolution.
 Device 0 is usually the built-in camera, Device 1 is usually the first USB camera available.
 
+You are also prompted for the resolution and frames per second of your camera.  Check your camera for its details.
+
 ## Main Screen
 
-The CrossMgrVideo screen is divided into a number of parts.
+### Buttons on Top
 
-Read and work through [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet).  CrossMgr has a built-in [Demo](Menu-Demo.html) showing a realistic race with two categories racing at once.  The data shows how to manage missed data and lapped riders.
+#### Focus
 
-### Watch the Demo
+Opens a big window suitable for focussing the camera.  Also useful in the __Live Feed__ scenario to allow the camera operator to follow the action.
 
-Do __Tools/Simulate Race...__.  Explore the program features with simulated race data.
+#### Reset Camera
 
-## File / New a Race
-Configure the [Properties][] of your race.  There are a lot of Properties there but don't worry - you only need to fill in the ones that are important to you.
+Allows the camera to be reset including the USB port, resolution and frames per second.
 
-For a simple race, you will only need to set up the following:
+#### Manage Database
 
-* Race Name
-* Organizer
-* Date
-* Scheduled Start
-* Race Minutes
-* Distance Unit (km or miles)
+Opens a dialog to manage the database including:
 
-That's really all you need to do.  At this point you are ready to start a race.
+* Location and size of the database
+* Deleting Triggers and Photos from the database
+* "Vacuuming" the database to reduce the database file size
 
-For the next race, do File/New Next... (see [File][] ).  This increments the race number but keeps all the other information to save typing.
+Deleting items from the database will not reduce the file size.  However,
+"holes" in the database will be reused by future database activity.
 
-## Start a Race
-When you are ready to start a race, goto [Actions][] and press Start.  This will bring you to the [Record](Record.html) screen.  Type in the numbers as the riders go by on the first lap.  After the first lap, CrossMgr will predict the riders in the lower left.
+To actually reduce the database size, select the "Vacuum" option.
+Warning - this can take a few minutes.
 
-When a rider comes around again, you don't have to type in the number again - just click on the number in the lower left (it's still OK if you type it in again).
+#### Config Auto Capture
 
-It's also OK if you miss a few numbers.  CrossMgr will reasonably autocorrect missing entries as it builds a profile about each rider.
+Opens a dialog to configure the __Auto Capture Time Interval__ defined by __Seconds Before__ and __Seconds After__.
 
-[Results][] are continously updated during the race.
+When the __AUTO CAPTURE__ button is pressed, it captures video during the __Auto Capture Time Interval__, then stops automatically.
 
-From [Actions][], press "Finish" when the race is over.
+For example, say __Seconds Before__=0.5 and __Seconds After=2.0 and the __AUTO CAPTURE__ button is pressed at 14:07:21.0.
+__CrossMgrVideo__ will capture video from 14:07:20.5 to 14:07:22.
 
-## Configure Categories
+__CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it keeps a 10-second circular buffer 
 
-CrossMgr can handle multiple categories in one race at one time.  It comes with some defaults, but they are not very descriptive.  Configure more descriptive categories in [Categories][].
+#### Auto Capture
 
-You configure the lap (or race) distance in [Categories][].  Distance Units are the same as configured in [Properties][].
+When pressed, captures frames for the time interval __Seconds Before__ to __Seconds After__ as configured in the dialog above.
 
-CrossMgr works best when you have number ranges for each category, but it's OK if you don't.  It's also OK if there are riders who's numbers don't match the category range.  Just make sure that all the numbers are unique in a race!
+This is primarily intended when using CrossMgrVideo to follow live-action track racing.
+When you see potential inteference, pressing the __AUTO CAPTURE__ button will save the frames before and after the incident for review.
 
-If a rider is showing in the wrong categegry in the [Results][], double-click on the rider.  This will bring up the [RiderDetail][] dialog.  From this dialog, change the rider to the right category.
+This is much faster than searching through video.
 
-You can setup or change [Categories][] before, during and after a race.
+#### Capture
 
-## Configure Rider Names, Teams, etc.
-CrossMgr reads external information from an Excel Sheet that you maintain externally.  CrossMgr "links" with the external sheet, reading the information based on the Bib numbers.  This is very easy to set up - read about the details in [DataMgmt][].  There is also an example sheet in the CrossMgr installation.
+Captures video frames as long as the __CAPTURE__ button is pressed.
+Useful for capturing traditional finishes.
 
-You can setup or change the Excel sheet before, during and after a race.  It is commonplace for the organizer to type in rider names at registration while the race is running, then link up the Excel sheet after the race.
+### Finish Strip
 
-## Publish Results
-After the race is finished, review the results in the [Results][] screen.  If you see issues, double-click on the rider and fix problems in the [RiderDetail][] screen.
+Shows all the frames recorded around the trigger event.
 
-Review CrossMgr's issues by checking the [Recommendations][] screen.
+* Move the mouse across the Finish Strip to seen the current frame in the Zoom window.
+* Ctrl-mouse-wheel to change the size of the zoom window.
+* Mouse-wheel, or use the Stretch slider to space the frames so that the objects between frames line up.
+* Left-click and Drag (or Scroll Bar) to move sideways.
+* Left-click move the current time line.
+* Right-click brings up the __Photo Dialog__.
 
-You also see all problems at once yourself from the [Chart][] screen.  CrossMgr has full undo and redo in case you don't want the change you just made.  CrossMgr also tracks changes and whether they were part of your original data, or whether they were changed.  The user and timestamp of the change is recorded.
+#### Photo Dialog
 
-Watch an fast-forward [Animation][] of your race and check for problems the same as how they happened in the race.
+##### Drag Zoom
 
-Post corrected results on your web site with [File/Publish Results as HTML...](Menu-File.html#publish-results-as-html).
+Drag a box in the photo to zoom in on any point of interest in the photo.
+Useful for checking bib numbers, etc.
 
-# Using CrossMgr to the Fullest
-There are many features available in CrossMgr that you can use as you feel more comfortable.  Here are some suggestions for improving your Results:
+##### Header
 
-1. Publish results in HTML to post on your website.  See [File/Publish Results as HTML...](Menu-File.html#publish-results-as-html).
-1. Customize the Graphic in your published output.  See [Options][] for details.
-1. Set the Email in the published output so people can email comments and corrections.  See [Options][] for details.
-1. Publish results directly to a website with FTP.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.
-1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.  Look at the "Automatically Upload Results During Race" feature.
-1. Use CrossMgr for Time Trials.  See [Time Trial Mode](Properties.html#time-trial-mode).
-1. Use a Chip Timing system system.  See [ChipReader][].
-1. Use a USB Camera to capture finishes.
+Select if you want the Trigger header shown on the photo.
 
-Remember: press [CTRL+H](Main.html) on each screen to find out what it does and how it works.  Review [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet).
+##### Buttons
+
+* Print
+* Copy to Clipboard
+* Contast - increases contrast in the photo
+* Save as PNG - save the photo in PNG format
+* Save as MPG - save an mpg file of the entire clip
+* Save as GIF - save an animaged gif file.  Caution: these files can be large.
+* Compute Speed
+
+__Compute Speed__ opens a wizard that enables you to estimate the speed of a bicycle by analyzing how far the bicycle moved between two video frames.
+
+__CrossMgrVideo__ requires you to indicate the dimensions of a bicycle wheel to establish a reference for the speed calculation.
+
+### Buttons on Bottom
+
+#### Finish Direction
+
+Controls the direction of the Finish Strip.  Ensure that it matches the direction of the finishers.
+
+#### Zoom Image Quality
+
+Unless you have a very fast processor, leave it at Normal.  __High__ is slightly better quality, but much more CPU.
+
+### Panes on Bottom
+
+#### Camera Window
+
+Shows what the Camera is looking at.  For performance reasons, this has a much slower frame rate than the camera.
+
+#### Triggers
+
+##### Show Triggers for
+
+Sets the Date to show triggers.  Can also use the __Select Data__ function.  Set __Filter by Bib__ if there is a particular bib number you are interested in.
+
+##### Trigger Window
+
+Window containing the triggers.
+
+* Left-click: shows the photos associated with the trigger.
+* Right-click:  brings up a delete menu.
+
+#### Message Window
+
+* Shows the camera connection status and other messages.

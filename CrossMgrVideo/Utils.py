@@ -164,9 +164,11 @@ if 'CrossMgr?' in os.path.basename(dirName):
 	dirName = os.path.dirname(dirName)
 
 imageFolder = os.path.join(dirName, 'images')
+helpFolder = os.path.join(dirName, 'CrossMgrVideoHtmlDoc')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
+def getHelpFolder():	return helpFolder
 
 def getBitmap( fname ):
 	fname = os.path.join( imageFolder, fname )

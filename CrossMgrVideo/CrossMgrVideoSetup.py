@@ -19,6 +19,10 @@ for googleDrive in gds:
 		break
 googleDrive = os.path.join( googleDrive, 'CrossMgrVideo' )
 
+# Compile the help files
+from helptxt.compile import CompileHelp
+CompileHelp( 'helptxt' )
+
 # Copy all dependent files into this folder.
 copyFiles = [
 	"MultiCast.py",
@@ -78,8 +82,9 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-copyDir( 'images' )
-copyDir( 'ffmpeg' )
+
+for dir in ('images', 'ffmpeg', 'CrossMgrVideoHtmlDoc'):
+	copyDir( dir )
 
 # Create the installer
 inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
