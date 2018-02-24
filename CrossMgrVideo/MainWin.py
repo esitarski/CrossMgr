@@ -705,7 +705,8 @@ class MainWin( wx.Frame ):
 			self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
 			self.autoCapture.Refresh()		
 
-		wx.CallLater( int(self.tdCaptureAfter.total_seconds()*1000.0) + 100, doUpdateAutoCapture, tNow, self.autoCaptureCount )
+		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
+		wx.CallLater( int(max(s_before, s_after)*1000.0) + 100, doUpdateAutoCapture, tNow, self.autoCaptureCount )
 		
 	def onStopAutoCapture( self, event ):
 		pass
