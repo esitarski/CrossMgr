@@ -30,7 +30,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 	camInfo = camInfo or {}
 	bufferSeconds = 8
 	backlog = []
-	transmitFramesMax = 4
+	transmitFramesMax = 2
 	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:

@@ -349,15 +349,13 @@ class FinishStrip( wx.Panel ):
 		wx.CallAfter( self.Refresh )
 		self.xMotionLast = None
 		
-	def draw( self, dc ):
+	def draw( self, dc, winWidth, winHeight ):
 		dc.SetBackground( wx.Brush(wx.Colour(0xd3,0xd3,0xd3), wx.SOLID) )
 		dc.Clear()
 	
 		self.xMotionLast = None
 		if not self.compositeBitmap:
 			return
-		
-		winWidth, winHeight = self.GetClientSize()
 		
 		compositeDC = wx.MemoryDC( self.compositeBitmap )
 		dc.Blit(
@@ -366,6 +364,9 @@ class FinishStrip( wx.Panel ):
 			self.bitmapLeft, 0,
 		)
 		compositeDC.SelectObject( wx.NullBitmap )
+		
+		# Draw the photo under the cursor.
+		
 		
 		xCursor = self.xFromT( self.tCursor )
 		
@@ -393,7 +394,8 @@ class FinishStrip( wx.Panel ):
 		gc.DrawText( text, xCursor - tWidth//2, winHeight - tHeight - border )
 	
 	def OnPaint( self, event=None ):
-		self.draw( wx.PaintDC(self) )
+		winWidth, winHeight = self.GetClientSize()
+		self.draw( wx.BufferedPaintDC(self), winWidth, winHeight )
 		
 	def GetBitmap( self ):
 		return self.compositeBitmap if self.compositeBitmap else None
