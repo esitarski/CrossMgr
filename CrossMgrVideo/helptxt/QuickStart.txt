@@ -53,7 +53,7 @@ You are also prompted for the resolution and frames per second of your camera.  
 
 #### Focus
 
-Opens a big window suitable for focussing the camera.  Also useful in the __Live Feed__ scenario to allow the camera operator to follow the action.
+Opens a big window suitable for focusing the camera.  Also useful in the __Live Feed__ scenario to allow the camera operator to follow the action.
 
 #### Reset Camera
 
@@ -113,7 +113,7 @@ Shows all the frames recorded around the trigger event.
 
 ##### Drag Zoom
 
-Drag a box in the photo to zoom in on any point of interest in the photo.
+Dragging a box in the photo will zoom in on the region of interest.
 Useful for checking bib numbers, etc.
 
 ##### Header
@@ -124,10 +124,10 @@ Select if you want the Trigger header shown on the photo.
 
 * Print
 * Copy to Clipboard
-* Contast - increases contrast in the photo
+* Contrast - increases contrast in the photo
 * Save as PNG - save the photo in PNG format
 * Save as MPG - save an mpg file of the entire clip
-* Save as GIF - save an animaged gif file.  Caution: these files can be large.
+* Save as GIF - save an animated gif file.  Caution: these files can be large.
 * Compute Speed
 
 __Compute Speed__ opens a wizard that enables you to estimate the speed of a bicycle by analyzing how far the bicycle moved between two video frames.
