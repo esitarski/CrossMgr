@@ -37,6 +37,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			time.sleep( 0.25 )
 			frameCount = 0
 			inCapture = False
+			doSnapshot = False
 			tsSeen.clear()
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			tsQuery = tsMax = now()
@@ -79,6 +80,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 								inCapture = True
 						elif cmd == 'stop_capture':
 							inCapture = False
+						elif cmd == 'snapshot':
+							doSnapshot = True
 						elif cmd == 'send_update':
 							sendUpdates[m['name']] = m['freq']
 						elif cmd == 'cancel_update':
@@ -113,6 +116,9 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					if frameCount % f == 0:
 						pWriter.send( {'cmd':'update', 'name':name, 'frame':updateFrame} )
 						updateFrame = None
+				if doSnapshot:
+					pWriter.send( {'cmd':'snapshot', 'ts':ts, 'frame':updateFrame} )
+					doSnapshot = False
 						
 				del backlog[-transmitFramesMax:]
 				frameCount += 1

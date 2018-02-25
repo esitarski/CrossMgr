@@ -4,16 +4,23 @@ import numpy as np
 from CVUtil import frameToBitmap, jpegToFrame
 
 def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False ):
-	if len(tsJpgs) < 2:
+	if not tsJpgs:
 		return None, None, None
-
+	
 	# Create a composite at full size, then rescale at the end.
 	tsFirst = tsJpgs[0][0]
 	times = [(ts - tsFirst).total_seconds() for ts, jpg in tsJpgs]
 	imgCur = jpegToFrame(tsJpgs[0][1])
 	heightPhoto, widthPhoto, layers = imgCur.shape
-	widthPhotoHalf = widthPhoto // 2
 	
+	if len(tsJpgs) == 1:
+		imgComposite = cv2.resize(
+			jpegToFrame(tsJpgs[0][1]), (0,0), fx=scale, fy=scale,
+			interpolation=cv2.INTER_AREA if highQuality else cv2.INTER_LINEAR
+		)
+		return widthPhoto, heightPhoto, frameToBitmap(imgComposite)
+	
+	widthPhotoHalf = widthPhoto // 2
 	extraSlice = int((times[1] - times[0]) if leftToRight else (times[-1] - times[-2]))
 	widthComposite = int((times[-1] + extraSlice)* pixelsPerSec) + 1
 

@@ -435,6 +435,15 @@ class MainWin( wx.Frame ):
 		self.help = wx.Button( self, wx.ID_HELP )
 		self.help.Bind( wx.EVT_BUTTON, self.onHelp )
 		
+		self.snapshotEnableColour = wx.Colour(0,0,100)
+		self.snapshotDisableColour = wx.Colour(100,100,0)
+		
+		self.snapshot = RoundButton( self, label="SNAPSHOT", size=(90,90) )
+		self.snapshot.SetBackgroundColour( wx.WHITE )
+		self.snapshot.SetForegroundColour( self.snapshotEnableColour )
+		self.snapshot.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		self.snapshot.Bind( wx.EVT_LEFT_DOWN, self.onStartSnapshot )
+		
 		self.autoCaptureEnableColour = wx.Colour(100,0,100)
 		self.autoCaptureDisableColour = wx.Colour(100,100,0)
 		
@@ -443,7 +452,6 @@ class MainWin( wx.Frame ):
 		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
 		self.autoCapture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
 		self.autoCapture.Bind( wx.EVT_LEFT_DOWN, self.onStartAutoCapture )
-		self.autoCapture.Bind( wx.EVT_LEFT_UP, self.onStopAutoCapture )
 		
 		self.captureEnableColour = wx.Colour(0,100,0)
 		self.captureDisableColour = wx.Colour(100,0,0)
@@ -471,6 +479,7 @@ class MainWin( wx.Frame ):
 		
 		headerSizer.Add( fgs, flag=wx.ALIGN_CENTRE|wx.LEFT, border=4 )
 		headerSizer.AddStretchSpacer()
+		headerSizer.Add( self.snapshot, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.autoCapture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
 
@@ -679,40 +688,63 @@ class MainWin( wx.Frame ):
 		self.messageQ.put( ('started', now().strftime('%Y/%m/%d %H:%M:%S')) )
 		self.startThreads()
 
+	def updateSnapshot( self, t, f ):
+		self.snapshotCount = getattr(self, 'snapshotCount', 0) + 1
+		self.dbWriterQ.put( ('photo', t, f) )
+		self.dbWriterQ.put( (
+			'trigger',
+			t,
+			0.00001,		# s_before
+			0.00001,		# s_after
+			t,
+			self.snapshotCount,	# Bib
+			u'', 			# firstName
+			u'Snapshot',	# lastName
+			u'',			# Team
+			u'',			# Wave
+			u'',			# RaceName
+		) )
+		self.doUpdateAutoCapture( t, self.snapshotCount, self.snapshot, self.snapshotEnableColour )
+		
+	def onStartSnapshot( self, event ):
+		self.snapshot.SetForegroundColour( self.snapshotDisableColour )
+		self.snapshot.Refresh()
+		self.camInQ.put( {'cmd':'snapshot'} )
+		
+	def doUpdateAutoCapture( self, tStartCapture, count, btn, colour ):
+		self.dbWriterQ.put( ('flush',) )
+		self.dbWriterQ.join()
+		triggers = self.db.getTriggers( tStartCapture, tStartCapture, count )
+		if triggers:
+			id = triggers[0][0]
+			self.db.initCaptureTriggerData( id, tStartCapture )
+			self.refreshTriggers( iTriggerRow=999999 )
+			self.showLastTrigger()
+			self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
+		btn.SetForegroundColour( colour )
+		btn.Refresh()		
+
 	def onStartAutoCapture( self, event ):
 		tNow = now()
 		
 		self.autoCapture.SetForegroundColour( self.autoCaptureDisableColour )
-		wx.CallAfter( self.autoCapture.Refresh )
+		self.autoCapture.Refresh()
 		
 		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
+		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
 		self.requestQ.put( {
 				'time':tNow,
-				's_before':self.tdCaptureBefore.total_seconds(),
-				's_after':self.tdCaptureAfter.total_seconds(),
+				's_before':s_before,
+				's_after':s_after,
 				'ts_start':tNow,
 				'bib':self.autoCaptureCount,
 				'lastName':u'Event',
 			}
 		)
 		
-		def doUpdateAutoCapture( tStartCapture, autoCaptureCount ):
-			self.dbWriterQ.put( ('flush',) )
-			self.dbWriterQ.join()
-			triggers = self.db.getTriggers( tStartCapture, tStartCapture, autoCaptureCount )
-			if triggers:
-				id = triggers[0][0]
-				self.db.initCaptureTriggerData( id, tStartCapture )
-				self.refreshTriggers( iTriggerRow=999999 )
-				self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
-			self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
-			self.autoCapture.Refresh()		
-
-		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
-		wx.CallLater( int(max(s_before, s_after)*1000.0) + 100, doUpdateAutoCapture, tNow, self.autoCaptureCount )
-		
-	def onStopAutoCapture( self, event ):
-		pass
+		wx.CallLater( int(max(s_before, s_after)*1000.0) + 100,
+			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, self.autoCaptureEnableColour
+		)
 		
 	def onStartCapture( self, event ):
 		tNow = now()
@@ -739,7 +771,7 @@ class MainWin( wx.Frame ):
 		if iTriggerRow < 0:
 			return
 		self.triggerList.EnsureVisible( iTriggerRow )
-		for r in xrange(self.triggerList.GetItemCount()):
+		for r in xrange(self.triggerList.GetItemCount()-1):
 			self.triggerList.Select(r, 0)
 		self.triggerList.Select( iTriggerRow )		
 	
@@ -817,8 +849,9 @@ class MainWin( wx.Frame ):
 				'firstName','lastName','kmh'))
 		}
 		self.ts = self.triggerInfo['ts']
-		s_before = max( self.triggerInfo['s_before'] or 0.0, self.tdCaptureBefore.total_seconds() )
-		s_after = max( self.triggerInfo['s_after'] or 0.0, self.tdCaptureAfter.total_seconds() )
+		s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
+		if s_before == 0.0 and s_after == 0.0:
+			s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
 		
 		# Update the screen in the background so we don't freeze the UI.
 		def updateFS():
@@ -930,6 +963,9 @@ class MainWin( wx.Frame ):
 							wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(lastFrame) )
 						else:
 							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+			elif cmd == 'snapshot':
+				lastFrame = lastFrame if msg['frame'] is None else msg['frame']
+				wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
 			elif cmd == 'terminate':
 				break
 		

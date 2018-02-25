@@ -174,7 +174,8 @@ class FinishStrip( wx.Panel ):
 			return
 		self.tCursor = t
 		x = self.xFromT( t )
-		self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetClientSize()[0]))
+		if self.compositeBitmap:
+			self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetClientSize()[0]))
 		self.Refresh()
 		self.scrollCallback( self.bitmapLeft )
 	
