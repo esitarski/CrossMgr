@@ -15,7 +15,7 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False )
 	
 	if len(tsJpgs) == 1:
 		imgComposite = cv2.resize(
-			jpegToFrame(tsJpgs[0][1]), (0,0), fx=scale, fy=scale,
+			imgCur, (0,0), fx=scale, fy=scale,
 			interpolation=cv2.INTER_AREA if highQuality else cv2.INTER_LINEAR
 		)
 		return widthPhoto, heightPhoto, frameToBitmap(imgComposite)
