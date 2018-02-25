@@ -84,6 +84,10 @@ __CrossMgrVideo__ will capture video from 14:07:20.5 to 14:07:22.
 
 __CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it keeps a 10-second circular buffer 
 
+#### Snapshot
+
+Takes a single snapshot and save it to the database.
+
 #### Auto Capture
 
 When pressed, captures frames for the time interval __Seconds Before__ to __Seconds After__ as configured in the dialog above.
