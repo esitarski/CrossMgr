@@ -207,20 +207,16 @@ class ConfigDialog( wx.Dialog ):
 		sizer.Add( pfgs, flag=wx.ALL, border=4 )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
 		self.helpBtn = wx.Button( self, wx.ID_HELP )
 		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, border = 4, flag=wx.ALL )
+		hs.Add( self.okBtn, border=4, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		hs.AddStretchSpacer()
-		hs.Add( self.helpBtn, border = 4, flag=wx.ALL )
-		hs.Add( self.cancelBtn, border = 4, flag=wx.ALL )
+		hs.Add( self.helpBtn, border=4, flag=wx.ALL )
+		hs.Add( self.cancelBtn, border=4, flag=wx.ALL )
 		
 		sizer.AddSpacer( 8 )
 		sizer.Add( hs, flag=wx.EXPAND )
@@ -236,43 +232,32 @@ class ConfigDialog( wx.Dialog ):
 	def GetFPS( self ):
 		return self.fps.GetValue()
 		
-	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )
-		
 	def onHelp( self, event ):
 		OpenHelp()
 		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
-		
 class FocusDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Focus') )
+		wx.Dialog.__init__( self, parent, id,
+			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
+			title=_('CrossMgr Video Focus')
+		)
 		
 		self.imageSz = None
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
-		self.image = ScaledImage( self )
+		self.image = ScaledImage( self )		
 		sizer.Add( self.image, 1, wx.EXPAND )
 		self.SetSizerAndFit( sizer )
-	
+		
 	def SetImage( self, image ):
 		sz = image.GetSize()
 		if sz != self.imageSz:
+			if self.imageSz is None:
+				r = wx.GetClientDisplayRect()
+				dWidth, dHeight = r.GetWidth(), r.GetHeight()
+				self.SetSize( (int(dWidth*0.9), int(dHeight*0.9)) )
 			self.imageSz = sz
-			iWidth, iHeight = sz
-			r = wx.GetClientDisplayRect()
-			dWidth, dHeight = r.GetWidth(), r.GetHeight()
-			if iWidth > dWidth or iHeight > dHeight:
-				if float(iHeight)/float(iWidth) < float(dHeight)/float(dWidth):
-					wSize = (dWidth, int(iHeight * float(dWidth)/float(iWidth)))
-				else:
-					wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
-			else:
-				wSize = sz
-			self.SetSize( wSize )
 			self.SetTitle( u'{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
-		
 		return self.image.SetImage( image )
 
 class TriggerDialog( wx.Dialog ):
@@ -560,7 +545,7 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------------------------
 		mainSizer.Add( self.finishStrip, 1, flag=wx.EXPAND )
 		
-		border = 2
+		border=2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
 		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=border )
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
