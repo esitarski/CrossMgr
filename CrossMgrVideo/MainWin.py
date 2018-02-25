@@ -54,6 +54,9 @@ def setFont( font, w ):
 	w.SetFont( font )
 	return w
 
+def OpenHelp():
+	webbrowser.open( os.path.join(Utils.getHelpFolder(), 'QuickStart.html'), new=0, autoraise=1 )
+	
 class MessageManager( object ):
 	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
 
@@ -209,10 +212,14 @@ class ConfigDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
+		self.helpBtn = wx.Button( self, wx.ID_HELP )
+		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okBtn, border = 4, flag=wx.ALL )
 		self.okBtn.SetDefault()
 		hs.AddStretchSpacer()
+		hs.Add( self.helpBtn, border = 4, flag=wx.ALL )
 		hs.Add( self.cancelBtn, border = 4, flag=wx.ALL )
 		
 		sizer.AddSpacer( 8 )
@@ -232,6 +239,9 @@ class ConfigDialog( wx.Dialog ):
 	def onOK( self, event ):
 		self.EndModal( wx.ID_OK )
 		
+	def onHelp( self, event ):
+		OpenHelp()
+		
 	def onCancel( self, event ):
 		self.EndModal( wx.ID_CANCEL )
 		
@@ -243,12 +253,8 @@ class FocusDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.image = ScaledImage( self )
-		self.image.Bind( wx.EVT_LEFT_UP, self.onOK )
 		sizer.Add( self.image, 1, wx.EXPAND )
 		self.SetSizerAndFit( sizer )
-	
-	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )
 	
 	def SetImage( self, image ):
 		sz = image.GetSize()
@@ -441,6 +447,9 @@ class MainWin( wx.Frame ):
 		self.autoCaptureBtn = wx.Button( self, label="Config Auto Capture" )
 		self.autoCaptureBtn.Bind( wx.EVT_BUTTON, self.autoCaptureConfig )
 		
+		self.help = wx.Button( self, wx.ID_HELP )
+		self.help.Bind( wx.EVT_BUTTON, self.onHelp )
+		
 		self.autoCaptureEnableColour = wx.Colour(100,0,100)
 		self.autoCaptureDisableColour = wx.Colour(100,100,0)
 		
@@ -466,10 +475,16 @@ class MainWin( wx.Frame ):
 		headerSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.targetFPS, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.targetFPSLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
-		headerSizer.Add( self.focus, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		headerSizer.Add( self.reset, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=32 )
-		headerSizer.Add( self.manage, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		headerSizer.Add( self.autoCaptureBtn, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		
+		fgs = wx.FlexGridSizer( rows=2, cols=0, hgap=8, vgap=4 )
+		
+		fgs.Add( self.focus, flag=wx.EXPAND )
+		fgs.Add( self.reset, flag=wx.EXPAND )
+		fgs.Add( self.manage, flag=wx.EXPAND )
+		fgs.Add( self.autoCaptureBtn, flag=wx.EXPAND )
+		fgs.Add( self.help, flag=wx.EXPAND )
+		
+		headerSizer.Add( fgs, flag=wx.ALIGN_CENTRE|wx.LEFT, border=4 )
 		headerSizer.AddStretchSpacer()
 		headerSizer.Add( self.autoCapture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
@@ -565,6 +580,9 @@ class MainWin( wx.Frame ):
 		self.messageThread.start()
 		
 		wx.CallLater( 300, self.refreshTriggers )
+	
+	def onHelp( self, event ):
+		OpenHelp()
 	
 	def setFPS( self, fps ):
 		self.fps = int(fps if fps > 0 else 30)

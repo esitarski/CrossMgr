@@ -8,14 +8,14 @@ Video can be triggered manually, or automatically by CrossMgr.
 
 ## Overview
 
-In __CrossMgrVideo__ you primarily work in two screen panels.
+__CrossMgrVideo__ has two primary panes:
 
 1. Finish Strip (top)
 2. Trigger List (middle of the bottom)
 
 The __Finish Stip__ shows photos captured by triggers spread out by time.  Triggers are shown in the __Trigger List__.
 
-A trigger event could be a race finish, a close finish, a points lap, or potentially a race incident from a live feed.
+A trigger event could be a race finish, a close finish, a points lap, or potentially a race indicent from a live feed.
 
 __CrossMgr__ can automatically generate triggers for __CrossMgrVideo__ evey time a bib number is entered (can be RFID or manual entry).
 Alternatively, you can generate triggers in __CrossMgrVideo__ manually with the __AUTO CAPTURE__ and __CAPTURE__ buttons.
@@ -103,7 +103,7 @@ Useful for capturing traditional finishes.
 Shows all the frames recorded around the trigger event.
 
 * Move the mouse across the Finish Strip to seen the current frame in the Zoom window.
-* Ctrl-mouse-wheel to change the size of the zoom window.
+* Shift-mouse-wheel to change magnification in the zoom window.
 * Mouse-wheel, or use the Stretch slider to space the frames so that the objects between frames line up.
 * Left-click and Drag (or Scroll Bar) to move sideways.
 * Left-click move the current time line.
