@@ -490,7 +490,7 @@ class MainWin( wx.Frame ):
 		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2) )
 		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
 		
-		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(imageWidth, imageHeight) )
+		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
 		self.primaryImage.SetTestImage()
 		self.primaryImage.Bind( wx.EVT_LEFT_UP, self.onFocus )
 		
@@ -738,7 +738,7 @@ class MainWin( wx.Frame ):
 				's_after':s_after,
 				'ts_start':tNow,
 				'bib':self.autoCaptureCount,
-				'lastName':u'Event',
+				'lastName':u'Auto',
 			}
 		)
 		

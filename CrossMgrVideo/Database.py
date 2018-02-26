@@ -236,7 +236,8 @@ class Database( object ):
 	def getTriggerDates( self ):
 		dates = defaultdict( int )
 		for row in self.conn.execute( 'SELECT ts FROM trigger' ):
-			dates[row[0].date()] += 1
+			if row[0]:
+				dates[row[0].date()] += 1
 		return sorted( dates.items() )
 	
 	def getTriggerEditFields( self, id ):
