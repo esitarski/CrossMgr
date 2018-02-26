@@ -150,6 +150,7 @@ class Database( object ):
 					'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(self.triggerFieldsInput), ','.join('?'*len(self.triggerFieldsInput))),
 					tsTriggers )
 			if tsJpgs:
+				assert not any(ts is None for ts, jpg in tsJpgs)
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
 		
 		if tsJpgs:

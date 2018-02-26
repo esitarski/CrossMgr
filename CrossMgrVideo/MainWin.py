@@ -707,8 +707,8 @@ class MainWin( wx.Frame ):
 		self.doUpdateAutoCapture( t, self.snapshotCount, self.snapshot, self.snapshotEnableColour )
 		
 	def onStartSnapshot( self, event ):
-		self.snapshot.SetForegroundColour( self.snapshotDisableColour )
-		self.snapshot.Refresh()
+		event.GetEventObject().SetForegroundColour( self.snapshotDisableColour )
+		event.GetEventObject().Refresh()
 		self.camInQ.put( {'cmd':'snapshot'} )
 		
 	def doUpdateAutoCapture( self, tStartCapture, count, btn, colour ):
@@ -727,8 +727,8 @@ class MainWin( wx.Frame ):
 	def onStartAutoCapture( self, event ):
 		tNow = now()
 		
-		self.autoCapture.SetForegroundColour( self.autoCaptureDisableColour )
-		self.autoCapture.Refresh()
+		event.GetEventObject().SetForegroundColour( self.autoCaptureDisableColour )
+		event.GetEventObject().Refresh()
 		
 		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
 		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
@@ -749,8 +749,8 @@ class MainWin( wx.Frame ):
 	def onStartCapture( self, event ):
 		tNow = now()
 		
-		self.capture.SetForegroundColour( self.captureDisableColour )
-		wx.CallAfter( self.capture.Refresh )
+		event.GetEventObject().SetForegroundColour( self.captureDisableColour )
+		event.GetEventObject().Refresh()
 		wx.BeginBusyCursor()
 		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
@@ -791,8 +791,8 @@ class MainWin( wx.Frame ):
 		self.showLastTrigger()
 		
 		wx.EndBusyCursor()
-		self.capture.SetForegroundColour( self.captureEnableColour )
-		self.capture.Refresh()		
+		event.GetEventObject().SetForegroundColour( self.captureEnableColour )
+		event.GetEventObject().Refresh()		
 		
 		def updateFS():
 			# Wait for all the photos to be written.
