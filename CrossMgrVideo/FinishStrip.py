@@ -9,6 +9,7 @@ from bisect import bisect_left
 from MakeComposite import MakeComposite
 from AddPhotoHeader import AddPhotoHeader
 import Utils
+import CVUtil
 
 def _( s ):
 	return s
@@ -63,7 +64,6 @@ class FinishStrip( wx.Panel ):
 
 		self.times = []
 		self.jpg = {}
-		self.zoomBitmap = {}
 		
 		self.leftToRight = leftToRight
 		self.pixelsPerSec = 25
@@ -77,8 +77,6 @@ class FinishStrip( wx.Panel ):
 		
 	def SetImageQuality( self, iq ):
 		self.imageQuality = iq
-		self.zoomBitmap = {}
-		self.prefetchZoomBitmap()
 	
 	def SetLeftToRight( self, leftToRight=True ):
 		self.leftToRight = leftToRight
@@ -90,26 +88,12 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 		wx.CallAfter( self.Refresh )
 
-	def prefetchZoomBitmap( self ):
-		if not self.times:
-			return
-		
-		iStart = bisect_left(self.times, self.tCursor, hi=len(self.times)-1)
-		for i in xrange(iStart, -1, -1):
-			tbm = self.times[i]
-			if tbm not in self.zoomBitmap:
-				self.getZoomBitmap( tbm )
-				if self.tCursor - tbm < 0.25:
-					wx.CallLater( 150, self.prefetchZoomBitmap )
-				break
-		
 	def SetBitmapLeft( self, position ):
 		self.bitmapLeft = position
 		self.Refresh()
 	
 	def SetCursorTime( self, tCursor ):
 		self.tCursor = tCursor
-		wx.CallAfter( self.prefetchZoomBitmap )
 		wx.CallAfter( self.Refresh )
 		
 	def GetTimeMinMax( self ):
@@ -119,7 +103,6 @@ class FinishStrip( wx.Panel ):
 		return self.times
 		
 	def SetTsJpgs( self, tsJpgs ):
-		self.zoomBitmap = {}
 		self.tsJpgs = (tsJpgs or [])
 		self.times = []
 		self.jpg = {}
@@ -152,7 +135,6 @@ class FinishStrip( wx.Panel ):
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
-		self.zoomBitmap = {}
 		
 	def OnErase( self, event ):
 		pass
@@ -208,13 +190,6 @@ class FinishStrip( wx.Panel ):
 		dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, useMask=True, logicalFunc=wx.XOR )
 		dc.DrawLine( x, 0, x, winHeight )
 
-	def getZoomBitmap( self, tbm ):
-		try:
-			return self.zoomBitmap[tbm]
-		except KeyError:
-			self.zoomBitmap[tbm] = wx.Image(StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
-			return self.zoomBitmap[tbm]
-	
 	def getJpg( self, x ):
 		if not self.times:
 			return None
@@ -232,7 +207,7 @@ class FinishStrip( wx.Panel ):
 		viewWidth = min(winWidth//2, int(viewHeight * float(jpgWidth)/float(jpgHeight)))
 		
 		tbm = self.times[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)]
-		bm = self.getZoomBitmap( tbm )
+		bm = CVUtil.jpegToImage( self.jpg[tbm] ).ConvertToBitmap()
 		bmWidth, bmHeight = bm.GetSize()
 		bmWidth = int(bmWidth * self.magnification)
 		bmHeight = int(bmHeight * self.magnification)
@@ -294,7 +269,6 @@ class FinishStrip( wx.Panel ):
 		
 	def OnLeftUp( self, event ):
 		self.tCursor = self.tFromX( event.GetX() )
-		wx.CallAfter( self.prefetchZoomBitmap )
 		wx.CallAfter( self.OnLeaveWindow )
 		wx.CallAfter( self.Refresh )
 		self.SetCursor( wx.NullCursor )
@@ -311,7 +285,6 @@ class FinishStrip( wx.Panel ):
 			
 			self.magnification = min( 10.0, max(0.10, self.magnification) )
 			if self.magnification != magnificationSave:
-				self.zoomBitmap.clear()
 				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
 		else:
 			self.mouseWheelCallback( event )
