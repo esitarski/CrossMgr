@@ -339,7 +339,7 @@ class FinishStrip( wx.Panel ):
 				wx.CallAfter( self.scrollCallback, self.bitmapLeft )
 				wx.CallAfter( self.Refresh )
 		else:
-			self.drawZoomPhoto( x, y )
+			wx.CallAfter( self.drawZoomPhoto, x, y )
 		
 	def OnLeaveWindow( self, event=None ):
 		self.drawXorLine( self.xMotionLast, self.yMotionLast )
