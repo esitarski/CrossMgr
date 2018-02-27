@@ -620,7 +620,7 @@ class MainWin( wx.Frame ):
 		for btn in (self.autoCapture, self.focusDialog.autoCapture):
 			btn.SetLabel( label )
 			btn.SetFontToFitLabel()
-			btn.Refresh()
+			wx.CallAfter( btn.Refresh )
 
 	def setQueryDate( self, d ):
 		self.tsQueryLower = d
