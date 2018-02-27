@@ -249,13 +249,6 @@ class FinishStrip( wx.Panel ):
 		else:
 			xViewPos, yViewPos = winWidth - viewWidth + penWidthDiv2, penWidthDiv2
 
-		'''
-		if xViewPos <= x < xViewPos + viewWidth:
-			if self.leftToRight:
-				xViewPos, yViewPos = penWidthDiv2, penWidthDiv2
-			else:
-				xViewPos, yViewPos = winWidth - viewWidth + penWidthDiv2, penWidthDiv2
-		'''
 		if xViewPos <= x < xViewPos + viewWidth:
 			if self.leftToRight:
 				xViewPos, yViewPos = penWidthDiv2, penWidthDiv2
