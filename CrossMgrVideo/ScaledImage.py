@@ -140,7 +140,6 @@ class ScaledImage( wx.Panel ):
 		
 	def SetImage( self, image ):
 		self.image = image
-		self.resetMagRect()
 		self.Refresh()
 		
 	def GetImage( self ):

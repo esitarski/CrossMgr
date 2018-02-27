@@ -280,7 +280,7 @@ class FocusDialog( wx.Dialog ):
 		
 		sizer.Add( btnSizer, flag=wx.EXPAND )
 		
-		self.image = ScaledImage( self )		
+		self.image = ScaledImage( self, inset=True )		
 		sizer.Add( self.image, 1, wx.EXPAND )
 		self.SetSizerAndFit( sizer )
 		
