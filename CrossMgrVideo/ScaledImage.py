@@ -20,6 +20,7 @@ class ScaledImage( wx.Panel ):
 		self.image = image
 		self.drawFinishLine = drawFinishLine
 		self.buttonDown = False
+		self.backgroundBrush = wx.Brush( wx.Colour(232,232,232), wx.SOLID )
 		self.resetMagRect()
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
@@ -66,7 +67,7 @@ class ScaledImage( wx.Panel ):
 		)
 	
 	def draw( self, dc, width, height ):
-		dc.SetBackground( wx.WHITE_BRUSH )
+		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
 		
 		try:
