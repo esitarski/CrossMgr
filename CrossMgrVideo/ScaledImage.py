@@ -57,12 +57,13 @@ class ScaledImage( wx.Panel ):
 		self.xEnd, self.yEnd = x, y
 		wx.CallAfter( self.Refresh )
 	
-	def getInsetRect( self, dc, isWest, isNorth ):
-		width, height = dc.GetSize()
+	def getInsetRect( self, dc, width, height, isWest, isNorth ):
 		r = 0.75
 		insetWidth = int(width*r)
 		insetHeight = int(height*r)
-		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight, insetWidth, insetHeight )
+		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight,
+			insetWidth, insetHeight
+		)
 	
 	def draw( self, dc, width, height ):
 		dc.SetBackground( wx.WHITE_BRUSH )
@@ -95,7 +96,7 @@ class ScaledImage( wx.Panel ):
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2
 		isWest = xCenter < self.image.GetWidth()//2
 		isNorth = yCenter < self.image.GetHeight()//2
-		insetRect = self.getInsetRect( dc, isWest, isNorth )
+		insetRect = self.getInsetRect( dc, width, height, isWest, isNorth )
 		
 		magRatio = GetScaleRatio( sourceRect.GetWidth(), sourceRect.GetHeight(), insetRect.GetWidth(), insetRect.GetHeight() )
 		iWidth, iHeight = int(sourceRect.GetWidth() * magRatio), int(sourceRect.GetHeight() * magRatio)
@@ -214,7 +215,7 @@ if __name__ == '__main__':
 		imageHeight /= 2
 	
 	mainWin = wx.Frame(None,title="ScaledImage", size=(imageWidth,imageHeight))
-	scaledImage = ScaledImage( mainWin, size=(imageWidth, imageHeight) )
+	scaledImage = ScaledImage( mainWin, size=(imageWidth, imageHeight), inset=True )
 	scaledImage.SetTestImage()
 	# scaledImage.SetToEmpty()
 	mainWin.Show()

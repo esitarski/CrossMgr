@@ -234,7 +234,32 @@ class ConfigDialog( wx.Dialog ):
 		
 	def onHelp( self, event ):
 		OpenHelp()
+
+snapshotEnableColour = wx.Colour(0,0,100)
+snapshotDisableColour = wx.Colour(100,100,0)
+autoCaptureEnableColour = wx.Colour(100,0,100)
+autoCaptureDisableColour = wx.Colour(100,100,0)
+captureEnableColour = wx.Colour(0,100,0)
+captureDisableColour = wx.Colour(100,0,0)
 		
+def CreateCaptureButtons( parent ):	
+	snapshot = RoundButton( parent, label="SNAPSHOT", size=(90,90) )
+	snapshot.SetBackgroundColour( wx.WHITE )
+	snapshot.SetForegroundColour( snapshotEnableColour )
+	snapshot.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	
+	autoCapture = RoundButton( parent, label="AUTO\nCAPTURE", size=(90,90) )
+	autoCapture.SetBackgroundColour( wx.WHITE )
+	autoCapture.SetForegroundColour( autoCaptureEnableColour )
+	autoCapture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	
+	capture = RoundButton( parent, label="CAPTURE", size=(90,90) )
+	capture.SetBackgroundColour( wx.WHITE )
+	capture.SetForegroundColour( captureEnableColour )
+	capture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		
+	return snapshot, autoCapture, capture
+
 class FocusDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id,
@@ -244,6 +269,16 @@ class FocusDialog( wx.Dialog ):
 		
 		self.imageSz = None
 		sizer = wx.BoxSizer( wx.VERTICAL )
+		self.SetBackgroundColour( wx.Colour(232,232,232) )
+				
+		self.snapshot, self.autoCapture, self.capture = CreateCaptureButtons( self )
+		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
+		btnSizer.AddStretchSpacer()
+		btnSizer.Add( self.snapshot, flag=wx.ALL, border=4 )
+		btnSizer.Add( self.autoCapture, flag=wx.ALL, border=4 )
+		btnSizer.Add( self.capture, flag=wx.ALL, border=4 )
+		
+		sizer.Add( btnSizer, flag=wx.EXPAND )
 		
 		self.image = ScaledImage( self )		
 		sizer.Add( self.image, 1, wx.EXPAND )
@@ -255,7 +290,7 @@ class FocusDialog( wx.Dialog ):
 			if self.imageSz is None:
 				r = wx.GetClientDisplayRect()
 				dWidth, dHeight = r.GetWidth(), r.GetHeight()
-				self.SetSize( (int(dWidth*0.9), int(dHeight*0.9)) )
+				self.SetSize( (int(dWidth*0.85), int(dHeight*0.85)) )
 			self.imageSz = sz
 			self.SetTitle( u'{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
 		return self.image.SetImage( image )
@@ -393,10 +428,11 @@ class MainWin( wx.Frame ):
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
-		self.triggerDialog = TriggerDialog( self )
+		self.focusDialog = FocusDialog( self )
 		self.photoDialog = PhotoDialog( self )
 		self.autoCaptureDialog = AutoCaptureDialog( self )
-		
+		self.triggerDialog = TriggerDialog( self )
+				
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		
 		#------------------------------------------------------------------------------------------------
@@ -435,33 +471,16 @@ class MainWin( wx.Frame ):
 		self.help = wx.Button( self, wx.ID_HELP )
 		self.help.Bind( wx.EVT_BUTTON, self.onHelp )
 		
-		self.snapshotEnableColour = wx.Colour(0,0,100)
-		self.snapshotDisableColour = wx.Colour(100,100,0)
+		self.snapshot, self.autoCapture, self.capture = CreateCaptureButtons( self )
 		
-		self.snapshot = RoundButton( self, label="SNAPSHOT", size=(90,90) )
-		self.snapshot.SetBackgroundColour( wx.WHITE )
-		self.snapshot.SetForegroundColour( self.snapshotEnableColour )
-		self.snapshot.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
 		self.snapshot.Bind( wx.EVT_LEFT_DOWN, self.onStartSnapshot )
-		
-		self.autoCaptureEnableColour = wx.Colour(100,0,100)
-		self.autoCaptureDisableColour = wx.Colour(100,100,0)
-		
-		self.autoCapture = RoundButton( self, label="AUTO\nCAPTURE", size=(90,90) )
-		self.autoCapture.SetBackgroundColour( wx.WHITE )
-		self.autoCapture.SetForegroundColour( self.autoCaptureEnableColour )
-		self.autoCapture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		self.focusDialog.snapshot.Bind( wx.EVT_LEFT_DOWN, self.onStartSnapshot )
 		self.autoCapture.Bind( wx.EVT_LEFT_DOWN, self.onStartAutoCapture )
-		
-		self.captureEnableColour = wx.Colour(0,100,0)
-		self.captureDisableColour = wx.Colour(100,0,0)
-		
-		self.capture = RoundButton( self, label="CAPTURE", size=(90,90) )
-		self.capture.SetBackgroundColour( wx.WHITE )
-		self.capture.SetForegroundColour( self.captureEnableColour )
-		self.capture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+		self.focusDialog.autoCapture.Bind( wx.EVT_LEFT_DOWN, self.onStartAutoCapture )
 		self.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
 		self.capture.Bind( wx.EVT_LEFT_UP, self.onStopCapture )
+		self.focusDialog.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
+		self.focusDialog.capture.Bind( wx.EVT_LEFT_UP, self.onStopCapture )
 		
 		headerSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		headerSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
@@ -493,8 +512,6 @@ class MainWin( wx.Frame ):
 		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
 		self.primaryImage.SetTestImage()
 		self.primaryImage.Bind( wx.EVT_LEFT_UP, self.onFocus )
-		
-		self.focusDialog = FocusDialog( self )
 		
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
 		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -593,9 +610,10 @@ class MainWin( wx.Frame ):
 			return s[:-2] if s.endswith('.0') else s
 		
 		label = u'\n'.join( [u'AUTO',u'CAPTURE',u'{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
-		self.autoCapture.SetLabel( label )
-		self.autoCapture.SetFontToFitLabel()
-		self.autoCapture.Refresh()
+		for btn in (self.autoCapture, self.focusDialog.autoCapture):
+			btn.SetLabel( label )
+			btn.SetFontToFitLabel()
+			btn.Refresh()
 
 	def setQueryDate( self, d ):
 		self.tsQueryLower = d
@@ -704,10 +722,10 @@ class MainWin( wx.Frame ):
 			u'',			# Wave
 			u'',			# RaceName
 		) )
-		self.doUpdateAutoCapture( t, self.snapshotCount, self.snapshot, self.snapshotEnableColour )
+		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
 		
 	def onStartSnapshot( self, event ):
-		event.GetEventObject().SetForegroundColour( self.snapshotDisableColour )
+		event.GetEventObject().SetForegroundColour( snapshotDisableColour )
 		event.GetEventObject().Refresh()
 		self.camInQ.put( {'cmd':'snapshot'} )
 		
@@ -721,13 +739,14 @@ class MainWin( wx.Frame ):
 			self.refreshTriggers( iTriggerRow=999999 )
 			self.showLastTrigger()
 			self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
-		btn.SetForegroundColour( colour )
-		btn.Refresh()		
+		for b in (btn if isinstance(btn, list) else [btn]):
+			b.SetForegroundColour( colour )
+			b.Refresh()
 
 	def onStartAutoCapture( self, event ):
 		tNow = now()
 		
-		event.GetEventObject().SetForegroundColour( self.autoCaptureDisableColour )
+		event.GetEventObject().SetForegroundColour( autoCaptureDisableColour )
 		event.GetEventObject().Refresh()
 		
 		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
@@ -743,13 +762,13 @@ class MainWin( wx.Frame ):
 		)
 		
 		wx.CallLater( int(max(s_before, s_after)*1000.0) + 100,
-			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, self.autoCaptureEnableColour
+			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, autoCaptureEnableColour
 		)
 		
 	def onStartCapture( self, event ):
 		tNow = now()
 		
-		event.GetEventObject().SetForegroundColour( self.captureDisableColour )
+		event.GetEventObject().SetForegroundColour( captureDisableColour )
 		event.GetEventObject().Refresh()
 		wx.BeginBusyCursor()
 		
@@ -791,7 +810,7 @@ class MainWin( wx.Frame ):
 		self.showLastTrigger()
 		
 		wx.EndBusyCursor()
-		event.GetEventObject().SetForegroundColour( self.captureEnableColour )
+		event.GetEventObject().SetForegroundColour( captureEnableColour )
 		event.GetEventObject().Refresh()		
 		
 		def updateFS():
