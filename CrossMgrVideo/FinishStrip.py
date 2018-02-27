@@ -264,8 +264,6 @@ class FinishStrip( wx.Panel ):
 		if (xViewPos,viewWidth) != getattr(self,'zoomViewLast', (None,None)):
 			self.zoomViewLast = (xViewPos,viewWidth)
 			self.Refresh()
-			wx.CallLater( 10, self.drawZoomPhoto, x, y )
-			return
 		
 		memDC = wx.MemoryDC( bm )
 		dc.StretchBlit( xViewPos, yViewPos, viewWidth, viewHeight, memDC,
