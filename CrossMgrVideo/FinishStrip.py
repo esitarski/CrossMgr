@@ -212,8 +212,7 @@ class FinishStrip( wx.Panel ):
 		try:
 			return self.zoomBitmap[tbm]
 		except KeyError:
-			image = wx.Image( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
-			self.zoomBitmap[tbm] = image.ConvertToBitmap()
+			self.zoomBitmap[tbm] = wx.Image(StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
 			return self.zoomBitmap[tbm]
 	
 	def getJpg( self, x ):
