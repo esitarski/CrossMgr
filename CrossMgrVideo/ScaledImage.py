@@ -46,9 +46,11 @@ class ScaledImage( wx.Panel ):
 		self.buttonDown = True
 		self.xBegin, self.yBegin = event.GetX(), event.GetY()
 		self.xEnd, self.yEnd = self.xBegin, self.yBegin
+		self.SetCursor( wx.Cursor(wx.CURSOR_MAGNIFIER) )
 		wx.CallAfter( self.Refresh )
 		
 	def OnLeftUp( self, event ):
+		self.SetCursor( wx.NullCursor )
 		self.buttonDown = False
 		
 	def OnMotion( self, event ):
