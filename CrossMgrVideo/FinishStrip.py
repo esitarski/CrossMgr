@@ -213,7 +213,6 @@ class FinishStrip( wx.Panel ):
 			return self.zoomBitmap[tbm]
 		except KeyError:
 			image = wx.Image( StringIO.StringIO(self.jpg[tbm]), wx.BITMAP_TYPE_JPEG )
-			image.Rescale( int(self.jpgWidth*self.magnification), int(self.jpgHeight*self.magnification), self.imageQuality )
 			self.zoomBitmap[tbm] = image.ConvertToBitmap()
 			return self.zoomBitmap[tbm]
 	
@@ -236,6 +235,8 @@ class FinishStrip( wx.Panel ):
 		tbm = self.times[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)]
 		bm = self.getZoomBitmap( tbm )
 		bmWidth, bmHeight = bm.GetSize()
+		bmWidth = int(bmWidth * self.magnification)
+		bmHeight = int(bmHeight * self.magnification)
 		
 		viewWidth = min( viewWidth, bmWidth )
 		viewHeight = min( viewHeight, bmHeight )
@@ -275,7 +276,10 @@ class FinishStrip( wx.Panel ):
 			return
 		
 		memDC = wx.MemoryDC( bm )
-		dc.Blit( xViewPos, yViewPos, viewWidth, viewHeight, memDC, bmX, bmY )
+		dc.StretchBlit( xViewPos, yViewPos, viewWidth, viewHeight, memDC,
+			int(bmX/self.magnification), int(bmY/self.magnification),
+			int(viewWidth/self.magnification), int(viewHeight/self.magnification)
+		)
 		memDC.SelectObject( wx.NullBitmap )
 		
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
@@ -315,7 +319,7 @@ class FinishStrip( wx.Panel ):
 			else:
 				self.magnification *= magFactor
 			
-			self.magnification = min( 5.0, max(0.10, self.magnification) )
+			self.magnification = min( 10.0, max(0.10, self.magnification) )
 			if self.magnification != magnificationSave:
 				self.zoomBitmap.clear()
 				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
