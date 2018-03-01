@@ -408,12 +408,11 @@ class MainWin( wx.Frame ):
 		self.db = Database()
 		
 		self.bufferSecs = 10
-		self.setFPS( 25 )
+		self.setFPS( 30 )
 		self.xFinish = None
 		
 		self.tFrameCount = self.tLaunch = self.tLast = now()
 		self.frameCount = 0
-		self.fpsActual = 0.0
 		self.fpt = timedelta(seconds=0)
 		self.iTriggerSelect = None
 		self.triggerInfo = None
@@ -453,15 +452,28 @@ class MainWin( wx.Frame ):
 		headerSizer.Add( self.title, flag=wx.ALL, border=10 )
 		
 		#------------------------------------------------------------------------------
-		self.cameraDeviceLabel = wx.StaticText(self, label='Camera Device:')
 		self.cameraDevice = wx.StaticText( self )
+		self.cameraResolution = wx.StaticText( self )
+		self.targetFPS = wx.StaticText( self, label='30 fps' )
+		self.actualFPS = wx.StaticText( self, label='30.0 fps' )
+		
 		boldFont = self.cameraDevice.GetFont()
 		boldFont.SetWeight( wx.BOLD )
-		self.cameraDevice.SetFont( boldFont )
-		self.cameraResolution = wx.StaticText( self )
-		self.cameraResolution.SetFont( boldFont )
-		self.targetFPS = wx.StaticText( self )
-		self.targetFPSLabel = wx.StaticText( self, label='fps' )
+		for w in (self.cameraDevice, self.cameraResolution, self.targetFPS, self.actualFPS):
+			w.SetFont( boldFont )
+		
+		fgs = wx.FlexGridSizer( 2, 2, 2 )	# 2 Cols
+		fgs.Add( wx.StaticText(self, label='Camera Device:'), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.cameraDevice )
+		
+		fgs.Add( wx.StaticText(self, label='Resolution:'), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.cameraResolution )
+		
+		fgs.Add( wx.StaticText(self, label='Target:'), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.targetFPS, flag=wx.ALIGN_RIGHT )
+		
+		fgs.Add( wx.StaticText(self, label='Actual:'), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.actualFPS, flag=wx.ALIGN_RIGHT )
 		
 		self.focus = wx.Button( self, label="Focus..." )
 		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
@@ -489,11 +501,7 @@ class MainWin( wx.Frame ):
 		self.focusDialog.capture.Bind( wx.EVT_LEFT_DOWN, self.onStartCapture )
 		self.focusDialog.capture.Bind( wx.EVT_LEFT_UP, self.onStopCapture )
 		
-		headerSizer.Add( self.cameraDeviceLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		headerSizer.Add( self.cameraDevice, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		headerSizer.Add( self.cameraResolution, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		headerSizer.Add( self.targetFPS, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
-		headerSizer.Add( self.targetFPSLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
+		headerSizer.Add( fgs, flag=wx.ALIGN_CENTER_VERTICAL )
 		
 		fgs = wx.FlexGridSizer( rows=2, cols=0, hgap=8, vgap=4 )
 		
@@ -588,7 +596,7 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 
 		self.readOptions()
-		self.updateFPS( int(float(self.targetFPS.GetLabel())) )
+		self.updateFPS( int(float(self.targetFPS.GetLabel().split()[0])) )
 		self.updateAutoCaptureLabel()
 		self.SetSizerAndFit( mainSizer )
 		
@@ -609,7 +617,10 @@ class MainWin( wx.Frame ):
 	
 	def updateFPS( self, fps ):
 		self.setFPS( fps )
-		self.targetFPS.SetLabel( u'{}'.format(self.fps) )
+		self.targetFPS.SetLabel( u'{} fps'.format(self.fps) )
+
+	def updateActualFPS( self, actualFPS ):
+		self.actualFPS.SetLabel( '{:.1f} fps'.format(actualFPS) )
 
 	def updateAutoCaptureLabel( self ):
 		def f( n ):
@@ -768,7 +779,7 @@ class MainWin( wx.Frame ):
 			}
 		)
 		
-		wx.CallLater( int(max(s_before, s_after)*1000.0) + 100,
+		wx.CallLater( int(CamServer.EstimateQuerySeconds(tNow, s_before, s_after, self.fps)*1000.0) + 80,
 			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, autoCaptureEnableColour
 		)
 		
@@ -960,7 +971,8 @@ class MainWin( wx.Frame ):
 		self.grabFrameOK = True
 		self.messageQ.put( ('threads', 'Successfully Launched') )
 		
-		self.camInQ.put( {'cmd':'send_update', 'name':'primary', 'freq':5} )
+		self.primaryFreq = 5
+		self.camInQ.put( {'cmd':'send_update', 'name':'primary', 'freq':self.primaryFreq} )
 		return True
 	
 	def stopCapture( self ):
@@ -968,6 +980,8 @@ class MainWin( wx.Frame ):
 	
 	def processCamera( self ):
 		lastFrame = None
+		lastPrimaryTime = now()
+		primaryCount = 0
 		while 1:
 			try:
 				msg = self.camReader.recv()
@@ -984,6 +998,14 @@ class MainWin( wx.Frame ):
 				if lastFrame is not None:
 					if name == 'primary':
 						wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(lastFrame) )
+						
+						primaryCount += self.primaryFreq
+						primaryTime = now()
+						primaryDelta = (primaryTime - lastPrimaryTime).total_seconds()
+						if primaryDelta > 2.5:
+							wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
+							lastPrimaryTime = primaryTime
+							primaryCount = 0
 					elif name == 'focus':
 						if self.focusDialog.IsShown():
 							wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(lastFrame) )
@@ -1077,7 +1099,7 @@ class MainWin( wx.Frame ):
 		return int(self.cameraDevice.GetLabel())
 		
 	def getCameraFPS( self ):
-		return int(float(self.targetFPS.GetLabel()))
+		return int(float(self.targetFPS.GetLabel().split()[0]))
 		
 	def getCameraResolution( self ):
 		try:

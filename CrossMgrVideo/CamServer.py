@@ -24,13 +24,34 @@ class VideoCaptureManager( object ):
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
+transmitFramesMax = 2
+bufferSeconds = 8
+
+def EstimateQuerySeconds( ts, s_before, s_after, fps ):
+	t = now()
+	tEarliest = ts - timedelta(seconds=s_before)
+	tLatest = ts + timedelta(seconds=s_after)
+	if tEarliest > t:		# Request is completely after the current time.
+		return (tLatest - t).total_seconds()
+	
+	transmitRate = float(fps * transmitFramesMax)
+	sBefore = (t - tEarliest).total_seconds()
+	sAfter = (tLatest - t).total_seconds()
+	backlog = (sBefore + sAfter) * fps
+	
+	if t >= tLatest:		# Request is completely before the current time.
+		return backlog/transmitRate
+	
+	# Some part of the request is before the current time, some is after.
+	# The transmit rate may or may not be able to catch up.
+	backlogRemaining = backlog - sAfter * transmitRate	
+	return sAfter + max(0.0, backlogRemaining / transmitRate)
+
 def CamServer( qIn, pWriter, camInfo=None ):
 	sendUpdates = {}
 	tsSeen = set()
 	camInfo = camInfo or {}
-	bufferSeconds = 8
 	backlog = []
-	transmitFramesMax = 2
 	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:
