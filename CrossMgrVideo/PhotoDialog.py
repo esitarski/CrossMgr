@@ -287,7 +287,7 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpgToBitmap(jpg)).ConvertToImage().GetData() )
+					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpegToBitmap(jpg)).ConvertToImage().GetData() )
 				proc.stdin.close()
 				proc.terminate()
 				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
