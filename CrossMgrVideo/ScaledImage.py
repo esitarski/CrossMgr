@@ -114,7 +114,6 @@ class ScaledImage( wx.Panel ):
 		
 		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
 		dc.StretchBlit( *(list(insetRect.Get()) + [sourceDC] + list(sourceRect.Get())) )
-		sourceDC.SelectObject( wx.NullBitmap )
 		
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.DrawRectangle( insetRect )
