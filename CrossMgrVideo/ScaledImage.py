@@ -72,13 +72,17 @@ class ScaledImage( wx.Panel ):
 		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
 		
-		try:
-			bitmap = wx.Bitmap( RescaleImage(self.image, width, height) )
-		except Exception as e:
+		if not self.image:
 			return
 		
-		xLeft, yTop = max(0, (width - bitmap.GetWidth())//2), max(0, (height - bitmap.GetHeight())//2)
-		dc.DrawBitmap( bitmap, xLeft, yTop )
+		sourceBM = wx.Bitmap( self.image )
+		sourceWidth, sourceHeight = sourceBM.GetSize()
+		ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height )
+		destWidth, destHeight = int(sourceWidth * ratio), int(sourceHeight * ratio)
+		sourceDC = wx.MemoryDC( sourceBM )
+
+		xLeft, yTop = max(0, (width - destWidth)//2), max(0, (height - destHeight)//2)
+		dc.StretchBlit( xLeft, yTop, destWidth, destHeight, sourceDC, 0, 0, sourceWidth, sourceHeight )
 		
 		if self.drawFinishLine:
 			dc.SetPen( wx.Pen(contrastColour, 1) )
@@ -88,8 +92,7 @@ class ScaledImage( wx.Panel ):
 		if magnifyRect.IsEmpty():
 			return
 			
-		ratio = GetScaleRatio( self.image.GetWidth(), self.image.GetHeight(), width, height )
-		sourceRect = wx.Rect( 0, 0, self.image.GetWidth(), self.image.GetHeight() )
+		sourceRect = wx.Rect( 0, 0, sourceWidth, sourceHeight )
 		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int(magnifyRect.GetY()-yTop)/ratio, magnifyRect.GetWidth()/ratio, magnifyRect.GetHeight()/ratio ) )
 		
 		if sourceRect.IsEmpty():
@@ -110,8 +113,6 @@ class ScaledImage( wx.Panel ):
 		)
 		
 		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
-		sourceBM = wx.Bitmap( self.image )
-		sourceDC = wx.MemoryDC( sourceBM )
 		dc.StretchBlit( *(list(insetRect.Get()) + [sourceDC] + list(sourceRect.Get())) )
 		sourceDC.SelectObject( wx.NullBitmap )
 		
