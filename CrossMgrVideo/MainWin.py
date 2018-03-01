@@ -24,7 +24,7 @@ import Utils
 import CVUtil
 from SocketListener import SocketListener
 from Database import Database, DBWriter, DBReader
-from ScaledImage import ScaledImage
+from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoDialog
@@ -267,7 +267,7 @@ class FocusDialog( wx.Dialog ):
 			title=_('CrossMgr Video Focus')
 		)
 		
-		self.imageSz = None
+		self.bitmapSz = None
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 				
@@ -287,20 +287,20 @@ class FocusDialog( wx.Dialog ):
 		
 		sizer.Add( btnSizer, flag=wx.EXPAND )
 		
-		self.image = ScaledImage( self, inset=True )		
-		sizer.Add( self.image, 1, wx.EXPAND )
+		self.bitmap = ScaledBitmap( self, inset=True )		
+		sizer.Add( self.bitmap, 1, wx.EXPAND )
 		self.SetSizerAndFit( sizer )
 		
-	def SetImage( self, image ):
-		sz = image.GetSize()
-		if sz != self.imageSz:
-			if self.imageSz is None:
+	def SetBitmap( self, bitmap ):
+		sz = bitmap.GetSize()
+		if sz != self.bitmapSz:
+			if self.bitmapSz is None:
 				r = wx.GetClientDisplayRect()
 				dWidth, dHeight = r.GetWidth(), r.GetHeight()
 				self.SetSize( (int(dWidth*0.85), int(dHeight*0.85)) )
-			self.imageSz = sz
+			self.bitmapSz = sz
 			self.SetTitle( u'{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
-		return self.image.SetImage( image )
+		return self.bitmap.SetBitmap( bitmap )
 
 class TriggerDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
@@ -524,9 +524,9 @@ class MainWin( wx.Frame ):
 		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2) )
 		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
 		
-		self.primaryImage = ScaledImage( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
-		self.primaryImage.SetTestImage()
-		self.primaryImage.Bind( wx.EVT_LEFT_UP, self.onFocus )
+		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
+		self.primaryBitmap.SetTestBitmap()
+		self.primaryBitmap.Bind( wx.EVT_LEFT_UP, self.onFocus )
 		
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
 		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -588,7 +588,7 @@ class MainWin( wx.Frame ):
 		
 		border=2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
-		row1Sizer.Add( self.primaryImage, flag=wx.ALL, border=border )
+		row1Sizer.Add( self.primaryBitmap, flag=wx.ALL, border=border )
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		row1Sizer.Add( self.messagesText, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, flag=wx.EXPAND )
@@ -997,7 +997,7 @@ class MainWin( wx.Frame ):
 				name, lastFrame = msg['name'], lastFrame if msg['frame'] is None else msg['frame']
 				if lastFrame is not None:
 					if name == 'primary':
-						wx.CallAfter( self.primaryImage.SetImage, CVUtil.frameToImage(lastFrame) )
+						wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
 						
 						primaryCount += self.primaryFreq
 						primaryTime = now()
@@ -1008,7 +1008,7 @@ class MainWin( wx.Frame ):
 							primaryCount = 0
 					elif name == 'focus':
 						if self.focusDialog.IsShown():
-							wx.CallAfter( self.focusDialog.SetImage, CVUtil.frameToImage(lastFrame) )
+							wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
 						else:
 							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 			elif cmd == 'snapshot':

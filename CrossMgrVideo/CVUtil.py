@@ -50,6 +50,9 @@ def jpegToFrame( jpeg ):
 def jpegToImage( jpeg ):
 	return frameToImage(jpegToFrame(jpeg))
 	
+def jpegToBitmap( jpeg ):
+	return frameToBitmap(jpegToFrame(jpeg))
+	
 def adjustGammaFrame( frame, gamma=1.0 ):
 	# build a lookup table mapping the pixel values [0, 255] to
 	# their adjusted gamma values
@@ -72,12 +75,20 @@ def imageToFrame( image ):
 	s = StringIO()
 	image.SaveFile( s, wx.BITMAP_TYPE_BMP )
 	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
+
+def bitmapToFrame( bitmap ):
+	s = StringIO()
+	bitmap.SaveFile( s, wx.BITMAP_TYPE_BMP )
+	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
 	
 def adjustGammaImage( image, gamma=1.0 ):
 	return frameToImage( adjustGammaFrame(imageToFrame(image), gamma) )
 
 def adjustContrastImage( image ):
 	return frameToImage( adjustContrastFrame(imageToFrame(image)) )
+
+def adjustContrastBitmap( bitmap ):
+	return bitmapToImage( adjustContrastFrame(bitmapToFrame(bitmap)) )
 
 if __name__ == '__main__':
 	print rescaleToRect( 200, 100, 100, 50 )

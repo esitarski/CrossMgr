@@ -1,14 +1,14 @@
 import wx
-from ScaledImage import ScaledImage
+from ScaledBitmap import ScaledBitmap
 
 class FramesViewer( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, rows=5, cols=12, size=(640,480), style=0 ):
 		super(FramesViewer, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
-		self.scaledImages = [ScaledImage(self, size=(64,48)) for i in xrange(rows*cols)]
-		for si in self.scaledImages:
-			si.SetTestImage()
+		self.scaledBitmaps = [ScaledBitmap(self, size=(64,48)) for i in xrange(rows*cols)]
+		for si in self.scaledBitmaps:
+			si.SetTestBitmap()
 			
 		self.cols = cols
 		self.rows = rows
@@ -19,15 +19,15 @@ class FramesViewer( wx.Panel ):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.OnSize()
 		
-	def GetImageCount( self ):
-		return len(self.scaledImages)
+	def GetBitmapCount( self ):
+		return len(self.scaledBitmaps)
 				
-	def SetImages( self, images ):
-		for i, si in enumerate(self.scaledImages):
+	def SetBitmaps( self, images ):
+		for i, si in enumerate(self.scaledBitmaps):
 			try:
-				si.SetImage( images[i] )
+				si.SetBitmap( images[i] )
 			except IndexError:
-				si.SetTestImage()
+				si.SetTestBitmap()
 				
 	def OnSize( self, event = None ):
 		widthWindow, heightWindow = self.GetClientSize()
@@ -39,7 +39,7 @@ class FramesViewer( wx.Panel ):
 		xMax = widthWindow - width/2
 		x = 0
 		y = 0
-		for si in self.scaledImages:
+		for si in self.scaledBitmaps:
 			si.SetSize( (width, height) )
 			si.Move( (x, y) )
 			x += width + sep
@@ -62,9 +62,9 @@ if __name__ == '__main__':
 	
 	images = []
 	for f in glob.glob( os.path.join('Test_Photos','*.jpg') ):
-		images.append( wx.Image(f, wx.BITMAP_TYPE_JPEG ) )
-	images = images[-fv.GetImageCount():]
-	fv.SetImages( images )
+		images.append( wx.Bitmap(f, wx.BITMAP_TYPE_JPEG ) )
+	images = images[-fv.GetBitmapCount():]
+	fv.SetBitmaps( images )
 	
 	mainWin.Show()
 	app.MainLoop()

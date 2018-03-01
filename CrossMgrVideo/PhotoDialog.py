@@ -3,7 +3,7 @@ import os
 import subprocess
 import cStringIO as StringIO
 from AddPhotoHeader import AddPhotoHeader
-from ScaledImage import ScaledImage, RescaleImage
+from ScaledBitmap import ScaledBitmap, GetScaleRatio
 from ComputeSpeed import ComputeSpeed
 import Utils
 import CVUtil
@@ -11,10 +11,26 @@ import CVUtil
 def _( x ):
 	return x
 
+def RescaleBitmap( bitmap, width, height ):
+	wBitmap, hBitmap = bitmap.GetSize()
+	ratio = GetScaleRatio( wBitmap, hBitmap, width, height )
+	wBM, hBM = int(wBitmap * ratio), int(hBitmap * ratio)
+	bm = wx.Bitmap( wBM, hBM )
+	
+	sourceDC = wx.MemoryDC( bitmap )
+	
+	destDC = wx.MemoryDC( bm )
+	destDC.SetBrush( wx.Brush( wx.Colour(232,232,232), wx.SOLID ) )
+	destDC.Clear()
+	
+	xLeft, yTop = (wBM - wBitmap) // 2, (hBM - hBitmap) // 2
+	destDC.StretchBlit( xLeft, yTop, wBM, hBM, sourceDC, 0, 0, wBitmap, hBitmap )
+	return bm
+	
 class PhotoPrintout( wx.Printout ):
-	def __init__(self, image):
+	def __init__(self, bitmap):
 		wx.Printout.__init__(self)
-		self.image = image
+		self.bitmap = bitmap
 
 	def HasPage(self, page):
 		return page == 1
@@ -31,16 +47,13 @@ class PhotoPrintout( wx.Printout ):
 		shrink = 0.9
 		drawWidth, drawHeight = int(width*shrink), int(height*shrink)
 		border = (width-drawWidth)//2
-		image = RescaleImage( self.image, drawWidth, drawHeight, wx.IMAGE_QUALITY_HIGH )
-		bitmap = image.ConvertToBitmap()
+		bitmap = RescaleBitmap( self.bitmap, drawWidth, drawHeight )
 		dcBitmap = wx.MemoryDC( bitmap )
 		
-		dc.Blit( border, border, image.GetSize()[0], image.GetSize()[1], dcBitmap, 0, 0 )
-		
-		dcBitmap.SelectObject( wx.NullBitmap )
+		dc.Blit( border, border, bitmap.GetSize()[0], bitmap.GetSize()[1], dcBitmap, 0, 0 )
 		return True
 
-def PrintPhoto( parent, image ):
+def PrintPhoto( parent, bitmap ):
 	printData = wx.PrintData()
 	printData.SetPaperId(wx.PAPER_LETTER)
 	printData.SetPrintMode(wx.PRINT_MODE_PRINTER)
@@ -53,7 +66,7 @@ def PrintPhoto( parent, image ):
 	pdd.EnablePrintToFile( False )
 	
 	printer = wx.Printer(pdd)
-	printout = PhotoPrintout( image )
+	printout = PhotoPrintout( bitmap )
 
 	if not printer.Print(parent, printout, True):
 		if printer.GetLastError() == wx.PRINTER_ERROR:
@@ -73,8 +86,8 @@ class PhotoDialog( wx.Dialog ):
 		self.clear()
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		self.scaledImage = ScaledImage( self, inset=True )
-		vs.Add( self.scaledImage, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.scaledBitmap = ScaledBitmap( self, inset=True )
+		vs.Add( self.scaledBitmap, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
         
@@ -88,18 +101,18 @@ class PhotoDialog( wx.Dialog ):
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
-		btn.SetToolTip( wx.ToolTip('Print Image') )
+		btn.SetToolTip( wx.ToolTip('Print Bitmap') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32)
 		
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
-		btn.SetToolTip( wx.ToolTip('Copy Image to Clipboard') )
+		btn.SetToolTip( wx.ToolTip('Copy Bitmap to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('png.png'))
-		btn.SetToolTip( wx.ToolTip('Save Image as PNG file') )
+		btn.SetToolTip( wx.ToolTip('Save Bitmap as PNG file') )
 		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
 		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
@@ -145,9 +158,9 @@ class PhotoDialog( wx.Dialog ):
 		self.mph = self.kmh * 0.621371
 		self.pps = 2000.0
 		
-		self.scaledImage.SetImage( self.getPhoto() )
+		self.scaledBitmap.SetBitmap( self.getPhoto() )
 		
-		sz = self.scaledImage.GetImage().GetSize()
+		sz = self.scaledBitmap.GetBitmap().GetSize()
 		iWidth, iHeight = sz
 		r = wx.GetClientDisplayRect()
 		dWidth, dHeight = r.GetWidth(), r.GetHeight()
@@ -168,7 +181,7 @@ class PhotoDialog( wx.Dialog ):
 		self.fps = None
 	
 	def onContrast( self, event ):
-		self.scaledImage.SetImage( CVUtil.adjustContrastImage(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )
+		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )
 	
 	def onBrightness( self, event ):
 		pass
@@ -176,14 +189,14 @@ class PhotoDialog( wx.Dialog ):
 	def onPhotoHeader( self, event=None ):
 		global photoHeaderState
 		photoHeaderState = self.photoHeader.GetValue()
-		self.scaledImage.SetImage(self.getPhoto())
+		self.scaledBitmap.SetBitmap(self.getPhoto())
 	
-	def addPhotoHeaderToImage( self, image ):
+	def addPhotoHeaderToBitmap( self, bitmap ):
 		if not photoHeaderState:
-			return image
+			return bitmap
 		
 		return AddPhotoHeader(
-			image.ConvertToBitmap(),
+			bitmap,
 			ts=self.triggerInfo['ts'],
 			bib=self.triggerInfo['bib'],
 			firstName=self.triggerInfo['firstName'],
@@ -197,13 +210,13 @@ class PhotoDialog( wx.Dialog ):
 	def getPhoto( self ):
 		if self.jpg is None:
 			return None
-		return self.addPhotoHeaderToImage( wx.Image(StringIO.StringIO(self.jpg), wx.BITMAP_TYPE_JPEG) )
+		return self.addPhotoHeaderToBitmap( CVUtil.jpegToBitmap(self.jpg) )
 		
 	def onClose( self, event ):
 		self.EndModal( wx.ID_OK )
 	
 	def onGetSpeed( self, event ):
-		t1, image1, t2, image2 = None, None, None, None
+		t1, bitmap1, t2, bitmap2 = None, None, None, None
 		speedFrames = self.speedFrames.GetSelection() + 1
 		i1, i2 = len(self.tsJpg)-(speedFrames+1), len(self.tsJpg)-1
 		
@@ -221,22 +234,22 @@ class PhotoDialog( wx.Dialog ):
 			return
 		
 		t1 = self.tsJpg[i1][0]
-		image1 = wx.Image( StringIO.StringIO(self.tsJpg[i1][1]), wx.BITMAP_TYPE_JPEG )
+		bitmap1 = CVUtil.jpegToBitmap(self.tsJpg[i1][1])
 		t2 = self.tsJpg[i2][0]
-		image2 = wx.Image( StringIO.StringIO(self.tsJpg[i2][1]), wx.BITMAP_TYPE_JPEG )
+		bitmap2 = CVUtil.jpegToBitmap(self.tsJpg[i2][1])
 				
 		size = (850,650)
 		computeSpeed = ComputeSpeed( self, size=size )
-		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( image1, t1, image2, t2, self.triggerInfo['ts_start'] )
+		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( bitmap1, t1, bitmap2, t2, self.triggerInfo['ts_start'] )
 		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
-		PrintPhoto( self, self.scaledImage.GetDisplayImage() )
+		PrintPhoto( self, self.scaledBitmap.GetDisplayBitmap() )
 		
 	def onCopyToClipboard( self, event ):
 		if wx.TheClipboard.Open():
 			bmData = wx.BitmapDataObject()
-			bmData.SetBitmap( self.scaledImage.GetDisplayImage().ConvertToBitmap() )
+			bmData.SetBitmap( self.scaledBitmap.GetDisplayBitmap() )
 			wx.TheClipboard.SetData( bmData )
 			wx.TheClipboard.Flush() 
 			wx.TheClipboard.Close()
@@ -248,7 +261,7 @@ class PhotoDialog( wx.Dialog ):
 		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
-				self.scaledImage.GetDisplayImage().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+				self.scaledBitmap.GetDisplayBitmap().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
 				wx.MessageBox( _('Photo Save Successful'), _('Success') )
 			except Exception as e:
 				wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )
@@ -263,7 +276,7 @@ class PhotoDialog( wx.Dialog ):
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'rawvideo',
 					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*self.scaledImage.GetImage().GetSize()), # size of one frame
+					'-s', '{}x{}'.format(*self.scaledBitmap.GetBitmap().GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
 					'-r', '{}'.format(self.fps), # input frames per second
 					'-i', '-', # Input comes from a pipe
@@ -274,7 +287,7 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					proc.stdin.write( self.addPhotoHeaderToImage(wx.Image(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpgToBitmap(jpg)).ConvertToImage().GetData() )
 				proc.stdin.close()
 				proc.terminate()
 				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
@@ -283,7 +296,7 @@ class PhotoDialog( wx.Dialog ):
 		fd.Destroy()
 
 	def onSaveGif( self, event ):
-		fd = wx.FileDialog( self, message='Save Animaged Gif', wildcard='*.gif', style=wx.FD_SAVE )
+		fd = wx.FileDialog( self, message='Save Anbitmapd Gif', wildcard='*.gif', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
 				command = [
@@ -291,7 +304,7 @@ class PhotoDialog( wx.Dialog ):
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'rawvideo',
 					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*self.scaledImage.GetImage().GetSize()), # size of one frame
+					'-s', '{}x{}'.format(*self.scaledBitmap.GetBitmap().GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
 					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The imput comes from a pipe
@@ -300,8 +313,8 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					proc.stdin.write(self.addPhotoHeaderToImage(wx.Image(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
-				images = None
+					proc.stdin.write(self.addPhotoHeaderToBitmap(wx.Bitmap(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+				bitmaps = None
 				proc.terminate()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )
 			except Exception as e:

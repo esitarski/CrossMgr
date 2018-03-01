@@ -205,5 +205,5 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, firstName=u'', 
 	dc.SetPen( wx.Pen(drawResources.borderColour, 1) )
 	dc.DrawLine( w-1, 0, w-1, y+lineHeight )
 	
-	return bitmap.ConvertToImage()
+	return bitmap
 

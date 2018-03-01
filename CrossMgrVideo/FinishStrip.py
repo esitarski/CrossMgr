@@ -7,7 +7,6 @@ import datetime
 import cStringIO as StringIO
 from bisect import bisect_left
 from MakeComposite import MakeComposite
-from AddPhotoHeader import AddPhotoHeader
 import Utils
 import CVUtil
 

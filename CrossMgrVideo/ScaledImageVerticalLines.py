@@ -131,6 +131,8 @@ class ScaledImageVerticalLines( wx.Panel ):
 			dc.DrawRectangle( x, height-self.controlHeight, self.controlHeight, self.controlHeight )
 	
 	def SetImage( self, image ):
+		if isinstance(image, wx.Bitmap):
+			image = image.ConvertToImage()
 		self.image = image
 		width, height = self.GetSize()
 		dx = width / (len(self.verticalLines) + 1)

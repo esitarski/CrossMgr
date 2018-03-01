@@ -2,22 +2,17 @@ import wx
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
-def GetScaleRatio( wImage, hImage, width, height ):
-	return min( float(width) / float(wImage), float(height) / float(hImage) )
-
-def RescaleImage( image, width, height, imageQuality=wx.IMAGE_QUALITY_NORMAL ):
-	wImage, hImage = image.GetWidth(), image.GetHeight()
-	ratio = GetScaleRatio( wImage, hImage, width, height )
-	return image.Scale( int(wImage*ratio), int(hImage*ratio), imageQuality )
+def GetScaleRatio( wBitmap, hBitmap, width, height ):
+	return min( float(width) / float(wBitmap), float(height) / float(hBitmap) )
 
 def intervalsOverlap( a0, a1, b0, b1 ):
 	return a0 <= b1 and b0 <= a1
 
-class ScaledImage( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, drawFinishLine=False, inset=False ):
-		super(ScaledImage, self).__init__( parent, id, size=size, style=style )
+class ScaledBitmap( wx.Panel ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, bitmap=None, drawFinishLine=False, inset=False ):
+		super(ScaledBitmap, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
-		self.image = image
+		self.bitmap = bitmap
 		self.drawFinishLine = drawFinishLine
 		self.buttonDown = False
 		self.backgroundBrush = wx.Brush( wx.Colour(232,232,232), wx.SOLID )
@@ -72,10 +67,10 @@ class ScaledImage( wx.Panel ):
 		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
 		
-		if not self.image:
+		if not self.bitmap:
 			return
 		
-		sourceBM = wx.Bitmap( self.image )
+		sourceBM = self.bitmap
 		sourceWidth, sourceHeight = sourceBM.GetSize()
 		ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height )
 		destWidth, destHeight = int(sourceWidth * ratio), int(sourceHeight * ratio)
@@ -100,8 +95,8 @@ class ScaledImage( wx.Panel ):
 			
 		xCenter = sourceRect.GetX() + sourceRect.GetWidth() // 2
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2
-		isWest = xCenter < self.image.GetWidth()//2
-		isNorth = yCenter < self.image.GetHeight()//2
+		isWest = xCenter < self.bitmap.GetWidth()//2
+		isNorth = yCenter < self.bitmap.GetHeight()//2
 		insetRect = self.getInsetRect( dc, width, height, isWest, isNorth )
 		
 		magRatio = GetScaleRatio( sourceRect.GetWidth(), sourceRect.GetHeight(), insetRect.GetWidth(), insetRect.GetHeight() )
@@ -141,14 +136,15 @@ class ScaledImage( wx.Panel ):
 		width, height = self.GetSize()
 		self.draw( wx.AutoBufferedPaintDC(self), width, height )
 		
-	def SetImage( self, image ):
-		self.image = image
+	def SetBitmap( self, bitmap ):
+		assert isinstance(bitmap, wx.Bitmap)
+		self.bitmap = bitmap
 		self.Refresh()
 		
-	def GetImage( self ):
-		return self.image
+	def GetBitmap( self ):
+		return self.bitmap
 		
-	def GetDisplayImage( self ):
+	def GetDisplayBitmap( self ):
 		width, height = self.GetSize()
 		bitmap = wx.Bitmap( width*2, height*2 )
 		self.xBegin *= 2
@@ -161,17 +157,16 @@ class ScaledImage( wx.Panel ):
 		self.yBegin //= 2
 		self.xEnd //= 2
 		self.yEnd //= 2
-		return bitmap.ConvertToImage()
+		return bitmap
 		
 	def SetToEmpty( self ):
 		width, height = self.GetSize()
-		bitmap = wx.Bitmap( width, height )
-		self.resetMagRect()
-		self.image = bitmap.ConvertToImage()
+		self.bitmap = wx.Bitmap( width, height )
+		self.Refresh()
 		
 	def SetTile( self, tile ):
 		width, height = self.GetSize()
-		bitmap = wx.Bitmap( width, height )
+		self.bitmap = wx.Bitmap( width, height )
 		dc = wx.MemoryDC()
 		dc.SelectObject( bitmap )
 		
@@ -180,13 +175,13 @@ class ScaledImage( wx.Panel ):
 		for y in xrange( 0, height, hTile ):
 			for x in xrange( 0, width, wTile ):
 				dc.DrawBitmap( tile, x, y )
-		self.SetImage( bitmap.ConvertToImage() )
+		self.Refresh()
 		
-	def SetTestImage( self ):
+	def SetTestBitmap( self ):
 		width, height = self.GetSize()
-		bitmap = wx.Bitmap( width, height )
+		self.bitmap = wx.Bitmap( width, height )
 		dc = wx.MemoryDC()
-		dc.SelectObject( bitmap )
+		dc.SelectObject( self.bitmap )
 		
 		colours = [(255,255,255), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (0,0,0) ]
 		rWidth = int(float(width) / len(colours) + 0.5)
@@ -204,21 +199,20 @@ class ScaledImage( wx.Panel ):
 			dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
 			dc.DrawEllipticArc(x, y, s, s, angle*i, angle*(i+1))
 		
-		dc.SelectObject( wx.NullBitmap )
-		self.SetImage( bitmap.ConvertToImage() )
+		self.Refresh()
 		
 if __name__ == '__main__':
 	app = wx.App(False)
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
-	imageWidth, imageHeight = 640*2, 480*2
-	if imageWidth*2 + 32 > displayWidth or imageHeight*2 + 32 > displayHeight:
-		imageWidth /= 2
-		imageHeight /= 2
+	bitmapWidth, bitmapHeight = 640*2, 480*2
+	if bitmapWidth*2 + 32 > displayWidth or bitmapHeight*2 + 32 > displayHeight:
+		bitmapWidth /= 2
+		bitmapHeight /= 2
 	
-	mainWin = wx.Frame(None,title="ScaledImage", size=(imageWidth,imageHeight))
-	scaledImage = ScaledImage( mainWin, size=(imageWidth, imageHeight), inset=True )
-	scaledImage.SetTestImage()
-	# scaledImage.SetToEmpty()
+	mainWin = wx.Frame(None,title="ScaledBitmap", size=(bitmapWidth,bitmapHeight))
+	scaledBitmap = ScaledBitmap( mainWin, size=(bitmapWidth, bitmapHeight), inset=True )
+	scaledBitmap.SetTestBitmap()
+	# scaledBitmap.SetToEmpty()
 	mainWin.Show()
 	app.MainLoop()
