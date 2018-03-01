@@ -853,7 +853,7 @@ class MainWin( wx.Frame ):
 		if self.focusDialog.IsShown():
 			return
 		self.focusDialog.Move((4,4))
-		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
+		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':3} )
 		self.focusDialog.Show()
 	
 	def onRightClick( self, event ):
