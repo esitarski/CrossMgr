@@ -101,18 +101,18 @@ class PhotoDialog( wx.Dialog ):
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
-		btn.SetToolTip( wx.ToolTip('Print Bitmap') )
+		btn.SetToolTip( wx.ToolTip('Print Photo') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32)
 		
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
-		btn.SetToolTip( wx.ToolTip('Copy Bitmap to Clipboard') )
+		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('png.png'))
-		btn.SetToolTip( wx.ToolTip('Save Bitmap as PNG file') )
+		btn.SetToolTip( wx.ToolTip('Save Photo as PNG file') )
 		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
 		btnsizer.Add(btn, flag=wx.LEFT, border=32)
 
@@ -238,8 +238,7 @@ class PhotoDialog( wx.Dialog ):
 		t2 = self.tsJpg[i2][0]
 		bitmap2 = CVUtil.jpegToBitmap(self.tsJpg[i2][1])
 				
-		size = (850,650)
-		computeSpeed = ComputeSpeed( self, size=size )
+		computeSpeed = ComputeSpeed( self, size=self.GetSize() )
 		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( bitmap1, t1, bitmap2, t2, self.triggerInfo['ts_start'] )
 		self.onPhotoHeader()
 	
@@ -296,7 +295,7 @@ class PhotoDialog( wx.Dialog ):
 		fd.Destroy()
 
 	def onSaveGif( self, event ):
-		fd = wx.FileDialog( self, message='Save Anbitmapd Gif', wildcard='*.gif', style=wx.FD_SAVE )
+		fd = wx.FileDialog( self, message='Save Animated Gif', wildcard='*.gif', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
 				command = [

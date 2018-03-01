@@ -1,4 +1,5 @@
 import wx
+from ScaledBitmap import GetScaleRatio
 
 EVT_VERTICAL_LINES_Type = wx.NewEventType()
 EVT_VERTICAL_LINES = wx.PyEventBinder(EVT_VERTICAL_LINES_Type, 1)
@@ -22,11 +23,11 @@ contrastColours = [
 	wx.Colour(  0,   0,   0), wx.Colour(255, 255, 255),
 ]
 
-class ScaledImageVerticalLines( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, image=None, numLines=2, colors=None ):
-		super(ScaledImageVerticalLines, self).__init__( parent, id, size=size, style=style )
+class ScaledBitmapVerticalLines( wx.Panel ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, bitmap=None, numLines=2, colors=None ):
+		super(ScaledBitmapVerticalLines, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
-		self.image = image
+		self.bitmap = bitmap
 		self.verticalLines = [None for i in xrange(numLines)]
 		self.iLineSelected = None
 		self.ratio = None
@@ -35,24 +36,12 @@ class ScaledImageVerticalLines( wx.Panel ):
 		self.xCorrection = None
 		self.yCur = None
 		self.colors = colors or contrastColours
+		self.backgroundBrush = wx.Brush( wx.Colour(232,232,232), wx.SOLID )
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_LEFT_DOWN, self.OnMouseDown )
 		self.Bind( wx.EVT_LEFT_UP, self.OnMouseUp )
 		self.Bind( wx.EVT_MOTION, self.OnMouseMotion )
-	
-	def rescaleImage( self, width, height ):
-		imageQuality = wx.IMAGE_QUALITY_NORMAL
-		
-		wImage = self.image.GetWidth()
-		hImage = self.image.GetHeight()
-		self.ratio = min( float(width) / float(wImage), float(height) / float(hImage) )
-		if 0.95 < self.ratio < 1.05:
-			self.ratio = 1.0
-		return (
-			self.image.Copy().Rescale( int(wImage*self.ratio), int(hImage*self.ratio), imageQuality ) if not self.ratio == 1.0
-			else self.image
-		)
 	
 	def OnMouseDown( self, event ):
 		if not self.controlHeight:
@@ -93,8 +82,11 @@ class ScaledImageVerticalLines( wx.Panel ):
 	
 	def OnPaint( self, event=None ):
 		dc = wx.AutoBufferedPaintDC( self )
-		dc.SetBackground( wx.WHITE_BRUSH )
+		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
+		
+		if not self.bitmap:
+			return
 		
 		if self.doResize:
 			if not self.ratio:
@@ -103,19 +95,20 @@ class ScaledImageVerticalLines( wx.Panel ):
 				self.verticalLines = [None if v is None else (v / self.ratio) for v in self.verticalLines]
 		
 		width, height = self.GetSize()
+		bmWidth, bmHeight = self.bitmap.GetSize()
 		self.controlHeight = 32
 		bitmapHeight = height - self.controlHeight
-		try:
-			bitmap = wx.Bitmap( self.rescaleImage(width, bitmapHeight) )
-		except Exception as e:
-			print e
-			return
+		self.ratio = GetScaleRatio( bmWidth, bmHeight, width, bitmapHeight )
 		
 		if self.doResize:
 			self.verticalLines = [None if v is None else int(v * self.ratio) for v in self.verticalLines]
 			self.doResize = False
 		
-		dc.DrawBitmap( bitmap, 0, 0 )
+		dcSource = wx.MemoryDC( self.bitmap )
+		dc.StretchBlit(
+			0, 0, int(bmWidth*self.ratio), int(bmHeight*self.ratio),
+			dcSource, 0, 0, bmWidth, bmHeight
+		)
 		
 		lenColors = len(self.colors)
 		if self.iLineSelected is not None and self.yCur is not None:
@@ -123,6 +116,8 @@ class ScaledImageVerticalLines( wx.Panel ):
 			dc.DrawLine( 0, self.yCur, width, self.yCur )
 		
 		for i, v in enumerate(self.verticalLines):
+			if v is None:
+				continue
 			dc.SetPen( wx.Pen(self.colors[i%lenColors], 1) )
 			dc.DrawLine( v, 0, v, height )
 			x = v - self.controlHeight // 2
@@ -130,10 +125,8 @@ class ScaledImageVerticalLines( wx.Panel ):
 			dc.SetBrush( wx.Brush(self.colors[i%lenColors]) )
 			dc.DrawRectangle( x, height-self.controlHeight, self.controlHeight, self.controlHeight )
 	
-	def SetImage( self, image ):
-		if isinstance(image, wx.Bitmap):
-			image = image.ConvertToImage()
-		self.image = image
+	def SetBitmap( self, bitmap ):
+		self.bitmap = bitmap
 		width, height = self.GetSize()
 		dx = width / (len(self.verticalLines) + 1)
 		self.verticalLines = [int(dx*(i+1)) for i in xrange(len(self.verticalLines))]
@@ -141,25 +134,27 @@ class ScaledImageVerticalLines( wx.Panel ):
 		self.Refresh()
 		
 	def GetVerticalLines( self ):
-		# Returned in image pixels.
+		# Returned in bitmap pixels.
 		return [None if (v is None or not self.ratio) else (v / self.ratio) for v in self.verticalLines]
 		
 	def SetLinePosition( self, i, v ):
 		self.verticalLines[i] = v * self.ratio
 		
-	def GetImage( self ):
-		return self.image
+	def GetBitmap( self ):
+		return self.bitmap
 		
 	def SetToEmpty( self ):
 		width, height = self.GetSize()
-		bitmap = wx.Bitmap( width, height )
-		self.image = bitmap.ConvertToImage()
+		self.bitmap = wx.Bitmap( width, height )
+		dc = wx.MemoryDC( self.bitmap )
+		dc.SetBackground( self.backgroundBrush )
+		dc.Clear()
+		self.Refresh()
 		
-	def SetTestImage( self ):
+	def SetTestBitmap( self ):
 		width, height = self.GetSize()
-		bitmap = wx.Bitmap( width, height )
-		dc = wx.MemoryDC()
-		dc.SelectObject( bitmap )
+		self.bitmap = wx.Bitmap( width, height )
+		dc = wx.MemoryDC( self.bitmap )
 		
 		colours = [(255,255,255), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (0,0,0) ]
 		rWidth = int(float(width) / len(colours) + 0.5)
@@ -177,20 +172,19 @@ class ScaledImageVerticalLines( wx.Panel ):
 			dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
 			dc.DrawEllipticArc(x, y, s, s, angle*i, angle*(i+1))
 		
-		dc.SelectObject( wx.NullBitmap )
-		self.SetImage( bitmap.ConvertToImage() )
+		self.Refresh()
 		
 if __name__ == '__main__':
 	app = wx.App(False)
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
-	imageWidth, imageHeight = 640, 480
-	if imageWidth*2 + 32 > displayWidth or imageHeight*2 + 32 > displayHeight:
-		imageWidth /= 2
-		imageHeight /= 2
+	bitmapWidth, bitmapHeight = 640, 480
+	if bitmapWidth*2 + 32 > displayWidth or bitmapHeight*2 + 32 > displayHeight:
+		bitmapWidth /= 2
+		bitmapHeight /= 2
 	
-	mainWin = wx.Frame(None,title="ScaledImageVerticalLines", size=(imageWidth,imageHeight))
-	scaledImageVL = ScaledImageVerticalLines( mainWin, size=(imageWidth, imageHeight) )
-	scaledImageVL.SetTestImage()
+	mainWin = wx.Frame(None,title="ScaledBitmapVerticalLines", size=(bitmapWidth,bitmapHeight))
+	scaledBitmapVL = ScaledBitmapVerticalLines( mainWin, size=(bitmapWidth, bitmapHeight) )
+	scaledBitmapVL.SetTestBitmap()
 	mainWin.Show()
 	app.MainLoop()

@@ -273,13 +273,15 @@ class FocusDialog( wx.Dialog ):
 				
 		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
-		btnSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
 		
-		self.title = wx.StaticText(self, label='CrossMgr Video\nFocus Window\nDrag on Screen to Zoom', style=wx.ALIGN_RIGHT )
+		self.title = wx.StaticText(self, label='CrossMgr Video\nFocus Window', style=wx.ALIGN_RIGHT )
 		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		btnSizer.Add( self.title, flag=wx.ALL, border=10 )
-		
+		self.explain = wx.StaticText(self, label='Click and Drag to Zoom')		
 		self.snapshot, self.autoCapture, self.capture = CreateCaptureButtons( self )
+		
+		btnSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
+		btnSizer.Add( self.title, flag=wx.ALL, border=10 )
+		btnSizer.Add( self.explain, flag=wx.ALL, border=4 )
 		btnSizer.AddStretchSpacer()
 		btnSizer.Add( self.snapshot, flag=wx.ALL, border=4 )
 		btnSizer.Add( self.autoCapture, flag=wx.ALL, border=4 )

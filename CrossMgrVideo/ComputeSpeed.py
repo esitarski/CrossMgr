@@ -2,7 +2,7 @@ import wx
 import wx.adv as adv
 import StringIO
 import datetime
-from ScaledImageVerticalLines import ScaledImageVerticalLines, EVT_VERTICAL_LINES
+from ScaledBitmapVerticalLines import ScaledBitmapVerticalLines, EVT_VERTICAL_LINES
 from Utils import formatTime
 
 _ = lambda x: x
@@ -16,8 +16,8 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		self.sivl = ScaledImageVerticalLines( self, numLines=2, colors=(wx.Colour(255, 0, 0), wx.Colour(0, 255, 0)) )
-		vbs.Add( self.sivl, 1, wx.EXPAND|wx.ALL, border=border)
+		self.sbvl = ScaledBitmapVerticalLines( self, numLines=2, colors=(wx.Colour(255, 0, 0), wx.Colour(0, 255, 0)) )
+		vbs.Add( self.sbvl, 1, wx.EXPAND|wx.ALL, border=border)
 		vbs.Add( wx.StaticText(self, label = _('1.  Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
 					flag=wx.TOP|wx.LEFT|wx.RIGHT, border = border )
 		vbs.Add( wx.StaticText(self, label = _('2.  Drag the Red Square so the line is on the Trailing edge of the Front Wheel.')),
@@ -35,14 +35,14 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		)
 		self.GetSizer().Layout()
 		
-	def Set( self, t, image, wheelDiameter ):
+	def Set( self, t, bitmap, wheelDiameter ):
 		self.t = t
 		self.wheelDiameter = wheelDiameter
-		self.sivl.SetImage( image )
+		self.sbvl.SetBitmap( bitmap )
 		self.setExplain()
 	
 	def getWheelEdges( self ):
-		return self.sivl.GetVerticalLines()
+		return self.sbvl.GetVerticalLines()
 	
 class FrontWheelEdgePage(adv.WizardPageSimple):
 	def __init__(self, parent, getSpeed):
@@ -52,9 +52,9 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		self.sivl = ScaledImageVerticalLines( self, numLines=1, colors=(wx.Colour(0, 255, 0),) )
-		self.sivl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
-		vbs.Add( self.sivl, 1, wx.EXPAND|wx.ALL, border=border)
+		self.sbvl = ScaledBitmapVerticalLines( self, numLines=1, colors=(wx.Colour(0, 255, 0),) )
+		self.sbvl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
+		vbs.Add( self.sbvl, 1, wx.EXPAND|wx.ALL, border=border)
 		vbs.Add( wx.StaticText(self, label = _('Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
 					flag=wx.ALL, border = border )
 		self.speed = wx.StaticText( self )
@@ -71,14 +71,14 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		self.speed.SetLabel( s )
 		self.GetSizer().Layout()
 		
-	def Set( self, t, image, wheelDiameter ):
+	def Set( self, t, bitmap, wheelDiameter ):
 		self.t = t
 		self.wheelDiameter = wheelDiameter
-		self.sivl.SetImage( image )
+		self.sbvl.SetBitmap( bitmap )
 		self.onVerticalLines()
 	
 	def getFrontWheelEdge( self ):
-		return self.sivl.GetVerticalLines()[0]
+		return self.sbvl.GetVerticalLines()[0]
 	
 class TimePage(adv.WizardPageSimple):
 	def __init__(self, parent):
@@ -86,9 +86,9 @@ class TimePage(adv.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		self.sivl = ScaledImageVerticalLines( self, numLines=1, colors=(wx.Colour(255,0,255),) )
-		self.sivl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
-		vbs.Add( self.sivl, 1, wx.EXPAND|wx.ALL, border=border)
+		self.sbvl = ScaledBitmapVerticalLines( self, numLines=1, colors=(wx.Colour(255,0,255),) )
+		self.sbvl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
+		vbs.Add( self.sbvl, 1, wx.EXPAND|wx.ALL, border=border)
 		vbs.Add( wx.StaticText(self,
 			label = _("Drag the Purple Square to show the Time in the photo.")),
 			flag=wx.ALL, border = border
@@ -101,7 +101,7 @@ class TimePage(adv.WizardPageSimple):
 		
 	def onVerticalLines( self, event=None ):
 		try:
-			t = self.tImage + datetime.timedelta(
+			t = self.tBitmap + datetime.timedelta(
 				seconds=self.direction * (self.getPosition() - self.frontWheelEdge) / self.pixelsPerSecond
 			)
 		except Exception as e:
@@ -110,9 +110,9 @@ class TimePage(adv.WizardPageSimple):
 		self.speed.SetLabel( formatTime(secs, True) )
 		self.GetSizer().Layout()
 		
-	def Set( self, image, tImage, tStart, frontWheelEdge, pixelsPerSecond, leftToRight ):
-		self.sivl.SetImage( image )
-		self.tImage = tImage
+	def Set( self, bitmap, tBitmap, tStart, frontWheelEdge, pixelsPerSecond, leftToRight ):
+		self.sbvl.SetBitmap( bitmap )
+		self.tBitmap = tBitmap
 		self.tStart = tStart
 		self.frontWheelEdge = frontWheelEdge
 		self.pixelsPerSecond = pixelsPerSecond
@@ -120,7 +120,7 @@ class TimePage(adv.WizardPageSimple):
 		self.onVerticalLines()
 	
 	def getPosition( self ):
-		return self.sivl.GetVerticalLines()[0]
+		return self.sbvl.GetVerticalLines()[0]
 	
 class ComputeSpeed( object ):
 	wheelDiameter = 0.678
@@ -131,8 +131,8 @@ class ComputeSpeed( object ):
 		
 		self.t1 = None
 		self.t2 = None
-		self.image1 = None
-		self.image2 = None
+		self.bitmap1 = None
+		self.bitmap2 = None
 		
 		self.wheelEdgesPage = WheelEdgesPage( self.wizard )
 		self.frontWheelEdgePage = FrontWheelEdgePage( self.wizard, self.getSpeed )
@@ -160,12 +160,12 @@ class ComputeSpeed( object ):
 		pixelsPerSecond = dPixels / dSeconds
 		return metersPerSecond, metersPerSecond*3.6, metersPerSecond*2.23694, pixelsPerSecond
 		
-	def Show( self, image1, t1, image2, t2, ts_start ):
+	def Show( self, bitmap1, t1, bitmap2, t2, ts_start ):
 		self.t1, self.t2, self.ts_start = t1, t2, ts_start
-		self.image1, self.image2 = image1, image2
-		self.wheelEdgesPage.Set( t1, image1, self.wheelDiameter )
-		self.frontWheelEdgePage.Set( t2, image2, self.wheelDiameter )
-		self.timePage.Set( self.image2, self.t2, self.ts_start, 0.0001, 1, True )
+		self.bitmap1, self.bitmap2 = bitmap1, bitmap2
+		self.wheelEdgesPage.Set( t1, bitmap1, self.wheelDiameter )
+		self.frontWheelEdgePage.Set( t2, bitmap2, self.wheelDiameter )
+		self.timePage.Set( self.bitmap2, self.t2, self.ts_start, 0.0001, 1, True )
 	
 		if self.wizard.RunWizard(self.wheelEdgesPage):
 			return self.getSpeed()
@@ -177,17 +177,17 @@ class ComputeSpeed( object ):
 		if isForward:
 			page = evt.GetPage()
 			if page == self.wheelEdgesPage:
-				self.frontWheelEdgePage.sivl.verticalLines = [self.wheelEdgesPage.sivl.verticalLines[1]]
+				self.frontWheelEdgePage.sbvl.verticalLines = [self.wheelEdgesPage.sbvl.verticalLines[1]]
 			elif page == self.frontWheelEdgePage:
-				v = self.wheelEdgesPage.sivl.verticalLines
+				v = self.wheelEdgesPage.sbvl.verticalLines
 				self.timePage.Set(
-					self.image2, self.t2, self.ts_start,
+					self.bitmap2, self.t2, self.ts_start,
 					self.frontWheelEdgePage.getFrontWheelEdge(),
 					self.getSpeed()[3],		# pixels per second
 					v[0] < v[1],
 				)
-				self.timePage.sivl.ratio = self.frontWheelEdgePage.sivl.ratio
-				self.timePage.sivl.verticalLines = [self.frontWheelEdgePage.sivl.verticalLines[0]]
+				self.timePage.sbvl.ratio = self.frontWheelEdgePage.sbvl.ratio
+				self.timePage.sbvl.verticalLines = [self.frontWheelEdgePage.sbvl.verticalLines[0]]
 				self.timePage.onVerticalLines()
 			
 	def onPageChanged( self, evt ):
@@ -198,15 +198,15 @@ if __name__ == '__main__':
 
 	tsJpgs = Database().getLastPhotos( 12 )
 	t1, t2 = tsJpgs[0][0], tsJpgs[-1][0]
-	image1 = wx.Image( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
-	image2 = wx.Image( StringIO.StringIO(tsJpgs[-1][1]), wx.BITMAP_TYPE_JPEG )
+	bitmap1 = wx.Bitmap( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
+	bitmap2 = wx.Bitmap( StringIO.StringIO(tsJpgs[-1][1]), wx.BITMAP_TYPE_JPEG )
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="ComputeSpeed", size=(600,300))
-	size=image1.GetSize()
+	size=bitmap1.GetSize()
 	size = (800,600)
 	computeSpeed = ComputeSpeed(mainWin, size=size)
 	mainWin.Show()
-	mps, kmh, mph, pps = computeSpeed.Show( image1, t1, image2, t2, t2 )
+	mps, kmh, mph, pps = computeSpeed.Show( bitmap1, t1, bitmap2, t2, t2 )
 	print 'm/s={}, km/h={}, mph={} pps={}'.format(mps, kmh, mph, pps)
 	app.MainLoop()
