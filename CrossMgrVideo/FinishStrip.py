@@ -39,8 +39,6 @@ class FinishStrip( wx.Panel ):
 		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
 		self.scrollCallback = scrollCallback or (lambda position: None)
 		
-		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
-		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
@@ -74,9 +72,6 @@ class FinishStrip( wx.Panel ):
 	def formatTime( self, t ):
 		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f')[:-3]
 		
-	def SetImageQuality( self, iq ):
-		self.imageQuality = iq
-	
 	def SetLeftToRight( self, leftToRight=True ):
 		self.leftToRight = leftToRight
 		self.refreshCompositeBitmap()
@@ -125,7 +120,7 @@ class FinishStrip( wx.Panel ):
 		self.jpgWidth, self.jpgHeight = image.GetSize()
 		self.scale = min( 1.0, float(self.GetSize()[1]) / float(self.jpgHeight) )
 		if self.scale != 1.0:
-			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), self.imageQuality )
+			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_NORMAL )
 
 		self.refreshCompositeBitmap()
 	
@@ -394,22 +389,13 @@ class FinishStripPanel( wx.Panel ):
 		self.stretchSlider.Bind( wx.EVT_SCROLL, self.onChangeSpeed )
 		
 		self.direction = wx.RadioBox( self,
-			label=_('Finish Direction'),
-			choices=[_('Right to Left'), _('Left to Right')],
+			label=_(''),
+			choices=[_('Finish Right to Left'), _('Finish Left to Right')],
 			majorDimension=1,
 			style=wx.RA_SPECIFY_ROWS
 		)
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
-
-		self.imageQualitySelect = wx.RadioBox( self,
-			label=_('Zoom Image Quality'),
-			choices=[_('Normal (faster)'), _('High (slower)')],
-			majorDimension=1,
-			style=wx.RA_SPECIFY_ROWS
-		)
-		self.imageQualitySelect.SetSelection( 1 if self.imageQuality == wx.IMAGE_QUALITY_HIGH else 0 )
-		self.imageQualitySelect.Bind( wx.EVT_RADIOBOX, self.onImageQuality )
 
 		self.copyToClipboard = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		self.copyToClipboard.SetToolTip( wx.ToolTip('Copy Finish Strip to Clipboard') )
@@ -422,8 +408,7 @@ class FinishStripPanel( wx.Panel ):
 		fgs.AddGrowableCol( 1, 1 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.direction )
-		hs.Add( self.imageQualitySelect, flag=wx.LEFT, border=16 )
+		hs.Add( self.direction, flag=wx.ALIGN_CENTRE_VERTICAL )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
 		hs.Add( wx.StaticText(self, label=u'\n'.join([
 					'To Pan: Click and Drag',
@@ -439,6 +424,9 @@ class FinishStripPanel( wx.Panel ):
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
+		self.frameCount = wx.StaticText( self, label='   frames' )
+		hs.Add( self.frameCount, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=16 )
+		
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
 		vs.Add( self.timeScrollbar, flag=wx.EXPAND )
 		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=0 )
@@ -487,10 +475,6 @@ class FinishStripPanel( wx.Panel ):
 		self.SetLeftToRight( event.GetInt() == 1 ) 
 		event.Skip()
 		
-	def onImageQuality( self, event ):
-		self.SetImageQuality( wx.IMAGE_QUALITY_HIGH if event.GetInt() == 1 else wx.IMAGE_QUALITY_NORMAL ) 
-		event.Skip()
-		
 	def onChangeSpeed( self, event=None ):
 		self.SetPixelsPerSec( self.stretchSlider.GetValue(), False )
 		self.scrollCallback()
@@ -533,11 +517,6 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetLeftToRight( self.leftToRight )
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		
-	def SetImageQuality( self, iq ):
-		self.imageQuality = iq
-		self.finish.SetImageQuality( self.imageQuality )
-		self.imageQualitySelect.SetSelection( 1 if self.imageQuality == wx.IMAGE_QUALITY_HIGH else 0 )
-		
 	def GetLeftToRight( self ):
 		return self.leftToRight
 		
@@ -557,6 +536,7 @@ class FinishStripPanel( wx.Panel ):
 		
 		self.stretchSlider.SetRange( *self.getSpeedPixelsPerSecondMinMax() )
 		self.scrollCallback()
+		self.frameCount.SetLabel( '{} frames'.format(len(tsJpgs)) )
 		
 	def GetTsJpgs( self ):
 		return self.finish.tsJpgs
