@@ -62,8 +62,9 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			tsSeen.clear()
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			tsQuery = tsMax = now()
+			keepCapturing = 1
 			
-			while 1:
+			while keepCapturing:
 				# Capture frame-by-frame
 				try:
 					ret, frame = cap.read()
@@ -112,6 +113,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 								sendUpdates.pop(m['name'], None)
 						elif cmd == 'cam_info':
 							camInfo = m['info'] or {}
+							keepCapturing = 0
 							break
 						elif cmd == 'terminate':
 							pWriter.send( {'cmd':'terminate'} )
