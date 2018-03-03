@@ -269,24 +269,24 @@ class PhotoDialog( wx.Dialog ):
 	def onSaveMPeg( self, event ):
 		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
+			work = wx.BusyCursor()
 			try:
 				command = [
 					Utils.getFFMegExe(),
+					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
-					'-f', 'rawvideo',
-					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*self.scaledBitmap.GetBitmap().GetSize()), # size of one frame
-					'-pix_fmt', 'rgb24',
-					'-r', '{}'.format(self.fps), # input frames per second
-					'-i', '-', # Input comes from a pipe
-					'-an', # Do not to expect any audio
+					'-f', 'image2pipe',
+					'-r', '{}'.format(self.fps), # frames per second
+					'-i', '-', # The input comes from a pipe
+					'-an', # Tells FFMPEG not to expect any audio
 					'-filter:v', 'setpts=5.0*PTS',	# Slow down the output.
 					'-vcodec', 'mpeg2video',
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
-				for ts, jpg in self.tsJpg:
-					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpegToBitmap(jpg)).ConvertToImage().GetData() )
+				for i, (ts, jpg) in enumerate(self.tsJpg):
+					print 'photo', i
+					proc.stdin.write( jpg )
 				proc.stdin.close()
 				proc.terminate()
 				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
@@ -297,22 +297,21 @@ class PhotoDialog( wx.Dialog ):
 	def onSaveGif( self, event ):
 		fd = wx.FileDialog( self, message='Save Animated Gif', wildcard='*.gif', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
+			work = wx.BusyCursor()
 			try:
 				command = [
 					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
-					'-f', 'rawvideo',
-					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*self.scaledBitmap.GetSize()), # size of one frame
-					'-pix_fmt', 'rgb24',
+					'-f', 'image2pipe',
 					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The input comes from a pipe
 					'-an', # Tells FFMPEG not to expect any audio
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
-				for ts, jpg in self.tsJpg:
-					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpegToBitmap(jpg)).ConvertToImage().GetData() )
+				for i, (ts, jpg) in enumerate(self.tsJpg):
+					print 'photo', i
+					proc.stdin.write( jpg )
 				proc.stdin.close()
 				proc.terminate()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )
