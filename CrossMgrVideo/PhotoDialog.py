@@ -306,14 +306,14 @@ class PhotoDialog( wx.Dialog ):
 					'-s', '{}x{}'.format(*self.scaledBitmap.GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
 					'-r', '{}'.format(self.fps), # frames per second
-					'-i', '-', # The imput comes from a pipe
+					'-i', '-', # The input comes from a pipe
 					'-an', # Tells FFMPEG not to expect any audio
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
 					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpegToBitmap(jpg)).ConvertToImage().GetData() )
-				bitmaps = None
+				proc.stdin.close()
 				proc.terminate()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )
 			except Exception as e:
