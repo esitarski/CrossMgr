@@ -57,7 +57,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 		try:
 			pWriter.send( msg )
 		except MemoryError as e:
-			print 'WriterSend: ', e
+			print 'pWriterSend: ', e
 	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:
