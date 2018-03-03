@@ -536,7 +536,7 @@ class FinishStripPanel( wx.Panel ):
 		
 		self.stretchSlider.SetRange( *self.getSpeedPixelsPerSecondMinMax() )
 		self.scrollCallback()
-		self.frameCount.SetLabel( '{} frames'.format(len(tsJpgs)) )
+		self.frameCount.SetLabel( '{} frames'.format(len(tsJpgs)) if tsJpgs else u'' )
 		
 	def GetTsJpgs( self ):
 		return self.finish.tsJpgs

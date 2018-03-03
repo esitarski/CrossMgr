@@ -53,6 +53,12 @@ def CamServer( qIn, pWriter, camInfo=None ):
 	camInfo = camInfo or {}
 	backlog = []
 	
+	def pWriterSend( msg ):
+		try:
+			pWriter.send( msg )
+		except MemoryError as e:
+			print 'WriterSend: ', e
+	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:
 			time.sleep( 0.25 )
@@ -116,7 +122,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 							keepCapturing = 0
 							break
 						elif cmd == 'terminate':
-							pWriter.send( {'cmd':'terminate'} )
+							pWriterSend( {'cmd':'terminate'} )
 							return
 						else:
 							assert False, 'Unknown Command'
@@ -131,16 +137,16 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Don't send too many frames at a time.  We don't want to overwhelm the pipe and lose frames.
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
-					pWriter.send( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )
+					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )
 						
 				# Send update messages.  If there was a backlog, don't send the frame as we can use the last frame sent.
 				updateFrame = None if backlog and backlog[-1][0] == ts else frame
 				for name, f in sendUpdates.iteritems():
-					if frameCount % f == 0:
-						pWriter.send( {'cmd':'update', 'name':name, 'frame':updateFrame} )
+					if frameCount % (f if backlog else 8) == 0:
+						pWriterSend( {'cmd':'update', 'name':name, 'frame':updateFrame} )
 						updateFrame = None
 				if doSnapshot:
-					pWriter.send( {'cmd':'snapshot', 'ts':ts, 'frame':updateFrame} )
+					pWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':updateFrame} )
 					doSnapshot = False
 						
 				del backlog[-transmitFramesMax:]
