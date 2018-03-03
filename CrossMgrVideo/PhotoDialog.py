@@ -303,7 +303,7 @@ class PhotoDialog( wx.Dialog ):
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'rawvideo',
 					'-vcodec','rawvideo',
-					'-s', '{}x{}'.format(*self.scaledBitmap.GetBitmap().GetSize()), # size of one frame
+					'-s', '{}x{}'.format(*self.scaledBitmap.GetSize()), # size of one frame
 					'-pix_fmt', 'rgb24',
 					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The imput comes from a pipe
@@ -312,7 +312,7 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for ts, jpg in self.tsJpg:
-					proc.stdin.write(self.addPhotoHeaderToBitmap(wx.Bitmap(StringIO.StringIO(jpg), wx.BITMAP_TYPE_JPEG)).GetData() )
+					proc.stdin.write( self.addPhotoHeaderToBitmap(CVUtil.jpegToBitmap(jpg)).ConvertToImage().GetData() )
 				bitmaps = None
 				proc.terminate()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )
