@@ -285,7 +285,6 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
-					print 'photo', i
 					proc.stdin.write( jpg )
 				proc.stdin.close()
 				proc.terminate()
@@ -310,11 +309,8 @@ class PhotoDialog( wx.Dialog ):
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
-					print 'photo', i
 					proc.stdin.write( jpg )
-				print 'Closing stdin'
 				proc.stdin.close()
-				print 'Teminating proc'
 				proc.terminate()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )
 			except Exception as e:

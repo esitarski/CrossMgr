@@ -148,6 +148,7 @@ class DateSelectDialog( wx.Dialog ):
 
 cameraResolutionChoices = (
 	'640x480',
+	'800x600',
 	'1280x720',
 	'1280x1024',
 	'1920x1080',
