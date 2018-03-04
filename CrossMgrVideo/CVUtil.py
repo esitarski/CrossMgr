@@ -88,7 +88,7 @@ def adjustContrastImage( image ):
 	return frameToImage( adjustContrastFrame(imageToFrame(image)) )
 
 def adjustContrastBitmap( bitmap ):
-	return bitmapToImage( adjustContrastFrame(bitmapToFrame(bitmap)) )
+	return frameToBitmap( adjustContrastFrame(bitmapToFrame(bitmap)) )
 
 if __name__ == '__main__':
 	print rescaleToRect( 200, 100, 100, 50 )
