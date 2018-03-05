@@ -77,9 +77,7 @@ def imageToFrame( image ):
 	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
 
 def bitmapToFrame( bitmap ):
-	s = StringIO()
-	bitmap.SaveFile( s, wx.BITMAP_TYPE_BMP )
-	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
+	return imageToFrame( bitmap.ConvertToImage() )
 	
 def adjustGammaImage( image, gamma=1.0 ):
 	return frameToImage( adjustGammaFrame(imageToFrame(image), gamma) )

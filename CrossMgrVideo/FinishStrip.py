@@ -184,10 +184,11 @@ class FinishStrip( wx.Panel ):
 		dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, useMask=True, logicalFunc=wx.XOR )
 		dc.DrawLine( x, 0, x, winHeight )
 
+	def getIJpg( self, x ):
+		return bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1) if self.times else None
+
 	def getJpg( self, x ):
-		if not self.times:
-			return None
-		return self.tsJpgs[bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1)][1]
+		return self.tsJpgs[getIJpg(x)][1] if self.times else None
 	
 	def drawZoomPhoto( self, x, y ):
 		if not self.times or not self.jpgWidth:

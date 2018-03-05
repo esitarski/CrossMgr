@@ -89,12 +89,27 @@ class PhotoDialog( wx.Dialog ):
 		self.scaledBitmap = ScaledBitmap( self, inset=True )
 		vs.Add( self.scaledBitmap, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
+		self.scaledBitmap.Bind( wx.EVT_MOUSEWHEEL, self.onMouseWheel )
+		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
+		
+		self.timestamp = wx.StaticText(self, label='00:00:00.000')
+		self.timestamp.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		
+		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C0' )
+		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
+		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B6' )
+		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
+				
+		btnsizer.Add( self.frameLeft, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		btnsizer.Add( self.frameRight, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
+		btnsizer.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
         
 		self.photoHeader = wx.CheckBox(self, label='Header')
 		self.photoHeader.SetValue( photoHeaderState )
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
-		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
 		self.contrast = wx.ToggleButton( self, label='Contrast')
 		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
@@ -104,22 +119,22 @@ class PhotoDialog( wx.Dialog ):
 		btn.SetToolTip( wx.ToolTip('Print Photo') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
-		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32)
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
 		
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
-		btnsizer.Add(btn, flag=wx.LEFT, border=32)
+		btnsizer.Add(btn, flag=wx.LEFT, border=16)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('png.png'))
 		btn.SetToolTip( wx.ToolTip('Save Photo as PNG file') )
 		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
-		btnsizer.Add(btn, flag=wx.LEFT, border=32)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('mpg.png'))
 		btn.SetToolTip( wx.ToolTip('Save Sequence as Mpeg') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveMPeg )
-		btnsizer.Add(btn, flag=wx.LEFT, border=32)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('gif.png'))
 		btn.SetToolTip( wx.ToolTip('Save Sequence as Animated Gif') )
@@ -147,8 +162,16 @@ class PhotoDialog( wx.Dialog ):
 		self.SetSizer(vs)
 		vs.Fit(self)
 
-	def set( self, jpg, triggerInfo, tsJpg, fps=25 ):
-		self.jpg = jpg
+	@property
+	def jpg( self ):
+		return None if self.iJpg is None else self.tsJpg[self.iJpg][1]
+
+	@property
+	def ts( self ):
+		return None if self.iJpg is None else self.tsJpg[self.iJpg][0]
+
+	def set( self, iJpg, triggerInfo, tsJpg, fps=25 ):
+		self.iJpg = iJpg
 		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
 		self.fps = fps
@@ -173,9 +196,23 @@ class PhotoDialog( wx.Dialog ):
 			wSize = sz
 		if self.GetSize() != wSize:
 			self.SetSize( wSize )
+		self.timestamp.SetLabel( self.ts.strftime('%H:%M:%S.%f')[:-3] )
+	
+	def changeFrame( self, frameDir ):
+		if self.iJpg is None:
+			return
+		if frameDir < 0:
+			self.iJpg = max(0, self.iJpg-1 )
+		else:
+			self.iJpg = min(len(self.tsJpg)-1, self.iJpg+1 )
+		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps )
+		self.Refresh()
+	
+	def onMouseWheel( self, event ):
+		self.changeFrame( event.GetWheelRotation() )
 	
 	def clear( self ):
-		self.jpg = None
+		self.iJpg = None
 		self.triggerInfo = None
 		self.tsJpg = None
 		self.fps = None

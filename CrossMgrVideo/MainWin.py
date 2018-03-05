@@ -866,7 +866,7 @@ class MainWin( wx.Frame ):
 			return
 		
 		self.xFinish = event.GetX()
-		self.photoDialog.set( self.finishStrip.finish.getJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
+		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		self.photoDialog.CenterOnParent()
 		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
 		self.photoDialog.ShowModal()
