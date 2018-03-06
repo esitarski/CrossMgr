@@ -310,13 +310,12 @@ class PhotoDialog( wx.Dialog ):
 			try:
 				command = [
 					Utils.getFFMegExe(),
-					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'image2pipe',
 					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The input comes from a pipe
 					'-an', # Tells FFMPEG not to expect any audio
-					'-filter:v', 'setpts=5.0*PTS',	# Slow down the output.
+					#'-filter:v', 'setpts=2.0*PTS',	# Slow down the output.
 					'-vcodec', 'mpeg2video',
 					fd.GetPath(),
 				]
