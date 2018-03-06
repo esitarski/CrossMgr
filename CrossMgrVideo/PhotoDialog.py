@@ -304,19 +304,21 @@ class PhotoDialog( wx.Dialog ):
 		fd.Destroy()
 
 	def onSaveMPeg( self, event ):
-		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mpeg', style=wx.FD_SAVE )
+		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mp4', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			work = wx.BusyCursor()
 			try:
+				# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
 				command = [
 					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'image2pipe',
-					'-r', '{}'.format(self.fps), # frames per second
+					'-framerate', '{}'.format(self.fps), # frames per second
+					'-movflags', 'faststart',
+					'-pix_fmt', 'yuv420p',
 					'-i', '-', # The input comes from a pipe
-					'-an', # Tells FFMPEG not to expect any audio
-					#'-filter:v', 'setpts=2.0*PTS',	# Slow down the output.
-					'-vcodec', 'mpeg2video',
+					'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',	# Ensure output is a size divisible by 2.
+					'-vf', 'setpts=2.0*PTS',	# Slow down the output to 1/2 speed.
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )

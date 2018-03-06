@@ -32,7 +32,7 @@ function GetILabelsToDraw() {
 		iLabelsToDraw.sort();
 	}
 	else {
-		for( var i = 0; i < 6; ++i )
+		for( var i = 0; i < MaxLabels; ++i )
 			iLabelsToDraw.push( i );
 	}
 	return iLabelsToDraw;
@@ -57,6 +57,8 @@ function strToMillis( s ) {
 	)).getTime();
 }
 
+var MaxLabels = 6;
+
 function LapCounter( aCanvas ) {
 	this.canvas = aCanvas;
 	this.flashOn = false;
@@ -67,7 +69,6 @@ function LapCounter( aCanvas ) {
 	this.lapElapsedClock = true;
 	this.tRaceStart = null;
 	
-	this.MaxLabels = 6;
 	this.tessellate = function ( numLabels ) {
 		var width = this.canvas.width, height = this.canvas.height;
 		if( numLabels == 1 ) {
@@ -126,7 +127,7 @@ function LapCounter( aCanvas ) {
 		labels = labels || [['999', false, null]];
 		
 		// labels is of the format [[label1, flash, tLapStart], [label2, flash, tLapStart], ...]
-		this.labels = labels.slice(0, this.MaxLabels);
+		this.labels = labels.slice(0, MaxLabels);
 		if( this.needsTimer() ) {
 			if( !this.nTimer ) {
 				this.nTimer = setInterval( this.onTimer.bind(this), 333 );
@@ -301,7 +302,7 @@ function SetLabelsToDraw() {
 		if( !/^\d$/.test(c) )
 			continue;
 		var iLab = parseInt(c) - 1;
-		if( 0 <= iLab && iLab < 4 && iLabelsToDraw.indexOf(iLab) < 0 )
+		if( 0 <= iLab && iLab < MaxLabels && iLabelsToDraw.indexOf(iLab) < 0 )
 			iLabelsToDraw.push( iLab );
 	}
 	iLabelsToDraw.sort();
@@ -309,7 +310,7 @@ function SetLabelsToDraw() {
 	for( var i = 0; i < iLabelsToDraw.length; ++i )
 		labelStr += String.fromCharCode(one + iLabelsToDraw[i]);
 	
-	if( labelStr == '123456' )
+	if( labelStr.length >= MaxLabels )
 		labelStr = '';
 		
 	window.location.assign( '/LapCounter' + labelStr + '.html' );
