@@ -1601,7 +1601,7 @@ class MainWin( wx.Frame ):
 				return xlFNames
 			BatchPublishAttrs.formatFilename[filecode] = getUCIFileNames
 	
-		return BatchPublishAttrs.formatFilename[filecode]( os.path.splitext(self.fileName)[0] )
+		return BatchPublishAttrs.formatFilename[filecode]( os.path.splitext(self.fileName or '')[0] )
 
 	@logCall
 	def menuPrintPDF( self, event=None, silent=False ):
