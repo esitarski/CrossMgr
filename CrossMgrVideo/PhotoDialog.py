@@ -194,7 +194,9 @@ class PhotoDialog( wx.Dialog ):
 				wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
 		else:
 			wSize = sz
-		if self.GetSize() != wSize:
+		
+		w, h = self.GetSize()
+		if w < wSize[0] or h < wSize[1]:
 			self.SetSize( wSize )
 		self.timestamp.SetLabel( self.ts.strftime('%H:%M:%S.%f')[:-3] )
 	
@@ -255,15 +257,11 @@ class PhotoDialog( wx.Dialog ):
 	def onGetSpeed( self, event ):
 		t1, bitmap1, t2, bitmap2 = None, None, None, None
 		speedFrames = self.speedFrames.GetSelection() + 1
-		i1, i2 = len(self.tsJpg)-(speedFrames+1), len(self.tsJpg)-1
 		
-		for i, (ts, jpg) in enumerate(self.tsJpg):
-			if jpg == self.jpg:
-				if i == 0:
-					i1, i2 = 0, speedFrames
-				else:
-					i1, i2  = i-speedFrames, i
-				break
+		if self.iJpg == 0:
+			i1, i2 = 0, speedFrames
+		else:
+			i1, i2  = self.iJpg-speedFrames, self.iJpg
 		
 		i1 = min( max(0, i1), len(self.tsJpg)-1 )
 		i2 = min( max(0, i2), len(self.tsJpg)-1 )
