@@ -532,7 +532,7 @@ class MainWin( wx.Frame ):
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		self.bibQuery = None
 		
-		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING )
+		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES )
 		
 		self.il = wx.ImageList(16, 16)
 		self.sm_close = []
