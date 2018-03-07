@@ -33,10 +33,10 @@ class Database( object ):
 
 	UpdateSeconds = 10*60*60
 
-	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','kmh')
-	triggerFieldsInput = triggerFieldsAll[1:-1]
+	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','note','kmh')
+	triggerFieldsInput = triggerFieldsAll[1:-2]
 	triggerFieldsUpdate = tuple( ['wave','race_name'] )
-	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name')
+	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note')
 			
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
@@ -59,6 +59,8 @@ class Database( object ):
 				cols = cur.fetchall()
 				if cols:
 					col_names = [col[1] for col in cols]
+					if 'note' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN note TEXT DEFAULT ""' )
 					if 'kmh' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN kmh DOUBLE DEFAULT 0.0' )
 					if 'ts_start' not in col_names:
@@ -88,6 +90,7 @@ class Database( object ):
 						('team', 'TEXT', 'ASC', None),
 						('wave', 'TEXT', 'ASC', None),
 						('race_name', 'TEXT', 'ASC', None),
+						('note', 'TEXT', False, None),
 						('kmh', 'DOUBLE', False, 0.0),
 					)
 				)

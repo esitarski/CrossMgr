@@ -57,31 +57,6 @@ def setFont( font, w ):
 def OpenHelp():
 	webbrowser.open( os.path.join(Utils.getHelpFolder(), 'QuickStart.html'), new=0, autoraise=1 )
 	
-class MessageManager( object ):
-	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
-
-	def __init__( self, messageList ):
-		self.messageList = messageList
-		self.messageList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
-		self.messageList.SetDoubleBuffered( True )
-		self.clear()
-		
-	def skip(self, evt):
-		return
-		
-	def write( self, message ):
-		if len(self.messages) >= self.MessagesMax:
-			self.messages = self.messages[int(self.MessagesMax):]
-			s = '\n'.join( self.messages )
-			self.messageList.ChangeValue( s + '\n' )
-		self.messages.append( message )
-		self.messageList.AppendText( message + '\n' )
-		
-	def clear( self ):
-		self.messages = []
-		self.messageList.ChangeValue( '' )
-		self.messageList.SetInsertionPointEnd()
-
 from CalendarHeatmap import CalendarHeatmap
 class DateSelectDialog( wx.Dialog ):
 	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
@@ -568,7 +543,7 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'km/h', 'mph']
+		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph']
 		for i, h in enumerate(headers):
 			self.triggerList.InsertColumn(
 				i, h,
@@ -581,9 +556,6 @@ class MainWin( wx.Frame ):
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onTriggerRightClick )
 		#self.triggerList.Bind( wx.EVT_LIST_DELETE_ITEM, self.onTriggerDelete )
 		
-		self.messagesText = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.HSCROLL, size=(250,-1) )
-		self.messageManager = MessageManager( self.messagesText )
-		
 		vsTriggers = wx.BoxSizer( wx.VERTICAL )
 		vsTriggers.Add( hsDate )
 		vsTriggers.Add( self.triggerList, 1, flag=wx.EXPAND|wx.TOP, border=2)
@@ -595,7 +567,6 @@ class MainWin( wx.Frame ):
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
 		row1Sizer.Add( self.primaryBitmap, flag=wx.ALL, border=border )
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
-		row1Sizer.Add( self.messagesText, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, flag=wx.EXPAND )
 				
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
@@ -690,9 +661,9 @@ class MainWin( wx.Frame ):
 			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		if triggers:
-			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,kmh
+			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh
 		
-		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,kmh) in enumerate(triggers):
+		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh) in enumerate(triggers):
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
 			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
@@ -702,15 +673,16 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetItem( row, 3, team )
 			self.triggerList.SetItem( row, 4, wave )
 			self.triggerList.SetItem( row, 5, race_name )
+			self.triggerList.SetItem( row, 6, note )
 			if kmh:
 				kmh_text, mph_text = u'{:.2f}'.format(kmh), u'{:.2f}'.format(kmh * 0.621371)
 			else:
 				kmh_text = mph_text = u''
-			self.triggerList.SetItem( row, 6, kmh_text )
-			self.triggerList.SetItem( row, 7, mph_text )
+			self.triggerList.SetItem( row, 7, kmh_text )
+			self.triggerList.SetItem( row, 8, mph_text )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,kmh)
+			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,note,kmh)
 			tsPrev = ts
 			
 		for i in xrange(5):
@@ -738,12 +710,13 @@ class MainWin( wx.Frame ):
 			0.00001,		# s_before
 			0.00001,		# s_after
 			t,
-			self.snapshotCount,	# Bib
-			u'', 			# firstName
-			u'Snapshot',	# lastName
-			u'',			# Team
-			u'',			# Wave
-			u'',			# RaceName
+			self.snapshotCount,	# bib
+			u'', 			# first_name
+			u'Snapshot',	# last_name
+			u'',			# team
+			u'',			# save
+			u'',			# race_name
+			u'',			# note
 		) )
 		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
 		
@@ -780,7 +753,7 @@ class MainWin( wx.Frame ):
 				's_after':s_after,
 				'ts_start':tNow,
 				'bib':self.autoCaptureCount,
-				'lastName':u'Auto',
+				'last_name':u'Auto',
 			}
 		)
 		
@@ -802,7 +775,7 @@ class MainWin( wx.Frame ):
 				's_after':self.tdCaptureAfter.total_seconds(),
 				'ts_start':tNow,
 				'bib':self.captureCount,
-				'lastName':u'Capture',
+				'last_name':u'Capture',
 			}
 		)
 		self.tStartCapture = tNow
@@ -887,8 +860,8 @@ class MainWin( wx.Frame ):
 		self.triggerInfo = {
 			a:data[i] for i, a in enumerate((
 				'id','ts','s_before','s_after','ts_start',
-				'bib','name','team','wave','raceName',
-				'firstName','lastName','kmh'))
+				'bib','name','team','wave','race_name',
+				'first_name','last_name','note','kmh'))
 		}
 		self.ts = self.triggerInfo['ts']
 		s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
@@ -918,6 +891,7 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetItem( row, 3, fields['team'] )
 			self.triggerList.SetItem( row, 4, fields['wave'] )
 			self.triggerList.SetItem( row, 5, fields['race_name'] )
+			self.triggerList.SetItem( row, 6, fields['note'] )
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
@@ -945,7 +919,7 @@ class MainWin( wx.Frame ):
 			message = self.messageQ.get()
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message
-			wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
+			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 		
 	def startThreads( self ):
 		self.grabFrameOK = False
@@ -1042,11 +1016,12 @@ class MainWin( wx.Frame ):
 				msg.get('s_after', tdCaptureAfterDefault.total_seconds()),
 				msg.get('ts_start', None) or now(),
 				msg.get('bib', 99999),
-				msg.get('firstName',u''),
-				msg.get('lastName',u''),
+				msg.get('first_name',u''),
+				msg.get('last_name',u''),
 				msg.get('team',u''),
 				msg.get('wave',u''),
-				msg.get('raceName',u'')
+				msg.get('race_name',u''),
+				msg.get('note',u''),
 			) )
 			# Record the video frames for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter

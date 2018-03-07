@@ -238,10 +238,10 @@ class PhotoDialog( wx.Dialog ):
 			bitmap,
 			ts=self.triggerInfo['ts'],
 			bib=self.triggerInfo['bib'],
-			firstName=self.triggerInfo['firstName'],
-			lastName=self.triggerInfo['lastName'],
+			first_name=self.triggerInfo['first_name'],
+			last_name=self.triggerInfo['last_name'],
 			team=self.triggerInfo['team'],
-			raceName=self.triggerInfo['raceName'],
+			race_name=self.triggerInfo['race_name'],
 			kmh=self.kmh,
 			mph=self.mph,
 		)
