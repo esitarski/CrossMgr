@@ -731,8 +731,8 @@ class MainWin( wx.Frame ):
 		triggers = self.db.getTriggers( tStartCapture, tStartCapture, count )
 		if triggers:
 			id = triggers[0][0]
-			self.db.initCaptureTriggerData( id, tStartCapture )
-			self.refreshTriggers( iTriggerRow=999999 )
+			self.db.initCaptureTriggerData( id )
+			self.refreshTriggers( iTriggerRow=999999, replace=True )
 			self.showLastTrigger()
 			self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
 		for b in (btn if isinstance(btn, list) else [btn]):
@@ -800,8 +800,8 @@ class MainWin( wx.Frame ):
 				0.0,
 				(now() - self.tStartCapture).total_seconds()
 			)
-			self.db.initCaptureTriggerData( id, self.tStartCapture )
-			self.refreshTriggers( iTriggerRow=999999 )
+			self.db.initCaptureTriggerData( id )
+			self.refreshTriggers( iTriggerRow=999999, replace=True )
 		
 		self.showLastTrigger()
 		
@@ -933,6 +933,7 @@ class MainWin( wx.Frame ):
 			message = self.messageQ.get()
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message
+			print 'Message:', '{}:  {}'.format(cmd, info) if cmd else info
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 		
 	def startThreads( self ):

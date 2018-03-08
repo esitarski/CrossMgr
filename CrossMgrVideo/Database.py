@@ -33,10 +33,10 @@ class Database( object ):
 
 	UpdateSeconds = 10*60*60
 
-	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','note','kmh')
+	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','note','kmh',)
 	triggerFieldsInput = triggerFieldsAll[1:-2]
-	triggerFieldsUpdate = tuple( ['wave','race_name'] )
-	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note')
+	triggerFieldsUpdate = ('wave','race_name',)
+	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 			
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
@@ -177,18 +177,23 @@ class Database( object ):
 	def updateTriggerBeforeAfter( self, id, s_before, s_after ):
 		self.updateTriggerRecord(id, {'s_before':s_before, 's_after':s_after})
 	
-	def initCaptureTriggerData( self, id, ts ):
+	def initCaptureTriggerData( self, id ):
+		''' Initialize some fields from the previous record. '''
 		with self.conn:
-			tsLower, tsUpper = ts, ts - timedelta( days=1 )
+			rows = list( self.conn.execute( 'SELECT ts FROM trigger WHERE id=?', (id,) ) )
+			if not rows:
+				return
+			ts = rows[0][0]
+			tsLower, tsUpper = ts - timedelta(days=1), ts, 
 			rows = list( self.conn.execute( 
-				'SELECT {} FROM trigger WHERE ts > ? and ts < ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
+				'SELECT {} FROM trigger WHERE ? < ts AND ts < ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
 					(tsLower, tsUpper)
 				)
 			)
 			if rows:
 				self.conn.execute(
 					'UPDATE trigger SET {} WHERE id = ?'.format(','.join('{}=?'.format(f) for f in self.triggerFieldsUpdate)),
-						rows[0] + [id]
+						rows[0] + (id,)
 				)
 	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):

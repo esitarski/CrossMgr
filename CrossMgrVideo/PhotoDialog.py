@@ -321,6 +321,7 @@ class PhotoDialog( wx.Dialog ):
 				# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
 				command = [
 					Utils.getFFMegExe(),
+					'-nostats', '-loglevel', '0',	# silence ffmpeg output
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'image2pipe',
 					'-r', '{}'.format(self.fps), # frames per second
@@ -331,7 +332,7 @@ class PhotoDialog( wx.Dialog ):
 					#'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
 					fd.GetPath(),
 				]
-				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
+				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=-1 )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
 					proc.stdin.write( jpg )
 				proc.stdin.close()
@@ -349,6 +350,7 @@ class PhotoDialog( wx.Dialog ):
 			try:
 				command = [
 					Utils.getFFMegExe(),
+					'-nostats', '-loglevel', '0',	# silence ffmpeg output
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'image2pipe',
 					'-r', '{}'.format(self.fps), # frames per second
@@ -356,7 +358,7 @@ class PhotoDialog( wx.Dialog ):
 					'-an', # Tells FFMPEG not to expect any audio
 					fd.GetPath(),
 				]
-				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
+				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=-1 )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
 					proc.stdin.write( jpg )
 				proc.stdin.close()
