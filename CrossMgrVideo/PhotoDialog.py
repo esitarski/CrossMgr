@@ -328,16 +328,16 @@ class PhotoDialog( wx.Dialog ):
 					'-i', '-', # The input comes from a pipe
 					'-an', # Tells FFMPEG not to expect any audio
 					'-movflags', 'faststart',
-					#'-pix_fmt', 'yuv420p',
-					#'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+					'-pix_fmt', 'yuv420p',
+					'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
 					fd.GetPath(),
 				]
-				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=-1 )
+				proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
 					proc.stdin.write( jpg )
 				proc.stdin.close()
 				proc.wait()
-
+				
 				wx.MessageBox( _('MP4 Save Successful'), _('Success') )
 			except Exception as e:
 				wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
@@ -358,7 +358,7 @@ class PhotoDialog( wx.Dialog ):
 					'-an', # Tells FFMPEG not to expect any audio
 					fd.GetPath(),
 				]
-				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=-1 )
+				proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
 					proc.stdin.write( jpg )
 				proc.stdin.close()
