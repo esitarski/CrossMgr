@@ -121,10 +121,15 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
 		
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
+		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
+		btn.Bind( wx.EVT_BUTTON, self.onEdit )
+		btnsizer.Add(btn, flag=wx.LEFT, border=16)
+
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
-		btnsizer.Add(btn, flag=wx.LEFT, border=16)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('png.png'))
 		btn.SetToolTip( wx.ToolTip('Save Photo as PNG file') )
@@ -133,7 +138,7 @@ class PhotoDialog( wx.Dialog ):
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('mpg.png'))
 		btn.SetToolTip( wx.ToolTip('Save Sequence as Mpeg') )
-		btn.Bind( wx.EVT_BUTTON, self.onSaveMPeg )
+		btn.Bind( wx.EVT_BUTTON, self.onSaveMP4 )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('gif.png'))
@@ -170,11 +175,12 @@ class PhotoDialog( wx.Dialog ):
 	def ts( self ):
 		return None if self.iJpg is None else self.tsJpg[self.iJpg][0]
 
-	def set( self, iJpg, triggerInfo, tsJpg, fps=25 ):
+	def set( self, iJpg, triggerInfo, tsJpg, fps=25, editCB=None ):
 		self.iJpg = iJpg
 		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
 		self.fps = fps
+		self.editCB = editCB
 		
 		self.kmh = triggerInfo['kmh'] or 0.0
 		self.mps = self.kmh / 3.6
@@ -207,7 +213,7 @@ class PhotoDialog( wx.Dialog ):
 			self.iJpg = max(0, self.iJpg-1 )
 		else:
 			self.iJpg = min(len(self.tsJpg)-1, self.iJpg+1 )
-		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps )
+		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
 		self.Refresh()
 	
 	def onMouseWheel( self, event ):
@@ -218,6 +224,12 @@ class PhotoDialog( wx.Dialog ):
 		self.triggerInfo = None
 		self.tsJpg = None
 		self.fps = None
+		self.editCB = None
+	
+	def onEdit( self, event ):
+		if self.editCB:
+			self.triggerInfo = self.editCB()
+			self.Refresh()
 	
 	def onContrast( self, event ):
 		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )
@@ -301,8 +313,8 @@ class PhotoDialog( wx.Dialog ):
 				wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )
 		fd.Destroy()
 
-	def onSaveMPeg( self, event ):
-		fd = wx.FileDialog( self, message='Save MPeg', wildcard='*.mp4', style=wx.FD_SAVE )
+	def onSaveMP4( self, event ):
+		fd = wx.FileDialog( self, message='Save MP4', wildcard='*.mp4', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			work = wx.BusyCursor()
 			try:
@@ -311,22 +323,23 @@ class PhotoDialog( wx.Dialog ):
 					Utils.getFFMegExe(),
 					'-y', # (optional) overwrite output file if it exists
 					'-f', 'image2pipe',
-					'-framerate', '{}'.format(self.fps), # frames per second
-					'-movflags', 'faststart',
-					'-pix_fmt', 'yuv420p',
+					'-r', '{}'.format(self.fps), # frames per second
 					'-i', '-', # The input comes from a pipe
-					'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',	# Ensure output is a size divisible by 2.
-					'-vf', 'setpts=2.0*PTS',	# Slow down the output to 1/2 speed.
+					'-an', # Tells FFMPEG not to expect any audio
+					'-movflags', 'faststart',
+					#'-pix_fmt', 'yuv420p',
+					#'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
 					fd.GetPath(),
 				]
 				proc = subprocess.Popen( command, stdin=subprocess.PIPE, stderr=subprocess.PIPE )
 				for i, (ts, jpg) in enumerate(self.tsJpg):
 					proc.stdin.write( jpg )
 				proc.stdin.close()
-				proc.terminate()
-				wx.MessageBox( _('MPeg Save Successful'), _('Success') )
+				proc.wait()
+
+				wx.MessageBox( _('MP4 Save Successful'), _('Success') )
 			except Exception as e:
-				wx.MessageBox( _('MPeg Save Failed:\n\n{}').format(e), _('Save Failed') )
+				wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
 		fd.Destroy()
 
 	def onSaveGif( self, event ):
@@ -347,7 +360,7 @@ class PhotoDialog( wx.Dialog ):
 				for i, (ts, jpg) in enumerate(self.tsJpg):
 					proc.stdin.write( jpg )
 				proc.stdin.close()
-				proc.terminate()
+				proc.wait()
 				wx.MessageBox( _('Gif Save Successful'), _('Success') )
 			except Exception as e:
 				wx.MessageBox( _('Gif Save Failed:\n\n{}').format(e), _('Save Failed') )

@@ -839,7 +839,9 @@ class MainWin( wx.Frame ):
 			return
 		
 		self.xFinish = event.GetX()
-		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
+		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
+			self.doTriggerEdit
+		)
 		self.photoDialog.CenterOnParent()
 		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
 		self.photoDialog.ShowModal()
@@ -877,43 +879,55 @@ class MainWin( wx.Frame ):
 			
 		threading.Thread( target=updateFS ).start()
 	
-	def onTriggerEdit( self, event ):
-		self.iTriggerSelect = event.Index
-		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.triggerDialog.set( self.db, data[0] )
-		self.triggerDialog.CenterOnParent()
-		if self.triggerDialog.ShowModal() == wx.ID_OK:
-			row = event.Index
-			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
-			self.triggerList.SetItem( row, 1, u'{:>6}'.format(fields['bib']) )
-			name = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
-			self.triggerList.SetItem( row, 2, name )
-			self.triggerList.SetItem( row, 3, fields['team'] )
-			self.triggerList.SetItem( row, 4, fields['wave'] )
-			self.triggerList.SetItem( row, 5, fields['race_name'] )
-			self.triggerList.SetItem( row, 6, fields['note'] )
-	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewId()
+			self.triggerEditID = wx.NewId()
 			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerDelete(), id=self.triggerDeleteID)
+			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerEdit(),   id=self.triggerEditID)
 
 		menu = wx.Menu()
+		menu.Append(self.triggerEditID,   "Edit...")
 		menu.Append(self.triggerDeleteID, "Delete...")
 
 		self.PopupMenu(menu)
 		menu.Destroy()
 
-	def doTriggerDelete( self ):
+	def doTriggerDelete( self, confirm=True ):
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.db.deleteTrigger( data[0], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
-		self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
+		id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,note,kmh = data
+		message = u', '.join( f for f in (ts.strftime('%H:%M:%S.%f')[:-3], unicode(bib) if bib else u'', name, team, wave, race_name) if f )
+		if not confirm or wx.MessageDialog( self, u'{}:\n\n{}'.format(u'Confirm Delete', message), u'Confirm Delete',
+				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
+			self.db.deleteTrigger( data[0], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
 	
 	def onTriggerDelete( self, event ):
 		self.iTriggerSelect = event.Index
 		self.doTriggerDelete()
 		
+	def doTriggerEdit( self ):
+		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
+		self.triggerDialog.set( self.db, data[0] )
+		self.triggerDialog.CenterOnParent()
+		if self.triggerDialog.ShowModal() == wx.ID_OK:
+			row = self.iTriggerSelect
+			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
+			self.triggerList.SetItem( row, 1, u'{:>6}'.format(fields['bib']) )
+			fields['name'] = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
+			self.triggerList.SetItem( row, 2, fields['name'] )
+			self.triggerList.SetItem( row, 3, fields['team'] )
+			self.triggerList.SetItem( row, 4, fields['wave'] )
+			self.triggerList.SetItem( row, 5, fields['race_name'] )
+			self.triggerList.SetItem( row, 6, fields['note'] )
+			self.triggerInfo.update( fields )
+		return self.triggerInfo
+	
+	def onTriggerEdit( self, event ):
+		self.iTriggerSelect = event.Index
+		self.doTriggerEdit()
+	
 	def showMessages( self ):
 		while 1:
 			message = self.messageQ.get()
