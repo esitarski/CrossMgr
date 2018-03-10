@@ -254,12 +254,12 @@ class FocusDialog( wx.Dialog ):
 		
 		self.title = wx.StaticText(self, label='CrossMgr Video\nFocus Window', style=wx.ALIGN_RIGHT )
 		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		self.explain = wx.StaticText(self, label='Click and Drag to Zoom')		
+		self.explain = wx.StaticText(self, label='Click and Drag to Zoom in Photo')		
 		self.snapshot, self.autoCapture, self.capture = CreateCaptureButtons( self )
 		
 		btnSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
 		btnSizer.Add( self.title, flag=wx.ALL, border=10 )
-		btnSizer.Add( self.explain, flag=wx.ALL, border=4 )
+		btnSizer.Add( self.explain, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4 )
 		btnSizer.AddStretchSpacer()
 		btnSizer.Add( self.snapshot, flag=wx.ALL, border=4 )
 		btnSizer.Add( self.autoCapture, flag=wx.ALL, border=4 )
@@ -267,7 +267,7 @@ class FocusDialog( wx.Dialog ):
 		
 		sizer.Add( btnSizer, flag=wx.EXPAND )
 		
-		self.bitmap = ScaledBitmap( self, inset=True )		
+		self.bitmap = ScaledBitmap( self, inset=True )
 		sizer.Add( self.bitmap, 1, wx.EXPAND )
 		self.SetSizerAndFit( sizer )
 		
@@ -1031,11 +1031,11 @@ class MainWin( wx.Frame ):
 				msg.get('s_after', tdCaptureAfterDefault.total_seconds()),
 				msg.get('ts_start', None) or now(),
 				msg.get('bib', 99999),
-				msg.get('first_name',u''),
-				msg.get('last_name',u''),
+				msg.get('first_name',u'') or msg.get('firstName',u''),
+				msg.get('last_name',u'') or msg.get('lastName',u''),
 				msg.get('team',u''),
 				msg.get('wave',u''),
-				msg.get('race_name',u''),
+				msg.get('race_name',u'') or msg.get('raceName',u''),
 				msg.get('note',u''),
 			) )
 			# Record the video frames for the trigger.
