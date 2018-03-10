@@ -90,6 +90,7 @@ class PhotoDialog( wx.Dialog ):
 		vs.Add( self.scaledBitmap, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.scaledBitmap.Bind( wx.EVT_MOUSEWHEEL, self.onMouseWheel )
+		self.scaledBitmap.Bind( wx.EVT_KEY_DOWN, self.onKeyDown )
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
 		
@@ -218,6 +219,9 @@ class PhotoDialog( wx.Dialog ):
 	
 	def onMouseWheel( self, event ):
 		self.changeFrame( event.GetWheelRotation() )
+	
+	def onKeyDown( self, event ):
+		self.changeFrame( -1 if event.ShiftDown() else 1 )
 	
 	def clear( self ):
 		self.iJpg = None
