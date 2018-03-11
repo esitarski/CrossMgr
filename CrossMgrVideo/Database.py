@@ -220,6 +220,23 @@ class Database( object ):
 		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
 		return tsJpgs
 	
+	def getPhotoCount( self, tsLower, tsUpper ):
+		key = (tsLower, tsUpper)
+		with self.conn:
+			count = list( self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)) )
+		return count[0][0] if count else 0
+	
+	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
+		with self.conn:
+			trigger = list( self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE id=?', (id,) ) )
+		if not trigger:
+			return 0
+		ts, s_before, s_after = trigger[0]
+		if s_before == 0.0 and s_after == 0.0:
+			s_before, s_after = s_before_default, s_after_default
+		tsLower, tsUpper = ts - timedelte(seconds=s_before), ts + timedelta(seconds=s_after)
+		return self.getPhotoCount(tsLower, tsUpper)
+	
 	def getLastPhotos( self, count ):
 		with self.conn:
 			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,)) )

@@ -427,7 +427,7 @@ class FinishStripPanel( wx.Panel ):
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
-		self.frameCount = wx.StaticText( self, label='   frames' )
+		self.frameCount = wx.StaticText( self, label='   Frames' )
 		hs.Add( self.frameCount, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=16 )
 		
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
@@ -539,7 +539,7 @@ class FinishStripPanel( wx.Panel ):
 		
 		self.stretchSlider.SetRange( *self.getSpeedPixelsPerSecondMinMax() )
 		self.scrollCallback()
-		self.frameCount.SetLabel( '{} frames'.format(len(tsJpgs)) if tsJpgs else u'' )
+		self.frameCount.SetLabel( '{} Frames'.format(len(tsJpgs)) if tsJpgs else u'' )
 		
 	def GetTsJpgs( self ):
 		return self.finish.tsJpgs

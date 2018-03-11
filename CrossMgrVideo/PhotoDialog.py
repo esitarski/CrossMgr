@@ -112,7 +112,7 @@ class PhotoDialog( wx.Dialog ):
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
-		self.contrast = wx.ToggleButton( self, label='Contrast')
+		self.contrast = wx.ToggleButton( self, label='Contrast', style=wx.BU_EXACTFIT)
 		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
@@ -120,12 +120,12 @@ class PhotoDialog( wx.Dialog ):
 		btn.SetToolTip( wx.ToolTip('Print Photo') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
-		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
 		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
 		btn.Bind( wx.EVT_BUTTON, self.onEdit )
-		btnsizer.Add(btn, flag=wx.LEFT, border=16)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
@@ -150,7 +150,7 @@ class PhotoDialog( wx.Dialog ):
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('speedometer.png'))
 		btn.SetToolTip( wx.ToolTip('Get Speed') )
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
-		btnsizer.Add(btn, flag=wx.LEFT, border=32)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		
 		self.speedFrames = wx.Choice(self, choices=['Use 1 Frame', 'Use 2 Frames', 'Use 3 Frames', 'Use 4 Frames'] )
 		self.speedFrames.SetSelection( 1 )

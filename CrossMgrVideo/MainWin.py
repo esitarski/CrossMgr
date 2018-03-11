@@ -543,11 +543,11 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph']
+		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph', 'Frames']
 		for i, h in enumerate(headers):
 			self.triggerList.InsertColumn(
 				i, h,
-				wx.LIST_FORMAT_RIGHT if h in ('Bib','km/h','mph') else wx.LIST_FORMAT_LEFT
+				wx.LIST_FORMAT_RIGHT if h in ('Bib','km/h','mph','Frames') else wx.LIST_FORMAT_LEFT
 			)
 		self.itemDataMap = {}
 		
@@ -664,6 +664,8 @@ class MainWin( wx.Frame ):
 			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh
 		
 		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh) in enumerate(triggers):
+			if s_before == 0.0 and s_after == 0.0:
+				s_before,s_after = tdCaptureBeforeDefault.total_seconds(),tdCaptureAfterDefault.total_seconds()
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
 			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
@@ -680,6 +682,7 @@ class MainWin( wx.Frame ):
 				kmh_text = mph_text = u''
 			self.triggerList.SetItem( row, 7, kmh_text )
 			self.triggerList.SetItem( row, 8, mph_text )
+			self.triggerList.SetItem( row, 9, unicode(self.db.getPhotoCount(ts-timedelta(seconds=s_before), ts+timedelta(seconds=s_after))) )
 			
 			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,note,kmh)
