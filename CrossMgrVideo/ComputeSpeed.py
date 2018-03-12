@@ -4,6 +4,7 @@ import StringIO
 import datetime
 from ScaledBitmapVerticalLines import ScaledBitmapVerticalLines, EVT_VERTICAL_LINES
 from Utils import formatTime
+import CVUtil
 
 _ = lambda x: x
 
@@ -195,16 +196,15 @@ class ComputeSpeed( object ):
 		
 if __name__ == '__main__':
 	from Database import Database
+	app = wx.App(False)
 
 	tsJpgs = Database().getLastPhotos( 12 )
 	t1, t2 = tsJpgs[0][0], tsJpgs[-1][0]
-	bitmap1 = wx.Bitmap( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
-	bitmap2 = wx.Bitmap( StringIO.StringIO(tsJpgs[-1][1]), wx.BITMAP_TYPE_JPEG )
+	bitmap1 = CVUtil.jpegToBitmap(tsJpgs[0][1])
+	bitmap2 = CVUtil.jpegToBitmap(tsJpgs[-1][1])
 
-	app = wx.App(False)
 	mainWin = wx.Frame(None,title="ComputeSpeed", size=(600,300))
-	size=bitmap1.GetSize()
-	size = (800,600)
+	size = bitmap1.GetSize()
 	computeSpeed = ComputeSpeed(mainWin, size=size)
 	mainWin.Show()
 	mps, kmh, mph, pps = computeSpeed.Show( bitmap1, t1, bitmap2, t2, t2 )

@@ -138,7 +138,7 @@ class PhotoDialog( wx.Dialog ):
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('mpg.png'))
-		btn.SetToolTip( wx.ToolTip('Save Sequence as Mpeg') )
+		btn.SetToolTip( wx.ToolTip('Save Sequence as Mp4') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveMP4 )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
@@ -183,7 +183,7 @@ class PhotoDialog( wx.Dialog ):
 		self.fps = fps
 		self.editCB = editCB
 		
-		self.kmh = triggerInfo['kmh'] or 0.0
+		self.kmh = triggerInfo.get('kmh',0.0) or 0.0
 		self.mps = self.kmh / 3.6
 		self.mph = self.kmh * 0.621371
 		self.pps = 2000.0

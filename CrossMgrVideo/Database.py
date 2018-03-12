@@ -165,7 +165,7 @@ class Database( object ):
 			self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
-		data = [(k,v) for k,v in data.iteritems()]
+		data = [(f,v) for f,v in data.iteritems()]
 		with self.conn:
 			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f,v in data)),
 				[v for f,v in data] + [id]

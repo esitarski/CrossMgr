@@ -946,7 +946,7 @@ def SyncExcelLink( race ):
 
 #-----------------------------------------------------------------------------------------------------
 
-reSeparators = re.compile( '[,;:]+' )
+reSeparators = re.compile( r'[,;:.]+' )
 class BibInfo( object ):
 	AllFields = (
 		'Name',
@@ -966,7 +966,11 @@ class BibInfo( object ):
 			self.fields = []
 			
 	def getData( self, bib ):
-		bib = int(bib)
+		try:
+			bib = int(bib)
+		except:
+			return {}
+		
 		try:
 			data = { k:unicode(v) for k, v in self.externalInfo.get(bib, {}).iteritems() }
 		except ValueError:
