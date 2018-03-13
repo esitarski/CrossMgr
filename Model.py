@@ -1509,11 +1509,13 @@ class Race( object ):
 	
 	@memoize
 	def getAverageLapTime( self ):
+		Finisher = Rider.Finisher
 		tTotal, count = 0.0, 0
 		for r in self.riders.itervalues():
-			t, c = r.getTimeCount()
-			tTotal += t
-			count += c
+			if r.status == Finisher:
+				t, c = r.getTimeCount()
+				tTotal += t
+				count += c
 		if count > 0:
 			averageLapTime = tTotal / count
 		else:
@@ -1522,8 +1524,9 @@ class Race( object ):
 		
 	@memoize
 	def getMedianLapTime( self, category=None ):
+		Finisher = Rider.Finisher
 		lapTimes = sorted( itertools.chain.from_iterable( r.getLapTimesForMedian()
-			for r in self.riders.itervalues() if race.inCategory(r.num, category) ) )
+			for r in self.riders.itervalues() if r.status == Finisher and race.inCategory(r.num, category) ) )
 		if not lapTimes:
 			return 8.0 * 60.0	# Default to 8 minutes.
 		lapTimesLen = len(lapTimes)
