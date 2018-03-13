@@ -152,10 +152,6 @@ class PhotoDialog( wx.Dialog ):
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		
-		self.speedFrames = wx.Choice(self, choices=['Use 1 Frame', 'Use 2 Frames', 'Use 3 Frames', 'Use 4 Frames'] )
-		self.speedFrames.SetSelection( 1 )
-		btnsizer.Add(self.speedFrames, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=2)
-		
 		btnsizer.AddStretchSpacer()
 
 		btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
@@ -272,7 +268,7 @@ class PhotoDialog( wx.Dialog ):
 	
 	def onGetSpeed( self, event ):
 		t1, bitmap1, t2, bitmap2 = None, None, None, None
-		speedFrames = self.speedFrames.GetSelection() + 1
+		speedFrames = 2
 		
 		if self.iJpg == 0:
 			i1, i2 = 0, speedFrames
