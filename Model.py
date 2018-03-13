@@ -568,6 +568,17 @@ class Entry(object):
 	def __repr__( self ):
 		return u'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
 
+def timeFilter( times, minPossibleLapTime ):
+	a = array.array('d')
+	if len(times) < 2:
+		return a
+	itimes = iter(times)
+	a.append( next(itimes) )
+	for t in itimes:
+		if t - a[-1] >= minPossibleLapTime:
+			a.append( t )
+	return a if len(a)>=2 else []
+
 class Rider(object):
 	# Rider Status.
 	Finisher  = 0
@@ -913,23 +924,22 @@ class Rider(object):
 		return self.times
 		
 	def getLapTimesForMedian( self ):
-		# Create a separate working list.
-		startOffset = race.getStartOffset(self.num) if race else 0.0
-		iTimes = [t for t in self.times if t > startOffset]
-		if not iTimes:
-			return []
-		lenITimes = len(iTimes)
-		if lenITimes == 1:
-			# Use 1st lap time if we only have one lap.
-			return [iTimes[0] - startOffset]
+		# Prevent multi-reader multiple reads from overwhelming the sample.
+		iTimes = [race.getStartOffset(self.num) if race else 0.0]
+		for t in self.times:
+			if t - iTimes[-1] >= 2.0:
+				iTimes.append( t )
 		
-		# Otherwise, ignore the first lap time.
+		if len(iTimes) == 1:
+			return []
+		
 		try:
-			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
+			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes)-1 )
 		except Exception as e:
-			numLaps = len(iTimes)
-		if lenITimes > numLaps:
-			iTimes = iTimes[:numLaps]
+			numLaps = len(iTimes)-1
+		iTimes = iTimes[:numLaps+1]
+		if len(iTimes) > 2:			# Ignore the first lap.
+			del iTimes[0]
 		return [b-a for b, a in zip(iTimes[1:], iTimes)]
 		
 	def getEarlyStartOffset( self ):
