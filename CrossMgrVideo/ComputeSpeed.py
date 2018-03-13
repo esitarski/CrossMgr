@@ -130,10 +130,8 @@ class ComputeSpeed( object ):
 		self.wizard = adv.Wizard( parent, wx.ID_ANY, _('Compute Speed') )
 		self.wizard.Bind( adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		
-		self.t1 = None
-		self.t2 = None
-		self.bitmap1 = None
-		self.bitmap2 = None
+		self.iPhoto1 = None
+		self.iPhoto2 = None
 		
 		self.wheelEdgesPage = WheelEdgesPage( self.wizard )
 		self.frontWheelEdgePage = FrontWheelEdgePage( self.wizard, self.getSpeed )
@@ -160,12 +158,27 @@ class ComputeSpeed( object ):
 		metersPerSecond = dPixels * metersPerPixel / dSeconds
 		pixelsPerSecond = dPixels / dSeconds
 		return metersPerSecond, metersPerSecond*3.6, metersPerSecond*2.23694, pixelsPerSecond
-		
-	def Show( self, bitmap1, t1, bitmap2, t2, ts_start ):
-		self.t1, self.t2, self.ts_start = t1, t2, ts_start
-		self.bitmap1, self.bitmap2 = bitmap1, bitmap2
-		self.wheelEdgesPage.Set( t1, bitmap1, self.wheelDiameter )
-		self.frontWheelEdgePage.Set( t2, bitmap2, self.wheelDiameter )
+	
+	@property
+	def t1( self ):
+		return self.tsJpg[self.iPhoto1][0] if self.iPhoto1 is not None else None
+	
+	@property
+	def bitmap1( self ):
+		return CVUtil.jpegToBitmap(self.tsJpg[self.iPhoto1][1]) if self.iPhoto1 is not None else None
+	
+	@property
+	def t2( self ):
+		return self.tsJpg[self.iPhoto2][0] if self.iPhoto2 is not None else None
+	
+	@property
+	def bitmap2( self ):
+		return CVUtil.jpegToBitmap(self.tsJpg[self.iPhoto2][1]) if self.iPhoto2 is not None else None
+	
+	def Show( self, tsJpg, iPhoto1, iPhoto2, ts_start ):
+		self.tsJpg, self.iPhoto1, self.iPhoto2, self.ts_start = tsJpg, iPhoto1, iPhoto2, ts_start
+		self.wheelEdgesPage.Set( self.t1, self.bitmap1, self.wheelDiameter )
+		self.frontWheelEdgePage.Set( self.t2, self.bitmap2, self.wheelDiameter )
 		self.timePage.Set( self.bitmap2, self.t2, self.ts_start, 0.0001, 1, True )
 	
 		if self.wizard.RunWizard(self.wheelEdgesPage):

@@ -284,13 +284,8 @@ class PhotoDialog( wx.Dialog ):
 		if i1 == i2:
 			return
 		
-		t1 = self.tsJpg[i1][0]
-		bitmap1 = CVUtil.jpegToBitmap(self.tsJpg[i1][1])
-		t2 = self.tsJpg[i2][0]
-		bitmap2 = CVUtil.jpegToBitmap(self.tsJpg[i2][1])
-				
 		computeSpeed = ComputeSpeed( self, size=self.GetSize() )
-		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( bitmap1, t1, bitmap2, t2, self.triggerInfo['ts_start'] )
+		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( self.tsJpg, i1, i2, self.triggerInfo['ts_start'] )
 		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
