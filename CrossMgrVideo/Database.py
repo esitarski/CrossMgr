@@ -252,8 +252,8 @@ class Database( object ):
 				return counts
 			
 			# Create a bucket list containing every intersecting trigger interval.
-			bucketMax = 256
-			bucketSecs = (rangeSecs + 0.001) / bucketMax	# Ensure the times equal to tsUpperPhoto go into the last bucket.
+			bucketMax = min( len(triggers)*2, 256 )
+			bucketSecs = (rangeSecs + 0.001) / bucketMax	# Ensure the timestamps equal to tsUpperPhoto go into the last bucket.
 			def tsToB( ts ):
 				return int((ts - tsLowerPhoto).total_seconds() / bucketSecs)
 			buckets = [[] for b in xrange(bucketMax)]
