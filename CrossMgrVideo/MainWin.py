@@ -663,6 +663,7 @@ class MainWin( wx.Frame ):
 		if triggers:
 			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh
 		
+		photoCounts = self.db.getTriggerPhotoCounts( tsLower, tsUpper )
 		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh) in enumerate(triggers):
 			if s_before == 0.0 and s_after == 0.0:
 				s_before,s_after = tdCaptureBeforeDefault.total_seconds(),tdCaptureAfterDefault.total_seconds()
@@ -682,7 +683,7 @@ class MainWin( wx.Frame ):
 				kmh_text = mph_text = u''
 			self.triggerList.SetItem( row, 7, kmh_text )
 			self.triggerList.SetItem( row, 8, mph_text )
-			self.triggerList.SetItem( row, 9, unicode(self.db.getPhotoCount(ts-timedelta(seconds=s_before), ts+timedelta(seconds=s_after))) )
+			self.triggerList.SetItem( row, 9, unicode(photoCounts[id]) )
 			
 			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,note,kmh)

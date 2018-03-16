@@ -237,6 +237,39 @@ class Database( object ):
 		tsLower, tsUpper = ts - timedelte(seconds=s_before), ts + timedelta(seconds=s_after)
 		return self.getPhotoCount(tsLower, tsUpper)
 	
+	def getTriggerPhotoCounts( self, tsLower, tsUpper ):
+		counts = defaultdict( int )
+		with self.conn:
+			triggers = { r[0]:(r[1]-timedelta(seconds=r[2]), r[1]+timedelta(seconds=r[3])) for r in self.conn.execute(
+				'SELECT id,ts,s_before,s_after FROM trigger WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)
+			) }
+			if not triggers:
+				return counts
+			tsLowerPhoto = min( tsBefore for tsBefore,tsAfter in triggers.itervalues() )
+			tsUpperPhoto = max( tsAfter  for tsBefore,tsAfter in triggers.itervalues() )
+			rangeSecs = (tsUpperPhoto - tsLowerPhoto).total_seconds()
+			if rangeSecs == 0.0:
+				return counts
+			
+			# Create a bucket list containing every intersecting trigger interval.
+			bucketMax = 256
+			bucketSecs = (rangeSecs + 0.001) / bucketMax	# Ensure the times equal to tsUpperPhoto go into the last bucket.
+			def tsToB( ts ):
+				return int((ts - tsLowerPhoto).total_seconds() / bucketSecs)
+			buckets = [[] for b in xrange(bucketMax)]
+			for id, (tsBefore,tsAfter) in triggers.iteritems():
+				for b in xrange(tsToB(tsBefore), tsToB(tsAfter)+1):
+					buckets[b].append(id)
+					
+			# Increment the count for every trigger intersecting this photo in the bucket.
+			for r in self.conn.execute( 'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (tsLowerPhoto, tsUpperPhoto) ):
+				tsPhoto = r[0]
+				for id in buckets[tsToB(tsPhoto)]:
+					tsBefore,tsAfter = triggers[id]
+					if tsBefore <= tsPhoto <= tsAfter:
+						counts[id] += 1
+		return counts
+	
 	def getLastPhotos( self, count ):
 		with self.conn:
 			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,)) )
