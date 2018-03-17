@@ -93,15 +93,15 @@ def getCurrentTTStartListHtml():
 with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf-8') as f:
 	lapCounterTemplate = f.read()
 def getLapCounterHtml():
+	# DEBUG DEBUG DEBUG
+	with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf-8') as f:
+		return f.read()
 	return lapCounterTemplate
 	
-#with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf-8') as f:
-#	announcerHTML = f.read()
+with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf-8') as f:
+	announcerHTML = f.read()
 def getAnnouncerHtml():
-	# DEBUG DEBUG DEBUG
-	with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf-8') as f:
-		return f.read()
-#	return announcerHTML
+	return announcerHTML
 	
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
@@ -377,7 +377,7 @@ def WriteHtmlIndexPage():
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
 	json_content = 'application/json'
-	reLapCounterHtml = re.compile( r'^\/LapCounter\d*\.html$' )
+	reLapCounterHtml = re.compile( r'^\/LapCounter[\d-]*\.html$' )
 	
 	def do_GET(self):
 		up = urlparse.urlparse( self.path )		

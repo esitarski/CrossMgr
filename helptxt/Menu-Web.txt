@@ -47,23 +47,24 @@ The idea is that you would use a tablet or a computer with an LCD screen as a la
 
 You can use multiple monitors, each showing one lap count of each start wave.
 
-By default, the Lap Counter web page shows multiple lap counters on the same screen (max of 4).
+By default, the Lap Counter web page shows multiple lap counters on the same screen (max of 6).  By default, it displays all lap counters on the screen and uses its own layout.
 
-To configure a display to show one, two or any combination of lap couters, click anywhere on the Lap Counter web page.
+To configure the display to show one, two or any combination of lap counters, click anywhere on the Lap Counter web page.
 
 When the Prompt appears, enter text indicating of the lap counters you want to show.
 For example:
 
-* If you enter "1", only the first lap counter will be displayed.
-* If you entery "12" only the first lap counters will be displayed.
-* If you entery "34" only the last lap counters will be displayed.
+* "1", show the first lap counter only.
+* "12" show lap counters one and two only.
+* "34" show lap counters three and four only.
 
-The following are valid:
+If you enter a "-" (minus sign), this starts a new row.
 
-* 1, 2, 3, 4
-* 12, 34, 23, 14
-* 123, 234, 124
-* 1234 or blank
+For example
+
+* "1234", four lap counters will be shown all in a same row.
+* "3-4", two lap counters will be shown, one on each row.
+* "1-2-3", three lap counters, each on its own row
 
 To check how a display is currently configured, look at the web page URL.  The counters displayed are just before the .html in the LapCounter url.
 

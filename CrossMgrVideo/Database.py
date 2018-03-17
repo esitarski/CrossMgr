@@ -33,8 +33,11 @@ class Database( object ):
 
 	UpdateSeconds = 10*60*60
 
-	triggerFieldsAll = ('id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name','note','kmh',)
-	triggerFieldsInput = triggerFieldsAll[1:-2]
+	triggerFieldsAll = (
+		'id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name',
+		'note','kmh','frames',
+	)
+	triggerFieldsInput = triggerFieldsAll[1:-3]	# ignore note, mph and frames
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 			
@@ -70,6 +73,9 @@ class Database( object ):
 					if 's_before' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_before DOUBLE DEFAULT 0.0' )
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN s_after DOUBLE DEFAULT 0.0' )
+					# Cache of number of frames.
+					if 'frames' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN frames INTEGER DEFAULT 0' )
 		
 			with self.conn:
 				createTable( self.conn, 'photo', (
@@ -92,6 +98,7 @@ class Database( object ):
 						('race_name', 'TEXT', 'ASC', None),
 						('note', 'TEXT', False, None),
 						('kmh', 'DOUBLE', False, 0.0),
+						('frames', 'INTEGER', False, 0),			# Number of frames with this trigger.		
 					)
 				)
 				self.photoTsCache = set( row[0] for row in self.conn.execute(
@@ -223,8 +230,8 @@ class Database( object ):
 	def getPhotoCount( self, tsLower, tsUpper ):
 		key = (tsLower, tsUpper)
 		with self.conn:
-			count = list( self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)) )
-		return count[0][0] if count else 0
+			count = self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()
+		return count[0] if count else 0
 	
 	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
 		with self.conn:
@@ -234,8 +241,13 @@ class Database( object ):
 		ts, s_before, s_after = trigger[0]
 		if s_before == 0.0 and s_after == 0.0:
 			s_before, s_after = s_before_default, s_after_default
-		tsLower, tsUpper = ts - timedelte(seconds=s_before), ts + timedelta(seconds=s_after)
+		tsLower, tsUpper = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
 		return self.getPhotoCount(tsLower, tsUpper)
+		
+	def updateTriggerPhotoCount( self, id, frames=None ):
+		frames = frames or self.getTriggerPhotoCount( id )
+		self.conn.execute( 'UPDATE trigger SET frames=? WHERE id=? AND frames!=?', (frames, id, frames) )
+		return frames
 	
 	def getTriggerPhotoCounts( self, tsLower, tsUpper ):
 		counts = defaultdict( int )
@@ -269,6 +281,12 @@ class Database( object ):
 					if tsBefore <= tsPhoto <= tsAfter:
 						counts[id] += 1
 		return counts
+	
+	def updateTriggerPhotoCounts( self, counts ):
+		with self.conn:
+			self.conn.executemany( 'UPDATE trigger SET frames=? WHERE id=? AND frames!=?',
+				[(count, id, count) for id, count in counts.iteritems()]
+			)
 	
 	def getLastPhotos( self, count ):
 		with self.conn:
@@ -308,7 +326,7 @@ class Database( object ):
 		with self.conn:
 			self.conn.execute(
 				'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in self.triggerEditFields)),
-				list(args) + [id]
+				args + (id,)
 			)
 	
 	def isDup( self, ts ):

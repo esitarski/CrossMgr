@@ -543,6 +543,7 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
+		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name note kmh mph frames'.split())}
 		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph', 'Frames']
 		for i, h in enumerate(headers):
 			self.triggerList.InsertColumn(
@@ -639,6 +640,39 @@ class MainWin( wx.Frame ):
 		data = self.triggerList.GetItemData( i )
 		return self.itemDataMap[data]
 	
+	def getTriggerRowFromID( self, id ):
+		for row in xrange(self.triggerList.GetItemCount()-1, -1, -1):
+			if self.itemDataMap[row][0] == id:
+				return i
+		return None
+
+	def updateTriggerRow( self, row, fields ):
+		if 'last_name' in fields and 'first_name' in fields:
+			fields['name'] = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
+		for k, v in fields.iteritems():
+			if k in self.fieldCol:
+				if k == 'bib':
+					v = u'{:>6}'.format(v)
+				elif k == 'frames':
+					v = unicode(v) if v else u''
+				else:
+					v = unicode(v)
+				self.triggerList.SetItem( row, self.fieldCol[k], v )
+				
+	def updateTriggerRowID( self, id, fields ):
+		row = self.getTriggerRowFromID( id )
+		if row is not None:
+			self.updateTriggerRow( row, fields )
+	
+	def getTriggerInfo( self, row ):
+		data = self.itemDataMap[self.triggerList.GetItemData(row)]
+		return {
+			a:data[i] for i, a in enumerate((
+				'id','ts','s_before','s_after','ts_start',
+				'bib','name','team','wave','race_name',
+				'first_name','last_name','note','kmh','frames'))
+		}
+	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
 		self.lastTriggerRefresh = tNow
@@ -661,35 +695,54 @@ class MainWin( wx.Frame ):
 			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		if triggers:
-			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh
+			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames
 		
-		photoCounts = self.db.getTriggerPhotoCounts( tsLower, tsUpper )
-		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh) in enumerate(triggers):
+		zeroFrames, tsLower, tsUpper = [], datetime.max, datetime.min
+		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames) in enumerate(triggers):
 			if s_before == 0.0 and s_after == 0.0:
 				s_before,s_after = tdCaptureBeforeDefault.total_seconds(),tdCaptureAfterDefault.total_seconds()
+			
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
 			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
-			self.triggerList.SetItem( row, 1, u'{:>6}'.format(bib) )
-			name = u', '.join( n for n in (last_name, first_name) if n )
-			self.triggerList.SetItem( row, 2, name )
-			self.triggerList.SetItem( row, 3, team )
-			self.triggerList.SetItem( row, 4, wave )
-			self.triggerList.SetItem( row, 5, race_name )
-			self.triggerList.SetItem( row, 6, note )
-			if kmh:
-				kmh_text, mph_text = u'{:.2f}'.format(kmh), u'{:.2f}'.format(kmh * 0.621371)
-			else:
-				kmh_text = mph_text = u''
-			self.triggerList.SetItem( row, 7, kmh_text )
-			self.triggerList.SetItem( row, 8, mph_text )
-			self.triggerList.SetItem( row, 9, unicode(photoCounts[id]) )
+			
+			if not frames:
+				tsLower = min( tsLower, ts-timedelta(seconds=s_before) )
+				tsU = ts+timedelta(seconds=s_after)
+				tsUpper = max( tsUpper,tsU )
+				zeroFrames.append( (row, id, tsU) )
+			
+			kmh_text, mph_text = (u'{:.2f}'.format(kmh), u'{:.2f}'.format(kmh * 0.621371)) if kmh else (u'', u'')
+			fields = {
+				'bib':			bib,
+				'last_name':	last_name,
+				'first_name':	first_name,
+				'team':			team,
+				'wave':			wave,
+				'race_name':	race_name,
+				'note':			note,
+				'kmh':			kmh_text,
+				'mph':			mph_text,
+				'frames':		frames,
+			}
+			self.updateTriggerRow( i, fields )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,note,kmh)
+			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,fields['name'],team,wave,race_name,first_name,last_name,note,kmh,frames)
 			tsPrev = ts
+		
+		if zeroFrames:
+			counts = self.db.getTriggerPhotoCounts( tsLower, tsUpper )
+			values = {'frames':0}
+			for row, id, tsU in zeroFrames:
+				values['frames'] = counts[id]
+				self.updateTriggerRow( row, values )
+				# Don't update the trigger if the number of frames is possibly not known yet.
+				if (tNow - tsU).total_seconds() < 5.0*60.0:
+					del counts[id]
+			self.db.updateTriggerPhotoCounts( counts )
 			
-		for i in xrange(5):
+		for i in xrange(self.triggerList.GetColumnCount()):
 			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
 		if iTriggerRow is not None:
@@ -720,7 +773,6 @@ class MainWin( wx.Frame ):
 			u'',			# team
 			u'',			# save
 			u'',			# race_name
-			u'',			# note
 		) )
 		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
 		
@@ -863,25 +915,20 @@ class MainWin( wx.Frame ):
 			return
 		
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.triggerInfo = {
-			a:data[i] for i, a in enumerate((
-				'id','ts','s_before','s_after','ts_start',
-				'bib','name','team','wave','race_name',
-				'first_name','last_name','note','kmh'))
-		}
+		self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
 		self.ts = self.triggerInfo['ts']
 		s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
 		if s_before == 0.0 and s_after == 0.0:
 			s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
 		
 		# Update the screen in the background so we don't freeze the UI.
-		def updateFS():
-			self.tsJpg = self.db.clone().getPhotos(
-				self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after)
-			)
-			wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, self.triggerInfo )
+		def updateFS( triggerInfo ):
+			self.ts = triggerInfo['ts']
+			self.tsJpg = self.db.clone().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
+			triggerInfo['frames'] = len(self.tsJpg)
+			wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, triggerInfo )
 			
-		threading.Thread( target=updateFS ).start()
+		threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
@@ -897,14 +944,14 @@ class MainWin( wx.Frame ):
 
 		self.PopupMenu(menu)
 		menu.Destroy()
-
+		
 	def doTriggerDelete( self, confirm=True ):
-		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		id,ts,s_before,s_after,ts_start,bib,name,team,wave,race_name,first_name,last_name,note,kmh = data
-		message = u', '.join( f for f in (ts.strftime('%H:%M:%S.%f')[:-3], unicode(bib) if bib else u'', name, team, wave, race_name) if f )
+		triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
+		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], unicode(triggerInfo['bib']),
+			triggerInfo['name'], triggerInfo['team'], triggerInfo['wave'], triggerInfo['race_name']) if f )
 		if not confirm or wx.MessageDialog( self, u'{}:\n\n{}'.format(u'Confirm Delete', message), u'Confirm Delete',
 				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
-			self.db.deleteTrigger( data[0], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+			self.db.deleteTrigger( triggerInfo['id'], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
 	
 	def onTriggerDelete( self, event ):
@@ -918,13 +965,7 @@ class MainWin( wx.Frame ):
 		if self.triggerDialog.ShowModal() == wx.ID_OK:
 			row = self.iTriggerSelect
 			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
-			self.triggerList.SetItem( row, 1, u'{:>6}'.format(fields['bib']) )
-			fields['name'] = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
-			self.triggerList.SetItem( row, 2, fields['name'] )
-			self.triggerList.SetItem( row, 3, fields['team'] )
-			self.triggerList.SetItem( row, 4, fields['wave'] )
-			self.triggerList.SetItem( row, 5, fields['race_name'] )
-			self.triggerList.SetItem( row, 6, fields['note'] )
+			self.updateTriggerRow( row, fields )
 			self.triggerInfo.update( fields )
 		return self.triggerInfo
 	
@@ -1040,7 +1081,6 @@ class MainWin( wx.Frame ):
 				msg.get('team',u''),
 				msg.get('wave',u''),
 				msg.get('race_name',u'') or msg.get('raceName',u''),
-				msg.get('note',u''),
 			) )
 			# Record the video frames for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter

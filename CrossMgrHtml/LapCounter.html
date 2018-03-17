@@ -17,25 +17,27 @@ function hex( n ) {
 function color( r, g, b ) {
 	return '#' + hex(r) + hex(g) + hex(b);
 }
-	
-var lapCounts = null;
-function GetILabelsToDraw() {
-	var iLabelsToDraw = [];
-	var matches = /^\/LapCounter(\d+)\.html$/.exec( window.location.pathname );
-	if( matches != null && matches.length == 2 ) {
-		var lapPositions = matches[1];
-		for( var i = 0; i < lapPositions.length; ++i ) {
-			var iLab = parseInt(lapPositions.charAt(i)) - 1;
-			if( 0 <= iLab && iLabelsToDraw.indexOf(iLab) < 0 )
-				iLabelsToDraw.push( iLab );
+
+function CleanLCLabel( lcLabelIn ) {
+	var lcLabel = '';
+	for( var i = 0; i < lcLabelIn.length; ++i ) {
+		var c = lcLabelIn.charAt(i);
+		if( c == '-' ) {
+			if( lcLabel && lcLabel.charAt([lcLabel.length-1]) != '-' )
+				lcLabel += '-';
 		}
-		iLabelsToDraw.sort();
+		else if ( '1' <= c && c <= cMaxLabels )
+			lcLabel += c;
 	}
-	else {
-		for( var i = 0; i < MaxLabels; ++i )
-			iLabelsToDraw.push( i );
-	}
-	return iLabelsToDraw;
+	return lcLabel;
+}
+
+function GetLCLabel() {
+	var lcLabel = '';
+	var matches = /^\/LapCounter([\d-]+)\.html$/.exec( window.location.pathname );
+	if( matches != null && matches.length == 2 )
+		lcLabel = matches[1];
+	return CleanLCLabel( lcLabel );
 }
 
 function formatTime( secs ) {
@@ -58,6 +60,7 @@ function strToMillis( s ) {
 }
 
 var MaxLabels = 6;
+var cMaxLabels = MaxLabels.toString(10);
 
 function LapCounter( aCanvas ) {
 	this.canvas = aCanvas;
@@ -68,7 +71,7 @@ function LapCounter( aCanvas ) {
 	this.backgrounds = [color(16,16,16), color(34,139,34), color(235,155,0), color(147,112,219), color(0,0,139), color(139,0,0)];
 	this.lapElapsedClock = true;
 	this.tRaceStart = null;
-	
+
 	this.tessellate = function ( numLabels ) {
 		var width = this.canvas.width, height = this.canvas.height;
 		if( numLabels == 1 ) {
@@ -94,6 +97,33 @@ function LapCounter( aCanvas ) {
 				[0, h, w, h], [w, h, w, h], [2*w, h, w, h],
 			];
 		}
+	}
+	
+	this.getRectangles = function( lcLabel ) {
+		var colsPerRow = [0];
+		var lcs = [];
+		for( var i = 0; i < lcLabel.length; ++i ) {
+			var c = lcLabel.charAt(i);
+			if( c == '-' )
+				colsPerRow.push( 0 );
+			else {
+				++colsPerRow[colsPerRow.length-1];
+				lcs.push( parseInt(c)-1 );
+			}
+		}
+		var lcPositions = new Array( MaxLabels );
+		if( colsPerRow.length == 1 && colsPerRow[0] == 0 )
+			return lcPositions;
+		
+		var width = this.canvas.width, height = this.canvas.height;
+		var h = height / colsPerRow.length;
+		var iLC = 0;
+		for( var row = 0; row < colsPerRow.length; ++row ) {
+			var w = width / colsPerRow[row];
+			for( var col = 0; col < colsPerRow[row]; ++col )
+				lcPositions[lcs[iLC++]] = [Math.floor(col*w), Math.floor(row*h), Math.floor(w), Math.floor(h)];
+		}
+		return lcPositions;
 	}
 	
 	this.onResize = function() {
@@ -156,20 +186,23 @@ function LapCounter( aCanvas ) {
 		var width = this.canvas.width, height = this.canvas.height;
 		
 		// Get the labels to draw from the url path.
-		var iLabelsToDraw = GetILabelsToDraw();
-		var iLabelsToDrawNew = [];
-		for( var i = 0; i < iLabelsToDraw.length; ++i ) {
-			var iLab = iLabelsToDraw[i];
-			if( iLab < this.labels.length )
-				iLabelsToDrawNew.push( iLab );
-		}
-		iLabelsToDraw = iLabelsToDrawNew;
+		var lcLabel = GetLCLabel();
 
-		if( iLabelsToDraw.length == 0 ) {
-			dc.fillStyle = '#000000';
+		// Check if we are drawing anything.
+		var drawSomething = (this.labels.length > 0);
+		if( lcLabel ) {
+			drawSomething = false;
+			for( var i = 1; !drawSomething && i <= this.labels.length; ++i )
+				drawSomething = (lcLabel.indexOf(i.toString()) >= 0);
+		}
+		if( !drawSomething ) {
+			dc.fillStyle = '#D3D3D3';
 			dc.fillRect( 0, 0, width, height );
 			return;
 		}
+		
+		dc.fillStyle = '#000000';
+		dc.fillRect( 0, 0, width, height );
 		
 		function getFontSizeToFit( dc, text, w, h ) {
 			w = Math.floor( w * 0.9 );
@@ -207,15 +240,19 @@ function LapCounter( aCanvas ) {
 			dc.fillText( label, xText, yText );
 		}
 		
-		var rects = this.tessellate(iLabelsToDraw.length);
+		// Get the position of each label on the screen.
+		var rects = (lcLabel ? this.getRectangles(lcLabel) : this.tessellate(this.labels.length));
 		
 		var lineBorderWidth = 4;
-		for(var i = 0; i < iLabelsToDraw.length; ++i ) {
-			var entry = this.labels[iLabelsToDraw[i]];
+		for(var i = 0; i < this.labels.length; ++i ) {
+			var rect = rects[i];
+			if( rect == undefined )
+				continue;
+			var entry = this.labels[i];
 			var label = entry[0] + '', flash = entry[1], tLapStart = entry[2];
-			var x = rects[i][0], y = rects[i][1], w = rects[i][2], h = rects[i][3];
-
-			dc.fillStyle = this.backgrounds[iLabelsToDraw[i]];
+			var x = rect[0], y = rect[1], w = rect[2], h = rect[3];
+			
+			dc.fillStyle = this.backgrounds[i];
 			dc.fillRect( x, y, w, h );
 			dc.lineWidth = lineBorderWidth;
 			dc.strokeStyle = '#000000';
@@ -228,14 +265,13 @@ function LapCounter( aCanvas ) {
 				if( tLapStart != null && this.tRaceStart ) {
 					var tLap = this.tRaceStart + tLapStart*1000.0;
 					var secs = ((new Date).getTime() - tLap)/1000.0;
-					drawText( dc, formatTime(secs), this.foregrounds[iLabelsToDraw[i]], x, yCC, w, hCC );
+					drawText( dc, formatTime(secs), this.foregrounds[i], x, yCC, w, hCC );
 				}
 			}
 			if( !flash || this.flashOn )
-				drawLapText( dc, label, this.foregrounds[iLabelsToDraw[i]], x, y, w, h );
+				drawLapText( dc, label, this.foregrounds[i], x, y, w, h );
 		}
 	}
-	
 	this.setLabels( this.labels );
 }
 
@@ -287,33 +323,13 @@ function CloseWebSocket() {
 }
 
 function SetLabelsToDraw() {
-	var iLabelsToDraw = GetILabelsToDraw();
-	var labelStr = '';
-	var one = '1'.charCodeAt(0);
-	for( var i = 0; i < iLabelsToDraw.length; ++i )
-		labelStr += String.fromCharCode(one + iLabelsToDraw[i]);
-	var labelStrNew = prompt("Enter the Lap Counters to Display (eg. 1, 2, 3, 12, 34):", labelStr);
-	if( labelStrNew == null || labelStrNew == labelStr )
+	var lcLabel = GetLCLabel();
+	var lcLabelNew = prompt("Enter the Lap Counters to Display (eg. 1, 2, 12, 34, 123-45):", lcLabel);
+	if( lcLabelNew == null || lcLabelNew == lcLabel )
 		return;
 	
-	iLabelsToDraw = [];
-	for( var i = 0; i < labelStrNew.length; ++i ) {
-		var c = labelStrNew.charAt(i);
-		if( !/^\d$/.test(c) )
-			continue;
-		var iLab = parseInt(c) - 1;
-		if( 0 <= iLab && iLab < MaxLabels && iLabelsToDraw.indexOf(iLab) < 0 )
-			iLabelsToDraw.push( iLab );
-	}
-	iLabelsToDraw.sort();
-	labelStr = '';
-	for( var i = 0; i < iLabelsToDraw.length; ++i )
-		labelStr += String.fromCharCode(one + iLabelsToDraw[i]);
-	
-	if( labelStr.length >= MaxLabels )
-		labelStr = '';
-		
-	window.location.assign( '/LapCounter' + labelStr + '.html' );
+	lcLabel = CleanLCLabel( lcLabelNew );
+	window.location.assign( '/LapCounter' + lcLabel + '.html' );
 }
 
 function onLoad() {
