@@ -708,7 +708,7 @@ class MainWin( wx.Frame ):
 			
 			if not frames:
 				tsLower = min( tsLower, ts-timedelta(seconds=s_before) )
-				tsU = ts+timedelta(seconds=s_after)
+				tsU = ts + timedelta(seconds=s_after)
 				tsUpper = max( tsUpper,tsU )
 				zeroFrames.append( (row, id, tsU) )
 			
