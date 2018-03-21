@@ -114,6 +114,21 @@ class RoundButton(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, label="", pos=wx.DefaultPosition,
 				 size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				 name="roundbutton"):
+		"""
+		Default class constructor.
+
+		:param `parent`: the L{RoundButton} parent;
+		:param `id`: window identifier. A value of -1 indicates a default value;
+		:param `label`: the button text label;
+		:param `pos`: the control position. A value of (-1, -1) indicates a default position,
+		 chosen by either the windowing system or wxPython, depending on platform;
+		:param `size`: the control size. A value of (-1, -1) indicates a default size,
+		 chosen by either the windowing system or wxPython, depending on platform;
+		:param `style`: the button style (unused);
+		:param `validator`: the validator associated to the button;
+		:param `name`: the button name.
+		"""
+		
 		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
 
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -139,11 +154,22 @@ class RoundButton(wx.Control):
 		self.SetInitialSize(size)
 
 	def OnSize(self, event):
+		"""
+		Handles the ``wx.EVT_SIZE`` event for L{RoundButton}.
+
+		:param `event`: a `wx.SizeEvent` event to be processed.
+		"""
+		
 		event.Skip()
 		self.Refresh()
 
 		
 	def _containsEvent( self, event ):
+		"""
+		Checks that the event occured in the L{RoundButton} circle.
+
+		:param `event`: a `wx.MouseEvent` event.
+		"""
 		x, y, width, height = self.GetClientRect()
 		x += width // 2
 		y += height // 2
@@ -153,6 +179,12 @@ class RoundButton(wx.Control):
 		return dx * dx + dy * dy < self._buttonRadius * self._buttonRadius
 		
 	def OnLeftDown(self, event):
+		"""
+		Handles the ``wx.EVT_LEFT_DOWN`` event for L{RoundButton}.
+
+		:param `event`: a `wx.MouseEvent` event to be processed.
+		"""
+
 		if not self.IsEnabled() or not self._containsEvent(event):
 			return
 		
@@ -163,6 +195,12 @@ class RoundButton(wx.Control):
 
 
 	def OnLeftUp(self, event):
+		"""
+		Handles the ``wx.EVT_LEFT_UP`` event for L{RoundButton}.
+
+		:param `event`: a `wx.MouseEvent` event to be processed.
+		"""
+
 		if not self.IsEnabled() or not self.HasCapture():
 			return
 		
@@ -180,6 +218,12 @@ class RoundButton(wx.Control):
 
 
 	def OnMouseEnter(self, event):
+		"""
+		Handles the ``wx.EVT_ENTER_WINDOW`` event for L{RoundButton}.
+
+		:param `event`: a `wx.MouseEvent` event to be processed.
+		"""
+
 		if not self.IsEnabled():
 			return
 		
@@ -189,24 +233,48 @@ class RoundButton(wx.Control):
 
 
 	def OnMouseLeave(self, event):
+		"""
+		Handles the ``wx.EVT_LEAVE_WINDOW`` event for L{RoundButton}.
+
+		:param `event`: a `wx.MouseEvent` event to be processed.
+		"""
+
 		self._mouseAction = None
 		self.Refresh()
 		event.Skip()
 
 
 	def OnGainFocus(self, event):
+		"""
+		Handles the ``wx.EVT_SET_FOCUS`` event for L{RoundButton}.
+
+		:param `event`: a `wx.FocusEvent` event to be processed.
+		"""
+		
 		self._hasFocus = True
 		self.Refresh()
 		self.Update()
 
 
 	def OnLoseFocus(self, event):
+		"""
+		Handles the ``wx.EVT_KILL_FOCUS`` event for L{RoundButton}.
+
+		:param `event`: a `wx.FocusEvent` event to be processed.
+		"""
+
 		self._hasFocus = False
 		self.Refresh()
 		self.Update()
 
 
 	def OnKeyDown(self, event):
+		"""
+		Handles the ``wx.EVT_KEY_DOWN`` event for L{RoundButton}.
+
+		:param `event`: a `wx.KeyEvent` event to be processed.
+		"""
+		
 		if self._hasFocus and event.GetKeyCode() == ord(" "):
 			self._mouseAction = HOVER
 			self.Refresh()
@@ -214,6 +282,12 @@ class RoundButton(wx.Control):
 
 
 	def OnKeyUp(self, event):
+		"""
+		Handles the ``wx.EVT_KEY_UP`` event for L{RoundButton}.
+
+		:param `event`: a `wx.KeyEvent` event to be processed.
+		"""
+		
 		if self._hasFocus and event.GetKeyCode() == ord(" "):
 			self._mouseAction = HOVER
 			self.Notify()
@@ -222,25 +296,64 @@ class RoundButton(wx.Control):
 
 
 	def SetInitialSize(self, size=None):
+		"""
+		Given the current font and bezel width settings, calculate
+		and set a good size.
+
+		:param `size`: an instance of `wx.Size`.		
+		"""
+		
 		if size is None:
 			size = wx.DefaultSize			
 		wx.Control.SetInitialSize(self, size)
-	
+
 	SetBestSize = SetInitialSize
+	
 
-	def AcceptsFocus(self):
-		return self.IsShown() and self.IsEnabled()
+	#def AcceptsFocus(self):
+		#"""
+		#Can this window be given focus by mouse click?
 
+		#:note: Overridden from `wx.Control`.
+		#"""
+		
+		#return self.IsShown() and self.IsEnabled()
 
+	def AcceptsFocusFromKeyboard( self ):
+		return True
+		
+	def AcceptsFocus( self ):
+		return False
+	
 	def GetDefaultAttributes(self):
+		"""
+		Overridden base class virtual. By default we should use
+		the same font/colour attributes as the native `wx.Button`.
+		"""
+		
 		return wx.Button.GetClassDefaultAttributes()
 
 
 	def ShouldInheritColours(self):
+		"""
+		Overridden base class virtual. Buttons usually don't inherit
+		the parent's colours.
+
+		:note: Overridden from `wx.Control`.
+		"""
+		
 		return False
 	
 
 	def Enable(self, enable=True):
+		"""
+		Enables/disables the button.
+
+		:param `enable`: ``True`` to enable the button, ``False`` to disable it.
+		
+		:note: Overridden from `wx.Control`.
+		"""
+		
 		wx.Control.Enable(self, enable)
 		self.Refresh()
 
@@ -431,7 +544,7 @@ class RoundButton(wx.Control):
 if __name__ == '__main__':
 
 	# Self-test.
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="roundbutton", size=(1024,600))
 	mainWin.SetBackgroundColour( wx.WHITE )
 	vs = wx.BoxSizer( wx.VERTICAL )
@@ -441,23 +554,28 @@ if __name__ == '__main__':
 	# Pure colours seem to work best as they approximate the jewel tones of coloured glass.
 	btnDefs = [
 		# Label				# Colour				# Use bold Font?
-		['GO',				wx.Colour(0,128,0),		True ],
+		#['OK',				wx.Colour(0,128,0),		True ],
+		#['SCAN',			wx.Colour(0,128,128),	False ],
+		#['Cancel',			wx.Colour(128,0,0),		True ],
+		
+		['OK',				wx.Colour(128,128,128),True ],
+		['SCAN',			wx.Colour(128,128,128),	False ],
+		['Cancel',			wx.Colour(128,128,128),True ],
+		
 		['STOP',			wx.Colour(128,0,0),		True ],
 		['SLOW',			wx.Colour(100,100,0),	True ],
-		['PANIC',			wx.Colour(128,0,0),		True ],
 		['ENGINE\nSTART',	wx.Colour(0,128, 0),	False ],
 		['Manual\nOverride',wx.Colour(0,0,128),		False ],
-		['Reload',			wx.Colour(0,128,128),	False ],
-		['LAUNCH',			wx.Colour(128,0,128),	False ],
+		['RESET',			wx.Colour(128,0,128),	False ],
 	]
 	
 	btnSize = 150
 
 	# The font size does not matter here - we just it for the properties.
-	boldFont = wx.FFontFromPixelSize((0,32), wx.DEFAULT, flags=wx.FONTFLAG_BOLD)	
+	boldFont = wx.Font(wx.FontInfo(10).Bold())	
 	
 	for i, (label, colour, boldFlag) in enumerate(btnDefs):
-		btn = RoundButton(mainWin, wx.ID_ANY, label, size=(btnSize, btnSize))
+		btn = RoundButton(mainWin, label=label, size=(btnSize, btnSize))
 		btn.SetBackgroundColour( wx.WHITE )
 		btn.SetForegroundColour( colour )
 		
