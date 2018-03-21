@@ -434,7 +434,7 @@ class RoundButton(wx.Control):
 			
 		# Adjust the font size based on the ratio that we would have drawn outside the button circle.
 		fontPixels *= rDrawable / math.sqrt( r2Max )
-		fontCur = wx.Font((0,fontPixels), font.GetFamily(), font.GetStyle(), font.GetWeight(),
+		fontCur = wx.Font((0,int(fontPixels)), font.GetFamily(), font.GetStyle(), font.GetWeight(),
 								font.GetUnderlined(), font.GetFaceName(), font.GetEncoding() )
 		self.SetFont( fontCur )
 
