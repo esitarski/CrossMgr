@@ -52,7 +52,7 @@ class Database( object ):
 			pass
 		'''
 		
-		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES )
+		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0 )
 		
 		if initTables:
 			# Add kmh, ts_start, sBefore and sAfter to the trigger table if necessary.
