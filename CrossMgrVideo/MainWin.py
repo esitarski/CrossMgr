@@ -507,6 +507,7 @@ class MainWin( wx.Frame ):
 		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
 		self.primaryBitmap.SetTestBitmap()
 		self.primaryBitmap.Bind( wx.EVT_LEFT_UP, self.onFocus )
+		self.primaryBitmap.Bind( wx.EVT_RIGHT_UP, self.onFocus )
 		
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
 		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )

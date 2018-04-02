@@ -630,7 +630,7 @@ class NumKeypad( wx.Panel ):
 			for a in race.riders.itervalues():
 				if a.status == Finisher and a.num not in resultNums and a.firstTime is not None:
 					category = getCategory( a.num )
-					if category and t >= a.firstTime:
+					if category and t >= a.firstTime and t >= race.getStartOffset(a.num):
 						results.append(
 							#              num,   status,    lastTime, raceCat,           lapTimes,  raceTimes, interp
 							RiderResult( a.num, Finisher, a.firstTime, category.fullname,       [],      [],      []   )
