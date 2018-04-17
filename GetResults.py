@@ -431,16 +431,12 @@ def _GetResultsCore( category ):
 				lastFullLapsTime = rr.roadRaceLastTime + 60.0
 			else:
 				if estimateLapsDownFinishTime:
-					# Compute a projected finish time.  Use the median lap time.
-					if len(rr.raceTimes) > 1 and rr.lapTimes:
-						lapTimes = sorted( rr.lapTimes )
-						if len(lapTimes) & 1:
-							medianLapTime = lapTimes[len(lapTimes)//2]
-						else:
-							i = len(lapTimes) // 2
-							medianLapTime = (lapTimes[i] + lapTimes[i+1]) / 2.0
-						lapsDown = leader.laps - rr.laps
-						rr.projectedTime = rr.raceTimes[-1] + lapsDown * medianLapTime
+					# Compute a projected finish time.  Use the median lap time.  Disregard the first lap.
+					lapTimes = sorted( rr.lapTimes[1:] if len(rr.lapTimes) > 1 else rr.lapTimes )
+					if lapTimes:
+						lapTimesLen = len(lapTimes)
+						medianLapTime = lapTimes[lapTimesLen//2] if lapTimesLen&1 else (lapTimes[lapTimesLen//2-1] + lapTimes[lapTimesLen//2]) / 2.0
+						rr.projectedTime = rr.raceTimes[-1] + (leader.laps - rr.laps) * medianLapTime
 						rr.roadRaceLastTime = max( lastFullLapsTime, floor(rr.projectedTime) )
 					else:
 						rr.roadRaceLastTime = rr.projectedTime = 5 * 24.0 * 60.0 * 60.0
