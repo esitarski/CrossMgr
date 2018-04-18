@@ -96,8 +96,8 @@ if __name__ == '__main__':
 	t = datetime.now()
 	delta = timedelta( seconds=0.01 )
 	for i in xrange(-10, 10):
-		tg.add( '111', t + i*delta, 1000-i**2/3.0 + 5*(random.random()-0.5) )
-		tg.add( '222', t - timedelta(seconds=10) + i*delta, 1000-i**2 + 5*(random.random()-0.5) )
+		tg.add( '111', t + i*delta, 1000-i**2 /3.0 + 5*(random.random()-0.5) )
+		tg.add( '222', t - timedelta(seconds=10) + i*delta, 1000-i**2 /4.0 + 5*(random.random()-0.5) )
 	sleep( 1.0 )
 	print t
 	reads, strays = tg.getReadsStrays()
