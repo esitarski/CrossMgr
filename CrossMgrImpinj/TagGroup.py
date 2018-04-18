@@ -43,8 +43,7 @@ class TagGroup( object ):
 	'''
 		Process groups of tag reads and return the best time estimated using quadratic regression.
 		Stray reads are also detected if there is no quiet period for the tag.
-		
-		The first read time of a stray read is returned.
+		The first read time of each stray read is returned.
 	'''
 	def __init__( self ):
 		self.tQuiet = 0.5		# Seconds of quiet after which the tag is considered read.
