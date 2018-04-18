@@ -13,6 +13,32 @@ def datetimeToTr( t ):
 def trToDatetime( tr ):
 	return tRef + timedelta(seconds=tr)
 
+class TagGroupEntry( object ):
+	__slots__ = ('firstRead', 'reads')
+	
+	def __init__( self, t, db ):
+		self.firstRead = datetimeToTr( t )
+		self.reads = [(self.firstRead, db)]
+		
+	def add( self, t, db ):
+		self.reads.append( (datetimeToTr(t), db) )
+		
+	def replaceLast( self, t, db ):
+		self.reads[-1] = (datetimeToTr(t), db)
+	
+	def isStray( self ):
+		return self.reads[-1][0] != self.firstRead
+	
+	def getBestEstimate( self ):
+		try:
+			trEst = QuadRegExtreme( self.reads )
+		except:
+			trEst = self.reads[0][0]
+		# If the estimate lies outside the data, return the first read.
+		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
+			trEst = self.reads[0][0]
+		return trToDatetime( trEst )
+	
 class TagGroup( object ):
 	'''
 		Process groups of tag reads and return the best time estimated using quadratic regression.
@@ -22,18 +48,19 @@ class TagGroup( object ):
 	'''
 	def __init__( self ):
 		self.tQuiet = 0.5		# Seconds of quiet after which the tag is considered read.
-		self.tStray = 5.0		# Seconds after the tag is considered a stray.
+		self.tStray = 8.0		# Seconds of continuous reads for tag to be considered a stray.
 		
-		self.tagReads = {}
-		self.tagFirstRead = {}
+		self.tagInfo = {}
 		
 	def add( self, tag, t, db ):
-		tr = datetimeToTr( t )
-		if tag in self.tagReads:
-			self.tagReads[tag].append( (tr, db) )
-		else:
-			self.tagFirstRead[tag] = tr
-			self.tagReads[tag] = [(tr, db)]
+		try:
+			tge = self.tagInfo[tag]
+			if tge.isStray():
+				tge.replaceLast( t, db )
+			else:
+				tge.add( t, db )
+		except KeyError:
+			self.tagInfo[tag] = TagGroupEntry( t, db )
 
 	def getReadsStrays( self, tNow=None ):
 		'''
@@ -46,26 +73,21 @@ class TagGroup( object ):
 		trNow = datetimeToTr( tNow or datetime.now() )
 		reads, strays = [], []
 		toDelete = []
-		for tag, tagReads in self.tagReads.iteritems():
-			if trNow - tagReads[0][0] >= self.tQuiet:			# This tag read group has ended.
-				if tagReads[0][0] == self.tagFirstRead[tag]:
-					tEst = QuadRegExtreme(tagReads)
-					# Check that the estimated time is within the read range.
-					# If not, return the first read.
-					if not tagReads[0][0] <= tEst <= tagReads[-1][0]:
-						tEst = tagReads[0][0]
-					reads.append( (tag, trToDatetime(tEst)) )
+		for tag, tge in self.tagInfo.iteritems():
+			if trNow - tge.reads[-1][0] >= self.tQuiet:			# Tag has left read range.
+				if tge.reads[0][0] == tge.firstRead:
+					reads.append( (tag, tge.getBestEstimate()) )
 				toDelete.append( tag )
-			elif tagReads[-1][0] - self.tagFirstRead[tag] >= self.tStray:	# This is a stray.
+			elif tge.reads[-1][0] - self.tagFirstRead[tag] >= self.tStray:	# This is a stray.
 				# Report the first read time of the stray if we have not done so.
-				if tagReads[0][0] == self.tagFirstRead[tag]:
-					reads.append( (tag, trToDatetime(tagReads[0][0])) )
-				strays.append( (tag, trToDatetime(self.tagFirstRead[tag])) )
-				del tagReads[0:len(reads)-1]	# Cleanup reads we don't need anymore.
+				t = trToDatetime( tge.firstRead )
+				if tge.reads[0][0] == tge.firstRead:
+					reads.append( (tag, t) )
+				strays.append( (tag, t) )
+				del tge.reads[:-1]	# Cleanup old reads we don't need anymore.
 				
 		for tag in toDelete:
-			del self.tagReads[tag]
-			del self.tagFirstRead[tag]
+			del self.tagInfo[tag]
 			
 		return reads, strays
 		
@@ -74,7 +96,10 @@ if __name__ == '__main__':
 	t = datetime.now()
 	delta = timedelta( seconds=0.01 )
 	for i in xrange(-10, 10):
-		tg.add( '111', t + i*delta, 1000-i**2 + 5*(random.random()-0.5) )
+		tg.add( '111', t + i*delta, 1000-i**2/3.0 + 5*(random.random()-0.5) )
 		tg.add( '222', t - timedelta(seconds=10) + i*delta, 1000-i**2 + 5*(random.random()-0.5) )
 	sleep( 1.0 )
-	print t, tg.getReadsStrays()
+	print t
+	reads, strays = tg.getReadsStrays()
+	for tag, t in reads:
+		print t, tag
