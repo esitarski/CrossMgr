@@ -20,20 +20,19 @@ class TagGroupEntry( object ):
 		self.firstRead = datetimeToTr( t )
 		self.reads = [(self.firstRead, db)]
 		
-	def add( self, t, db ):
-		self.reads.append( (datetimeToTr(t), db) )
+	def insert( self, t, db ):
+		if self.reads[0][0] != self.firstRead:
+			self.reads[-1] = (datetimeToTr(t), db)	# if a stray, replace the last entry.
+		else:
+			self.reads.append( (datetimeToTr(t), db) )
 		
-	def replaceLast( self, t, db ):
-		self.reads[-1] = (datetimeToTr(t), db)
-	
-	def isStray( self ):
-		return self.reads[-1][0] != self.firstRead
-	
 	def getBestEstimate( self ):
 		try:
 			trEst = QuadRegExtreme( self.reads )
-		except:
+		except Exception as e:
+			# If error, return the first read.
 			trEst = self.reads[0][0]
+		
 		# If the estimate lies outside the data, return the first read.
 		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
 			trEst = self.reads[0][0]
@@ -53,11 +52,7 @@ class TagGroup( object ):
 		
 	def add( self, tag, t, db ):
 		try:
-			tge = self.tagInfo[tag]
-			if tge.isStray():
-				tge.replaceLast( t, db )
-			else:
-				tge.add( t, db )
+			self.tagInfo[tag].insert( t, db )
 		except KeyError:
 			self.tagInfo[tag] = TagGroupEntry( t, db )
 
@@ -74,7 +69,7 @@ class TagGroup( object ):
 		toDelete = []
 		for tag, tge in self.tagInfo.iteritems():
 			if trNow - tge.reads[-1][0] >= self.tQuiet:			# Tag has left read range.
-				if tge.reads[0][0] == tge.firstRead:
+				if tge.reads[0][0] == tge.firstRead:			# Check if not a stray.
 					reads.append( (tag, tge.getBestEstimate()) )
 				toDelete.append( tag )
 			elif tge.reads[-1][0] - self.tagFirstRead[tag] >= self.tStray:	# This is a stray.
@@ -83,7 +78,7 @@ class TagGroup( object ):
 				if tge.reads[0][0] == tge.firstRead:
 					reads.append( (tag, t) )
 				strays.append( (tag, t) )
-				del tge.reads[:-1]	# Cleanup old reads we don't need anymore.
+				del tge.reads[:-1]	# Cleanup any old reads we don't need anymore.
 				
 		for tag in toDelete:
 			del self.tagInfo[tag]
@@ -91,14 +86,34 @@ class TagGroup( object ):
 		return reads, strays
 		
 if __name__ == '__main__':
-	tg = TagGroup()
+	
+	def genReadProfile( tg, t, tag ):
+		pointCount = 15
+		xRange = 0.5
+		yRange = 25
+		yTop = -47
+		
+		yMult = yRange / ((pointCount/2.0) ** 2)
+		tDelta = xRange / pointCount
+		for i in xrange(pointCount):
+			x = i - pointCount/2.0
+			noise = random.normalvariate( 0.0, 10.0 )
+			y = yTop - x * x * yMult
+			tg.add( tag, t + timedelta( seconds=x*tDelta ), y+noise  )
+	
 	t = datetime.now()
-	delta = timedelta( seconds=0.01 )
-	for i in xrange(-10, 10):
-		tg.add( '111', t + i*delta, 1000-i**2 /3.0 + 5*(random.random()-0.5) )
-		tg.add( '222', t - timedelta(seconds=10) + i*delta, 1000-i**2 /4.0 + 5*(random.random()-0.5) )
+	for k in xrange(100):
+		tg = TagGroup()
+		genReadProfile( tg, t, '111' )
+		tEst = tg.tagInfo['111'].getBestEstimate()
+		print t, tEst, (t - tEst).total_seconds()
+	
+	print
+	tg = TagGroup()
+	genReadProfile( tg, t, '111' )
+	genReadProfile( tg, t-timedelta(seconds=3), '222' )
 	sleep( 1.0 )
-	print t
+	print t, t-timedelta(seconds=3)
 	reads, strays = tg.getReadsStrays()
 	for tag, t in reads:
 		print t, tag

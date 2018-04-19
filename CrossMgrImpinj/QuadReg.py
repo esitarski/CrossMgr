@@ -1,5 +1,7 @@
 def QuadReg( points ):
 	n = len( points )
+	if n < 3:
+		raise ValueError('QuadReg: requires at least 3 points')
 	s1 = s2 = s3 = s4 = s5 = s6 = s7 = 0.0
 	for x, y in points:
 		s1 += x
@@ -15,7 +17,7 @@ def QuadReg( points ):
 		s2 * (s1 * s3 - s2 * s2) )
 		
 	if denom < 0.0000001:
-		raise ValueError( 'denom too small' )
+		raise ValueError( 'QuadReg: numerically unstable - denom too small' )
 		   
 	a1 = (s5 * (s2 * s4 - s3 * s3) -
 		s6 * (s1 * s4 - s2 * s3) +
@@ -30,6 +32,9 @@ def QuadReg( points ):
 	
 def QuadRegExtreme( points ):
 	n = len( points )
+	if n < 3:
+		raise ValueError('QuadRegExtreme: requires at least 3 points')
+	
 	s1 = s2 = s3 = s4 = s5 = s6 = s7 = 0.0
 	for x, y in points:
 		s1 += x
