@@ -39,9 +39,69 @@ TransmitPower = None
 InventorySession = 2		# LLRP inventory session.
 TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  Default=3
 
+def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
+	#-----------------------------------------------------------------------------
+	# Create a read everything Operation Spec message
+	#
+	if not antennas:	# Default to all antennas if unspecified.
+		antennas = [0]
+	
+	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
+		# Initialize to disabled.
+		ROSpec_Parameter(
+			ROSpecID = ROSpecID,
+			CurrentState = ROSpecState.Disabled,
+			Parameters = [
+				ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
+					Parameters = [
+						# Start immediately.
+						ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
+						# No stop trigger.
+						ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
+					]
+				),
+				
+				AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use).
+					AntennaIDs = antennas,		# Use specified antennas.
+					Parameters = [
+						AISpecStopTrigger_Parameter(
+							AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
+							Parameters = [
+								TagObservationTrigger_Parameter(
+									TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
+									NumberOfTags = 500,
+									NumberOfAttempts = 1,
+									Timeout = 500,		# Milliseconds
+									T = 0,				# Idle time between responses.
+								),
+							]
+						),
+						InventoryParameterSpec_Parameter(
+							InventoryParameterSpecID = inventoryParameterSpecID,
+							ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
+						),
+					]
+				),
+				
+				ROReportSpec_Parameter(			# Report spec (specifies what to send from the reader).
+					ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
+					N = 0,
+					Parameters = [
+						TagReportContentSelector_Parameter(
+							EnableAntennaID = True,
+							EnableFirstSeenTimestamp = True,
+							EnablePeakRSSI = True,
+						),
+					]
+				),
+			]
+		)	# ROSpec_Parameter
+	])	# ADD_ROSPEC_Message
+	return rospecMessage
+
 class Impinj( object ):
 
-	def __init__( self, dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
+	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
 		self.impinjHost = impinjHost
 		self.impinjPort = impinjPort
 		self.statusCB = statusCB
@@ -50,6 +110,7 @@ class Impinj( object ):
 		else:
 			self.antennas = [int(a) for a in antennaStr.split()]
 		self.dataQ = dataQ			# Queue to write tag reads.
+		self.strayQ = strayQ		# Queue to write stray reads.
 		self.messageQ = messageQ	# Queue to write operational messages.
 		self.shutdownQ = shutdownQ	# Queue to listen for shutdown.
 		self.rospecID = 123
@@ -139,7 +200,7 @@ class Impinj( object ):
 			self.connectedAntennas = [p.AntennaID for p in response.Parameters
 				if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4]
 		
-		# Configure a period Keepalive message.
+		# Configure a periodic Keepalive message.
 		# Change receiver sensitivity (if specified).  This value is reader dependent.
 		receiverSensitivityParameter = []
 		if ReceiverSensitivity is not None:
@@ -201,7 +262,7 @@ class Impinj( object ):
 			return False
 		
 		# Configure our new rospec.
-		success, response = self.sendCommand( GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas) )
+		success, response = self.sendCommand( GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas) )
 		if not success:
 			return False
 			
@@ -340,7 +401,9 @@ class Impinj( object ):
 					except Exception as e:
 						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: Missing Timestamp'.format(self.tagCount)) )
 						continue
-						
+					
+					peakRSSI = tag.get('PeakRSSI', None)		# -127..127 in db.
+					
 					# Convert discoveryTime to Python format and correct for reader time difference.
 					discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 					

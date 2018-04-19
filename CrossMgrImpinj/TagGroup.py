@@ -84,11 +84,13 @@ class TagGroup( object ):
 			del self.tagInfo[tag]
 			
 		return reads, strays
-		
+	
+from math import sqrt
 if __name__ == '__main__':
 	
-	def genReadProfile( tg, t, tag ):
-		pointCount = 15
+	def genReadProfile( tg, t, tag, stddev=10.0 ):
+		#pointCount = 15
+		pointCount = 18
 		xRange = 0.5
 		yRange = 25
 		yTop = -47
@@ -97,16 +99,21 @@ if __name__ == '__main__':
 		tDelta = xRange / pointCount
 		for i in xrange(pointCount):
 			x = i - pointCount/2.0
-			noise = random.normalvariate( 0.0, 10.0 )
+			noise = random.normalvariate( 0.0, stddev )
 			y = yTop - x * x * yMult
-			tg.add( tag, t + timedelta( seconds=x*tDelta ), y+noise  )
+			# Report integer values, just like the reader would.
+			tg.add( tag, t + timedelta( seconds=x*tDelta ), round(y+noise)  )
 	
 	t = datetime.now()
-	for k in xrange(100):
-		tg = TagGroup()
-		genReadProfile( tg, t, '111' )
-		tEst = tg.tagInfo['111'].getBestEstimate()
-		print t, tEst, (t - tEst).total_seconds()
+	for stddev in xrange(10+1):
+		variance = 0.0
+		samples = 1000
+		for k in xrange(samples):
+			tg = TagGroup()
+			genReadProfile( tg, t, '111', float(stddev) )
+			tEst = tg.tagInfo['111'].getBestEstimate()
+			variance += (t - tEst).total_seconds() ** 2
+		print '{},{}'.format( stddev, sqrt(variance / samples) )
 	
 	print
 	tg = TagGroup()

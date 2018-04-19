@@ -831,7 +831,7 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 					]
 				),
 				
-				ROReportSpec_Parameter(			# Report spec (specified what to send from the reader)
+				ROReportSpec_Parameter(			# Report spec (specifies what to send from the reader)
 					ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
 					N = 0,
 					Parameters = [
@@ -849,14 +849,15 @@ def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParamet
 def GetEnableRospecMesssage( MessageID, ROSpecID = 123 ):
 	return ENABLE_ROSPEC_Message(MessageID = MessageID, ROSpecID = ROSpecID)
 	
+actions = {
+	EPC_96_Parameter:					lambda x: ('EPC', x.EPC),
+	EPCData_Parameter: 					lambda x: ('EPC', x.EPC),
+	FirstSeenTimestampUTC_Parameter:	lambda x: ('Timestamp', x.Microseconds),
+	AntennaID_Parameter:				lambda x: ('AntennaID', x.AntennaID),
+	TagSeenCount_Parameter:				lambda x: ('TagSeenCount', x.TagCount),
+	PeakRSSI_Parameter:					lambda x: ('PeakRSSI', x.PeakRSSI),
+}
 def _getTagData( self ):
-	actions = {
-		EPC_96_Parameter:					lambda x: ('EPC', x.EPC),
-		EPCData_Parameter: 					lambda x: ('EPC', x.EPC),
-		FirstSeenTimestampUTC_Parameter:	lambda x: ('Timestamp', x.Microseconds),
-		AntennaID_Parameter:				lambda x: ('AntennaID', x.AntennaID),
-		TagSeenCount_Parameter:				lambda x: ('TagSeenCount', x.TagCount),
-	}
 	tagData = []
 	for p in self.Parameters:
 		if not isinstance( p, TagReportData_Parameter ):

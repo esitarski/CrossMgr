@@ -418,8 +418,19 @@ class MainWin( wx.Frame ):
 		for i in xrange(4):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 	
+	def strayHandler( self, strayQ ):
+		while 1:
+			msg = strayQ.get()
+			if msg[0] == 'strays':
+				strays = msg[1]
+				# Do something with the strays.
+				# wx.CallAfter( ... )
+			elif msg[0] == 'shutdown':
+				break
+	
 	def start( self ):
 		self.dataQ = Queue()
+		self.strayQ = Queue()
 		self.messageQ = Queue()
 		self.shutdownQ = Queue()	# Queue to tell the Impinj monitor to shut down.
 		self.readerStatusCB()
@@ -428,7 +439,7 @@ class MainWin( wx.Frame ):
 			self.impinjProcess = Process(
 				name='ImpinjProcess', target=ImpinjServer,
 				args=(
-					self.dataQ, self.messageQ, self.shutdownQ,
+					self.dataQ, self.strayQ, self.messageQ, self.shutdownQ,
 					ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix, ImpinjInboundPort,
 					self.getAntennaStr(),
 					self.readerStatusCB,
@@ -438,7 +449,7 @@ class MainWin( wx.Frame ):
 			self.impinjProcess = Process(
 				name='ImpinjProcess', target=ImpinjServer,
 				args=(
-					self.dataQ, self.messageQ, self.shutdownQ,
+					self.dataQ, self.strayQ, self.messageQ, self.shutdownQ,
 					self.impinjHost.GetAddress(), ImpinjInboundPort,
 					self.getAntennaStr(),
 					self.readerStatusCB,
@@ -446,18 +457,24 @@ class MainWin( wx.Frame ):
 			)
 		self.impinjProcess.daemon = True
 		
+		self.strayProcess = Process( name='StrayProcess', target=self.strayHandler, args=(self.strayQ,) )
+		self.strayProcess.daemon = True
+		
 		self.crossMgrProcess = Process( name='CrossMgrProcess', target=CrossMgrServer,
 			args=(self.dataQ, self.messageQ, self.shutdownQ, self.getCrossMgrHost(), CrossMgrPort) )
 		self.crossMgrProcess.daemon = True
 		
 		self.impinjProcess.start()
+		self.strayProcess.start()
 		self.crossMgrProcess.start()
 	
 	def shutdown( self ):
 		self.impinjProcess = None
 		self.crossMgrProcess = None
+		self.strayProcess = None
 		self.messageQ = None
 		self.dataQ = None
+		self.strayQ = None
 		self.shutdownQ = None
 	
 	def doReset( self, event, confirm = True ):
@@ -519,14 +536,20 @@ class MainWin( wx.Frame ):
 		if self.dataQ:
 			self.dataQ.put( 'shutdown' )
 			self.dataQ.put( 'shutdown' )
+		if self.strayQ:
+			self.dataQ.put( ('shutdown',) )
+			self.dataQ.put( ('shutdown',) )
 		
 		if self.crossMgrProcess:
 			self.crossMgrProcess.join()
 		if self.impinjProcess:
 			self.impinjProcess.join()
+		if self.strayProcess:
+			self.strayProcess.join()
 		
 		self.crossMgrProcess = None
 		self.impinjProcess = None
+		self.strayProcess = None
 	
 	def onCloseWindow( self, event ):
 		self.gracefulShutdown()
