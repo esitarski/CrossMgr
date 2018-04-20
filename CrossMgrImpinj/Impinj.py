@@ -17,6 +17,7 @@ except ImportError:
 from TagGroup import TagGroup
 
 getTimeNow = datetime.datetime.now
+tOld = getTimeNow() - datetime.timedelta( days=200 )
 
 HOME_DIR = os.path.expanduser("~")
 
@@ -123,6 +124,7 @@ class Impinj( object ):
 		self.timeCorrection = None	# Correction between the reader's time and the computer's time.
 		self.connectedAntennas = []
 		self.antennaReadCount = defaultdict(int)
+		self.lastReadTime = {}
 		self.start()
 		
 	def start( self ):
@@ -135,10 +137,6 @@ class Impinj( object ):
 		
 		# Create a log queue and start a thread to write the log.
 		self.logQ.put( 'msg', 'Tag ID,Discover Time' )
-		self.logFileThread = threading.Thread( target=self.handleLogFile )
-		self.logFileThread.daemon = True
-		self.logFileThread.start()
-	
 		self.logFileThread = threading.Thread( target=self.handleLogFile )
 		self.logFileThread.daemon = True
 		self.logFileThread.start()
@@ -289,10 +287,23 @@ class Impinj( object ):
 		success = (success and isinstance(response, ENABLE_ROSPEC_RESPONSE_Message) and response.success())
 		return success
 	
-	def reportTag( self, tagID, discoveryTime ):
+	def reportTag( self, tagID, discoveryTime, quadReg ):
+		lrt = self.lastReadTime.get(tagID, tOld)
+		if discoveryTime > lrt:
+			self.lastReadTime[tagID] = discoveryTime
+		
+		if (discoveryTime - lrt).total_seconds() < RepeatSeconds:
+			self.messageQ.put( (
+				'Impinj',
+				'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds,
+				discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
+				self.antennaReadCount,
+				)
+			)
+			return False
+			
 		self.dataQ.put( (tagID, discoveryTime) )
 		
-		# Write the entry to the log.
 		self.logQ.put( (
 				'log',
 				'{},{}'.format(
@@ -304,17 +315,19 @@ class Impinj( object ):
 		
 		self.messageQ.put( (
 			'Impinj',
-			'QuadReg {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTime),
+			'{} {}. tag={}, time={}'.format('QuadReg' if quadReg else 'FirstRead', self.tagCount, tagID, discoveryTime),
 			self.antennaReadCount,
 			)
 		)
+		Bell()
+		return True
 	
 	def handleTagGroup( self ):
 		if not self.tagGroup:
 			return
 		reads, strays = self.tagGroup.getReadsStrays()
 		for tagID, discoveryTime in reads:
-			self.reportTag( tagID, discoveryTime )
+			self.reportTag( tagID, discoveryTime, True )
 			
 		self.strayQ.put( ('strays', strays) )
 		self.tagGroupTimer = threading.Timer( 1.0, self.handleTagGroup )
@@ -359,8 +372,6 @@ class Impinj( object ):
 			#------------------------------------------------------------
 			# Connect Mode.
 			#
-			lastReadTime = {}			# Lookup for last tag read times.
-			
 			# Create a socket to connect to the reader.
 			self.readerSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			self.readerSocket.settimeout( ConnectionTimeoutSeconds )
@@ -483,27 +494,14 @@ class Impinj( object ):
 						if self.tagGroup.add( antennaID, tagID, discoveryTime, peakRSSI ):
 							self.messageQ.put( (
 								'Impinj',
-								'First Read {}.  tag={} time={}'.format(self.tagCount, tagID,
+								'QuadRegProcessing {}.  tag={} time={}'.format(self.tagCount, tagID,
 								discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
 								self.antennaReadCount,
 								)
 							)
 							Bell()
 					else:
-						# Check if this read happened too soon after another read.
-						LRT = lastReadTime.get( tagID, tOld )
-						lastReadTime[tagID] = discoveryTime
-						if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
-							self.messageQ.put( (
-								'Impinj',
-								'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds,
-								discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
-								self.antennaReadCount,
-								)
-							)
-							continue
-						self.reportTag( tagID, discoveryTime )
-						Bell()
+						self.reportTag( tagID, discoveryTime, False )
 		
 		# Cleanup.
 		if self.readerSocket:

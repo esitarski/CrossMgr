@@ -537,8 +537,7 @@ class MainWin( wx.Frame ):
 			self.dataQ.put( 'shutdown' )
 			self.dataQ.put( 'shutdown' )
 		if self.strayQ:
-			self.dataQ.put( ('shutdown',) )
-			self.dataQ.put( ('shutdown',) )
+			self.strayQ.put( ('shutdown',) )
 		
 		if self.crossMgrProcess:
 			self.crossMgrProcess.join()

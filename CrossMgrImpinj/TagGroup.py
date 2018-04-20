@@ -81,7 +81,7 @@ class TagGroupEntry( object ):
 		return trToDatetime( max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate() )
 		
 	def __repr__( self ):
-		return 'TagGroupEntry({},{})'.format(self.firstRead, self.reads)
+		return 'TagGroupEntry({},{})'.format(self.firstReadMin, self.lastReadMax)
 	
 class TagGroup( object ):
 	'''

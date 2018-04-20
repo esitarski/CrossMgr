@@ -113,7 +113,7 @@ def getHelpFolder():	return helpFolder
 playBell = False
 def Bell():
 	if playBell:
-		wx.Bell()
+		wx.CallAfter( wx.Bell )
 		
 #------------------------------------------------------------------------
 def disable_stdout_buffering():
