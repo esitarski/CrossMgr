@@ -449,8 +449,9 @@ class Impinj( object ):
 				for tag in response.getTagData():
 					self.tagCount += 1
 					
+					antennaID = tag['AntennaID']
 					try:
-						self.antennaReadCount[tag['AntennaID']] += 1
+						self.antennaReadCount[antennaID] += 1
 					except Exception as e:
 						self.messageQ.put( ('Impinj', 'Received {}.  Missing AntennaID.'.format(self.tagCount)) )
 					
@@ -479,7 +480,7 @@ class Impinj( object ):
 					
 					# Convert tag and discovery Time
 					if peakRSSI is not None:
-						if self.tagGroup.add( tagID, discoveryTime, peakRSSI ):
+						if self.tagGroup.add( antennaID, tagID, discoveryTime, peakRSSI ):
 							self.messageQ.put( (
 								'Impinj',
 								'First Read {}.  tag={} time={}'.format(self.tagCount, tagID,

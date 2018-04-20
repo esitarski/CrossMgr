@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from QuadReg import QuadRegExtreme
 from time import sleep
 import random
+import sys
 
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()
@@ -13,30 +14,80 @@ def datetimeToTr( t ):
 def trToDatetime( tr ):
 	return tRef + timedelta(seconds=tr)
 
-class TagGroupEntry( object ):
-	__slots__ = ('firstRead', 'reads')
+class AntennaReads( object ):
+	__slots__ = ('firstRead', 'reads', 'dbMax')
 	
-	def __init__( self, t, db ):
-		self.firstRead = datetimeToTr( t )
-		self.reads = [(self.firstRead, db)]
-		
-	def add( self, t, db ):
+	def __init__( self, tr, db ):
+		self.firstRead = tr
+		self.reads = [(tr, db)]
+		self.dbMax = db
+	
+	def add( self, tr, db ):
 		if self.reads[0][0] != self.firstRead:
-			self.reads[-1] = (datetimeToTr(t), db)	# if a stray, replace the last entry.
+			self.reads[-1] = (tr, db)	# if a stray, just replace the last entry.
 		else:
-			self.reads.append( (datetimeToTr(t), db) )
-		
+			self.reads.append( (tr, db) )
+			if db > self.dbMax: self.dbMax = db
+	
+	def isStray( self ):
+		return self.reads[0][0] != self.firstRead
+	
 	def getBestEstimate( self ):
 		try:
 			trEst = QuadRegExtreme( self.reads )
 		except Exception as e:
 			# If error, return the first read.
-			trEst = self.reads[0][0]
+			trEst = self.firstRead
 		
 		# If the estimate lies outside the data, return the first read.
 		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
-			trEst = self.reads[0][0]
+			trEst = self.firstRead
 		return trToDatetime( trEst )
+		
+class TagGroupEntry( object ):
+	__slots__ = ('antennaReads', 'firstReadMin', 'lastReadMax', 'isStray')
+	
+	def __init__( self, antenna, t, db ):
+		self.antennaReads = [None, None, None, None]
+		self.firstReadMin, self.lastReadMax = sys.float_info.max, -sys.float_info.max
+		self.isStray = False
+		self.add( antenna, t, db )
+		
+	def add( self, antenna, t, db ):
+		tr = datetimeToTr(t)
+		iAntenna = antenna - 1
+		if not self.antennaReads[iAntenna]:
+			self.antennaReads[iAntenna] = AntennaReads(tr, db)
+		else:
+			self.antennaReads[iAntenna].add( tr, db )
+		
+		if tr < self.firstReadMin: self.firstReadMin = tr
+		if tr > self.lastReadMax:  self.lastReadMax = tr
+	
+	def setStray( self ):
+		for ar in self.antennaReads:
+			if ar:
+				del ar.reads[:-1]	# Delete all but last read.
+		self.isStray = True
+	
+	def getBestEstimate( self ):
+		if self.isStray:
+			return trToDatetime( self.firstReadMin )
+	
+		arBest = None
+		# Choose the antenna with the most reads.  This is also likely dbMax.
+		for ar in self.antennaReads:
+			if ar and (not arBest or len(arBest.reads) < len(ar.reads)):
+				arBest = ar
+		if not arBest:
+			raise ValueError( 'no antenna reads' )
+		
+		# Then check for highest db with sufficient samples.
+		for ar in self.antennaReads:
+			if ar and (arBest.dbMax < ar.dbMax and len(ar.reads) >= 5):
+				arBest = ar
+			
+		return arBest.getBestEstimate()
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstRead, self.reads)
@@ -53,12 +104,12 @@ class TagGroup( object ):
 		
 		self.tagInfo = {}
 		
-	def add( self, tag, t, db ):
+	def add( self, antenna, tag, t, db ):
 		try:
-			self.tagInfo[tag].add( t, db )
+			self.tagInfo[tag].add( antenna, t, db )
 			return False
 		except KeyError:
-			self.tagInfo[tag] = TagGroupEntry( t, db )
+			self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
 			return True
 
 	def getReadsStrays( self, tNow=None ):
@@ -73,17 +124,16 @@ class TagGroup( object ):
 		reads, strays = [], []
 		toDelete = []
 		for tag, tge in self.tagInfo.iteritems():
-			if trNow - tge.reads[-1][0] >= self.tQuiet:			# Tag has left read range.
-				if tge.reads[0][0] == tge.firstRead:			# Check if not a stray.
+			if trNow - tge.lastReadMax >= self.tQuiet:				# Tag has left read range.
+				if not tge.isStray:
 					reads.append( (tag, tge.getBestEstimate()) )
 				toDelete.append( tag )
-			elif tge.reads[-1][0] - tge.firstRead >= self.tStray:	# This is a stray.
-				# Report the first read time of the stray if we have not done so.
-				t = trToDatetime( tge.firstRead )
-				if tge.reads[0][0] == tge.firstRead:
+			elif tge.lastReadMax - tge.firstReadMin >= self.tStray:	# This is a stray.
+				t = trToDatetime( tge.firstReadMin )
+				if not tge.isStray:
+					tge.setStray()
 					reads.append( (tag, t) )
 				strays.append( (tag, t) )
-				del tge.reads[:-1]	# Cleanup any old reads we don't need anymore.
 				
 		for tag in toDelete:
 			del self.tagInfo[tag]
@@ -106,7 +156,7 @@ if __name__ == '__main__':
 			noise = random.normalvariate( 0.0, stddev )
 			y = yTop - x * x * yMult
 			# Report integer values, just like the reader would.
-			tg.add( tag, t + timedelta( seconds=x*tDelta ), round(y+noise)  )
+			tg.add( 1, tag, t + timedelta( seconds=x*tDelta ), round(y+noise)  )
 	
 	t = datetime.now()
 	for stddev in xrange(10+1):
