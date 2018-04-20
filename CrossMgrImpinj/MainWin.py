@@ -20,6 +20,7 @@ import sys
 import os
 import re
 import datetime
+import operator
 
 from Version import AppVerName
 
@@ -374,17 +375,29 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------------------------
 		# CrossMgr configuration.
 		#
-		gbs = wx.GridBagSizer( 4, 4 )
-		fgs.Add( gbs, flag=wx.EXPAND|wx.ALL, border = 4 )
+		cmcs = wx.BoxSizer( wx.VERTICAL )
+		fgs.Add( cmcs, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
-		gbs.Add( setFont(bigFont,wx.StaticText(self, label='CrossMgr Configuration:')), pos=(0,0), span=(1,2), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
-		gbs.Add( wx.StaticText(self, label='CrossMgr Address:'), pos=(1,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		
-		hb = wx.BoxSizer( wx.HORIZONTAL )
+		cmcs.Add( setFont(bigFont,wx.StaticText(self, label='CrossMgr Configuration:')) )
+		hh = wx.BoxSizer( wx.HORIZONTAL )
+		hh.Add( wx.StaticText(self, label='CrossMgr Address:'), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.crossMgrHost = IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
-		hb.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
-		hb.Add( wx.StaticText( self, label=' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
-		gbs.Add( hb, pos=(1,1), span=(1,1), flag=wx.ALIGN_LEFT )
+		hh.Add( self.crossMgrHost, flag=wx.ALIGN_LEFT )
+		hh.Add( wx.StaticText( self, label=' : 53135' ), flag=wx.ALIGN_CENTER_VERTICAL )
+		cmcs.Add( hh, flag=wx.ALL, border=4 )
+		
+		#------------------------------------------------------------------------------------------------
+		# Add strays
+		#
+		cmcs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=2 )
+		self.strayTagsLabel = wx.StaticText(self, label='Stray Tags:         ')
+		cmcs.Add( self.strayTagsLabel, flag=wx.LEFT|wx.RIGHT, border=4 )
+		
+		self.strays = wx.ListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN, size=(-1,50) )
+		self.strays.InsertColumn( 0, 'Tag', wx.LIST_AUTOSIZE_USEHEADER )
+		self.strays.InsertColumn( 1, 'Discovered', wx.LIST_AUTOSIZE_USEHEADER )
+	
+		cmcs.Add( self.strays, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
 		#------------------------------------------------------------------------------------------------
 		# Add messages
@@ -417,14 +430,22 @@ class MainWin( wx.Frame ):
 		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
 		for i in xrange(4):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
-	
+
+	def refreshStrays( self, strays ):
+		if self.strays.GetItemCount() or strays:
+			self.strays.DeleteAllItems()
+			for tag, discovered in sorted( strays, key=operator.itemgetter(1) ):
+				i = self.strays.InsertItem( 1000000, tag )
+				self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
+			for c in xrange(self.strays.GetColumnCount()):
+				self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
+			self.strayTagsLabel.SetLabel( 'Stray Tags: {}'.format(len(strays)) )
+			
 	def strayHandler( self, strayQ ):
 		while 1:
 			msg = strayQ.get()
 			if msg[0] == 'strays':
-				strays = msg[1]
-				# Do something with the strays.
-				# wx.CallAfter( ... )
+				wx.CallAfter( self.refreshStrays, msg[1] )
 			elif msg[0] == 'shutdown':
 				break
 	
