@@ -7,13 +7,14 @@ import threading
 import datetime
 import random
 from collections import defaultdict
-from Queue import Empty
+from Queue import Queue, Empty
 from Utils import readDelimitedData, timeoutSecs, Bell
 import cStringIO as StringIO
 try:
 	from pyllrp.pyllrp import *
 except ImportError:
 	from pyllrp import *
+from TagGroup import TagGroup
 
 getTimeNow = datetime.datetime.now
 
@@ -69,9 +70,9 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 							Parameters = [
 								TagObservationTrigger_Parameter(
 									TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
-									NumberOfTags = 500,
+									NumberOfTags = 1,
 									NumberOfAttempts = 1,
-									Timeout = 500,		# Milliseconds
+									Timeout = 0,		# Milliseconds
 									T = 0,				# Idle time between responses.
 								),
 							]
@@ -101,7 +102,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 
 class Impinj( object ):
 
-	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
+	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB, peakRSSI ):
 		self.impinjHost = impinjHost
 		self.impinjPort = impinjPort
 		self.statusCB = statusCB
@@ -109,10 +110,14 @@ class Impinj( object ):
 			self.antennas = [0]
 		else:
 			self.antennas = [int(a) for a in antennaStr.split()]
+		self.peakRSSI = peakRSSI
+		self.tagGroup = None
+		self.tagGroupTimer = None
 		self.dataQ = dataQ			# Queue to write tag reads.
 		self.strayQ = strayQ		# Queue to write stray reads.
 		self.messageQ = messageQ	# Queue to write operational messages.
 		self.shutdownQ = shutdownQ	# Queue to listen for shutdown.
+		self.logQ = Queue()
 		self.rospecID = 123
 		self.readerSocket = None
 		self.timeCorrection = None	# Correction between the reader's time and the computer's time.
@@ -127,8 +132,16 @@ class Impinj( object ):
 		if not os.path.isdir( dataDir ):
 			os.makedirs( dataDir )
 		self.fname = os.path.join( dataDir, tNow.strftime('Impinj-%Y-%m-%d-%H-%M-%S.txt') )
-		with open(self.fname, 'w') as pf:
-			pf.write( 'Tag ID, Discover Time\n' )
+		
+		# Create a log queue and start a thread to write the log.
+		self.logQ.put( 'msg', 'Tag ID,Discover Time' )
+		self.logFileThread = threading.Thread( target=self.handleLogFile )
+		self.logFileThread.daemon = True
+		self.logFileThread.start()
+	
+		self.logFileThread = threading.Thread( target=self.handleLogFile )
+		self.logFileThread.daemon = True
+		self.logFileThread.start()
 	
 		self.keepGoing = True
 		self.tagCount = 0
@@ -146,7 +159,6 @@ class Impinj( object ):
 			return False
 		except Empty:
 			return True
-			
 			
 	def reconnectDelay( self ):
 		if self.checkKeepGoing():
@@ -262,7 +274,10 @@ class Impinj( object ):
 			return False
 		
 		# Configure our new rospec.
-		success, response = self.sendCommand( GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas) )
+		success, response = self.sendCommand(
+			GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas) if self.peakRSSI else
+			GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
+			)
 		if not success:
 			return False
 			
@@ -273,7 +288,64 @@ class Impinj( object ):
 		
 		success = (success and isinstance(response, ENABLE_ROSPEC_RESPONSE_Message) and response.success())
 		return success
+	
+	def reportTag( self, tagID, discoveryTime ):
+		self.dataQ.put( (tagID, discoveryTime) )
 		
+		# Write the entry to the log.
+		self.logQ.put( (
+				'log',
+				'{},{}'.format(
+					tagID,
+					discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d')
+				)
+			)
+		)
+		
+		self.messageQ.put( (
+			'Impinj',
+			'QuadReg {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTime),
+			self.antennaReadCount,
+			)
+		)
+	
+	def handleTagGroup( self ):
+		if not self.tagGroup:
+			return
+		reads, strays = self.tagGroup.getReadsStrays()
+		for tagID, discoveryTime in reads:
+			self.reportTag( tagID, discoveryTime )
+			
+		self.strayQ.put( ('strays', strays) )
+		self.tagGroupTimer = threading.Timer( 1.0, self.handleTagGroup )
+		self.tagGroupTimer.start()
+	
+	def handleLogFile( self ):
+		while 1:
+			msg = self.logQ.get()
+			self.logQ.task_done()
+			
+			if msg[0] == 'shutdown':
+				return
+			try:
+				pf = open( self.fname, 'a' )
+			except:
+				continue
+			
+			pf.write( msg[1] if msg[1].endswith('\n') else msg[1] + '\n' )
+			while 1:
+				try:
+					msg = self.logQ.get( False )
+				except Empty:
+					break
+				self.logQ.task_done()
+				
+				if msg[0] == 'shutdown':
+					return
+				pf.write( msg[1] if msg[1].endswith('\n') else msg[1] + '\n' )
+			pf.close()
+			time.sleep( 0.1 )
+	
 	def runServer( self ):
 		self.messageQ.put( ('BackupFile', self.fname) )
 		
@@ -330,9 +402,13 @@ class Impinj( object ):
 				timeCorrection = self.timeCorrection,
 			)
 			
+			self.tagGroup = TagGroup()
+			self.handleTagGroup()
+				
 			tUpdateLast = tKeepaliveLast = getTimeNow()
 			self.tagCount = 0
 			while self.checkKeepGoing():
+			
 				#------------------------------------------------------------
 				# Read Mode.
 				#
@@ -370,12 +446,6 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Skipping: {}'.format(response.__class__.__name__)) )
 					continue
 				
-				# Open the log file.
-				try:
-					pf = open( self.fname, 'a' )
-				except:
-					pf = None
-				
 				for tag in response.getTagData():
 					self.tagCount += 1
 					
@@ -408,41 +478,33 @@ class Impinj( object ):
 					discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 					
 					# Convert tag and discovery Time
-					discoveryTimeStr = discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')
-					
-					# Check if this read happened too soon after another read.
-					LRT = lastReadTime.get( tagID, tOld )
-					lastReadTime[tagID] = discoveryTime
-					if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
-						self.messageQ.put( (
-							'Impinj',
-							'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds, discoveryTimeStr),
-							self.antennaReadCount,
+					if peakRSSI is not None:
+						if self.tagGroup.add( tagID, discoveryTime, peakRSSI ):
+							self.messageQ.put( (
+								'Impinj',
+								'First Read {}.  tag={} time={}'.format(self.tagCount, tagID,
+								discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
+								self.antennaReadCount,
+								)
 							)
-						)
-						continue
-					
-					# Put this read on the queue for transmission to CrossMgr.
-					self.dataQ.put( (tagID, discoveryTime) )
-
-					# Write the entry to the log.
-					if pf:
-						# 									Thu Dec 04 10:14:49 PST 2014
-						pf.write( '{},{}\n'.format(
-									tagID,
-									discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d')) )
-					self.messageQ.put( (
-						'Impinj',
-						'Received {}. tag={}, time={}'.format(self.tagCount, tagID, discoveryTimeStr),
-						self.antennaReadCount,
-						)
-					)
-					Bell()
-				
-				# Close the log file.
-				if pf:
-					pf.close()
-			
+							Bell()
+					else:
+						# Check if this read happened too soon after another read.
+						LRT = lastReadTime.get( tagID, tOld )
+						lastReadTime[tagID] = discoveryTime
+						if (discoveryTime - LRT).total_seconds() < RepeatSeconds:
+							self.messageQ.put( (
+								'Impinj',
+								'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds,
+								discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
+								self.antennaReadCount,
+								)
+							)
+							continue
+						self.reportTag( tagID, discoveryTime )
+						Bell()
+		
+		# Cleanup.
 		if self.readerSocket:
 			try:
 				response = self.sendCommand( CLOSE_CONNECTION_Message() )
@@ -450,6 +512,13 @@ class Impinj( object ):
 				pass
 			self.readerSocket.close()
 			self.readerSocket = None
+		
+		self.logQ.put( ('shutdown',) )
+		self.logFileThread.join()
+
+		if self.tagGroupTimer:
+			self.tagGroupTimer.cancel()
+		
 		return True
 		
 	def purgeDataQ( self ):
@@ -459,6 +528,6 @@ class Impinj( object ):
 			except Empty:
 				break
 
-def ImpinjServer( dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None ):
-	impinj = Impinj(dataQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB)
+def ImpinjServer( dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None, peakRSSI=True ):
+	impinj = Impinj(dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB, peakRSSI)
 	impinj.runServer()

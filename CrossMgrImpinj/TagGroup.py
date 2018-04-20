@@ -20,7 +20,7 @@ class TagGroupEntry( object ):
 		self.firstRead = datetimeToTr( t )
 		self.reads = [(self.firstRead, db)]
 		
-	def insert( self, t, db ):
+	def add( self, t, db ):
 		if self.reads[0][0] != self.firstRead:
 			self.reads[-1] = (datetimeToTr(t), db)	# if a stray, replace the last entry.
 		else:
@@ -37,6 +37,9 @@ class TagGroupEntry( object ):
 		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
 			trEst = self.reads[0][0]
 		return trToDatetime( trEst )
+		
+	def __repr__( self ):
+		return 'TagGroupEntry({},{})'.format(self.firstRead, self.reads)
 	
 class TagGroup( object ):
 	'''
@@ -52,9 +55,11 @@ class TagGroup( object ):
 		
 	def add( self, tag, t, db ):
 		try:
-			self.tagInfo[tag].insert( t, db )
+			self.tagInfo[tag].add( t, db )
+			return False
 		except KeyError:
 			self.tagInfo[tag] = TagGroupEntry( t, db )
+			return True
 
 	def getReadsStrays( self, tNow=None ):
 		'''
@@ -72,7 +77,7 @@ class TagGroup( object ):
 				if tge.reads[0][0] == tge.firstRead:			# Check if not a stray.
 					reads.append( (tag, tge.getBestEstimate()) )
 				toDelete.append( tag )
-			elif tge.reads[-1][0] - self.tagFirstRead[tag] >= self.tStray:	# This is a stray.
+			elif tge.reads[-1][0] - tge.firstRead >= self.tStray:	# This is a stray.
 				# Report the first read time of the stray if we have not done so.
 				t = trToDatetime( tge.firstRead )
 				if tge.reads[0][0] == tge.firstRead:
@@ -85,7 +90,6 @@ class TagGroup( object ):
 			
 		return reads, strays
 	
-from math import sqrt
 if __name__ == '__main__':
 	
 	def genReadProfile( tg, t, tag, stddev=10.0 ):
@@ -113,7 +117,7 @@ if __name__ == '__main__':
 			genReadProfile( tg, t, '111', float(stddev) )
 			tEst = tg.tagInfo['111'].getBestEstimate()
 			variance += (t - tEst).total_seconds() ** 2
-		print '{},{}'.format( stddev, sqrt(variance / samples) )
+		print '{},{}'.format( stddev, (variance / samples)**0.5 )
 	
 	print
 	tg = TagGroup()
