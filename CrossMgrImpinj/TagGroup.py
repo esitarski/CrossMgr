@@ -46,7 +46,7 @@ class AntennaReads( object ):
 		# If the estimate lies outside the data, return the first read.
 		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
 			trEst = self.firstRead
-		return trToDatetime( trEst )
+		return trEst
 		
 class TagGroupEntry( object ):
 	__slots__ = ('antennaReads', 'firstReadMin', 'lastReadMax', 'isStray')
@@ -78,7 +78,7 @@ class TagGroupEntry( object ):
 		if self.isStray:
 			return trToDatetime( self.firstReadMin )
 		# Compute the best estimate using the antenna with the most of reads.  Break ties with dbMax.
-		return max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate()
+		return trToDatetime( max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate() )
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstRead, self.reads)
