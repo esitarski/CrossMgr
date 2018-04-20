@@ -32,6 +32,10 @@ class AntennaReads( object ):
 	def isStray( self ):
 		return self.reads[0][0] != self.firstRead
 	
+	@property
+	def lastRead( self ):
+		return self.reads[-1][0]
+	
 	def getBestEstimate( self ):
 		try:
 			trEst = QuadRegExtreme( self.reads )
@@ -73,21 +77,8 @@ class TagGroupEntry( object ):
 	def getBestEstimate( self ):
 		if self.isStray:
 			return trToDatetime( self.firstReadMin )
-	
-		arBest = None
-		# Choose the antenna with the most reads.  This is also likely dbMax.
-		for ar in self.antennaReads:
-			if ar and (not arBest or len(arBest.reads) < len(ar.reads)):
-				arBest = ar
-		if not arBest:
-			raise ValueError( 'no antenna reads' )
-		
-		# Then check for highest db with sufficient samples.
-		for ar in self.antennaReads:
-			if ar and (arBest.dbMax < ar.dbMax and len(ar.reads) >= 5):
-				arBest = ar
-			
-		return arBest.getBestEstimate()
+		# Compute the best estimate using the antenna with the most of reads.  Break ties with dbMax.
+		return max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate()
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstRead, self.reads)
@@ -132,7 +123,7 @@ class TagGroup( object ):
 				t = trToDatetime( tge.firstReadMin )
 				if not tge.isStray:
 					tge.setStray()
-					reads.append( (tag, t) )
+					reads.append( (tag, t) )						# Report stray first read time.
 				strays.append( (tag, t) )
 				
 		for tag in toDelete:
