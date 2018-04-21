@@ -319,7 +319,8 @@ class Impinj( object ):
 			self.antennaReadCount,
 			)
 		)
-		Bell()
+		if not quadReg:
+			Bell()
 		return True
 	
 	def handleTagGroup( self ):
