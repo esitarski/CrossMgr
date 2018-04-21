@@ -12,18 +12,16 @@ def Test():
 		# 10.16.21.147,738AD3FF13CFD7C9F62F029D,123132.461593,0,-52
 		with open(file, 'r') as pf:
 			for line in pf:
-				fields = line.split(',')
+				fields = [f.strip() for f in line.split(',')]
 				if len(fields) != 5:
 					continue
-				tagID = fields[1]
 				try:
-					t = float(fields[2])
+					tagID = fields[1]
+					t     = float(fields[2])
+					db    = int(fields[4])
 				except:
 					continue
-				try:
-					db = int(fields[4])
-				except:
-					continue
+				
 				if tFirst is None:
 					tFirst = t
 				if t > tLast: tLast = t
