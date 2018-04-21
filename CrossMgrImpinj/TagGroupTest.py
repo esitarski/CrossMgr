@@ -22,8 +22,7 @@ def Test():
 				except:
 					continue
 				
-				if tFirst is None:
-					tFirst = t
+				if tFirst is None: tFirst = t
 				if t > tLast: tLast = t
 				tg.add( 1, tagID, tNow + datetime.timedelta(seconds=t - tFirst), db )
 		
