@@ -1,0 +1,38 @@
+import glob
+import datetime
+from TagGroup import TagGroup
+
+def Test():
+	for file in glob.glob('data/*.txt'):
+		tg = TagGroup()
+		tNow = datetime.datetime.now()
+		tFirst = None
+		tLast = 0.0
+		
+		# 10.16.21.147,738AD3FF13CFD7C9F62F029D,123132.461593,0,-52
+		with open(file, 'r') as pf:
+			for line in pf:
+				fields = line.split(',')
+				if len(fields) != 5:
+					continue
+				tagID = fields[1]
+				try:
+					t = float(fields[2])
+				except:
+					continue
+				try:
+					db = int(fields[4])
+				except:
+					continue
+				if tFirst is None:
+					tFirst = t
+				if t > tLast: tLast = t
+				tg.add( 1, tagID, tNow + datetime.timedelta(seconds=t - tFirst), db )
+		
+		reads, strays = tg.getReadsStrays( tNow + datetime.timedelta( seconds = tLast - tFirst + 1.0) )
+		print '************************************************'
+		for tagID, t in reads:
+			print tagID, t.strftime('%H:%M:%S.%f')
+				
+if __name__ == '__main__':
+	Test()
