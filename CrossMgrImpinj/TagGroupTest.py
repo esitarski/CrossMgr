@@ -3,7 +3,7 @@ import datetime
 from TagGroup import TagGroup
 
 def Test():
-	for file in glob.glob('data/*.txt'):
+	for file in sorted(glob.glob('data/*.txt')):
 		tg = TagGroup()
 		tNow = datetime.datetime.now()
 		tFirst = None
@@ -28,8 +28,10 @@ def Test():
 		
 		reads, strays = tg.getReadsStrays( tNow + datetime.timedelta( seconds = tLast - tFirst + 1.0) )
 		print '************************************************'
-		for tagID, t in reads:
-			print tagID, t.strftime('%H:%M:%S.%f')
+		print '    {}'.format( file )
+		print '************************************************'
+		for tagID, t, sampleSize in reads:
+			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize
 				
 if __name__ == '__main__':
 	Test()

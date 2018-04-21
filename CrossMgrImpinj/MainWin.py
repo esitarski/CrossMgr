@@ -453,7 +453,6 @@ class MainWin( wx.Frame ):
 				self.strays.DeleteAllItems()
 			return
 			
-		strays.sort( key=operator.itemgetter(1, 0) )
 		if (
 				self.strays.GetItemCount() == len(strays) and
 				strays[0][0] == self.strays.GetItemText(0) and strays[-1][0] == self.strays.GetItemText(self.strays.GetItemCount()-1)

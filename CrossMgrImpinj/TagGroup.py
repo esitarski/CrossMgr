@@ -4,9 +4,13 @@ from QuadReg import QuadRegExtreme
 from time import sleep
 import random
 import sys
+import operator
 
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()
+
+tQuiet = 0.5		# Seconds of quiet after which the tag is considered read.
+tStray = 8.0		# Seconds of continuous reads for tag to be considered a stray.
 
 def datetimeToTr( t ):
 	return (t - tRef).total_seconds()
@@ -23,30 +27,33 @@ class AntennaReads( object ):
 		self.dbMax = db
 	
 	def add( self, tr, db ):
-		if self.reads[0][0] != self.firstRead:
-			self.reads[-1] = (tr, db)	# if a stray, just replace the last entry.
+		if self.isStray:
+			self.reads = [(tr, db)]			# if a stray, just replace the last entry.
 		else:
 			self.reads.append( (tr, db) )
 			if db > self.dbMax: self.dbMax = db
 	
+	@property
 	def isStray( self ):
-		return self.reads[0][0] != self.firstRead
+		return self.reads[-1][0] - self.firstRead > tStray
 	
 	@property
 	def lastRead( self ):
 		return self.reads[-1][0]
 	
 	def getBestEstimate( self ):
+		if self.isStray:
+			return self.firstRead, 1
 		try:
-			trEst = QuadRegExtreme( self.reads )
+			trEst, sampleSize = QuadRegExtreme(self.reads), len(self.reads)
 		except Exception as e:
 			# If error, return the first read.
-			trEst = self.firstRead
+			trEst, sampleSize = self.firstRead, 1
 		
 		# If the estimate lies outside the data, return the first read.
 		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
-			trEst = self.firstRead
-		return trEst
+			trEst, sampleSize = self.firstRead, 1
+		return trEst, sampleSize
 		
 class TagGroupEntry( object ):
 	__slots__ = ('antennaReads', 'firstReadMin', 'lastReadMax', 'isStray')
@@ -76,9 +83,11 @@ class TagGroupEntry( object ):
 	
 	def getBestEstimate( self ):
 		if self.isStray:
-			return trToDatetime( self.firstReadMin )
+			return trToDatetime( self.firstReadMin ), 1
+		
 		# Compute the best estimate using the antenna with the most of reads.  Break ties with dbMax.
-		return trToDatetime( max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate() )
+		tr, sampleSize = max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate()
+		return trToDatetime(tr), sampleSize
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstReadMin, self.lastReadMax)
@@ -90,9 +99,6 @@ class TagGroup( object ):
 		The first read time of each stray read is returned.
 	'''
 	def __init__( self ):
-		self.tQuiet = 0.5		# Seconds of quiet after which the tag is considered read.
-		self.tStray = 8.0		# Seconds of continuous reads for tag to be considered a stray.
-		
 		self.tagInfo = {}
 		
 	def add( self, antenna, tag, t, db ):
@@ -106,7 +112,7 @@ class TagGroup( object ):
 	def getReadsStrays( self, tNow=None ):
 		'''
 			Returns two lists:
-				reads = [(tag1, t1), (tag2, t2), ...]
+				reads = [(tag1, t1, sampleSize1), (tag2, t2, sampleSize2), ...]
 				strays = [(tagA, tFirstReadA), (tagB, tFirstReadB), ...]
 				
 			Each stray will be reported as a read the first time it is detected.
@@ -115,20 +121,23 @@ class TagGroup( object ):
 		reads, strays = [], []
 		toDelete = []
 		for tag, tge in self.tagInfo.iteritems():
-			if trNow - tge.lastReadMax >= self.tQuiet:				# Tag has left read range.
+			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
-					reads.append( (tag, tge.getBestEstimate()) )
+					t, sampleSize = tge.getBestEstimate()
+					reads.append( (tag, t, sampleSize) )
 				toDelete.append( tag )
-			elif tge.lastReadMax - tge.firstReadMin >= self.tStray:	# This is a stray.
+			elif tge.lastReadMax - tge.firstReadMin >= tStray:	# This is a stray.
 				t = trToDatetime( tge.firstReadMin )
 				if not tge.isStray:
 					tge.setStray()
-					reads.append( (tag, t) )						# Report stray first read time.
+					reads.append( (tag, t, 1) )					# Report stray first read time.
 				strays.append( (tag, t) )
 				
 		for tag in toDelete:
 			del self.tagInfo[tag]
-			
+		
+		reads.sort( key=operator.itemgetter(1,0))
+		strays.sort( key=operator.itemgetter(1,0) )
 		return reads, strays
 	
 if __name__ == '__main__':
@@ -167,5 +176,5 @@ if __name__ == '__main__':
 	sleep( 1.0 )
 	print t, t-timedelta(seconds=3)
 	reads, strays = tg.getReadsStrays()
-	for tag, t in reads:
-		print t, tag
+	for tag, t, sampleSize in reads:
+		print t, tag, sampleSize

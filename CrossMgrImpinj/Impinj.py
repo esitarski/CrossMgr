@@ -289,7 +289,7 @@ class Impinj( object ):
 		success = (success and isinstance(response, ENABLE_ROSPEC_RESPONSE_Message) and response.success())
 		return success
 	
-	def reportTag( self, tagID, discoveryTime, quadReg ):
+	def reportTag( self, tagID, discoveryTime, sampleSize, quadReg ):
 		lrt = self.lastReadTime.get(tagID, tOld)
 		if discoveryTime > lrt:
 			self.lastReadTime[tagID] = discoveryTime
@@ -317,7 +317,7 @@ class Impinj( object ):
 		
 		self.messageQ.put( (
 			'Impinj',
-			'{} {}. tag={}, time={}'.format('QuadReg' if quadReg else 'FirstRead', self.tagCount, tagID, discoveryTime),
+			'{} {}. tag={}, time={} samples={}'.format('QuadReg' if quadReg else 'FirstRead', self.tagCount, tagID, discoveryTime, sampleSize),
 			self.antennaReadCount,
 			)
 		)
@@ -329,8 +329,8 @@ class Impinj( object ):
 		if not self.tagGroup:
 			return
 		reads, strays = self.tagGroup.getReadsStrays()
-		for tagID, discoveryTime in reads:
-			self.reportTag( tagID, discoveryTime, True )
+		for tagID, discoveryTime, sampleSize in reads:
+			self.reportTag( tagID, discoveryTime, sampleSize, True )
 			
 		self.strayQ.put( ('strays', strays) )
 		self.tagGroupTimer = threading.Timer( 1.0, self.handleTagGroup )
@@ -504,7 +504,7 @@ class Impinj( object ):
 							)
 							Bell()
 					else:
-						self.reportTag( tagID, discoveryTime, False )
+						self.reportTag( tagID, discoveryTime, 1, False )
 		
 		# Cleanup.
 		if self.readerSocket:
