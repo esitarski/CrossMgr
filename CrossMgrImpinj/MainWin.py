@@ -122,6 +122,8 @@ class AdvancedSetup( wx.Dialog ):
 		Impinj.ConnectionTimeoutSeconds	= 1		# Interval for connection timeout
 		Impinj.KeepaliveSeconds			= 2		# Interval to request a Keepalive message
 		Impinj.RepeatSeconds			= 2		# Interval in which a tag is considered a repeat read.
+		
+		Impinj.PeakRSSI					= True
 		'''
 
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -131,6 +133,16 @@ class AdvancedSetup( wx.Dialog ):
 		border = 8
 		bs.Add( wx.StaticText(self, label='Advanced Reader Options:'), pos = (0,0), span=(1, 2), border = border, flag=wx.ALL )
 		
+		row += 1
+		bs.Add( wx.StaticText(self, label='Report Method'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.ReportMethod = wx.Choice(self, choices=('Quadratic Regression', 'First Read Time') )
+		self.ReportMethod.SetSelection( 0 if Impinj.PeakRSSI else 1 )
+		bs.Add( self.ReportMethod, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
+		bs.Add( wx.StaticText(self, label='Quadratic Regression: return an estimated time when the tag is closest to an antenna by combining multiple reads and signal strength (high accuracy, high processing).\nFirst Read Time:  return the first time the tag is read by an antenna (lower accuracy, low processing).'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+
+		row += 1
+		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
+
 		row += 1
 		bs.Add( wx.StaticText(self, label='Tag Population'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.TagPopulation = intctrl.IntCtrl( self, min=0, max=500, limited = True, allow_none=True,
@@ -229,10 +241,12 @@ class AdvancedSetup( wx.Dialog ):
 				getattr( self, a ).SetValue( getattr(Impinj, a + 'Default') )
 			except AttributeError:
 				getattr( self, a ).SetValue( None )
+		self.ReportMethod.SetSelection( 0 if Impinj.PeakRSSIDefault else 1 )
 		
 	def onOK( self, event ):
 		for a in self.fields:
 			setattr( Impinj, a, getattr(self, a).GetValue() )
+		Impinj.PeakRSSI = (self.ReportMethod.GetSelection() == 0)
 		
 		Utils.playBell = self.playSoundsCheckbox.IsChecked()
 		self.EndModal( wx.ID_OK )
@@ -659,6 +673,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'TransmitPower', '{}'.format(Impinj.TransmitPower or 0) )
 		self.config.Write( 'TagPopulation', '{}'.format(Impinj.TagPopulation or 0) )
 		self.config.Write( 'TagTransitTime', '{}'.format(Impinj.TagTransitTime or 0) )
+		self.config.Write( 'PeakRSSI', '{}'.format(Impinj.PeakRSSI) )
 
 		self.config.Flush()
 	
@@ -683,6 +698,7 @@ class MainWin( wx.Frame ):
 		Impinj.TransmitPower = int(self.config.Read('TransmitPower', '0')) or None
 		Impinj.TagPopulation = int(self.config.Read('TagPopulation', '0')) or None
 		Impinj.TagTransitTime = int(self.config.Read('TagTransitTime', '0')) or None
+		Impinj.PeakRSSI = self.config.Read('PeakRSSI', 'T').upper().startswith('T')
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()

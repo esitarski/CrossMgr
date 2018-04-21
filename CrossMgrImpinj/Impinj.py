@@ -24,6 +24,7 @@ HOME_DIR = os.path.expanduser("~")
 ConnectionTimeoutSecondsDefault	= 3		# Interval for connection timeout
 KeepaliveSecondsDefault			= 2		# Interval to request a Keepalive message
 RepeatSecondsDefault			= 3		# Interval in which a tag is considered a repeat read.
+PeakRSSIDefault					= True
 
 ConnectionTimeoutSeconds	= ConnectionTimeoutSecondsDefault
 KeepaliveSeconds			= KeepaliveSecondsDefault
@@ -40,6 +41,8 @@ TransmitPower = None
 	
 InventorySession = 2		# LLRP inventory session.
 TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  Default=3
+
+PeakRSSI		= PeakRSSIDefault	# Use signal strength and Quadratic Regression to estimate the tag crossing more accurately.
 
 def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
@@ -103,7 +106,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 
 class Impinj( object ):
 
-	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB, peakRSSI ):
+	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
 		self.impinjHost = impinjHost
 		self.impinjPort = impinjPort
 		self.statusCB = statusCB
@@ -111,7 +114,6 @@ class Impinj( object ):
 			self.antennas = [0]
 		else:
 			self.antennas = [int(a) for a in antennaStr.split()]
-		self.peakRSSI = peakRSSI
 		self.tagGroup = None
 		self.tagGroupTimer = None
 		self.dataQ = dataQ			# Queue to write tag reads.
@@ -273,7 +275,7 @@ class Impinj( object ):
 		
 		# Configure our new rospec.
 		success, response = self.sendCommand(
-			GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas) if self.peakRSSI else
+			GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas) if PeakRSSI else
 			GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
 			)
 		if not success:
@@ -528,6 +530,6 @@ class Impinj( object ):
 			except Empty:
 				break
 
-def ImpinjServer( dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None, peakRSSI=True ):
-	impinj = Impinj(dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB, peakRSSI)
+def ImpinjServer( dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None ):
+	impinj = Impinj(dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB)
 	impinj.runServer()
