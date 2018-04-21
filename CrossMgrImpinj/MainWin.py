@@ -409,7 +409,7 @@ class MainWin( wx.Frame ):
 		
 		self.strays = wx.ListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN, size=(-1,50) )
 		self.strays.InsertColumn( 0, 'Tag', wx.LIST_AUTOSIZE_USEHEADER )
-		self.strays.InsertColumn( 1, 'Discovered', wx.LIST_AUTOSIZE_USEHEADER )
+		self.strays.InsertColumn( 1, 'Time', wx.LIST_AUTOSIZE_USEHEADER )
 	
 		cmcs.Add( self.strays, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
@@ -446,14 +446,26 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 
 	def refreshStrays( self, strays ):
-		if self.strays.GetItemCount() or strays:
-			self.strays.DeleteAllItems()
-			for tag, discovered in sorted( strays, key=operator.itemgetter(1) ):
-				i = self.strays.InsertItem( 1000000, tag )
-				self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
-			for c in xrange(self.strays.GetColumnCount()):
-				self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
+		if self.strays.GetItemCount() != len(strays):
 			self.strayTagsLabel.SetLabel( 'Stray Tags: {}'.format(len(strays)) )
+		if not strays:
+			if self.strays.GetItemCount():
+				self.strays.DeleteAllItems()
+			return
+			
+		strays.sort( key=operator.itemgetter(1, 0) )
+		if (
+				self.strays.GetItemCount() == len(strays) and
+				strays[0][0] == self.strays.GetItemText(0) and strays[-1][0] == self.strays.GetItemText(self.strays.GetItemCount()-1)
+			):
+			return
+		
+		self.strays.DeleteAllItems()
+		for tag, discovered in strays:
+			i = self.strays.InsertItem( 1000000, tag )
+			self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
+		for c in xrange(self.strays.GetColumnCount()):
+			self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
 			
 	def strayHandler( self, strayQ ):
 		while 1:
@@ -559,7 +571,9 @@ class MainWin( wx.Frame ):
 	
 	def doAdvanced( self, event ):
 		dlg = AdvancedSetup( self )
-		dlg.ShowModal()
+		if dlg.ShowModal() == wx.ID_OK:
+			if Utils.MessageOKCancel( self, 'Reset Reader Now?', 'Reset Reader' ):
+				self.doReset( event, confirm=False )
 		dlg.Destroy()
 	
 	def gracefulShutdown( self ):
@@ -706,6 +720,13 @@ class MainWin( wx.Frame ):
 		self.runningTime.SetLabel( '{:02d}:{:02d}:{:02d}'.format(running // (60*60), (running // 60) % 60, running % 60) )
 		self.time.SetLabel( tNow.strftime('%H:%M:%S') )
 		
+		def formatAntennaReadCount( arc ):
+			if arc < 1000:
+				return arc
+			if arc < 1000000:
+				return '{:.1f}k'.format( arc / 1000.0 )
+			return '{:.1f}m'.format( arc / 1000000.0 )
+		
 		if not self.messageQ:
 			return
 		while 1:
@@ -727,7 +748,9 @@ class MainWin( wx.Frame ):
 					self.impinjMessages.write( message )
 					if antennaReadCount is not None:
 						total = max(1, sum( antennaReadCount[i] for i in xrange(1,4+1)) )
-						self.antennaReadCount.SetLabel(' | '.join('{}:{} {:.1f}%'.format(i, antennaReadCount[i], antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)) )
+						self.antennaReadCount.SetLabel(' | '.join('{}:{} {:.1f}%'.format(
+							i, formatAntennaReadCount(antennaReadCount[i]), antennaReadCount[i]*100.0/total) for i in xrange(1,4+1))
+						)
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:
 					self.crossMgrMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
