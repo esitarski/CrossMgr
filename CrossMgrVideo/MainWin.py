@@ -1007,6 +1007,7 @@ class MainWin( wx.Frame ):
 		self.cameraThread.start()
 		self.eventThread.start()
 		self.dbWriterThread.start()
+		self.listenerThread.start()
 		
 		self.grabFrameOK = True
 		self.messageQ.put( ('threads', 'Successfully Launched') )
