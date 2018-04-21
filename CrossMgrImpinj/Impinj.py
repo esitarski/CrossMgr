@@ -495,7 +495,7 @@ class Impinj( object ):
 						if self.tagGroup.add( antennaID, tagID, discoveryTime, peakRSSI ):
 							self.messageQ.put( (
 								'Impinj',
-								'QuadRegProcessing {}.  tag={} time={}'.format(self.tagCount, tagID,
+								'QRProcessing {}.  tag={} time={}'.format(self.tagCount, tagID,
 								discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
 								self.antennaReadCount,
 								)
