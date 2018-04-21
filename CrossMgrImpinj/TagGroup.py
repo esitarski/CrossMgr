@@ -28,7 +28,10 @@ class AntennaReads( object ):
 	
 	def add( self, tr, db ):
 		if self.isStray:
-			self.reads = [(tr, db)]			# if a stray, just replace the last entry.
+			# if a stray, just replace the last entry.
+			if len(self.reads) > 1:
+				del self.reads[:-1]		
+			self.reads[-1] = (tr, db)
 		else:
 			self.reads.append( (tr, db) )
 			if db > self.dbMax: self.dbMax = db
@@ -165,7 +168,7 @@ if __name__ == '__main__':
 		for k in xrange(samples):
 			tg = TagGroup()
 			genReadProfile( tg, t, '111', float(stddev) )
-			tEst = tg.tagInfo['111'].getBestEstimate()
+			tEst, sampleSize = tg.tagInfo['111'].getBestEstimate()
 			variance += (t - tEst).total_seconds() ** 2
 		print '{},{}'.format( stddev, (variance / samples)**0.5 )
 	
