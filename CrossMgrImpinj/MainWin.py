@@ -137,8 +137,8 @@ class AdvancedSetup( wx.Dialog ):
 		bs.Add( wx.StaticText(self, label='Report Method'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.ReportMethod = wx.Choice(self, choices=('Quadratic Regression', 'First Read Time') )
 		self.ReportMethod.SetSelection( 0 if Impinj.PeakRSSI else 1 )
-		bs.Add( self.ReportMethod, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
-		bs.Add( wx.StaticText(self, label='Quadratic Regression: return an estimated time when the tag is closest to an antenna by combining multiple reads and signal strength (high accuracy, high processing).\nFirst Read Time:  return the first time the tag is read by an antenna (lower accuracy, low processing).'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( self.ReportMethod, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( wx.StaticText(self, label='Quadratic Regression: return an estimated time when the tag is closest to an antenna by combining\nmultiple reads and signal strength (high accuracy, high processing).\nFirst Read Time:  return the first time the tag is read by any antenna (lower accuracy, low processing).'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
 
 		row += 1
 		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
