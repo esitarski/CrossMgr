@@ -289,7 +289,7 @@ class Impinj( object ):
 		success = (success and isinstance(response, ENABLE_ROSPEC_RESPONSE_Message) and response.success())
 		return success
 	
-	def reportTag( self, tagID, discoveryTime, sampleSize, quadReg ):
+	def reportTag( self, tagID, discoveryTime, sampleSize=1, antennaID=0, quadReg=False ):
 		lrt = self.lastReadTime.get(tagID, tOld)
 		if discoveryTime > lrt:
 			self.lastReadTime[tagID] = discoveryTime
@@ -297,8 +297,8 @@ class Impinj( object ):
 		if (discoveryTime - lrt).total_seconds() < RepeatSeconds:
 			self.messageQ.put( (
 				'Impinj',
-				'Received {}.  tag={} Skipped (<{} secs ago).  time={}'.format(self.tagCount, tagID, RepeatSeconds,
-				discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
+				'Received {}.  tag={} Skipped (<{} secs ago).  {}'.format(self.tagCount, tagID, RepeatSeconds,
+				discoveryTime.strftime('%H:%M:%S.%f')),
 				self.antennaReadCount,
 				)
 			)
@@ -310,14 +310,21 @@ class Impinj( object ):
 				'log',
 				'{},{}'.format(
 					tagID,
-					discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d')
+					discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d'),
 				)
 			)
 		)
 		
 		self.messageQ.put( (
 			'Impinj',
-			'{} {}. tag={}, time={} samples={}'.format('QuadReg' if quadReg else 'FirstRead', self.tagCount, tagID, discoveryTime, sampleSize),
+			'{} {}. {} - {}{}{}'.format(
+					'QuadReg' if quadReg else 'FirstRead',
+					self.tagCount,
+					tagID,
+					discoveryTime.strftime('%H:%M:%S.%f'),
+					' samples={}'.format(sampleSize) if sampleSize > 1 else '',
+					' antennaID={}'.format(antennaID) if antennaID else '',
+			),
 			self.antennaReadCount,
 			)
 		)
@@ -329,8 +336,8 @@ class Impinj( object ):
 		if not self.tagGroup:
 			return
 		reads, strays = self.tagGroup.getReadsStrays()
-		for tagID, discoveryTime, sampleSize in reads:
-			self.reportTag( tagID, discoveryTime, sampleSize, True )
+		for tagID, discoveryTime, sampleSize, antennaID in reads:
+			self.reportTag( tagID, discoveryTime, sampleSize, antennaID, True )
 			
 		self.strayQ.put( ('strays', strays) )
 		self.tagGroupTimer = threading.Timer( 1.0, self.handleTagGroup )
@@ -464,6 +471,7 @@ class Impinj( object ):
 					self.tagCount += 1
 					
 					antennaID = tag['AntennaID']
+					
 					try:
 						self.antennaReadCount[antennaID] += 1
 					except Exception as e:
@@ -504,7 +512,7 @@ class Impinj( object ):
 							)
 							Bell()
 					else:
-						self.reportTag( tagID, discoveryTime, 1, False )
+						self.reportTag( tagID, discoveryTime )
 		
 		# Cleanup.
 		if self.readerSocket:

@@ -89,8 +89,9 @@ class TagGroupEntry( object ):
 			return trToDatetime( self.firstReadMin ), 1
 		
 		# Compute the best estimate using the antenna with the most of reads.  Break ties with dbMax.
-		tr, sampleSize = max( (ar for ar in self.antennaReads if ar), key=lambda x: (len(x.reads), x.dbMax) ).getBestEstimate()
-		return trToDatetime(tr), sampleSize
+		a, arBest = max( ((a, ar) for a, ar in enumerate(self.antennaReads) if ar), key=lambda x: (len(x[1].reads), x[1].dbMax) )
+		tr, sampleSize = arBest.getBestEstimate()
+		return trToDatetime(tr), sampleSize, a+1
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstReadMin, self.lastReadMax)
@@ -115,7 +116,7 @@ class TagGroup( object ):
 	def getReadsStrays( self, tNow=None ):
 		'''
 			Returns two lists:
-				reads = [(tag1, t1, sampleSize1), (tag2, t2, sampleSize2), ...]
+				reads = [(tag1, t1, sampleSize1, antennaID1), (tag2, t2, sampleSize2, , antennaID2), ...]
 				strays = [(tagA, tFirstReadA), (tagB, tFirstReadB), ...]
 				
 			Each stray will be reported as a read the first time it is detected.
@@ -126,14 +127,14 @@ class TagGroup( object ):
 		for tag, tge in self.tagInfo.iteritems():
 			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
-					t, sampleSize = tge.getBestEstimate()
-					reads.append( (tag, t, sampleSize) )
+					t, sampleSize, antennaID = tge.getBestEstimate()
+					reads.append( (tag, t, sampleSize, antennaID) )
 				toDelete.append( tag )
 			elif tge.lastReadMax - tge.firstReadMin >= tStray:	# This is a stray.
 				t = trToDatetime( tge.firstReadMin )
 				if not tge.isStray:
 					tge.setStray()
-					reads.append( (tag, t, 1) )					# Report stray first read time.
+					reads.append( (tag, t, 1, 0) )					# Report stray first read time.
 				strays.append( (tag, t) )
 				
 		for tag in toDelete:
@@ -145,12 +146,11 @@ class TagGroup( object ):
 	
 if __name__ == '__main__':
 	
-	def genReadProfile( tg, t, tag, stddev=10.0 ):
+	def genReadProfile( tg, t, tag, antenna=1, yTop=-47, stddev=10.0 ):
 		#pointCount = 15
 		pointCount = 18
 		xRange = 0.5
 		yRange = 25
-		yTop = -47
 		
 		yMult = yRange / ((pointCount/2.0) ** 2)
 		tDelta = xRange / pointCount
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 			noise = random.normalvariate( 0.0, stddev )
 			y = yTop - x * x * yMult
 			# Report integer values, just like the reader would.
-			tg.add( 1, tag, t + timedelta( seconds=x*tDelta ), round(y+noise)  )
+			tg.add( antenna, tag, t + timedelta( seconds=x*tDelta ), round(y+noise)  )
 	
 	t = datetime.now()
 	for stddev in xrange(10+1):
@@ -167,17 +167,18 @@ if __name__ == '__main__':
 		samples = 1000
 		for k in xrange(samples):
 			tg = TagGroup()
-			genReadProfile( tg, t, '111', float(stddev) )
-			tEst, sampleSize = tg.tagInfo['111'].getBestEstimate()
+			genReadProfile( tg, t, '111', stddev=float(stddev) )
+			tEst, sampleSize, antennaID = tg.tagInfo['111'].getBestEstimate()
 			variance += (t - tEst).total_seconds() ** 2
 		print '{},{}'.format( stddev, (variance / samples)**0.5 )
 	
 	print
 	tg = TagGroup()
-	genReadProfile( tg, t, '111' )
-	genReadProfile( tg, t-timedelta(seconds=3), '222' )
+	for antennaID in xrange(1,3):
+		genReadProfile( tg, t, '111', antenna=antennaID, yTop=-47+antennaID )
+		genReadProfile( tg, t-timedelta(seconds=3), '222', antenna=antennaID, yTop=-47+antennaID )
 	sleep( 1.0 )
 	print t, t-timedelta(seconds=3)
 	reads, strays = tg.getReadsStrays()
-	for tag, t, sampleSize in reads:
-		print t, tag, sampleSize
+	for tag, t, sampleSize, antennaID in reads:
+		print t, tag, sampleSize, antennaID

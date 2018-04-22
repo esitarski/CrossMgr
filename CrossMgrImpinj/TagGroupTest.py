@@ -30,8 +30,8 @@ def Test():
 		print '************************************************'
 		print '    {}'.format( file )
 		print '************************************************'
-		for tagID, t, sampleSize in reads:
-			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize
+		for tagID, t, sampleSize, antennaID in reads:
+			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize, antennaID
 				
 if __name__ == '__main__':
 	Test()
