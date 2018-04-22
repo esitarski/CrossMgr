@@ -1,5 +1,6 @@
 import wx
 import os
+import time
 import subprocess
 import cStringIO as StringIO
 from AddPhotoHeader import AddPhotoHeader
@@ -98,12 +99,30 @@ class PhotoDialog( wx.Dialog ):
 		self.timestamp.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		
-		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C0' )
+		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u23EA' )
+		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
+		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C0' )
+		self.playerReverse.Bind( wx.EVT_BUTTON, lambda e: self.playReverse() )
+		self.player = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B6' )
+		self.player.Bind( wx.EVT_BUTTON, lambda e: self.play() )
+		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C0' )
+		self.playerReverse.Bind( wx.EVT_BUTTON, lambda e: self.playReverse() )
+		self.playerStop = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25A0' )
+		self.playerStop.Bind( wx.EVT_BUTTON, lambda e: self.playStop() )		
+		self.playerForwardToEnd = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u23E9' )
+		self.playerForwardToEnd.Bind( wx.EVT_BUTTON, lambda e: self.playForwardToEnd() )
+		
+		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C1' )
 		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
-		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B6' )
+		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B7' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
-		btnsizer.Add( self.frameLeft, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		btnsizer.Add( self.playerReverse, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
+		btnsizer.Add( self.player, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
+		btnsizer.Add( self.playerStop, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
+		btnsizer.Add( self.playerForwardToEnd, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
+		btnsizer.Add( self.frameLeft, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
 		btnsizer.Add( self.frameRight, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
         
@@ -208,8 +227,10 @@ class PhotoDialog( wx.Dialog ):
 			return
 		if frameDir < 0:
 			self.iJpg = max(0, self.iJpg-1 )
-		else:
+		elif frameDir > 0:
 			self.iJpg = min(len(self.tsJpg)-1, self.iJpg+1 )
+		else:
+			self.iJpg = 0
 		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
 		self.Refresh()
 	
@@ -219,7 +240,47 @@ class PhotoDialog( wx.Dialog ):
 	def onKeyDown( self, event ):
 		self.changeFrame( -1 if event.ShiftDown() else 1 )
 	
+	def playNextFrame( self ):
+		if self.keepPlayingForward:
+			self.changeFrame( 1 )
+			if self.iJpg < len(self.tsJpg)-1:
+				wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
+	
+	def play( self ):
+		self.playStop()
+		if self.tsJpg:
+			self.keepPlayingForward = True
+			if self.iJpg < len(self.tsJpg)-1:
+				wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
+		
+	def playPrevFrame( self ):
+		if self.keepPlayingReverse:
+			self.changeFrame( -1 )
+			if self.iJpg > 0:
+				wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
+	
+	def playReverse( self ):
+		self.playStop()
+		if self.tsJpg:
+			self.keepPlayingReverse = True
+			if self.iJpg > 0:
+				wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
+		
+	def playStop( self ):
+		self.keepPlayingForward = self.keepPlayingReverse = False
+		
+	def playRewind( self ):
+		self.playStop()
+		self.changeFrame( 0 )		
+		
+	def playForwardToEnd( self ):
+		self.playStop()
+		if self.tsJpg:
+			self.iJpg = len(self.tsJpg)
+			self.changeFrame( 1 )
+		
 	def clear( self ):
+		self.playStop()
 		self.iJpg = None
 		self.triggerInfo = None
 		self.tsJpg = None
