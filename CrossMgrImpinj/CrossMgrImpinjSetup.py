@@ -34,6 +34,8 @@ subprocess.call( [
 	'--windowed',
 	'--noconfirm',
 	
+	'--hidden-import=numpy',
+	
 	'--exclude-module=tcl',
 	'--exclude-module=tk',
 	'--exclude-module=Tkinter',
