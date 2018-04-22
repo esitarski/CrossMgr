@@ -325,9 +325,12 @@ class PhotoDialog( wx.Dialog ):
 		return self.addPhotoHeaderToBitmap( CVUtil.jpegToBitmap(self.jpg) )
 		
 	def onClose( self, event ):
+		self.playStop()
 		self.EndModal( wx.ID_OK )
 	
 	def onGetSpeed( self, event ):
+		self.playStop()
+
 		t1, bitmap1, t2, bitmap2 = None, None, None, None
 		speedFrames = 2
 		
@@ -346,9 +349,11 @@ class PhotoDialog( wx.Dialog ):
 		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
+		self.playStop()
 		PrintPhoto( self, self.scaledBitmap.GetDisplayBitmap() )
 		
 	def onCopyToClipboard( self, event ):
+		self.playStop()
 		if wx.TheClipboard.Open():
 			bmData = wx.BitmapDataObject()
 			bmData.SetBitmap( self.scaledBitmap.GetDisplayBitmap() )
@@ -360,6 +365,7 @@ class PhotoDialog( wx.Dialog ):
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 		
 	def onSavePng( self, event ):
+		self.playStop()
 		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			try:
@@ -370,6 +376,7 @@ class PhotoDialog( wx.Dialog ):
 		fd.Destroy()
 
 	def onSaveMP4( self, event ):
+		self.playStop()
 		fd = wx.FileDialog( self, message='Save MP4', wildcard='*.mp4', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			work = wx.BusyCursor()
@@ -400,6 +407,7 @@ class PhotoDialog( wx.Dialog ):
 		fd.Destroy()
 
 	def onSaveGif( self, event ):
+		self.playStop()
 		fd = wx.FileDialog( self, message='Save Animated Gif', wildcard='*.gif', style=wx.FD_SAVE )
 		if fd.ShowModal() == wx.ID_OK:
 			work = wx.BusyCursor()
