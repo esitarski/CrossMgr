@@ -1,56 +1,13 @@
-def QuadReg( points ):
-	n = len( points )
-	if n < 3:
-		raise ValueError('QuadReg: requires at least 3 points')
-	s1 = s2 = s3 = s4 = s5 = s6 = s7 = 0.0
-	for x, y in points:
-		s1 += x
-		s2 += x * x
-		s3 += x * x * x
-		s4 += x * x * x * x
-		s5 += y
-		s6 += x * y
-		s7 += x * x * y
-		
-	denom = (n  * (s2 * s4 - s3 * s3) -
-		s1 * (s1 * s4 - s2 * s3) +
-		s2 * (s1 * s3 - s2 * s2) )
-		
-	if denom < 0.0000001:
-		raise ValueError( 'QuadReg: numerically unstable - denom too small' )
-		   
-	a1 = (s5 * (s2 * s4 - s3 * s3) -
-		s6 * (s1 * s4 - s2 * s3) +
-		s7 * (s1 * s3 - s2 * s2)) / denom
-	a2 = (n  * (s6 * s4 - s3 * s7) -
-		s1 * (s5 * s4 - s7 * s2) +
-		s2 * (s5 * s3 - s6 * s2)) / denom
-	a3 = (n  * (s2 * s7 - s6 * s3) -
-		s1 * (s1 * s7 - s5 * s3) +
-		s2 * (s1 * s6 - s5 * s2)) / denom
-	return a3, a2, a1
+import numpy as np
+
+def QuadReg( data ):
+	if len(data) < 3:
+		raise ValueError( 'data must have >= 3 values' )
+	return np.polyfit( np.array( [d[0] for d in data], 'd'), np.array( [d[1] for d in data], 'd'), 2 )
 	
-def QuadRegExtreme( points ):
-	n = len( points )
-	if n < 3:
-		raise ValueError('QuadRegExtreme: requires at least 3 points')
-	
-	s1 = s2 = s3 = s4 = s5 = s6 = s7 = 0.0
-	for x, y in points:
-		s1 += x
-		s2 += x * x
-		s3 += x * x * x
-		s4 += x * x * x * x
-		s5 += y
-		s6 += x * y
-		s7 += x * x * y
-	
-	return -(n  * (s6 * s4 - s3 * s7) -
-		s1 * (s5 * s4 - s7 * s2) +
-		s2 * (s5 * s3 - s6 * s2)) / (2.0 * (
-		n  * (s2 * s7 - s6 * s3) -
-		s1 * (s1 * s7 - s5 * s3) +
-		s2 * (s1 * s6 - s5 * s2)))
+def QuadRegExtreme( data ):
+	a, b, c = QuadReg( data )
+	return -b / (2.0 * a)
 
 if __name__ == '__main__':
 	data = '''i	Temperature	Yield

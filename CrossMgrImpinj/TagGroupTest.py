@@ -12,6 +12,8 @@ def Test():
 		# 10.16.21.147,738AD3FF13CFD7C9F62F029D,123132.461593,0,-52
 		with open(file, 'r') as pf:
 			for line in pf:
+				if line.startswith('127.'):
+					continue
 				fields = [f.strip() for f in line.split(',')]
 				if len(fields) != 5:
 					continue
@@ -32,6 +34,8 @@ def Test():
 		print '************************************************'
 		for tagID, t, sampleSize, antennaID in reads:
 			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize, antennaID
+			
+		break
 				
 if __name__ == '__main__':
 	Test()

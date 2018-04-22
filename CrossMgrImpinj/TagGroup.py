@@ -145,6 +145,30 @@ class TagGroup( object ):
 		return reads, strays
 	
 if __name__ == '__main__':
+
+	t = datetime.now()
+	tFirst = None
+	tg = TagGroup()
+	data = '''10.16.21.147,82DD45F2339C3D0F556E5803,123414.636989,2,-61
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.676506,2,-55
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.711024,1,-49
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.738245,0,-42
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.767357,0,-39
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.799116,0,-39
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.831069,1,-41
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.858307,0,-42
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.897999,0,-48
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.927323,1,-55
+10.16.21.147,82DD45F2339C3D0F556E5803,123414.983460,1,-66'''
+	for line in data.split():
+		fields = line.split(',')
+		tCur = float(fields[2])
+		if tFirst is None:
+			tFirst = tCur
+		db = int(fields[4])
+		tg.add( 1, fields[1], t + timedelta( seconds=tCur - tFirst ), db  )
+	reads, strays = tg.getReadsStrays( t + timedelta(seconds=5.0) )
+	print reads
 	
 	def genReadProfile( tg, t, tag, antenna=1, yTop=-47, stddev=10.0 ):
 		#pointCount = 15
