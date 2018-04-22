@@ -33,7 +33,7 @@ def Test():
 		print '    {}'.format( file )
 		print '************************************************'
 		for tagID, t, sampleSize, antennaID in reads:
-			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize, antennaID
+			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize
 			
 		break
 				

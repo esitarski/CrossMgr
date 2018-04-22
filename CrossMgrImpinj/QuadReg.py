@@ -7,6 +7,8 @@ def QuadReg( data ):
 	
 def QuadRegExtreme( data ):
 	a, b, c = QuadReg( data )
+	if a >= 0.0:
+		raise ValueError( 'quadratic opens up' )
 	return -b / (2.0 * a)
 
 if __name__ == '__main__':
@@ -30,7 +32,7 @@ if __name__ == '__main__':
 	for line in data.split('\n'):
 		if not line.startswith('i'):
 			fields = line.split()
-			points.append( (float(fields[1]), float(fields[2])) )
+			points.append( (float(fields[1]), -float(fields[2])) )
 	print points
 	print QuadReg( points ), QuadRegExtreme( points )
 	
