@@ -413,21 +413,23 @@ class Database( object ):
 		
 tsJpgs = []
 tsTriggers = []
-def flush( db ):
+def flush( db, triggerWriteCB = None ):
 	db.write( tsTriggers, tsJpgs )
+	if tsTriggers and triggerWriteCB:
+		triggerWriteCB()
 	del tsTriggers[:]
 	del tsJpgs[:]
 		
-def DBWriter( q, fps=30 ):
-	db = Database( fps=fps )
+def DBWriter( q, triggerWriteCB=None ):
+	db = Database()
 	
 	keepGoing = True
 	while keepGoing:
 		try:
-			v = q.get( timeout=1 )
+			v = q.get( timeout=2 )
 		except Empty:
 			if tsTriggers or tsJpgs:
-				flush( db )
+				flush( db, triggerWriteCB )
 			continue
 		
 		doFlush = True
@@ -445,8 +447,8 @@ def DBWriter( q, fps=30 ):
 		elif v[0] == 'terminate':
 			keepGoing = False
 		
-		if doFlush or len(tsJpgs) >= db.fps*3:
-			flush( db )
+		if doFlush or len(tsJpgs) >= 30*3:
+			flush( db, triggerWriteCB )
 		q.task_done()
 		
 	flush( db )

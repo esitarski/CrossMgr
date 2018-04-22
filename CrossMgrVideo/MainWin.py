@@ -726,7 +726,7 @@ class MainWin( wx.Frame ):
 				'mph':			mph_text,
 				'frames':		frames,
 			}
-			self.updateTriggerRow( i, fields )
+			self.updateTriggerRow( row, fields )
 			
 			self.triggerList.SetItemData( row, row )
 			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,fields['name'],team,wave,race_name,first_name,last_name,note,kmh,frames)
@@ -981,7 +981,11 @@ class MainWin( wx.Frame ):
 			cmd, info = message
 			print 'Message:', '{}:  {}'.format(cmd, info) if cmd else info
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
-		
+	
+	def delayRefreshTriggers( self ):
+		if not hasattr(self, 'refreshTimer') or not self.refreshTimer.IsRunning():
+			self.resetTimer = wx.CallLater( 1000, self.refreshTriggers )
+
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
@@ -1001,7 +1005,7 @@ class MainWin( wx.Frame ):
 		self.eventThread = threading.Thread( target=self.processRequests )
 		self.eventThread.daemon = True
 		
-		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ,) )
+		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers)) )
 		self.dbWriterThread.daemon = True
 		
 		self.cameraThread.start()
@@ -1061,7 +1065,6 @@ class MainWin( wx.Frame ):
 	def processRequests( self ):
 		def refresh():
 			self.dbWriterQ.put( ('flush',) )
-			wx.CallLater( 300, self.refreshTriggers )
 	
 		while 1:
 			msg = self.requestQ.get()
