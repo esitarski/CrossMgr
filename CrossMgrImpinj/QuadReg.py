@@ -1,14 +1,15 @@
 import numpy as np
 
 def QuadReg( data ):
-	if len(data) < 3:
+	lenData = len(data)
+	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
-	return np.polyfit( np.array( [d[0] for d in data], 'd'), np.array( [d[1] for d in data], 'd'), 2 )
+	return np.polyfit( np.fromiter( (d[0] for d in data), np.float64, lenData), np.fromiter( (d[1] for d in data), np.float64, lenData), 2 )
 	
 def QuadRegExtreme( data ):
 	a, b, c = QuadReg( data )
 	if a >= 0.0:
-		raise ValueError( 'quadratic opens up' )
+		raise ValueError( 'invalid quadratic: cannot open up' )
 	return -b / (2.0 * a)
 
 if __name__ == '__main__':
