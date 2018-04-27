@@ -274,11 +274,10 @@ class Impinj( object ):
 			return False
 			
 		# Get reader capabilities.
-		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
-		print response
-		
-		if not success:
-			return False
+		#success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
+		#print response
+		#if not success:
+		#	return False
 		
 		# Configure our new rospec.
 		success, response = self.sendCommand(
