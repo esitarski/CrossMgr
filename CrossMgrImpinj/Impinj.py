@@ -273,11 +273,34 @@ class Impinj( object ):
 		if not success:
 			return False
 			
-		# Get reader capabilities.
-		#success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
-		#print response
-		#if not success:
-		#	return False
+		# Get reader info.
+		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
+		if success:
+			self.messageQ.put( (
+					'Impinj',
+					'-----------------------------',
+				)
+			)
+			for p in response.Parameters:
+				if isinstance(p, GeneralDeviceCapabilities_Parameter):
+					self.messageQ.put( (
+							'Impinj',
+							'ModelName={}, ReaderFirmwareVersion={}, MaxNumberOfAntennaSupported={}'.format(
+								p.ModelName,
+								p.ReaderFirmwareVersion,
+								p.MaxNumberOfAntennaSupported,
+							)
+						)
+					)
+				elif isinstance(p, RegulatoryCapabilities_Parameter):
+					self.messageQ.put( (
+							'Impinj',
+							'CountryCode={}, CommunicationsStandard={}'.format(
+								p.CountryCode,
+								CommunicationsStandard.getName(p.CommunicationsStandard),
+							)
+						)
+					)
 		
 		# Configure our new rospec.
 		success, response = self.sendCommand(
