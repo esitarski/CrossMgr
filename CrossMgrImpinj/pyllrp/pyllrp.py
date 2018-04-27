@@ -174,16 +174,18 @@ class _EnumDef( object ):
 		return self._nameToValue[attr]
 
 	def getName( self, value ):
+		if isinstance(value, list):
+			return '[{}]'.format( ','.join( self.getName(v) for v in value ) )
 		try:
 			return self._valueToName[value]
 		except KeyError:
-			return 'UnknownValue <%s>' % value
+			return 'UnknownValue={}'.format( value )
 		
 	def valid( self, value ):
 		return value in self._valueToName
 		
 	def __repr__( self ):
-		return '%s:\n  %s\n' % (self._name, '\n  '.join( '%s=%s' % (name, str(value)) for value, name in self._choices))
+		return '{}:\n  {}\n'.format(self._name, '\n  '.join( '%s=%s' % (name, str(value)) for value, name in self._choices))
 
 #----------------------------------------------------------------------------------
 # Guarantees a unique id even across multiple threads in CPython.
