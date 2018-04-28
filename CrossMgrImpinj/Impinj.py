@@ -76,7 +76,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 									TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
 									NumberOfTags = 1,
 									NumberOfAttempts = 1,
-									Timeout = 5,		# Milliseconds
+									Timeout = 0,		# Milliseconds
 									T = 0,				# Idle time between responses.
 								),
 							]

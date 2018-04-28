@@ -748,7 +748,8 @@ class MainWin( wx.Frame ):
 					if antennaReadCount is not None:
 						total = max(1, sum( antennaReadCount[i] for i in xrange(1,4+1)) )
 						self.antennaReadCount.SetLabel(' | '.join('{}:{} {:.1f}%'.format(
-							i, formatAntennaReadCount(antennaReadCount[i]), antennaReadCount[i]*100.0/total) for i in xrange(1,4+1))
+							i, formatAntennaReadCount(antennaReadCount[i]), antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)) +
+							'  (' + ('Peak RSSI' if Impinj.PeakRSSI else 'First Read') + ')'
 						)
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:
