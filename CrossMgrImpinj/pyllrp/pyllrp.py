@@ -862,16 +862,15 @@ actions = {
 def _getTagData( self ):
 	tagData = []
 	for p in self.Parameters:
-		if not isinstance( p, TagReportData_Parameter ):
-			continue
-		data = {}
-		for pp in p.Parameters:
-			try:
-				key, value = actions[type(pp)](pp)
-				data[key] = value
-			except KeyError:
-				pass
-		tagData.append( data )
+		if isinstance(p, TagReportData_Parameter):
+			data = {}
+			for pp in p.Parameters:
+				try:
+					key, value = actions[type(pp)](pp)
+					data[key] = value
+				except KeyError:
+					pass
+			tagData.append( data )
 			
 	return tagData
 

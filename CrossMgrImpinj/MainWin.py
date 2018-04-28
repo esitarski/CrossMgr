@@ -377,9 +377,8 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress.SetValue( False )
 		
 		iRow += 1
-		gbs.Add( wx.StaticText(self, label='ANT Reads:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
-		self.antennaReadCount = wx.StaticText( self, label='1:0 0% | 2:0 0% | 3:0 0% | 4:0 0%               ' )
-		gbs.Add( self.antennaReadCount, pos=(iRow,1), span=(1,2), flag=wx.ALIGN_LEFT )
+		self.antennaReadCount = wx.StaticText( self, label='ANT Reads: 1:0 0% | 2:0 0% | 3:0 0% | 4:0 0%               ' )
+		gbs.Add( self.antennaReadCount, pos=(iRow,0), span=(1,3), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
 		gbs.Add( wx.StaticText(self, label='Backup File:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT )
@@ -747,10 +746,16 @@ class MainWin( wx.Frame ):
 					self.impinjMessages.write( message )
 					if antennaReadCount is not None:
 						total = max(1, sum( antennaReadCount[i] for i in xrange(1,4+1)) )
-						self.antennaReadCount.SetLabel(' | '.join('{}:{} {:.1f}%'.format(
-							i, formatAntennaReadCount(antennaReadCount[i]), antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)) +
-							'  (' + ('Peak RSSI' if Impinj.PeakRSSI else 'First Read') + ')'
-						)
+						label = '{}: {} ({})'.format(
+								'ANT Used' if Impinj.PeakRSSI else 'ANT Reads',
+								' | '.join('{}:{} {:.1f}%'.format(
+									i,
+									formatAntennaReadCount(antennaReadCount[i]),
+									antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)
+								),
+								'Peak RSSI' if Impinj.PeakRSSI else 'First Read',
+							)
+						self.antennaReadCount.SetLabel( label )
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:
 					self.crossMgrMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
