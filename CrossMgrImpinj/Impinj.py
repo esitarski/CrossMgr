@@ -6,6 +6,7 @@ import socket
 import threading
 import datetime
 import random
+import traceback
 from collections import defaultdict
 from Queue import Queue, Empty
 from Utils import readDelimitedData, timeoutSecs, Bell
@@ -44,6 +45,7 @@ TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  D
 
 PeakRSSI		= PeakRSSIDefault	# Use signal strength and Quadratic Regression to estimate the tag crossing more accurately.
 
+'''
 def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
 	# Create a read everything Operation Spec message
@@ -103,7 +105,82 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 		)	# ROSpec_Parameter
 	])	# ADD_ROSPEC_Message
 	return rospecMessage
+'''
 
+#------------------------------------------------------
+def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
+	#-----------------------------------------------------------------------------
+	# Create a read everything Operation Spec message
+	#
+	if not antennas:	# Default to all antennas if unspecified.
+		antennas = [0]
+	
+	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
+		# Initialize to disabled.
+		ROSpec_Parameter(
+			ROSpecID = ROSpecID,
+			CurrentState = ROSpecState.Disabled,
+			Parameters = [
+				ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
+					Parameters = [
+						# Start immediately.
+						ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
+						# No stop trigger.
+						ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
+					]
+				),
+				
+				AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use).
+					AntennaIDs = antennas,		# Use specified antennas.
+					Parameters = [
+						AISpecStopTrigger_Parameter(
+							AISpecStopTriggerType = AISpecStopTriggerType.Null,
+						),
+						InventoryParameterSpec_Parameter(
+							InventoryParameterSpecID = inventoryParameterSpecID,
+							ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
+							Parameters = [
+								AntennaConfiguration_Parameter(
+									AntennaID = 0,	# All antennas
+									Parameters = [
+										C1G2InventoryCommand_Parameter(
+											TagInventoryStateAware = False,
+											Parameters = [
+												C1G2RFControl_Parameter(
+													ModeIndex = 0,
+													Tari = 0,
+												),
+												C1G2SingulationControl_Parameter(
+													Session = 2,
+													TagPopulation = 8,
+													TagTransitTime = 0,
+												)
+											],
+										),
+									],
+								),
+							],
+						),
+					]
+				),
+				
+				ROReportSpec_Parameter(			# Report spec (specifies what to send from the reader).
+					ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
+					N = 1,
+					Parameters = [
+						TagReportContentSelector_Parameter(
+							EnableAntennaID = True,
+							EnableFirstSeenTimestamp = True,
+							EnablePeakRSSI = True,
+						),
+					]
+				),
+			]
+		)	# ROSpec_Parameter
+	])	# ADD_ROSPEC_Message
+	return rospecMessage
+
+	
 class Impinj( object ):
 
 	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
@@ -406,6 +483,7 @@ class Impinj( object ):
 			
 		# Create an old default time for last tag read.
 		tOld = getTimeNow() - datetime.timedelta( days = 100 )
+		utcfromtimestamp = datetime.datetime.utcfromtimestamp
 		
 		while self.checkKeepGoing():
 			#------------------------------------------------------------
@@ -457,6 +535,7 @@ class Impinj( object ):
 				
 			tUpdateLast = tKeepaliveLast = getTimeNow()
 			self.tagCount = 0
+			lastDiscoveryTime = None
 			while self.checkKeepGoing():
 			
 				#------------------------------------------------------------
@@ -496,6 +575,14 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Skipping: {}'.format(response.__class__.__name__)) )
 					continue
 				
+				try:
+					discoveryTime = utcfromtimestamp( tag['Timestamp'] / 1000000.0 )
+					if lastDiscoveryTime is not None:
+						print '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ),
+					lastDiscoveryTime = discoveryTime
+				except:
+					pass
+				
 				for tag in response.getTagData():
 					self.tagCount += 1
 					
@@ -527,7 +614,7 @@ class Impinj( object ):
 					peakRSSI = tag.get('PeakRSSI', None)		# -127..127 in db.
 					
 					# Convert discoveryTime to Python format and correct for reader time difference.
-					discoveryTime = datetime.datetime.utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
+					discoveryTime = utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 					
 					# Convert tag and discovery Time
 					if peakRSSI is not None:

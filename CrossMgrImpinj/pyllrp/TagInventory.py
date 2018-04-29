@@ -22,13 +22,14 @@ class TagInventory( object ):
 		
 	def resetTagInventory( self ):
 		self.tagInventory = set()
+		self.tagDetail = []
 		self.otherMessages = []
 
 	def AccessReportHandler( self, connector, accessReport ):
 		for tag in accessReport.getTagData():
-			tagID = HexFormatToStr( tag['EPC'] )
-			discoveryTime = self.connector.tagTimeToComputerTime( tag['Timestamp'] )
-			self.tagInventory.add( tagID )
+			tag['Tag'] = HexFormatToStr( tag['EPC'] )
+			self.tagInventory.add( tag['Tag'] )
+			self.tagDetail.append( tag )
 
 	def DefaultHandler( self, connector, message ):
 		self.otherMessages.append( message )
@@ -133,6 +134,7 @@ class TagInventory( object ):
 								TagReportContentSelector_Parameter(
 									EnableAntennaID = True,
 									EnableFirstSeenTimestamp = True,
+									EnablePeakRSSI = True,
 								),
 							]
 						), # ROReportSpec
