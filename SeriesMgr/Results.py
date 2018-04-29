@@ -390,9 +390,12 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
 							write( cgi.escape(model.name) )
-						if model.organizer:
-							with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+							if model.organizer:
 								write( u'by {}'.format(cgi.escape(model.organizer)) )
+							with tag(html, 'span', {'style': 'font-size: 60%'}):
+								write( '&nbsp;' * 5 )
+								write( u' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
 			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
 				with tag(html, 'label', {'class':'green'} ):
 					with tag(html, 'input', {
