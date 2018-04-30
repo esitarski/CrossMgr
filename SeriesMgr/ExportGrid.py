@@ -1,4 +1,3 @@
-
 import wx
 import os
 import xlwt
@@ -7,6 +6,7 @@ import Model
 import math
 import cgi
 import base64
+import datetime
 from FitSheetWrapper import FitSheetWrapper
 from contextlib import contextmanager
 
@@ -59,7 +59,7 @@ class ExportGrid( object ):
 		self.leftJustifyCols = {}
 		self.rightJustifyCols = {}
 		
-		rightJustify = set( ['Pos', 'Bib', 'Time'] )
+		rightJustify = set( ['Pos', 'Bib', 'Points', 'Gap', 'Time'] )
 		for c, n in enumerate(self.colnames):
 			if n in rightJustify:
 				self.rightJustifyCols[c] = True
@@ -137,6 +137,14 @@ class ExportGrid( object ):
 		xPix = borderPix
 		yPix = borderPix
 		
+		# Draw the update timestamp.
+		fontHeight = borderPix // 4
+		font = self._getFont( fontHeight, False )
+		dc.SetFont( font )
+		updateText = u'Updated: {}'.format( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
+		w, h = dc.GetMultiLineTextExtent( updateText )
+		self._drawMultiLineText( dc, updateText, widthPix - borderPix - w, yPix - fontHeight )
+		
 		graphicWidth = 0
 		graphicHeight = heightPix * 0.15
 		graphicBorder = 0
@@ -166,6 +174,7 @@ class ExportGrid( object ):
 		font = self._getFontToFit( widthFieldPix - graphicWidth - graphicBorder - qrWidth, graphicHeight, getTitleExtent, True )
 		dc.SetFont( font )
 		self._drawMultiLineText( dc, self.title, xPix + graphicWidth + graphicBorder, yPix )
+		
 		yPix += graphicHeight + graphicBorder
 		
 		heightFieldPix = heightPix - yPix - borderPix
@@ -181,17 +190,30 @@ class ExportGrid( object ):
 		for r in xrange(self.grid.GetNumberRows()):
 			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c))[1] for c in xrange(self.grid.GetNumberCols()))
 		
+		# Get the max height of the header row.
+		headerRowHeight = 0
+		headerRowLines = 0
+		for col, c in enumerate(self.colnames):
+			w, h = dc.GetMultiLineTextExtent( c )
+			if h > headerRowHeight: headerRowHeight = h
+			lines = c.strip().count('\n') + 1
+			if headerRowLines < lines: headerRowLines = lines
+		
+		# Draw the table by column.
 		yPixTop = yPix
 		yPixMax = yPix
 		for col, c in enumerate(self.colnames):
+			c = c.strip()
+			
 			colWidth = self._getColSizeTuple( dc, font, col )[0]
 			yPix = yPixTop
 			w, h = dc.GetMultiLineTextExtent( c )
+			lines = c.count('\n') + 1
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix )					# left justify
+				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix + (headerRowLines-lines)*textHeight )		# left justify
 			else:
-				self._drawMultiLineText( dc, u'{}'.format(c), xPix + colWidth - w, yPix )	# right justify
-			yPix += h + hSpace/4
+				self._drawMultiLineText( dc, u'{}'.format(c), xPix + colWidth - w, yPix + (headerRowLines-lines)*textHeight )	# right justify
+			yPix += headerRowHeight + hSpace/4
 			if col == 0:
 				yLine = yPix - hSpace/8
 				dc.DrawLine( borderPix, yLine, widthPix - borderPix, yLine )
@@ -212,11 +234,11 @@ class ExportGrid( object ):
 			xPix += colWidth + wSpace
 				
 		# Put CrossMgr branding at the bottom of the page.
-		font = self._getFont( borderPix // 5, False )
+		font = self._getFont( borderPix // 4, False )
 		dc.SetFont( font )
 		w, h = dc.GetMultiLineTextExtent( brandText )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
-	
+		
 	def toExcelSheet( self, sheet ):
 		''' Write the contents of the grid to an xlwt excel sheet. '''
 		titleStyle = xlwt.XFStyle()

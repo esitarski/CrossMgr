@@ -393,7 +393,6 @@ class MainWin( wx.Frame ):
 		
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		psdd.CalculatePaperSizeFromId()
 		dlg = wx.PageSetupDialog(self, psdd)
 		dlg.ShowModal()
 
@@ -410,11 +409,10 @@ class MainWin( wx.Frame ):
 			pageTitle = self.pages[iSelection].getTitle()
 		except:
 			pageTitle = self.attrClassName[iSelection][2]
-			
-		title = '%s\n%s' % (
-			pageTitle, model.name
-		)
-		return title
+		
+		if pageTitle == 'Results':
+			return model.name
+		return '{}\n{}'.format( pageTitle, model.name )
 	
 	def menuPrintPreview( self, event ):
 		self.commit()
