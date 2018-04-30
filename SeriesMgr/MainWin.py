@@ -488,7 +488,7 @@ class MainWin( wx.Frame ):
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
 		xlfileName = self.fileName[:-4] + '-' + pageTitle + '.xls'
-		dlg = wx.DirDialog( self, 'Folder to write "%s"' % os.path.basename(xlfileName),
+		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlfileName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -509,10 +509,10 @@ class MainWin( wx.Frame ):
 		try:
 			wb.save( xlfileName )
 			webbrowser.open( xlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Excel file written to:\n\n   %s' % xlfileName, 'Excel Export')
+			#Utils.MessageOK(self, 'Excel file written to:\n\n   {}'.format(xlfileName), 'Excel Export')
 		except IOError:
 			Utils.MessageOK(self,
-						'Cannot write "%s".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.' % xlfileName,
+						'Cannot write "{}".\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlfileName),
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 						
 	def menuExportToHtml( self, event ):
@@ -635,7 +635,7 @@ table.results tr td.fastest{
 			with open(htmlfileName, 'wb') as fp:
 				fp.write( html )
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html file written to:\n\n  [}'.format(htmlfileName), 'Html Write')
+			#Utils.MessageOK(self, 'Html file written to:\n\n  [}'.format(htmlfileName), 'Html Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "{}".\n\nCheck if this file is open.\nIf so, close it, and try again.'.format(htmlfileName),
