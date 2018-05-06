@@ -81,11 +81,11 @@ def FtpUploadFile( fname=None, callback=None ):
 			callback	= callback,
 		)
 	except ftputil.error.FTPOSError as e:
-		Utils.writeLog( 'FtpUploadFile: Error: {}'.format(e) )
+		Utils.writeLog( 'FtpUploadFile:{}: {}'.format(e.__class__.__name__, e) )
 		return e
 	except Exception as e:
 		# Utils.logException( e, sys.exc_info() )
-		Utils.writeLog( 'FtpUploadFile: Error: {}'.format(e) )
+		Utils.writeLog( 'FtpUploadFile: {}: {}'.format(e.__class__.__name__, e) )
 		return e
 		
 	return None
@@ -99,8 +99,6 @@ def FtpUploadFileAsync( fname ):
 	thread.start()
 
 def FtpWriteRaceHTML():
-	Utils.writeLog( 'FtpWriteRaceHTML: called.' )
-	
 	html = Model.getCurrentHtml()
 	if not html:
 		return None

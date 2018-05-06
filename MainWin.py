@@ -1908,6 +1908,8 @@ class MainWin( wx.Frame ):
 		
 		def sanitize( template ):
 			# Sanitize the template into a safe json string.
+			api_key = 'AIzaSyD2sl2JTvnyMcsgWc3tTceWCYo3ZoyWdAI'
+			template = template.replace( '{{api_key}}', api_key )
 			template = self.reLeadingWhitespace.sub( '', template )
 			template = self.reComments.sub( '', template )
 			template = self.reBlankLines.sub( '\n', template )
