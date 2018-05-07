@@ -349,7 +349,7 @@ class Impinj( object ):
 		success, response = self.sendCommand( DELETE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		if not success:
 			return False
-			
+		
 		# Get reader info.
 		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
 		if success:
