@@ -350,6 +350,7 @@ class Impinj( object ):
 		if not success:
 			return False
 		
+		'''
 		# Get reader info.
 		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
 		if success:
@@ -378,6 +379,7 @@ class Impinj( object ):
 							)
 						)
 					)
+		'''
 		
 		# Configure our new rospec.
 		success, response = self.sendCommand(
