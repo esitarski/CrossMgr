@@ -45,7 +45,6 @@ TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  D
 
 PeakRSSI		= PeakRSSIDefault	# Use signal strength and Quadratic Regression to estimate the tag crossing more accurately.
 
-'''
 def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
 	# Create a read everything Operation Spec message
@@ -105,8 +104,8 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 		)	# ROSpec_Parameter
 	])	# ADD_ROSPEC_Message
 	return rospecMessage
-'''
 
+'''
 #------------------------------------------------------
 def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
@@ -179,7 +178,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 		)	# ROSpec_Parameter
 	])	# ADD_ROSPEC_Message
 	return rospecMessage
-
+'''
 	
 class Impinj( object ):
 
