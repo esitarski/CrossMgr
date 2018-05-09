@@ -824,7 +824,7 @@ table.results tr td.fastest{
 
 	def menuAbout( self, event ):
 		# First we create and fill the info object
-		info = wx.AboutDialogInfo()
+		info = wx.adv.AboutDialogInfo()
 		info.Name = Version.AppVerName
 		info.Version = ''
 		info.Copyright = "(C) 2013-{}".format(datetime.datetime.now().year)
@@ -850,7 +850,7 @@ table.results tr td.fastest{
 			"Computers fail, screw-ups happen.  Always use a paper manual backup."
 		info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
 
-		wx.AboutBox(info)
+		wx.adv.AboutBox(info)
 
 	#--------------------------------------------------------------------------------------
 
