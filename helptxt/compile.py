@@ -101,7 +101,8 @@ def CompileHelp( dir = '.' ):
 		ZipFileName = 'CrossMgrDocHtml.zip'
 		zf = zipfile.ZipFile( ZipFileName, 'w' )
 		for fname in glob.glob("./*.html"):
-			zf.write( fname )
+			if not ('prolog' in fname or 'epilog' in fname):
+				zf.write( fname )
 		zf.close()
 		
 		# Copy all the files into the htmldoc directory.
