@@ -3,7 +3,7 @@
 # Introduction
 Welcome to SeriesMgr!
 
-SeriesMgr make is easy to combine results from multiple events to score a race series.  Series can be scored by:
+SeriesMgr makes is easy to combine results from multiple events to score a race series.  Series can be scored by:
 
 * Points for Place (can be different for each event)
 * Total Time
@@ -18,31 +18,34 @@ SeriesMgr reads CrossMgr race files directly.  It also reads Excel spreadsheets.
 
 SeriesMgr uses __First Name__, __Last Name__ and __License__ to identify riders.  The fields __must__ be specified in the CrossMgr or Spreadsheet input.  Upper/lower case does not matter.
 
+The __First Name__, __Last Name__ and __License__ (ignoring case) all must match *exactly* for a result to be considered from the same rider.  For example, "James Smith", "Jim Smith", "Jimmy Smith" and "J. Smith" will all be treated as different riders.
+
 If you don't have a __License__ and want to use name only, you must still have a __License__ column in the input, but the values can be blank.
 
-However, be aware that without a __License__ field you might get two people with the same name (eg. two Jim Smiths).  Because SeriesMgr cannot tell them apart, it will combine their points!
+However, be aware that without a __License__ field you might get two people with the same name (eg. two Jim Smiths).  Because SeriesMgr cannot tell them apart, it will combine their results!
 
-Of course, you can still differentite the names (change one Jim Smith to James Smith).  You must do this in the race input as there is no way to fix this up after the fact.
+Of course, you can still differentiate the names (for example, change one "Jim Smith" to "James Smith").  You must do this in the race input as there is no way to fix this up after the fact.
 
 SeriesMgr also supports __aliaes__ for names, teams and licenses.  Aliases allow you to map common misspellings/alternate spellings to a standard name.
 
 ## Category Identification
 
-For CrossMgr races, the rider's category comes from the CrossMgr Categories screen and the bib number ranges.  To control which Categories are considered, set the appropriate flags in the CrossMgr Categories screen.  For example, if you have a Beginner category you don't want to consider in a Series (or a Custom category, etc), make sure to uncheck the flag.
+For CrossMgr races, the rider's category comes from the CrossMgr Categories screen based on the bib number ranges.  To control which Categories are considered in SeriesMgr, set the flag in the CrossMgr Categories screen.  For example, if you have a Beginner category you don't want to consider in a Series (or a Custom category, etc), make sure to uncheck the Series flag.
 
-For spreadsheet races, SeriesMgr uses the __Category__ column or, if missing, the Sheet name.  If using the Sheet name, all results in that sheet are expected to be for that Category.
+For spreadsheet races, SeriesMgr uses the __Category__ column or, if missing, the Excel Sheet name.  If using the Sheet name, all results in that sheet will be taken to be in that Category.
 
-SeriesMgr expects that the Category name is unique with regards to gender.  For example, results from CrossMgr will always contain the category gender in brackets on the end, for example, "Cat 1/2 (Men)".
+SeriesMgr expects that the Category name is unique with regards to gender.
+For example, using "Cat 1/2" as the Category for both Men and Women won't work - SeriesMgr will rank everyone together in the same category.  To fix this, make sure the Category name contains the gender.  For example, "Cat 1/2 (Men)" and "Cat 1/2 (Women)" will work.
 
-The point is that if you have a "Cat 1/2" category and use it for Men and Women, SeriesMgr will rank everyone together in the same category.  To keep the category separate by gender, the name must contain the gender - something like "Cat 1/2 (Men)" and "Cat 1/2 (Women)".
+CrossMgr categories always contain the category gender in brackets on the end (for example, "Cat 1/2 (Men)").
 
 ## Team Identification
 
 SeriesMgr computes Team results, but you don't have to use them.
 
-If you are interested in Team results, the Team names must be present in the Race files.  Sometimes there is considereable variation in how Team names are spelled (for example, "Beaches Cycling Club", "Beaches Cycling", "BCC").  You can map variations to a single name in the Team Aliase screen.
+If you are interested in Team results, the Team names must be present in the Race files.  Sometimes there is considerable variation in the same Team name (for example, "Beaches Cycling Club", "Beaches Cycling", "BCC").  You can map variations to a single name in the Team Alias screen.
 
-Blank team names, or team names "Independent", "Ind.", "Ind" are treated separately and are not combined into an overall result.
+Blank team names, or "Independent", "Ind.", "Ind" are treated separately and are not combined into an overall result.
 
 # Races Screen
 
@@ -50,7 +53,7 @@ At the top, add the name of your Series and Organizer.
 
 In each row, add the race, either a CrossMgr race file (.cmn) or an Excel sheet (.xlsx, .xls).
 
-You can change the order of races by dragging-and-dropping rows by clicking in the grey column to the left of the race name.
+You can change the order of races by dragging the row in the grey column to the left of the race name.
 
 The __Points__ column refers to the points structure to be used for that race.  This only applies if you are scoring by Points (more on that later).
 The __Grade__ column is used to break ties (more on that later too).
@@ -63,13 +66,13 @@ It is a good practice to open each CrossMgr race beforehand to ensure that its E
 
 ## Excel Format
 
-SeriesMgr supports Excel.  This format is compatable with CrossMgr Excel output and USAC upload format.
+SeriesMgr supports Excel.  This format is compatible with CrossMgr Excel output and USAC upload format.
 
 1. Starting form the top of the sheet, SeriesMgr looks for a cell in the first column that is one of 'Pos','Pos.','Rank', 'Rider Place' or 'Place'.  This is the Header Row.  Data is expected to be in columns under the headers.
 1. The Header Row can contain other header values as described in the table below.  Unrecognized headers are ignored.  Upper/lower case does not matter.
 1. Except for the __Pos__ column (or one of its equivalents) which must be in the first column, headers can be in any order.
 1. Data are expected in the columns under each header.
-1. If the __Category__ column is not present, the rider's category is taken from the Excel sheet name.  This allows the Excel sheet to be organized with each Category name in each sheet.  Alternatively, if the __Category__ column is present, multple categories can be submitted all in one sheet.
+1. If the __Category__ column is not present, the rider's category is taken from the Excel sheet name.  This allows the Excel sheet to be organized with each Category name in each sheet.  Alternatively, if the __Category__ column is present, multiple categories can be submitted all in one sheet.
 
 | Header        | Status | Description
 |---------------|:-------------|:-------------
@@ -115,7 +118,7 @@ The options available to break ties are fairly straightforward.
 An exception is Grades.  Grades are specified by Race in the __Races__ screen.
 __Grades__ can have values A-Z.  Results for a higher grade race take precedence over results for a lower-grade race in tie breaking.
 
-For example, say riders A and B are tied in every way, but finished A=1, B=2 in the Regional Championship.  If you set the Regional Champtionship race to Grade A and all other races to Grade B, that race will "take priority" in the number of 1st place finishes to break the tie.
+For example, say riders A and B are tied in every way, but finished A=1, B=2 in the Regional Championship.  If you set the Regional Championship race to Grade A and all other races to Grade B, that race will "take priority" in the number of 1st place finishes to break the tie.
 
 __Note:__ __Grades__ only apply when breaking ties for series scored by Points.
 
@@ -150,11 +153,11 @@ Use this screen to specify name aliases to fix misspellings in your given Race R
 
 # Team Aliases Screen
 
-Use this screen to speficy team aliases to fix misspellings in your given Race Results.
+Use this screen to specify team aliases to fix misspellings in your given Race Results.
 
 # License Aliases Screen
 
-Use this screen tp specify license aliaes to fix misspellings in your given Race Results.
+Use this screen to specify license aliases to fix misspellings in your given Race Results.
 
 # Results Screen
 
@@ -162,12 +165,12 @@ Shows the individual SeriesResult for each category.  The Refresh button will re
 
 The publish buttons are fairly self-explanitory.  __Publish to HTML with FTP__ will use the FTP site and password in the last CrossMgr race file.
 
-The __Post Publish Cmd__ is a command thaht is run after the publish.  This allows you to post-process the results (for example, copy them somewhere).  As per the Windows shell standard, you can use %* to refer to all files created by SeriesMgr in the publish.
+The __Post Publish Cmd__ is a command that is run after the publish.  This allows you to post-process the results (for example, copy them somewhere).  As per the Windows shell standard, you can use %* to refer to all files created by SeriesMgr in the publish.
 
 # Team Results Screen
 
 Similar to individual results, but for teams.
 
-SeriesMgr treats blank team names, or teams with the value "Independent"/"Ind."/"Ind" (case indepdendent) differently.  Specifically, it treats these entries all as "Independent" and will not accumulate points for them.
+SeriesMgr treats blank team names, or teams with the value "Independent"/"Ind."/"Ind" (case independent) differently.  Specifically, it treats these entries all as "Independent" and will not accumulate points for them.
 
 For example, all independent riders (or riders without a team) it will not show up under team "Independent".
