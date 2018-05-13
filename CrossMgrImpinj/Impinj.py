@@ -108,6 +108,8 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 '''
 
 #------------------------------------------------------
+
+ImpinjDebug = False
 def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
 	# Create a read everything Operation Spec message
@@ -147,12 +149,12 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 											TagInventoryStateAware = False,
 											Parameters = [
 												C1G2RFControl_Parameter(
-													ModeIndex = 0,
+													ModeIndex = 1000,
 													Tari = 0,
 												),
 												C1G2SingulationControl_Parameter(
 													Session = 2,
-													TagPopulation = 8,
+													TagPopulation = 32,
 													TagTransitTime = 0,
 												)
 											],
@@ -578,7 +580,7 @@ class Impinj( object ):
 				
 				try:
 					discoveryTime = utcfromtimestamp( tag['Timestamp'] / 1000000.0 )
-					if lastDiscoveryTime is not None:
+					if ImpinjDebug and lastDiscoveryTime is not None:
 						print '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ),
 					lastDiscoveryTime = discoveryTime
 				except:
