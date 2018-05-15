@@ -110,12 +110,15 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 #------------------------------------------------------
 
 ImpinjDebug = False
-def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
+def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None, modeIdentifiers = None ):
 	#-----------------------------------------------------------------------------
 	# Create a read everything Operation Spec message
 	#
 	if not antennas:	# Default to all antennas if unspecified.
 		antennas = [0]
+	
+	# Pick a mode index from those available in the reader.
+	modeIndex = 1000 if modeIdentifiers is None or 1000 in modeIdentifiers else modeIdentifiers[0]
 	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
 		# Initialize to disabled.
@@ -149,7 +152,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 											TagInventoryStateAware = False,
 											Parameters = [
 												C1G2RFControl_Parameter(
-													ModeIndex = 1000,
+													ModeIndex = modeIndex,
 													Tari = 0,
 												),
 												C1G2SingulationControl_Parameter(
@@ -350,10 +353,16 @@ class Impinj( object ):
 		success, response = self.sendCommand( DELETE_ROSPEC_Message(ROSpecID = self.rospecID) )
 		if not success:
 			return False
+			
+		# Get the C1G2UHFRFModeTable and extract possible mode identifiers.
+		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.Regulatory_Capabilities ))
+		modeIdentifiers = [e.ModeIdentifier for e in response.getFirstParameterByClass(C1G2UHFRFModeTable_Parameter).Parameters]
 		
 		'''
 		# Get reader info.
 		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
+		with open('ReaderCapabilities.txt','w') as f:
+			f.write( '{}'.format(response) )
 		if success:
 			self.messageQ.put( (
 					'Impinj',
@@ -384,7 +393,7 @@ class Impinj( object ):
 		
 		# Configure our new rospec.
 		success, response = self.sendCommand(
-			GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas) if PeakRSSI else
+			GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas, modeIdentifiers=modeIdentifiers ) if PeakRSSI else
 			GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
 			)
 		if not success:
