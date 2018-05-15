@@ -125,7 +125,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 		if modeIndex in modeIdentifiers:
 			break
 	else:
-		modeIndex = 1000
+		modeIndex = modeIdentifiers[0]	# If we can't find the ones we are looking for, pick one.
 	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
 		# Initialize to disabled.
