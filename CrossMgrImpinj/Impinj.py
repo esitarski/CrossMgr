@@ -117,8 +117,15 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 	if not antennas:	# Default to all antennas if unspecified.
 		antennas = [0]
 	
+	if not modeIdentifiers:	# Default to ModeIndex=1000 as this is common.
+		modeIdentifiers = [1000]
+	
 	# Pick a mode index from those available in the reader.
-	modeIndex = 1000 if modeIdentifiers is None or 1000 in modeIdentifiers else modeIdentifiers[0]
+	for modeIndex in (0,1000):
+		if modeIndex in modeIdentifiers:
+			break
+	else:
+		modeIndex = 1000
 	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
 		# Initialize to disabled.
