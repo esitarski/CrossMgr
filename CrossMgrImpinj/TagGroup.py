@@ -5,6 +5,7 @@ from time import sleep
 import random
 import sys
 import operator
+from Queue import Queue, Empty
 
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()
@@ -103,16 +104,25 @@ class TagGroup( object ):
 		The first read time of each stray read is returned.
 	'''
 	def __init__( self ):
+		self.q = Queue()
 		self.tagInfo = {}
 		
 	def add( self, antenna, tag, t, db ):
-		try:
-			self.tagInfo[tag].add( antenna, t, db )
-			return False
-		except KeyError:
-			self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
-			return True
+		self.q.put((antenna, tag, t, db))
 
+	def flush( self ):
+		# Process all waiting reads.
+		while 1:
+			try:
+				antenna, tag, t, db = self.q.get(False)
+			except Empty:
+				break
+			try:
+				self.tagInfo[tag].add( antenna, t, db )
+			except KeyError:
+				self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
+			self.q.task_done()
+			
 	def getReadsStrays( self, tNow=None ):
 		'''
 			Returns two lists:
@@ -121,9 +131,13 @@ class TagGroup( object ):
 				
 			Each stray will be reported as a read the first time it is detected.
 		'''
+		self.flush()
+		
 		trNow = datetimeToTr( tNow or datetime.now() )
 		reads, strays = [], []
 		toDelete = []
+		
+		# Process the items without referencing the dictionary.
 		for tag, tge in self.tagInfo.iteritems():
 			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
@@ -134,7 +148,7 @@ class TagGroup( object ):
 				t = trToDatetime( tge.firstReadMin )
 				if not tge.isStray:
 					tge.setStray()
-					reads.append( (tag, t, 1, 0) )					# Report stray first read time.
+					reads.append( (tag, t, 1, 0) )				# Report stray first read time.
 				strays.append( (tag, t) )
 				
 		for tag in toDelete:
@@ -192,6 +206,7 @@ if __name__ == '__main__':
 		for k in xrange(samples):
 			tg = TagGroup()
 			genReadProfile( tg, t, '111', stddev=float(stddev) )
+			tg.flush()
 			tEst, sampleSize, antennaID = tg.tagInfo['111'].getBestEstimate()
 			variance += (t - tEst).total_seconds() ** 2
 		print '{},{}'.format( stddev, (variance / samples)**0.5 )

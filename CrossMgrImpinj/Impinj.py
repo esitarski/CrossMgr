@@ -453,8 +453,7 @@ class Impinj( object ):
 			self.antennaReadCount,
 			)
 		)
-		if not quadReg:
-			Bell()
+		Bell()
 		return True
 	
 	def handleTagGroup( self ):
@@ -635,17 +634,8 @@ class Impinj( object ):
 					# Convert discoveryTime to Python format and correct for reader time difference.
 					discoveryTime = utcfromtimestamp( discoveryTime / 1000000.0 ) + self.timeCorrection
 					
-					# Convert tag and discovery Time
 					if peakRSSI is not None:
-						if self.tagGroup.add( antennaID, tagID, discoveryTime, peakRSSI ):
-							self.messageQ.put( (
-								'Impinj',
-								'QRProcessing {}.  tag={} time={}'.format(self.tagCount, tagID,
-								discoveryTime.strftime('%Y/%m/%d_%H:%M:%S.%f')),
-								self.antennaReadCount,
-								)
-							)
-							Bell()
+						self.tagGroup.add( antennaID, tagID, discoveryTime, peakRSSI )
 					else:
 						self.reportTag( tagID, discoveryTime, antennaID=antennaID )
 		
