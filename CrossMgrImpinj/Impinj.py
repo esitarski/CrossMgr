@@ -110,12 +110,17 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 #------------------------------------------------------
 
 ImpinjDebug = False
-def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None, modeIdentifiers = None ):
+def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234,
+		antennas = None, modeIdentifiers = None, maxNumberOfAntennaSupported = None,
+	):
 	#-----------------------------------------------------------------------------
 	# Create a read everything Operation Spec message
 	#
 	if not antennas:	# Default to all antennas if unspecified.
 		antennas = [0]
+	
+	if maxNumberOfAntennaSupported:
+		antennas = [a for a in antennas if a <= maxNumberOfAntennaSupported]
 	
 	if not modeIdentifiers:	# Default to ModeIndex=1000 as this is common.
 		modeIdentifiers = [1000]
@@ -125,7 +130,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 		if modeIndex in modeIdentifiers:
 			break
 	else:
-		modeIndex = modeIdentifiers[0]	# If we can't find the ones we are looking for, pick one.
+		modeIndex = modeIdentifiers[0]	# If we can't find the ones we are looking for, pick a valid one.
 	
 	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
 		# Initialize to disabled.
@@ -362,47 +367,22 @@ class Impinj( object ):
 			return False
 			
 		# Get the C1G2UHFRFModeTable and extract available mode identifiers.
-		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.Regulatory_Capabilities ))
-		modeIdentifiers = [e.ModeIdentifier for e in response.getFirstParameterByClass(C1G2UHFRFModeTable_Parameter).Parameters]
-		
-		'''
-		# Get reader info.
 		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
-		with open('ReaderCapabilities.txt','w') as f:
-			f.write( '{}'.format(response) )
-		if success:
-			self.messageQ.put( (
-					'Impinj',
-					'-----------------------------',
-				)
-			)
-			for p in response.Parameters:
-				if isinstance(p, GeneralDeviceCapabilities_Parameter):
-					self.messageQ.put( (
-							'Impinj',
-							'ModelName={}, ReaderFirmwareVersion={}, MaxNumberOfAntennaSupported={}'.format(
-								p.ModelName,
-								p.ReaderFirmwareVersion,
-								p.MaxNumberOfAntennaSupported,
-							)
-						)
-					)
-				elif isinstance(p, RegulatoryCapabilities_Parameter):
-					self.messageQ.put( (
-							'Impinj',
-							'CountryCode={}, CommunicationsStandard={}'.format(
-								p.CountryCode,
-								CommunicationsStandard.getName(p.CommunicationsStandard),
-							)
-						)
-					)
-		'''
-		
+		if not success:
+			return False
+		modeIdentifiers = [e.ModeIdentifier for e in response.getFirstParameterByClass(C1G2UHFRFModeTable_Parameter).Parameters]
+		gdc = response.getFirstParameterByClass(GeneralDeviceCapabilities_Parameter)
+		maxNumberOfAntennaSupported = gdc.MaxNumberOfAntennaSupported
+				
 		# Configure our new rospec.
-		success, response = self.sendCommand(
-			GetAddRospecRIISMessage(ROSpecID = self.rospecID, antennas = self.antennas, modeIdentifiers=modeIdentifiers ) if PeakRSSI else
-			GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
+		if PeakRSSI:
+			cmd = GetAddRospecRIISMessage(
+				ROSpecID = self.rospecID, antennas = self.antennas,
+				modeIdentifiers=modeIdentifiers, maxNumberOfAntennaSupported=maxNumberOfAntennaSupported
 			)
+		else:
+			cmd = GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
+		success, response = self.sendCommand(cmd)
 		if not success:
 			return False
 			

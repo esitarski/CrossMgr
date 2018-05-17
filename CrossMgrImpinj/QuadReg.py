@@ -11,6 +11,17 @@ def QuadRegExtreme( data ):
 	if a >= 0.0:
 		raise ValueError( 'invalid quadratic: cannot open up' )
 	return -b / (2.0 * a)
+	
+def QuadRegRSS( data ):
+	lenData = len(data)
+	if lenData < 3:
+		raise ValueError( 'data must have >= 3 values' )
+	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
+	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
+	a, b, c = np.polyfit( x, y, 2 )
+	e = np.fromiter( (v*v*a + v*b + c for v in x), np.float64, lenData )
+	s = np.sum( (y-e)**2 )
+	return s
 
 if __name__ == '__main__':
 	data = '''i	Temperature	Yield
@@ -35,5 +46,5 @@ if __name__ == '__main__':
 			fields = line.split()
 			points.append( (float(fields[1]), -float(fields[2])) )
 	print points
-	print QuadReg( points ), QuadRegExtreme( points )
+	print QuadReg( points ), QuadRegExtreme( points ), QuadRegRSS( points )
 	
