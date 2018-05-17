@@ -361,7 +361,7 @@ class Impinj( object ):
 		if not success:
 			return False
 			
-		# Get the C1G2UHFRFModeTable and extract possible mode identifiers.
+		# Get the C1G2UHFRFModeTable and extract available mode identifiers.
 		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.Regulatory_Capabilities ))
 		modeIdentifiers = [e.ModeIdentifier for e in response.getFirstParameterByClass(C1G2UHFRFModeTable_Parameter).Parameters]
 		
