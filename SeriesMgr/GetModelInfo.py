@@ -808,7 +808,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 					rider = rr.key()
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 					earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
-					points = asInt( earnedPoints * rr.upgradeFactor )
+					points = asInt( earnedPoints )
 					teamResults[raceInSeries][team].append( ResultTuple(points, rr.tFinish, rr.rank, primePoints, 0, rr) )
 
 				teamResults[raceInSeries][team].sort( key=lambda rt: (-rt.points, rt.rank) )

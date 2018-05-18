@@ -105,8 +105,8 @@ def copyDir( d ):
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
 copyDir( 'CrossMgrImages' )
+copyDir( 'SeriesMgrHtmlDoc' )
 #copyDir( 'data' )
-#copyDir( 'html' )
 
 # Create the installer
 inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'
