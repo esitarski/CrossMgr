@@ -32,7 +32,7 @@ SeriesMgr also supports __aliaes__ for names, teams and licenses.  Aliases allow
 
 For CrossMgr races, the rider's category comes from the CrossMgr Categories screen based on the bib number ranges.  To control which Categories are considered in SeriesMgr, set the flag in the CrossMgr Categories screen.  For example, if you have a Beginner category you don't want to consider in a Series (or a Custom category, etc), make sure to uncheck the Series flag.
 
-For spreadsheet races, SeriesMgr uses the __Category__ column or, if missing, the Excel Sheet name.  If using the Sheet name, all results in that sheet will be taken to be in that Category.
+For spreadsheet races, SeriesMgr uses a __Race Category__ column or, if missing, the Excel Sheet name.  If using the Sheet name, all results in that sheet will be taken to be in that Category.
 
 SeriesMgr expects that the Category name is unique with regards to gender.
 For example, using "Cat 1/2" as the Category for both Men and Women won't work - SeriesMgr will rank everyone together in the same category.  To fix this, make sure the Category name contains the gender.  For example, "Cat 1/2 (Men)" and "Cat 1/2 (Women)" will work.
@@ -91,7 +91,7 @@ SeriesMgr supports race results in Excel (either .xls or .xlsx).  SeriesMgr will
 | 'LastName','Last Name','LName','Rider Last Name'| Required | Rider's last name
 | 'FirstName','First Name','FName','Rider First Name'| Required | Rider's first name
 | 'Licence','Licence #','Rider License #'| Required | Rider's license number
-| 'Category' | Optional | Rider Category.  If not present, the Category will be taken from the Excel Sheet name.
+| 'Race Category','RaceCategory','Race_Category' | Optional | Rider Category.  If not present, the Category will be taken from the Excel Sheet name.
 | 'Team','Team Name','TeamName','Rider Team','Club','Club Name','ClubName','Rider Club','Rider Club/Team' | Optional | Rider's team name.
 | 'Time','Tm.','Rider Time' | Finish Time
 
