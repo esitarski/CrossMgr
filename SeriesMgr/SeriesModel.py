@@ -232,6 +232,12 @@ class SeriesModel( object ):
 	aliasLicenseLookup = {}
 	aliasTeamLookup = {}
 
+	ftpHost = ''
+	ftpPath = ''
+	ftpUser = ''
+	ftpPassword = ''
+	urlPath = ''
+	
 	@property
 	def scoreByPoints( self ):
 		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)

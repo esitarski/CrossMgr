@@ -65,7 +65,7 @@ class FtpPublishDialog( wx.Dialog ):
 
 	def __init__( self, parent, html, id = wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, "Ftp Publish Results",
-						style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.html = html
 		bs = wx.GridBagSizer(vgap=0, hgap=4)
