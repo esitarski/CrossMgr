@@ -1,8 +1,10 @@
 import glob
 import datetime
-from TagGroup import TagGroup
+from TagGroup import TagGroup, QuadraticRegressionMethod, StrongestReadMethod
 
 def Test():
+	method = QuadraticRegressionMethod
+
 	for file in sorted(glob.glob('data/*.txt')):
 		tg = TagGroup()
 		tNow = datetime.datetime.now()
@@ -28,7 +30,7 @@ def Test():
 				if t > tLast: tLast = t
 				tg.add( 1, tagID, tNow + datetime.timedelta(seconds=t - tFirst), db )
 		
-		reads, strays = tg.getReadsStrays( tNow + datetime.timedelta( seconds = tLast - tFirst + 1.0) )
+		reads, strays = tg.getReadsStrays( tNow + datetime.timedelta( seconds = tLast - tFirst + 1.0), method )
 		print '************************************************'
 		print '    {}'.format( file )
 		print '************************************************'

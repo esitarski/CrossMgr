@@ -6,6 +6,7 @@ import random
 import sys
 import operator
 from Queue import Queue, Empty
+import itertools
 
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()
@@ -19,6 +20,8 @@ def datetimeToTr( t ):
 def trToDatetime( tr ):
 	return tRef + timedelta(seconds=tr)
 
+QuadraticRegressionMethod, StrongestReadMethod = 0, 1
+	
 class AntennaReads( object ):
 	__slots__ = ('firstRead', 'reads', 'dbMax')
 	
@@ -45,19 +48,24 @@ class AntennaReads( object ):
 	def lastRead( self ):
 		return self.reads[-1][0]
 	
-	def getBestEstimate( self ):
+	def getBestEstimate( self, method=QuadraticRegressionMethod ):
 		if self.isStray:
 			return self.firstRead, 1
-		try:
-			trEst, sampleSize = QuadRegExtreme(self.reads), len(self.reads)
-		except Exception as e:
-			# If error, return the first read.
-			trEst, sampleSize = self.firstRead, 1
 		
-		# If the estimate lies outside the data, return the first read.
-		if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
-			trEst, sampleSize = self.firstRead, 1
-		return trEst, sampleSize
+		if method == QuadraticRegressionMethod and len(self.reads) >= 3:
+			try:
+				trEst, sampleSize = QuadRegExtreme(self.reads), len(self.reads)
+			except Exception as e:
+				# If error, return the first read.
+				trEst, sampleSize = self.firstRead, 1
+			
+			# If the estimate lies outside the data, return the first read.
+			if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
+				trEst, sampleSize = self.firstRead, 1
+			return trEst, sampleSize
+		
+		else:	# method == StrongestReadMethod or len(self.reads) < 3
+			return max( self.reads, key=lambda x: x[1] )[0], len(self.reads)
 		
 class TagGroupEntry( object ):
 	__slots__ = ('antennaReads', 'firstReadMin', 'lastReadMax', 'isStray')
@@ -85,14 +93,26 @@ class TagGroupEntry( object ):
 				del ar.reads[:-1]	# Delete all but last read.
 		self.isStray = True
 	
-	def getBestEstimate( self ):
+	def getBestEstimate( self, method=QuadraticRegressionMethod ):
 		if self.isStray:
-			return trToDatetime( self.firstReadMin ), 1
+			return trToDatetime( self.firstReadMin ), 1, 0
 		
-		# Compute the best estimate using the antenna with the most of reads.  Break ties with dbMax.
-		a, arBest = max( ((a, ar) for a, ar in enumerate(self.antennaReads) if ar), key=lambda x: (len(x[1].reads), x[1].dbMax) )
-		tr, sampleSize = arBest.getBestEstimate()
-		return trToDatetime(tr), sampleSize, a+1
+		if method == QuadraticRegressionMethod:
+			# Compute the best estimate using the antenna with the most of reads.  Break ties with dbMax.
+			a, arBest = max( ((a, ar) for a, ar in enumerate(self.antennaReads) if ar), key=lambda x: (len(x[1].reads), x[1].dbMax) )
+			tr, sampleSize = arBest.getBestEstimate( method )
+			return trToDatetime(tr), sampleSize, a+1
+		
+		elif method == StrongestReadMethod:
+			a, tr, dbMax = None, None, -999999999.0
+			sampleSize = 0
+			for aCur, ar in enumerate(self.antennaReads):
+				if ar and ar.dbMax > dbMax:
+					trCur, dbCur = max( ar.reads, key=lambda x:x[1] )
+					sampleSize = len(ar.reads)
+					if dbCur > dbMax:
+						a, tr, dbMax = aCur, trCur, dbCur						
+			return trToDatetime(tr), sampleSize, a
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstReadMin, self.lastReadMax)
@@ -123,7 +143,7 @@ class TagGroup( object ):
 				self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
 			self.q.task_done()
 			
-	def getReadsStrays( self, tNow=None ):
+	def getReadsStrays( self, tNow=None, method=QuadraticRegressionMethod ):
 		'''
 			Returns two lists:
 				reads = [(tag1, t1, sampleSize1, antennaID1), (tag2, t2, sampleSize2, , antennaID2), ...]
@@ -141,7 +161,7 @@ class TagGroup( object ):
 		for tag, tge in self.tagInfo.iteritems():
 			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
-					t, sampleSize, antennaID = tge.getBestEstimate()
+					t, sampleSize, antennaID = tge.getBestEstimate(method)
 					reads.append( (tag, t, sampleSize, antennaID) )
 				toDelete.append( tag )
 			elif tge.lastReadMax - tge.firstReadMin >= tStray:	# This is a stray.
@@ -159,6 +179,8 @@ class TagGroup( object ):
 		return reads, strays
 	
 if __name__ == '__main__':
+
+	method = StrongestReadMethod
 
 	t = datetime.now()
 	tFirst = None
@@ -207,7 +229,7 @@ if __name__ == '__main__':
 			tg = TagGroup()
 			genReadProfile( tg, t, '111', stddev=float(stddev) )
 			tg.flush()
-			tEst, sampleSize, antennaID = tg.tagInfo['111'].getBestEstimate()
+			tEst, sampleSize, antennaID = tg.tagInfo['111'].getBestEstimate( method )
 			variance += (t - tEst).total_seconds() ** 2
 		print '{},{}'.format( stddev, (variance / samples)**0.5 )
 	
@@ -218,6 +240,6 @@ if __name__ == '__main__':
 		genReadProfile( tg, t-timedelta(seconds=3), '222', antenna=antennaID, yTop=-47+antennaID )
 	sleep( 1.0 )
 	print t, t-timedelta(seconds=3)
-	reads, strays = tg.getReadsStrays()
+	reads, strays = tg.getReadsStrays(method=method)
 	for tag, t, sampleSize, antennaID in reads:
 		print t, tag, sampleSize, antennaID
