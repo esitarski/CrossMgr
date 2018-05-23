@@ -821,9 +821,8 @@ table.results tr td.fastest{
 		self.openSeries( fileName )
 	
 	def menuHelp( self, event ):
-		fname = os.path.join( Utils.getHelpFolder(), 'QuickStart.html' )
-		url = 'file:{}'.format(pathname2url(fname))
-		webbrowser.open(url)
+		fname = os.path.join( Utils.getHelpFolder().replace('CrossMgrHtmlDoc','SeriesMgrHtmlDoc'), 'QuickStart.html' )
+		Utils.LaunchApplication( fname )
 	
 	def menuExit(self, event):
 		self.onCloseWindow( event )

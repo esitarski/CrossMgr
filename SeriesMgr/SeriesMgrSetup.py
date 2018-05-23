@@ -55,6 +55,10 @@ for googleDrive in gds:
 		break
 googleDrive = os.path.join( googleDrive, 'SeriesMgr' )
 
+# Compile the help files
+from helptxt.compile import CompileHelp
+CompileHelp( 'helptxt' )
+
 if 'win' not in sys.platform.lower():
 	sys.exit()
 	
