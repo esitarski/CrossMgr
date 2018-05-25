@@ -47,68 +47,6 @@ TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  D
 ProcessingMethod = ProcessingMethodDefault
 AnteennaChoice   = AntennaChoiceDefault
 
-'''
-def GetAddRospecRSSIMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
-	#-----------------------------------------------------------------------------
-	# Create a read everything Operation Spec message
-	#
-	if not antennas:	# Default to all antennas if unspecified.
-		antennas = [0]
-	
-	rospecMessage = ADD_ROSPEC_Message( MessageID = MessageID, Parameters = [
-		# Initialize to disabled.
-		ROSpec_Parameter(
-			ROSpecID = ROSpecID,
-			CurrentState = ROSpecState.Disabled,
-			Parameters = [
-				ROBoundarySpec_Parameter(		# Configure boundary spec (start and stop triggers for the reader).
-					Parameters = [
-						# Start immediately.
-						ROSpecStartTrigger_Parameter(ROSpecStartTriggerType = ROSpecStartTriggerType.Immediate),
-						# No stop trigger.
-						ROSpecStopTrigger_Parameter(ROSpecStopTriggerType = ROSpecStopTriggerType.Null),
-					]
-				),
-				
-				AISpec_Parameter(				# Antenna Inventory Spec (specifies which antennas and protocol to use).
-					AntennaIDs = antennas,		# Use specified antennas.
-					Parameters = [
-						AISpecStopTrigger_Parameter(
-							AISpecStopTriggerType = AISpecStopTriggerType.Tag_Observation,
-							Parameters = [
-								TagObservationTrigger_Parameter(
-									TriggerType = TagObservationTriggerType.Upon_Seeing_N_Tags_Or_Timeout,
-									NumberOfTags = 1,
-									NumberOfAttempts = 1,
-									Timeout = 0,		# Milliseconds
-									T = 0,				# Idle time between responses.
-								),
-							]
-						),
-						InventoryParameterSpec_Parameter(
-							InventoryParameterSpecID = inventoryParameterSpecID,
-							ProtocolID = AirProtocols.EPCGlobalClass1Gen2,
-						),
-					]
-				),
-				
-				ROReportSpec_Parameter(			# Report spec (specifies what to send from the reader).
-					ROReportTrigger = ROReportTriggerType.Upon_N_Tags_Or_End_Of_ROSpec,
-					N = 0,
-					Parameters = [
-						TagReportContentSelector_Parameter(
-							EnableAntennaID = True,
-							EnableFirstSeenTimestamp = True,
-							EnablePeakRSSI = True,
-						),
-					]
-				),
-			]
-		)	# ROSpec_Parameter
-	])	# ADD_ROSPEC_Message
-	return rospecMessage
-'''
-
 #------------------------------------------------------
 
 ImpinjDebug = False
