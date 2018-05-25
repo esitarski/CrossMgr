@@ -4,6 +4,7 @@ from TagGroup import TagGroup, QuadraticRegressionMethod, StrongestReadMethod
 
 def Test():
 	method = QuadraticRegressionMethod
+	#method = StrongestReadMethod
 
 	for file in sorted(glob.glob('data/*.txt')):
 		tg = TagGroup()

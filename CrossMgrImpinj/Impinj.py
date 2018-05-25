@@ -15,7 +15,7 @@ try:
 	from pyllrp.pyllrp import *
 except ImportError:
 	from pyllrp import *
-from TagGroup import TagGroup
+from TagGroup import TagGroup, QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MostReadsChoice, DBMaxChoice
 
 getTimeNow = datetime.datetime.now
 tOld = getTimeNow() - datetime.timedelta( days=200 )
@@ -25,7 +25,8 @@ HOME_DIR = os.path.expanduser("~")
 ConnectionTimeoutSecondsDefault	= 3		# Interval for connection timeout
 KeepaliveSecondsDefault			= 2		# Interval to request a Keepalive message
 RepeatSecondsDefault			= 3		# Interval in which a tag is considered a repeat read.
-PeakRSSIDefault					= True
+ProcessingMethodDefault 		= QuadraticRegressionMethod
+AntennaChoiceDefault			= MostReadsChoice
 
 ConnectionTimeoutSeconds	= ConnectionTimeoutSecondsDefault
 KeepaliveSeconds			= KeepaliveSecondsDefault
@@ -43,10 +44,11 @@ TransmitPower = None
 InventorySession = 2		# LLRP inventory session.
 TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  Default=3
 
-PeakRSSI		= PeakRSSIDefault	# Use signal strength and Quadratic Regression to estimate the tag crossing more accurately.
+ProcessingMethod = ProcessingMethodDefault
+AnteennaChoice   = AntennaChoiceDefault
 
 '''
-def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
+def GetAddRospecRSSIMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
 	# Create a read everything Operation Spec message
 	#
@@ -110,7 +112,7 @@ def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 #------------------------------------------------------
 
 ImpinjDebug = False
-def GetAddRospecRIISMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234,
+def GetAddRospecRSSIMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234,
 		antennas = None, modeIdentifiers = None, maxNumberOfAntennaSupported = None,
 	):
 	#-----------------------------------------------------------------------------
@@ -375,13 +377,13 @@ class Impinj( object ):
 		maxNumberOfAntennaSupported = gdc.MaxNumberOfAntennaSupported
 				
 		# Configure our new rospec.
-		if PeakRSSI:
-			cmd = GetAddRospecRIISMessage(
+		if ProcessingMethod == FirstReadMethod:
+			cmd = GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
+		else:
+			cmd = GetAddRospecRSSIMessage(
 				ROSpecID = self.rospecID, antennas = self.antennas,
 				modeIdentifiers=modeIdentifiers, maxNumberOfAntennaSupported=maxNumberOfAntennaSupported
 			)
-		else:
-			cmd = GetBasicAddRospecMessage(ROSpecID = self.rospecID, antennas = self.antennas)
 		success, response = self.sendCommand(cmd)
 		if not success:
 			return False
@@ -439,7 +441,7 @@ class Impinj( object ):
 	def handleTagGroup( self ):
 		if not self.tagGroup:
 			return
-		reads, strays = self.tagGroup.getReadsStrays()
+		reads, strays = self.tagGroup.getReadsStrays( method=ProcessingMethod, antennaChoice=AntennaChoice )
 		for tagID, discoveryTime, sampleSize, antennaID in reads:
 			self.reportTag( tagID, discoveryTime, sampleSize, antennaID, True )
 			

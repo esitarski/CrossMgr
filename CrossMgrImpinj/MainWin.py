@@ -12,6 +12,7 @@ import Impinj
 from Impinj import ImpinjServer
 from Impinj2JChip import CrossMgrServer
 from AutoDetect import AutoDetect
+from TagGroup import QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MethodNames, MostReadsChoice, DBMaxChoice, AntennaChoiceNames
 
 import wx
 import wx.lib.masked			as masked
@@ -123,7 +124,8 @@ class AdvancedSetup( wx.Dialog ):
 		Impinj.KeepaliveSeconds			= 2		# Interval to request a Keepalive message
 		Impinj.RepeatSeconds			= 2		# Interval in which a tag is considered a repeat read.
 		
-		Impinj.PeakRSSI					= True
+		Impinj.ProcessingMethod 		= QuadraticRegressionMethod
+		Impinj.AnteennaChoice           = MostReadsChoice
 		'''
 
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -135,10 +137,28 @@ class AdvancedSetup( wx.Dialog ):
 		
 		row += 1
 		bs.Add( wx.StaticText(self, label='Report Method'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.ReportMethod = wx.Choice(self, choices=('Quadratic Regression', 'First Read Time') )
-		self.ReportMethod.SetSelection( 0 if Impinj.PeakRSSI else 1 )
+		self.ReportMethod = wx.Choice(self, choices=MethodNames )
+		self.ReportMethod.SetSelection( Impinj.ProcessingMethod )
 		bs.Add( self.ReportMethod, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP|wx.ALIGN_CENTER_VERTICAL )
-		bs.Add( wx.StaticText(self, label='Quadratic Regression: return an estimated time when the tag is closest to an antenna by combining\nmultiple reads and signal strength (high accuracy, high processing).\nFirst Read Time:  return the first time the tag is read by any antenna (lower accuracy, low processing).'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( wx.StaticText(self, label='Antenna Choice (only applies to QR)'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
+		self.AntennaChoice = wx.Choice( self, choices=AntennaChoiceNames )
+		self.AntennaChoice.SetSelection( Impinj.AntennaChoice )
+		hs.Add( self.AntennaChoice, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
+		bs.Add( hs, pos=(row,2), span=(1,1), border=border, flag=wx.TOP )
+		
+		row += 1
+		bs.Add( wx.StaticText(self, label='\n'.join([
+			'**Quadratic Regression**: return an estimated time when the tag is closest to an antenna by combining',
+			'multiple reads and signal strength (high accuracy, high processing).',
+			'The Antenna Choice option controls which antenna is selected for the regression.'
+			'Recommended for high-speed finishes (cycling).',
+			'**Strongest Read**: return the time of the strongest read signal (lower accuracy, low processing).',
+			'Recommended for slow finishes with highly variable tag alignment reads (running).',
+			'**First Read Time**:  return the first time the tag is read by any antenna (lowest accuracy, lowest processing).',
+			'Recommended for extremely large fields (Gran Fondo).',			
+			])), pos=(row, 1), span=(1,2), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
 
 		row += 1
 		bs.Add( wx.StaticLine(self), pos=(row, 0), span=(1, 3), flag=wx.EXPAND )
@@ -241,12 +261,14 @@ class AdvancedSetup( wx.Dialog ):
 				getattr( self, a ).SetValue( getattr(Impinj, a + 'Default') )
 			except AttributeError:
 				getattr( self, a ).SetValue( None )
-		self.ReportMethod.SetSelection( 0 if Impinj.PeakRSSIDefault else 1 )
+		self.ReportMethod.SetSelection( Impinj.ProcessingMethodDefault )
+		self.AntennaChoice.SetSelection( Impinj.AntennaChoiceDefault )
 		
 	def onOK( self, event ):
 		for a in self.fields:
 			setattr( Impinj, a, getattr(self, a).GetValue() )
-		Impinj.PeakRSSI = (self.ReportMethod.GetSelection() == 0)
+		Impinj.ProcessingMethod = self.ReportMethod.GetSelection()
+		Impinj.AntennaChoice = self.AntennaChoice.GetSelection()
 		
 		Utils.playBell = self.playSoundsCheckbox.IsChecked()
 		self.EndModal( wx.ID_OK )
@@ -343,8 +365,14 @@ class MainWin( wx.Frame ):
 			gs.Add( cb, flag=wx.ALIGN_CENTER )
 			self.antennas.append( cb )
 		
+		hb = wx.BoxSizer()
+		hb.Add( gs )
+		self.methodName = wx.StaticText( self )
+		self.refreshMethodName()
+		hb.Add( self.methodName, flag=wx.ALIGN_BOTTOM|wx.LEFT, border=8 )
+				
 		gbs.Add( wx.StaticText(self, label='ANT Ports:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
-		gbs.Add( gs, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		
 		iRow += 1
 		
@@ -444,6 +472,9 @@ class MainWin( wx.Frame ):
 		for i in xrange(4):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 
+	def refreshMethodName( self ):
+		self.methodName.SetLabel( MethodNames[Impinj.ProcessingMethod] )
+
 	def refreshStrays( self, strays ):
 		if self.strays.GetItemCount() != len(strays):
 			self.strayTagsLabel.SetLabel( 'Stray Tags: {}'.format(len(strays)) )
@@ -534,6 +565,7 @@ class MainWin( wx.Frame ):
 		
 		self.reset.Enable( False )		# Prevent multiple clicks while shutting down.
 		self.writeOptions()
+		self.refreshMethodName()
 		
 		self.gracefulShutdown()
 		
@@ -613,7 +645,8 @@ class MainWin( wx.Frame ):
 			'    HostName:      {}'.format((ImpinjHostNamePrefix + self.impinjHostName.GetValue()) + ImpinjHostNameSuffix),
 			'    ImpinjHost:    {}'.format(self.impinjHost.GetAddress()),
 			'    ImpinjPort:    {}'.format(ImpinjInboundPort),
-			''
+			'    ReportMethod:  {}'.format(MethodNames[Impinj.ProcessingMethod]),
+			'',
 			'    ConnectionTimeoutSeconds: {}'.format(Impinj.ConnectionTimeoutSeconds),
 			'    KeepaliveSeconds:         {}'.format(Impinj.KeepaliveSeconds),
 			'    RepeatSeconds:            {}'.format(Impinj.RepeatSeconds),
@@ -685,7 +718,8 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'TransmitPower', '{}'.format(Impinj.TransmitPower or 0) )
 		self.config.Write( 'TagPopulation', '{}'.format(Impinj.TagPopulation or 0) )
 		self.config.Write( 'TagTransitTime', '{}'.format(Impinj.TagTransitTime or 0) )
-		self.config.Write( 'PeakRSSI', '{}'.format(Impinj.PeakRSSI) )
+		self.config.Write( 'ProcessingMethod', '{}'.format(Impinj.ProcessingMethod) )
+		self.config.Write( 'AntennaChoice', '{}'.format(Impinj.AntennaChoice) )
 
 		self.config.Flush()
 	
@@ -710,7 +744,8 @@ class MainWin( wx.Frame ):
 		Impinj.TransmitPower = int(self.config.Read('TransmitPower', '0')) or None
 		Impinj.TagPopulation = int(self.config.Read('TagPopulation', '0')) or None
 		Impinj.TagTransitTime = int(self.config.Read('TagTransitTime', '0')) or None
-		Impinj.PeakRSSI = self.config.Read('PeakRSSI', 'T').upper().startswith('T')
+		Impinj.ProcessMethod = int(self.config.Read('ProcessMethod', '0'))
+		Impinj.AntennaChoice = int(self.config.Read('AntennaChoice', '0'))
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()
@@ -747,13 +782,13 @@ class MainWin( wx.Frame ):
 					if antennaReadCount is not None:
 						total = max(1, sum( antennaReadCount[i] for i in xrange(1,4+1)) )
 						label = '{}: {} ({})'.format(
-								'ANT Used' if Impinj.PeakRSSI else 'ANT Reads',
+								'ANT Used' if Impinj.ProcessingMethod != FirstReadMethod else 'ANT Reads',
 								' | '.join('{}:{} {:.1f}%'.format(
 									i,
 									formatAntennaReadCount(antennaReadCount[i]),
 									antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)
 								),
-								'Peak RSSI' if Impinj.PeakRSSI else 'First Read',
+								'Peak RSSI' if Impinj.ProcessingMethod != FirstReadMethod else 'First Read',
 							)
 						self.antennaReadCount.SetLabel( label )
 			elif d[0] == 'Impinj2JChip':
