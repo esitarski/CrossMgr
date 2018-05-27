@@ -1,6 +1,9 @@
 import socket
 import Utils
-from pyllrp.pyllrp import *
+try:
+	from pyllrp.pyllrp import *
+except ImportError:
+	from pyllrp import *
 
 def findImpinjHost( impinjPort, callback = None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''

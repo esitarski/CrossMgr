@@ -10,15 +10,18 @@ import time
 import datetime
 import traceback
 
-sys.path.append( '../CrossMgrImpinj/pyllrp' )
-
 import Utils
 from Version import AppVerName
 import Images
 
-from pyllrp import *
-from pyllrp.TagInventory import TagInventory
-from pyllrp.TagWriter import TagWriter
+try:
+	from pyllrp.pyllrp import *
+	from pyllrp.pyllrp.TagInventory import TagInventory
+	from pyllrp.pyllrp.TagWriter import TagWriter
+except ImportError:
+	from pyllrp import *
+	from pyllrp.TagInventory import TagInventory
+	from pyllrp.TagWriter import TagWriter
 
 from AutoDetect import AutoDetect
 
@@ -428,6 +431,7 @@ def Launch( doRedirect = False ):
 	if doRedirect:
 		dataDir = Utils.getHomeDir()
 		redirectFileName = os.path.join(dataDir, 'TagReadWrite.log')
+		print '"{}"'.format( redirectFileName )
 		
 		# Set up the log file.  Otherwise, show errors on the screen.
 		try:
@@ -441,11 +445,11 @@ def Launch( doRedirect = False ):
 			app.RedirectStdio( redirectFileName )
 		except:
 			pass
-			
+
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
-				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
+				pf.write( '{}: {} Started.\n'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except:
 			pass
 	
