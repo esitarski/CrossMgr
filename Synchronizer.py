@@ -37,7 +37,7 @@ def syncfunc( func ):
 	''' Decorator to synchronize a function call from a worker thread to the wx GUI thread. '''
 	def syncwrap( *args, **kwargs ):
 		if wx.IsMainThread():
-			return self.func( *args, **kwargs )
+			return func( *args, **kwargs )
 		else:
 			sync = Synchronizer( func, *args, **kwargs )
 			return sync.Run()

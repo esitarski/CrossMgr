@@ -155,6 +155,32 @@ class Gantt( wx.Panel ):
 			for id, name, callback in self.splitMenuInfo:
 				self.Bind( wx.EVT_MENU, callback, id=id )
 			self.splitMenuId = wx.NewId()
+
+			self.menu = {}
+			for numBefore in [False, True]:
+				for numAfter in [False, True]:
+					for caseCode in xrange(3):
+						menu = wx.Menu()
+						for id, name, text, callback, cCase in self.popupInfo:
+							if not id:
+								Utils.addMissingSeparator( menu )
+								continue
+							if caseCode < cCase:
+								continue
+							if (name.endswith(_('before')) and not numBefore) or (name.endswith(_('after')) and not numAfter):
+								continue
+							menu.Append( id, name, text )
+							
+						if caseCode == 2:
+							submenu = wx.Menu()
+							for id, name, callback in self.splitMenuInfo:
+								submenu.Append( id, name )
+							Utils.addMissingSeparator( menu )
+							menu.PrependSeparator()
+							menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
+					
+						Utils.deleteTrailingSeparators( menu )
+						self.menu[(numBefore,numAfter,caseCode)] = menu
 				
 		caseCode = 1 if entries[iLap].interp else 2
 		
@@ -168,29 +194,9 @@ class Gantt( wx.Panel ):
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 		
-		menu = wx.Menu()
-		for id, name, text, callback, cCase in self.popupInfo:
-			if not id:
-				Utils.addMissingSeparator( menu )
-				continue
-			if caseCode < cCase:
-				continue
-			if (name.endswith(_('before')) and not self.numBefore) or (name.endswith(_('after')) and not self.numAfter):
-				continue
-			menu.Append( id, name, text )
-			
-		if caseCode == 2:
-			submenu = wx.Menu()
-			for id, name, callback in self.splitMenuInfo:
-				submenu.Append( id, name )
-			Utils.addMissingSeparator( menu )
-			menu.PrependSeparator()
-			menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
-			
-		Utils.deleteTrailingSeparators( menu )
+		menu = self.menu[(bool(self.numBefore), bool(self.numAfter), caseCode)]
 		try:
 			self.PopupMenu( menu )
-			menu.Destroy()
 		except Exception as e:
 			Utils.writeLog( 'Gantt:onRightClick: {}'.format(e) )
 

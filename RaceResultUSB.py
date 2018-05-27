@@ -88,7 +88,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 		return keepGoing()
 		
 	def makeCall( s, message ):
-		if not messages.endswith(EOL):
+		if not message.endswith(EOL):
 			message += EOL
 		cmd = message.split(';', 1)[0]
 		qLog( 'command', u'sending: {}'.format(message) )

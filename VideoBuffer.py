@@ -110,7 +110,7 @@ class VideoBuffer( object ):
 			image = self.camera.getImage()
 			self.fcb.append( tNow, image )
 			if self.owner is not None:
-				wx.PostEvent( self.owner, PhotoEvent(t=tNew, photo=image) )
+				wx.PostEvent( self.owner, PhotoEvent(t=tNow, photo=image) )
 		except Exception as e:
 			logException( e, sys.exc_info() )
 

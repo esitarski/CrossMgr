@@ -98,7 +98,7 @@ import SimulationLapTimes
 import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel, GetTagNums
 from SetGraphic			import SetGraphicDialog
-from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails, GetAnimationData
+from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails, GetAnimationData, ResetVersionRAM
 from PhotoFinish		import DeletePhotos, okTakePhoto
 from SendPhotoRequests	import SendPhotoRequests
 from PhotoViewer		import PhotoViewerDialog

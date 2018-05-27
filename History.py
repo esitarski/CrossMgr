@@ -183,23 +183,26 @@ class History( wx.Panel ):
 			for id, name, text, callback, cCode in self.popupInfo:
 				if id:
 					self.Bind( wx.EVT_MENU, callback, id=id )
+					
+			self.menu = []
+			for caseCode in xrange(3):
+				menu = wx.Menu()
+				for i, (id, name, text, callback, cCode) in enumerate(self.popupInfo):
+					if not id:
+						Utils.addMissingSeparator( menu )
+						continue
+					if caseCode < cCode:
+						continue
+					menu.Append( id, name, text )
+				Utils.deleteTrailingSeparators( menu )
+				self.menu.append( menu )
 
 		isInterp = self.history[self.colPopup][self.rowPopup].interp
 		caseCode = 1 if isInterp else 2
 		
-		menu = wx.Menu()
-		for i, (id, name, text, callback, cCode) in enumerate(self.popupInfo):
-			if not id:
-				Utils.addMissingSeparator( menu )
-				continue
-			if caseCode < cCode:
-				continue
-			menu.Append( id, name, text )
-		
-		Utils.deleteTrailingSeparators( menu )
+		menu = self.menu[caseCode]
 		try:
 			self.PopupMenu( menu )
-			menu.Destroy()
 		except Exception as e:
 			Utils.writeLog( 'History:doRightClick: {}'.format(e) )
 			

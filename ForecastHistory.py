@@ -265,16 +265,15 @@ class ForecastHistory( wx.Panel ):
 				if p[2]:
 					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
-		menu = wx.Menu()
-		for i, p in enumerate(self.historyPopupInfo):
-			if p[2]:
-				menu.Append( p[1], p[0] )
-			else:
-				menu.AppendSeparator()
+			self.menu = wx.Menu()
+			for i, p in enumerate(self.historyPopupInfo):
+				if p[2]:
+					menu.Append( p[1], p[0] )
+				else:
+					menu.AppendSeparator()
 		
 		try:
-			self.PopupMenu( menu )
-			menu.Destroy()
+			self.PopupMenu( self.menu )
 		except Exception as e:
 			Utils.writeLog( 'ForecastHistory:doHistoryPopup: {}'.format(e) )
 	

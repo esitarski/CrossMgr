@@ -36,6 +36,9 @@ class Logger( object ):
 			print msg
 			Utils.writeLog( msg )
 	
+	def warn( self, message ):
+		return self.warning( message )
+	
 	def info( self, message ):
 		if self.level >= logging.INFO:
 			msg = 'Websocket Info: '

@@ -215,7 +215,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 					qLog( 'connection', _('Lost heartbeat.') )
 				continue
 			except Exception as e:
-				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+				qLog( 'connection', u'{}: "{}"'.format(_('Connection failed'), e) )
 				break
 
 			tagTimes = []
@@ -234,7 +234,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				tag, t = parseTagTime( message )
 				
 				if tag is None or t is None:
-					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected reader message'), line) )
+					qLog( 'command', u'{}: "{}"'.format(_('Unexpected reader message'), message) )
 					continue
 				
 				t += readerComputerTimeDiff

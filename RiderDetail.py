@@ -540,24 +540,27 @@ class RiderDetail( wx.Panel ):
 			for p in self.popupInfo:
 				if p[0]:
 					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
+			
+			self.menu = []
+			for caseCode in xrange(3):
+				menu = wx.Menu()
+				for id, name, text, callback, cCase in self.popupInfo:
+					if not id:
+						if not Utils.hasTrailingSeparator(menu):
+							menu.AppendSeparator()
+						continue
+					if caseCode >= cCase:
+						menu.Append( id, name, text )
+				self.menu.append( menu )
 		
 		try:
 			caseCode = 1 if self.entry.interp else 2
 		except (TypeError, IndexError, KeyError):
 			caseCode = 0
 		
-		menu = wx.Menu()
-		for id, name, text, callback, cCase in self.popupInfo:
-			if not id:
-				if not Utils.hasTrailingSeparator(menu):
-					menu.AppendSeparator()
-				continue
-			if caseCode >= cCase:
-				menu.Append( id, name, text )
-		
+		menu = self.menu[caseCode]
 		try:
 			self.PopupMenu( menu )
-			menu.Destroy()
 		except Exception as e:
 			Utils.writeLog( 'RiderDetail:doRightClick: {}'.format(e) )
 

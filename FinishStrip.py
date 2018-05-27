@@ -480,7 +480,7 @@ class FinishStripPanel( wx.Panel ):
 			pixelsPerSecond = max(300, pixels * self.fps)
 			minMax.append( int(pixelsPerSecond) )
 		
-		return minMax
+		return minMax[0], minMax[1]
 
 	def onCopyToClipboard( self, event ):
 		if wx.TheClipboard.Open():
