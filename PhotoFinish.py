@@ -59,11 +59,17 @@ def okTakePhoto( num, t ):
 	if not race.photosAtRaceEndOnly or race.isTimeTrial or num == 9999 or not t:
 		return True
 	
-	results = GetResults( race.getCategory(num) )
+	category = race.getCategory( num )
+	results = GetResults( category )
 	try:
-		return t > results[0].raceTimes[-1] - 60.0
-	except:
-		return False
+		leader = results[0]
+		if leader.status == Model.Rider.Finisher:
+			leaderFinishTime = leader.raceTimes[-1]
+			return t > leaderFinishTime - 60.0
+	except Exception as e:
+		pass
+	
+	return False
 
 def DeletePhotos( raceFileName ):
 	dirName = getPhotoDirName( raceFileName )
