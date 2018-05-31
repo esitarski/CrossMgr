@@ -1077,8 +1077,8 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( (
 				'trigger',
 				tSearch - timedelta(seconds=advanceSeconds),
-				msg.get('s_before', tdCaptureBeforeDefault.total_seconds()),
-				msg.get('s_after', tdCaptureAfterDefault.total_seconds()),
+				msg.get('s_before', self.tdCaptureBefore.total_seconds()),	# Use the configured capture interval, not the default.
+				msg.get('s_after', self.tdCaptureAfter.total_seconds()),
 				msg.get('ts_start', None) or now(),
 				msg.get('bib', 99999),
 				msg.get('first_name',u'') or msg.get('firstName',u''),
