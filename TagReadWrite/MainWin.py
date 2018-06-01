@@ -184,13 +184,13 @@ class MainWin( wx.Frame ):
 		
 		self.writeSuccess = wx.Gauge( self, style = wx.GA_HORIZONTAL, range = 100 )
 		
-		self.writeButton = wx.Button( self, label = 'Write' )
+		self.writeButton = wx.Button( self, label = 'Write (F1 or Space)' )
 		self.writeButton.Bind( wx.EVT_BUTTON, self.onWriteButton )
 		
 		readTags = wx.StaticBox( self, label = 'Read Tags' )
 		vs2 = wx.StaticBoxSizer( readTags, wx.VERTICAL )
 		self.tags = wx.TextCtrl( self, style = wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_PROCESS_ENTER )
-		self.readButton = wx.Button( self, label = 'Read' )
+		self.readButton = wx.Button( self, label = 'Read (F2)' )
 		self.readButton.Bind( wx.EVT_BUTTON, self.onReadButton )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -234,6 +234,16 @@ class MainWin( wx.Frame ):
 		self.readOptions()
 		
 		self.Bind( wx.EVT_CLOSE, self.onClose )
+		
+		idWrite, idRead = wx.NewId(), wx.NewId()
+		self.Bind(wx.EVT_MENU, self.onWriteButton, id=idWrite)
+		self.Bind(wx.EVT_MENU, self.onReadButton, id=idRead)
+		accelTable = wx.AcceleratorTable([
+			(wx.ACCEL_NORMAL, wx.WXK_F1, idWrite ),
+			(wx.ACCEL_NORMAL, wx.WXK_SPACE, idWrite ),
+			(wx.ACCEL_NORMAL, wx.WXK_F2, idRead ),
+		])
+		self.SetAcceleratorTable(accelTable)
 		
 		wx.CallAfter( self.doReset )
 	
