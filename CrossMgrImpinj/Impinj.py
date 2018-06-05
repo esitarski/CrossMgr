@@ -27,6 +27,7 @@ KeepaliveSecondsDefault			= 2		# Interval to request a Keepalive message
 RepeatSecondsDefault			= 3		# Interval in which a tag is considered a repeat read.
 ProcessingMethodDefault 		= QuadraticRegressionMethod
 AntennaChoiceDefault			= MostReadsChoice
+RemoveOutliersDefault           = True
 
 ConnectionTimeoutSeconds	= ConnectionTimeoutSecondsDefault
 KeepaliveSeconds			= KeepaliveSecondsDefault
@@ -45,7 +46,8 @@ InventorySession = 2		# LLRP inventory session.
 TagTransitTime = None		# Time (seconds) expected for tag to cross read field.  Default=3
 
 ProcessingMethod = ProcessingMethodDefault
-AnteennaChoice   = AntennaChoiceDefault
+AntennaChoice    = AntennaChoiceDefault
+RemoveOutliers   = RemoveOutliersDefault
 
 #------------------------------------------------------
 

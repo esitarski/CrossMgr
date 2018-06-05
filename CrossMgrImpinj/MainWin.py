@@ -125,7 +125,7 @@ class AdvancedSetup( wx.Dialog ):
 		Impinj.RepeatSeconds			= 2		# Interval in which a tag is considered a repeat read.
 		
 		Impinj.ProcessingMethod 		= QuadraticRegressionMethod
-		Impinj.AnteennaChoice           = MostReadsChoice
+		Impinj.AntennaChoice            = MostReadsChoice
 		'''
 
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
@@ -141,12 +141,34 @@ class AdvancedSetup( wx.Dialog ):
 		self.ReportMethod.SetSelection( Impinj.ProcessingMethod )
 		bs.Add( self.ReportMethod, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP|wx.ALIGN_CENTER_VERTICAL )
 		
+		'''
+		vs = wx.BoxSizer( wx.VERTICAL )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( wx.StaticText(self, label='Antenna Choice (only applies to QR)'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
 		self.AntennaChoice = wx.Choice( self, choices=AntennaChoiceNames )
 		self.AntennaChoice.SetSelection( Impinj.AntennaChoice )
-		hs.Add( self.AntennaChoice, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
-		bs.Add( hs, pos=(row,2), span=(1,1), border=border, flag=wx.TOP )
+		hs.Add( self.AntennaChoice, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )		
+		vs.Add( hs )
+		
+		self.RemoveOutliers = wx.CheckBox( self, label='Remove Outliers (only applies to QR)' )
+		vs.Add( self.RemoveOutliers )
+		'''
+		
+		sb = wx.StaticBox( self, label='QR Only Options' )
+		sbSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
+		
+		self.RemoveOutliers = wx.CheckBox( self, label='Remove Outliers' )
+		self.RemoveOutliers.SetValue( Impinj.RemoveOutliers )
+		sbSizer.Add( self.RemoveOutliers, flag=wx.ALL, border=2 )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( wx.StaticText(self, label='Antenna Choice'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
+		self.AntennaChoice = wx.Choice( self, choices=AntennaChoiceNames )
+		self.AntennaChoice.SetSelection( Impinj.AntennaChoice )
+		hs.Add( self.AntennaChoice, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )		
+		sbSizer.Add( hs, flag=wx.ALL, border=2 )
+		
+		bs.Add( sbSizer, pos=(row,2), span=(1,1), border=border, flag=wx.TOP )
 		
 		row += 1
 		bs.Add( wx.StaticText(self, label='\n'.join([
@@ -213,7 +235,7 @@ class AdvancedSetup( wx.Dialog ):
 
 		self.fields = [
 			'ConnectionTimeoutSeconds', 'KeepaliveSeconds', 'RepeatSeconds',
-			'TagPopulation', 'TransmitPower', 'ReceiverSensitivity',
+			'TagPopulation', 'TransmitPower', 'ReceiverSensitivity', 'RemoveOutliers',
 		]
 		
 		row += 1
@@ -646,6 +668,8 @@ class MainWin( wx.Frame ):
 			'    ImpinjHost:    {}'.format(self.impinjHost.GetAddress()),
 			'    ImpinjPort:    {}'.format(ImpinjInboundPort),
 			'    ReportMethod:  {}'.format(MethodNames[Impinj.ProcessingMethod]),
+			'    AntennaChoice: {}'.format(AntennaChoiceNames[Impinj.AntennaChoice]),
+			'    RemoveOutliers:{}'.format(Impinj.RepeatSeconds),
 			'',
 			'    ConnectionTimeoutSeconds: {}'.format(Impinj.ConnectionTimeoutSeconds),
 			'    KeepaliveSeconds:         {}'.format(Impinj.KeepaliveSeconds),
@@ -720,6 +744,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'TagTransitTime', '{}'.format(Impinj.TagTransitTime or 0) )
 		self.config.Write( 'ProcessingMethod', '{}'.format(Impinj.ProcessingMethod) )
 		self.config.Write( 'AntennaChoice', '{}'.format(Impinj.AntennaChoice) )
+		self.config.Write( 'RemoveOutliers', '{}'.format('True' if Impinj.RemoveOutliers else 'False') )
 
 		self.config.Flush()
 	
@@ -746,6 +771,7 @@ class MainWin( wx.Frame ):
 		Impinj.TagTransitTime = int(self.config.Read('TagTransitTime', '0')) or None
 		Impinj.ProcessMethod = int(self.config.Read('ProcessMethod', '0'))
 		Impinj.AntennaChoice = int(self.config.Read('AntennaChoice', '0'))
+		Impinj.RemoveOutliers = (self.config.Read('RemoveOutliers', 'True').upper()[:1] == 'T')
 	
 	def updateMessages( self, event ):
 		tNow = datetime.datetime.now()

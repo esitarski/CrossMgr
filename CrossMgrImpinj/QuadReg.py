@@ -86,11 +86,24 @@ def QuadRegRemoveOutliersRobust( data ):
 				iBest, zMax = i, z
 		if iBest is None:
 			break
-		
+			
 		# Eliminate the maximum outlier found.
 		x = np.delete( x, iBest )
 		y = np.delete( y, iBest )
 		abc = np.polyfit(x, y, 2)
+
+	'''
+	sample = set( (x[i], y[i]) for i in xrange(len(x)) )
+	outliers, selected = [], []
+	for d in data:
+		if d in sample:
+			selected.append( d )
+		else:
+			outliers.append( d )
+	'''
+	
+	s = set( data )
+	
 	
 	return abc
 

@@ -2951,6 +2951,8 @@ class MainWin( wx.Frame ):
 		Model.writeModelUpdate()
 		self.closeFindDialog()
 		
+		fileNameSave = self.fileName
+		
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
 				try:
@@ -2967,13 +2969,10 @@ class MainWin( wx.Frame ):
 			
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
 			self.fileName = fileName
-			WebServer.SetFileName( self.fileName )
 			
 			undo.clear()
 			ResetExcelLinkCache()
 			Model.resetCache()
-			
-			self.updateRecentFiles()
 			
 			self.setNumSelect( None )
 			self.record.setTimeTrialInput( race.isTimeTrial )
@@ -2982,6 +2981,33 @@ class MainWin( wx.Frame ):
 			Utils.writeLog( u'{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
 			Utils.writeLog( u'call: openRace: "{}"'.format(fileName) )
 			
+			eventFileName = os.path.join( os.path.dirname(self.fileName), race.getFileName() )
+			if self.fileName != eventFileName:
+				if os.path.isfile(eventFileName):
+					exists = '\n\n{}: "{}"'.format(_('This will replace an Existing Race file'), os.path.basename(eventFileName))
+				else:
+					exists = u''
+				
+				if not Utils.MessageOKCancel( self, u'{}.\n\n{}:\n\n\t{}{}\n\n{}'.format(
+					_("The FileName does not match the Event Name format"),
+					_("Going forward, this event will saved as"), eventFileName,
+					exists,
+					_('To change the File Name, change the event Date, Name or Race Number in Properties/General Properties'),
+					_('Unmatched Filename'),
+				)):
+					if fileNameSave:
+						self.openRace( fileNameSave )
+					else:
+						Model.setRace( None )
+						self.refresh()
+					return
+				
+				Utils.writeLog( u'openRace: changed FileName to "{}".'.format(eventFileName) )
+				self.fileName = eventFileName
+			
+			self.updateRecentFiles()
+			WebServer.SetFileName( self.fileName )
+
 			excelLink = getattr(race, 'excelLink', None)
 			if excelLink is None or not excelLink.fileName:
 				return
@@ -3005,7 +3031,7 @@ class MainWin( wx.Frame ):
 				Model.resetCache()
 				self.refreshAll()
 				Utils.writeLog( u'openRace: changed Excel file to "{}"'.format(newFileName) )
-
+				
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
 			Utils.MessageOK(self, u'{} "{}"\n\n{}.'.format(_('Cannot Open File'), fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )

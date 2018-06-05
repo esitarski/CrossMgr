@@ -1,6 +1,6 @@
 
 from datetime import datetime, timedelta
-from QuadReg import QuadRegExtreme
+from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadReg
 from time import sleep
 import random
 import sys
@@ -53,13 +53,13 @@ class AntennaReads( object ):
 	def lastRead( self ):
 		return self.reads[-1][0]
 	
-	def getBestEstimate( self, method=QuadraticRegressionMethod ):
+	def getBestEstimate( self, method=QuadraticRegressionMethod, removeOutliers=True ):
 		if self.isStray:
 			return self.firstRead, 1
 		
 		if method == QuadraticRegressionMethod and len(self.reads) >= 3:
 			try:
-				trEst, sampleSize = QuadRegExtreme(self.reads), len(self.reads)
+				trEst, sampleSize = QuadRegExtreme(self.reads, QuadRegRemoveOutliersRobust if removeOutliers else QuadReg), len(self.reads)
 			except Exception as e:
 				# If error, return the first read.
 				trEst, sampleSize = self.firstRead, 1
@@ -98,7 +98,7 @@ class TagGroupEntry( object ):
 				del ar.reads[:-1]	# Delete all but last read.
 		self.isStray = True
 	
-	def getBestEstimate( self, method=QuadraticRegressionMethod, antennaChoice=MostReadsChoice ):
+	def getBestEstimate( self, method=QuadraticRegressionMethod, antennaChoice=MostReadsChoice, removeOutliers=True ):
 		if self.isStray:
 			return trToDatetime( self.firstReadMin ), 1, 0
 		
@@ -107,7 +107,7 @@ class TagGroupEntry( object ):
 				((a, ar) for a, ar in enumerate(self.antennaReads) if ar),
 				key=((lambda x: (len(x[1].reads), x[1].dbMax)) if antennaChoice == MostReadsChoice else (lambda x: (x[1].dbMax, len(x[1].reads))))
 			)
-			tr, sampleSize = arBest.getBestEstimate( method )
+			tr, sampleSize = arBest.getBestEstimate( method, removeOutliers )
 			return trToDatetime(tr), sampleSize, a+1
 		
 		else: # method == StrongestReadMethod:
@@ -144,7 +144,7 @@ class TagGroup( object ):
 				self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
 			self.q.task_done()
 			
-	def getReadsStrays( self, tNow=None, method=QuadraticRegressionMethod, antennaChoice=MostReadsChoice ):
+	def getReadsStrays( self, tNow=None, method=QuadraticRegressionMethod, antennaChoice=MostReadsChoice, removeOutliers=True ):
 		'''
 			Returns two lists:
 				reads = [(tag1, t1, sampleSize1, antennaID1), (tag2, t2, sampleSize2, , antennaID2), ...]
@@ -161,7 +161,7 @@ class TagGroup( object ):
 		for tag, tge in self.tagInfo.iteritems():
 			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
-					t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice)
+					t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice, removeOutliers)
 					reads.append( (tag, t, sampleSize, antennaID) )
 				toDelete.append( tag )
 			elif tge.lastReadMax - tge.firstReadMin >= tStray:	# This is a stray.
