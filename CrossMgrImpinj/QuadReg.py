@@ -39,17 +39,17 @@ def QuadRegFindOutlier( data ):
 	mean, std = np.mean(R), np.std(R)
 	return max( ((i, abs(r-mean)/std) for i, r in enumerate(R)), key=operator.itemgetter(1) )
 	
-def QuadRegRemoveOutliersRobust( data ):
+def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	'''
 		Return a Quadratic Regression ignoring outliers.
 		
 		Approach:
 			1) Compute the QR with all data points.
-			2) Compute the RMSE (Root Mean Square Error), an estimate of the standard deviation the Residuals.
+			2) Compute the RMSE (Root Mean Square Error), an estimate of the standard deviation of the Residuals.
 			3) Scale each point to a Standard Normal Distribution (Mean=0, Std=RMSE).  Mean is zero for best-fit residuals.
 			4) Find the max point that exceeds a threshold distance from the mean (-1..1=68.25%, -2..2=95.44%, -3..3=99.74)
-			5) If no such point exists, all the points used in the regression are within the "z-score" threshold.  Return.
-			6) Otherwise, eliminate the point, compute the QR on the remaining points and go to (2)
+			5) If no such point exists, all the points used in the regression are within the threshold.  Return - no outliers.
+			6) Otherwise, eliminate the outlier, compute the QR on the remaining points, go to (2)
 			
 		Discussion:
 			Pros:
@@ -62,8 +62,7 @@ def QuadRegRemoveOutliersRobust( data ):
 				Also, O(N*k) where N is the sample size and k is the number of outliers.
 			
 			Conclusion:
-				With RFID reads, we expect a few "wild" values.  This technique should work well for that.
-				
+				With RFID reads, we expect a few "wild" values.  The technique should work well for this case.
 	'''
 	lenData = len(data)
 	if lenData <= 3:
@@ -92,13 +91,11 @@ def QuadRegRemoveOutliersRobust( data ):
 		y = np.delete( y, iBest )
 		abc = np.polyfit(x, y, 2)
 
-	'''
-	selected = [(x[i], y[i]) for i in xrange(len(x))]
-	selectedSet = set( selected )
-	outliers = [d for d in data if d not in selectedSet]
-	if outliers:
-		print 'outliers:', outliers, 'data:', data
-	'''
+	if returnDetails:
+		selected = zip(x, y)
+		selectedSet = set( selected )
+		outliers = [d for d in data if d not in selectedSet]
+		return abc, selected, outliers
 	
 	return abc
 
