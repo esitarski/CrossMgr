@@ -93,13 +93,11 @@ def QuadRegRemoveOutliersRobust( data ):
 		abc = np.polyfit(x, y, 2)
 
 	'''
-	sample = set( (x[i], y[i]) for i in xrange(len(x)) )
-	outliers, selected = [], []
-	for d in data:
-		if d in sample:
-			selected.append( d )
-		else:
-			outliers.append( d )
+	selected = [(x[i], y[i]) for i in xrange(len(x))]
+	selectedSet = set( selected )
+	outliers = [d for d in data if d not in selectedSet]
+	if outliers:
+		print 'outliers:', outliers, 'data:', data
 	'''
 	
 	return abc
