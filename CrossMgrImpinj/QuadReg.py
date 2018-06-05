@@ -102,9 +102,6 @@ def QuadRegRemoveOutliersRobust( data ):
 			outliers.append( d )
 	'''
 	
-	s = set( data )
-	
-	
 	return abc
 
 def QuadRegExtreme( data, f=QuadRegRemoveOutliersRobust ):
