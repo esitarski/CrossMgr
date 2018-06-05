@@ -32,8 +32,8 @@ def QuadRegFindOutlier( data ):
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
 	p = np.poly1d( np.polyfit(x, y, 2) )
 	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
-	mean, std = np.mean(R), np.std(R)
-	return max( ((i, abs(r-mean)/std) for i, r in enumerate(R)), key=operator.itemgetter(1) )
+	rmse = math.sqrt( np.dot(R,R) / (lenData-1) )	# dot(R,R) = sum of squares
+	return max( ((i, abs(r/rmse) for i, r in enumerate(R)), key=operator.itemgetter(1) )
 	
 def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	'''
