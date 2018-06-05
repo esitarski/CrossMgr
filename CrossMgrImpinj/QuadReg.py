@@ -15,11 +15,9 @@ def QuadRegRSS( data ):
 		raise ValueError( 'data must have >= 3 values' )
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
-	a, b, c = np.polyfit( x, y, 2 )
-	p = np.poly1d( (a,b,c) )
-	e = np.fromiter( (p(v) for v in x), np.float64, lenData )
-	s = np.sum( (y-e)**2 )
-	return s
+	p = np.poly1d( np.polyfit(x, y, 2) )
+	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
+	return np.dot( R, R )
 
 def QuadRegRSE( data ):
 	if len(data) <= 3:
@@ -32,10 +30,8 @@ def QuadRegFindOutlier( data ):
 		raise ValueError( 'data must have >= 3 values' )
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
-	a, b, c = np.polyfit( x, y, 2 )
-	p = np.poly1d( (a,b,c) )
-	e = np.fromiter( (p(v) for v in x), np.float64, lenData )
-	R = y - e
+	p = np.poly1d( np.polyfit(x, y, 2) )
+	Y = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
 	mean, std = np.mean(R), np.std(R)
 	return max( ((i, abs(r-mean)/std) for i, r in enumerate(R)), key=operator.itemgetter(1) )
 	
