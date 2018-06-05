@@ -92,9 +92,9 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 		abc = np.polyfit(x, y, 2)
 
 	if returnDetails:
-		selected = zip(x, y)
+		selected = tuple( zip(x, y) )
 		selectedSet = set( selected )
-		outliers = [d for d in data if d not in selectedSet]
+		outliers = tuple( d for d in data if d not in selectedSet )
 		return abc, selected, outliers
 	
 	return abc
