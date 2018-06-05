@@ -31,7 +31,7 @@ def QuadRegFindOutlier( data ):
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
 	p = np.poly1d( np.polyfit(x, y, 2) )
-	Y = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
+	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
 	mean, std = np.mean(R), np.std(R)
 	return max( ((i, abs(r-mean)/std) for i, r in enumerate(R)), key=operator.itemgetter(1) )
 	
