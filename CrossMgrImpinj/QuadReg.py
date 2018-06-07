@@ -112,7 +112,8 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	n = max( lenData // 20, 3 )		# Number of points used to define a proposed model.
 	
 	#k = 100
-	k = lenData * 5			# Number of iterations.
+	#k = lenData * 5			# Number of iterations.
+	k = lenData * 8			# Number of iterations.
 	t = 5					# Distance from parabolic where a point is considered an inlier.
 	
 	bestErr = np.inf		# Best Sum of abs Residuals.
