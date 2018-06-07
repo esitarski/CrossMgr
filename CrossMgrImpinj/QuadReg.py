@@ -1,4 +1,6 @@
 import numpy as np
+import warnings
+warnings.simplefilter('ignore', np.RankWarning)
 import math
 import operator
 import itertools
@@ -33,7 +35,7 @@ def QuadRegFindOutlier( data ):
 	p = np.poly1d( np.polyfit(x, y, 2) )
 	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
 	rmse = math.sqrt( np.dot(R,R) / (lenData-1) )	# dot(R,R) = sum of squares
-	return max( ((i, abs(r/rmse) for i, r in enumerate(R)), key=operator.itemgetter(1) )
+	return max( ((i, abs(r/rmse)) for i, r in enumerate(R)), key=operator.itemgetter(1) )
 	
 def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	'''
@@ -61,20 +63,22 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 				With RFID reads, we expect a few "wild" values.  The technique should work well for this case.
 	'''
 	lenData = len(data)
-	if lenData <= 3:
+	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
+		
+	zThreshold = 1.9
 	
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
 	
 	abc = np.polyfit(x, y, 2)
+	p = np.poly1d( abc )
 	while len(x) > 3:
-		p = np.poly1d( abc )
 		R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, len(x) )	# Residuals from Best Fit.
 
 		# Root mean square error.
 		rmse = math.sqrt( np.dot(R,R) / (len(x)-1) )	# dot(R,R) = sum of squares
-		iBest, zMax = None, 2.0							# 2.0 = 95% of normal distribution within mean.
+		iBest, zMax = None, zThreshold					# 2.0 = 95% of normal distribution within mean.
 		for i, r in enumerate(R):
 			z = abs(r/rmse)		# Scale residual to standard normal.  Mean is always zero for residuals.
 			if z > zMax:
@@ -86,6 +90,7 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 		x = np.delete( x, iBest )
 		y = np.delete( y, iBest )
 		abc = np.polyfit(x, y, 2)
+		p = np.poly1d( abc )
 
 	if returnDetails:
 		selected = tuple( zip(x, y) )
@@ -95,6 +100,59 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	
 	return abc
 
+def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
+	lenData = len(data)
+	if lenData < 3:
+		raise ValueError( 'data must have >= 3 values' )
+	
+	np.random.seed( 123456789 )
+	#n = max( lenData // 4, 3 )
+	#n = max( lenData // 8, 3 )
+	#n = max( lenData // 10, 3 )
+	n = max( lenData // 20, 3 )
+	
+	#k = 100
+	k = lenData * 5
+	t = 5
+	
+	bestErr = np.inf
+	bestModel = None
+	bestD = 0
+	
+	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
+	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
+	indexes = np.arange( 0, len(x), dtype=int )
+	for kk in xrange(k):
+		np.random.shuffle( indexes )
+		maybeInliers = np.resize( indexes, n )
+		maybeModel = np.polyfit(x[maybeInliers], y[maybeInliers], 2)
+		if maybeModel[0] >= 0.0:
+			continue	# Cannot open up.
+		alsoInliers = np.abs(np.polyval(maybeModel, x)-y) < t
+		curD = sum( alsoInliers )
+		if curD > bestD * 0.75:
+			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
+			if betterModel[0] >= 0.0:
+				continue	# Cannot open up.
+			if curD > bestD:
+				bestD = curD
+			thisErr = np.sum(np.abs(np.polyval(betterModel, x[alsoInliers])-y[alsoInliers]))
+			if thisErr < bestErr:
+				bestModel = betterModel
+				bestErr = thisErr
+	
+	if bestModel is None:
+		return QuadRegRemoveOutliersRobust( data, returnDetails )
+	
+	if returnDetails:
+		inliers = np.abs(np.polyval(bestModel, x)-y) < t
+		selected = tuple( zip(x[inliers], y[inliers]) )
+		selectedSet = set( selected )
+		outliers = tuple( d for d in data if d not in selectedSet )
+		return bestModel, selected, outliers
+		
+	return bestModel
+	
 def QuadRegExtreme( data, f=QuadRegRemoveOutliersRobust ):
 	a, b, c = f( data )
 	if a >= 0.0:

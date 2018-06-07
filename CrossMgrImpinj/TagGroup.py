@@ -53,6 +53,14 @@ class AntennaReads( object ):
 	def lastRead( self ):
 		return self.reads[-1][0]
 	
+	@property
+	def medianRead( self ):
+		if (len(reads) & 1) == 1:
+			return self.reads[len(reads)//2][0]
+		else:
+			iMid = len(reads)//2
+			return (self.reads[iMid-1][0] + self.reads[iMid][0]) / 2.0
+	
 	def getBestEstimate( self, method=QuadraticRegressionMethod, removeOutliers=True ):
 		if self.isStray:
 			return self.firstRead, 1
@@ -62,11 +70,11 @@ class AntennaReads( object ):
 				trEst, sampleSize = QuadRegExtreme(self.reads, QuadRegRemoveOutliersRobust if removeOutliers else QuadReg), len(self.reads)
 			except Exception as e:
 				# If error, return the first read.
-				trEst, sampleSize = self.firstRead, 1
+				trEst, sampleSize = self.medianRead, 1
 			
-			# If the estimate lies outside the data, return the first read.
+			# If the estimate lies outside the data, return the median read.
 			if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
-				trEst, sampleSize = self.firstRead, 1
+				trEst, sampleSize = self.medianRead, 1
 			return trEst, sampleSize
 		
 		else:	# method == StrongestReadMethod or len(self.reads) < 3
