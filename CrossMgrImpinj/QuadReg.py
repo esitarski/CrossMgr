@@ -93,10 +93,10 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 		p = np.poly1d( abc )
 
 	if returnDetails:
-		selected = tuple( zip(x, y) )
-		selectedSet = set( selected )
-		outliers = tuple( d for d in data if d not in selectedSet )
-		return abc, selected, outliers
+		inliers = tuple( zip(x, y) )
+		inliersSet = set( inliers )
+		outliers = tuple( d for d in data if d not in inliersSet )
+		return abc, inliers, outliers
 	
 	return abc
 
@@ -109,15 +109,15 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	#n = max( lenData // 4, 3 )
 	#n = max( lenData // 8, 3 )
 	#n = max( lenData // 10, 3 )
-	n = max( lenData // 20, 3 )
+	n = max( lenData // 20, 3 )		# Number of points used to define a proposed model.
 	
 	#k = 100
-	k = lenData * 5
-	t = 5
+	k = lenData * 5			# Number of iterations.
+	t = 5					# Distance from parabolic where a point is considered an inlier.
 	
-	bestErr = np.inf
-	bestModel = None
-	bestD = 0
+	bestErr = np.inf		# Best Sum of abs Residuals.
+	bestModel = None		# Cooefs of the parabolic
+	bestD = 0				# Best number of points within threshold distance of model.
 	
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
@@ -127,29 +127,36 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 		maybeInliers = np.resize( indexes, n )
 		maybeModel = np.polyfit(x[maybeInliers], y[maybeInliers], 2)
 		if maybeModel[0] >= 0.0:
-			continue	# Cannot open up.
+			continue	# Parabola cannot open up.
 		alsoInliers = np.abs(np.polyval(maybeModel, x)-y) < t
 		curD = sum( alsoInliers )
-		if curD > bestD * 0.75:
+		if curD > bestD * 0.75:		# Only evaluate this model if it is reasonably close to an existing solution.
 			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
 			if betterModel[0] >= 0.0:
-				continue	# Cannot open up.
+				continue	# Parabola cannot open up.
 			if curD > bestD:
 				bestD = curD
 			thisErr = np.sum(np.abs(np.polyval(betterModel, x[alsoInliers])-y[alsoInliers]))
 			if thisErr < bestErr:
 				bestModel = betterModel
 				bestErr = thisErr
+				if bestD == len(x):		# If there are no outliers, terminate early.
+					break
 	
 	if bestModel is None:
 		return QuadRegRemoveOutliersRobust( data, returnDetails )
-	
+	a, b, c = bestModel
+	apexX = -b / (2.0 * a)
+	apexY = np.poly1d(bestModel)( apexX )
+	if apexY > 0.0:
+		return QuadRegRemoveOutliersRobust( data, returnDetails )
+		
 	if returnDetails:
 		inliers = np.abs(np.polyval(bestModel, x)-y) < t
-		selected = tuple( zip(x[inliers], y[inliers]) )
-		selectedSet = set( selected )
-		outliers = tuple( d for d in data if d not in selectedSet )
-		return bestModel, selected, outliers
+		inliers = tuple( zip(x[inliers], y[inliers]) )
+		inliersSet = set( inliers )
+		outliers = tuple( d for d in data if d not in inliersSet )
+		return bestModel, inliers, outliers
 		
 	return bestModel
 	
