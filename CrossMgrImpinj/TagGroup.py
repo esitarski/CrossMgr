@@ -1,6 +1,6 @@
 
 from datetime import datetime, timedelta
-from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadReg
+from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
 from time import sleep
 import random
 import sys
@@ -67,7 +67,7 @@ class AntennaReads( object ):
 		
 		if method == QuadraticRegressionMethod and len(self.reads) >= 3:
 			try:
-				trEst, sampleSize = QuadRegExtreme(self.reads, QuadRegRemoveOutliersRobust if removeOutliers else QuadReg), len(self.reads)
+				trEst, sampleSize = QuadRegExtreme(self.reads, QuadRegRemoveOutliersRansac if removeOutliers else QuadReg), len(self.reads)
 			except Exception as e:
 				# If error, return the first read.
 				trEst, sampleSize = self.medianRead, 1

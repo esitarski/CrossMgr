@@ -4,6 +4,7 @@ warnings.simplefilter('ignore', np.RankWarning)
 import math
 import operator
 import itertools
+from math import log
 
 def QuadReg( data ):
 	lenData = len(data)
@@ -113,18 +114,13 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 			return False	# Parabola cannot open up
 		apexX = -model[1] / (2.0 * model[0])
 		# Estimated point must be in time range, value at estimation must be reasonable db.
-		return (tMin <= apexX <= tMax) and np.poly1d(model)( apexX ) <= 0.0
+		return (tMin <= apexX <= tMax) and np.poly1d(model)(apexX) <= 0.0
 	
 	np.random.seed( 123456789 )
-	#n = max( lenData // 4, 3 )
-	#n = max( lenData // 8, 3 )
+	# Number of points used to define a proposed model.
 	n = max( lenData // 10, 3 )
-	#n = max( lenData // 20, 3 )		# Number of points used to define a proposed model.
 	
-	#k = 100
-	#k = lenData * 5			# Number of iterations.
-	k = lenData * 8			# Number of iterations.
-	t = 5					# Distance from parabolic where a point is considered an inlier.
+	t = 4					# Distance from parabolic curve where a point is considered an inlier.
 	
 	bestErr = np.inf		# Best Sum of abs Residuals.
 	bestModel = None		# Cooefs of the parabolic
@@ -133,38 +129,56 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
 	
-	#indexes = np.arange( 0, len(x), dtype=int )
+	# Bias the sample to consider the strongest reads.
+	indexes = sorted( list(xrange(lenData)), key=lambda i: data[i][1], reverse=True )
+	indexes = np.fromiter( (i for i in indexes[:max(int(lenData*0.75), 6)]), int )
 	
-	# Bias the sample to the strongest reads.
-	idb = sorted( ((i, d[1]) for i, d in enumerate(data)), key=operator.itemgetter(1), reverse=True )
-	indexes = np.fromiter( (i for i, d in idb[:max(int(lenData*0.75), 6)]), int )
+	P = 0.99		# Max estimated proportion of outliers (worse case).
+	K = np.inf		# Minimum number of samples required to find an uncontaminated model.
+	samples = 0
 	
-	for kk in xrange(k):
+	KBad = lenData * 2	# Max number of allowed bad samples (invalid models).
+	samplesBad = 0
+	
+	while samples < K and samplesBad < KBad:
 		np.random.shuffle( indexes )
 		maybeInliers = np.resize( indexes, n )
 		maybeModel = np.polyfit(x[maybeInliers], y[maybeInliers], 2)
 		if not modelValid(maybeModel):
+			samplesBad += 1
 			continue
+		
+		samples += 1
+
+		# Get all points within range of model.
 		alsoInliers = np.abs(np.polyval(maybeModel, x)-y) < t
 		curD = sum( alsoInliers )
-		if curD > bestD * 0.80:		# Only evaluate this model if it is reasonably close to an existing solution.
+		
+		if curD >= bestD:
+		
 			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
 			if not modelValid(betterModel):
+				samplesBad += 1
 				continue
 			
 			if curD > bestD:
 				bestD = curD
+				# Use adaptive estimation to update number of samples required to find
+				# a sample model with uncontaminated points.
+				if curD < lenData:
+					w = float(curD) / float(lenData)
+					K = 2.0 * log( 1.0 - P ) / log( 1.0 - w ** n)	# Multiply by 2 for extra safety.
+				else:
+					K = samples		# We have a model that includes all points - time to quit.
+				
 			thisErr = np.sum(np.abs(np.polyval(betterModel, x[alsoInliers])-y[alsoInliers]))
-			if thisErr < bestErr:
+			if curD == bestD or thisErr < bestErr:
 				bestModel = betterModel
 				bestErr = thisErr
-				if bestD == len(x):		# If there are no outliers, terminate early.
-					break
 	
-	if bestModel is None:
-		return None, None, None if returnDetails else None
-		
 	if returnDetails:
+		if bestModel is None:
+			return None, None, None
 		inliers = np.abs(np.polyval(bestModel, x)-y) < t
 		inliers = tuple( zip(x[inliers], y[inliers]) )
 		inliersSet = set( inliers )

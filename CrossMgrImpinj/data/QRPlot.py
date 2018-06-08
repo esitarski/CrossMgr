@@ -121,63 +121,64 @@ class PlotPanel( wx.Panel ):
 		def dbToY( db ):
 			return h - int((db-self.data['dbMin']) * dbScale + 0.5)
 		
-		iCount = 0
-		for (reader, EPC), coords in self.data['data'].iteritems():
-			for coordsCur in coords:
-				if len(coordsCur) < 3 or tToX(coordsCur[0][0]) > w or tToX(coordsCur[-1][0]) < 0:
-					continue
-				#abc, inliers, outliers = QuadRegRemoveOutliersRobust( coordsCur, True )
-				abc, inliers, outliers = QuadRegRemoveOutliersRansac( coordsCur, True )
-					
-				if abc is not None:
-					p = np.poly1d( abc )
-					a, b, c = abc
-					apex_t = -b / (2.0 * a)
-					apex_db = p( apex_t )
-				else:
-					if len(coordsCur) & 1 == 1:
-						iMedian = len(coordsCur) // 2
-						apex_t, apex_db = coordsCur[iMedian]
-						inliers = [coordsCur[iMedian]]
-						outliers = [v for v in coordsCur if v not in inliers]
+		with wx.BusyCursor():
+			iCount = 0
+			for (reader, EPC), coords in self.data['data'].iteritems():
+				for coordsCur in coords:
+					if len(coordsCur) < 3 or tToX(coordsCur[0][0]) > w or tToX(coordsCur[-1][0]) < 0:
+						continue
+					#abc, inliers, outliers = QuadRegRemoveOutliersRobust( coordsCur, True )
+					abc, inliers, outliers = QuadRegRemoveOutliersRansac( coordsCur, True )
+						
+					if abc is not None:
+						p = np.poly1d( abc )
+						a, b, c = abc
+						apex_t = -b / (2.0 * a)
+						apex_db = p( apex_t )
 					else:
-						iMedian = len(coordsCur) // 2
-						apex_t, apex_db = (coordsCur[iMedian][0] + coordsCur[iMedian-1][0]) / 2.0, (coordsCur[iMedian][1] + coordsCur[iMedian-1][1]) / 2.0
-						inliers = [coordsCur[iMedian-1], coordsCur[iMedian]]
-						outliers = [v for v in coordsCur if v not in inliers]
-				
-				col = colors[(int(EPC, 16)+reader) % len(colors)]
-				dc.SetPen( wx.TRANSPARENT_PEN )
-				dc.SetBrush( wx.Brush(col) )
-				for t, db in inliers:
-					x, y = tToX(t), dbToY(db)
-					if x > 0 and x < w and y > 0 and y < h:
-						dc.DrawCircle( x, y, 4 )
+						if len(coordsCur) & 1 == 1:
+							iMedian = len(coordsCur) // 2
+							apex_t, apex_db = coordsCur[iMedian]
+							inliers = [coordsCur[iMedian]]
+							outliers = [v for v in coordsCur if v not in inliers]
+						else:
+							iMedian = len(coordsCur) // 2
+							apex_t, apex_db = (coordsCur[iMedian][0] + coordsCur[iMedian-1][0]) / 2.0, (coordsCur[iMedian][1] + coordsCur[iMedian-1][1]) / 2.0
+							inliers = [coordsCur[iMedian-1], coordsCur[iMedian]]
+							outliers = [v for v in coordsCur if v not in inliers]
 					
-				dc.SetPen( wx.Pen(col) )
-				dc.SetBrush( wx.WHITE_BRUSH )
-				for t, db in outliers:
-					x, y = tToX(t), dbToY(db)
-					if x > 0 and x < w and y > 0 and y < h:
-						dc.DrawCircle( x, y, 4 )
-				
-				if abc is not None:
-					dc.SetPen( wx.Pen(wx.Colour(160,160,160) ) )
-					points = []
-					#for x in xrange( tToX(coordsCur[0][0]), tToX(coordsCur[-1][0])+1 ):
-					for x in xrange( tToX(inliers[0][0]), tToX(inliers[-1][0])+1 ):
-						t = (x / tScale) + self.tLeft
-						y = dbToY(p(t))
+					col = colors[(int(EPC, 16)+reader) % len(colors)]
+					dc.SetPen( wx.TRANSPARENT_PEN )
+					dc.SetBrush( wx.Brush(col) )
+					for t, db in inliers:
+						x, y = tToX(t), dbToY(db)
 						if x > 0 and x < w and y > 0 and y < h:
-							points.append( wx.Point(x, dbToY(p(t)) ) )
-					dc.DrawLines( points )
-				
-				#dc.SetPen( wx.Pen(wx.Colour(160,160,160)) )
-				dc.SetPen( wx.Pen(wx.Colour(255,165,0)) )
-				dc.DrawLine( tToX(apex_t), h, tToX(apex_t), dbToY(apex_db) )
-				
-				#dc.DrawText( EPC, tToX(apex_t), h - fontHeight * (iCount%4) )
-				#iCount += 1
+							dc.DrawCircle( x, y, 4 )
+						
+					dc.SetPen( wx.Pen(col) )
+					dc.SetBrush( wx.WHITE_BRUSH )
+					for t, db in outliers:
+						x, y = tToX(t), dbToY(db)
+						if x > 0 and x < w and y > 0 and y < h:
+							dc.DrawCircle( x, y, 4 )
+					
+					if abc is not None:
+						dc.SetPen( wx.Pen(wx.Colour(160,160,160) ) )
+						points = []
+						#for x in xrange( tToX(coordsCur[0][0]), tToX(coordsCur[-1][0])+1 ):
+						for x in xrange( tToX(inliers[0][0]), tToX(inliers[-1][0])+1 ):
+							t = (x / tScale) + self.tLeft
+							y = dbToY(p(t))
+							if x > 0 and x < w and y > 0 and y < h:
+								points.append( wx.Point(x, dbToY(p(t)) ) )
+						dc.DrawLines( points )
+					
+					#dc.SetPen( wx.Pen(wx.Colour(160,160,160)) )
+					dc.SetPen( wx.Pen(wx.Colour(255,165,0)) )
+					dc.DrawLine( tToX(apex_t), h, tToX(apex_t), dbToY(apex_db) )
+					
+					#dc.DrawText( EPC, tToX(apex_t), h - fontHeight * (iCount%4) )
+					#iCount += 1
 
 	def setData( self, data ):
 		self.data = data
