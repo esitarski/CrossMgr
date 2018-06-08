@@ -137,7 +137,7 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	
 	# Bias the sample to the strongest reads.
 	idb = sorted( ((i, d[1]) for i, d in enumerate(data)), key=operator.itemgetter(1), reverse=True )
-	indexes = np.fromiter( (i for i, d in idb[:max(lenData//2, 3)]), int )
+	indexes = np.fromiter( (i for i, d in idb[:max(lenData//2, 6)]), int )
 	
 	for kk in xrange(k):
 		np.random.shuffle( indexes )
