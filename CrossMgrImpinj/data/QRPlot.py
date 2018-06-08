@@ -128,14 +128,13 @@ class PlotPanel( wx.Panel ):
 					continue
 				#abc, inliers, outliers = QuadRegRemoveOutliersRobust( coordsCur, True )
 				abc, inliers, outliers = QuadRegRemoveOutliersRansac( coordsCur, True )
-				p = np.poly1d( abc )
-				a, b, c = abc
-				apex_t = -b / (2.0 * a)
-				apex_db = p( apex_t )
-				
-				if not (coordsCur[0][0] <= apex_t <= coordsCur[-1][0]) or apex_db > 0.0:
-					# If apex is out of range, show median.
-					abc = None
+					
+				if abc is not None:
+					p = np.poly1d( abc )
+					a, b, c = abc
+					apex_t = -b / (2.0 * a)
+					apex_db = p( apex_t )
+				else:
 					if len(coordsCur) & 1 == 1:
 						iMedian = len(coordsCur) // 2
 						apex_t, apex_db = coordsCur[iMedian]

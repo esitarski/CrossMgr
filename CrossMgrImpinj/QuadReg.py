@@ -65,7 +65,7 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	lenData = len(data)
 	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
-		
+	
 	zThreshold = 1.9
 	
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
@@ -104,12 +104,22 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	lenData = len(data)
 	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
+		
+	tMin = min( d[0] for d in data )
+	tMax = max( d[0] for d in data )
+	
+	def modelValid( model ):
+		if model[0] >= 0:
+			return False	# Parabola cannot open up
+		apexX = -model[1] / (2.0 * model[0])
+		# Estimated point must be in time range, value at estimation must be reasonable db.
+		return (tMin <= apexX <= tMax) and np.poly1d(model)( apexX ) <= 0.0
 	
 	np.random.seed( 123456789 )
 	#n = max( lenData // 4, 3 )
 	#n = max( lenData // 8, 3 )
-	#n = max( lenData // 10, 3 )
-	n = max( lenData // 20, 3 )		# Number of points used to define a proposed model.
+	n = max( lenData // 10, 3 )
+	#n = max( lenData // 20, 3 )		# Number of points used to define a proposed model.
 	
 	#k = 100
 	#k = lenData * 5			# Number of iterations.
@@ -122,19 +132,26 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
-	indexes = np.arange( 0, len(x), dtype=int )
+	
+	#indexes = np.arange( 0, len(x), dtype=int )
+	
+	# Bias the sample to the strongest reads.
+	idb = sorted( ((i, d[1]) for i, d in enumerate(data)), key=operator.itemgetter(1), reverse=True )
+	indexes = np.fromiter( (i for i, d in idb[:max(lenData//2, 3)]), int )
+	
 	for kk in xrange(k):
 		np.random.shuffle( indexes )
 		maybeInliers = np.resize( indexes, n )
 		maybeModel = np.polyfit(x[maybeInliers], y[maybeInliers], 2)
-		if maybeModel[0] >= 0.0:
-			continue	# Parabola cannot open up.
+		if not modelValid(maybeModel):
+			continue
 		alsoInliers = np.abs(np.polyval(maybeModel, x)-y) < t
 		curD = sum( alsoInliers )
-		if curD > bestD * 0.75:		# Only evaluate this model if it is reasonably close to an existing solution.
+		if curD > bestD * 0.80:		# Only evaluate this model if it is reasonably close to an existing solution.
 			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
-			if betterModel[0] >= 0.0:
-				continue	# Parabola cannot open up.
+			if not modelValid(betterModel):
+				continue
+			
 			if curD > bestD:
 				bestD = curD
 			thisErr = np.sum(np.abs(np.polyval(betterModel, x[alsoInliers])-y[alsoInliers]))
@@ -145,12 +162,7 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 					break
 	
 	if bestModel is None:
-		return QuadRegRemoveOutliersRobust( data, returnDetails )
-	a, b, c = bestModel
-	apexX = -b / (2.0 * a)
-	apexY = np.poly1d(bestModel)( apexX )
-	if apexY > 0.0:
-		return QuadRegRemoveOutliersRobust( data, returnDetails )
+		return None, None, None if returnDetails else None
 		
 	if returnDetails:
 		inliers = np.abs(np.polyval(bestModel, x)-y) < t
