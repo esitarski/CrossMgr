@@ -109,8 +109,8 @@ class PlotPanel( wx.Panel ):
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		fontHeight = max( h//40, 5 )
-		dc.SetFont( wx.Font(wx.FontInfo((0, fontHeight))) )
+		#fontHeight = max( h//40, 5 )
+		#dc.SetFont( wx.Font(wx.FontInfo((0, fontHeight))) )
 		
 		tScale = 2000000 / (self.data['tMax'] - self.data['tMin'])
 		dbScale = h / (self.data['dbMax'] - self.data['dbMin'])
