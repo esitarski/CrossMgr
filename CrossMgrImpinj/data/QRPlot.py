@@ -164,6 +164,7 @@ class PlotPanel( wx.Panel ):
 				if abc is not None:
 					dc.SetPen( wx.Pen(wx.Colour(160,160,160) ) )
 					points = []
+					#for x in xrange( tToX(coordsCur[0][0]), tToX(coordsCur[-1][0])+1 ):
 					for x in xrange( tToX(inliers[0][0]), tToX(inliers[-1][0])+1 ):
 						t = (x / tScale) + self.tLeft
 						y = dbToY(p(t))
@@ -171,7 +172,8 @@ class PlotPanel( wx.Panel ):
 							points.append( wx.Point(x, dbToY(p(t)) ) )
 					dc.DrawLines( points )
 				
-				dc.SetPen( wx.Pen(wx.Colour(160,160,160)) )
+				#dc.SetPen( wx.Pen(wx.Colour(160,160,160)) )
+				dc.SetPen( wx.Pen(wx.Colour(255,165,0)) )
 				dc.DrawLine( tToX(apex_t), h, tToX(apex_t), dbToY(apex_db) )
 				
 				#dc.DrawText( EPC, tToX(apex_t), h - fontHeight * (iCount%4) )
