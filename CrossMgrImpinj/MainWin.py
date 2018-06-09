@@ -141,19 +141,6 @@ class AdvancedSetup( wx.Dialog ):
 		self.ReportMethod.SetSelection( Impinj.ProcessingMethod )
 		bs.Add( self.ReportMethod, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP|wx.ALIGN_CENTER_VERTICAL )
 		
-		'''
-		vs = wx.BoxSizer( wx.VERTICAL )
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( wx.StaticText(self, label='Antenna Choice (only applies to QR)'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
-		self.AntennaChoice = wx.Choice( self, choices=AntennaChoiceNames )
-		self.AntennaChoice.SetSelection( Impinj.AntennaChoice )
-		hs.Add( self.AntennaChoice, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )		
-		vs.Add( hs )
-		
-		self.RemoveOutliers = wx.CheckBox( self, label='Remove Outliers (only applies to QR)' )
-		vs.Add( self.RemoveOutliers )
-		'''
-		
 		sb = wx.StaticBox( self, label='QR Only Options' )
 		sbSizer = wx.StaticBoxSizer( sb, wx.VERTICAL )
 		
@@ -769,8 +756,8 @@ class MainWin( wx.Frame ):
 		Impinj.TransmitPower = int(self.config.Read('TransmitPower', '0')) or None
 		Impinj.TagPopulation = int(self.config.Read('TagPopulation', '0')) or None
 		Impinj.TagTransitTime = int(self.config.Read('TagTransitTime', '0')) or None
-		Impinj.ProcessMethod = int(self.config.Read('ProcessMethod', '0'))
-		Impinj.AntennaChoice = int(self.config.Read('AntennaChoice', '0'))
+		Impinj.ProcessMethod = int(self.config.Read('ProcessMethod', '0'))		# Default to QuadraticRegression.
+		Impinj.AntennaChoice = int(self.config.Read('AntennaChoice', '1'))		# Default to MaxDB antenna.
 		Impinj.RemoveOutliers = (self.config.Read('RemoveOutliers', 'True').upper()[:1] == 'T')
 	
 	def updateMessages( self, event ):
