@@ -50,7 +50,9 @@ def readData( fname ):
 				continue
 			fields = line.split(',')
 			
-			Reader = int(fields[0])			
+			Reader = int(fields[0])
+			#if Reader != 21:
+			#	continue
 			EPC = fields[1]
 			t = fields[3]
 			t = int(t[:2]) * 60 * 60 + int(t[2:4]) * 60 + float(t[4:])
