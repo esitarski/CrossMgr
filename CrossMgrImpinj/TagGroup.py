@@ -68,12 +68,12 @@ class AntennaReads( object ):
 			try:
 				trEst, sampleSize = QuadRegExtreme(self.reads, QuadRegRemoveOutliersRansac if removeOutliers else QuadReg), len(self.reads)
 			except Exception as e:
-				# If error, return the first read.
-				trEst, sampleSize = self.medianRead, 1
+				# If error, return the strongest read.
+				trEst, sampleSize = self.trDbMax, 1
 			
-			# If the estimate lies outside the data, return the median read.
+			# If the estimate lies outside the data, return the strongest read.
 			if not self.reads[0][0] <= trEst <= self.reads[-1][0]:
-				trEst, sampleSize = self.medianRead, 1
+				trEst, sampleSize = self.trDbMax, 1
 			return trEst, sampleSize
 		
 		else:	# method == StrongestReadMethod or len(self.reads) < 3
