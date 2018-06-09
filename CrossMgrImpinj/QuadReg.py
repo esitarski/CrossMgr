@@ -187,7 +187,7 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 		
 	return bestModel
 	
-def QuadRegExtreme( data, f=QuadRegRemoveOutliersRobust ):
+def QuadRegExtreme( data, f=QuadRegRemoveOutliersRansac ):
 	a, b, c = f( data )
 	if a >= 0.0:
 		raise ValueError( 'invalid quadratic: cannot open up' )

@@ -1,12 +1,11 @@
-
-from datetime import datetime, timedelta
-from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
-from time import sleep
-import random
 import sys
+import random
 import operator
-from Queue import Queue, Empty
 import itertools
+from time import sleep
+from datetime import datetime, timedelta
+from Queue import Queue, Empty
+from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
 
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()
@@ -55,10 +54,10 @@ class AntennaReads( object ):
 	
 	@property
 	def medianRead( self ):
-		if (len(reads) & 1) == 1:
+		if (len(self.reads) & 1) == 1:
 			return self.reads[len(reads)//2][0]
 		else:
-			iMid = len(reads)//2
+			iMid = len(self.reads)//2
 			return (self.reads[iMid-1][0] + self.reads[iMid][0]) / 2.0
 	
 	def getBestEstimate( self, method=QuadraticRegressionMethod, removeOutliers=True ):
