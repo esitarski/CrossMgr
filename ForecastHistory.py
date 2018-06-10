@@ -268,9 +268,9 @@ class ForecastHistory( wx.Panel ):
 			self.menu = wx.Menu()
 			for i, p in enumerate(self.historyPopupInfo):
 				if p[2]:
-					menu.Append( p[1], p[0] )
+					self.menu.Append( p[1], p[0] )
 				else:
-					menu.AppendSeparator()
+					self.menu.AppendSeparator()
 		
 		try:
 			self.PopupMenu( self.menu )
