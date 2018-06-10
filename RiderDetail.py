@@ -541,7 +541,7 @@ class RiderDetail( wx.Panel ):
 				if p[0]:
 					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
 			
-			self.menu = []
+			self.menuOptions = []
 			for caseCode in xrange(3):
 				menu = wx.Menu()
 				for id, name, text, callback, cCase in self.popupInfo:
@@ -551,14 +551,14 @@ class RiderDetail( wx.Panel ):
 						continue
 					if caseCode >= cCase:
 						menu.Append( id, name, text )
-				self.menu.append( menu )
+				self.menuOptions.append( menu )
 		
 		try:
 			caseCode = 1 if self.entry.interp else 2
 		except (TypeError, IndexError, KeyError):
 			caseCode = 0
 		
-		menu = self.menu[caseCode]
+		menu = self.menuOptions[caseCode]
 		try:
 			self.PopupMenu( menu )
 		except Exception as e:

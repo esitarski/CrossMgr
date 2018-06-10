@@ -229,18 +229,17 @@ class LapCounter( wx.Panel ):
 			for p in self.popupInfo:
 				if p[0]:
 					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
-			self.menu = []
+			self.menuOptions = []
 			for caseCode in xrange(2):
 				menu = wx.Menu()
 				for i, (id, name, text, callback) in enumerate(self.popupInfo):
 					if i == 0 and caseCode == 0:
 						continue
 					menu.Append( id, name, text )
-				self.menu.append( menu )
+				self.menuOptions.append( menu )
 		
 		caseCode = 0 if (race and race.isUnstarted()) or category.isNumLapsLocked() else 1
-		menu = self.menu[caseCode]
-		self.PopupMenu( menu )
+		self.PopupMenu( self.menuOptions[caseCode] )
 		
 	def OnTimer( self, event=None ):
 		if self.countdownTimer:

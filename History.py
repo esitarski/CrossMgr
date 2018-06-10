@@ -184,7 +184,7 @@ class History( wx.Panel ):
 				if id:
 					self.Bind( wx.EVT_MENU, callback, id=id )
 					
-			self.menu = []
+			self.menuOptions = []
 			for caseCode in xrange(3):
 				menu = wx.Menu()
 				for i, (id, name, text, callback, cCode) in enumerate(self.popupInfo):
@@ -195,12 +195,12 @@ class History( wx.Panel ):
 						continue
 					menu.Append( id, name, text )
 				Utils.deleteTrailingSeparators( menu )
-				self.menu.append( menu )
+				self.menuOptions.append( menu )
 
 		isInterp = self.history[self.colPopup][self.rowPopup].interp
 		caseCode = 1 if isInterp else 2
 		
-		menu = self.menu[caseCode]
+		menu = self.menuOptions[caseCode]
 		try:
 			self.PopupMenu( menu )
 		except Exception as e:
