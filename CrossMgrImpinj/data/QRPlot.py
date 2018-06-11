@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 sys.path.append( os.path.dirname(os.path.dirname(os.path.abspath(__file__))) )
-from QuadReg import QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac
+from QuadReg import QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
 import re
 
 colorTable = '''
@@ -18,13 +18,10 @@ Magenta	#f032e6	(240, 50, 230)	(0, 100, 0, 0)
 Lime	#d2f53c	(210, 245, 60)	(35, 0, 100, 0)
 Pink	#fabebe	(250, 190, 190)	(0, 30, 15, 0)
 Teal	#008080	(0, 128, 128)	(100, 0, 0, 50)
-Lavender	#e6beff	(230, 190, 255)	(10, 25, 0, 0)
 Brown	#aa6e28	(170, 110, 40)	(0, 35, 75, 33)
-Beige	#fffac8	(255, 250, 200)	(5, 10, 30, 0)
 Maroon	#800000	(128, 0, 0)	(0, 100, 100, 50)
 Mint	#aaffc3	(170, 255, 195)	(33, 0, 23, 0)
 Olive	#808000	(128, 128, 0)	(0, 0, 100, 50)
-Coral	#ffd8b1	(255, 215, 180)	(0, 15, 30, 0)
 Navy	#000080	(0, 0, 128)	(100, 100, 0, 50)
 Grey	#808080	(128, 128, 128)	(0, 0, 0, 50)
 '''
@@ -111,9 +108,6 @@ class PlotPanel( wx.Panel ):
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		#fontHeight = max( h//40, 5 )
-		#dc.SetFont( wx.Font(wx.FontInfo((0, fontHeight))) )
-		
 		tScale = 2000000 / (self.data['tMax'] - self.data['tMin'])
 		dbScale = h / (self.data['dbMax'] - self.data['dbMin'])
 		
@@ -129,7 +123,6 @@ class PlotPanel( wx.Panel ):
 				for coordsCur in coords:
 					if len(coordsCur) < 3 or tToX(coordsCur[0][0]) > w or tToX(coordsCur[-1][0]) < 0:
 						continue
-					#abc, inliers, outliers = QuadRegRemoveOutliersRobust( coordsCur, True )
 					abc, inliers, outliers = QuadRegRemoveOutliersRansac( coordsCur, True )
 						
 					if abc is not None:
@@ -138,16 +131,11 @@ class PlotPanel( wx.Panel ):
 						apex_t = -b / (2.0 * a)
 						apex_db = p( apex_t )
 					else:
-						if len(coordsCur) & 1 == 1:
-							iMedian = len(coordsCur) // 2
-							apex_t, apex_db = coordsCur[iMedian]
-							inliers = [coordsCur[iMedian]]
-							outliers = [v for v in coordsCur if v not in inliers]
-						else:
-							iMedian = len(coordsCur) // 2
-							apex_t, apex_db = (coordsCur[iMedian][0] + coordsCur[iMedian-1][0]) / 2.0, (coordsCur[iMedian][1] + coordsCur[iMedian-1][1]) / 2.0
-							inliers = [coordsCur[iMedian-1], coordsCur[iMedian]]
-							outliers = [v for v in coordsCur if v not in inliers]
+						# Pick the maximum signal strength point.
+						iMax = max( ((i, d) for i, d in enumerate(coordsCur)), key=lambda x: x[1][1] )[0]
+						apex_t, apex_db = coordsCur[iMax]
+						inliers = [coordsCur[iMax]]
+						outliers = [v for v in coordsCur if v not in inliers]
 					
 					col = colors[(int(EPC, 16)+reader) % len(colors)]
 					dc.SetPen( wx.TRANSPARENT_PEN )
@@ -165,9 +153,8 @@ class PlotPanel( wx.Panel ):
 							dc.DrawCircle( x, y, 4 )
 					
 					if abc is not None:
-						dc.SetPen( wx.Pen(wx.Colour(160,160,160) ) )
+						dc.SetPen( wx.Pen(wx.Colour(255,165,0)) )
 						points = []
-						#for x in xrange( tToX(coordsCur[0][0]), tToX(coordsCur[-1][0])+1 ):
 						for x in xrange( tToX(inliers[0][0]), tToX(inliers[-1][0])+1 ):
 							t = (x / tScale) + self.tLeft
 							y = dbToY(p(t))
@@ -175,10 +162,38 @@ class PlotPanel( wx.Panel ):
 								points.append( wx.Point(x, dbToY(p(t)) ) )
 						dc.DrawLines( points )
 					
-					#dc.SetPen( wx.Pen(wx.Colour(160,160,160)) )
 					dc.SetPen( wx.Pen(wx.Colour(255,165,0)) )
 					dc.DrawLine( tToX(apex_t), h, tToX(apex_t), dbToY(apex_db) )
+
+					#---------------------------------------------------------------------------------
+					# Draw the full QuadReg including all outliers.
+					#
+					try:
+						abc = QuadReg( coordsCur )
+					except:
+						abc = None
+						
+					if abc is not None and abc[0] < 0:
+						p = np.poly1d( abc )
+						a, b, c = abc
+						apex_t = -b / (2.0 * a)
+						apex_t = max(coordsCur[0][0], apex_t)
+						apex_t = min(coordsCur[-1][0], apex_t)
+						apex_db = p( apex_t )
+						
+						dc.SetPen( wx.Pen(wx.Colour(0,0,200) ) )
+						points = []
+						for x in xrange( tToX(coordsCur[0][0]), tToX(coordsCur[-1][0])+1 ):
+							t = (x / tScale) + self.tLeft
+							y = dbToY(p(t))
+							if x > 0 and x < w and y > 0 and y < h:
+								points.append( wx.Point(x, dbToY(p(t)) ) )
+						dc.DrawLines( points )
 					
+						dc.SetPen( wx.Pen(wx.Colour(0,0,200)) )
+						dc.DrawLine( tToX(apex_t), h, tToX(apex_t), dbToY(apex_db) )
+					
+					#---------------------------------------------------------------------------------
 					#dc.DrawText( EPC, tToX(apex_t), h - fontHeight * (iCount%4) )
 					#iCount += 1
 

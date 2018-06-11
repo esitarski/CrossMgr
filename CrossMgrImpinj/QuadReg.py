@@ -107,6 +107,8 @@ def ResetStats():
 	inliersTotal, samplesTotal = 0, 0
 	
 def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
+	global inliersTotal, samplesTotal
+	
 	lenData = len(data)
 	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
@@ -180,18 +182,25 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 			if curD == bestD or thisErr < bestErr:
 				bestModel = betterModel
 				bestErr = thisErr
+
+	# Check if the apex is within range of inliers.
+	if bestModel is not None:
+		apexX = -bestModel[1] / (2.0 * bestModel[0])
+		inliers = np.abs(np.polyval(bestModel, x)-y) < t
+		if not (min(x[inliers]) <= apexX <= max(x[inliers])):
+			bestModel = None
+	
+	samplesTotal += lenData
+	inliersTotal += 0 if bestModel is None else bestD
 	
 	if returnDetails:
 		if bestModel is None:
 			return None, None, None
-		inliers = np.abs(np.polyval(bestModel, x)-y) < t
 		inliers = tuple( zip(x[inliers], y[inliers]) )
 		inliersSet = set( inliers )
 		outliers = tuple( d for d in data if d not in inliersSet )
 		return bestModel, inliers, outliers
 	
-	samplesTotal += lenData
-	inliersTotal += bestD if bestModel is not None else 0
 	return bestModel
 	
 def QuadRegExtreme( data, f=QuadRegRemoveOutliersRansac ):
