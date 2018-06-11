@@ -12,6 +12,7 @@ import Impinj
 from Impinj import ImpinjServer
 from Impinj2JChip import CrossMgrServer
 from AutoDetect import AutoDetect
+import QuadReg
 from TagGroup import QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MethodNames, MostReadsChoice, DBMaxChoice, AntennaChoiceNames
 
 import wx
@@ -482,7 +483,14 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 
 	def refreshMethodName( self ):
-		self.methodName.SetLabel( MethodNames[Impinj.ProcessingMethod] )
+		if Impinj.ProcessingMethod == 0 and QuadReg.samplesTotal:
+			s = u'{}: Inliers: {:.1%}'.format(
+				MethodNames[Impinj.ProcessingMethod],
+				float(QuadReg.inliersTotal)/float(QuadReg.samplesTotal)
+			)
+		else:
+			s = MethodNames[Impinj.ProcessingMethod]
+		self.methodName.SetLabel( s )
 
 	def refreshStrays( self, strays ):
 		if self.strays.GetItemCount() != len(strays):
@@ -583,6 +591,7 @@ class MainWin( wx.Frame ):
 		self.shutdown()
 		
 		self.reset.Enable( True )
+		QuadReg.ResetStats()
 		
 		wx.CallAfter( self.start )
 		

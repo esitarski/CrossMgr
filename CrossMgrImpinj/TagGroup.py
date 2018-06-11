@@ -20,7 +20,7 @@ def trToDatetime( tr ):
 	return tRef + timedelta(seconds=tr)
 
 QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod = 0, 1, 2
-MethodNames = ('Quadratic Regression', 'Strongest Read', 'First Read Time')
+MethodNames = ('Quad Regression', 'Strongest Read', 'First Read Time')
 
 MostReadsChoice, DBMaxChoice = 0, 1
 AntennaChoiceNames = ('Most Reads', 'Max Signal dB')

@@ -101,6 +101,11 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	
 	return abc
 
+inliersTotal, samplesTotal = 0, 0
+def ResetStats():
+	global inliersTotal, samplesTotal
+	inliersTotal, samplesTotal = 0, 0
+	
 def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	lenData = len(data)
 	if lenData < 3:
@@ -184,7 +189,9 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 		inliersSet = set( inliers )
 		outliers = tuple( d for d in data if d not in inliersSet )
 		return bestModel, inliers, outliers
-		
+	
+	samplesTotal += lenData
+	inliersTotal += bestD if bestModel is not None else 0
 	return bestModel
 	
 def QuadRegExtreme( data, f=QuadRegRemoveOutliersRansac ):
