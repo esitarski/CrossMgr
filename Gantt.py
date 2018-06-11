@@ -156,7 +156,7 @@ class Gantt( wx.Panel ):
 				self.Bind( wx.EVT_MENU, callback, id=id )
 			self.splitMenuId = wx.NewId()
 
-			self.menu = {}
+			self.menuOptions = {}
 			for numBefore in [False, True]:
 				for numAfter in [False, True]:
 					for caseCode in xrange(3):
@@ -180,7 +180,7 @@ class Gantt( wx.Panel ):
 							menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
 					
 						Utils.deleteTrailingSeparators( menu )
-						self.menu[(numBefore,numAfter,caseCode)] = menu
+						self.menuOptions[(numBefore,numAfter,caseCode)] = menu
 				
 		caseCode = 1 if entries[iLap].interp else 2
 		
@@ -194,7 +194,7 @@ class Gantt( wx.Panel ):
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 		
-		menu = self.menu[(bool(self.numBefore), bool(self.numAfter), caseCode)]
+		menu = self.menuOptions[(bool(self.numBefore), bool(self.numAfter), caseCode)]
 		try:
 			self.PopupMenu( menu )
 		except Exception as e:
