@@ -160,7 +160,7 @@ class AdvancedSetup( wx.Dialog ):
 		
 		row += 1
 		bs.Add( wx.StaticText(self, label='\n'.join([
-			'**Quadratic Regression**: return an estimated time when the tag is closest to an antenna by combining',
+			'**Quad Regression**: return an estimated time when the tag is closest to an antenna by combining',
 			'multiple reads and signal strength (high accuracy, high processing).',
 			'The Antenna Choice option controls which antenna is selected for the regression.'
 			'Recommended for high-speed finishes (cycling).',
@@ -813,6 +813,7 @@ class MainWin( wx.Frame ):
 								'Peak RSSI' if Impinj.ProcessingMethod != FirstReadMethod else 'First Read',
 							)
 						self.antennaReadCount.SetLabel( label )
+				self.refreshMethodName()
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:
 					self.crossMgrMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )

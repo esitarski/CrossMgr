@@ -132,6 +132,7 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	bestErr = np.inf		# Best Sum of abs Residuals.
 	bestModel = None		# Cooefs of the parabolic
 	bestD = 0				# Best number of points within threshold distance of model.
+	minD = int(lenData * 0.75)	# Minimum number of points matched.
 	
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
@@ -161,7 +162,7 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 		alsoInliers = np.abs(np.polyval(maybeModel, x)-y) < t
 		curD = sum( alsoInliers )
 		
-		if curD >= bestD:
+		if curD >= minD and curD >= bestD:
 		
 			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
 			if not modelValid(betterModel):
