@@ -116,24 +116,30 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	tMin = min( d[0] for d in data )
 	tMax = max( d[0] for d in data )
 	
-	def modelValid( model ):
+	def modelValid( model, inliers=None ):
 		if model[0] >= 0:
 			return False	# Parabola cannot open up
+		
 		apexX = -model[1] / (2.0 * model[0])
-		# Estimated point must be in time range, value at estimation must be reasonable db.
-		return (tMin <= apexX <= tMax) and np.poly1d(model)(apexX) <= 0.0
+		if np.polyval(model, apexX) > 0.0:
+			return False	# db value must be reasonable.
+		
+		# Estimated point must be in range of samples.
+		return (tMin <= apexX <= tMax) if inliers is None else (min(x[inliers]) <= apexX <= max(x[inliers]))
 	
 	np.random.seed( 123456789 )
+	
 	# Number of points used to define a proposed model.
 	n = max( lenData // 10, 3 )
 	
-	t = 4					# Distance from parabolic curve where a point is considered an inlier.
+	t = 3					# Distance from parabolic curve where a point is considered an inlier.
 	
+	minD = int(lenData * 0.75)	# Minimum number of points that must be matched to consider the model valid.
 	bestErr = np.inf		# Best Sum of abs Residuals.
 	bestModel = None		# Cooefs of the parabolic
-	bestD = 0				# Best number of points within threshold distance of model.
-	minD = int(lenData * 0.75)	# Minimum number of points matched.
+	bestD = minD			# Best number of points within threshold distance of model.  Initialize to minimum.
 	
+	# Convert input to numpy.
 	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
 	
@@ -145,58 +151,54 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	K = np.inf		# Minimum number of samples required to find an uncontaminated model.
 	samples = 0
 	
-	KBad = lenData * 2	# Max number of allowed bad samples (invalid models).
+	KBad = lenData	# Max number of allowed bad samples (invalid models).
 	samplesBad = 0
 	
 	while samples < K and samplesBad < KBad:
 		np.random.shuffle( indexes )
-		maybeInliers = np.resize( indexes, n )
+		maybeInliers = indexes[:n]
 		maybeModel = np.polyfit(x[maybeInliers], y[maybeInliers], 2)
 		if not modelValid(maybeModel):
 			samplesBad += 1
 			continue
 		
-		samples += 1
-
 		# Get all points within range of model.
 		alsoInliers = np.abs(np.polyval(maybeModel, x)-y) < t
 		curD = sum( alsoInliers )
 		
-		if curD >= minD and curD >= bestD:
+		if curD >= bestD:
 		
 			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
-			if not modelValid(betterModel):
+			if not modelValid(betterModel, alsoInliers):
 				samplesBad += 1
 				continue
 			
-			if curD > bestD:
+			if curD > bestD or bestModel is None:
 				bestD = curD
+				bestErr = np.inf	# Ensure we accept this better fitting model.
+				
 				# Use adaptive estimation to update number of samples required to find
 				# a sample model with uncontaminated points.
 				if curD < lenData:
 					w = float(curD) / float(lenData)
-					K = 2.0 * log( 1.0 - P ) / log( 1.0 - w ** n)	# Multiply by 2 for extra safety.
+					K = 2.0 * log(1.0 - P) / log(1.0 - w**n)	# Multiply by 2 for extra safety.
 				else:
 					K = samples		# We have a model that includes all points - time to quit.
 				
 			thisErr = np.sum(np.abs(np.polyval(betterModel, x[alsoInliers])-y[alsoInliers]))
-			if curD == bestD or thisErr < bestErr:
+			if thisErr < bestErr:
 				bestModel = betterModel
 				bestErr = thisErr
+		
+		samples += 1
 
-	# Check if the apex is within range of inliers.
-	if bestModel is not None:
-		apexX = -bestModel[1] / (2.0 * bestModel[0])
-		inliers = np.abs(np.polyval(bestModel, x)-y) < t
-		if not (min(x[inliers]) <= apexX <= max(x[inliers])):
-			bestModel = None
-	
 	samplesTotal += lenData
 	inliersTotal += 0 if bestModel is None else bestD
 	
 	if returnDetails:
 		if bestModel is None:
 			return None, None, None
+		inliers = np.abs(np.polyval(bestModel, x)-y) < t
 		inliers = tuple( zip(x[inliers], y[inliers]) )
 		inliersSet = set( inliers )
 		outliers = tuple( d for d in data if d not in inliersSet )
@@ -209,64 +211,6 @@ def QuadRegExtreme( data, f=QuadRegRemoveOutliersRansac ):
 	if a >= 0.0:
 		raise ValueError( 'invalid quadratic: cannot open up' )
 	return -b / (2.0 * a)
-
-'''
-def QuadRegRemoveOutliersCooks( data ):
-	lenData = len(data)
-	if lenData < 4:
-		raise ValueError( 'data must have >= 4 values' )
-	
-	k = 3.0		# Degrees of freedom.
-		
-	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
-	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
-	
-	while len(x) >= 4:		
-		# Compute the original best-fit.
-		coefs = np.polyfit(x, y, 2)
-		p = np.poly1d( coefs )
-		lenX = len(x)
-
-		# Get residuals.
-		R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, len(x) )
-
-		# Compute the leverage (scale the residuals to a standard normal distribution)..
-		leverage = (R -  np.mean(R)) / np.std(R)
-		
-		# Compute the MSE (mean squared error) of the model.
-		mse = np.doc(R,R) / lenX
-		#DMax = 4.0 / (lenX - k)
-		
-		# Threshold for considering a point an outlier.
-		DMax = 1.0
-		
-		outliers = []
-		mask = np.ones( len(x), dtype=bool )	
-		for i in xrange(len(x)):
-			# Compute a best-fit without point i.
-			mask[i] = False
-			p_i = np.poly1d( np.polyfit(x[mask], y[mask], 2) )
-			mask[i] = True
-			
-			# Compute Cook's Distance on removed point.
-			print 'leverage', leverage[i], (leverage[i] / (1-leverage[i])**2)
-			D = sum( (y[i] - p_i(v)) ** 2 for i, v in enumerate(x) ) / ((lenX+3.0) * mse) * (leverage[i] / (1-leverage[i])**2)
-			print D, DMax
-			if D > DMax:	# Classify as outlier if point exceeds threshold.
-				outliers.append( i )
-		
-		print 'QuadRegRemoveOutliersCooks: outliers:', outliers
-		if not outliers:
-			return coefs
-		
-		# Eliminate outliers and continue.
-		for i in outliers:
-			mask[i] = False
-		x = x[mask]
-		y = y[mask]
-	
-	return np.polyfit(x, y, 2)
-'''
 	
 if __name__ == '__main__':
 	data = '''i	Temperature	Yield
