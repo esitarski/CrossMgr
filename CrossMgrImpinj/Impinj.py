@@ -309,12 +309,19 @@ class Impinj( object ):
 			return False
 			
 		# Get the C1G2UHFRFModeTable and extract available mode identifiers.
-		success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All ))
-		if not success:
-			return False
-		modeIdentifiers = [e.ModeIdentifier for e in response.getFirstParameterByClass(C1G2UHFRFModeTable_Parameter).Parameters]
-		gdc = response.getFirstParameterByClass(GeneralDeviceCapabilities_Parameter)
-		maxNumberOfAntennaSupported = gdc.MaxNumberOfAntennaSupported
+		modeIdentifiers = None
+		gdc = None
+		maxNumberOfAntennaSupported = 4
+		try:
+			success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All))
+			if success:
+				modeIdentifiers = [e.ModeIdentifier for e in response.getFirstParameterByClass(C1G2UHFRFModeTable_Parameter).Parameters]
+				gdc = response.getFirstParameterByClass(GeneralDeviceCapabilities_Parameter)
+				maxNumberOfAntennaSupported = gdc.MaxNumberOfAntennaSupported
+			else:
+				self.messageQ.put( ('Impinj', 'Send command fails.') )
+		except Exception as e:
+			self.messageQ.put( ('Impinj', 'GET_READER_CAPABILITIES Exception: {}:\n{}'.format(e, traceback.format_exc())) )
 				
 		# Configure our new rospec.
 		if ProcessingMethod == FirstReadMethod:
