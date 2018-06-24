@@ -319,7 +319,7 @@ class Impinj( object ):
 				gdc = response.getFirstParameterByClass(GeneralDeviceCapabilities_Parameter)
 				maxNumberOfAntennaSupported = gdc.MaxNumberOfAntennaSupported
 			else:
-				self.messageQ.put( ('Impinj', 'Send command fails.') )
+				self.messageQ.put( ('Impinj', 'GET_READER_CAPABILITIES fails.') )
 		except Exception as e:
 			self.messageQ.put( ('Impinj', 'GET_READER_CAPABILITIES Exception: {}:\n{}'.format(e, traceback.format_exc())) )
 				
