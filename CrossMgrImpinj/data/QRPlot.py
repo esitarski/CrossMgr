@@ -2,6 +2,7 @@ import wx
 import sys
 import os
 import numpy as np
+import random
 
 sys.path.append( os.path.dirname(os.path.dirname(os.path.abspath(__file__))) )
 from QuadReg import QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
@@ -34,6 +35,9 @@ for c in colorTable.split('\n'):
 	r, g, b = [int(v) for v in ct.split(',')]
 	colors.append( wx.Colour(r, g, b) )
 
+random.seed( 0xed )
+random.shuffle( colors )
+	
 def readData( fname ):
 	data = {}
 	tMin, tMax = 1000*24*60*60.0, -1000*24*60*60.0
@@ -48,8 +52,9 @@ def readData( fname ):
 			fields = line.split(',')
 			
 			Reader = int(fields[0])
-			#if Reader != 21:
-			#	continue
+			if Reader != 21: continue
+			if fields[-2]:	continue			# Alg
+			
 			EPC = fields[1]
 			t = fields[3]
 			t = int(t[:2]) * 60 * 60 + int(t[2:4]) * 60 + float(t[4:])
@@ -103,13 +108,14 @@ class PlotPanel( wx.Panel ):
 		self.Refresh()
 	
 	def onPaint(self, event):
+		width, height = wx.GetDisplaySize()
 		w, h = self.GetClientSize()
 		dc = wx.AutoBufferedPaintDC(self)
 		dc.SetBackground( wx.WHITE_BRUSH )
 		dc.Clear()
 		
-		tScale = 2000000 / (self.data['tMax'] - self.data['tMin'])
-		dbScale = h / (self.data['dbMax'] - self.data['dbMin'])
+		tScale = float(width/2.0)	# pixels per second
+		dbScale = float(h / (self.data['dbMax'] - self.data['dbMin']))
 		
 		def tToX( t ):
 			return int((t - self.tLeft) * tScale + 0.5)
@@ -137,7 +143,7 @@ class PlotPanel( wx.Panel ):
 						inliers = [coordsCur[iMax]]
 						outliers = [v for v in coordsCur if v not in inliers]
 					
-					col = colors[(int(EPC, 16)+reader) % len(colors)]
+					col = colors[(iCount+reader) % len(colors)]
 					dc.SetPen( wx.TRANSPARENT_PEN )
 					dc.SetBrush( wx.Brush(col) )
 					for t, db in inliers:
@@ -195,7 +201,8 @@ class PlotPanel( wx.Panel ):
 					
 					#---------------------------------------------------------------------------------
 					#dc.DrawText( EPC, tToX(apex_t), h - fontHeight * (iCount%4) )
-					#iCount += 1
+					
+					iCount += 1
 
 	def setData( self, data ):
 		self.data = data
@@ -233,7 +240,9 @@ def MainLoop():
 	app = wx.App(False)
 	app.SetAppName("QRPlot")
 	mainWin = PlotFrame( None, title='QRPlot', size=(800,min(int(wx.GetDisplaySize()[1]*0.85),1000)) )
-	mainWin.setData( readData('Impinj-2018-05-29-18-12-21.txt') )
+	#fname = 'Impinj-2018-05-29-18-12-21.txt'
+	fname = 'M12-contested.csv'
+	mainWin.setData( readData(fname) )
 	mainWin.Show()
 	app.MainLoop()
 

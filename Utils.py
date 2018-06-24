@@ -776,10 +776,10 @@ if sys.platform == 'darwin':
 
 def LaunchApplication( fnames ):
 	for fname in (fnames if isinstance(fnames, list) else [fnames]):
-		if os.name is 'nt':
+		if os.name is 'nt':							# Windows.
 			subprocess.call(('cmd', '/C', 'start', '', fname))
 		elif sys.platform.startswith('darwin'):
-			subprocess.call(('open', fname))
+			subprocess.call(('open', fname))		# Apple
 		else:
 			subprocess.call(('xdg-open', fname))	# Linux
 

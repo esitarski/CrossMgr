@@ -67,7 +67,7 @@ class _FieldDef( object ):
 			length = s.read( 'uintbe:16' )
 			eftype = 'bytes:%d' % length
 			st = s.read( eftype )
-			setattr( obj, attr, str(st) )
+			setattr( obj, attr, str(st).rstrip('\x00') )
 		elif ftype.startswith('array'):
 			length = s.read( 'uintbe:16' )
 			eftype = 'uintbe:%s' % ftype.split(':')[1]

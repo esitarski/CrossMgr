@@ -653,6 +653,7 @@ class MainWin( wx.Frame ):
 		
 	def doCopyToClipboard( self, event ):
 		cc = [
+			AppVerName,
 			'Configuration: CrossMgrImpinj',
 			'    RunningTime:   {}'.format(self.runningTime.GetLabel()),
 			'    Time:          {}'.format(self.time.GetLabel()),
