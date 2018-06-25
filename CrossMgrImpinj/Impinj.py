@@ -310,7 +310,6 @@ class Impinj( object ):
 			
 		# Get the C1G2UHFRFModeTable and extract available mode identifiers.
 		modeIdentifiers = None
-		gdc = None
 		maxNumberOfAntennaSupported = 4
 		try:
 			success, response = self.sendCommand(GET_READER_CAPABILITIES_Message(RequestedData = GetReaderCapabilitiesRequestedData.All))
