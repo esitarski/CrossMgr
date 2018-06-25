@@ -232,49 +232,54 @@ def _getValues( self ):
 	''' Get all specified values of an LLRP object. '''
 	return [(f.Name, getattr(self, f.Name)) for f in self.FieldDefs if not f.Type.startswith('skip')]
 
-def _getRepr( self, indent = '' ):
+def _getRepr( self, indent = 0 ):
 	''' Get the representation of an LLRP object. '''
 	# Check for the number of values
 	values = self._getValues()
 	numValues = len(values) + (1 if hasattr(self, '_MessageID') else 0)
 	
 	s = StringIO()
+	def w( v ):
+		s.write( v )
+	def iw( v ):
+		s.write( '    ' * indent )
+		s.write( v )
 	
 	if numValues > 1 or self.Parameters:
 		# Output in long form (one line per value and parameter).
-		s.write( '%s%s(\n' % (indent, self.Name) )
+		iw( '{}(\n'.format(self.Name) )
 		try:
-			s.write( '%s  %s=%s,\n' % (indent, 'MessageID', repr(self._MessageID)) )
+			iw( '  {}={},\n'.format('MessageID', repr(self._MessageID)) )
 		except AttributeError:
 			pass
 			
 		for f in self.DataFields:
 			if f.Enum:
-				s.write( '%s  %s=%s.%s,\n' % (indent, f.Name, f.Enum._name, f.Enum.getName(getattr(self, f.Name))) )
+				iw( '  {}={}.{},\n'.format(f.Name, f.Enum._name, f.Enum.getName(getattr(self, f.Name))) )
 			elif f.Name == 'ParameterType':
 				v = getattr(self, f.Name)
-				s.write( '%s  %s=%s, # %s\n' % (indent, f.Name, repr(v), _parameterClassFromType[v].Name ) )
+				iw( '{}={}, # {}\n'.format(f.Name, repr(v), _parameterClassFromType[v].Name ) )
 			else:
-				s.write( '%s  %s=%s,\n' % (indent, f.Name, repr(getattr(self, f.Name)) ) )
+				iw('  {}={},\n'.format(f.Name, repr(getattr(self, f.Name)) ) )
 		if self.Parameters:
-			s.write( '%s  Parameters=[\n' % indent )
+			iw( '  Parameters=[\n' )
 			for p in self.Parameters:
-				s.write( p._getRepr( indent + '    ' ) )
-			s.write( '%s  ]\n' % indent )
-		s.write( '%s)%s\n' % (indent, ',' if indent else '') )
+				s.write( p._getRepr( indent + 1 ) )
+			iw( '  ]\n' )
+		iw( '){}\n'.format(',' if indent else '') )
 	else:
 		# Output in short form as there is only one value.
-		s.write( '%s%s( ' % (indent, self.Name) )
+		iw( '{}( '.format(self.Name) )
 		try:
-			s.write( ' %s=%s )\n' % ('MessageID', repr(self._MessageID)) )
+			w( ' {}={} )\n'.format('MessageID', repr(self._MessageID)) )
 		except AttributeError:
 			pass
 			
 		for f in self.DataFields:
 			if f.Enum:
-				s.write( '%s=%s.%s ),\n' % (f.Name, f.Enum._name, f.Enum.getName(getattr(self, f.Name))) )
+				w( '{}={}.{} ),\n'.format(f.Name, f.Enum._name, f.Enum.getName(getattr(self, f.Name))) )
 			else:
-				s.write( '%s=%s ),\n' % (f.Name, repr(getattr(self, f.Name)) ) )
+				w( '{}={} ),\n'.format(f.Name, repr(getattr(self, f.Name)) ) )
 		
 	return s.getvalue()
 	
