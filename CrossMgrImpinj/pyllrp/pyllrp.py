@@ -65,27 +65,27 @@ class _FieldDef( object ):
 			setattr( obj, attr, s.read(ftype) )
 		elif ftype == 'string':
 			length = s.read( 'uintbe:16' )
-			eftype = 'bytes:%d' % length
+			eftype = 'bytes:{}'.format(length)
 			st = s.read( eftype )
 			setattr( obj, attr, str(st).rstrip('\x00') )
 		elif ftype.startswith('array'):
 			length = s.read( 'uintbe:16' )
-			eftype = 'uintbe:%s' % ftype.split(':')[1]
+			eftype = 'uintbe:{}'.format(ftype.split(':')[1])
 			arr = []
 			for i in xrange(length):
 				arr.append( s.read(eftype) )
 			setattr( obj, attr, arr )
 		elif ftype == 'bitarray':
 			length = s.read( 'uintbe:16' )
-			eftype = 'bits:%d' % length
+			eftype = 'bits:{}'.format(length)
 			bstr = s.read( eftype )
 			setattr( obj, attr, bstr.tobytes() )
 		elif ftype.startswith('skip'):
 			skip = int(ftype.split(':',1)[1])
-			s.read( 'int:%d' % skip )
+			s.read( 'int:{}'.format(skip) )
 		elif ftype == 'bytesToEnd':
 			assert bytesRemaining is not None, 'bytesToEnd type requires bytesRemaining to be set'
-			b = s.read( 'bytes:%d' % bytesRemaining )				# Read as bytes.
+			b = s.read( 'bytes:{}'.format(bytesRemaining) )				# Read as bytes.
 			setattr( obj, attr, bitstring.BitStream(bytes=b) )		# Set attr to a bitstream.
 		else:
 			assert False
@@ -126,7 +126,7 @@ class _FieldDef( object ):
 			elif ftype.startswith('skip'):
 				skip = int(ftype.split(':',1)[1])
 				assert skip > 0
-				s.append( bitstring.pack('int:%d=0'%skip) )
+				s.append( bitstring.pack('int:{}=0'.format(skip) ) )
 			elif ftype == 'bytesToEnd':
 				s.append( getattr(obj, attr) )		# assume the field is a bitstream
 			else:
@@ -153,7 +153,7 @@ class _FieldDef( object ):
 			assert False
 			setattr( obj, attr, bitstring.BitStream() )
 		else:
-			assert ftype.startswith('skip'), 'Unknown field type: "%s"' % ftype
+			assert ftype.startswith('skip'), 'Unknown field type: "{}"'.format(ftype)
 			
 	def __repr__( self ):
 		return u'FieldDef( "{}", "{}" )'.format( self.Name, self.Type )
@@ -185,7 +185,7 @@ class _EnumDef( object ):
 		return value in self._valueToName
 		
 	def __repr__( self ):
-		return '{}:\n  {}\n'.format(self._name, '\n  '.join( '%s=%s' % (name, str(value)) for value, name in self._choices))
+		return '{}:\n  {}\n'.format(self._name, '\n  '.join( '{}={}'.format(name, str(value)) for value, name in self._choices))
 
 #----------------------------------------------------------------------------------
 # Guarantees a unique id even across multiple threads in CPython.
@@ -303,39 +303,39 @@ def _validate( self, path = None ):
 			continue
 		name = f.Name
 			
-		assert hasattr(self, name), '%s: Missing attribute: %s' % ('.'.join(path), name)
+		assert hasattr(self, name), '{}: Missing attribute: {}'.format('.'.join(path), name)
 		
 		if f.Enum:
-			assert f.Enum.getName(getattr(self, name)), '%s: field "%s" must have value in enumeration: %s' % ('.'.join(path), name, f.Enum)
+			assert f.Enum.getName(getattr(self, name)), '{}: field "{}" must have value in enumeration: {}'.format('.'.join(path), name, f.Enum)
 		
 		if ftype.startswith('uintbe') or ftype.startswith('intbe') or ftype.startswith('bits'):
-			assert isinstance( getattr(self, name), (int, long) ), '%s: field "%s" must be "int" type, not "%s"' % (
+			assert isinstance( getattr(self, name), (int, long) ), '{}: field "{}" must be "int" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bool':
-			assert isinstance( getattr(self, name), bool ), '%s: field "%s" must be "bool" type, not "%s"' % (
+			assert isinstance( getattr(self, name), bool ), '{}: field "{}" must be "bool" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype.startswith('array'):
 			arr = getattr(self, name)
-			assert isinstance( arr, list ), '%s: field "%s" must be "list" type, not "%s"' % (
+			assert isinstance( arr, list ), '{}: field "{}" must be "list" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 			for i, e in enumerate(arr):
-				assert isinstance( e, (int, long) ), '%s: field "%s" must contain all "ints" or "longs" (not "%s" at position %d)' % (
+				assert isinstance( e, (int, long) ), '{}: field "{}" must contain all "ints" or "longs" (not "{}" at position {})'.format(
 						'.'.join(path), name, e.__class__.__name__, i)
 		elif ftype == 'string':
-			assert isinstance( getattr(self, name), basestring ), '%s: field "%s" must be "string" type, not "%s"' % (
+			assert isinstance( getattr(self, name), basestring ), '{}: field "{}" must be "string" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bitarray':
-			assert isinstance( getattr(self, name), bytes ), '%s: field "%s" must be "bytes" type, not "%s"' % (
+			assert isinstance( getattr(self, name), bytes ), '{}: field "{}" must be "bytes" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bytesToEnd':
-			assert isinstance( getattr(self, namt), bitstream.BitStream ), '%s: bytesToEnd field "%s" must be "bitstream.BitStream" type, not "%s"' % (
+			assert isinstance( getattr(self, namt), bitstream.BitStream ), '{}: bytesToEnd field "{}" must be "bitstream.BitStream" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		else:
-			assert False, '%s: Unknown field ftype: "%s"' % ('.'.join(path), ftype)
+			assert False, '{}: Unknown field ftype: "{}"'.format('.'.join(path), ftype)
 			
 	# Check that the number and type of parameters match the constraints.
 	if self.ParameterDefs is None:
-		assert not self.Parameters, '%s: No Parameters are allowed.' % '.'.join(path)
+		assert not self.Parameters, '{}: No Parameters are allowed.'.format('.'.join(path))
 	else:
 		i, iMax = 0, len(self.Parameters)
 		for p in self.ParameterDefs:
@@ -385,7 +385,7 @@ def _getLLRPStatusSuccess( self ):
 	for p in self.Parameters:
 		if isinstance( p, LLRPStatus_Parameter ):
 			return p.StatusCode == StatusCode.M_Success
-	assert False, 'Message "%s" has no LLRPStatus parameter.' % self.__class__.__name__
+	assert False, 'Message "{}" has no LLRPStatus parameter.'.format(self.__class__.__name__)
 
 def _getAllParametersByClass( self, parameterClass ):
 	for p in self.Parameters:
