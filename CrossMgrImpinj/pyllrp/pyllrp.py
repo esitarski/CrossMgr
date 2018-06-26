@@ -167,8 +167,8 @@ class _EnumDef( object ):
 	def __init__( self, name, choices ):
 		self._name = name
 		self._choices = choices
-		self._valueToName = dict( (value, name) for value, name in choices )
-		self._nameToValue = dict( (name, value) for value, name in choices )
+		self._valueToName = { value:name for value, name in choices }
+		self._nameToValue = { name:value for value, name in choices }
 		
 	def __getattr__( self, attr ):
 		return self._nameToValue[attr]
@@ -177,9 +177,11 @@ class _EnumDef( object ):
 		if isinstance(value, list):
 			return '[{}]'.format( ','.join( self.getName(v) for v in value ) )
 		try:
+			if isinstance(value, bool) and len(self._choices) == 2:
+				value = int(value)
 			return self._valueToName[value]
 		except KeyError:
-			return 'UnknownValue={}'.format( value )
+			return 'UnknownEnum={}'.format( value )
 		
 	def valid( self, value ):
 		return value in self._valueToName
@@ -787,6 +789,8 @@ def WaitForMessage( MessageID, sock, nonMatchingMessageHandler = None ):
 #-----------------------------------------------------------------------------
 
 def HexFormatToStr( value ):
+	if isinstance(value, bool):
+		return '1' if value else '0'
 	if isinstance(value, (int, long)):
 		return '{:X}'.format(value)
 	return ''.join( [ "%02X" % ord(x) for x in value ] ).lstrip('0')
