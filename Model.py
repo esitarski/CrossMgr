@@ -606,6 +606,7 @@ class Rider(object):
 	firstTime = None				# Used for time trial mode.  Also used to flag the first start time.
 	relegatedPosition = None
 	autocorrectLaps = True
+	alwaysFilterMinPossibleLapTime = True	# If True, short laps will always be filtered even if autocorrectLaps is off.
 	
 	def __init__( self, num ):
 		self.num = num
@@ -870,8 +871,10 @@ class Rider(object):
 			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
 			iTimes = [race.getStartOffset(self.num) if race else 0.0]
-			iTimes[1:] = self.times
-			iTimes = self.removeEarlyTimes( iTimes )
+			minPossibleLapTime = race.minPossibleLapTime if self.alwaysFilterMinPossibleLapTime else 0.0
+			for t in self.times:
+				if t - iTimes[-1] > minPossibleLapTime:
+					iTimes.append( t )		
 			iTimes = [(t, False) for t in iTimes]
 			if dnfPulledTime is not None:
 				iTimes = self.removeLateTimes( iTimes, dnfPulledTime )
