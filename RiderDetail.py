@@ -355,6 +355,10 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
 		
+		self.alwaysFilterMinPossibleLapTime = wx.CheckBox( self, label = _('Filter on Min Possble Lap Time') )
+		gbs.Add( self.alwaysFilterMinPossibleLapTime, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
+		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
+		
 		self.showPhotos = wx.Button( self, label = u'{}...'.format(_('Show Photos')) )
 		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_BUTTON, self.onShowPhotos, self.showPhotos )
@@ -944,11 +948,13 @@ class RiderDetail( wx.Panel ):
 		num = self.num.GetValue()
 		if not Model.race or num not in Model.race:
 			self.autocorrectLaps.SetValue( True )
+			self.alwaysFilterMinPossibleLapTime.SetValue( True )
 			return
 		undo.pushState()
 		with Model.LockRace() as race:
 			rider = race.riders[num]
 			rider.autocorrectLaps = self.autocorrectLaps.GetValue()
+			rider.alwaysFilterMinPossibleLapTime = self.alwaysFilterMinPossibleLapTime.GetValue()
 			race.setChanged()
 		self.refresh()
 		wx.CallAfter( Utils.refreshForecastHistory )
@@ -1198,6 +1204,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.Reset()
 		self.category.Clear()
 		self.autocorrectLaps.SetValue( True )
+		self.alwaysFilterMinPossibleLapTime.SetValue( True )
 		num = self.num.GetValue()
 		
 		self.statusOption.SetSelection( 0 )
@@ -1305,6 +1312,7 @@ class RiderDetail( wx.Panel ):
 				self.setAtRaceTime( rider.tStatus, True )
 				
 			self.autocorrectLaps.SetValue( rider.autocorrectLaps )
+			self.alwaysFilterMinPossibleLapTime.SetValue( rider.alwaysFilterMinPossibleLapTime )
 			
 			isTimeTrial = race.isTimeTrial
 			if isTimeTrial:
