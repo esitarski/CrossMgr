@@ -568,17 +568,6 @@ class Entry(object):
 	def __repr__( self ):
 		return u'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
 
-def timeFilter( times, minPossibleLapTime ):
-	a = array.array('d')
-	if len(times) < 2:
-		return a
-	itimes = iter(times)
-	a.append( next(itimes) )
-	for t in itimes:
-		if t - a[-1] >= minPossibleLapTime:
-			a.append( t )
-	return a if len(a)>=2 else []
-
 class Rider(object):
 	# Rider Status.
 	Finisher  = 0
