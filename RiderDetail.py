@@ -353,7 +353,7 @@ class RiderDetail( wx.Panel ):
 		
 		self.autocorrectLaps = wx.CheckBox( self, label = _('Autocorrect Lap Data') )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
-		self.alwaysFilterMinPossibleLapTime = wx.CheckBox( self, label = _('Always Filter on Min Possble Lap Time') )
+		self.alwaysFilterMinPossibleLapTime = wx.CheckBox( self, label = _('Always Filter on Min Possble Lap Time'), style=wx.ALIGN_RIGHT )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.alwaysFilterMinPossibleLapTime )
 		
 		vb = wx.BoxSizer( wx.VERTICAL )
