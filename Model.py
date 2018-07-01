@@ -871,7 +871,7 @@ class Rider(object):
 			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
 			iTimes = [race.getStartOffset(self.num) if race else 0.0]
-			minPossibleLapTime = race.minPossibleLapTime if self.alwaysFilterMinPossibleLapTime else 0.0
+			minPossibleLapTime = max( 1.0, race.minPossibleLapTime if self.alwaysFilterMinPossibleLapTime else 0.0 )
 			for t in self.times:
 				if t - iTimes[-1] > minPossibleLapTime:
 					iTimes.append( t )		
