@@ -352,12 +352,14 @@ class RiderDetail( wx.Panel ):
 		row += 1
 		
 		self.autocorrectLaps = wx.CheckBox( self, label = _('Autocorrect Lap Data') )
-		gbs.Add( self.autocorrectLaps, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
+		self.alwaysFilterMinPossibleLapTime = wx.CheckBox( self, label = _('Always Filter on Min Possble Lap Time') )
+		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.alwaysFilterMinPossibleLapTime )
 		
-		self.alwaysFilterMinPossibleLapTime = wx.CheckBox( self, label = _('Filter on Min Possble Lap Time') )
-		gbs.Add( self.alwaysFilterMinPossibleLapTime, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_CENTRE|wx.EXPAND )
-		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
+		vb = wx.BoxSizer( wx.VERTICAL )
+		vb.Add( self.autocorrectLaps, flag=wx.ALL, border=2 )
+		vb.Add( self.alwaysFilterMinPossibleLapTime, flag=wx.ALL, border=2 )
+		gbs.Add( vb, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_RIGHT )
 		
 		self.showPhotos = wx.Button( self, label = u'{}...'.format(_('Show Photos')) )
 		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )

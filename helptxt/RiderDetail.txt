@@ -142,6 +142,14 @@ Say that rider did a 6:06 lap.  With the two extra reads, the average lap time w
 
 As outlined above, CrossMgr knows how to do this mathematically.
 
+### Always Filter on Min Possble Lap Time
+If selected, CrossMgr will ignore laps shorter than Min. Possible Lap filter __even if__ Autocorrect Lap Data is off.
+
+Min. Possible Lap Time can be set in [Properties][]
+
+This is especially helpful if you want to filter out spurious RFID reads, but do not want CrossMgr to autocorrect what it believes are missing lap splits.
+__Always Filter on Min Possble Lap Time__ has no effect if __Autocorrect Lap Data__ is selected, as autocorrect already ignores laps shorter than Min Possible Lap Time.
+
 ## Time Entries (bottom left of screen)
 
 Projected, auto-corrected and manually edited times are shown highlighted in yellow.  This indicates that some adjustment has been made to the times that were not present in the originally collected data.
