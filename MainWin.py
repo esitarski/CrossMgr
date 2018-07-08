@@ -1200,16 +1200,35 @@ class MainWin( wx.Frame ):
 				OutputStreamer.getFileName()), _("No Data Found")
 			)
 			return
+		self.showPageName( _('Actions') )
 		undo.pushState()
+		
+		DNS, Finisher = Model.Rider.DNS, Model.Rider.Finisher
 		with Model.LockRace() as race:
 			race.clearAllRiderTimes()
-			race.startTime = startTime
-			race.endTime = endTime
+			
+			SyncExcelLink( race )
+			
+			race.startTime = race.endTime = None
+			if race.isTimeTrial:
+				AutoImportTTStartTimes()
+			race.startTime, race.endTime = startTime, endTime
+			
 			for num, t in numTimes:
+				rider = race.getRider( num )
+				if race.isTimeTrial:
+					try:
+						t += rider.firstTime
+					except:
+						pass
+				if rider.status == DNS:
+					rider.status = Finisher
 				race.addTime( num, t )
 			race.numLaps = race.getMaxLap()
 			race.setChanged()
-		wx.CallAfter( self.refresh )
+		
+		self.refreshAll()
+		self.showPageName( _('Results') )
 			
 	def menuChangeProperties( self, event ):
 		if not Model.race:
