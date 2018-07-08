@@ -2327,6 +2327,7 @@ class Race( object ):
 			intro.append( u'{}: {}'.format(_('Category Laps'), ', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
 		else:
 			intro.append( u'{}: {} min'.format(_('Duration'), self.minutes) )
+		intro.append( u'{}: {}'.format( 'Min Possible Lap Time', Utils.formatTime(self.minPossibleLapTime)) )
 		return u'\n'.join( intro )
 	
 	def getNextExpectedLeaderTNL( self, t ):
