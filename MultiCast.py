@@ -44,15 +44,19 @@ class MultiCastSender( threading.Thread ):
 	
 	def getReceivers( self, sock ):
 		# Send our current time so the receivers can compute a clock correction.
+		receivers = []
+		
 		tNow = now()
 		message = [
 			'idrequest',
 			{ 'ts_sender': [tNow.year, tNow.month, tNow.day, tNow.hour, tNow.minute, tNow.second, tNow.microsecond] }
 		]
-		sent = sock.sendto(json.dumps(message), (multicast_group, multicast_port))
+		try:
+			sent = sock.sendto(json.dumps(message), (multicast_group, multicast_port))
+		except Exception as e:
+			return receivers
 		
 		# Look for responses from all recipients
-		receivers = []
 		while 1:
 			try:
 				data, server = sock.recvfrom(4096)

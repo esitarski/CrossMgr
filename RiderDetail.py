@@ -217,6 +217,7 @@ class ChangeOffsetDialog( wx.Dialog ):
 class RiderDetail( wx.Panel ):
 	yellowColour = wx.Colour( 255, 255, 0 )
 	orangeColour = wx.Colour( 255, 165, 0 )
+	ignoreColour = wx.Colour( 180, 180, 180 )
 		
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
@@ -477,7 +478,11 @@ class RiderDetail( wx.Panel ):
 		row = event.GetRow()
 		if row >= self.grid.GetNumberRows():
 			return None
-		return row + 1
+		lapValue = self.grid.GetCellValue(row, self.nameCol['Lap']).strip()
+		try:
+			return int(lapValue)
+		except:
+			return None
 		
 	ids = []
 	def NewId( self ):
@@ -532,14 +537,14 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(self.NewId(), _('Add Missing Last Lap'),		_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
+				(self.NewId(), _('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None, None),
-				(self.NewId(), _('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, allCases),
+				(self.NewId(), _('Pull After Lap') + u'...',_('Pull After lap'),	self.OnPopupPull, allCases),
 				(self.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None, None),
-				(self.NewId(), _('Correct') + u'...',			_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
+				(self.NewId(), _('Correct') + u'...',		_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
 				(self.NewId(), _('Shift') + u'...',			_('Move lap time earlier/later') + u'...',	self.OnPopupShift, interpCase),
-				(self.NewId(), _('Delete') + u'...',			_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
+				(self.NewId(), _('Delete') + u'...',		_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None, None),
 				(self.NewId(), _('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
@@ -1351,9 +1356,25 @@ class RiderDetail( wx.Panel ):
 				
 			maxLap = (maxLap or 0)		# Ensure that maxLap is not None
 			
+			raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else 0.0
+
 			startOffset = race.getStartOffset( num )
 			entries = GetEntries(waveCategory) if rider.autocorrectLaps else race.getRider(num).interpolate()
 			entries = [e for e in entries if e.num == num and e.t > startOffset]
+			
+			unfilteredTimes = [t for t in race.getRider(num).times if t > startOffset]
+			entryTimes = set( e.t for e in entries )
+			ignoredTimes = [t for t in unfilteredTimes if t not in entryTimes]
+			dataFields = []
+			for t in ignoredTimes:
+				fields = {c:u'\u2715' for c in self.nameCol.iterkeys()}
+				del fields['Lap']
+				fields.update( {
+					'Race': Utils.formatTime(t, highPrecisionTimes),
+					'Clock': Utils.formatTime(t + raceStartTimeOfDay, highPrecisionTimes),
+					'highlightColour': self.ignoreColour,
+				} )
+				dataFields.append( fields )
 			
 			# Figure out which laps this rider was lapped in.
 			leaderTimes, leaderNums = race.getLeaderTimesNums(waveCategory)
@@ -1376,8 +1397,6 @@ class RiderDetail( wx.Panel ):
 				notInLapStr = ''
 			self.notInLap.SetLabel( notInLapStr )
 			
-			raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else 0.0
-
 			# Populate the lap times.
 			try:
 				raceTime = min(waveCategory.getStartOffsetSecs() if waveCategory else 0.0, entries[0].t)
@@ -1387,7 +1406,6 @@ class RiderDetail( wx.Panel ):
 			ganttInterp = [False]
 			data = [ [] for c in xrange(len(self.colnames)) ]
 			graphData = []
-			backgroundColour = {}
 			numTimeInfo = race.numTimeInfo
 			tSum = 0.0
 			for r, e in enumerate(entries):
@@ -1406,32 +1424,38 @@ class RiderDetail( wx.Panel ):
 				ganttData.append( e.t )
 				ganttInterp.append( e.interp )
 				
-				highlightColour = None
 				if e.interp:
 					fields['Edit'] = _('Auto')
 					fields['By'] = u'CrossMgr'
-					highlightColour = self.yellowColour
+					fields['highlightColour'] = self.yellowColour
 				else:
 					info = numTimeInfo.getInfo( e.num, e.t )
 					if info:
 						fields['Edit'] = Model.NumTimeInfo.ReasonName[info[0]]
 						fields['By'] = info[1]
 						fields['On'] =  info[2].ctime()
-						highlightColour = self.orangeColour
+						fields['highlightColour'] = self.orangeColour
 						
 				fields['Note'] = getattr(race, 'lapNote', {}).get( (e.num, e.lap), u'' )
 				if distanceByLap:
 					fields['Lap Speed'] = u'{:.2f}'.format(1000.0 if tLap <= 0.0 else (waveCategory.getLapDistance(r+1) / (tLap / (60.0*60.0))))
 					fields['Race Speed'] = u'{:.2f}'.format(1000.0 if tSum <= 0.0 else (waveCategory.getDistanceAtLap(r+1) / (tSum / (60.0*60.0))))
 				
-				for name, i in self.nameCol.iteritems():
-					data[i].append( fields.get(name, u'') )
+				dataFields.append( fields )
 				
-				if highlightColour:
-					for i in xrange(len(self.colnames)):
-						backgroundColour[(r,i)] = highlightColour
 				raceTime = e.t
 
+			# Merge the ignored times with the actual times.
+			dataFields.sort( key=lambda x: (Utils.StrToSeconds(x.get('Race', '0')), int(x.get('Lap', '999999'))) )
+			backgroundColour = {}
+			for r, fields in enumerate(dataFields):
+				for name, i in self.nameCol.iteritems():
+					data[i].append( fields.get(name, u'') )
+				if fields.get('highlightColour',None):
+					highlightColour = fields.get('highlightColour',None)
+					for i in xrange(len(self.colnames)):
+						backgroundColour[(r,i)] = highlightColour
+			
 			self.grid.Set( data=data, backgroundColour=backgroundColour, colnames=self.colnames )
 			self.grid.AutoSizeColumns( True )
 			self.grid.Reset()
