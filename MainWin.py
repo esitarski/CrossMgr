@@ -1192,7 +1192,7 @@ class MainWin( wx.Frame ):
 				_("Restore from Original Input"), iconMask=wx.ICON_WARNING ):
 			return
 				
-		startTime, endTime, numTimes = OutputStreamer.ReadStreamFile()
+		startTime, finishTime, numTimes = OutputStreamer.ReadStreamFile()
 		if not numTimes:
 			Utils.MessageOK( self, u'{}.\n\n{} "{}".'.format(
 				_('No Data Found'),
@@ -1209,21 +1209,18 @@ class MainWin( wx.Frame ):
 			
 			SyncExcelLink( race )
 			
-			race.startTime = race.endTime = None
+			race.startTime = race.finishTime = None
 			if race.isTimeTrial:
 				AutoImportTTStartTimes()
-			race.startTime, race.endTime = startTime, endTime
+			race.startTime = startTime
 			
 			for num, t in numTimes:
 				rider = race.getRider( num )
-				if race.isTimeTrial:
-					try:
-						t += rider.firstTime
-					except:
-						pass
 				if rider.status == DNS:
 					rider.status = Finisher
 				race.addTime( num, t )
+			
+			race.finishTime = finishTime
 			race.numLaps = race.getMaxLap()
 			race.setChanged()
 		
