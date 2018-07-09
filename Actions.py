@@ -16,6 +16,7 @@ import Checklist
 from Clock import Clock
 from CountdownClock import CountdownClock, EVT_COUNTDOWN
 from SetNoDataDNS import SetNoDataDNS
+from Properties import PropertiesDialog
 
 undoResetTimer = None
 def StartRaceNow( page=_('Record') ):
@@ -246,7 +247,14 @@ class Actions( wx.Panel ):
 		
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
+		self.settingsButton = wx.BitmapButton( self.leftPanel, bitmap=Utils.GetPngBitmap('settings-icon.png') )
+		self.settingsButton.Bind( wx.EVT_BUTTON, self.onShowProperties )
+		
 		self.startRaceTimeCheckBox = wx.CheckBox(self.leftPanel, label = _('Start Race Automatically at Future Time'))
+
+		hsSettings = wx.BoxSizer( wx.HORIZONTAL )
+		hsSettings.Add( self.settingsButton, flag=wx.ALIGN_CENTER_VERTICAL )
+		hsSettings.Add( self.startRaceTimeCheckBox, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=12 )
 		
 		border = 8
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -257,7 +265,7 @@ class Actions( wx.Panel ):
 		hsClock = wx.BoxSizer(wx.HORIZONTAL)
 		hsClock.AddSpacer( 26 )
 		hsClock.Add( self.clock )
-		hsClock.Add(self.startRaceTimeCheckBox, border=4, flag=wx.LEFT)
+		hsClock.Add(hsSettings, border=4, flag=wx.LEFT )
 		bs.Add(hsClock, border=4, flag=wx.ALL)
 		
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
@@ -306,6 +314,16 @@ class Actions( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		return not mainWin or mainWin.isShowingPage(self)
 	
+	def onShowProperties( self, event ):
+		if not Model.race:
+			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			return
+		dlg = PropertiesDialog( self, showFileFields=False, updateProperties=True, size=(600,400) )
+		if dlg.ShowModal() == wx.ID_OK:
+			dlg.properties.doCommit()
+			Utils.refresh()
+		dlg.Destroy()
+
 	def onChipTimingOptions( self, event ):
 		if not Model.race:
 			return
