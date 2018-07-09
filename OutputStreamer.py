@@ -157,7 +157,7 @@ def ReadStreamFile( fname = None ):
 		fname = getFileName()
 	
 	startTime = None
-	endTime = None
+	finishTime = None
 	numTimes = []
 	try:
 		with open(fname, 'rb') as f:
@@ -176,17 +176,17 @@ def ReadStreamFile( fname = None ):
 						numTimes.append( (int(fields[1]), t) )
 					elif fields[0] == 'start':
 						startTime = gt( fields[1] )
-						endTime = None		# Reset the endTime and numTimes on start.
+						finishTime = None		# Reset the finishTime and numTimes on start.
 						numTimes = []
 					elif fields[0] == 'end':
-						endTime = gt( fields[1] )
+						finishTime = gt( fields[1] )
 				except (ValueError, IndexError):
 					pass
 	except IOError:
 		pass
 	if startTime is None and numTimes:
 		startTime = datetime.datetime.now() - datetime.timedelta( seconds = numTimes[0][1] )
-	return startTime, endTime, numTimes
+	return startTime, finishTime, numTimes
 	
 @atexit.register
 def CleanupStreamer():
