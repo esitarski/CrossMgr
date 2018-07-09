@@ -226,8 +226,12 @@ class RaceOptionsProperties( wx.Panel ):
 		self.winAndOut = wx.CheckBox( self, label=_("Win and Out") )
 		self.winAndOut.SetValue( False )
 
-		self.minPossibleLapTimeLabel = wx.StaticText( self, label=_('Min. Possible Lap Time (hh:mm:ss.ddd) ') )
+		self.minPossibleLapTimeLabel = wx.StaticText( self, label=_('Min. Possible Lap Time: ') )
 		self.minPossibleLapTime = HighPrecisionTimeEdit( self, seconds = 0.0 )
+		self.minPossibleLapTimeUnit = wx.StaticText( self, label=_('hh:mm:ss.ddd') )
+		mplths = wx.BoxSizer( wx.HORIZONTAL )
+		mplths.Add( self.minPossibleLapTime )		
+		mplths.Add( self.minPossibleLapTimeUnit, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 
 		self.licenseLinkTemplateLabel = wx.StaticText( self, label=_('License Link HTML Template: ') )
 		self.licenseLinkTemplate = wx.TextCtrl( self, size=(64,-1), style=wx.TE_PROCESS_ENTER )
@@ -257,8 +261,8 @@ class RaceOptionsProperties( wx.Panel ):
 			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showCourseAnimationInHtml,1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.winAndOut,				1, fieldAlign),
-			(self.minPossibleLapTimeLabel,0, labelAlign),(self.minPossibleLapTime,		0, 0),
-			(self.licenseLinkTemplateLabel,0, labelAlign),(self.licenseLinkTemplate,		1, fieldAlign),
+			(self.minPossibleLapTimeLabel,0, labelAlign),(mplths,						0, 0),
+			(self.licenseLinkTemplateLabel,0, labelAlign),(self.licenseLinkTemplate,	1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldBatchPublish )
 		
@@ -1294,6 +1298,12 @@ class Properties( wx.Panel ):
 	def onJChipIntegration( self, event ):
 		self.rfidProperties.autocorrectLapsDefault.SetValue( not self.rfidProperties.jchip.GetValue() )
 	
+	def setPage( self, pageName ):
+		for i, d in enumerate(self.propClassName):
+			if pageName in d:
+				self.notebook.SetSelection( i )
+				break
+	
 	def onPageChanging( self, event ):
 		'''
 		if Model.race:
@@ -1446,9 +1456,9 @@ class Properties( wx.Panel ):
 	def getFileName( self ):
 		return self.updateFileName()
 	
-	def refresh( self ):
+	def refresh( self, forceUpdate=False ):
 		self.updateFileName()
-		if not self.state.changed():
+		if not forceUpdate and not self.state.changed():
 			return
 
 		with Model.LockRace() as race:

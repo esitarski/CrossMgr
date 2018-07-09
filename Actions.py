@@ -235,7 +235,7 @@ class Actions( wx.Panel ):
 		self.clock.SetBackgroundColour( wx.WHITE )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
-		self.raceIntro.SetFont( wx.Font(24, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		self.raceIntro.SetFont( wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
 		self.chipTimingOptions = wx.RadioBox(
 			self.leftPanel,
@@ -248,6 +248,7 @@ class Actions( wx.Panel ):
 		self.Bind( wx.EVT_RADIOBOX, self.onChipTimingOptions, self.chipTimingOptions )
 		
 		self.settingsButton = wx.BitmapButton( self.leftPanel, bitmap=Utils.GetPngBitmap('settings-icon.png') )
+		self.settingsButton.SetToolTip( wx.ToolTip(_('Properties Shortcut')) )
 		self.settingsButton.Bind( wx.EVT_BUTTON, self.onShowProperties )
 		
 		self.startRaceTimeCheckBox = wx.CheckBox(self.leftPanel, label = _('Start Race Automatically at Future Time'))
@@ -318,11 +319,14 @@ class Actions( wx.Panel ):
 		if not Model.race:
 			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
 			return
-		dlg = PropertiesDialog( self, showFileFields=False, updateProperties=True, size=(600,400) )
-		if dlg.ShowModal() == wx.ID_OK:
-			dlg.properties.doCommit()
+		if not hasattr(self, 'propertiesDialog'):
+			self.propertiesDialog = PropertiesDialog( self, showFileFields=False, updateProperties=True, size=(600,400) )
+		else:
+			self.propertiesDialog.properties.refresh( forceUpdate = True )
+		self.propertiesDialog.properties.setPage( 'raceOptionsProperties' )
+		if self.propertiesDialog.ShowModal() == wx.ID_OK:
+			self.propertiesDialog.properties.doCommit()
 			Utils.refresh()
-		dlg.Destroy()
 
 	def onChipTimingOptions( self, event ):
 		if not Model.race:
@@ -415,6 +419,7 @@ class Actions( wx.Panel ):
 		self.clock.Start()
 		self.button.Enable( False )
 		self.startRaceTimeCheckBox.Enable( False )
+		self.settingsButton.Enable( False )
 		self.button.SetLabel( StartText )
 		self.button.SetForegroundColour( wx.Colour(100,100,100) )
 		self.chipTimingOptions.SetSelection( 0 )
@@ -422,6 +427,8 @@ class Actions( wx.Panel ):
 		
 		with Model.LockRace() as race:
 			if race:
+				self.settingsButton.Enable( True )
+				
 				# Adjust the chip recording options for TT.
 				if getattr(race, 'isTimeTrial', False):
 					race.resetStartClockOnFirstTag = False
