@@ -43,6 +43,7 @@ class memoize(object):
 	"""
    
 	cache = {}
+	rlock = threading.RLock()
 	
 	@classmethod
 	def clear( cls ):
@@ -57,14 +58,17 @@ class memoize(object):
 		try:
 			return memoize.cache[self.func.__name__][args]
 		except KeyError:
-			value = self.func(*args)
-			memoize.cache.setdefault(self.func.__name__, {})[args] = value
-			return value
+			with self.rlock:
+				value = self.func(*args)
+				memoize.cache.setdefault(self.func.__name__, {})[args] = value
+				return value
 		except TypeError:
-			# uncachable -- for instance, passing a list as an argument.
-			# Better to not cache than to blow up entirely.
+			with self.rlock:
+				# uncachable -- for instance, passing a list as an argument.
+				# Better to not cache than to blow up entirely.
+				return self.func(*args)
+		with self.rlock:
 			return self.func(*args)
-		return self.func(*args)
 			
 	def __repr__(self):
 		"""Return the function's docstring."""

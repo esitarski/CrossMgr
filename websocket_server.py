@@ -4,6 +4,7 @@
 
 import re
 import sys
+import time
 import struct
 from base64 import b64encode
 from hashlib import sha1
@@ -192,8 +193,14 @@ class WebsocketServer(ThreadingMixIn, TCPServer, API):
 		to_client['handler'].send_message(msg)
 
 	def _multicast_(self, msg):
-		for handler in self.clients.iterkeys():
-			handler.send_message( msg )
+		# Handle the case where clients might be dropped during the multicast.
+		while 1:
+			try:
+				for handler in list(self.clients.keys()):
+					handler.send_message( msg )
+				break
+			except RuntimeError:
+				time.sleep( 0.25 )
 
 	def handler_to_client(self, handler):
 		return {'id':self.clients[handler], 'handler':handler, 'address': handler.client_address}

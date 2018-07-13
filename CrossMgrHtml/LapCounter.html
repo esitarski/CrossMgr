@@ -205,9 +205,9 @@ function LapCounter( aCanvas ) {
 		dc.fillRect( 0, 0, width, height );
 		
 		function getFontSizeToFit( dc, text, w, h ) {
-			w = Math.floor( w * 0.9 );
-			h = Math.floor( h * 0.9 );
-			var fontSize = h;
+			w = Math.floor( w * 0.95 );
+			h = Math.floor( h * 0.95 );
+			var fontSize = h * 1.15;
 			dc.font = 'bold ' + fontSize + "px Arial";
 			var wText = dc.measureText( text ).width;
 			if( wText > w ) {
@@ -259,7 +259,7 @@ function LapCounter( aCanvas ) {
 			dc.strokeRect( x, y, w, h );
 			
 			if( this.lapElapsedClock ) {
-				var hCC = h * 0.15;
+				var hCC = h * 0.20;
 				var yCC = y + h - hCC;
 				h -= hCC;
 				if( tLapStart != null && this.tRaceStart ) {

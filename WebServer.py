@@ -545,7 +545,12 @@ wsTimer = tTimerStart = None
 def WsPost():
 	global wsTimer, tTimerStart
 	if wsServer.hasClients():
-		ram = GetResultsRAM()
+		while 1:
+			try:
+				ram = GetResultsRAM()
+				break
+			except AttributeError:
+				time.sleep( 0.25 )
 		if ram:
 			wsQ.put( ram )
 	if wsTimer:
