@@ -48,6 +48,14 @@ function formatTime( secs ) {
 	return (h ? (h + ':') : '') +  ('0' + m + ':').slice(-3) + ('0' + s).slice(-2);
 }
 
+function formatTimeNoLeadingZero( secs ) {
+	var t = formatTime( secs );
+	if( t && t.charAt(0) == '0' )
+		t = t.substring( 1 )
+	return t;
+}
+	
+
 function strToMillis( s ) {
 	if( s == null )
 		return null;
@@ -265,7 +273,7 @@ function LapCounter( aCanvas ) {
 				if( tLapStart != null && this.tRaceStart ) {
 					var tLap = this.tRaceStart + tLapStart*1000.0;
 					var secs = ((new Date).getTime() - tLap)/1000.0;
-					drawText( dc, formatTime(secs), this.foregrounds[i], x, yCC, w, hCC );
+					drawText( dc, formatTimeNoLeadingZero(secs), this.foregrounds[i], x, yCC, w, hCC );
 				}
 			}
 			if( !flash || this.flashOn )
