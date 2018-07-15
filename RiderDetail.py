@@ -1206,15 +1206,19 @@ class RiderDetail( wx.Panel ):
 		race = Model.race
 		if not race:
 			return False
-		rider = race.riders.get( self.num.GetValue(), None )
+		num = self.num.GetValue()
+		rider = race.riders.get( num, None )
 		if not rider:
 			return False
 		attr = ('num', 'times', 'status', 'firstTime', 'relegatedPosition', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
 		riderInfo = {a: getattr(rider,a) for a in attr}
-		riderInfo['category'] = race.getCategory( rider.num )
+		riderInfo['category'] = race.getCategory( num )
 		riderInfo['lapNote'] = getattr(race, 'lapNote', {})
+		riderInfo['entries'] = GetEntriesForNum(riderInfo['category'], num) if rider.autocorrectLaps else rider.interpolate()
+
 		if riderInfo != getattr(self, 'riderInfoCache', {}):
 			riderInfo['times'] = list(riderInfo['times'])		# Make a copy so we can compare to the original.
+			riderInfo['entries'] = list(riderInfo['entries'])	# Make a copy so we can compare to the original.
 			riderInfo['lapNote'] = riderInfo['lapNote'].copy()	# There don't change much, so make a copy.
 			self.riderInfoCache = riderInfo
 			return False
@@ -1381,7 +1385,7 @@ class RiderDetail( wx.Panel ):
 			raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else 0.0
 
 			startOffset = race.getStartOffset( num )
-			entries = GetEntriesForNum(waveCategory, num) if rider.autocorrectLaps else race.getRider(num).interpolate()
+			entries = GetEntriesForNum(waveCategory, num) if rider.autocorrectLaps else rider.interpolate()
 			entries = [e for e in entries if e.t > startOffset]
 			
 			unfilteredTimes = [t for t in race.getRider(num).times if t > startOffset]
