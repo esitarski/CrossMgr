@@ -313,7 +313,7 @@ class MainWin( wx.Frame ):
 
 		Utils.setMainWin( self )
 		
-		self.updateLater = None	# Used for delayed updates after chip reads.
+		self.callLaterProcessRfidRefresh = None	# Used for delayed updates after chip reads.
 		self.numTimes = []
 		
 		self.nonBusyRefresh = NonBusyCall( self.refresh, min_millis=1500, max_millis=7500 )
@@ -3965,9 +3965,14 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				else:
 					Utils.writeLog( 'USB Camera Error: {}'.format(error) )
 		
-		self.numTimes = []
-		self.updateLater = None
+		del self.numTimes[:]
 		return True
+	
+	def processRfidRefresh( self ):
+		if self.processNumTimes():
+			self.refresh()
+			if Model.race and Model.race.ftpUploadDuringRace:
+				realTimeFtpPublish.publishEntry()		
 	
 	def processJChipListener( self ):
 		race = Model.race
@@ -4008,7 +4013,15 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			if race.isRunning() and race.startTime <= dt:
 				self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 		
-		return self.processNumTimes()
+		# return self.processNumTimes()
+		
+		# Ensure that we don't update more than each second.
+		if not self.callLaterProcessRfidRefresh:
+			self.callLaterProcessRfidRefresh = wx.CallLater( 1000, self.processRfidRefresh )
+		elif not self.callLaterProcessRfidRefresh.IsRunning():
+			self.callLaterProcessRfidRefresh.Start()
+		
+		return False	# Never signal for an update.
 
 	def updateRaceClock( self, event = None ):
 		self.record.refreshAll()
