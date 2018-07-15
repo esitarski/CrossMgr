@@ -1216,8 +1216,6 @@ class RiderDetail( wx.Panel ):
 		riderInfo['lapNote'] = getattr(race, 'lapNote', {})
 		riderInfo['entries'] = GetEntriesForNum(riderInfo['category'], num) if rider.autocorrectLaps else rider.interpolate()
 		
-		getStFtLaps
-
 		if riderInfo != getattr(self, 'riderInfoCache', {}):
 			riderInfo['times'] = list(riderInfo['times'])		# Make a copy so we can compare to the original.
 			riderInfo['entries'] = list(riderInfo['entries'])	# Make a copy so we can compare to the original.
