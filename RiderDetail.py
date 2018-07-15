@@ -1210,11 +1210,13 @@ class RiderDetail( wx.Panel ):
 		rider = race.riders.get( num, None )
 		if not rider:
 			return False
-		attr = ('num', 'times', 'status', 'firstTime', 'relegatedPosition', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
-		riderInfo = {a: getattr(rider,a) for a in attr}
+		attr = ('num', 'times', 'status', 'tStatus', 'firstTime', 'relegatedPosition', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
+		riderInfo = {a: getattr(rider,a,None) for a in attr}
 		riderInfo['category'] = race.getCategory( num )
 		riderInfo['lapNote'] = getattr(race, 'lapNote', {})
 		riderInfo['entries'] = GetEntriesForNum(riderInfo['category'], num) if rider.autocorrectLaps else rider.interpolate()
+		
+		getStFtLaps
 
 		if riderInfo != getattr(self, 'riderInfoCache', {}):
 			riderInfo['times'] = list(riderInfo['times'])		# Make a copy so we can compare to the original.
