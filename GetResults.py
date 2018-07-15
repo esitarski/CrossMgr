@@ -661,6 +661,14 @@ def GetEntries( category ):
 		),
 		key=Entry.key
 	)
+
+def GetEntriesForNum( category, num ):
+	results = GetResultsWithData( category )
+	Entry = Model.Entry
+	for r in results:
+		if r.num == num:
+			return [Entry(r.num, lap, t, r.interp[lap]) for lap, t in enumerate(r.raceTimes)]
+	return []
 	
 @Model.memoize
 def GetLastRider( category ):

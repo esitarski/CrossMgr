@@ -17,7 +17,7 @@ from Undo import undo
 import Gantt
 from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
-from GetResults import GetResults, GetEntries, GetCategoryDetails
+from GetResults import GetResults, GetEntriesForNum, GetCategoryDetails
 from NumberEntryDialog import NumberEntryDialog
 
 def getStFtLaps( rider ):
@@ -222,6 +222,8 @@ class RiderDetail( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
+		self.SetDoubleBuffered( True )
+		
 		self.idCur = 0
 
 		self.num = None
@@ -274,7 +276,6 @@ class RiderDetail( wx.Panel ):
 		self.nameName = wx.StaticText( self, label = u'{} '.format(_('Name')) )
 		gbs.Add( self.nameName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.riderName = wx.StaticText( self )
-		self.riderName.SetDoubleBuffered( True )
 		gbs.Add( self.riderName, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
 		self.startTimeName = wx.StaticText( self, label = u'{} '.format(_('Start')) )
@@ -287,7 +288,6 @@ class RiderDetail( wx.Panel ):
 		self.teamName = wx.StaticText( self, label = u'{} '.format(_('Team')) )
 		gbs.Add( self.teamName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.riderTeam = wx.StaticText( self )
-		self.riderTeam.SetDoubleBuffered( True )
 		gbs.Add( self.riderTeam, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 		
 		self.finishTimeName = wx.StaticText( self, label = u'{} '.format(_('Finish')) )
@@ -301,7 +301,6 @@ class RiderDetail( wx.Panel ):
 		self.tagsName = wx.StaticText( self, label = u'{} '.format(_('Tag(s)')) )
 		gbs.Add( self.tagsName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.tags = wx.StaticText( self )
-		self.tags.SetDoubleBuffered( True )
 		gbs.Add( self.tags, pos=(row,1), span=(1,4), flag=wx.EXPAND )
 
 		self.rideTimeName = wx.StaticText( self, label = u'{} '.format(_('Ride Time')) )
@@ -349,6 +348,7 @@ class RiderDetail( wx.Panel ):
 		self.relegatedName = wx.StaticText( self, label = u'{} '.format(_('Relegated to')) )
 		gbs.Add( self.relegatedName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.relegatedPosition = intctrl.IntCtrl( self, min=2, max=9999, allow_none=True, value=None, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
+
 		gbs.Add( self.relegatedPosition, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
@@ -407,6 +407,7 @@ class RiderDetail( wx.Panel ):
 		panel = wx.Panel( splitter, wx.ID_ANY, style = wx.BORDER_SUNKEN )
 		
 		self.lineGraph = LineGraph( panel, style = wx.NO_BORDER )
+		
 		self.ganttChart = GanttChartPanel( panel, style = wx.NO_BORDER )
 		self.ganttChart.getNowTimeCallback = Gantt.GetNowTime
 		self.ganttChart.minimizeLabels = True
@@ -435,7 +436,6 @@ class RiderDetail( wx.Panel ):
 		self.SetSizer( mainSizer )
 		self.hs = hs
 		self.setRider()
-		self.SetDoubleBuffered( True )
 	
 	@logCall
 	def onShowPhotos( self, event ):
@@ -1202,7 +1202,28 @@ class RiderDetail( wx.Panel ):
 		self.atRaceTime.Enable( editable )
 		self.atRaceTimeName.Enable( editable )
 	
-	def refresh( self ):
+	def skipUpdate( self ):
+		race = Model.race
+		if not race:
+			return False
+		rider = race.riders.get( self.num.GetValue(), None )
+		if not rider:
+			return False
+		attr = ('num', 'times', 'status', 'firstTime', 'relegatedPosition', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
+		riderInfo = {a: getattr(rider,a) for a in attr}
+		riderInfo['category'] = race.getCategory( rider.num )
+		if riderInfo != getattr(self, 'riderInfoCache', {}):
+			riderInfo['times'] = list(riderInfo['times'])	# Copy this so the comparison works.
+			self.riderInfoCache = riderInfo
+			return False
+		return True
+	
+	def refresh( self, forceUpdate=False ):
+		if not forceUpdate and self.skipUpdate():
+			return
+	
+		num = self.num.GetValue()
+		
 		visibleRow = self.visibleRow
 		self.visibleRow = None
 
@@ -1212,7 +1233,6 @@ class RiderDetail( wx.Panel ):
 		self.category.Clear()
 		self.autocorrectLaps.SetValue( True )
 		self.alwaysFilterMinPossibleLapTime.SetValue( True )
-		num = self.num.GetValue()
 		
 		self.statusOption.SetSelection( 0 )
 		self.setAtRaceTime( 0.0, False )
@@ -1248,7 +1268,7 @@ class RiderDetail( wx.Panel ):
 				externalInfo = {}
 			
 			info = externalInfo.get(int(num), {})
-			riderName = u', '.join( n for n in [info.get( 'LastName', u'' ), info.get( 'FirstName', u'' )] if n )
+			riderName = u', '.join( n for n in [info.get('LastName', u''), info.get('FirstName', u'')] if n )
 			try:
 				riderName += u'      {}  {}'.format( _('Age'), info['Age'] )
 			except KeyError:
@@ -1271,7 +1291,7 @@ class RiderDetail( wx.Panel ):
 			iCategory = None
 			categories = race.getCategories( startWaveOnly = False, excludeCustom = True, excludeCombined = True  )
 			for i, c in enumerate(categories):
-				if race.inCategory( num, c ) and c.catType != Model.Category.CatCustom:
+				if race.inCategory(num, c) and c.catType != Model.Category.CatCustom:
 					iCategory = i
 					category = c
 					if c.catType == Model.Category.CatComponent:
@@ -1359,8 +1379,8 @@ class RiderDetail( wx.Panel ):
 			raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else 0.0
 
 			startOffset = race.getStartOffset( num )
-			entries = GetEntries(waveCategory) if rider.autocorrectLaps else race.getRider(num).interpolate()
-			entries = [e for e in entries if e.num == num and e.t > startOffset]
+			entries = GetEntriesForNum(waveCategory, num) if rider.autocorrectLaps else race.getRider(num).interpolate()
+			entries = [e for e in entries if e.t > startOffset]
 			
 			unfilteredTimes = [t for t in race.getRider(num).times if t > startOffset]
 			entryTimes = set( e.t for e in entries )

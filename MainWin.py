@@ -3203,7 +3203,8 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		
 		# Get the simulation times.
-		bigSimulation = False
+		#bigSimulation = False
+		bigSimulation = True
 		self.lapTimes = self.genTimes( bigSimulation )
 		tMin = self.lapTimes[0][0]
 		self.lapTimes.reverse()			# Reverse the times so we can pop them from the end later.
