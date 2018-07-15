@@ -535,7 +535,10 @@ class Entry(object):
 		
 	def key( self ):
 		return (self.t, -self.lap, self.num, self.interp)
-		
+	
+	def __eq__( self, e ):
+		return self.num == e.num and self.lap == e.lap and self.t == e.t and self.interp == e.interp
+	
 	def keyTT( self ):
 		return (0 if self.lap == 0 else 1, self.t, -self.lap, self.num, self.interp)
 		
