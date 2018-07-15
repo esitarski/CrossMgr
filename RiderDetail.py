@@ -1212,8 +1212,10 @@ class RiderDetail( wx.Panel ):
 		attr = ('num', 'times', 'status', 'firstTime', 'relegatedPosition', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
 		riderInfo = {a: getattr(rider,a) for a in attr}
 		riderInfo['category'] = race.getCategory( rider.num )
+		riderInfo['lapNote'] = getattr(race, 'lapNote', {})
 		if riderInfo != getattr(self, 'riderInfoCache', {}):
-			riderInfo['times'] = list(riderInfo['times'])	# Copy this so the comparison works.
+			riderInfo['times'] = list(riderInfo['times'])		# Make a copy so we can compare to the original.
+			riderInfo['lapNote'] = riderInfo['lapNote'].copy()	# There don't change much, so make a copy.
 			self.riderInfoCache = riderInfo
 			return False
 		return True
