@@ -147,8 +147,8 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	indexes = sorted( list(xrange(lenData)), key=lambda i: data[i][1], reverse=True )
 	indexes = np.fromiter( (i for i in indexes[:max(int(lenData*0.75), 6)]), int )
 	
-	P = 0.99		# Desired probability that we ahve found an uncontaminated model.
-	K = np.inf		# Minimum number of samples required to find an uncontaminated model.
+	P = 0.99		# Desired probability that we have found an uncontaminated model.
+	K = lenData*10	# Minimum number of samples required to find an uncontaminated model.
 	samples = 0
 	
 	KBad = lenData	# Max number of allowed bad samples (invalid models).

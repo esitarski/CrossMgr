@@ -52,7 +52,7 @@ def readData( fname ):
 			fields = line.split(',')
 			
 			Reader = int(fields[0])
-			if Reader != 21: continue
+			#if Reader != 21: continue
 			if fields[-2]:	continue			# Alg
 			
 			EPC = fields[1]
@@ -241,7 +241,8 @@ def MainLoop():
 	app.SetAppName("QRPlot")
 	mainWin = PlotFrame( None, title='QRPlot', size=(800,min(int(wx.GetDisplaySize()[1]*0.85),1000)) )
 	#fname = 'Impinj-2018-05-29-18-12-21.txt'
-	fname = 'M12-contested.csv'
+	#fname = 'M12-contested.csv'
+	fname = 'ransac-fails.txt'
 	mainWin.setData( readData(fname) )
 	mainWin.Show()
 	app.MainLoop()
