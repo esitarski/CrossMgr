@@ -712,7 +712,7 @@ class MainWin( wx.Frame ):
 			[ 'announcer',		Announcer,			_('Announcer') ],
 			[ 'histogram',		HistogramPanel,		_('Histogram') ],
 		]
-		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'lapCounter'}
+		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'announcer', 'lapCounter'}
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )

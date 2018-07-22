@@ -305,3 +305,13 @@ class Announcer( wx.Panel ):
 	def commit( self ):
 		pass
 		
+if __name__ == '__main__':
+	Utils.disable_stdout_buffering()
+	app = wx.App(False)
+	mainWin = wx.Frame(None,title="CrossMan", size=(600,200))
+	Model.setRace( Model.Race() )
+	Model.getRace()._populate()
+	announcer = Announcer(mainWin)
+	announcer.refresh()
+	mainWin.Show()
+	app.MainLoop()
