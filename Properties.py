@@ -223,9 +223,6 @@ class RaceOptionsProperties( wx.Panel ):
 		self.showCourseAnimationInHtml = wx.CheckBox( self, label=_("Show Course Animation in Html") )
 		self.showCourseAnimationInHtml.SetValue( True )
 
-		self.winAndOut = wx.CheckBox( self, label=_("Win and Out") )
-		self.winAndOut.SetValue( False )
-
 		self.minPossibleLapTimeLabel = wx.StaticText( self, label=_('Min. Possible Lap Time: ') )
 		self.minPossibleLapTime = HighPrecisionTimeEdit( self, seconds = 0.0 )
 		self.minPossibleLapTimeUnit = wx.StaticText( self, label=_('hh:mm:ss.ddd') )
@@ -236,6 +233,9 @@ class RaceOptionsProperties( wx.Panel ):
 		self.licenseLinkTemplateLabel = wx.StaticText( self, label=_('License Link HTML Template: ') )
 		self.licenseLinkTemplate = wx.TextCtrl( self, size=(64,-1), style=wx.TE_PROCESS_ENTER )
 		
+		self.winAndOut = wx.CheckBox( self, label=_("Win and Out") )
+		self.winAndOut.SetValue( False )
+
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
 		self.SetSizer( ms )
@@ -260,9 +260,9 @@ class RaceOptionsProperties( wx.Panel ):
 			(self.distanceUnitLabel,0, labelAlign),		(self.distanceUnitSizer,		1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showDetails,				1, fieldAlign),
 			(blank(),				0, labelAlign),		(self.showCourseAnimationInHtml,1, fieldAlign),
-			(blank(),				0, labelAlign),		(self.winAndOut,				1, fieldAlign),
 			(self.minPossibleLapTimeLabel,0, labelAlign),(mplths,						0, 0),
 			(self.licenseLinkTemplateLabel,0, labelAlign),(self.licenseLinkTemplate,	1, fieldAlign),
+			(blank(),				0, labelAlign),		(self.winAndOut,				1, fieldAlign),
 		]
 		addToFGS( fgs, labelFieldBatchPublish )
 		
