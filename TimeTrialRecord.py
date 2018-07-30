@@ -70,13 +70,13 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.controller = controller
 
-		self.headerNames = [_('Time'), _('Bib')]
+		self.headerNames = [_('Time'), u'   {}   '.format(_('Bib'))]
 		
 		self.maxRows = 10
 		
 		fontSize = 18
 		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.bigFont = wx.Font( (0,int(fontSize*1.3)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		self.bigFont = wx.Font( (0,int(fontSize*1.30)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
 		tapForTimeLabel = _('Tap for Time')
@@ -104,7 +104,9 @@ class TimeTrialRecord( wx.Panel ):
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.SetFont( self.font )
 		self.grid.EnableReorderRows( False )
-		
+		self.grid.DisableDragColSize()
+		self.grid.DisableDragRowSize()
+
 		dc = wx.WindowDC( self.grid )
 		dc.SetFont( self.font )
 		width, height = dc.GetTextExtent(" 999 ")
@@ -141,9 +143,9 @@ class TimeTrialRecord( wx.Panel ):
 		hbsCommit.Add( saveExplain, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=20 )
 		hbsCommit.Add( self.commitButton, 0 )
 		
-		self.vbs.Add( hbs, 0, flag=wx.ALL|wx.EXPAND, border = 4 )
+		self.vbs.Add( hbs, 0, flag=wx.ALL, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
-		self.vbs.Add( hbsCommit, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
+		self.vbs.Add( hbsCommit, 0, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		
 		idRecordAcceleratorId, idCommitAccelleratorId = wx.NewId(), wx.NewId()
 		self.Bind(wx.EVT_MENU, self.doRecordTime, id=idRecordAcceleratorId)
@@ -195,6 +197,9 @@ class TimeTrialRecord( wx.Panel ):
 			return
 			
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
+		
+		self.grid.AutoSizeColumns( True )
+		self.grid.AutoSizeRows( True )
 		
 		# Set the edit cursor at the first empty bib position.
 		for row in xrange(self.grid.GetNumberRows()):
@@ -251,7 +256,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.grid.SetGridCursor( 0, 1 )
 	
 	def refresh( self ):
-		self.grid.AutoSizeRows( False )
+		self.grid.AutoSizeRows()
 		
 		dc = wx.WindowDC( self.grid )
 		dc.SetFont( self.font )
@@ -270,7 +275,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.GetSizer().SetMinSize( (widthTotal + scrollBarWidth, -1) )
 		
 		self.grid.ForceRefresh()
-		self.Fit()
+		self.GetSizer().Layout()
 		
 		wx.CallAfter( self.recordTimeButton.SetFocus )
 		

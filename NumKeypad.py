@@ -6,6 +6,8 @@ import bisect
 import datetime
 import wx.lib.intctrl
 import wx.lib.buttons
+import wx.lib.agw.flatnotebook as flatnotebook
+
 from collections import defaultdict
 
 import Utils
@@ -254,11 +256,16 @@ class NumKeypad( wx.Panel ):
 		
 		#-------------------------------------------------------------------------------
 		# Create the edit field, numeric keypad and buttons.
-		self.keypad = Keypad( panel, self )
-		horizontalMainSizer.Add( self.keypad, 0, flag=wx.TOP|wx.LEFT|wx.EXPAND, border = 4 )
+		self.notebook = wx.Notebook( panel, style=wx.NB_BOTTOM )
+		self.notebook.SetBackgroundColour( wx.WHITE )
 		
-		self.timeTrialRecord = TimeTrialRecord( panel, self )
-		self.timeTrialRecord.Show( False )
+		self.keypad = Keypad( self.notebook, self )
+		self.timeTrialRecord = TimeTrialRecord( self.notebook, self )
+		
+		self.notebook.AddPage( self.keypad, _("Bib"), select=True )
+		self.notebook.AddPage( self.timeTrialRecord, _("TimeTrial") )
+		horizontalMainSizer.Add( self.notebook, 0, flag=wx.TOP|wx.LEFT|wx.EXPAND, border = 4 )
+		
 		self.horizontalMainSizer = horizontalMainSizer
 		
 		#------------------------------------------------------------------------------
@@ -268,20 +275,11 @@ class NumKeypad( wx.Panel ):
 		self.raceTime = wx.StaticText( panel, label = u'0:00')
 		self.raceTime.SetFont( font )
 		self.raceTime.SetDoubleBuffered(True)
-		
-		self.keypadBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'keypad.png'), wx.BITMAP_TYPE_PNG )
-		self.ttRecordBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'stopwatch.png'), wx.BITMAP_TYPE_PNG )
-		
-		self.keypadTimeTrialToggleButton = wx.BitmapButton( panel, bitmap = self.ttRecordBitmap )
-		self.isKeypadState = True
-		self.keypadTimeTrialToggleButton.Bind( wx.EVT_BUTTON, self.swapKeypadTimeTrialRecord )
-		self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
-		
+				
 		verticalSubSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer.Add( verticalSubSizer )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.keypadTimeTrialToggleButton, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border = 8 )
 		hs.Add( self.raceTime, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=100-40-8 )
 		verticalSubSizer.Add( hs, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTRE_VERTICAL | wx.ALL, border = 2 )
 		
@@ -394,34 +392,11 @@ class NumKeypad( wx.Panel ):
 		return not mainWin or mainWin.isShowingPage(self)
 	
 	def isKeypadInputMode( self ):
-		return self.isKeypadState
+		return self.notebook.GetCurrentPage() == self.keypad
 		
 	def isTimeTrialInputMode( self ):
 		return not self.isKeypadInputMode()
 	
-	def swapKeypadTimeTrialRecord( self, event = None ):
-		if self.isKeypadState:
-			self.keypad.Show( False )
-			self.timeTrialRecord.Show( True )
-			self.timeTrialRecord.refresh()
-			self.horizontalMainSizer.Replace( self.keypad, self.timeTrialRecord )
-			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.keypadBitmap )
-			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToNumberEntryMessage))
-			wx.CallAfter( self.timeTrialRecord.Refresh )
-			wx.CallLater( 100, self.timeTrialRecord.grid.SetFocus )
-		else:
-			self.keypad.Show( True )
-			self.timeTrialRecord.Show( False )
-			self.horizontalMainSizer.Replace( self.timeTrialRecord, self.keypad )
-			self.keypadTimeTrialToggleButton.SetBitmapLabel( self.ttRecordBitmap )
-			self.keypadTimeTrialToggleButton.SetToolTip(wx.ToolTip(self.SwitchToTimeTrialEntryMessage))
-			wx.CallAfter( self.keypad.Refresh )
-			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
-		self.isKeypadState = not self.isKeypadState
-		self.horizontalMainSizer.Layout()
-		self.GetSizer().Layout()
-		wx.CallAfter( self.Refresh )
-		
 	def setKeypadInput( self, b = True ):
 		if b:
 			if not self.isKeypadInputMode():
@@ -432,6 +407,11 @@ class NumKeypad( wx.Panel ):
 	
 	def setTimeTrialInput( self, b = True ):
 		self.setKeypadInput( not b )
+		
+	def swapKeypadTimeTrialRecord( self ):
+		page = self.timeTrialRecord if self.isKeypadInputMode() else self.keypad
+		page.refresh()
+		self.notebook.SetCurrentPage( page )
 	
 	def refreshRaceHUD( self ):
 		race = Model.race
