@@ -3301,6 +3301,7 @@ class MainWin( wx.Frame ):
 
 		# Start the simulation.
 		self.showPageName( _('Record') if isTimeTrial else _('Chart') )
+		self.record.setTimeTrialInput( race.isTimeTrial )
 
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
 

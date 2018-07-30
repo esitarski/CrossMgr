@@ -392,25 +392,18 @@ class NumKeypad( wx.Panel ):
 		return not mainWin or mainWin.isShowingPage(self)
 	
 	def isKeypadInputMode( self ):
-		return self.notebook.GetCurrentPage() == self.keypad
+		return self.notebook.GetSelection() == 0
 		
 	def isTimeTrialInputMode( self ):
-		return self.notebook.GetCurrentPage() == self.timeTrialRecord
+		return self.notebook.GetSelection() == 1
 	
-	def setKeypadInput( self, b = True ):
-		if b:
-			if self.notebook.GetCurrentPage() != self.keypad:
-				self.notebook.SetCurrentPage( self.keypad )
-		else:
-			if self.notebook.GetCurrentPage() != self.timeTrialRecord:
-				self.notebook.SetCurrentPage( self.timeTrialRecord )
-	
-	def setTimeTrialInput( self, b = True ):
-		self.setKeypadInput( not b )
+	def setTimeTrialInput( self, isTimeTrial=True ):
+		page = 1 if isTimeTrial else 0
+		if self.notebook.GetSelection() != page:
+			self.notebook.SetSelection( page )
 		
 	def swapKeypadTimeTrialRecord( self ):
-		page = self.timeTrialRecord if self.isKeypadInputMode() else self.keypad
-		self.notebook.SetCurrentPage( page )
+		self.notebook.SetSelection( 1 - self.notebook.GetSelection() )
 	
 	def refreshRaceHUD( self ):
 		race = Model.race
