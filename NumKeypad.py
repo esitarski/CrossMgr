@@ -40,7 +40,7 @@ class Keypad( wx.Panel ):
 		self.SetBackgroundColour( wx.WHITE )
 		self.controller = controller
 		
-		fontPixels = 43
+		fontPixels = 36
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		dc = wx.WindowDC( self )
 		dc.SetFont( font )
@@ -122,7 +122,7 @@ class Keypad( wx.Panel ):
 		self.showTouchScreen ^= True
 		self.keypadPanel.Show( self.showTouchScreen )
 		self.GetSizer().Layout()
-		self.GetParent().GetParent().SetSashPosition( SplitterMaxPos if self.showTouchScreen else SplitterMinPos )
+		self.GetParent().GetParent().GetParent().SetSashPosition( SplitterMaxPos if self.showTouchScreen else SplitterMinPos )
 		try:
 			self.GetParent().GetSizer().Layout()
 		except:
@@ -395,22 +395,21 @@ class NumKeypad( wx.Panel ):
 		return self.notebook.GetCurrentPage() == self.keypad
 		
 	def isTimeTrialInputMode( self ):
-		return not self.isKeypadInputMode()
+		return self.notebook.GetCurrentPage() == self.timeTrialRecord
 	
 	def setKeypadInput( self, b = True ):
 		if b:
-			if not self.isKeypadInputMode():
-				self.swapKeypadTimeTrialRecord()
+			if self.notebook.GetCurrentPage() != self.keypad:
+				self.notebook.SetCurrentPage( self.keypad )
 		else:
-			if not self.isTimeTrialInputMode():
-				self.swapKeypadTimeTrialRecord()
+			if self.notebook.GetCurrentPage() != self.timeTrialRecord:
+				self.notebook.SetCurrentPage( self.timeTrialRecord )
 	
 	def setTimeTrialInput( self, b = True ):
 		self.setKeypadInput( not b )
 		
 	def swapKeypadTimeTrialRecord( self ):
 		page = self.timeTrialRecord if self.isKeypadInputMode() else self.keypad
-		page.refresh()
 		self.notebook.SetCurrentPage( page )
 	
 	def refreshRaceHUD( self ):
