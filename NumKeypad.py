@@ -227,9 +227,6 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 	return info
 
 class NumKeypad( wx.Panel ):
-	SwitchToTimeTrialEntryMessage = _('Switch to Time Trial Entry')
-	SwitchToNumberEntryMessage = _('Switch to Regular Number Entry')
-
 	def __init__( self, parent, id = wx.ID_ANY ):
 		wx.Panel.__init__(self, parent, id)
 		
@@ -401,6 +398,7 @@ class NumKeypad( wx.Panel ):
 		page = 1 if isTimeTrial else 0
 		if self.notebook.GetSelection() != page:
 			self.notebook.SetSelection( page )
+			self.timeTrialRecord.refresh()
 		
 	def swapKeypadTimeTrialRecord( self ):
 		self.notebook.SetSelection( 1 - self.notebook.GetSelection() )
@@ -741,8 +739,6 @@ class NumKeypad( wx.Panel ):
 		race = Model.race
 		enable = bool(race and race.isRunning())
 		if self.isEnabled != enable:
-			self.keypad.Enable( enable )
-			self.timeTrialRecord.Enable( enable )
 			self.isEnabled = enable
 		if not enable and self.isKeypadInputMode():
 			self.keypad.numEdit.SetValue( '' )
@@ -770,8 +766,6 @@ class NumKeypad( wx.Panel ):
 		
 		if self.isKeypadInputMode():
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
-		if self.isTimeTrialInputMode():
-			wx.CallAfter( self.timeTrialRecord.refresh )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()

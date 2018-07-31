@@ -109,7 +109,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		dc = wx.WindowDC( self.grid )
 		dc.SetFont( self.font )
-		width, height = dc.GetTextExtent(" 999 ")
+		width, height = dc.GetTextExtent(u" 999 ")
 		self.rowLabelSize = width
 		self.grid.SetRowLabelSize( self.rowLabelSize )
 		
@@ -198,8 +198,8 @@ class TimeTrialRecord( wx.Panel ):
 			
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
 		
-		self.grid.AutoSizeColumns( True )
-		self.grid.AutoSizeRows( True )
+		#self.grid.AutoSizeColumns( True )
+		#self.grid.AutoSizeRows( True )
 		
 		# Set the edit cursor at the first empty bib position.
 		for row in xrange(self.grid.GetNumberRows()):
