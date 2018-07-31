@@ -198,9 +198,6 @@ class TimeTrialRecord( wx.Panel ):
 			
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
 		
-		#self.grid.AutoSizeColumns( True )
-		#self.grid.AutoSizeRows( True )
-		
 		# Set the edit cursor at the first empty bib position.
 		for row in xrange(self.grid.GetNumberRows()):
 			text = self.grid.GetCellValue(row, 1)
