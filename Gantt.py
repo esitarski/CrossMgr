@@ -8,6 +8,7 @@ from GetResults import GetResults, RidersCanSwap, RiderResult
 from Undo import undo
 import EditEntry
 from NumberEntryDialog import NumberEntryDialog
+from bisect import bisect_right
 
 def UpdateSetNum( num ):
 	if num is None:
@@ -128,6 +129,8 @@ class Gantt( wx.Panel ):
 				(wx.NewId(), _('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
 				(wx.NewId(), _('Shift Lap End Time') + u'...',_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
 				(wx.NewId(), _('Delete Lap End Time') + u'...',_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None, None),
+				(wx.NewId(), _('Mass Pull after Lap End Time') + u'...',_('Pull Rider and all Riders after at Lap End'), self.OnPopupMassPull, allCases),
 				(None, None, None, None, None),
 				(wx.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None, None),
@@ -378,6 +381,59 @@ class Gantt( wx.Panel ):
 					pass
 		wx.CallAfter( self.refresh )
 	
+	def OnPopupMassPull( self, event ):
+		if not self.entry:
+			return
+		if not Utils.MessageOKCancel( self,
+			u'{} {}: {} {}, {}.\n{} {}.\n\n{}?'.format(
+				_('Bib'), self.entry.num,
+				_('Pull Rider after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True),
+				_('And, Pull all riders ranked lower after lap'), self.entry.lap,
+				_('Continue'),
+			),
+			_('Mass Pull') ):
+			return
+		
+		try:
+			undo.pushState()
+			with Model.LockRace() as race:
+				if not race:
+					return
+				
+				category = race.getCategory( self.entry.num )
+				if not category:
+					Utils.MessageOK( self,
+						_('Cannot apply Mass Pull to rider with unknown category.'),
+						_('Unknown Category'),
+						wx.ICON_ERROR,
+					)
+					return
+					
+				results = GetResults( category )
+				
+				toPull = []
+				Finisher, Pulled = Model.Rider.Finisher, Model.Rider.Pulled
+				found = False
+				for rr in results:
+					if not found:
+						found = (rr.num == self.entry.num)
+					if found and rr.status == Finisher and rr.raceTimes:
+							toPull.append( rr )
+				
+				tSearch = self.entry.t
+				for rr in toPull:
+					i = bisect_right( rr.raceTimes, tSearch )
+					try:
+						race.getRider(rr.num).setStatus( Pulled, rr.raceTimes[i] + 1 )
+					except IndexError:
+						pass
+				
+				race.setChanged()
+				wx.CallAfter( self.refresh )
+		
+		except Exception as e:
+			pass
+		
 	def OnPopupLapDetail( self, event ):
 		with Model.LockRace() as race:
 			if not race:
