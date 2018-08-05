@@ -52,6 +52,7 @@ Note...|Add a note to this lap.  The note is displayed on the lap in the Chart. 
 Correct Lap End Time...|Correct the lap end time
 Shift Lap End Time...|Shift the lap end time forwards or backwards
 Delete Lap End Time...|Delete the lap end time
+Mass Pull after Lap End Time...|Pulls this rider, and all riders ranked lower in the results after this end time.  Useful when you have a separate sprint for the field in a Criterium and you need to remove the laps of all riders except those in the break.  
 Turn off Autocorrect...|Turn off Autocorrect for this rider
 Swap with Rider before|Swap current rider's finish time with preceeding rider's finish time
 Swap with Rider after|Swap current rider's finish time with the following rider's finish time
