@@ -145,6 +145,9 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 	GetTranslation = _
 	iNoMatch = len(headers) - 1
 	exactMatch = { h.lower():(100.0, i) for i, h in enumerate(headers) }
+	# For Tag fields, try remove spaces.
+	exactMatch.update( {h.lower().replace(u' ', u''):(100.0, i) for i, h in enumerate(headers) if h.lower().startswith('tag')} )
+	
 	matchStrength = {}
 	for c, f in enumerate(Fields):
 		# Figure out some reasonable defaults for headers.
@@ -167,7 +170,7 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 				try:
 					iBest = min( expectedFieldCol[h], iNoMatch )
 				except (TypeError, KeyError):
-					iBest = iNoMatch
+					iBest = iNoMatch			
 		
 		fieldCol[f] = iBest
 		matchStrength[f] = matchBest
