@@ -155,7 +155,7 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 		# First look for a perfect match ignoring case.
 		matchBest, iBest = exactMatch.get( f.lower(), (0.0, iNoMatch) )
 		
-		if not f.lower().startswith('tag'):			
+		if not f.lower().startswith('tag'):
 			# Then try the local translation of the header name.
 			if matchBest < 2.0:
 				fTrans = GetTranslation( f )
