@@ -284,7 +284,7 @@ class FinishStrip( wx.Panel ):
 			if event:
 				x, y = event.GetX(), event.GetY()
 			else:
-				x, y = 0, 0
+				x, y = self.GetClientSize()[0]-4, 4
 			wx.CallAfter( self.drawZoomPhoto, x, y )
 		
 	def OnMouseWheel( self, event ):
