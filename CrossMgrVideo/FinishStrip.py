@@ -271,18 +271,25 @@ class FinishStrip( wx.Panel ):
 		self.SetCursor( wx.NullCursor )
 		event.Skip()
 		
+	def doZoom( self, dir, event=None ):
+		magnificationSave = self.magnification
+		magFactor = 0.90
+		if dir < 0:
+			self.magnification /= magFactor
+		else:
+			self.magnification *= magFactor
+		
+		self.magnification = min( 10.0, max(0.10, self.magnification) )
+		if self.magnification != magnificationSave:
+			if event:
+				x, y = event.GetX(), event.GetY()
+			else:
+				x, y = 0, 0
+			wx.CallAfter( self.drawZoomPhoto, x, y )
+		
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():
-			magnificationSave = self.magnification
-			magFactor = 0.90
-			if event.GetWheelRotation() < 0:
-				self.magnification /= magFactor
-			else:
-				self.magnification *= magFactor
-			
-			self.magnification = min( 10.0, max(0.10, self.magnification) )
-			if self.magnification != magnificationSave:
-				wx.CallAfter( self.drawZoomPhoto, event.GetX(), event.GetY() )
+			self.doZoom( event.GetWheelRotation(), event )
 		else:
 			self.mouseWheelCallback( event )
 	
@@ -391,6 +398,14 @@ class FinishStripPanel( wx.Panel ):
 		self.stretchSlider.SetPageSize( 1 )
 		self.stretchSlider.Bind( wx.EVT_SCROLL, self.onChangeSpeed )
 		
+		self.zoomInButton = wx.BitmapButton( self, bitmap=Utils.getBitmap('Zoom-In-Icon.png'))
+		self.zoomInButton.Bind( wx.EVT_BUTTON, lambda event: self.finish.doZoom(-1) )
+		self.zoomOutButton = wx.BitmapButton( self, bitmap=Utils.getBitmap('Zoom-Out-Icon.png'))
+		self.zoomOutButton.Bind( wx.EVT_BUTTON, lambda event: self.finish.doZoom(1) )
+		zs = wx.BoxSizer( wx.HORIZONTAL )
+		zs.Add( self.zoomInButton )
+		zs.Add( self.zoomOutButton )
+		
 		self.direction = wx.RadioBox( self,
 			label=_(''),
 			choices=[_('Finish Right to Left'), _('Finish Left to Right')],
@@ -404,11 +419,11 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard.SetToolTip( wx.ToolTip('Copy Finish Strip to Clipboard') )
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
-		fgs = wx.FlexGridSizer( cols=2, vgap=0, hgap=0 )
-		fgs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
-		fgs.Add( self.stretchSlider, flag=wx.EXPAND )
-		
-		fgs.AddGrowableCol( 1, 1 )
+		szs = wx.BoxSizer( wx.HORIZONTAL )
+		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		szs.Add( self.stretchSlider, 1, flag=wx.EXPAND )
+		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Zoom'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		szs.Add( zs )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -427,12 +442,13 @@ class FinishStripPanel( wx.Panel ):
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
+		
 		self.frameCount = wx.StaticText( self, label='   Frames' )
 		hs.Add( self.frameCount, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=16 )
 		
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
 		vs.Add( self.timeScrollbar, flag=wx.EXPAND )
-		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=0 )
+		vs.Add( szs, flag=wx.EXPAND|wx.ALL, border=0 )
 		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=0 )
 		
 		self.SetSizer( vs )
