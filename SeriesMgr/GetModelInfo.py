@@ -357,13 +357,14 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				except:
 					info['raceDate'] = None
 			
-			info['bib'] = int(rr.num)
+			info['bib'] = int(rr.num)			
 			info['rank'] = RaceResult.rankDNF if rr.status == DNF else pos
 			
 			if hasattr(rr, '_lastTimeOrig') or hasattr(rr, 'lastTime'):
 				info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime')
 				if rr.raceTimes:
-					info['tFinish'] = max( 0.0, info['tFinish'] - rr.raceTimes[0] )
+					#info['tFinish'] = max( 0.0, info['tFinish'] - rr.raceTimes[0] )
+					info['tFinish'] = max( 0.0, rr.raceTimes[-1] - rr.raceTimes[0] )
 			else:
 				info['tFinish'] = 1000.0*24.0*60.0*60.0
 			

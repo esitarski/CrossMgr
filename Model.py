@@ -722,6 +722,14 @@ class Rider(object):
 		self.status = status
 		self.tStatus = tStatus
 	
+	def getMustBeRepeatInterval( self ):
+		minPossibleLapTime = race.minPossibleLapTime
+		medianLapTime = race.getMedianLapTime( race.getCategory(self.num) )
+		if race.enableJChipIntegration:
+			medianLapTime /= 10.0
+		mustBeRepeatInterval = max( minPossibleLapTime, medianLapTime * 0.4 )
+		return mustBeRepeatInterval
+	
 	def getCleanLapTimes( self ):
 		if not self.times or self.status in (Rider.DNS, Rider.DQ) or not race:
 			return None
@@ -732,14 +740,8 @@ class Rider(object):
 		iTimes = [race.getStartOffset(self.num)]
 		
 		# Clean up spurious reads based on minumum possible lap time.
-		# Also consider the median lap time.
 		# Also removes early times.
-		minPossibleLapTime = race.minPossibleLapTime
-		medianLapTime = race.getMedianLapTime( race.getCategory(self.num) )
-		if race.enableJChipIntegration:
-			medianLapTime /= 10.0
-		
-		mustBeRepeatInterval = max( minPossibleLapTime, medianLapTime * 0.4 )
+		mustBeRepeatInterval = self.getMustBeRepeatInterval()
 		for t in self.times:
 			if t - iTimes[-1] > mustBeRepeatInterval:
 				iTimes.append( t )
@@ -870,9 +872,9 @@ class Rider(object):
 			# Add the start time for the beginning of the rider.
 			# This avoids a whole lot of special cases later.
 			iTimes = [race.getStartOffset(self.num) if race else 0.0]
-			minPossibleLapTime = max( 1.0, race.minPossibleLapTime if self.alwaysFilterMinPossibleLapTime else 0.0 )
+			mustBeRepeatInterval = self.getMustBeRepeatInterval() if self.alwaysFilterMinPossibleLapTime else 0.0
 			for t in self.times:
-				if t - iTimes[-1] > minPossibleLapTime:
+				if t - iTimes[-1] > mustBeRepeatInterval:
 					iTimes.append( t )		
 			iTimes = [(t, False) for t in iTimes]
 			if dnfPulledTime is not None:
