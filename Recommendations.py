@@ -47,49 +47,6 @@ class Recommendations( wx.Panel ):
 		bs.Add(self.grid, 1, wx.GROW|wx.ALL, 5)
 		self.SetSizer(bs)
 		bs.SetSizeHints(self)
-
-	'''
-	def doRightClick( self, event ):
-		if self.isEmpty:
-			return
-			
-		self.rowPopup = event.GetRow()
-		self.colPopup = event.GetCol()
-		numSelect = self.getCellNum( self.rowPopup, self.colPopup )
-		if not numSelect:
-			return
-			
-		self.doNumSelect( event )
-				
-		if not hasattr(self, 'popupInfo'):
-			self.popupInfo = [
-				('Results', 	wx.NewId(), self.OnPopupResults),
-				('RiderDetail',wx.NewId(), self.OnPopupRiderDetail),
-				
-				('Correct...',	wx.NewId(), self.OnPopupCorrect),
-				('Insert...',	wx.NewId(), self.OnPopupSplit),
-				('Delete...',	wx.NewId(), self.OnPopupDelete)
-			]
-			self.numEditActions = 2
-			for p in self.popupInfo:
-				self.Bind( wx.EVT_MENU, p[2], id=p[1] )
-
-		isInterp = self.history[self.colPopup][self.rowPopup].interp
-		
-		race = Model.getRace()
-		menu = wx.Menu()
-		for i, p in enumerate(self.popupInfo):
-			if i >= self.numEditActions and isInterp:		# Disallow editing of interpreted entries
-				continue
-			elif i == self.numEditActions and not isInterp:
-				menu.AppendSeparator()
-			elif p[0] == 'Record' and not race.isRunning():
-				continue
-			menu.Append( p[1], p[0] )
-		
-		self.PopupMenu( menu )
-		menu.Destroy()
-	'''
 				
 	def updateColours( self ):
 		self.textColour = {}

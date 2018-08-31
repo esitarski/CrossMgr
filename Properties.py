@@ -1138,11 +1138,10 @@ class NotesProperties( wx.Panel ):
 			self.menu = wx.Menu()
 			self.idVariable = {}
 			for v in sorted(race.getTemplateValues().keys() + ['Bib ', 'BibList ', 'BibTable ']):
-				idCur = wx.NewId()
 				v = u'{=' + v + u'}'
-				self.idVariable[idCur] = v
-				self.menu.Append( idCur, v )
-				self.Bind( wx.EVT_MENU, self.onInsertVariable, id=idCur )
+				item = self.menu.Append( wx.ID_ANY, v )
+				self.Bind( wx.EVT_MENU, self.onInsertVariable, item )
+				self.idVariable[item.GetId()] = v
 		
 		self.PopupMenu( self.menu )
 		wx.CallAfter( self.notes.SetFocus )

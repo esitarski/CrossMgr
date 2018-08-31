@@ -130,7 +130,7 @@ class Animation(wx.Control):
 		self.highlightFont = None
 		self.rLast = -1
 			 
-		self.timer = wx.Timer( self, id=wx.NewId())
+		self.timer = wx.Timer( self, id=wx.ID_ANY )
 		self.Bind( wx.EVT_TIMER, self.NextFrame, self.timer )
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for

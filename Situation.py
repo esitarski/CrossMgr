@@ -556,25 +556,22 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail),
-				(None, None, None, None),
-				(wx.NewId(), _('Pull After Last Recorded Time') + u'...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
-				(wx.NewId(), _('DNF After Last Recorded Time') + u'...',	_('DNF After Last Recorded Time'),	self.OnPopupDNF),
+				(_('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail),
+				(None, None, None),
+				(_('Pull After Last Recorded Time') + u'...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
+				(_('DNF After Last Recorded Time') + u'...',	_('DNF After Last Recorded Time'),	self.OnPopupDNF),
 			]
-			for id, name, text, callback in self.popupInfo:
-				if id:
-					self.Bind( wx.EVT_MENU, callback, id=id )
 
-		menu = wx.Menu()
-		for i, (id, name, text, callback) in enumerate(self.popupInfo):
-			if not id:
-				Utils.addMissingSeparator( menu )
-				continue
-			menu.Append( id, name, text )
+			self.menu = wx.Menu()
+			for i, (name, text, callback) in enumerate(self.popupInfo):
+				if not name:
+					Utils.addMissingSeparator( menu )
+					continue
+				item = menu.Append( wx.ID_ANY, name, text )
+				self.Bind( wx.EVT_MENU, callback, item )
 		
 		try:
-			self.PopupMenu( menu )
-			menu.Destroy()
+			self.PopupMenu( self.menu )
 		except Exception as e:
 			Utils.writeLog( 'Situation:doRightClick: {}'.format(e) )
 	

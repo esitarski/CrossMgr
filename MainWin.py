@@ -215,8 +215,8 @@ def ShowTipAtStartup():
 		pass
 
 class SimulateDialog(wx.Dialog):
-	ID_MASS_START = wx.NewId()
-	ID_TIME_TRIAL = wx.NewId()
+	ID_MASS_START = 0
+	ID_TIME_TRIAL = 1
 
 	def __init__(
 			self, parent, fName, id=wx.ID_ANY, title=_('Simulation'), size=wx.DefaultSize, pos=wx.DefaultPosition,
@@ -306,6 +306,7 @@ def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
 	mi = wx.MenuItem( menu, id, name, help )
 	mi.SetBitmap( bitmap )
 	menu.Append( mi )
+	return mi
 		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
@@ -333,7 +334,7 @@ class MainWin( wx.Frame ):
 		self.raceDBUploadDialog = None
 		
 		# Setup the objects for the race clock.
-		self.timer = wx.Timer( self, id=wx.NewId() )
+		self.timer = wx.Timer( self, id=wx.ID_ANY )
 		self.secondCount = 0
 		self.Bind( wx.EVT_TIMER, self.updateRaceClock, self.timer )
 
@@ -352,42 +353,36 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.fileMenu = wx.Menu()
 
-		AppendMenuItemBitmap( self.fileMenu, wx.ID_NEW , _("&New..."), _("Create a new race"), Utils.GetPngBitmap('document-new.png') )
-		self.Bind(wx.EVT_MENU, self.menuNew, id=wx.ID_NEW )
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_NEW, _("&New..."), _("Create a new race"), Utils.GetPngBitmap('document-new.png') )
+		self.Bind(wx.EVT_MENU, self.menuNew, item )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.fileMenu, idCur , _("New Nex&t..."), _("Create a new race starting from the current race"), Utils.GetPngBitmap('document-new-next.png') )
-		self.Bind(wx.EVT_MENU, self.menuNewNext, id=idCur )
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_ANY, _("New Nex&t..."), _("Create a new race starting from the current race"), Utils.GetPngBitmap('document-new-next.png') )
+		self.Bind(wx.EVT_MENU, self.menuNewNext, item )
 
 		self.fileMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.fileMenu, idCur , _("New from &RaceDB Excel..."), _("Create a new race from RaceDB Excel output"), Utils.GetPngBitmap('database-add.png') )
-		self.Bind(wx.EVT_MENU, self.menuNewRaceDB, id=idCur )
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_ANY, _("New from &RaceDB Excel..."), _("Create a new race from RaceDB Excel output"), Utils.GetPngBitmap('database-add.png') )
+		self.Bind(wx.EVT_MENU, self.menuNewRaceDB, item )
 
 		self.fileMenu.AppendSeparator()
-		AppendMenuItemBitmap( self.fileMenu, wx.ID_OPEN , _("&Open..."), _("Open a race"), Utils.GetPngBitmap('document-open.png') )
-		self.Bind(wx.EVT_MENU, self.menuOpen, id=wx.ID_OPEN )
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_OPEN, _("&Open..."), _("Open a race"), Utils.GetPngBitmap('document-open.png') )
+		self.Bind(wx.EVT_MENU, self.menuOpen, item )
 
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("Open N&ext..."), _("Open the next race starting from the current race") )
-		self.Bind(wx.EVT_MENU, self.menuOpenNext, id=idCur )
+		item = self.fileMenu.Append( wx.ID_ANY, _("Open N&ext..."), _("Open the next race starting from the current race") )
+		self.Bind(wx.EVT_MENU, self.menuOpenNext, item )
 
 		self.fileMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("Open from RaceDB Server..."), _("Open a Race directly from RaceDB server") )
-		self.Bind(wx.EVT_MENU, self.menuOpenRaceDB, id=idCur )
+		item = self.fileMenu.Append( wx.ID_ANY, _("Open from RaceDB Server..."), _("Open a Race directly from RaceDB server") )
+		self.Bind(wx.EVT_MENU, self.menuOpenRaceDB, item )
 
-		idCur = wx.NewId()
-		self.fileMenu.Append( idCur , _("Upload Results to RaceDB Server..."), _("Upload Results to RaceDB server") )
-		self.Bind(wx.EVT_MENU, self.menuUploadRaceDB, id=idCur )
+		item = self.fileMenu.Append( wx.ID_ANY, _("Upload Results to RaceDB Server..."), _("Upload Results to RaceDB server") )
+		self.Bind(wx.EVT_MENU, self.menuUploadRaceDB, item )
 		
 		self.fileMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.fileMenu, idCur , _("&Restore from Original Input..."), _("Restore from Original Input"),
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_ANY, _("&Restore from Original Input..."), _("Restore from Original Input"),
 			Utils.GetPngBitmap('document-revert.png') )
-		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuRestoreFromInput, item )
 
 		self.fileMenu.AppendSeparator()
 		
@@ -399,13 +394,12 @@ class MainWin( wx.Frame ):
 		
 		self.fileMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.fileMenu, idCur, _('&Close Race'), _('Close this race without exiting CrossMgr'),
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_ANY, _('&Close Race'), _('Close this race without exiting CrossMgr'),
 			Utils.GetPngBitmap('document-close.png') )
-		self.Bind(wx.EVT_MENU, self.menuCloseRace, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuCloseRace, item )
 		
-		AppendMenuItemBitmap( self.fileMenu, wx.ID_EXIT, _("E&xit"), _("Exit CrossMgr"), Utils.GetPngBitmap('exit.png') )
-		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
+		item = AppendMenuItemBitmap( self.fileMenu, wx.ID_EXIT, _("E&xit"), _("Exit CrossMgr"), Utils.GetPngBitmap('exit.png') )
+		self.Bind(wx.EVT_MENU, self.menuExit, item )
 		
 		self.Bind(wx.EVT_MENU_RANGE, self.menuFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
 		
@@ -414,252 +408,217 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.publishMenu = wx.Menu()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur, _("Page &Setup..."), _("Setup the print page"), Utils.GetPngBitmap('page-setup.png') )
-		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=idCur )
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY, _("Page &Setup..."), _("Setup the print page"), Utils.GetPngBitmap('page-setup.png') )
+		self.Bind(wx.EVT_MENU, self.menuPageSetup, item )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur, _("P&review Print Results..."), _("Preview the printed results on screen"),
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY, _("P&review Print Results..."), _("Preview the printed results on screen"),
 								Utils.GetPngBitmap('print-preview.png') )
-		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPrintPreview, item )
 
 		self.publishMenu.AppendSeparator()
 		
-		AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"),
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_PRINT, _("&Print Results..."), _("Print the results to a printer"),
 								Utils.GetPngBitmap('Printer.png') )
 		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur, _("Print P&odium Results..."), _("Print the top position results to a printer"),
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY, _("Print P&odium Results..."), _("Print the top position results to a printer"),
 								Utils.GetPngBitmap('Podium.png') )
-		self.Bind(wx.EVT_MENU, self.menuPrintPodium, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPrintPodium, item )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur , _("Print C&ategories..."), _("Print Categories"), Utils.GetPngBitmap('categories.png') )
-		self.Bind(wx.EVT_MENU, self.menuPrintCategories, id=idCur )
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY, _("Print C&ategories..."), _("Print Categories"), Utils.GetPngBitmap('categories.png') )
+		self.Bind(wx.EVT_MENU, self.menuPrintCategories, item )
 
 		self.publishMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&Batch Publish Files..."), _("Publish Multiple Results File Formats"), Utils.GetPngBitmap('batch_process_icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPublishBatch, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPublishBatch, item )
 		
 		'''
 		self.publishMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&HTML Publish..."), _("Publish Results as HTML (.html)"), Utils.GetPngBitmap('html-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPublishHtmlRaceResults, item )
 
 		self.publishMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&Ftp Publish..."), _("Publish Results to FTP"),
 							Utils.GetPngBitmap('ftp-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlFtp, item )
 
 		self.publishMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&PDF Publish..."), _("Publish Results as PDF Files"),
 							Utils.GetPngBitmap('pdf-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPrintPDF, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPrintPDF, item )
 		
 		self.publishMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&Excel Publish..."), _("Publish Results as an Excel Spreadsheet (.xls)"), Utils.GetPngBitmap('excel-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPublishAsExcel, item )
 		
 		self.publishMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&CrossResults.com Publish..."), _("Publish Results to the CrossResults.com web site"),
 							Utils.GetPngBitmap('crossresults-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportCrossResults, item )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&Road-Results.com Publish..."), _("Publish Results to the Road-Results.com web site"),
 							Utils.GetPngBitmap('crossresults-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportRoadResults, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportRoadResults, item )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&WebScorer.com Publish..."), _("Publish Results in WebScorer.com format"),
 							Utils.GetPngBitmap('webscorer-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportWebScorer, item )
 
 		self.publishMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&USAC Excel Publish..."), _("Publish Results in USAC Excel Format"),
 							Utils.GetPngBitmap('usac-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportUSAC, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportUSAC, item )
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("UCI (&Infostrada) Excel Publish..."), _("Publish Results in UCI (&Infostrada) Excel Format"),
 							Utils.GetPngBitmap('infostrada-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportUCI, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportUCI, item )
 
 		self.publishMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&VTTA Excel Publish..."), _("Publish Results in Excel Format for VTTA analysis"),
 							Utils.GetPngBitmap('vtta-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuExportVTTA, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportVTTA, item )
 
 		self.publishMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("&Facebook PNG Publish..."), _("Publish Results as PNG files for posting on Facebook"),
 							Utils.GetPngBitmap('facebook-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPrintPNG, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPrintPNG, item )
 		
 		self.publishMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.publishMenu, idCur,
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
 							_("TT Start HTML Publish..."), _("Publish Time Trial Start page"),
 							Utils.GetPngBitmap('stopwatch-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuPublishHtmlTTStart, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuPublishHtmlTTStart, item )
 		'''
 		
 		self.menuBar.Append( self.publishMenu, _("&Publish") )
 		
 		#-----------------------------------------------------------------------
 		self.editMenu = wx.Menu()
-		self.undoMenuButton = wx.MenuItem( self.editMenu, wx.ID_UNDO , _("&Undo\tCtrl+Z"), _("Undo the last edit") )
+		item = self.undoMenuButton = wx.MenuItem( self.editMenu, wx.ID_UNDO , _("&Undo\tCtrl+Z"), _("Undo the last edit") )
 		self.undoMenuButton.SetBitmap( Utils.GetPngBitmap('Undo-icon.png') )
 		self.editMenu.Append( self.undoMenuButton )
-		self.Bind(wx.EVT_MENU, self.menuUndo, id=wx.ID_UNDO )
+		self.Bind(wx.EVT_MENU, self.menuUndo, item )
 		self.undoMenuButton.Enable( False )
 		
 		self.redoMenuButton = wx.MenuItem( self.editMenu, wx.ID_REDO , _("&Redo\tCtrl+Y"), _("Redo the last edit") )
 		self.redoMenuButton.SetBitmap( Utils.GetPngBitmap('Redo-icon.png') )
-		self.editMenu.Append( self.redoMenuButton )
-		self.Bind(wx.EVT_MENU, self.menuRedo, id=wx.ID_REDO )
+		item = self.editMenu.Append( self.redoMenuButton )
+		self.Bind(wx.EVT_MENU, self.menuRedo, item )
 		self.redoMenuButton.Enable( False )
 		self.editMenu.AppendSeparator()
 		
-		self.editMenu.Append( wx.ID_FIND, _("&Find...\tCtrl+F"), _("Find a Rider") )
-		self.Bind(wx.EVT_MENU, self.menuFind, id=wx.ID_FIND )
+		item = self.editMenu.Append( wx.ID_FIND, _("&Find...\tCtrl+F"), _("Find a Rider") )
+		self.Bind(wx.EVT_MENU, self.menuFind, item )
 		
 		self.editMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		self.editMenu.Append( idCur, _('&Delete Bib Number...'), _('Delete Bib Number...') )
-		self.Bind( wx.EVT_MENU, self.menuDeleteBib, id=idCur )
+		item = self.editMenu.Append( wx.ID_ANY, _('&Delete Bib Number...'), _('Delete Bib Number...') )
+		self.Bind( wx.EVT_MENU, self.menuDeleteBib, item )
 		
-		idCur = wx.NewId()
-		self.editMenu.Append( idCur, _('&Swap Bib Numbers...'), _('Swap Bib Numbers...') )
-		self.Bind( wx.EVT_MENU, self.menuSwapBibs, id=idCur )
+		item = self.editMenu.Append( wx.ID_ANY, _('&Swap Bib Numbers...'), _('Swap Bib Numbers...') )
+		self.Bind( wx.EVT_MENU, self.menuSwapBibs, item )
 		
-		idCur = wx.NewId()
-		self.editMenu.Append( idCur, _('&Change Bib Number...'), _('Change Bib Number...') )
-		self.Bind( wx.EVT_MENU, self.menuChangeBib, id=idCur )
+		item = self.editMenu.Append( wx.ID_ANY, _('&Change Bib Number...'), _('Change Bib Number...') )
+		self.Bind( wx.EVT_MENU, self.menuChangeBib, item )
 		
-		idCur = wx.NewId()
-		self.editMenu.Append( idCur, _('&Add Missing Bib Number...'), _('Add Missing Bib Number...') )
-		self.Bind( wx.EVT_MENU, self.menuAddBibNumber, id=idCur )
+		item = self.editMenu.Append( wx.ID_ANY, _('&Add Missing Bib Number...'), _('Add Missing Bib Number...') )
+		self.Bind( wx.EVT_MENU, self.menuAddBibNumber, item )
 		
 		self.editMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.editMenu.Append( idCur, _('&Change "Autocorrect"...'), _('Change "Autocorrect"...') )
-		self.Bind( wx.EVT_MENU, self.menuAutocorrect, id=idCur )
+		item = self.editMenu.Append( wx.ID_ANY, _('&Change "Autocorrect"...'), _('Change "Autocorrect"...') )
+		self.Bind( wx.EVT_MENU, self.menuAutocorrect, item )
 		
 		self.editMenuItem = self.menuBar.Append( self.editMenu, _("&Edit") )
 
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu = wx.Menu()
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("&Link to External Excel Data..."), _("Link to information in an Excel spreadsheet"),
+		item = AppendMenuItemBitmap( self.dataMgmtMenu, wx.ID_ANY, _("&Link to External Excel Data..."), _("Link to information in an Excel spreadsheet"),
 			Utils.GetPngBitmap('excel-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuLinkExcel, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuLinkExcel, item )
 		
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur, _('&Add DNS from External Excel Data...'), _('Add DNS...') )
-		self.Bind( wx.EVT_MENU, self.menuDNS, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _('&Add DNS from External Excel Data...'), _('Add DNS...') )
+		self.Bind( wx.EVT_MENU, self.menuDNS, item )
 		
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur, _('&Open Excel Spreadsheet...'), _('Open Excel Spreadsheet...') )
-		self.Bind( wx.EVT_MENU, self.menuOpenExcelSheet, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _('&Open Excel Spreadsheet...'), _('Open Excel Spreadsheet...') )
+		self.Bind( wx.EVT_MENU, self.menuOpenExcelSheet, item )
 		
 		self.dataMgmtMenu.AppendSeparator()
 		
 		#-----------------------------------------------------------------------
-		idCur = wx.NewId()
-		AppendMenuItemBitmap(self.dataMgmtMenu, idCur , _("&Import Time Trial Start Times..."), _("Import Time Trial Start Times"),
+		item = AppendMenuItemBitmap(self.dataMgmtMenu, wx.ID_ANY, _("&Import Time Trial Start Times..."), _("Import Time Trial Start Times"),
 			Utils.GetPngBitmap('clock-add.png') )
-		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuImportTTStartTimes, item )
 		
 		'''
 		#-----------------------------------------------------------------------
 		self.dataMgmtMenu.AppendSeparator()
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.dataMgmtMenu, idCur , _("&Import Course in GPX format..."), _("Import Course in GPX format"),
+		item = AppendMenuItemBitmap( self.dataMgmtMenu, wx.ID_ANY, _("&Import Course in GPX format..."), _("Import Course in GPX format"),
 			Utils.GetPngBitmap('gps-icon.png') )
-		self.Bind(wx.EVT_MENU, self.menuImportGpx, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuImportGpx, item )
 		
 		self.exportGpxMenu = wx.Menu()
 		
-		idCur = wx.NewId()
-		self.exportGpxMenu.Append( idCur, _("in GPX Format..."), _("Export Course in GPX format") )
-		self.Bind(wx.EVT_MENU, self.menuExportGpx, id=idCur )
+		item = self.exportGpxMenu.Append( wx.ID_ANY, _("in GPX Format..."), _("Export Course in GPX format") )
+		self.Bind(wx.EVT_MENU, self.menuExportGpx, item )
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.exportGpxMenu, idCur , _("as HTML &Preview..."),
+		item = AppendMenuItemBitmap( self.exportGpxMenu, wx.ID_ANY, _("as HTML &Preview..."),
 			_("Export Course Preview in HTML"),
 			Utils.GetPngBitmap('html-icon.png')
 		)
-		self.Bind(wx.EVT_MENU, self.menuExportCoursePreviewAsHtml, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportCoursePreviewAsHtml, item )
 		
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.exportGpxMenu, idCur,
+		item = AppendMenuItemBitmap( self.exportGpxMenu, wx.ID_ANY,
 			_("as KMZ Virtual Tour..."),
 			_("Export Course as KMZ Virtual Tour (Requires Google Earth to View)"),
 			Utils.GetPngBitmap('Google-Earth-icon.png')
 		)
-		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, id=idCur )
+		self.Bind(wx.EVT_MENU, self.menuExportCourseAsKml, item )
 		
-		self.dataMgmtMenu.AppendMenu( wx.NewId(), _('Export Course'), self.exportGpxMenu  )
+		self.dataMgmtMenu.AppendMenu( wx.ANY_ID, _('Export Course'), self.exportGpxMenu  )
 		'''
 		
 		#-----------------------------------------------------------------------
 		
 		self.dataMgmtMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("&Import Categories from File..."), _("Import Categories from File") )
-		self.Bind(wx.EVT_MENU, self.menuImportCategories, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("&Import Categories from File..."), _("Import Categories from File") )
+		self.Bind(wx.EVT_MENU, self.menuImportCategories, item )
 
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("&Export Categories to File..."), _("Export Categories to File") )
-		self.Bind(wx.EVT_MENU, self.menuExportCategories, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("&Export Categories to File..."), _("Export Categories to File") )
+		self.Bind(wx.EVT_MENU, self.menuExportCategories, item )
 		
 		self.dataMgmtMenu.AppendSeparator()
 
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export Passings to Excel..."), _("Export Passings to Excel File") )
-		self.Bind(wx.EVT_MENU, self.menuExportHistory, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("Export Passings to Excel..."), _("Export Passings to Excel File") )
+		self.Bind(wx.EVT_MENU, self.menuExportHistory, item )
 
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export Raw Data as &HTML..."), _("Export raw data as HTML (.html)") )
-		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("Export Raw Data as &HTML..."), _("Export raw data as HTML (.html)") )
+		self.Bind(wx.EVT_MENU, self.menuExportHtmlRawData, item )
 
-		idCur = wx.NewId()
-		self.dataMgmtMenu.Append( idCur , _("Export Results as &JSON..."), _("Export results as JSON (.json)") )
-		self.Bind(wx.EVT_MENU, self.menuExportResultsJSON, id=idCur )
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("Export Results as &JSON..."), _("Export results as JSON (.json)") )
+		self.Bind(wx.EVT_MENU, self.menuExportResultsJSON, item )
 		
 		self.menuBar.Append( self.dataMgmtMenu, _("&DataMgmt") )
 
@@ -730,112 +689,92 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.chipMenu = wx.Menu()
 
-		idCur = wx.NewId()
-		AppendMenuItemBitmap( self.chipMenu, idCur, _("Chip Reader &Setup..."), _("Configure and Test the Chip Reader"), Utils.GetPngBitmap('rfid-signal.png') )
-		self.Bind(wx.EVT_MENU, self.menuJChip, id=idCur )
+		item = AppendMenuItemBitmap( self.chipMenu, wx.ID_ANY, _("Chip Reader &Setup..."), _("Configure and Test the Chip Reader"), Utils.GetPngBitmap('rfid-signal.png') )
+		self.Bind(wx.EVT_MENU, self.menuJChip, item )
 		
 		self.chipMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , _("Import JChip File..."), _("JChip Formatted File") )
-		self.Bind(wx.EVT_MENU, self.menuJChipImport, id=idCur )
+		item = self.chipMenu.Append( wx.ID_ANY, _("Import JChip File..."), _("JChip Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuJChipImport, item )
 		
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , _("Import Impinj File..."), _("Impinj Formatted File") )
-		self.Bind(wx.EVT_MENU, self.menuImpinjImport, id=idCur )
+		item = self.chipMenu.Append( wx.ID_ANY, _("Import Impinj File..."), _("Impinj Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuImpinjImport, item )
 		
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , _("Import Ipico File..."), _("Ipico Formatted File") )
-		self.Bind(wx.EVT_MENU, self.menuIpicoImport, id=idCur )
+		item = self.chipMenu.Append( wx.ID_ANY, _("Import Ipico File..."), _("Ipico Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuIpicoImport, item )
 		
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , _("Import Alien File..."), _("Alien Formatted File") )
-		self.Bind(wx.EVT_MENU, self.menuAlienImport, id=idCur )
+		item = self.chipMenu.Append( wx.ID_ANY, _("Import Alien File..."), _("Alien Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuAlienImport, item )
 		
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , _("Import Orion File..."), _("Orion Formatted File") )
-		self.Bind(wx.EVT_MENU, self.menuOrionImport, id=idCur )
+		item = self.chipMenu.Append( wx.ID_ANY, _("Import Orion File..."), _("Orion Formatted File") )
+		self.Bind(wx.EVT_MENU, self.menuOrionImport, item )
 		
-		idCur = wx.NewId()
-		self.chipMenu.Append( idCur , _("Import RaceResult File..."), _("RaceResult File") )
-		self.Bind(wx.EVT_MENU, self.menuRaceResultImport, id=idCur )
+		item = self.chipMenu.Append( wx.ID_ANY, _("Import RaceResult File..."), _("RaceResult File") )
+		self.Bind(wx.EVT_MENU, self.menuRaceResultImport, item )
 		
 		self.menuBar.Append( self.chipMenu, _("Chip&Reader") )
 
 		#----------------------------------------------------------------------------------------------
 		self.toolsMenu = wx.Menu()
 		
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
-		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, id=idCur )
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
+		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, item )
 		
 		self.toolsMenu.AppendSeparator()
 
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
-		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, id=idCur )
+		item = self.toolsMenu.Append( wx.ID_ANY, _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
+		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, item )
 
 		self.toolsMenu.AppendSeparator()
 		
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Simulate Race..."), _("Simulate a race") )
-		self.Bind(wx.EVT_MENU, self.menuSimulate, id=idCur )
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Simulate Race..."), _("Simulate a race") )
+		self.Bind(wx.EVT_MENU, self.menuSimulate, item )
 
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
-		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, id=idCur )
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
+		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, item )
 		
 		self.toolsMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.toolsMenu.Append( idCur , _("&Playback..."), _("Playback this race from original data.") )
-		self.Bind(wx.EVT_MENU, self.menuPlayback, id=idCur )
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Playback..."), _("Playback this race from original data.") )
+		self.Bind(wx.EVT_MENU, self.menuPlayback, item )
 		
 		self.menuBar.Append( self.toolsMenu, _("&Tools") )
 		
 		#-----------------------------------------------------------------------
 		self.optionsMenu = wx.Menu()
-		idCur = wx.NewId()
-		self.menuItemHighPrecisionTimes = self.optionsMenu.Append( idCur , _("&Show 100s of a second"), _("Show 100s of a second"), wx.ITEM_CHECK )
-		self.Bind( wx.EVT_MENU, self.menuShowHighPrecisionTimes, id=idCur )
+		item = self.menuItemHighPrecisionTimes = self.optionsMenu.Append( wx.ID_ANY, _("&Show 100s of a second"), _("Show 100s of a second"), wx.ITEM_CHECK )
+		self.Bind( wx.EVT_MENU, self.menuShowHighPrecisionTimes, item )
 		
-		idCur = wx.NewId()
-		self.menuItemPlaySounds = self.optionsMenu.Append( idCur , _("&Play Sounds"), _("Play Sounds"), wx.ITEM_CHECK )
+		item = self.menuItemPlaySounds = self.optionsMenu.Append( wx.ID_ANY, _("&Play Sounds"), _("Play Sounds"), wx.ITEM_CHECK )
 		self.playSounds = self.config.ReadBool('playSounds', True)
 		self.menuItemPlaySounds.Check( self.playSounds )
-		self.Bind( wx.EVT_MENU, self.menuPlaySounds, id=idCur )
+		self.Bind( wx.EVT_MENU, self.menuPlaySounds, item )
 		
-		idCur = wx.NewId()
-		self.menuItemSyncCategories = self.optionsMenu.Append( idCur , _("Sync &Categories between Tabs"), _("Sync Categories between Tabs"), wx.ITEM_CHECK )
-		self.Bind( wx.EVT_MENU, self.menuSyncCategories, id=idCur )
+		item = self.menuItemSyncCategories = self.optionsMenu.Append( wx.ID_ANY, _("Sync &Categories between Tabs"), _("Sync Categories between Tabs"), wx.ITEM_CHECK )
+		self.Bind( wx.EVT_MENU, self.menuSyncCategories, item )
 		
 		self.optionsMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.menuItemLaunchExcelAfterPublishingResults = self.optionsMenu.Append( idCur,
+		item = self.menuItemLaunchExcelAfterPublishingResults = self.optionsMenu.Append( wx.ID_ANY,
 			_("&Launch Excel after Publishing Results"),
 			_("Launch Excel after Publishing Results"), wx.ITEM_CHECK )
 		self.launchExcelAfterPublishingResults = self.config.ReadBool('menuLaunchExcelAfterPublishingResults', True)
 		self.menuItemLaunchExcelAfterPublishingResults.Check( self.launchExcelAfterPublishingResults )
-		self.Bind( wx.EVT_MENU, self.menuLaunchExcelAfterPublishingResults, id=idCur )
+		self.Bind( wx.EVT_MENU, self.menuLaunchExcelAfterPublishingResults, item )
 		
 		'''
 		self.optionsMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set Contact &Email..."), _("Set Contact Email for HTML Output") )
-		self.Bind(wx.EVT_MENU, self.menuSetContactEmail, id=idCur )
+		item = self.optionsMenu.Append( wx.ID_ANY, _("Set Contact &Email..."), _("Set Contact Email for HTML Output") )
+		self.Bind(wx.EVT_MENU, self.menuSetContactEmail, item )
 		
-		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set &Graphic..."), _("Set Graphic") )
-		self.Bind(wx.EVT_MENU, self.menuSetGraphic, id=idCur )
+		item = self.optionsMenu.Append( wx.ID_ANY, _("Set &Graphic..."), _("Set Graphic") )
+		self.Bind(wx.EVT_MENU, self.menuSetGraphic, item )
 		'''
 		
 		self.optionsMenu.AppendSeparator()
-		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set Default Contact &Email..."), _("Set Default Contact Email") )
-		self.Bind(wx.EVT_MENU, self.menuSetDefaultContactEmail, id=idCur )
+		item = self.optionsMenu.Append( wx.ID_ANY, _("Set Default Contact &Email..."), _("Set Default Contact Email") )
+		self.Bind(wx.EVT_MENU, self.menuSetDefaultContactEmail, item )
 		
-		idCur = wx.NewId()
-		self.optionsMenu.Append( idCur , _("Set Default &Graphic..."), _("Set Default Graphic") )
-		self.Bind(wx.EVT_MENU, self.menuSetDefaultGraphic, id=idCur )
+		item = self.optionsMenu.Append( wx.ID_ANY, _("Set Default &Graphic..."), _("Set Default Graphic") )
+		self.Bind(wx.EVT_MENU, self.menuSetDefaultGraphic, item )
 		
 		self.menuBar.Append( self.optionsMenu, _("&Options") )
 		
@@ -847,14 +786,13 @@ class MainWin( wx.Frame ):
 		jumpToIds = []
 		for i, p in enumerate(self.pages):
 			name = self.notebook.GetPageText(i)
-			idCur = wx.NewId()
-			self.idPage[idCur] = i
 			if i <= 11:
-				self.pageMenu.Append( idCur, u'{}\tF{}'.format(name, i+1), u"{} {}".format(_('Jump to'), name) )
+				item = self.pageMenu.Append( wx.ID_ANY, u'{}\tF{}'.format(name, i+1), u"{} {}".format(_('Jump to'), name) )
 			else:
-				self.pageMenu.Append( idCur, name, u"{} {}".format(_('Jump to'), name) )
-			self.Bind(wx.EVT_MENU, self.menuShowPage, id=idCur )
-			jumpToIds.append( idCur )
+				item = self.pageMenu.Append( wx.ID_ANY, name, u"{} {}".format(_('Jump to'), name) )
+			self.idPage[item.GetId()] = i
+			self.Bind(wx.EVT_MENU, self.menuShowPage, item )
+			jumpToIds.append( item.GetId() )
 			
 		self.menuBar.Append( self.pageMenu, _("&JumpTo") )
 
@@ -864,13 +802,12 @@ class MainWin( wx.Frame ):
 		self.menuIdToWindowInfo = {}
 		
 		def addMenuWindow( attr, cls, name ):
-			idCur = wx.NewId()
-			menuItem = self.windowMenu.Append( idCur, name, name, wx.ITEM_CHECK )
-			self.Bind( wx.EVT_MENU, self.menuWindow, id=idCur )
-			pageDialog = PageDialog(self, cls, closeCallback=lambda idIn=idCur: self.windowCloseCallback(idIn), title=name)
+			menuItem = self.windowMenu.Append( wx.ID_ANY, name, name, wx.ITEM_CHECK )
+			self.Bind( wx.EVT_MENU, self.menuWindow, menuItem )
+			pageDialog = PageDialog(self, cls, closeCallback=lambda idIn=menuItem.GetId(): self.windowCloseCallback(idIn), title=name)
 			if attr == 'lapCounter':
 				self.lapCounterDialog = pageDialog
-			self.menuIdToWindowInfo[idCur] = [
+			self.menuIdToWindowInfo[menuItem.GetId()] = [
 				attr, name, menuItem,
 				pageDialog,
 			]
@@ -886,37 +823,32 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.webMenu = wx.Menu()
 
-		idCur = wx.NewId()
-		self.webMenu.Append( idCur, _("&Index Page..."), _("Index Page...") )
-		self.Bind(wx.EVT_MENU, self.menuWebIndexPage, id=idCur )
+		item = self.webMenu.Append( wx.ID_ANY, _("&Index Page..."), _("Index Page...") )
+		self.Bind(wx.EVT_MENU, self.menuWebIndexPage, item )
 
-		idCur = wx.NewId()
-		self.webMenu.Append( idCur, _("&QR Code Share Page..."), _("QR Code Share Page...") )
-		self.Bind(wx.EVT_MENU, self.menuWebQRCodePage, id=idCur )
+		item = self.webMenu.Append( wx.ID_ANY, _("&QR Code Share Page..."), _("QR Code Share Page...") )
+		self.Bind(wx.EVT_MENU, self.menuWebQRCodePage, item )
 		
 		self.menuBar.Append( self.webMenu, _("&Web") )
 		
 		#------------------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
 
-		idCur = wx.NewId()
-		self.helpMenu.Append( idCur, _("Help &Search..."), _("Search Help...") )
-		self.Bind(wx.EVT_MENU, self.menuHelpSearch, id=idCur )
+		item = self.helpMenu.Append( wx.ID_ANY, _("Help &Search..."), _("Search Help...") )
+		self.Bind(wx.EVT_MENU, self.menuHelpSearch, item )
 		self.helpSearch = HelpSearchDialog( self, title=_('Help Search') )
-		self.helpMenu.Append( wx.ID_HELP, _("&Help..."), _("Help about CrossMgr...") )
-		self.Bind(wx.EVT_MENU, self.menuHelp, id=wx.ID_HELP )
-		idCur = wx.NewId()
-		self.helpMenu.Append( idCur , _("&QuickStart..."), _("Get started with CrossMgr Now...") )
-		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, id=idCur )
+		item = self.helpMenu.Append( wx.ID_HELP, _("&Help..."), _("Help about CrossMgr...") )
+		self.Bind(wx.EVT_MENU, self.menuHelp, item )
+		item = self.helpMenu.Append( wx.ID_ANY, _("&QuickStart..."), _("Get started with CrossMgr Now...") )
+		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, item )
 		
 		self.helpMenu.AppendSeparator()
 
-		self.helpMenu.Append( wx.ID_ABOUT , _("&About..."), _("About CrossMgr...") )
-		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
+		item = self.helpMenu.Append( wx.ID_ABOUT , _("&About..."), _("About CrossMgr...") )
+		self.Bind(wx.EVT_MENU, self.menuAbout, item )
 
-		idCur = wx.NewId()
-		self.helpMenu.Append( idCur , _("&Tips at Startup..."), _("Enable/Disable Tips at Startup...") )
-		self.Bind(wx.EVT_MENU, self.menuTipAtStartup, id=idCur )
+		item = self.helpMenu.Append( wx.ID_ANY, _("&Tips at Startup..."), _("Enable/Disable Tips at Startup...") )
+		self.Bind(wx.EVT_MENU, self.menuTipAtStartup, item )
 
 
 		self.menuBar.Append( self.helpMenu, _("&Help") )
@@ -929,7 +861,7 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
 		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(min(11,len(jumpToIds)))]
-		self.contextHelp = wx.NewId()
+		self.contextHelp = wx.ID_HELP
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
 		accTable.append( (wx.ACCEL_SHIFT, wx.WXK_F1, self.contextHelp) )

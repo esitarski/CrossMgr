@@ -24,7 +24,7 @@ Root: HKCR; Subkey: "SeriesMgr\shell\open\command"; ValueType: string; ValueName
 Name: "desktopicon"; Description: "Create a &desktop icon"; 
 	
 [Files]
-Source: "*.*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "*.*"; Excludes: "\bugs\*,\install\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Icons]
 Name: "{group}\SeriesMgr"; Filename: "{app}\SeriesMgr.exe"

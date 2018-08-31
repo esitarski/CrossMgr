@@ -121,66 +121,60 @@ class Gantt( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),		_('Add Missing Last Lap'),		self.OnPopupAddMissingLastLap, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Pull after Lap End') + u'...',_('Pull after Lap End'),		self.OnPopupPull, allCases),
-				(wx.NewId(), _('DNF after Lap End') + u'...',	_('DNF after Lap End'),			self.OnPopupDNF, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift Lap End Time') + u'...',_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete Lap End Time') + u'...',_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Mass Pull after Lap End Time') + u'...',_('Pull Rider and all Riders after at Lap End'), self.OnPopupMassPull, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Turn off Autocorrect') + u'...',_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Swap with Rider before'),		_('Swap with Rider before'),	self.OnPopupSwapBefore, nonInterpCase),
-				(wx.NewId(), _('Swap with Rider after'),		_('Swap with Rider after'),		self.OnPopupSwapAfter, nonInterpCase),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Show Lap Details') + u'...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
-				(wx.NewId(), _('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
+				(_('Add Missing Last Lap'),		_('Add Missing Last Lap'),		self.OnPopupAddMissingLastLap, allCases),
+				(None, None, None, None),
+				(_('Pull after Lap End') + u'...',_('Pull after Lap End'),		self.OnPopupPull, allCases),
+				(_('DNF after Lap End') + u'...',	_('DNF after Lap End'),			self.OnPopupDNF, allCases),
+				(None, None, None, None),
+				(_('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
+				(_('Shift Lap End Time') + u'...',_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
+				(_('Delete Lap End Time') + u'...',_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None),
+				(_('Mass Pull after Lap End Time') + u'...',_('Pull Rider and all Riders after at Lap End'), self.OnPopupMassPull, allCases),
+				(None, None, None, None),
+				(_('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
+				(None, None, None, None),
+				(_('Turn off Autocorrect') + u'...',_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
+				(None, None, None, None),
+				(_('Swap with Rider before'),		_('Swap with Rider before'),	self.OnPopupSwapBefore, nonInterpCase),
+				(_('Swap with Rider after'),		_('Swap with Rider after'),		self.OnPopupSwapAfter, nonInterpCase),
+				(None, None, None, None),
+				(_('Show Lap Details') + u'...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
+				(None, None, None, None),
+				(_('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
+				(_('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
 			]
 			
 			self.splitMenuInfo = [
-					(wx.NewId(),
-					u'{} {}'.format(split-1, _('Split') if split-1 == 1 else _('Splits')),
+					(u'{} {}'.format(split-1, _('Split') if split-1 == 1 else _('Splits')),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
-					(wx.NewId(),
-					_('Custom') + u'...',
+					(_('Custom') + u'...',
 					lambda evt, s = self: s.doCustomSplitLap())]
-			for id, name, text, callback, cCase in self.popupInfo:
-				if id:
-					self.Bind( wx.EVT_MENU, callback, id=id )
-			for id, name, callback in self.splitMenuInfo:
-				self.Bind( wx.EVT_MENU, callback, id=id )
-			self.splitMenuId = wx.NewId()
 
 			self.menuOptions = {}
 			for numBefore in [False, True]:
 				for numAfter in [False, True]:
 					for caseCode in xrange(3):
 						menu = wx.Menu()
-						for id, name, text, callback, cCase in self.popupInfo:
-							if not id:
+						for name, text, callback, cCase in self.popupInfo:
+							if not name:
 								Utils.addMissingSeparator( menu )
 								continue
 							if caseCode < cCase:
 								continue
 							if (name.endswith(_('before')) and not numBefore) or (name.endswith(_('after')) and not numAfter):
 								continue
-							menu.Append( id, name, text )
+							item = menu.Append( wx.ID_ANY, name, text )
+							self.Bind( wx.EVT_MENU, callback, item )
 							
 						if caseCode == 2:
 							submenu = wx.Menu()
-							for id, name, callback in self.splitMenuInfo:
-								submenu.Append( id, name )
+							for name, callback in self.splitMenuInfo:
+								item = submenu.Append( wx.ID_ANY, name )
+								self.Bind( wx.EVT_MENU, callback, item )
 							Utils.addMissingSeparator( menu )
 							menu.PrependSeparator()
-							menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
+							menu.Prepend( wx.ID_ANY, _('Add Missing Split'), submenu )
 					
 						Utils.deleteTrailingSeparators( menu )
 						self.menuOptions[(numBefore,numAfter,caseCode)] = menu

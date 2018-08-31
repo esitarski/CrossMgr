@@ -147,11 +147,11 @@ vNum = AppVerName.split()[1].replace( '.', '_' )
 newExeName = 'SeriesMgr_Setup_v' + vNum + '.exe'
 
 try:
-	os.remove( 'install\\' + newExeName )
+	os.remove( os.path.join('install',newExeName) )
 except:
 	pass
 	
-shutil.copy( 'install\\SeriesMgr_Setup.exe', 'install\\' + newExeName )
+shutil.copy( os.path.join('install', 'SeriesMgr_Setup.exe'), os.path.join('install', newExeName) )
 print 'executable copied to: ' + newExeName
 
 # Create compressed executable.

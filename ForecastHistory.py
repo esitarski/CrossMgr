@@ -248,32 +248,30 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
-				(u'{}...'.format(_('Correct')),	wx.NewId(), self.OnPopupHistoryCorrect),
-				(u'{}...'.format(_('Split')),	wx.NewId(), self.OnPopupHistorySplit),
-				(u'{}...'.format(_('Shift')),	wx.NewId(), self.OnPopupHistoryShift),
-				(u'{}...'.format(_('Insert')),	wx.NewId(), self.OnPopupHistoryInsert),
-				(u'{}...'.format(_('Delete')),	wx.NewId(), self.OnPopupHistoryDelete),
-				(None,				None,		None),
-				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupHistoryDNF),
-				(None,				None,		None),
-				(_('RiderDetail'),				wx.NewId(),self.OnPopupHistoryRiderDetail),
-				(_('Results'),					wx.NewId(),self.OnPopupHistoryResults),
-				(_('Passings'),					wx.NewId(),self.OnPopupHistoryPassings),
-				(_('Chart'),					wx.NewId(),self.OnPopupHistoryChart),
+				(u'{}...'.format(_('Correct')),	self.OnPopupHistoryCorrect),
+				(u'{}...'.format(_('Split')),	self.OnPopupHistorySplit),
+				(u'{}...'.format(_('Shift')),	self.OnPopupHistoryShift),
+				(u'{}...'.format(_('Insert')),	self.OnPopupHistoryInsert),
+				(u'{}...'.format(_('Delete')),	self.OnPopupHistoryDelete),
+				(None,				    		None),
+				(u'{}...'.format(_('DNF')),		self.OnPopupHistoryDNF),
+				(None,				    		None),
+				(_('RiderDetail'),				self.OnPopupHistoryRiderDetail),
+				(_('Results'),					self.OnPopupHistoryResults),
+				(_('Passings'),					self.OnPopupHistoryPassings),
+				(_('Chart'),					self.OnPopupHistoryChart),
 			]
-			for p in self.historyPopupInfo:
-				if p[2]:
-					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
-
-			self.menu = wx.Menu()
-			for i, p in enumerate(self.historyPopupInfo):
-				if p[2]:
-					self.menu.Append( p[1], p[0] )
+			
+			menu = wx.Menu()
+			for i, (name, callback) in enumerate(self.historyPopupInfo):
+				if name:
+					item = self.menu.Append( wx.ID_ANY, name )
+					self.Bind( wx.EVT_MENU, callback, item )
 				else:
 					self.menu.AppendSeparator()
-		
+			self.menuHistory = menu
 		try:
-			self.PopupMenu( self.menu )
+			self.PopupMenu( self.menuHistory )
 		except Exception as e:
 			Utils.writeLog( 'ForecastHistory:doHistoryPopup: {}'.format(e) )
 	
@@ -394,28 +392,26 @@ class ForecastHistory( wx.Panel ):
 		
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
-				(u'{}...'.format(_('DNF')),		wx.NewId(), self.OnPopupExpectedDNF),
-				(u'{}...'.format(_('Pull')),	wx.NewId(), self.OnPopupExpectedPull),
-				(None,				None,		None),
-				(_('RiderDetail'),	wx.NewId(),	self.OnPopupExpectedRiderDetail),
-				(_('Results'),		wx.NewId(),	self.OnPopupExpectedResults),
-				(_('Passings'),		wx.NewId(),	self.OnPopupExpectedPassings),
-				(_('Chart'),		wx.NewId(),	self.OnPopupExpectedChart),
+				(u'{}...'.format(_('DNF')),		self.OnPopupExpectedDNF),
+				(u'{}...'.format(_('Pull')),	self.OnPopupExpectedPull),
+				(None,							None),
+				(_('RiderDetail'),				self.OnPopupExpectedRiderDetail),
+				(_('Results'),					self.OnPopupExpectedResults),
+				(_('Passings'),					self.OnPopupExpectedPassings),
+				(_('Chart'),					self.OnPopupExpectedChart),
 			]
-			for p in self.expectedPopupInfo:
-				if p[2]:
-					self.Bind( wx.EVT_MENU, p[2], id=p[1] )
 
-		menu = wx.Menu()
-		for i, p in enumerate(self.expectedPopupInfo):
-			if p[2]:
-				menu.Append( p[1], p[0] )
-			else:
-				menu.AppendSeparator()
+			menu = wx.Menu()
+			for i, (name, callback) in enumerate(self.expectedPopupInfo):
+				if name:
+					item = menu.Append( p[1], p[0] )
+					self.Bind( wx.EVT_MENU, p[2], item )
+				else:
+					menu.AppendSeparator()
+			self.menuExpected = menu
 		
 		try:
-			self.PopupMenu( menu )
-			menu.Destroy()
+			self.PopupMenu( self.menuExpected )
 		except Exception as e:
 			Utils.writeLog( 'ForecastHistory:doExpectedPopup: {}'.format(e) )
 		

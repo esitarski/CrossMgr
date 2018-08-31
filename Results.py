@@ -326,21 +326,37 @@ class Results( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(wx.NewId(), _('Passings'), 	_('Switch to Passings tab'), self.OnPopupHistory, allCases),
-				(wx.NewId(), _('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Show Photos'),	_('Show Photos'), self.OnPopupShowPhotos, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Correct...'),	_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
-				(wx.NewId(), _('Shift...'),	_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
-				(wx.NewId(), _('Delete...'),	_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, allCases),
-				(wx.NewId(), _('Swap with Rider after'),	_('Swap with Rider after'),	self.OnPopupSwapAfter, allCases),
+				(_('Passings'), 	_('Switch to Passings tab'), self.OnPopupHistory, allCases),
+				(_('RiderDetail'),	_('Show RiderDetail Dialog'), self.OnPopupRiderDetail, allCases),
+				(None, None, None, None),
+				(_('Show Photos'),	_('Show Photos'), self.OnPopupShowPhotos, allCases),
+				(None, None, None, None),
+				(_('Correct...'),	_('Change number or lap time...'),	self.OnPopupCorrect, interpCase),
+				(_('Shift...'),	_('Move lap time earlier/later...'),	self.OnPopupShift, interpCase),
+				(_('Delete...'),	_('Delete lap time...'),	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None),
+				(_('Swap with Rider before'),	_('Swap with Rider before'),	self.OnPopupSwapBefore, allCases),
+				(_('Swap with Rider after'),	_('Swap with Rider after'),	self.OnPopupSwapAfter, allCases),
 			]
-			for p in self.popupInfo:
-				if p[0]:
-					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
+
+			self.menuOptions = {}
+			for numBefore in [False, True]:
+				for numAfter in [False, True]:
+					for caseCode in xrange(3):
+						menu = wx.Menu()
+						for name, text, callback, cCase in self.popupInfo:
+							if not name:
+								Utils.addMissingSeparator( menu )
+								continue
+							if caseCode < cCase:
+								continue
+							if (name.endswith(_('before')) and not numBefore) or (name.endswith(_('after')) and not numAfter):
+								continue
+							item = menu.Append( wx.ID_ANY, name, text )
+							self.Bind( wx.EVT_MENU, callback, item )
+					
+						Utils.deleteTrailingSeparators( menu )
+						self.menuOptions[(numBefore,numAfter,caseCode)] = menu
 		
 		num = int(self.numSelect)
 		with Model.LockRace() as race:
@@ -365,20 +381,9 @@ class Results( wx.Panel ):
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 			
-		menu = wx.Menu()
-		for id, name, text, callback, cCase in self.popupInfo:
-			if not id:
-				Utils.addMissingSeparator( menu )
-				continue
-			if caseCode >= cCase:
-				if (name.endswith('before') and not self.numBefore) or (name.endswith('after') and not self.numAfter):
-					continue
-				menu.Append( id, name, text )
-				
-		Utils.deleteTrailingSeparators( menu )
+		menu = self.menuOptions[(bool(self.numBefore), bool(self.numAfter), caseCode)]
 		try:
 			self.PopupMenu( menu )
-			menu.Destroy()
 		except Exception as e:
 			Utils.writeLog( 'Results:doRightClick: {}'.format(e) )
 		

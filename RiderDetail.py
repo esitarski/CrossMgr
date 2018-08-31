@@ -248,21 +248,16 @@ class RiderDetail( wx.Panel ):
 		gbs.Add( self.num, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		
 		self.menu = wx.Menu()
-		self.deleteMenuId = wx.NewId()
-		self.menu.Append( self.deleteMenuId, _('&Delete Rider from Race...'), _('Delete this rider from the race') )
-		self.Bind( wx.EVT_MENU, self.onDeleteRider, id = self.deleteMenuId )
-		self.changeNumberMenuId = wx.NewId()
-		self.menu.Append( self.changeNumberMenuId, _("&Change Rider's Number..."), _("Change this rider's number") )
-		self.Bind( wx.EVT_MENU, self.onChangeNumber, id = self.changeNumberMenuId )
-		self.swapNumberMenuId = wx.NewId()
-		self.menu.Append( self.swapNumberMenuId, _('&Swap Number with Other Rider...'), _("Swap this rider's number with another rider's number") )
-		self.Bind( wx.EVT_MENU, self.onSwapNumber, id = self.swapNumberMenuId )
-		self.copyRiderMenuId = wx.NewId()
-		self.menu.Append( self.copyRiderMenuId, _('C&opy Rider Times to New Number...'), _("Copy these rider's times to another number") )
-		self.Bind( wx.EVT_MENU, self.onCopyRider, id = self.copyRiderMenuId )
-		self.changeOffsetMenuId = wx.NewId()
-		self.menu.Append( self.changeOffsetMenuId, _('Change Start W&ave Time...'), _("Fix lap times if the rider started in the wrong start wave") )
-		self.Bind( wx.EVT_MENU, self.onChangeOffset, id = self.changeOffsetMenuId )
+		item = self.menu.Append( wx.ID_ANY, _('&Delete Rider from Race...'), _('Delete this rider from the race') )
+		self.Bind( wx.EVT_MENU, self.onDeleteRider, item )
+		item = self.menu.Append( wx.ID_ANY, _("&Change Rider's Number..."), _("Change this rider's number") )
+		self.Bind( wx.EVT_MENU, self.onChangeNumber, item )
+		item = self.menu.Append( wx.ID_ANY, _('&Swap Number with Other Rider...'), _("Swap this rider's number with another rider's number") )
+		self.Bind( wx.EVT_MENU, self.onSwapNumber, item )
+		item = self.menu.Append( wx.ID_ANY, _('C&opy Rider Times to New Number...'), _("Copy these rider's times to another number") )
+		self.Bind( wx.EVT_MENU, self.onCopyRider, item )
+		item = self.menu.Append( wx.ID_ANY, _('Change Start W&ave Time...'), _("Fix lap times if the rider started in the wrong start wave") )
+		self.Bind( wx.EVT_MENU, self.onChangeOffset, item )
 		
 		self.editRiderBtn = wx.Button( self, label = u'{}...'.format(_('Edit')) )
 		self.Bind( wx.EVT_BUTTON, self.onEditRider, self.editRiderBtn )
@@ -484,16 +479,6 @@ class RiderDetail( wx.Panel ):
 		except:
 			return None
 		
-	ids = []
-	def NewId( self ):
-		try:
-			id = RiderDetail.ids[self.idCur]
-		except IndexError:
-			id = wx.NewId()
-			RiderDetail.ids.append( id )
-		self.idCur += 1
-		return id
-	
 	def getEntryFromClick( self, event ):
 		self.eventRow = event.GetRow()
 		self.visibleRow = self.eventRow
@@ -1076,54 +1061,50 @@ class RiderDetail( wx.Panel ):
 
 		if not hasattr(self, 'ganttMenuInfo'):
 			self.ganttMenuInfo = [
-				(wx.NewId(), _('Add Missing Last Lap'),			_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Pull after Lap End') + u'...',	_('Pull after Lap End'),				self.OnGanttPopupPull, allCases),
-				(wx.NewId(), _('DNF after Lap End') + u'...',	_('DNF after Lap End'),					self.OnGanttPopupDNF, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Correct lap End Time') + u'...',_('Correct lap End Time'),				lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
-				(wx.NewId(), _('Shift Lap End Time') + u'...',	_('Move lap end time earlier/later'),	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
-				(wx.NewId(), _('Delete Lap End Time') + u'...',	_('Delete Lap End Time'),				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Note') + u'...',				_('Add/Edit lap Note'),					self.OnGanttPopupLapNote, allCases),
-				(None, None, None, None, None),
-				(wx.NewId(), _('Show Lap Details') + u'...', 	_('Show Lap Details'),					self.OnGanttPopupLapDetail, allCases),
+				(_('Add Missing Last Lap'),			_('Add missing last lap'),				self.OnPopupAddMissingLastLap, allCases),
+				(None, None, None, None),
+				(_('Pull after Lap End') + u'...',	_('Pull after Lap End'),				self.OnGanttPopupPull, allCases),
+				(_('DNF after Lap End') + u'...',	_('DNF after Lap End'),					self.OnGanttPopupDNF, allCases),
+				(None, None, None, None),
+				(_('Correct lap End Time') + u'...',_('Correct lap End Time'),				lambda event, s = self: CorrectNumber(s, s.entry), interpCase),
+				(_('Shift Lap End Time') + u'...',	_('Move lap end time earlier/later'),	lambda event, s = self: ShiftNumber(s, s.entry), interpCase),
+				(_('Delete Lap End Time') + u'...',	_('Delete Lap End Time'),				lambda event, s = self: DeleteEntry(s, s.entry), nonInterpCase),
+				(None, None, None, None),
+				(_('Note') + u'...',				_('Add/Edit lap Note'),					self.OnGanttPopupLapNote, allCases),
+				(None, None, None, None),
+				(_('Show Lap Details') + u'...', 	_('Show Lap Details'),					self.OnGanttPopupLapDetail, allCases),
 			]
 			self.splitMenuInfo = [
-					(wx.NewId(),
-					u'{} {}'.format( split-1, _('Splits') if split > 2 else _('Split') ),
+					(u'{} {}'.format( split-1, _('Splits') if split > 2 else _('Split') ),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in xrange(2,8) ] + [
-					(wx.NewId(),
-					_('Custom') + u'...',
-					lambda evt, s = self: s.doCustomSplitLap())]
-			for id, name, text, callback, cCase in self.ganttMenuInfo:
-				if id:
-					self.Bind( wx.EVT_MENU, callback, id=id )
-			for id, name, callback in self.splitMenuInfo:
-				self.Bind( wx.EVT_MENU, callback, id=id )
-			self.splitMenuId = wx.NewId()
+					(_('Custom') + u'...', lambda evt, s = self: s.doCustomSplitLap())]
+			self.menuCase = {}
+			for caseCodeCur in xrange(3):
+				menu = wx.Menu()
+				for name, text, callback, cCase in self.ganttMenuInfo:
+					if not name:
+						Utils.addMissingSeparator( menu )
+						continue
+					if caseCodeCur < cCase:
+						continue
+					item = menu.Append( wx.ID_ANY, name, text )
+					self.Bind( wx.EVT_MENU, callback, item )
+
+				if caseCodeCur == 2:
+					submenu = wx.Menu()
+					for name, callback in self.splitMenuInfo:
+						item = submenu.Append( wx.ID_ANY, name )
+						self.Bind( wx.EVT_MENU, callback, item )
+					Utils.addMissingSeparator( menu )
+					menu.PrependSeparator()
+					menu.Prepend( wx.ID_ANY, _('Add Missing Split'), submenu )
+				
+				Utils.deleteTrailingSeparators( menu )
+				self.menuCase[caseCodeCur] = menu
 		
-		menu = wx.Menu()
-		for id, name, text, callback, cCase in self.ganttMenuInfo:
-			if not id:
-				Utils.addMissingSeparator( menu )
-				continue
-			if caseCode < cCase:
-				continue
-			menu.Append( id, name, text )
-			
-		if caseCode == 2:
-			submenu = wx.Menu()
-			for id, name, callback in self.splitMenuInfo:
-				submenu.Append( id, name )
-			Utils.addMissingSeparator( menu )
-			menu.PrependSeparator()
-			menu.Prepend( self.splitMenuId, _('Add Missing Split'), submenu )
-			
-		Utils.deleteTrailingSeparators( menu )
+		menu = self.menuCase[caseCode]
 		try:
 			self.PopupMenu( menu )
-			menu.Destroy()
 		except Exception as e:
 			Utils.writeLog( 'RiderDetail:onEditGantt: {}'.format(e) )
 	

@@ -64,7 +64,7 @@ class GanttChartPanel(wx.Panel):
 		self.yMove = -1
 		self.moveIRider = None
 		self.moveLap = None
-		self.moveTimer = wx.Timer( self, wx.NewId() )
+		self.moveTimer = wx.Timer( self, wx.ID_ANY )
 		
 		self.barHeight = 8
 		self.labelsWidthLeft = 8000

@@ -148,28 +148,28 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.toolbar.Bind( wx.EVT_TOOL, self.OnToolBar )
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Refresh.png'), wx.BITMAP_TYPE_PNG )
-		self.refreshID = wx.NewId()
-		self.toolbar.AddTool( self.refreshID, _('Refresh Photos'), bitmap )
+		item = self.toolbar.AddTool( wx.ID_ANY, _('Refresh Photos'), bitmap )
+		self.refreshID = item.GetId()
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'ClipboardPlus.png'), wx.BITMAP_TYPE_PNG )
-		self.copyToClipboardID = wx.NewId()
-		self.toolbar.AddTool( self.copyToClipboardID, _('Copy Photo to Clipboard...'), bitmap )
+		item = self.toolbar.AddTool( wx.ID_ANY, _('Copy Photo to Clipboard...'), bitmap )
+		self.copyToClipboardID = item.GetId()
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'FileBrowser.png'), wx.BITMAP_TYPE_PNG )
-		self.showFilesID = wx.NewId()
-		self.toolbar.AddTool( self.showFilesID, _('Show Files...'), bitmap )
+		item = self.toolbar.AddTool( wx.ID_ANY, _('Show Files...'), bitmap )
+		self.showFilesID = item.GetId()
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'Printer.png'), wx.BITMAP_TYPE_PNG )
-		self.printID = wx.NewId()
-		self.toolbar.AddTool( self.printID, _('Print Photo...'), bitmap )
+		item = self.toolbar.AddTool( wx.ID_ANY, _('Print Photo...'), bitmap )
+		self.printID = item.GetId()
 		
 		bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_toolbar.png'), wx.BITMAP_TYPE_PNG )
-		self.takePhotoID = wx.NewId()
-		self.toolbar.AddTool( self.takePhotoID, _('Photo Test'), bitmap )
+		item = self.toolbar.AddTool( wx.ID_ANY, _('Photo Test'), bitmap )
+		self.takePhotoID = item.GetId()
 		
 		#bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CheckeredFlagIcon.png'), wx.BITMAP_TYPE_PNG )
-		#self.finishStripID = wx.NewId()
-		#self.toolbar.AddTool( self.finishStripID, _('Composite Finish Photo'), bitmap )
+		#item = self.toolbar.AddTool( wx.ID_ANY, _('Composite Finish Photo'), bitmap )
+		#self.finishStripID = item.GetId()
 		
 		#self.closeButton = wx.Button( self, wx.ID_CANCEL, 'Close' )
 		#self.Bind(wx.EVT_BUTTON, self.OnClose, self.closeButton )
