@@ -173,27 +173,27 @@ class MainWin( wx.Frame ):
 		#-----------------------------------------------------------------------
 		self.fileMenu = wx.Menu()
 
-		self.fileMenu.Append( wx.ID_NEW , "&New...", "Create a new Series" )
-		self.Bind(wx.EVT_MENU, self.menuNew, id=wx.ID_NEW )
+		item = self.fileMenu.Append( wx.ID_NEW , "&New...", "Create a new Series" )
+		self.Bind(wx.EVT_MENU, self.menuNew, item )
 
-		self.fileMenu.Append( wx.ID_OPEN , "&Open...", "Open an existing Series" )
-		self.Bind(wx.EVT_MENU, self.menuOpen, id=wx.ID_OPEN )
+		item = self.fileMenu.Append( wx.ID_OPEN , "&Open...", "Open an existing Series" )
+		self.Bind(wx.EVT_MENU, self.menuOpen, item )
 
-		self.fileMenu.Append( wx.ID_SAVE , "&Save\tCtrl+S", "Save Series" )
-		self.Bind(wx.EVT_MENU, self.menuSave, id=wx.ID_SAVE )
+		item = self.fileMenu.Append( wx.ID_SAVE , "&Save\tCtrl+S", "Save Series" )
+		self.Bind(wx.EVT_MENU, self.menuSave, item )
 
-		self.fileMenu.Append( wx.ID_SAVEAS , "Save &As...", "Save to a different filename" )
-		self.Bind(wx.EVT_MENU, self.menuSaveAs, id=wx.ID_SAVEAS )
+		item = self.fileMenu.Append( wx.ID_SAVEAS , "Save &As...", "Save to a different filename" )
+		self.Bind(wx.EVT_MENU, self.menuSaveAs, item )
 
 		self.fileMenu.AppendSeparator()
-		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
-		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
+		item = self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
+		self.Bind(wx.EVT_MENU, self.menuPageSetup, item )
 
-		self.fileMenu.Append( wx.ID_PREVIEW , "Print P&review...\tCtrl+R", "Preview Results" )
-		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
+		item = self.fileMenu.Append( wx.ID_PREVIEW , "Print P&review...\tCtrl+R", "Preview Results" )
+		self.Bind(wx.EVT_MENU, self.menuPrintPreview, item )
 
-		self.fileMenu.Append( wx.ID_PRINT , "&Print...\tCtrl+P", "Print Results" )
-		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
+		item = self.fileMenu.Append( wx.ID_PRINT , "&Print...\tCtrl+P", "Print Results" )
+		self.Bind(wx.EVT_MENU, self.menuPrint, item )
 
 		self.fileMenu.AppendSeparator()
 
@@ -214,8 +214,8 @@ class MainWin( wx.Frame ):
 		
 		self.fileMenu.AppendSeparator()
 
-		self.fileMenu.Append( wx.ID_EXIT, "E&xit", "Exit" )
-		self.Bind(wx.EVT_MENU, self.menuExit, id=wx.ID_EXIT )
+		item = self.fileMenu.Append( wx.ID_EXIT, "E&xit", "Exit" )
+		self.Bind(wx.EVT_MENU, self.menuExit, item)
 		
 		self.Bind(wx.EVT_MENU_RANGE, self.menuFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
 		
@@ -286,8 +286,8 @@ class MainWin( wx.Frame ):
 		
 		self.helpMenu.AppendSeparator()
 
-		self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About SeriesMgr..." )
-		self.Bind(wx.EVT_MENU, self.menuAbout, id=wx.ID_ABOUT )
+		item = self.helpMenu.Append( wx.ID_ABOUT , "&About...", "About SeriesMgr..." )
+		self.Bind(wx.EVT_MENU, self.menuAbout, item )
 
 		item = self.helpMenu.Append( wx.ID_ANY, "&Tips at Startup...", "Enable/Disable Tips at Startup..." )
 		self.Bind(wx.EVT_MENU, self.menuTipAtStartup, item )
