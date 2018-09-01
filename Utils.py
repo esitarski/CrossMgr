@@ -56,20 +56,6 @@ import wx
 import os
 import io
 
-# Monkey patch wx.NewId so we can see if we are making any dynamically.
-# import traceback
-# import datetime
-# NewIdSave = wx.NewId
-# idCount = 0
-# def NewIdNew():
-	# global idCount
-	# id = NewIdSave()
-	# traceback.print_stack( limit = 4 )
-	# idCount += 1
-	# print '**** {}: {} - {}'.format( idCount, datetime.datetime.now(), id )
-	# return id
-# wx.NewId = NewIdNew
-
 import wx.lib.agw.genericmessagedialog
 
 if 'WXMAC' in wx.Platform:
