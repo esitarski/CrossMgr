@@ -4023,7 +4023,7 @@ def MainLoop():
 	
 	if 'WXMAC' in wx.Platform:
 		wx.Log.SetActiveTarget( LogPrintStackStderr() )
-	
+			
 	random.seed()
 
 	parser = ArgumentParser( prog="CrossMgr", description='Timing and Scoring Software' )

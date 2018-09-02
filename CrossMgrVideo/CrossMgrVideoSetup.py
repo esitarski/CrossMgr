@@ -1,9 +1,11 @@
 from distutils.core import setup
 import os
+import sys
 import glob
 import shutil
 import zipfile
 import datetime
+import platform
 import subprocess
 
 if os.path.exists('build'):
@@ -30,7 +32,10 @@ copyFiles = [
 ]
 for f in copyFiles:
 	shutil.copy( os.path.join( '..', f), f )
-	
+
+if 'Linux' in platform.platform():
+	sys.exit()
+
 distDir = r'dist\CrossMgrVideo'
 distDirParent = os.path.dirname(distDir)
 if os.path.exists(distDirParent):
