@@ -398,9 +398,9 @@ class FinishStripPanel( wx.Panel ):
 		self.stretchSlider.SetPageSize( 1 )
 		self.stretchSlider.Bind( wx.EVT_SCROLL, self.onChangeSpeed )
 		
-		self.zoomInButton = wx.BitmapButton( self, bitmap=Utils.getBitmap('Zoom-In-Icon.png'))
+		self.zoomInButton = wx.BitmapButton( self, bitmap=Utils.getBitmap('Zoom-In-icon.png'))
 		self.zoomInButton.Bind( wx.EVT_BUTTON, lambda event: self.finish.doZoom(-1) )
-		self.zoomOutButton = wx.BitmapButton( self, bitmap=Utils.getBitmap('Zoom-Out-Icon.png'))
+		self.zoomOutButton = wx.BitmapButton( self, bitmap=Utils.getBitmap('Zoom-Out-icon.png'))
 		self.zoomOutButton.Bind( wx.EVT_BUTTON, lambda event: self.finish.doZoom(1) )
 		zs = wx.BoxSizer( wx.HORIZONTAL )
 		zs.Add( self.zoomInButton )
