@@ -5,6 +5,7 @@ import zipfile
 import sys
 import datetime
 import subprocess
+import platform
 
 # Copy all dependent files into this folder.
 copyFiles = [
@@ -44,6 +45,9 @@ with open('Dependencies.py', 'w') as fp:
 
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
+	
+if platform.platform() == 'Linux':
+	sys.exit()
 
 gds = [
 	r"c:\GoogleDrive\Downloads\Windows",
