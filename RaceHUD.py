@@ -297,7 +297,7 @@ class RaceHUD(wx.Control):
 			
 			# Draw the leader.
 			if leader is not None:
-				leaderText = '{}'.format(leader)
+				leaderText = u'{}'.format(leader)
 				dc.SetFont( fontLegend if legendHeight > raceTimeHeight else fontRaceTime )
 				textWidth, textHeight = dc.GetTextExtent( leaderText )
 				dc.DrawText( leaderText, xLeft - textWidth - textHeight / 8, yTop + hMiddle - textHeight / 2 )
