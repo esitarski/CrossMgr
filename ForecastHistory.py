@@ -263,13 +263,14 @@ class ForecastHistory( wx.Panel ):
 			]
 			
 			menu = wx.Menu()
-			for i, (name, callback) in enumerate(self.historyPopupInfo):
+			for name, callback in self.historyPopupInfo:
 				if name:
-					item = self.menu.Append( wx.ID_ANY, name )
+					item = menu.Append( wx.ID_ANY, name )
 					self.Bind( wx.EVT_MENU, callback, item )
 				else:
-					self.menu.AppendSeparator()
+					menu.AppendSeparator()
 			self.menuHistory = menu
+		
 		self.PopupMenu( self.menuHistory )
 	
 	def fixTTEntry( self, e ):
@@ -399,18 +400,15 @@ class ForecastHistory( wx.Panel ):
 			]
 
 			menu = wx.Menu()
-			for i, (name, callback) in enumerate(self.expectedPopupInfo):
+			for name, callback in self.expectedPopupInfo:
 				if name:
-					item = menu.Append( p[1], p[0] )
-					self.Bind( wx.EVT_MENU, p[2], item )
+					item = menu.Append( wx.ID_ANY, name )
+					self.Bind( wx.EVT_MENU, callback, item )
 				else:
 					menu.AppendSeparator()
 			self.menuExpected = menu
 		
-		try:
-			self.PopupMenu( self.menuExpected )
-		except Exception as e:
-			Utils.writeLog( 'ForecastHistory:doExpectedPopup: {}'.format(e) )
+		self.PopupMenu( self.menuExpected )
 		
 	def OnPopupExpectedEnter( self, event ):
 		try:
