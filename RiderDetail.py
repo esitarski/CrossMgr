@@ -522,31 +522,28 @@ class RiderDetail( wx.Panel ):
 		nonInterpCase = 2
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(self.NewId(), _('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
-				(None, None, None, None, None),
-				(self.NewId(), _('Pull After Lap') + u'...',_('Pull After lap'),	self.OnPopupPull, allCases),
-				(self.NewId(), _('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
-				(None, None, None, None, None),
-				(self.NewId(), _('Correct') + u'...',		_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
-				(self.NewId(), _('Shift') + u'...',			_('Move lap time earlier/later') + u'...',	self.OnPopupShift, interpCase),
-				(self.NewId(), _('Delete') + u'...',		_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
-				(None, None, None, None, None),
-				(self.NewId(), _('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
+				(_('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
+				(None, None, None, None),
+				(_('Pull After Lap') + u'...',_('Pull After lap'),	self.OnPopupPull, allCases),
+				(_('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
+				(None, None, None, None),
+				(_('Correct') + u'...',		_('Change number or lap time') + u'...',	self.OnPopupCorrect, interpCase),
+				(_('Shift') + u'...',			_('Move lap time earlier/later') + u'...',	self.OnPopupShift, interpCase),
+				(_('Delete') + u'...',		_('Delete lap time(s)') + u'...',	self.OnPopupDelete, nonInterpCase),
+				(None, None, None, None),
+				(_('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
-			for p in self.popupInfo:
-				if p[0]:
-					self.Bind( wx.EVT_MENU, p[3], id=p[0] )
-			
 			self.menuOptions = []
 			for caseCode in xrange(3):
 				menu = wx.Menu()
-				for id, name, text, callback, cCase in self.popupInfo:
-					if not id:
+				for name, text, callback, cCase in self.popupInfo:
+					if name:
+						if caseCode >= cCase:
+							item = menu.Append( wx.ID_ANY, name, text )
+							self.Bind( wx.EVT_MENU, callback, item )
+					else:
 						if not Utils.hasTrailingSeparator(menu):
 							menu.AppendSeparator()
-						continue
-					if caseCode >= cCase:
-						menu.Append( id, name, text )
 				self.menuOptions.append( menu )
 		
 		try:
@@ -555,10 +552,7 @@ class RiderDetail( wx.Panel ):
 			caseCode = 0
 		
 		menu = self.menuOptions[caseCode]
-		try:
-			self.PopupMenu( menu )
-		except Exception as e:
-			Utils.writeLog( 'RiderDetail:doRightClick: {}'.format(e) )
+		self.PopupMenu( menu )
 
 	def OnPopupPull( self, event ):
 		self.grid.SelectRow( self.eventRow )

@@ -270,10 +270,7 @@ class ForecastHistory( wx.Panel ):
 				else:
 					self.menu.AppendSeparator()
 			self.menuHistory = menu
-		try:
-			self.PopupMenu( self.menuHistory )
-		except Exception as e:
-			Utils.writeLog( 'ForecastHistory:doHistoryPopup: {}'.format(e) )
+		self.PopupMenu( self.menuHistory )
 	
 	def fixTTEntry( self, e ):
 		race = Model.race
