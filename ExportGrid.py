@@ -824,15 +824,15 @@ class ExportGrid( object ):
 			elif f in ('clockStartTime', 'startTime', 'finishTime'):
 				for row, rr in enumerate(results):
 					if f == 'finishTime' and rr.status != Finisher:
-						data[col].append( '' )
+						data[col].append( u'' )
 						continue
 						
 					sfTime = getattr( rr, f, None )
-					if sfTime is not None and (f != 'finishTime' and rr.status == Finisher):
+					if sfTime is not None:
 						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
 						continue
 						
-					data[col].append( '' )
+					data[col].append( u'' )
 			elif f == 'factor':
 				for row, rr in enumerate(results):
 					factor = getattr( rr, f, None )
@@ -863,7 +863,7 @@ class ExportGrid( object ):
 					lap = i + 1
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
 						try:
-							data[iCol].append( '' )
+							data[iCol].append( u'' )
 							iCol += 1
 						except IndexError as e:
 							break
