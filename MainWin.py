@@ -1489,9 +1489,13 @@ class MainWin( wx.Frame ):
 		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		printout = CrossMgrPrintout( categories )
+		try:
+			printout = CrossMgrPrintout( categories )
+			printError = False
+		except:
+			printError = True
 
-		if not printer.Print(self, printout, True):
+		if not printer.Print(self, printout, True) or printError:
 			if printer.GetLastError() == wx.PRINTER_ERROR:
 				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
