@@ -1489,11 +1489,13 @@ class MainWin( wx.Frame ):
 		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		try:
-			printout = CrossMgrPrintout( categories )
-			printError = False
-		except:
-			printError = True
+		for i in xrange(3):
+			try:
+				printout = CrossMgrPrintout( categories )
+				printError = False
+				break
+			except:
+				printError = True
 
 		if not printer.Print(self, printout, True) or printError:
 			if printer.GetLastError() == wx.PRINTER_ERROR:

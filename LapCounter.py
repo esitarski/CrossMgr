@@ -232,7 +232,7 @@ class LapCounter( wx.Panel ):
 				for i, (name, text, callback) in enumerate(self.popupInfo):
 					if i == 0 and caseCode == 0:
 						continue
-					item = menu.Append( id, name, text )
+					item = menu.Append( wx.ID_ANY, name, text )
 					self.Bind( wx.EVT_MENU, callback, item )
 				self.menuOptions.append( menu )
 		
