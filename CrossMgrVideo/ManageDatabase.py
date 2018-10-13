@@ -1,6 +1,7 @@
 import wx
 import wx.adv
 import datetime
+import os
 
 DatePickerCtrl = wx.adv.DatePickerCtrl
 
@@ -10,13 +11,20 @@ class ManageDatabase( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
+		self.dbName = dbName
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( wx.StaticText(self, label='Database File:'), flag=wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( wx.TextCtrl(self, value=dbName, style=wx.TE_READONLY, size=(300,-1)), flag=wx.LEFT, border=4 )
+		self.dbNameText = wx.TextCtrl(self, value=dbName, style=wx.TE_READONLY, size=(300,-1))
+		hs.Add( self.dbNameText, flag=wx.LEFT, border=4 )
 		vs.Add( hs, flag=wx.ALL, border=4 )
+		
+		self.changeDirButton = wx.Button( self, label='Change Database Folder' )
+		self.changeDirButton.Bind( wx.EVT_BUTTON, self.doChangeDir )
+		vs.Add( self.changeDirButton, flag=wx.ALL, border=4 )
 			
-		vs.Add( wx.StaticText(self, label='Database Size: {:.1f} meg'.format(dbSize/1048576.0)),
-			flag=wx.ALL, border=4 )
+		self.dbSizeText = wx.StaticText(self)
+		self.setDbSize( dbSize )
+		vs.Add( self.dbSizeText, flag=wx.ALL, border=4 )
 		vs.Add( wx.StaticText(
 					self,
 					label='Triggers Recorded from {}  to {} '.format(
@@ -76,14 +84,25 @@ class ManageDatabase( wx.Dialog ):
 
 		self.SetSizer(vs)
 		vs.Fit(self)
-		
+	
+	def setDbSize( self, dbSize ):
+		self.dbSizeText.SetLabel( 'Database Size: {:.1f} meg'.format(dbSize/1048576.0) )
+	
+	def doChangeDir( self, event ):
+		dbDir = os.path.dirname( self.dbName )
+		dlg = wx.DirDialog( None, "Choose database directory", dbDir, wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST )
+		if dlg.ShowModal() == wx.ID_OK:
+			path = dlg.GetPath()
+			self.dbName = os.path.join( path, os.path.basename(self.dbName) )
+			self.dbNameText.SetValue( self.dbName )
+	
 	def GetValues( self ):
 		v = self.dateFrom.GetValue()
 		dateFrom = datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) if v else None
 		v = self.dateTo.GetValue()
 		dateTo = datetime.datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) if v else None
 		vacuum = self.vacuum.GetValue()
-		return dateFrom, dateTo, vacuum
+		return dateFrom, dateTo, vacuum, self.dbName
 
 if __name__ == '__main__':
 	app = wx.App(False)

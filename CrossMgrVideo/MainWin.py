@@ -23,7 +23,7 @@ now = datetime.now
 import Utils
 import CVUtil
 from SocketListener import SocketListener
-from Database import Database, DBWriter, DBReader
+from Database import Database, DBWriter
 from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
@@ -1005,7 +1005,7 @@ class MainWin( wx.Frame ):
 		self.eventThread = threading.Thread( target=self.processRequests )
 		self.eventThread.daemon = True
 		
-		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers)) )
+		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), self.db.fname) )
 		self.dbWriterThread.daemon = True
 		
 		self.cameraThread.start()
@@ -1098,6 +1098,21 @@ class MainWin( wx.Frame ):
 			self.camInQ.put( {'cmd':'terminate'} )
 			self.dbWriterQ.put( ('terminate', ) )
 			self.dbWriterThread.join()
+			
+	def setDBName( self, dbName ):
+		if dbName != self.db.fname:
+			if hasattr(self, 'dbWriterThread'):
+				self.dbWriterQ.put( ('terminate', ) )
+				self.dbWriterThread.join()
+			try:
+				self.db = Database( dbName )
+			except:
+				self.db = Database()
+			
+			self.dbWriterQ = Queue()
+			self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), self.db.fname) )
+			self.dbWriterThread.daemon = True
+			self.dbWriterThread.start()
 	
 	def resetCamera( self, event=None ):
 		dlg = ConfigDialog( self, self.getCameraDeviceNum(), self.fps, self.getCameraResolution() )
@@ -1123,7 +1138,8 @@ class MainWin( wx.Frame ):
 		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, trigFirst, trigLast, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
 			work = wx.BusyCursor()
-			tsLower, tsUpper, vacuum = dlg.GetValues()
+			tsLower, tsUpper, vacuum, dbName = dlg.GetValues()
+			self.setDBName( dbName )
 			if tsUpper:
 				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
 			self.db.cleanBetween( tsLower, tsUpper )
@@ -1157,6 +1173,7 @@ class MainWin( wx.Frame ):
 		wx.Exit()
 		
 	def writeOptions( self ):
+		self.config.Write( 'DBName', self.db.fname )
 		self.config.Write( 'CameraDevice', self.cameraDevice.GetLabel() )
 		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
 		self.config.Write( 'FPS', self.targetFPS.GetLabel() )
@@ -1165,6 +1182,7 @@ class MainWin( wx.Frame ):
 		self.config.Flush()
 	
 	def readOptions( self ):
+		self.setDBName( self.config.Read('DBName', '') )
 		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', u'0') )
 		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', u'640x480') )
 		self.targetFPS.SetLabel( self.config.Read('FPS', u'30.000') )

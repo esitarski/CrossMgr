@@ -40,7 +40,7 @@ class Database( object ):
 	triggerFieldsInput = triggerFieldsAll[1:-3]	# ignore note, mph and frames
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
-			
+	
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
 		self.fps = fps
@@ -420,8 +420,8 @@ def flush( db, triggerWriteCB = None ):
 	del tsTriggers[:]
 	del tsJpgs[:]
 		
-def DBWriter( q, triggerWriteCB=None ):
-	db = Database()
+def DBWriter( q, triggerWriteCB=None, fname=None ):
+	db = Database( fname=fname )
 	
 	keepGoing = True
 	while keepGoing:
@@ -453,8 +453,8 @@ def DBWriter( q, triggerWriteCB=None ):
 		
 	flush( db )
 	
-def DBReader( q, callback ):
-	db = Database( initTables=False )
+def DBReader( q, callback, fname=None ):
+	db = Database( initTables=False, fname=fname  )
 	
 	keepGoing = True
 	while keepGoing:
