@@ -543,8 +543,8 @@ wsThread.start()
 
 wsTimer = tTimerStart = None
 def WsPost():
-	global wsTimer, tTimerStart
-	if wsServer.hasClients():
+	global wsServer, wsTimer, tTimerStart
+	if wsServer and wsServer.hasClients():
 		while 1:
 			try:
 				ram = GetResultsRAM()

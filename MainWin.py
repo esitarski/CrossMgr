@@ -3157,6 +3157,7 @@ class MainWin( wx.Frame ):
 		race.enableUSBCamera = True
 		race.minutes = self.raceMinutes
 		race.enableJChipIntegration = race.resetStartClockOnFirstTag = rfidResetStartClockOnFirstTag
+		race.minPossibleLapTime = 0.0	# Override any defaults so that laps will show up.
 		#race.photosAtRaceEndOnly = True
 		
 		# Prep the simulation data.
