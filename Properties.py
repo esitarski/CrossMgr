@@ -1010,7 +1010,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 				def run(self):
 					wx.CallAfter( self.progressDialog.ShowModal )
 					self.e = FtpUploadFile( self.ftpFiles, self.progressDialog.update )
-					wx.CallAfter( self.progressDialog.Show, False )
+					wx.CallAfter(self.progressDialog.EndModal, 0)
 				
 			bytesTotal = sum( os.path.getsize(f) for f in ftpFiles )
 			uploadProgress = FtpUploadProgress( mainWin, fileTotal=len(ftpFiles), bytesTotal=bytesTotal, )
