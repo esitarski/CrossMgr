@@ -381,7 +381,8 @@ class Results( wx.Panel ):
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 			
-		menu = self.menuOptions[(bool(self.numBefore), bool(self.numAfter), caseCode)]
+		print self.iRow, self.numBefore, self.numAfter
+		menu = self.menuOptions[(self.numBefore is not None, self.numAfter is not None, caseCode)]
 		try:
 			self.PopupMenu( menu )
 		except Exception as e:
