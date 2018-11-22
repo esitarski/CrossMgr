@@ -3953,14 +3953,33 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			if race.isRunning() and race.startTime <= dt:
 				self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 		
-		# return self.processNumTimes()
-		
-		# Ensure that we don't update more than each second.
+		# Ensure that we don't update too often if riders arrive in a bunch.
 		if not self.callLaterProcessRfidRefresh:
-			self.callLaterProcessRfidRefresh = wx.CallLater( 1000, self.processRfidRefresh )
-		elif not self.callLaterProcessRfidRefresh.IsRunning():
-			self.callLaterProcessRfidRefresh.Start()
+			class ProcessRfidRefresh( wx.Timer ):
+				def __init__( self, *args, **kwargs ):
+					self.mainWin = kwargs.pop('mainWin')
+					super(ProcessRfidRefresh, self).__init__(*args, **kwargs)
+				def Notify( self ):
+					self.mainWin.processRfidRefresh()
+			self.callLaterProcessRfidRefresh = ProcessRfidRefresh( mainWin=self )
 		
+		#delayIntervals = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+		delayIntervals = (0.1, 0.25, 0.5, 1.0)
+		if not self.callLaterProcessRfidRefresh.IsRunning():
+			# Start the timer for the first interval.
+			self.clprIndex = 0
+			self.clprTime = now() + datetime.timedelta( seconds=delayIntervals[0] )
+			if not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
+				self.processRfidRefresh()
+		elif (		(self.clprTime - now()).total_seconds() > delayIntervals[self.clprIndex] / 2.0 and
+					self.clprIndex < len(delayIntervals)-1 ):
+			# If we get another read within the last 50% of the interval, increase the update to the next interval.
+			self.callLaterProcessRfidRefresh.Stop()
+			self.clprIndex += 1
+			self.clprTime += datetime.timedelta( seconds = delayIntervals[self.clprIndex] - delayIntervals[self.clprIndex-1] )
+			delayToGo = max( 10, int((self.clprTime - now()).total_seconds() * 1000.0) )
+			if not self.callLaterProcessRfidRefresh.Start( delayToGo, True ):
+				self.processRfidRefresh()
 		return False	# Never signal for an update.
 
 	def updateRaceClock( self, event = None ):

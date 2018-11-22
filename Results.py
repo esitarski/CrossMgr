@@ -412,7 +412,7 @@ class Results( wx.Panel ):
 		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		try:
 			rr1, rr2 = riderResults[num], riderResults[numAdjacent]
-			laps = riderResults[num].laps
+			laps = rr1.laps
 			undo.pushState()
 			ee1 = next( e for e in e1 if e.t == rr1.raceTimes[laps] )
 			ee2 = next( e for e in e2 if e.t == rr2.raceTimes[laps] )
