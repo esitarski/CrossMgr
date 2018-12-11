@@ -362,13 +362,14 @@ class Results( wx.Panel ):
 		with Model.LockRace() as race:
 			if not race or num not in race.riders:
 				return
-			entries = race.getRider(num).interpolate()
 			category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
 			
 		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		
+		entries = race.riders[num].interpolate()
 		try:
-			self.entry = entries[self.iLap]
+			laps = riderResults[num].laps
+			self.entry = next(e for e in entries if e.t == riderResults[num].raceTimes[laps])
 			caseCode = 1 if self.entry.interp else 2
 		except (TypeError, IndexError, KeyError):
 			caseCode = 0
@@ -381,7 +382,7 @@ class Results( wx.Panel ):
 			if RidersCanSwap( riderResults, num, numAdjacent ):
 				setattr( self, attr, numAdjacent )
 			
-		menu = self.menuOptions[(bool(self.numBefore), bool(self.numAfter), caseCode)]
+		menu = self.menuOptions[(self.numBefore is not None, self.numAfter is not None, caseCode)]
 		try:
 			self.PopupMenu( menu )
 		except Exception as e:
@@ -410,12 +411,15 @@ class Results( wx.Panel ):
 			
 		riderResults = dict( (r.num, r) for r in GetResults(category) )
 		try:
-			laps = riderResults[num].laps
+			rr1, rr2 = riderResults[num], riderResults[numAdjacent]
+			laps = rr1.laps
 			undo.pushState()
+			ee1 = next( e for e in e1 if e.t == rr1.raceTimes[laps] )
+			ee2 = next( e for e in e2 if e.t == rr2.raceTimes[laps] )
 			with Model.LockRace() as race:
-				SwapEntry( e1[laps], e2[laps] )
+				SwapEntry( ee1, ee2 )
 			wx.CallAfter( self.refresh )
-		except KeyError:
+		except KeyError, StopIteration:
 			pass
 	
 	def showLastLap( self ):

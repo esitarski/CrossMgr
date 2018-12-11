@@ -31,14 +31,9 @@ def RidersCanSwap( riderResults, num, numAdjacent ):
 			rr1.laps != rr2.laps ):
 			return False
 		laps = rr1.laps
-		# Check if swapping the last times would result in race times out of order.
-		with Model.LockRace() as race:
-			e1 = race.getRider(num).interpolate()
-			e2 = race.getRider(numAdjacent).interpolate()
-		if e1[laps].interp or e2[laps].interp:
+		if rr1.interp[laps] or rr2.interp[laps]:
 			return False
-		rt1 = [e.t for e in e1]
-		rt2 = [e.t for e in e2]
+		rt1, rt2 = rr1.raceTimes[:], rr2.raceTimes[:]
 		rt1[laps], rt2[laps] = rt2[laps], rt1[laps]
 		if 	all( x < y for x, y in itertools.izip(rt1, rt1[1:]) ) and \
 			all( x < y for x, y in itertools.izip(rt2, rt2[1:]) ):

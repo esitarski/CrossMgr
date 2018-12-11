@@ -458,7 +458,7 @@ class StatusChangeDialog( wx.Dialog ):
 		
 		if t is not None:
 			self.entryTime = wx.CheckBox( self, label=u'{}: {}'.format(_('and Enter Last Lap Time at'), Utils.formatTime(t)) )
-			self.entryTime.SetValue( False )
+			self.entryTime.SetValue( True )
 			self.entryTime.SetFont( font )
 		else:
 			self.entryTime = None
