@@ -107,7 +107,7 @@ class Pulled( wx.Panel ):
 			(u'Name',					'pulledName',		's'),
 			(u'Team',					'pulledTeam',		's'),
 			(u'Component',				'pulledComponent',	's'),
-			(u'Error',					'pulledError',	's'),
+			(u'Error',					'pulledError',		's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
