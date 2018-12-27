@@ -73,6 +73,7 @@ For example, F3 selects the Results screen.
 * [Actions][]
 * [Record][]
 * [Results][]
+* [Pulled][]
 * [Passings][]
 * [RiderDetail][]
 * [Chart][]

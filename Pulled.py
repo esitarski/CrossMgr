@@ -11,21 +11,27 @@ import Model
 from ReorderableGrid 	import ReorderableGrid
 from FinishStrip		import ShowFinishStrip
 from ReadSignOnSheet	import ExcelLink
+from FixCategories import FixCategories, SetCategory
 from GetResults			import GetResults, getPulledCmpTuple
 from RaceInputState import RaceInputState
 from Undo import undo
 
 def getRiderInfo( bib ):
 	race = Model.race
-	if not race or not bib:
-		return u'', u''
-	
 	try:
 		riderInfo = race.excelLink.read()[bib]
-	except Exception as e:
-		return u'', u''
-
-	return u', '.join( f for f in (riderInfo.get('LastName',u''), riderInfo.get('FirstName',u'')) if f ), riderInfo.get('Team', u'')
+	except (KeyError, AttributeError) as e:
+		return u'', u'', u''
+	
+	CatComponent = Model.Category.CatComponent
+	for cat in race.getCategories( startWaveOnly=False ):
+		if cat.catType == CatComponent and cat.matches(bib):
+			componentName = cat.fullname
+			break
+	else:
+		componentName = u''
+	
+	return u', '.join( f for f in (riderInfo.get('LastName',u''), riderInfo.get('FirstName',u'')) if f ), riderInfo.get('Team', u''), componentName
 
 class TimeEditor(gridlib.GridCellEditor):
 	defaultValue = '00:00.000'
@@ -70,52 +76,6 @@ class TimeEditor(gridlib.GridCellEditor):
 		
 	def Clone( self ):
 		return TimeEditor()
-		
-def FixCategories( choice, iSelection = None ):
-	choice.InvalidateBestSize() 
-	choice.SetSize(choice.GetBestSize()) 
-
-	race = Model.race
-	if iSelection is None:
-		iSelection = getattr( race, 'modelCategory', 0 ) or 0
-		if iSelection > 0:
-			iSelection -= 1
-	
-	items = choice.GetItems()
-	choice.SetSelection( iSelection )
-
-	categories = race.getCategories( startWaveOnly=True ) if race else []
-	newItems = [c.fullname for c in categories]
-	if items == newItems:
-		return categories[choice.GetSelection()]
-	
-	catNameCur = None
-	if items:
-		catNameCur = items[choice.GetSelection()]
-	
-	choice.Clear()
-	choice.AppendItems( newItems )
-	
-	iNew = 0
-	if catNameCur is not None:
-		for i, fullname in enumerate(newItems):
-			if catNameCur == fullname:
-				iNew = i
-				break
-		
-	choice.SetSelection( iNew )
-	return categories[choice.GetSelection()]
-	
-def SetCategory( choice, cat ):
-	if FixCategories(choice) != cat:
-		if cat is None:
-			choice.SetSelection( 0 )
-		else:
-			for i, item in enumerate(choice.GetItems()):
-				if item.strip() == cat.fullname:
-					choice.SetSelection( i )
-					race.modelCategory = i+1
-					break
 
 class Pulled( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
@@ -126,22 +86,28 @@ class Pulled( wx.Panel ):
 		vsOverall = wx.BoxSizer( wx.VERTICAL )
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
+		self.showingCategoryLabel = wx.StaticText( self, label=u'{}:'.format(_('Start Wave')) )
+		self.showingCategory = wx.StaticText( self )
+		self.showingCategory.SetFont( self.showingCategory.GetFont().Bold() )
 		self.categoryLabel = wx.StaticText( self, label=_('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		self.commitBtn = wx.Button( self, label=_('Commit') )
 		self.commitBtn.Bind( wx.EVT_BUTTON, self.doCommit )
-		self.hbs.Add( self.categoryLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		self.hbs.Add( self.showingCategoryLabel, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=0 )
+		self.hbs.Add( self.showingCategory, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=2 )
+		self.hbs.Add( self.categoryLabel, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=18 )
 		self.hbs.Add( self.categoryChoice, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=2 )
 		self.hbs.Add( self.commitBtn, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=64 )
 		
 		#---------------------------------------------------------------
 		self.colNameFields = (
-			(_('Laps to Go'),			'lapsToGo',		'i'),
-			(u'    ' + _('Bib'),		'pulledBib',	'i'),
-			(u'Name',					'pulledName',	's'),
-			(u'Team',					'pulledTeam',	's'),
-			(u'Message',				'pulledMessage','s'),
+			(_('Laps to Go'),			'lapsToGo',			'i'),
+			(u'    ' + _('Bib'),		'pulledBib',		'i'),
+			(u'Name',					'pulledName',		's'),
+			(u'Team',					'pulledTeam',		's'),
+			(u'Component',				'pulledComponent',	's'),
+			(u'Error',					'pulledError',	's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
@@ -175,7 +141,17 @@ class Pulled( wx.Panel ):
 		vsOverall.Add( self.grid, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		self.SetSizer( vsOverall )
 	
+	def setCategory( self, category ):
+		for i, c in enumerate(Model.race.getCategories( startWaveOnly=False ) if Model.race else [], 1):
+			if c == category:
+				SetCategory( self.categoryChoice, c )
+				Model.setCategoryChoice( i, 'resultsCategory' )
+				return
+		SetCategory( self.categoryChoice, None )
+		Model.setCategoryChoice( 0, 'resultsCategory' )
+	
 	def doChooseCategory( self, event ):
+		Model.setCategoryChoice( self.categoryChoice.GetSelection(), 'resultsCategory' )
 		self.refresh()
 	
 	def doCommit( self, event ):
@@ -183,7 +159,16 @@ class Pulled( wx.Panel ):
 		self.refresh()
 	
 	def getCategory( self ):
-		return FixCategories( self.categoryChoice, self.categoryChoice.GetSelection())
+		race = Model.race
+		if not race:
+			category = None
+		else:
+			category = race.getCategoryStartWave( FixCategories(self.categoryChoice, getattr(race, 'resultsCategory', 0)) )
+		categoryName = category.fullname if category else u''
+		if categoryName != self.showingCategory.GetLabel():
+			self.showingCategory.SetLabel( categoryName )
+			self.hbs.Layout()
+		return category
 	
 	def getRaceInfo( self ):
 		race = Model.race
@@ -200,7 +185,7 @@ class Pulled( wx.Panel ):
 
 		return True, [race, category, results, len(results[0].lapTimes)]
 	
-	def getMessage( self, bib, lapsToGo, laps ):
+	def getError( self, bib, lapsToGo, laps ):
 		if not bib:
 			return u''
 		if not lapsToGo:
@@ -216,9 +201,11 @@ class Pulled( wx.Panel ):
 			return _(u'Bib not in Category')
 		rider = race.riders[bib]
 		if rider.status not in (Model.Rider.Pulled, Model.Rider.Finisher):
-			return u'{}: {}'.format(_('Bib has non-finisher Status'), Model.Rider.statusNames[rider.status])			
+			return u'{}: {}'.format(_('Bib has non-Finisher Status'), Model.Rider.statusNames[rider.status])			
 		if lapsToGo >= laps:
-			return u'{}: {}'.format(_('Laps To Go too large for Race Laps'), laps )
+			return u'{}: {}'.format(_('Laps To Go exceeds for Race Laps'), laps )
+		if lapsToGo <= 0:
+			return u'{}'.format(_('Laps To Go must be >= 0') )
 		return u''
 	
 	def onCellChange( self, event ):
@@ -240,16 +227,20 @@ class Pulled( wx.Panel ):
 				return
 			race, category, results, laps = info
 			
-			name, team = getRiderInfo(bib)
+			name, team, component = getRiderInfo(bib)
 			self.grid.SetCellValue( row, self.iCol['pulledName'], name )
 			self.grid.SetCellValue( row, self.iCol['pulledTeam'], team )
-			self.grid.SetCellValue( row, self.iCol['pulledMessage'], self.getMessage(bib, lapsToGo, laps) )
+			self.grid.SetCellValue( row, self.iCol['pulledComponent'], component )
+			self.grid.SetCellValue( row, self.iCol['pulledError'], self.getError(bib, lapsToGo, laps) )
 					
 			wx.CallAfter( self.grid.AutoSizeColumns, False )
 	
 	def setRow( self, bib, lapsToGo, laps, row, updateGrid=True ):
-		name, team = getRiderInfo(bib)
-		values = { 'pulledBib':bib, 'pulledName':name, 'pulledTeam':team, 'pulledMessage':self.getMessage(bib, lapsToGo, laps), 'lapsToGo':lapsToGo }		
+		name, team, component = getRiderInfo(bib)
+		values = {
+			'pulledBib':bib, 'pulledName':name, 'pulledTeam':team, 'pulledComponent':component,
+			'pulledError':self.getError(bib, lapsToGo, laps), 'lapsToGo':lapsToGo
+		}		
 		for col, (name, attr, valuesType) in enumerate(self.colNameFields):
 			self.grid.SetCellValue( row, col, unicode(values[attr]) )
 		return values
