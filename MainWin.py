@@ -78,6 +78,7 @@ from RaceDB				import RaceDB, RaceDBUpload
 from SimulateData		import SimulateData
 from NonBusyCall		import NonBusyCall
 from Playback			import Playback
+from Pulled				import Pulled
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -658,14 +659,15 @@ class MainWin( wx.Frame ):
 			[ 'actions',		Actions,			_('Actions') ],
 			[ 'record',			NumKeypad,			_('Record') ],
 			[ 'results',		Results,			_('Results') ],
+			[ 'pulled',			Pulled,				_('Pulled') ],
 			[ 'history',		History,			_('Passings') ],
 			[ 'riderDetail',	RiderDetail,		_('RiderDetail') ],
 			[ 'gantt', 			Gantt,				_('Chart') ],
-			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			[ 'recommendations',Recommendations,	_('Recommendations') ],
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
 			[ 'primes',			Primes,				_('Primes') ],
+			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			[ 'situation',		Situation,			_('Situation') ],
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 			[ 'announcer',		Announcer,			_('Announcer') ],

@@ -607,6 +607,9 @@ class Rider(object):
 	autocorrectLaps = True
 	alwaysFilterMinPossibleLapTime = True	# If True, short laps will always be filtered even if autocorrectLaps is off.
 	
+	pulledLapsToGo = None
+	pulledSequence = None
+	
 	def __init__( self, num ):
 		self.num = num
 		self.times = []

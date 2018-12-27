@@ -95,7 +95,7 @@ class RiderResult( object ):
 			self.lastTime, getattr(self, 'startTime', 0.0) or 0.0,
 			self.num
 		)
-		
+	
 	def _getWinAndOutKey( self ):
 		k = self._getKey()
 		laps = -k[1]
@@ -108,6 +108,10 @@ class RiderResult( object ):
 	
 	def _getWinAndOutComponentKey( self ):
 		return (statusSortSeq[self.status], self.laps if self.laps else 999999, toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
+		
+	def _setLapsDown( self, lapsDown ):
+		self.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
+		self.gapValue = -lapsDown
 
 def assignFinishPositions( riderResults ):
 	Finisher = Model.Rider.Finisher
@@ -152,7 +156,73 @@ def FixRelegations( riderResults ):
 	riderResultsNew.extend( nonFinishers )
 		
 	riderResults[:] = riderResultsNew
+
+def getPulledCmpTuple( rr, rider, winnerLaps, decreasingLapsToGo=True ):
+	f = 1 if decreasingLapsToGo else -1
+	if rider.pulledLapsToGo:
+		lapsToGo = rider.pulledLapsToGo
+	else:
+		try:
+			lapsToGo = winnerLaps - (len(rr.lapTimes) + int(rider.tStatus - rr.raceLaps[-1] > 20.0))
+		except:
+			lapsToGo = 9999999
+	return (lapsToGo*f, rider.pulledSequence or 9999999, rr.raceTimes[-1] if rr.raceTimes else 24.0*60*60*300, rr.num, rr)
 	
+def FixPulled( riderResults, race, category ):
+	if race.isTimeTrial:
+		return
+	
+	catPull = defaultdict( list )
+	catWinnerLaps = {}
+	setPull = set()
+	Finisher, Pulled = Model.Rider.Finisher, Model.Rider.Pulled
+	hasPulledSequence = 0
+	for rr in riderResults:
+		category = race.getCategory(rr.num)
+		if not category:
+			continue
+		if category not in catWinnerLaps:
+			catWinnerLaps[category] = len(rr.lapTimes) if rr.lapTimes else None
+		rider = race.riders[rr.num]
+		if rider.status == Pulled:
+			catPull[category].append( rr )
+			setPull.add( rr.num )
+			hasPulledSequence += int(rider.pulledSequence is not None)
+	
+	if not catPull or not hasPulledSequence:
+		return
+	
+	pullSort = []
+	for cat, winnerLaps in catWinnerLaps.iteritems():
+		if not winnerLaps:
+			continue
+		for rr in catPull[cat]:
+			rider = race.riders[rr.num]
+			pullSort.append( getPulledCmpTuple(rr, rider, winnerLaps) )
+			
+			pulledLapsToGo = abs(pullSort[-1][0])
+			rr._setLapsDown( pulledLapsToGo )
+			
+			lapsCompleted = winnerLaps - pulledLapsToGo
+			del rr.raceTimes[lapsCompleted+1:]
+			del rr.lapTimes[lapsCompleted:]
+			rr.lastTime = rr.lastTimeOrig = rr._lastTimeOrig = rr.raceTimes[-1] if rr.raceTimes else 0.0
+
+	pullSort.sort()
+	
+	riderResultsNew, nonFinishers = [], []
+	for rr in riderResults:
+		if rr.num not in setPull:
+			if rr.status == Finisher:
+				riderResultsNew.append( rr )
+			else:
+				nonFinishers.append( rr )
+	
+	riderResultsNew.extend( v[-1] for v in pullSort )
+	riderResultsNew.extend( nonFinishers)
+	
+	riderResults[:] = riderResultsNew
+
 def _GetResultsCore( category ):
 	Finisher = Model.Rider.Finisher
 	PUL = Model.Rider.Pulled
@@ -393,15 +463,15 @@ def _GetResultsCore( category ):
 		# if gapValue is negative, it is laps down.  Otherwise, it is seconds.
 		rr.gapValue = 0
 		if rr.laps < leader.laps:
-			lapsDown = leader.laps - rr.laps
-			rr.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
-			rr.gapValue = -lapsDown
+			rr._setLapsDown( leader.laps - rr.laps )
 		elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
 			rr.gap = (
 				Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
 					if leader.lastTime < rr.lastTime else u''
 			)
 			rr.gapValue = max(0.0, rr.lastTime - leader.lastTime)
+
+	FixPulled( riderResults, race, category )
 	
 	# Compute road race times and gaps.
 	if roadRaceFinishTimes and not isTimeTrial:
