@@ -38,5 +38,5 @@ Error|Automatic.  Any error.  Rows with errors will not be committed.
 
 It is unnecessary to repeat the __Laps to Go__ on each row if subsequent rows are for the same lap.
 
-You can drag-and-drop rows to change the sequence (click and drag in the left-most column).
+You can drag-and-drop rows to change the sequence (click and drag the left-most cell of each row).
 
