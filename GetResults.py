@@ -165,7 +165,7 @@ def getPulledCmpTuple( rr, rider, winnerLaps, decreasingLapsToGo=True ):
 		try:
 			lapsToGo = winnerLaps - (len(rr.lapTimes) + int(rider.tStatus - rr.raceLaps[-1] > 20.0))
 		except:
-			lapsToGo = 9999999
+			lapsToGo = winnerLaps
 	return (lapsToGo*f, rider.pulledSequence or 9999999, rr.raceTimes[-1] if rr.raceTimes else 24.0*60*60*300, rr.num, rr)
 	
 def FixPulled( riderResults, race, category ):
@@ -203,8 +203,8 @@ def FixPulled( riderResults, race, category ):
 			pulledLapsToGo = abs(pullSort[-1][0])
 			rr._setLapsDown( pulledLapsToGo )
 			
-			lapsCompleted = winnerLaps - pulledLapsToGo
-			del rr.raceTimes[lapsCompleted+1:]
+			lapsCompleted = max( 0, winnerLaps - pulledLapsToGo )
+			del rr.raceTimes[((lapsCompleted+1) if lapsCompleted else 0):]
 			del rr.lapTimes[lapsCompleted:]
 			rr.lastTime = rr.lastTimeOrig = rr._lastTimeOrig = rr.raceTimes[-1] if rr.raceTimes else 0.0
 
