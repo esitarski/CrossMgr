@@ -1843,7 +1843,7 @@ class MainWin( wx.Frame ):
 <meta http-equiv="Expires" content="0"/>''' )
 		
 		#------------------------------------------------------------------------
-		courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain, isPointToPoint = None, None, None, None, None
+		courseCoordinates, gpsPoints, gpsAltigraph, totalElevationGain, isPointToPoint, lengthKm = None, None, None, None, None, None
 		geoTrack = getattr(race, 'geoTrack', None)
 		if geoTrack is not None:
 			courseCoordinates = geoTrack.asCoordinates()
@@ -1851,6 +1851,7 @@ class MainWin( wx.Frame ):
 			gpsAltigraph = geoTrack.getAltigraph()
 			totalElevationGain = geoTrack.totalElevationGainM
 			isPointToPoint = getattr( geoTrack, 'isPointToPoint', False )
+			lengthKm = geoTrack.lengthKm
 		
 		#------------------------------------------------------------------------
 		codes = []
@@ -1913,6 +1914,8 @@ class MainWin( wx.Frame ):
 			payload['gpsAltigraph'] = gpsAltigraph
 		if isPointToPoint:
 			payload['gpsIsPointToPoint'] = isPointToPoint
+		if lengthKm:
+			payload['lengthKm'] = lengthKm
 
 		html = replaceJsonVar( html, 'payload', payload )
 		graphicBase64 = self.getGraphicBase64()
