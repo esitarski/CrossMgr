@@ -922,7 +922,7 @@ function DrawMap()
 function DrawCourseStats()
 {
 	document.getElementById('idCourseLength').innerHTML = displayUnits == 'km'
-		? lengthKm.toFixed(3) + ' km'
+		? lengthKm.toFixed(2) + ' km'
 		: (lengthKm * 0.621371192).toFixed(3) + ' miles';
 	
 	if( !gpsAltigraph )
