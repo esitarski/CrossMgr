@@ -4,6 +4,7 @@ import sys
 import glob
 import math
 import datetime
+import platform
 import cStringIO as StringIO
 from bisect import bisect_left
 from MakeComposite import MakeComposite
@@ -160,9 +161,8 @@ class FinishStrip( wx.Panel ):
 			return
 		
 		dc = wx.ClientDC( self )
-		dc.SetLogicalFunction( wx.XOR )
+		dc.SetBrush(wx.TRANSPARENT_BRUSH)
 		
-		dc.SetPen( wx.WHITE_PEN )
 		winWidth, winHeight = self.GetClientSize()
 		
 		text = self.formatTime( self.tFromX(x) )
@@ -171,18 +171,30 @@ class FinishStrip( wx.Panel ):
 		dc.SetFont( font )
 		tWidth, tHeight = dc.GetTextExtent( text )
 		border = int(tHeight / 3)
-		
-		bm = wx.Bitmap( tWidth, tHeight )
-		memDC = wx.MemoryDC( bm )
-		memDC.SetBackground( wx.BLACK_BRUSH )
-		memDC.Clear()
-		memDC.SetFont( font )
-		memDC.SetTextForeground( wx.WHITE )
-		memDC.DrawText( text, 0, 0 )
-		bmMask = wx.Bitmap( bm.ConvertToImage() )
-		bm.SetMask( wx.Mask(bmMask, wx.BLACK) )
-		dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, useMask=True, logicalFunc=wx.XOR )
-		dc.DrawLine( x, 0, x, winHeight )
+			
+		if platform.system() == 'Linux':
+			border //= 2
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			dc.SetBrush( wx.BLACK_BRUSH )
+			dc.DrawRectangle( 0, 0, tWidth + border*2, tHeight + border*2 )
+			dc.SetTextForeground( wx.WHITE )
+			dc.SetTextBackground( wx.BLACK )
+			dc.DrawText( text, border, border )
+		else:
+			bm = wx.Bitmap( tWidth, tHeight )
+			memDC = wx.MemoryDC( bm )
+			memDC.SetBackground( wx.BLACK_BRUSH )
+			memDC.Clear()
+			memDC.SetFont( font )
+			memDC.SetTextForeground( wx.WHITE )
+			memDC.DrawText( text, 0, 0 )
+			bmMask = wx.Bitmap( bm.ConvertToImage() )
+			bm.SetMask( wx.Mask(bmMask, wx.BLACK) )
+			dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, wx.XOR, True, 0, 0 )
+
+			dc.SetPen( wx.WHITE_PEN )
+			dc.SetLogicalFunction( wx.XOR )
+			dc.DrawLine( x, 0, x, winHeight )
 
 	def getIJpg( self, x ):
 		return bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1) if self.times else None

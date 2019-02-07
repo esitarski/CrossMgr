@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from datetime import datetime, timedelta
 import time
+import platform
 from Queue import Empty
 from multiprocessing import Process, Pipe, Queue
 from threading import Thread, Timer
@@ -14,6 +15,8 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480 ):
 	cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 	cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 	cap.set(cv2.CAP_PROP_FPS, fps)
+	if platform.system() == 'Linux':	# HACK HACK HACK
+		cap.set(cv2.CAP_PROP_MODE, cv2.CAP_MODE_YUYV)
 	return cap
 
 class VideoCaptureManager( object ):
