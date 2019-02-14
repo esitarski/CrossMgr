@@ -607,6 +607,9 @@ class Rider(object):
 	autocorrectLaps = True
 	alwaysFilterMinPossibleLapTime = True	# If True, short laps will always be filtered even if autocorrectLaps is off.
 	
+	pulledLapsToGo = None
+	pulledSequence = None
+	
 	def __init__( self, num ):
 		self.num = num
 		self.times = []
@@ -1916,19 +1919,30 @@ class Race( object ):
 		return sorted( set(c.getStartOffsetSecs() for c in self.getCategories(startWaveOnly=True)) )
 	
 	@memoize
-	def categoryStartOffset( self, category ):
-		# Get the start offset of the controlling Start Wave.
+	def getCategoryStartWave( self, category ):
 		if category:
 			if category.catType == Category.CatWave:
-				return category.getStartOffsetSecs()
-			elif category.catType == Category.CatComponent:
+				return category
+			
+			if category.catType == Category.CatComponent:
 				CatWave = Category.CatWave
 				lastWave = None
 				for c in self.getCategories( startWaveOnly=False ):
 					if c.catType == CatWave:
 						lastWave = c
 					elif c == category:
-						return lastWave.getStartOffsetSecs() if lastWave else 0.0
+						return lastWave
+		
+		categories = self.getCategories( startWaveOnly=True )
+		return categories[0] if categories else None
+	
+	def categoryStartOffset( self, category ):
+		# Get the start offset of the controlling Start Wave.
+		if category:
+			if category.catType == Category.CatWave:
+				return category.getStartOffsetSecs()
+			if category.catType == Category.CatComponent:
+				return self.getCategoryStartWave( category ).getStartOffsetSecs()
 		return 0.0
 
 	def setCategoryMask( self ):

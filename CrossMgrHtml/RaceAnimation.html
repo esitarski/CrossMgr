@@ -501,26 +501,6 @@ function ordinal( value ) {
 var degreesToRadians = Math.PI / 180.0;
 var radiansToDegrees = 180.0 / Math.PI;
 
-function GreatCircleDistance( lat1, lon1, lat2, lon2 )
-{
-	// Calculate the great circle distance between two points 
-	// on the earth (specified in decimal degrees) in meters.
-
-	// convert decimal degrees to radians 
-	lon1 *= degreesToRadians;
-	lat1 *= degreesToRadians;
-	lon2 *= degreesToRadians;
-	lat2 *= degreesToRadians;
-	
-	// haversine formula 
-	var dlon = lon2 - lon1;
-	var dlat = lat2 - lat1;
-	var a = Math.pow(Math.sin(dlat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(dlon/2),2);
-	var c = 2.0 * Math.asin(Math.sqrt(Math.max(a, 0.0)));
-	var m = 6371000.0 * c;
-	return m;
-}
-
 function CompassBearing( lat1, lon1, lat2, lon2 )
 {
 	// Calculates the bearing between two points.
@@ -703,21 +683,13 @@ function OpenCourseViewerWindow()
 	var payload = {};
 	
 	var fields = ['courseCoordinates', 'raceNameText', 'raceDate', 'email', 'displayUnits', 'organizer',
-					'gpsAltigraph', 'gpsIsPointToPoint', 'gpsTotalElevationGain' ];
+					'gpsAltigraph', 'gpsIsPointToPoint', 'gpsTotalElevationGain', 'lengthKm' ];
 	for( var f = 0; f < fields.length; ++f ) {
 		var key = fields[f];
 		var value = window[key];
 		if( value )
 			payload[key] = value;
 	}
-	var lengthKm = 0.0;
-	for( var i = 0; i < courseCoordinates.length - 2; i += 2 )
-		lengthKm += GreatCircleDistance(courseCoordinates[i],courseCoordinates[i+1],courseCoordinates[i+2],courseCoordinates[i+3]);
-	if( !gpsIsPointToPoint )
-		lengthKm += GreatCircleDistance(courseCoordinates[courseCoordinates.length-2],courseCoordinates[courseCoordinates.length-1],
-										courseCoordinates[0],courseCoordinates[1] );
-	lengthKm /= 1000.0;
-	payload['lengthKm'] = lengthKm;
 	
 	var newTitle = 'Map: ' + payload['raceNameText'] + ' ' + payload['raceDate'];
 	var template = courseViewerTemplate.replace(/{-{/g, '<').replace(/}-}/g, '>').replace(

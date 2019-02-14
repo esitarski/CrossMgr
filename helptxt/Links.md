@@ -19,6 +19,7 @@
 [Actions]:			Actions.html
 [Record]:			Record.html
 [Results]:			Results.html
+[Pulled]:			Pulled.html
 [Situation]:		Situation.html
 [LapCounter]:		LapCounter.html
 [Passings]:			Passings.html

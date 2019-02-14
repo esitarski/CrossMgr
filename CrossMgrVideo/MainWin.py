@@ -403,10 +403,7 @@ class MainWin( wx.Frame ):
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
 
-		self.config = wx.Config(appName="CrossMgrVideo",
-						vendorName="SmartCyclingSolutions",
-						#style=wx.CONFIG_USE_LOCAL_FILE
-		)
+		self.config = wx.Config()
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
@@ -819,7 +816,7 @@ class MainWin( wx.Frame ):
 		)
 		
 	def onStartCapture( self, event ):
-		tNow = now()
+		tNow = self.tStartCapture = now()
 		
 		event.GetEventObject().SetForegroundColour( captureDisableColour )
 		wx.CallAfter( event.GetEventObject().Refresh )
@@ -835,7 +832,6 @@ class MainWin( wx.Frame ):
 				'last_name':u'Capture',
 			}
 		)
-		self.tStartCapture = tNow
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-self.tdCaptureBefore} )
 	
 	def showLastTrigger( self ):
