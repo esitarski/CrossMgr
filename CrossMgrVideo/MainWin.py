@@ -226,16 +226,19 @@ def CreateCaptureButtons( parent ):
 	snapshot.SetBackgroundColour( wx.WHITE )
 	snapshot.SetForegroundColour( snapshotEnableColour )
 	snapshot.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	snapshot.SetToolTip( _('Record a Single Frame') )
 	
 	autoCapture = RoundButton( parent, label="AUTO\nCAPTURE", size=(90,90) )
 	autoCapture.SetBackgroundColour( wx.WHITE )
 	autoCapture.SetForegroundColour( autoCaptureEnableColour )
 	autoCapture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	autoCapture.SetToolTip( _('Capture Video for an Automatic Interval\nSet in "Config Auto Capture"') )
 	
 	capture = RoundButton( parent, label="CAPTURE", size=(90,90) )
 	capture.SetBackgroundColour( wx.WHITE )
 	capture.SetForegroundColour( captureEnableColour )
 	capture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	capture.SetToolTip( _('Capture Video\nwhile the Button is held down') )
 		
 	return snapshot, autoCapture, capture
 
@@ -1135,6 +1138,8 @@ class MainWin( wx.Frame ):
 		
 		if hasattr(self, 'camInQ'):
 			self.camInQ.put( {'cmd':'cam_info', 'info':self.getCameraInfo(),} )
+			
+		self.GetSizer().Layout()
 		return True
 	
 	def manageDatabase( self, event ):
