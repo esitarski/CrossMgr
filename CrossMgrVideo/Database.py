@@ -414,9 +414,10 @@ class Database( object ):
 tsJpgs = []
 tsTriggers = []
 def flush( db, triggerWriteCB = None ):
-	db.write( tsTriggers, tsJpgs )
-	if tsTriggers and triggerWriteCB:
-		triggerWriteCB()
+	if db:
+		db.write( tsTriggers, tsJpgs )
+		if tsTriggers and triggerWriteCB:
+			triggerWriteCB()
 	del tsTriggers[:]
 	del tsJpgs[:]
 		

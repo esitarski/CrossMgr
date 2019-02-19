@@ -1104,7 +1104,7 @@ class MainWin( wx.Frame ):
 		if hasattr(self, 'dbWriterThread'):
 			self.camInQ.put( {'cmd':'terminate'} )
 			self.dbWriterQ.put( ('terminate', ) )
-			self.dbWriterThread.join()
+			self.dbWriterThread.join( 2.0 )
 			
 	def setDBName( self, dbName ):
 		if dbName != self.db.fname:
