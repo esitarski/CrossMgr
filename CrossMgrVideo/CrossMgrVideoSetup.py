@@ -29,6 +29,7 @@ CompileHelp( 'helptxt' )
 copyFiles = [
 	"MultiCast.py",
 	"roundbutton.py",
+	"Clock.py",
 ]
 for f in copyFiles:
 	shutil.copy( os.path.join( '..', f), f )

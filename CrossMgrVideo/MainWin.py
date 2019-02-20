@@ -28,6 +28,7 @@ from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoDialog
+from Clock import Clock
 from Version import AppVerName
 
 imageWidth, imageHeight = 640, 480
@@ -225,16 +226,19 @@ def CreateCaptureButtons( parent ):
 	snapshot.SetBackgroundColour( wx.WHITE )
 	snapshot.SetForegroundColour( snapshotEnableColour )
 	snapshot.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	snapshot.SetToolTip( _('Record a Single Frame') )
 	
 	autoCapture = RoundButton( parent, label="AUTO\nCAPTURE", size=(90,90) )
 	autoCapture.SetBackgroundColour( wx.WHITE )
 	autoCapture.SetForegroundColour( autoCaptureEnableColour )
 	autoCapture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	autoCapture.SetToolTip( _('Capture Video for an Automatic Interval\nSet in "Config Auto Capture"') )
 	
 	capture = RoundButton( parent, label="CAPTURE", size=(90,90) )
 	capture.SetBackgroundColour( wx.WHITE )
 	capture.SetForegroundColour( captureEnableColour )
 	capture.SetFontToFitLabel( wx.Font(wx.FontInfo(10).Bold()) )
+	capture.SetToolTip( _('Capture Video\nwhile the Button is held down') )
 		
 	return snapshot, autoCapture, capture
 
@@ -254,7 +258,7 @@ class FocusDialog( wx.Dialog ):
 		
 		self.title = wx.StaticText(self, label='CrossMgr Video\nFocus Window', style=wx.ALIGN_RIGHT )
 		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		self.explain = wx.StaticText(self, label='Click and Drag to Zoom in Photo')		
+		self.explain = wx.StaticText(self, label='Click and Drag to Zoom in Photo')
 		self.snapshot, self.autoCapture, self.capture = CreateCaptureButtons( self )
 		
 		btnSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
@@ -428,6 +432,12 @@ class MainWin( wx.Frame ):
 		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		headerSizer.Add( self.title, flag=wx.ALL, border=10 )
 		
+		clock = Clock( self, size=(90,90) )
+		clock.SetBackgroundColour( self.GetBackgroundColour() )
+		clock.Start()
+
+		headerSizer.Add( clock, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, border=4 )
+		
 		#------------------------------------------------------------------------------
 		self.cameraDevice = wx.StaticText( self )
 		self.cameraResolution = wx.StaticText( self )
@@ -490,6 +500,7 @@ class MainWin( wx.Frame ):
 		
 		headerSizer.Add( fgs, flag=wx.ALIGN_CENTRE|wx.LEFT, border=4 )
 		headerSizer.AddStretchSpacer()
+		
 		headerSizer.Add( self.snapshot, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.autoCapture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		headerSizer.Add( self.capture, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.RIGHT, border=8 )
@@ -1093,7 +1104,7 @@ class MainWin( wx.Frame ):
 		if hasattr(self, 'dbWriterThread'):
 			self.camInQ.put( {'cmd':'terminate'} )
 			self.dbWriterQ.put( ('terminate', ) )
-			self.dbWriterThread.join()
+			self.dbWriterThread.join( 2.0 )
 			
 	def setDBName( self, dbName ):
 		if dbName != self.db.fname:
@@ -1127,6 +1138,8 @@ class MainWin( wx.Frame ):
 		
 		if hasattr(self, 'camInQ'):
 			self.camInQ.put( {'cmd':'cam_info', 'info':self.getCameraInfo(),} )
+			
+		self.GetSizer().Layout()
 		return True
 	
 	def manageDatabase( self, event ):
