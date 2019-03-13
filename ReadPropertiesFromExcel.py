@@ -1,7 +1,8 @@
 import re
+import six
+import sys
 import Utils
 import Model
-import sys
 import scramble
 
 sheetName = '--CrossMgr-Properties'
@@ -62,13 +63,13 @@ def ReadPropertiesFromExcel( reader ):
 					headerMap[v] = c
 			continue
 		
-		for h, c in headerMap.iteritems():
+		for h, c in six.iteritems(headerMap):
 			a = AttributeFromHeader[h]
 			
 			v = row[c]
 			t = FieldType[a]
 			if t == 's':
-				v = unicode(v)
+				v = six.text_type(v)
 			elif t == 'b':
 				v = bool(v)
 			elif t == 'n':

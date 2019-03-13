@@ -1,8 +1,9 @@
 import wx
-import bisect
 import sys
-import itertools
+import six
+import bisect
 import operator
+import itertools
 import Utils
 import Model
 from Utils import formatTime, formatTimeGap, SetLabel
@@ -378,7 +379,7 @@ class ForecastHistory( wx.Panel ):
 		value = int(value)
 		
 		self.entryCur = None
-		for k in xrange(1, 2*max(r, len(self.quickExpected) - r)):
+		for k in six.moves.range(1, 2*max(r, len(self.quickExpected) - r)):
 			i = r + (k//2 if k&1 else -k//2)
 			if 0 <= i < len(self.quickExpected):
 				if self.quickExpected[i].num == value:
@@ -602,7 +603,7 @@ class ForecastHistory( wx.Panel ):
 		tMissing = tRace - averageLapTime / 8.0
 		iNotMissing = 0
 		for r in (i for i, e in enumerate(expected) if e.t < tMissing):
-			for c in xrange(iExpectedColMax):
+			for c in six.moves.range(iExpectedColMax):
 				backgroundColour[(r, c)] = self.orangeColour
 			iNotMissing = r + 1
 			
@@ -685,7 +686,7 @@ class ForecastHistory( wx.Panel ):
 		# Highlight the leader in the recorded list.
 		for r, e in enumerate(recorded):
 			if e.isGap():
-				for i in xrange( iRecordedColMax ):
+				for i in six.moves.range( iRecordedColMax ):
 					backgroundColour[(r, i)] = self.groupColour
 			if prevRiderPosition.get(e.num,-1) == 1:
 				backgroundColour[(r, iRecordedNoteCol)] = wx.GREEN
@@ -743,7 +744,7 @@ if __name__ == '__main__':
 	fh = ForecastHistory(mainWin)
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	for i, rider in enumerate(Model.getRace().riders.itervalues()):
+	for i, rider in enumerate(six.itervalues(Model.getRace().riders)):
 		rider.firstTime = i * 30.0
 	Model.getRace().isTimeTrial = True
 	fh.refresh()

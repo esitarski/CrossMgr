@@ -1,10 +1,11 @@
-
-import bitstring
-from cStringIO import StringIO
-import itertools
+import sys
+import six
 import types
-import llrpdef
-llrpdef.choiceDefinitions = { k + '_Parameter' : v + '_Parameter' for k, v in llrpdef.choiceDefinitions.iteritems() }
+import codecs
+import bitstring
+import itertools
+from . import llrpdef
+llrpdef.choiceDefinitions = { k + '_Parameter' : v + '_Parameter' for k, v in six.iteritems(llrpdef.choiceDefinitions) }
 
 #----------------------------------------------------------------------------------
 # Python support for LLRP (Low Level Reader Protocol).
@@ -43,14 +44,14 @@ llrpdef.choiceDefinitions = { k + '_Parameter' : v + '_Parameter' for k, v in ll
 #		pass
 #
 
-CustomType = 1023
+CustomTypeCode = 1023
 
 class _FieldDef( object ):
-	__slots__ = ['Name', 'Type', 'Enum', 'Format', 'Default']
+	__slots__ = ['Name', 'TypeCode', 'Enum', 'Format', 'Default']
 	
-	def __init__( self, Name, Type, Enum = None, Format = None, Default = None ):
+	def __init__( self, Name, TypeCode, Enum = None, Format = None, Default = None ):
 		self.Name = Name
-		self.Type = Type
+		self.TypeCode = TypeCode
 		if Enum:
 			self.Enum = globals()[Enum]
 		else:
@@ -59,7 +60,7 @@ class _FieldDef( object ):
 		self.Default = Default
 		
 	def read( self, s, obj, bytesRemaining = None ):
-		ftype = self.Type
+		ftype = self.TypeCode
 		attr = self.Name
 		if 'intbe' in ftype or ftype == 'bool' or ftype.startswith('bits'):
 			setattr( obj, attr, s.read(ftype) )
@@ -67,13 +68,11 @@ class _FieldDef( object ):
 			length = s.read( 'uintbe:16' )
 			eftype = 'bytes:{}'.format(length)
 			st = s.read( eftype )
-			setattr( obj, attr, str(st).rstrip('\x00') )
+			setattr( obj, attr, st.decode().rstrip('\x00') )		# Decode utf-8
 		elif ftype.startswith('array'):
 			length = s.read( 'uintbe:16' )
 			eftype = 'uintbe:{}'.format(ftype.split(':')[1])
-			arr = []
-			for i in xrange(length):
-				arr.append( s.read(eftype) )
+			arr = [s.read(eftype) for i in six.moves.range(length)]
 			setattr( obj, attr, arr )
 		elif ftype == 'bitarray':
 			length = s.read( 'uintbe:16' )
@@ -85,14 +84,14 @@ class _FieldDef( object ):
 			s.read( 'int:{}'.format(skip) )
 		elif ftype == 'bytesToEnd':
 			assert bytesRemaining is not None, 'bytesToEnd type requires bytesRemaining to be set'
-			b = s.read( 'bytes:{}'.format(bytesRemaining) )				# Read as bytes.
-			setattr( obj, attr, bitstring.BitStream(bytes=b) )		# Set attr to a bitstream.
+			by = s.read( 'bytes:{}'.format(bytesRemaining) )			# Read as bytes.
+			setattr( obj, attr, bitstring.BitStream(bytes=by) )		# Set attr to a bitstream.
 		else:
 			assert False
 
 	def write( self, s, obj ):
 		''' Write the field from the obj to the bitstring. '''
-		ftype = self.Type
+		ftype = self.TypeCode
 		attr = self.Name
 		try:
 			if 'intbe' in ftype or ftype == 'bool':
@@ -100,12 +99,12 @@ class _FieldDef( object ):
 			elif ftype.startswith('bits'):
 				v = getattr( obj, attr )
 				length = int(ftype.split(':')[1])
-				for i in xrange(length-1, -1, -1):
+				for i in six.moves.range(length-1, -1, -1):
 					s.append( bitstring.pack('bool', bool(v & (1<<i))) )
 			elif ftype == 'string':
-				st = getattr(obj, attr, '')
-				s.append( bitstring.Bits(uintbe=len(st), length=16) )
-				s.append( bitstring.Bits(bytes=bytes(st)) )
+				by = getattr(obj, attr, u'').encode()	# Encode utf-8.
+				s.append( bitstring.Bits(uintbe=len(by), length=16) )
+				s.append( bitstring.Bits(bytes=by) )
 			elif ftype.startswith('array'):
 				arr = getattr( obj, attr, [] )
 				length = int(ftype.split(':')[1])
@@ -113,16 +112,16 @@ class _FieldDef( object ):
 				for e in arr:
 					s.append( bitstring.Bits(uintbe=e, length=length) )
 			elif ftype == 'bitarray':
-				# Expects bytes.
-				st = getattr(obj, attr, '')
-				if isinstance(st, (int, long)):
-					# Convert an int to bytes.
-					assert st > 0, 'bitarray cannot be initialized with negative integer'
-					v = bytes(st)
-					v = zfill( len(v) + len(v) % 1 )
-					st = ''.join(chr(int(v[i:i+2], 16)) for i in xrange(0, len(v), 2))
-				s.append( bitstring.Bits(uintbe=len(st)*8, length=16) )
-				s.append( bitstring.Bits(bytes=st) )
+				by = getattr(obj, attr, b'')	# Expects bytes.
+				if isinstance(by, six.integer_types):
+					# Convert int to bytes.
+					assert by > 0, 'bitarray cannot be initialized with negative integer'
+					v = u'{:x}'.format(by)	# Convert to hex.
+					if len(v) & 1:			# Ensure number has an even number of hex chars.
+						v = u'0' + v
+					by = codecs.encode( v, 'hex_codec' )	# Encode to byes as hex.
+				s.append( bitstring.Bits(uintbe=len(by)*8, length=16) )
+				s.append( bitstring.Bits(bytes=by) )
 			elif ftype.startswith('skip'):
 				skip = int(ftype.split(':',1)[1])
 				assert skip > 0
@@ -131,20 +130,20 @@ class _FieldDef( object ):
 				s.append( getattr(obj, attr) )		# assume the field is a bitstream
 			else:
 				assert False
-		except bitstring.CreationError, e:
-			print 'write:', ftype, attr, getattr(obj, attr)
+		except bitstring.CreationError as e:
+			six.print_( 'write: {} {} {}\n'.format(ftype, attr, getattr(obj, attr)) )
 			raise
 
 	def init( self, obj ):
 		''' Initialize a field value based on its ftype. '''
-		ftype = self.Type
+		ftype = self.TypeCode
 		attr = self.Name
 		if 'intbe' in ftype or ftype.startswith('bits'):
 			setattr( obj, attr, self.Default if self.Default else 0 )
 		elif ftype == 'bool':
 			setattr( obj, attr, False )
 		elif ftype == 'string':
-			setattr( obj, attr, '' )
+			setattr( obj, attr, u'' )
 		elif ftype.startswith('array'):
 			setattr( obj, attr, [] )
 		elif ftype == 'bitarray':
@@ -156,7 +155,7 @@ class _FieldDef( object ):
 			assert ftype.startswith('skip'), 'Unknown field type: "{}"'.format(ftype)
 			
 	def __repr__( self ):
-		return u'FieldDef( "{}", "{}" )'.format( self.Name, self.Type )
+		return u'FieldDef( "{}", "{}" )'.format( self.Name, self.TypeCode )
 
 #----------------------------------------------------------------------------------
 
@@ -216,7 +215,7 @@ def _initFieldDefs( self, *args, **kwargs ):
 		assert len(args) == 1, 'Cannot initialize more than one field with positional initialization'
 		setattr( self, self.__slots__[0], args[0] )
 		
-	for key, value in kwargs.iteritems():
+	for key, value in six.iteritems(kwargs):
 		if key == 'MessageID':
 			self._MessageID = value
 		else:
@@ -224,7 +223,7 @@ def _initFieldDefs( self, *args, **kwargs ):
 	
 	# Use a default unique MessageID if None.
 	if getattr(self, '_MessageID', 'NA') is None:
-		self._MessageID = _CurMessageIDCounter.next()
+		self._MessageID = next(_CurMessageIDCounter)
 
 def _setSingleField( self, value ):
 	assert self.FieldCount == 1, 'Object can only have one field to initialize with _setSingleField'
@@ -232,7 +231,7 @@ def _setSingleField( self, value ):
 		
 def _getValues( self ):
 	''' Get all specified values of an LLRP object. '''
-	return [(f.Name, getattr(self, f.Name)) for f in self.FieldDefs if not f.Type.startswith('skip')]
+	return [(f.Name, getattr(self, f.Name)) for f in self.FieldDefs if not f.TypeCode.startswith('skip')]
 
 def _getRepr( self, indent = 0 ):
 	''' Get the representation of an LLRP object. '''
@@ -240,7 +239,7 @@ def _getRepr( self, indent = 0 ):
 	values = self._getValues()
 	numValues = len(values) + (1 if hasattr(self, '_MessageID') else 0)
 	
-	s = StringIO()
+	s = six.StringIO()
 	def w( v ):
 		s.write( v )
 	def iw( v ):
@@ -258,9 +257,9 @@ def _getRepr( self, indent = 0 ):
 		for f in self.DataFields:
 			if f.Enum:
 				iw( '  {}={}.{},\n'.format(f.Name, f.Enum._name, f.Enum.getName(getattr(self, f.Name))) )
-			elif f.Name == 'ParameterType':
+			elif f.Name == 'ParameterTypeCode':
 				v = getattr(self, f.Name)
-				iw( '{}={}, # {}\n'.format(f.Name, repr(v), _parameterClassFromType[v].Name ) )
+				iw( '{}={}, # {}\n'.format(f.Name, repr(v), _parameterClassFromTypeCode[v].Name ) )
 			else:
 				iw('  {}={},\n'.format(f.Name, repr(getattr(self, f.Name)) ) )
 		if self.Parameters:
@@ -290,8 +289,8 @@ def _addParameter( self, p ):
 	self.Parameters.append( p )
 	return p
 
-def _getPTypeName( pType ):
-	return pType.Name if not isinstance(pType, tuple) else ' or '.join( v.Name for v in pType )
+def _getPTypeCodeName( pTypeCode ):
+	return pTypeCode.Name if not isinstance(pTypeCode, tuple) else ' or '.join( v.Name for v in pTypeCode )
 	
 def _validate( self, path = None ):
 	''' Validate all the values of an LLRP object. '''
@@ -300,7 +299,7 @@ def _validate( self, path = None ):
 	path.append( self.__class__.__name__ )
 	
 	for f in self.FieldDefs:
-		ftype = f.Type
+		ftype = f.TypeCode
 		if ftype.startswith('skip'):	# Pass over "skip" fields first as there is no field.
 			continue
 		name = f.Name
@@ -311,7 +310,7 @@ def _validate( self, path = None ):
 			assert f.Enum.getName(getattr(self, name)), '{}: field "{}" must have value in enumeration: {}'.format('.'.join(path), name, f.Enum)
 		
 		if ftype.startswith('uintbe') or ftype.startswith('intbe') or ftype.startswith('bits'):
-			assert isinstance( getattr(self, name), (int, long) ), '{}: field "{}" must be "int" type, not "{}"'.format(
+			assert isinstance( getattr(self, name), six.integer_types ), '{}: field "{}" must be "int" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bool':
 			assert isinstance( getattr(self, name), bool ), '{}: field "{}" must be "bool" type, not "{}"'.format(
@@ -321,16 +320,16 @@ def _validate( self, path = None ):
 			assert isinstance( arr, list ), '{}: field "{}" must be "list" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 			for i, e in enumerate(arr):
-				assert isinstance( e, (int, long) ), '{}: field "{}" must contain all "ints" or "longs" (not "{}" at position {})'.format(
+				assert isinstance( e, six.integer_types ), '{}: field "{}" must contain all "ints" (not "{}" at position {})'.format(
 						'.'.join(path), name, e.__class__.__name__, i)
 		elif ftype == 'string':
-			assert isinstance( getattr(self, name), basestring ), '{}: field "{}" must be "string" type, not "{}"'.format(
+			assert isinstance( getattr(self, name), six.string_types ), '{}: field "{}" must be "string" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bitarray':
 			assert isinstance( getattr(self, name), bytes ), '{}: field "{}" must be "bytes" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		elif ftype == 'bytesToEnd':
-			assert isinstance( getattr(self, namt), bitstream.BitStream ), '{}: bytesToEnd field "{}" must be "bitstream.BitStream" type, not "{}"'.format(
+			assert isinstance( getattr(self, name), bitstring.BitStream ), '{}: bytesToEnd field "{}" must be "bitstring.BitStream" type, not "{}"'.format(
 					'.'.join(path), name, getattr(self, name).__class__.__name__)
 		else:
 			assert False, '{}: Unknown field ftype: "{}"'.format('.'.join(path), ftype)
@@ -405,7 +404,7 @@ def _getFirstParameterByClass( self, parameterClass ):
 			return match
 	return None
 		
-def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
+def _MakeClass( messageOrParameter, Name, TypeCode, PackUnpack ):
 	''' Make an LLRP class (Message or Parameter). '''
 	extraFields = ['Parameters', '_Length']
 	if messageOrParameter == 'Message':
@@ -413,12 +412,12 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 		
 	classAttrs = {
 		'Name':				Name,					# Name of this message/parameter.
-		'Type':				Type,					# LLRP Type integer
+		'TypeCode':			TypeCode,				# LLRP Type integer
 		'PackUnpack':		PackUnpack,				# Instance to pack/unpack it into a bitstream.
 		'FieldDefs':		PackUnpack.FieldDefs,	# Fields specified for this object.
+		'__slots__':		[ f.Name for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ] + extraFields, # Available fields in this object.
 		'ParameterDefs':	PackUnpack.ParameterDefs, # Parameters specified for this object.
 		'ParameterSequence':PackUnpack.ParameterSequence, # Required sequence of Parameters for this object.
-		'__slots__':		[ f.Name for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ] + extraFields, # Available fields in this object.
 		'FieldCount':		sum( 1 for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ),			# Field count for convenience.
 		'DataFields':		[ f for f in PackUnpack.FieldDefs if not f.Name.startswith('skip') ],				# List of data fields.
 		'__init__':			_initFieldDefs,			# Initialize the object and default field values.
@@ -447,8 +446,8 @@ def _MakeClass( messageOrParameter, Name, Type, PackUnpack ):
 
 class _MessagePackUnpack( object ):
 	''' Pack and Unpack an LLRP Message. '''
-	def __init__( self, Type, Name, FieldDefs, ParameterDefs ):
-		self.Type = Type
+	def __init__( self, TypeCode, Name, FieldDefs, ParameterDefs ):
+		self.TypeCode = TypeCode
 		self.Name = Name
 		self.FieldDefs = FieldDefs
 		self.ParameterDefs = ParameterDefs
@@ -460,7 +459,7 @@ class _MessagePackUnpack( object ):
 
 	def isCustom( self ):
 		try:
-			return	self.Type == CustomType and \
+			return	self.TypeCode == CustomTypeCode and \
 					self.FieldDefs[0].Name == 'VendorIdentifier' and self.FieldDefs[0].Default is not None and \
 					self.FieldDefs[1].Name == 'MessageSubtype'   and self.FieldDefs[1].Default is not None
 		except (IndexError, KeyError):
@@ -470,17 +469,17 @@ class _MessagePackUnpack( object ):
 		if self.isCustom():
 			VendorIdentifier = self.FieldDefs[0].Default
 			MessageSubtype = self.FieldDefs[1].Default
-			return (self.Type, VendorIdentifier, MessageSubtype)
+			return (self.TypeCode, VendorIdentifier, MessageSubtype)
 		else:
-			return self.Type
+			return self.TypeCode
 
 	def unpack( self, s ):
-		m = _messageClassFromType[self.Type]( MessageID = -1 )	# Use a dummy MessageID - get the real one from the bitstream later.
+		m = _messageClassFromTypeCode[self.TypeCode]( MessageID = -1 )	# Use a dummy MessageID - get the real one from the bitstream later.
 	
 		beginPos = s.pos
-		Type = s.read('uintbe:16')
-		Type &= ((1<<10)-1)
-		assert m.Type == Type
+		TypeCode = s.read('uintbe:16')
+		TypeCode &= ((1<<10)-1)
+		assert m.TypeCode == TypeCode
 		m._Length = s.read('uintbe:32')
 		m._MessageID = s.read('uintbe:32')
 		
@@ -488,9 +487,9 @@ class _MessagePackUnpack( object ):
 		for f in self.FieldDefs:
 			f.read( s, m, m._Length - ((s.pos - beginPos) >> 3) )
 			
-		if m.Type == CustomType:
+		if m.TypeCode == CustomTypeCode:
 			# Rebind to the specific custom message based on vendor and subtype.
-			mCustom = _messageClassFromType[(self.Type, m.VendorIdentifier, m.MessageSubtype)]( MessageID = m._MessageID )
+			mCustom = _messageClassFromTypeCode[(self.TypeCode, m.VendorIdentifier, m.MessageSubtype)]( MessageID = m._MessageID )
 			mCustom._Length = m._Length
 			m = mCustom
 			
@@ -508,7 +507,7 @@ class _MessagePackUnpack( object ):
 		
 		beginPos = len(s)
 		# Add Version 1 code to the message type - the (1<<10).
-		s.append( bitstring.pack('uintbe:16, uintbe:32, uintbe:32', (1<<10) | m.Type, 0, m._MessageID) )
+		s.append( bitstring.pack('uintbe:16, uintbe:32, uintbe:32', (1<<10) | m.TypeCode, 0, m._MessageID) )
 		
 		for f in m.FieldDefs:
 			f.write( s, m )
@@ -528,8 +527,8 @@ class _ParameterPackUnpack( object ):
 	''' Pack and Unpack an LLRP Parameter (TLV or TV encoding). '''
 	TLV = 'TLV'
 	TV = 'TV'
-	def __init__( self, Type, Name, Encoding, FieldDefs, ParameterDefs, Length = -1 ):
-		self.Type = Type
+	def __init__( self, TypeCode, Name, Encoding, FieldDefs, ParameterDefs, Length = -1 ):
+		self.TypeCode = TypeCode
 		self.Name = Name
 		self.Encoding = Encoding
 		self.FieldDefs = FieldDefs
@@ -543,7 +542,7 @@ class _ParameterPackUnpack( object ):
 
 	def isCustom( self ):
 		try:
-			return	self.Type == CustomType and \
+			return	self.TypeCode == CustomTypeCode and \
 					self.FieldDefs[0].Name == 'VendorIdentifier' and self.FieldDefs[0].Default is not None and \
 					self.FieldDefs[1].Name == 'ParameterSubtype' and self.FieldDefs[1].Default is not None
 		except (IndexError, KeyError):
@@ -553,35 +552,35 @@ class _ParameterPackUnpack( object ):
 		if self.isCustom():
 			VendorIdentifier = self.FieldDefs[0].Default
 			ParameterSubtype = self.FieldDefs[1].Default
-			return (self.Type, VendorIdentifier, ParameterSubtype)
+			return (self.TypeCode, VendorIdentifier, ParameterSubtype)
 		else:
-			return self.Type
+			return self.TypeCode
 
 	def unpack( self, s ):
-		p = _parameterClassFromType[self.Type]()
+		p = _parameterClassFromTypeCode[self.TypeCode]()
 		
 		beginPos = s.pos
-		Type = s.peek( 'uintbe:8' )
-		if Type & (1<<7):
-			Type &= ((1<<7) - 1)
+		TypeCode = s.peek( 'uintbe:8' )
+		if TypeCode & (1<<7):
+			TypeCode &= ((1<<7) - 1)
 			p._Length = self.Length
 			assert p.Encoding == self.TV
 			s.read( 'uintbe:8' )
 		else:
-			Type = s.read('uintbe:16')
-			Type &= ((1<<10)-1)
+			TypeCode = s.read('uintbe:16')
+			TypeCode &= ((1<<10)-1)
 			assert p.Encoding == self.TLV
 			p._Length = s.read('uintbe:16')
 		
-		assert Type == self.Type
+		assert TypeCode == self.TypeCode
 		
 		# Read the fields of this parameter.
 		for f in self.FieldDefs:
 			f.read( s, p )
 			
-		if Type == CustomType:
+		if TypeCode == CustomTypeCode:
 			# Get the new fields definition based on the VendorIdentifier and ParameterSubtype.
-			pCustom = _parameterClassFromType[ (Type, p.VendorIdentifier, p.ParameterSubtype) ]()
+			pCustom = _parameterClassFromTypeCode[ (TypeCode, p.VendorIdentifier, p.ParameterSubtype) ]()
 			pCustom._Length = p._Length
 			
 			# Read the rest of the defined fields for the custom type.
@@ -599,12 +598,11 @@ class _ParameterPackUnpack( object ):
 		p._validate()
 
 		beginPos = len(s)
-		# print 'Packing:', p.Name, beginPos >> 3
 		if p.Encoding == self.TLV:
-			s.append( bitstring.pack('uintbe:16, uintbe:16', p.Type, 0) )
+			s.append( bitstring.pack('uintbe:16, uintbe:16', p.TypeCode, 0) )
 		else:
 			assert not p.Parameters, 'LLRP TV _parameters cannot contain nested parameters'
-			s.append( bitstring.pack('uintbe:8', p.Type | 128 ) )
+			s.append( bitstring.pack('uintbe:8', p.TypeCode | 128 ) )
 		
 		for f in p.FieldDefs:	# Was self.FieldDefs.  We need to use the "p" to handle the extra fields in the custom messages.
 			f.write( s, p )
@@ -622,18 +620,18 @@ class _ParameterPackUnpack( object ):
 			p._Length = self.Length
 		return s
 
-def _DefTV( Type, Name, FieldDefs ):
+def _DefTV( TypeCode, Name, FieldDefs ):
 	''' Define a TV parameter (no explicit length field). '''
-	Length = 8		# Adjust for the leading Type (8 bits).
+	Length = 8		# Adjust for the leading TypeCode (8 bits).
 	for f in FieldDefs:
-		Length += int(f.Type.split(':')[1])
+		Length += int(f.TypeCode.split(':')[1])
 	assert Length & 7 == 0
 	Length >>= 3	# Divide by 8 to get bytes from bits.
-	return _ParameterPackUnpack( Type, Name, _ParameterPackUnpack.TV, FieldDefs, None, Length )
+	return _ParameterPackUnpack( TypeCode, Name, _ParameterPackUnpack.TV, FieldDefs, None, Length )
 	
-def _DefTLV( Type, Name, FieldDefs, ParameterDefs ):
+def _DefTLV( TypeCode, Name, FieldDefs, ParameterDefs ):
 	''' Define a TLV parameter (length field included). '''
-	return _ParameterPackUnpack( Type, Name, _ParameterPackUnpack.TLV, FieldDefs, ParameterDefs )
+	return _ParameterPackUnpack( TypeCode, Name, _ParameterPackUnpack.TLV, FieldDefs, ParameterDefs )
 
 def _fixFieldDefs( fields ):
 	return [_FieldDef(	f['name'],
@@ -655,40 +653,40 @@ globals().update( _enumClassFromName )
 
 #-----------------------------------------------------------------------------
 # Create Parameter classes from the specs.
-# Initialize a dict to retrieve the Parameter PackUnpack class from the Type.
-# Initialize a dict to retrieve the Parameter class from the Type.
+# Initialize a dict to retrieve the Parameter PackUnpack class from the TypeCode.
+# Initialize a dict to retrieve the Parameter class from the TypeCode.
 #
 _ParameterPackUnpackLookup = {}
 _parameterClassFromName = {}
-_parameterClassFromType = {}
+_parameterClassFromTypeCode = {}
 for p in llrpdef.parameters:
-	Type = p['typeNum']
+	TypeCode = p['typeNum']
 	Name = p['name']
-	if Type <= 127:
-		pup = _DefTV( Type, Name, _fixFieldDefs(p['fields']) )
+	if TypeCode <= 127:
+		pup = _DefTV( TypeCode, Name, _fixFieldDefs(p['fields']) )
 	else:
-		pup = _DefTLV( Type, Name, _fixFieldDefs(p.get('fields',[])), p.get('parameters', None) )
+		pup = _DefTLV( TypeCode, Name, _fixFieldDefs(p.get('fields',[])), p.get('parameters', None) )
 	parameterClassName = pup.Name + '_Parameter'
-	_ParameterPackUnpackLookup[Type] = pup
-	_parameterClassFromType[pup.Code] = _parameterClassFromName[parameterClassName] = _MakeClass( 'Parameter', pup.Name, Type, pup )
+	_ParameterPackUnpackLookup[TypeCode] = pup
+	_parameterClassFromTypeCode[pup.Code] = _parameterClassFromName[parameterClassName] = _MakeClass( 'Parameter', pup.Name, TypeCode, pup )
 
 globals().update( _parameterClassFromName )	# Add Parameter classes to global namespace.
 
 #-----------------------------------------------------------------------------
 # Create Messages classes from the specs.
-# Initialize a dict to retrieve the Message PackUnpack class from the Type.
-# Initialize a dict to retrieve the Message class from the Type.
+# Initialize a dict to retrieve the Message PackUnpack class from the TypeCode.
+# Initialize a dict to retrieve the Message class from the TypeCode.
 #
 _MessagePackUnpackLookup = {}
 _messageClassFromName = {}
-_messageClassFromType = {}
+_messageClassFromTypeCode = {}
 for m in llrpdef.messages:
-	Type = m['typeNum']
+	TypeCode = m['typeNum']
 	Name = m['name']
-	pup = _MessagePackUnpack(Type, Name, _fixFieldDefs(m.get('fields',[])), m.get('parameters',None))
+	pup = _MessagePackUnpack(TypeCode, Name, _fixFieldDefs(m.get('fields',[])), m.get('parameters',None))
 	messageClassName = pup.Name + '_Message'
-	_MessagePackUnpackLookup[Type] = pup
-	_messageClassFromType[pup.Code] = _messageClassFromName[messageClassName] = _MakeClass( 'Message', pup.Name, Type, pup )
+	_MessagePackUnpackLookup[TypeCode] = pup
+	_messageClassFromTypeCode[pup.Code] = _messageClassFromName[messageClassName] = _MakeClass( 'Message', pup.Name, TypeCode, pup )
 	
 globals().update( _messageClassFromName )	# Add Message classes to global namespace.
 
@@ -721,13 +719,13 @@ def UnpackMessageFromSocket( sock ):
 		messageLen += len(chunk)
 		zeroLenChunkCount = 0
 	
-	# Convert to a BitStream to get the message Type and Length.
+	# Convert to a BitStream to get the message TypeCode and Length.
 	s = bitstring.ConstBitStream( bytes=b''.join(chunks) )
-	Type = s.read('uintbe:16')
-	Type &= ((1<<10)-1)
+	TypeCode = s.read('uintbe:16')
+	TypeCode &= ((1<<10)-1)
 	Length = s.read('uintbe:32')
 	
-	# print 'UnpackMessageFromSocket: Type={} Length={} {}'.format(Type, Length, _messageClassFromType[Type].__name__)
+	# print( 'UnpackMessageFromSocket: TypeCode={} Length={} {}'.format(TypeCode, Length, _messageClassFromTypeCode[TypeCode].__name__) )
 	
 	# Read the remaining message based on the Length.
 	zeroLenChunkCount = 0
@@ -744,33 +742,33 @@ def UnpackMessageFromSocket( sock ):
 	
 	# Convert the full message to a BitStream and parse it.
 	s = bitstring.ConstBitStream( bytes=b''.join(chunks) )
-	return _MessagePackUnpackLookup[Type].unpack( s )
+	return _MessagePackUnpackLookup[TypeCode].unpack( s )
 
 def UnpackMessage( s ):
 	''' Unpack a message from a bitstream. '''
 	s.pos = 0
-	Type = s.peek('uintbe:16')
-	Type &= ((1<<10)-1)
-	return _MessagePackUnpackLookup[Type].unpack( s )
+	TypeCode = s.peek('uintbe:16')
+	TypeCode &= ((1<<10)-1)
+	return _MessagePackUnpackLookup[TypeCode].unpack( s )
 	
 def PackMessage( m ):
 	''' Pack message into a bitstream. '''
-	assert m.Type in _messageClassFromType
+	assert m.TypeCode in _messageClassFromTypeCode
 	return m.pack( bitstring.BitStream() )
 	
 def UnpackParameter( s ):
 	''' Unpack a parameter from a bitstream. '''
-	Type = s.peek( 'uintbe:8' )
-	if Type & (1<<7):
-		Type &= ((1<<7) - 1)			# TV Encoding
+	TypeCode = s.peek( 'uintbe:8' )
+	if TypeCode & (1<<7):
+		TypeCode &= ((1<<7) - 1)			# TV Encoding
 	else:
-		Type = s.peek('uintbe:16')		# TLV Encoding
-		Type &= ((1<<10)-1)
-	return _ParameterPackUnpackLookup[Type].unpack( s )
+		TypeCode = s.peek('uintbe:16')		# TLV Encoding
+		TypeCode &= ((1<<10)-1)
+	return _ParameterPackUnpackLookup[TypeCode].unpack( s )
 	
 def GetResponseClass( message ):
 	''' Get the corresponding response class of a message. '''
-	if message.Type == CustomType:
+	if message.TypeCode == CustomTypeCode:
 		responseClassName = 'CUSTOM_MESSAGE_Message'
 	else:
 		responseClassName = message.__class__.__name__.replace('_Message', '_RESPONSE_Message')
@@ -788,15 +786,26 @@ def WaitForMessage( MessageID, sock, nonMatchingMessageHandler = None ):
 
 #-----------------------------------------------------------------------------
 
-def HexFormatToStr( value ):
-	if isinstance(value, bool):
-		return '1' if value else '0'
-	if isinstance(value, (int, long)):
-		return '{:X}'.format(value)
-	return ''.join( [ "%02X" % ord(x) for x in value ] ).lstrip('0')
+if six.PY2:
+	def HexFormatToStr( value ):
+		if isinstance(value, bool):
+			return '1' if value else '0'
+		if isinstance(value, six.integer_types):
+			return '{:X}'.format(value)
+		return ''.join( "{:02X}".format(ord(x)) for x in value ).lstrip('0')
 
-def HexFormatToInt( value ):
-	return long(''.join( [ "%02X" % ord(x) for x in value ] ))
+	def HexFormatToInt( value ):
+		return int(''.join( "{:02X}".format(ord(x)) for x in value ), 16)
+else:
+	def HexFormatToStr( value ):
+		if isinstance(value, bool):
+			return '1' if value else '0'
+		if isinstance(value, six.integer_types):
+			return '{:X}'.format(value)
+		return ''.join( "{:02X}".format(x) for x in value ).lstrip('0')
+
+	def HexFormatToInt( value ):
+		return int(''.join( "{:02X}".format(x) for x in value ), 16)
 
 def GetBasicAddRospecMessage( MessageID = None, ROSpecID = 123, inventoryParameterSpecID = 1234, antennas = None ):
 	#-----------------------------------------------------------------------------
@@ -884,7 +893,10 @@ def _getTagData( self ):
 	return tagData
 
 # Add a 'getTagData' convenience method to the RO_ACCESS_REPORT message.
+RO_ACCESS_REPORT_Message.getTagData = _getTagData
+'''
 RO_ACCESS_REPORT_Message.getTagData = types.MethodType( _getTagData, None, RO_ACCESS_REPORT_Message )
+'''
 
 # Remove the bytesToEnd field from the CUSTOM_MESSAGE and Custom parameter.
 CUSTOM_MESSAGE_Message.FieldDefs = CUSTOM_MESSAGE_Message.FieldDefs[:-1]
@@ -894,13 +906,13 @@ if __name__ == '__main__':
 	import sys
 	
 	c = IMPINJ_ENABLE_EXTENSIONS_Message()
-	print c
+	six.print_( c )
 	
 	s = c.pack( bitstring.BitStream() )
-	print s
+	six.print_( s )
 	
 	m = UnpackMessage( s )
-	print m
+	six.print_( m )
 	
 	#-----------------------------
 
@@ -910,47 +922,47 @@ if __name__ == '__main__':
 	rospecEnableMessage = GetEnableRospecMesssage( 2 )
 	rospecMessage._validate()
 	
-	print rospecMessage
+	six.print_( rospecMessage )
 	rospecMessage._validate()
 	
-	print rospecEnableMessage
+	six.print_( rospecEnableMessage )
 	rospecEnableMessage._validate()
 	
 	s = rospecMessage.pack( bitstring.BitStream() )
-	print s
+	six.print_( s )
 	
 	m = UnpackMessage( s )
-	print m
+	six.print_( m )
 	
-	bytes=s.tobytes()
-	t = bitstring.ConstBitStream( bytes=bytes )
+	bb=s.tobytes()
+	t = bitstring.ConstBitStream( bytes=bb )
 	n = UnpackMessage( t )
-	print n
+	six.print_( n )
 	
 	s = rospecEnableMessage.pack( bitstring.BitStream() )
-	print s
+	six.print_( s )
 	
 	m = UnpackMessage( s )
-	print m
+	six.print_( m )
 	
-	bytes=s.tobytes()
-	t = bitstring.ConstBitStream( bytes=bytes )
+	bb=s.tobytes()
+	t = bitstring.ConstBitStream( bytes=bb )
 	n = UnpackMessage( t )
-	print n
+	six.print_( n )
 	
 	customMessage = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 1 )
-	print customMessage
+	six.print_( customMessage )
 	
 	s = customMessage.pack( bitstring.BitStream() )
 	m = UnpackMessage( s )
-	print m
+	six.print_( m )
 	
 	customMessage = IMPINJ_ADD_ENCODE_DATA_Message( MessageID = 1, EncodeDataCacheID = 32 )
-	print customMessage
+	six.print_( customMessage )
 	
 	s = customMessage.pack( bitstring.BitStream() )
 	m = UnpackMessage( s )
-	print m
+	six.print_( m )
 	
 	message = READER_EVENT_NOTIFICATION_Message( MessageID = 1234, Parameters = [
 		UTCTimestamp_Parameter( Microseconds = 31415626 ),
@@ -960,7 +972,7 @@ if __name__ == '__main__':
 			),
 		]),
 	])	# ADD_ROSPEC_Message
-	print message.__repr__()
-	print message.getFirstParameterByClass(ConnectionAttemptEvent_Parameter)
+	six.print_( message.__repr__() )
+	six.print_( message.getFirstParameterByClass(ConnectionAttemptEvent_Parameter) )
 	
-	print ConnectionAttemptStatusType.getName(2), ConnectionAttemptStatusType.Success
+	six.print_( ConnectionAttemptStatusType.getName(2), ConnectionAttemptStatusType.Success )

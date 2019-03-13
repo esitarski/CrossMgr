@@ -1,11 +1,12 @@
-
-import time
-import atexit
+import io
 import os
+import six
+import time
 import math
+import atexit
 import datetime
 import threading
-from Queue import Queue, Empty
+from six.moves.queue import Queue, Empty
 
 import Utils
 import Model
@@ -43,11 +44,11 @@ def Server( q, fname ):
 		# Write all messages to the stream file.
 		if messages:
 			try:
-				with open(fname, 'ab') as f:
-					f.write( ''.join(messages) )
+				with io.open(fname, 'a') as f:
+					f.write( u''.join(messages) )
 				for m in messages:
 					q.task_done()
-			except IOError:
+			except IOError as e:
 				pass
 
 def StopStreamer():
@@ -160,7 +161,7 @@ def ReadStreamFile( fname = None ):
 	finishTime = None
 	numTimes = []
 	try:
-		with open(fname, 'rb') as f:
+		with io.open(fname, 'r', encoding='utf-8') as f:
 			for line in f:
 				line = line.strip()
 				if not line or line[0] == '#':
@@ -197,8 +198,8 @@ def CleanupStreamer():
 if __name__ == '__main__':
 	StartStreamer()
 	count = 0
-	for i in xrange(10):
-		for j in xrange(5):
+	for i in six.moves.range(10):
+		for j in six.moves.range(5):
 			writeNumTime( i+j, i )
 		time.sleep( 1 )
 	StopStreamer()

@@ -3,6 +3,7 @@ import wx.grid as gridlib
 
 import os
 import sys
+import six
 import operator
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
@@ -35,10 +36,10 @@ class CategorySequence(wx.Panel):
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 0, len(self.headerNames) )
-		for col in xrange(self.grid.GetNumberCols()):
+		for col in six.moves.range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, self.headerNames[col] )
 		
-		for col in xrange(self.grid.GetNumberCols()):
+		for col in six.moves.range(self.grid.GetNumberCols()):
 			attr = gridlib.GridCellAttr()
 			if col == self.CategoryCol:
 				attr.SetReadOnly( True )
@@ -89,7 +90,7 @@ class CategorySequence(wx.Panel):
 		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
 			self.grid.SetCellValue( row, self.PublishCol, u'01'[int(c.publish)] )
-			self.grid.SetCellValue( row, self.TeamNCol, unicode(c.teamN) )
+			self.grid.SetCellValue( row, self.TeamNCol, six.text_type(c.teamN) )
 			self.grid.SetCellValue( row, self.UseNthScoreCol, u'01'[int(c.useNthScore)] )
 			self.grid.SetCellValue( row, self.TeamPublishCol, u'01'[int(c.teamPublish)] )
 		wx.CallAfter( self.gridAutoSize )
@@ -98,7 +99,7 @@ class CategorySequence(wx.Panel):
 		Category = SeriesModel.Category
 		gc = self.grid.GetCellValue
 		categories = []
-		for row in xrange(self.grid.GetNumberRows()):
+		for row in six.moves.range(self.grid.GetNumberRows()):
 			c = Category(
 				name=gc(row, self.CategoryCol),
 				iSequence=row,

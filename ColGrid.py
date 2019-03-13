@@ -1,7 +1,7 @@
-
-import  wx
-import  wx.grid as  Grid
-import  copy
+import wx
+import six
+import wx.grid as  Grid
+import copy
 
 #---------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ class ColTable( Grid.GridTableBase ):
 			elementIndex = [(e, i) for i, e in enumerate(self.data[iCol])]
 		elementIndex.sort()
 		
-		for c in xrange(len(self.data)):
+		for c in six.moves.range(len(self.data)):
 			self.data[c] = [self.data[c][i] for e, i in elementIndex]
 			if descending:
 				self.data[c].reverse()
@@ -141,7 +141,7 @@ class ColTable( Grid.GridTableBase ):
 			return ''
 
 	def GetRowLabelValue(self, row):
-		return unicode(row+1)
+		return six.text_type(row+1)
 
 	def IsEmptyCell( self, row, col ):
 		try:
@@ -154,7 +154,7 @@ class ColTable( Grid.GridTableBase ):
 		return '' if self.IsEmptyCell(row, col) else self.data[col][row]
 
 	def GetValue(self, row, col):
-		return unicode(self.GetRawValue(row, col))
+		return six.text_type(self.GetRawValue(row, col))
 
 	def SetValue(self, row, col, value):
 		# Nothing to do - everthing is read-only.
@@ -171,7 +171,7 @@ class ColTable( Grid.GridTableBase ):
 			if not getattr(self, a, None):
 				continue
 			colD = {}
-			for (r, c), colour in getattr(self, a).iteritems():
+			for (r, c), colour in six.iteritems(getattr(self, a)):
 				if c < pos:
 					colD[(r, c)] = colour
 				elif posMax <= c:
@@ -189,7 +189,13 @@ class ColTable( Grid.GridTableBase ):
 			hCellAlign = wx.ALIGN_RIGHT
 		
 		rc = (row, col)
-		key = (self.textColour.get(rc, None), self.backgroundColour.get(rc, None), col, hCellAlign)
+		textColour = self.textColour.get(rc, None)
+		if textColour:
+			textColour = textColour.GetAsString(wx.C2S_HTML_SYNTAX)
+		backgroundColour = self.backgroundColour.get(rc, None)
+		if backgroundColour:
+			backgroundColour = backgroundColour.GetAsString(wx.C2S_HTML_SYNTAX)
+		key = (textColour, backgroundColour, col, hCellAlign)
 		try:
 			attr = self.attrs[key]
 		except KeyError:

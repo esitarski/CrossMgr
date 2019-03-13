@@ -1,3 +1,5 @@
+import io
+import six
 import glob
 import datetime
 from TagGroup import TagGroup, QuadraticRegressionMethod, StrongestReadMethod
@@ -13,7 +15,7 @@ def Test():
 		tLast = 0.0
 		
 		# 10.16.21.147,738AD3FF13CFD7C9F62F029D,123132.461593,0,-52
-		with open(file, 'r') as pf:
+		with io.open(file, 'r') as pf:
 			for line in pf:
 				if line.startswith('127.'):
 					continue
@@ -32,11 +34,11 @@ def Test():
 				tg.add( 1, tagID, tNow + datetime.timedelta(seconds=t - tFirst), db )
 		
 		reads, strays = tg.getReadsStrays( tNow + datetime.timedelta( seconds = tLast - tFirst + 1.0), method )
-		print '************************************************'
-		print '    {}'.format( file )
-		print '************************************************'
+		six.print_( '************************************************' )
+		six.print_( '    {}'.format( file ) )
+		six.print_( '************************************************' )
 		for tagID, t, sampleSize, antennaID in reads:
-			print tagID, t.strftime('%H:%M:%S.%f'), sampleSize
+			six.print_( tagID, t.strftime('%H:%M:%S.%f'), sampleSize )
 			
 		break
 				

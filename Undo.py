@@ -1,7 +1,7 @@
 import Model
 from Utils import updateUndoStatus
 from Utils import logCall
-import cPickle as pickle
+import six.moves.cPickle as pickle
 import pickletools
 
 class Undo( object ):

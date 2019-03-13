@@ -1,3 +1,4 @@
+import six
 import fpdf
 
 class PDF( fpdf.FPDF ):
@@ -13,7 +14,7 @@ class PDF( fpdf.FPDF ):
 		height *= 1.25
 		
 		# Encode the text as windows-1252.
-		text = unicode(text).encode('windows-1252', 'ignore')
+		text = six.text_type(text).encode('windows-1252', 'ignore')
 		fs, fsMin, fsMax = 0.0, 0.0, 720.0
 		
 		def widthHeight( fs ):
@@ -53,7 +54,7 @@ class PDF( fpdf.FPDF ):
 		leftJustifyCols = set( leftJustifyCols or [] )
 		
 		# Encode the entire table as windows-1252.
-		table = [[unicode(v).encode('windows-1252', 'ignore') for v in row] for row in table]
+		table = [[six.text_type(v).encode('windows-1252', 'ignore') for v in row] for row in table]
 		colMax = max( len(row) for row in table )
 		for row in table:
 			if len(row) < colMax:
@@ -66,7 +67,7 @@ class PDF( fpdf.FPDF ):
 		
 		def maxColWidths():
 			cellPad = self.get_string_width( cellSpace )
-			widths = [max(self.get_string_width(row[col]) for row in table) + cellPad for col in xrange(colMax) ]
+			widths = [max(self.get_string_width(row[col]) for row in table) + cellPad for col in six.moves.range(colMax) ]
 			return widths
 		
 		def widthHeight( fs ):
@@ -119,7 +120,7 @@ class PDF( fpdf.FPDF ):
 			yCur += lineHeight
 		
 		self.yRow = [y + lineHeight * 0.08]
-		for i in xrange(len(table)+1):
+		for i in six.moves.range(len(table)+1):
 			self.yRow.append( self.yRow[-1] + lineHeight )
 		
 		self.xCol = [x+cellPad]

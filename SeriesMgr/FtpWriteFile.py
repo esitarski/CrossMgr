@@ -22,20 +22,20 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 		ftp.cwd( serverPath )
 	fileOpened = False
 	if file is None:
-		file = open(fileName, 'rb')
+		file = io.open(fileName, 'rb')
 		fileOpened = True
 	ftp.storbinary( 'STOR %s' % os.path.basename(fileName), file )
 	ftp.quit()
 	if fileOpened:
 		file.close()
 
-def FtpWriteHtml( html ):
+def FtpWriteHtml( html_in ):
 	Utils.writeLog( 'FtpWriteHtml: called.' )
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
 	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
 	defaultPath = os.path.dirname( modelFileName )
-	with io.open(os.path.join(defaultPath, fileName), 'w', encoding='utf-8') as fp:
-		fp.write( html )
+	with io.open(os.path.join(defaultPath, fileName), 'w') as fp:
+		fp.write( html_in )
 		
 	model = SeriesModel.model
 	host		= getattr( model, 'ftpHost', '' )
@@ -43,17 +43,17 @@ def FtpWriteHtml( html ):
 	passwd		= getattr( model, 'ftpPassword', '' )
 	serverPath	= getattr( model, 'ftpPath', '' )
 	
-	file		= open( os.path.join(defaultPath, fileName), 'rb' )
-	try:
-		FtpWriteFile(	host		= host,
-						user		= user,
-						passwd		= passwd,
-						serverPath	= serverPath,
-						fileName	= fileName,
-						file		= file )
-	except Exception as e:
-		Utils.writeLog( 'FtpWriteHtml Error: {}'.format(e) )
-		return e
+	with io.open( os.path.join(defaultPath, fileName), 'rb' ) as file:
+		try:
+			FtpWriteFile(	host		= host,
+							user		= user,
+							passwd		= passwd,
+							serverPath	= serverPath,
+							fileName	= fileName,
+							file		= file )
+		except Exception as e:
+			Utils.writeLog( 'FtpWriteHtml Error: {}'.format(e) )
+			return e
 		
 	return None
 
@@ -194,7 +194,7 @@ if __name__ == '__main__':
 
 	app = wx.PySimpleApp()
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
-	ftpPublishDialog = FtpPublishDialog(mainWin)
+	ftpPublishDialog = FtpPublishDialog(mainWin, 'TestHtml')
 	ftpPublishDialog.ShowModal()
 	mainWin.Show()
 	app.MainLoop()

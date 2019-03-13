@@ -441,7 +441,7 @@ def Launch( doRedirect = False ):
 	if doRedirect:
 		dataDir = Utils.getHomeDir()
 		redirectFileName = os.path.join(dataDir, 'TagReadWrite.log')
-		print '"{}"'.format( redirectFileName )
+		print ( '"{}"'.format( redirectFileName ) )
 		
 		# Set up the log file.  Otherwise, show errors on the screen.
 		try:

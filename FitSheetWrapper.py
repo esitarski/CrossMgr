@@ -1,4 +1,5 @@
 import arial10
+import six
 import datetime
 import Utils
 import math
@@ -31,7 +32,7 @@ class FitSheetWrapper(object):
 		elif isinstance(label, datetime.time):
 			label = '00:00:00'
 		else:
-			label = Utils.removeDiacritic( unicode(label) )
+			label = Utils.removeDiacritic( six.text_type(label) )
 		if label.find( '\n' ) >= 0:
 			width, height = arial10.fitWidthHeight(label, isBold)
 			if height > self.heights.get(r, 0):
@@ -72,7 +73,7 @@ class FitSheetWrapperXLSX(object):
 		elif isinstance(data, datetime.time):
 			data = '00:00:00'
 		else:
-			data = Utils.removeDiacritic( unicode(data) )
+			data = Utils.removeDiacritic( six.text_type(data) )
 		if '\n' in data:
 			width, height = arial10.fitWidthHeight(data, isBold)
 			height /= StandardCharWidth

@@ -1,5 +1,6 @@
+import six
 from Database import Database
-from Queue import Empty
+from six.moves.queue import Empty
 
 from MakeComposite import MakeComposite
 

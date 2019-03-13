@@ -1,4 +1,5 @@
 import wx
+import six
 import sys
 import datetime
 import traceback
@@ -12,7 +13,7 @@ class LogPrintStackStderr( wx.Log ):
     def doPrint( self, *args, **kwargs ):
         sys.stderr.write( u': '.join(u'{}'.format(a) for a in args) )
         sys.stderr.write( '\n' )
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             sys.stderr.write( u'{}: {}\n'.format(k,v) )
                 
     def DoLogText( self, *args, **kwargs ):

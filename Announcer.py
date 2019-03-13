@@ -2,6 +2,7 @@ import Utils
 import Model
 import wx
 import re
+import six
 from GetResults import GetResults
 from math import modf
 from ForecastHistory import getExpectedRecorded
@@ -97,7 +98,7 @@ class Announcer( wx.Panel ):
 	]
 	def createGreenScale( self, alertETA ):
 		self.colourMap = {}
-		for i in xrange(alertETA):
+		for i in six.moves.range(alertETA):
 			self.colourMap[i]			= self.greenScale[i]
 			self.colourMap[-i]			= self.greenScale[0]
 			self.colourMap[-alertETA-i]	= self.greenScale[i]
@@ -272,7 +273,7 @@ class Announcer( wx.Panel ):
 				self.isRecorded.append( False )
 			
 			rowColour = recordedColour if self.isRecorded[-1] else unrecordedColour
-			for c in xrange(len(self.cols)):
+			for c in six.moves.range(len(self.cols)):
 				self.grid.SetCellBackgroundColour( row, c, rowColour )
 		
 		gCur = 0

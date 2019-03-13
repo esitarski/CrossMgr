@@ -1,4 +1,5 @@
 import wx
+import six
 import random
 import bisect
 import copy
@@ -162,7 +163,7 @@ class LineGraph(wx.Control):
 		d = self.seriesMax / numLabels
 		intervals = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
-		for i in xrange(d-1, self.seriesMax, d):
+		for i in six.moves.range(d-1, self.seriesMax, d):
 			x = xLeft + i * thick
 			dc.DrawLine( x, yBottom+2, x, yTop );
 			s = '{}'.format(i+1)
@@ -178,7 +179,7 @@ class LineGraph(wx.Control):
 		intervals = [1, 2, 5, 10, 15, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 24*60*60]
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 			
-		for t in xrange(int(dataMinRange) - int(dataMinRange%d), int(dataMaxRange * 2), d):
+		for t in six.moves.range(int(dataMinRange) - int(dataMinRange%d), int(dataMaxRange * 2), d):
 			y = yBottom - (t - dataMinRange) * dFactor
 			if y > yBottom:
 				continue
@@ -258,9 +259,9 @@ if __name__ == '__main__':
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
-	lineGraph.SetData( [[random.normalvariate(t, tVar) for x in xrange(9)],
-						[random.normalvariate(t, tVar) for x in xrange(10)]] )
-	#lineGraph.SetData( [[random.normalvariate(t, tVar) for x in xrange(9)]] )
+	lineGraph.SetData( [[random.normalvariate(t, tVar) for x in six.moves.range(9)],
+						[random.normalvariate(t, tVar) for x in six.moves.range(10)]] )
+	#lineGraph.SetData( [[random.normalvariate(t, tVar) for x in six.moves.range(9)]] )
 	#lineGraph.SetData( [GetData()] )
 
 	mainWin.Show()

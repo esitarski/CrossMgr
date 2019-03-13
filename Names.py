@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import six
 import random
+import six
 import unicodedata
 
 def clean( names ):
@@ -1816,8 +1818,8 @@ teams = [t.split(',')[2].strip() for t in teams.split('\n') ]
 def GetNameTeam( isMale=True):
 	firstname = random.choice(firstNamesMale if isMale else firstNamesFemale)
 	lastname = random.choice(lastNames)
-	return unicode(lastname,'utf8'), unicode(firstname,'utf8'), unicode(random.choice(teams),'utf8')
+	return lastname, firstname, random.choice(teams)
 	
 if __name__ == '__main__':
-	for i in xrange(20):
-		print [unicodedata.normalize('NFKD', f).encode('ASCII', 'ignore') for f in GetNameTeam( i%2 )]
+	for i in six.moves.range(20):
+		six.print_( [unicodedata.normalize('NFKD', f).encode('ASCII', 'ignore').decode() for f in GetNameTeam( i%2 )] )

@@ -1,6 +1,8 @@
 #from distutils.core import setup
 import os
+import io
 import sys
+import six
 import shutil
 import zipfile
 import datetime
@@ -102,13 +104,13 @@ def make_inno_version():
 		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
 		'VersionInfoVersion':	AppVerName.split()[1],
 	}
-	with open('inno_setup.txt', 'w') as f:
-		for k, v in setup.iteritems():
+	with io.open('inno_setup.txt', 'w', encoding='utf-8') as f:
+		for k, v in six.iteritems(setup):
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
 
 cmd = '"' + inno + '" ' + 'CrossMgr.iss'
-print cmd
+six.print_( cmd )
 subprocess.call( cmd, shell=True )
 
 # Create versioned executable.
@@ -121,7 +123,7 @@ except:
 	pass
 
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
-print 'executable copied to: ' + newExeName
+six.print_( 'executable copied to: ' + newExeName )
 
 # Create compressed executable.
 os.chdir( 'install' )
@@ -136,12 +138,12 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-print 'executable compressed to: ' + newZipName
+six.print_( 'executable compressed to: ' + newZipName )
 
 shutil.copy( newZipName, googleDrive  )
 
 cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
-print cmd
+six.print_( cmd )
 
 os.chdir( '..' )
 shutil.copy( os.path.join('helptxt', 'CrossMgrDocHtml.zip'), googleDrive )

@@ -1,15 +1,16 @@
-import os
-import time
 import sys
-from pyllrp import *
-from TagInventory import TagInventory
+import six
+import codecs
+from .pyllrp import *
+from .TagInventory import TagInventory
 
 def padToWords( epc ):
-	if isinstance(epc, (int, long)):
-		epc = bytes(epc)
+	if isinstance(epc, six.integer_types):
+		epc = u'{}'.format(epc)
 	else:
 		epc = epc.lstrip('0')
-	return epc.zfill( len(epc) + (-len(epc)%4) )
+	len_epc = len(epc)
+	return epc.zfill( len_epc + (-len_epc%4) )
 	
 def getTagMask( epc ):
 	epc = padToWords( epc )
@@ -20,24 +21,24 @@ def addLengthPrefix( epc ):
 	# Then, add the length in words as the highest 5-bits of the first word.
 	# We don't care about the other bits - just leave them at zero.
 	epc = padToWords( epc )
-	epc = '{:04X}{}'.format( (len(epc)//4)<<(16-5), epc )
+	epc = u'{:04X}{}'.format( (len(epc)//4)<<(16-5), epc )
 	return epc
 	
 def hexToWords( epc ):
 	assert len(epc) % 4 == 0, 'epc must be a 16-bit word multiple'
-	return [int(epc[i:i+4], 16) for i in xrange(0, len(epc), 4)]
+	return [int(epc[i:i+4], 16) for i in six.moves.range(0, len(epc), 4)]
 
 def hexToBytes( epc ):
 	assert len(epc) % 2 == 0, 'epc must be a byte multiple'
-	return bytes(''.join(chr(int(epc[i:i+2], 16)) for i in xrange(0, len(epc), 2)))
+	return codec.decode(epc, 'hex_codec')
 
 class TagWriter( TagInventory ):
 	accessSpecID = 456
 
 	def GetAccessSpec(	self,
 						MessageID = None,			# If None, one will be assigned.
-						epcOld = b'',				# Old EPC.  Empty matches anything.
-						epcNew = b'0123456789',		# New EPC.
+						epcOld = '',				# Old EPC.  Empty matches anything.
+						epcNew = '0123456789',		# New EPC.
 						roSpecID = 0,				# ROSpec to trigger this ROSpec.  0 = run when any ROSpec runs.
 						opSpecID = 1,				# Something unique.
 						operationCount = 10,		# Number of times to execute.
@@ -132,7 +133,7 @@ class TagWriter( TagInventory ):
 		
 		self._prolog()
 		tagCur = tagStart
-		for tag in sorted(tagInventory):
+		for tag in sorted(tagInventory, reverse=True):	# Go in reverse to avoid overlap increment conflicts.
 			self._prologTW( tag, tagFormat.format(tagStart) )
 			self._executeTW()
 			self._epilogTW()
@@ -142,35 +143,39 @@ class TagWriter( TagInventory ):
 		return tagCur
 
 if __name__ == '__main__':
-	print '*' * 75
-	print '*' * 75
-	print '*' * 75
+	print ( '{}\n'.format('*' * 75) )
 	
-	impinjHost = '192.168.10.102'
+	impinjHost = '192.168.0.101'
 	tw = TagWriter( impinjHost )
 	tw.Connect()
 	
-	tw.WriteTag( '', '127' )
-	
-	'''
+	print ( 'Before tags' )
 	tagInventory, otherMessages = tw.GetTagInventory()
-	print '\n'.join( tagInventory )
-	tw.Disconnect()
+	print ( '\n'.join( tagInventory ) )
 	
+	tagValue = '256'
+	print ( 'Writing tag: {}'.format(tagValue) )
+	tw.WriteTag( '', tagValue )
+	
+	print ( 'After Tags' )
+	tagInventory, otherMessages = tw.GetTagInventory()
+	print ( '\n'.join( tagInventory ) )
+	
+	tw.Disconnect()
+	tw.Connect()
+	tagInventory, otherMessages = tw.GetTagInventory()
 	for tag in tagInventory:
 		tw.Connect()
 		epcOld = tag
-		epcNew = bytes(int(tag)+1)
-		print epcOld, epcNew
+		epcNew = u'{:X}'.format(int(tag,16)+1)
+		print ( u'{} {}'.format(epcOld, epcNew) )
 		tw.WriteTag( epcOld, epcNew )
 		tw.Disconnect()
 
-	#tw.WriteFOVConsecutive( 8000 )
-	
 	tw.Connect()
+	print ( '{}\n'.format('*' * 75) )
 	tagInventory, otherMessages = tw.GetTagInventory()
-	print '\n'.join( tagInventory )
-	'''
+	print ( '\n'.join(tagInventory) )
 	
 	tw.Disconnect()
 	

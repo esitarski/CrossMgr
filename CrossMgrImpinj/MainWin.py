@@ -1,17 +1,17 @@
 import sys
+import six
 import threading
 import socket
 import atexit
 import time
 from roundbutton import RoundButton
 import Utils
-from Queue import Empty
+from six.moves.queue import Queue, Empty
 from threading import Thread as Process
-from Queue import Queue
 import Impinj
 from Impinj import ImpinjServer
 from Impinj2JChip import CrossMgrServer
-from AutoDetect import AutoDetect
+from pyllrp.AutoDetect import AutoDetect
 import QuadReg
 from TagGroup import QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MethodNames, MostReadsChoice, DBMaxChoice, AntennaChoiceNames
 
@@ -20,6 +20,7 @@ import wx.lib.masked			as masked
 import wx.lib.intctrl			as intctrl
 import sys
 import os
+import io
 import re
 import datetime
 import operator
@@ -40,47 +41,46 @@ else:
 			return self.GetValue()
 
 clipboard_xpm = [
-"16 15 23 1",
-"+ c #769CDA",
-": c #DCE6F6",
-"X c #3365B7",
-"* c #FFFFFF",
-"o c #9AB6E4",
-"< c #EAF0FA",
-"# c #B1C7EB",
-". c #6992D7",
-"3 c #F7F9FD",
-", c #F0F5FC",
-"$ c #A8C0E8",
-"  c None",
-"- c #FDFEFF",
-"& c #C4D5F0",
-"1 c #E2EAF8",
-"O c #89A9DF",
-"= c #D2DFF4",
-"4 c #FAFCFE",
-"2 c #F5F8FD",
-"; c #DFE8F7",
-"% c #B8CCEC",
-"> c #E5EDF9",
-"@ c #648FD6",
-" .....XX        ",
-" .oO+@X#X       ",
-" .$oO+X##X      ",
-" .%$o........   ",
-" .&%$.*=&#o.-.  ",
-" .=&%.*;=&#.--. ",
-" .:=&.*>;=&.... ",
-" .>:=.*,>;=&#o. ",
-" .<1:.*2,>:=&#. ",
-" .2<1.*32,>:=&. ",
-" .32<.*432,>:=. ",
-" .32<.*-432,>:. ",
-" .....**-432,>. ",
-"     .***-432,. ",
-"     .......... "
+b"16 15 23 1",
+b"+ c #769CDA",
+b": c #DCE6F6",
+b"X c #3365B7",
+b"* c #FFFFFF",
+b"o c #9AB6E4",
+b"< c #EAF0FA",
+b"# c #B1C7EB",
+b". c #6992D7",
+b"3 c #F7F9FD",
+b", c #F0F5FC",
+b"$ c #A8C0E8",
+b"  c None",
+b"- c #FDFEFF",
+b"& c #C4D5F0",
+b"1 c #E2EAF8",
+b"O c #89A9DF",
+b"= c #D2DFF4",
+b"4 c #FAFCFE",
+b"2 c #F5F8FD",
+b"; c #DFE8F7",
+b"% c #B8CCEC",
+b"> c #E5EDF9",
+b"@ c #648FD6",
+b" .....XX        ",
+b" .oO+@X#X       ",
+b" .$oO+X##X      ",
+b" .%$o........   ",
+b" .&%$.*=&#o.-.  ",
+b" .=&%.*;=&#.--. ",
+b" .:=&.*>;=&.... ",
+b" .>:=.*,>;=&#o. ",
+b" .<1:.*2,>:=&#. ",
+b" .2<1.*32,>:=&. ",
+b" .32<.*432,>:=. ",
+b" .32<.*-432,>:. ",
+b" .....**-432,>. ",
+b"     .***-432,. ",
+b"     .......... "
 ]
-
 
 class MessageManager( object ):
 	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
@@ -364,10 +364,10 @@ class MainWin( wx.Frame ):
 		gs = wx.GridSizer( rows=0, cols=4, vgap=0, hgap=2 )
 		self.antennaLabels = []
 		self.antennas = []
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
 			gs.Add( self.antennaLabels[-1], flag=wx.ALIGN_CENTER|wx.EXPAND )
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
 				cb.SetValue( True )
@@ -479,7 +479,7 @@ class MainWin( wx.Frame ):
 	def readerStatusCB( self, **kwargs ):
 		# As this is called from another thread, make sure all UI updates are done from CallAfter.
 		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 
 	def refreshMethodName( self ):
@@ -510,7 +510,7 @@ class MainWin( wx.Frame ):
 		for tag, discovered in strays:
 			i = self.strays.InsertItem( 1000000, tag )
 			self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
-		for c in xrange(self.strays.GetColumnCount()):
+		for c in six.moves.range(self.strays.GetColumnCount()):
 			self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
 			
 	def strayHandler( self, strayQ ):
@@ -710,7 +710,7 @@ class MainWin( wx.Frame ):
 		return self.crossMgrHost.GetAddress()
 		
 	def getAntennaStr( self ):
-		selectedAntennas = [ i for i in xrange(4) if self.antennas[i].GetValue() ]
+		selectedAntennas = [ i for i in six.moves.range(4) if self.antennas[i].GetValue() ]
 		# Ensure at least one antenna is selected.
 		if not selectedAntennas:
 			self.antennas[0].SetValue( True )
@@ -719,7 +719,7 @@ class MainWin( wx.Frame ):
 	
 	def setAntennaStr( self, s ):
 		antennas = set( int(a) for a in s.split() )
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			self.antennas[i].SetValue( (i+1) in antennas )
 	
 	def writeOptions( self ):
@@ -796,20 +796,20 @@ class MainWin( wx.Frame ):
 			else:
 				antennaReadCount = None
 			
-			message = ' '.join( unicode(x) for x in d[1:] )
+			message = ' '.join( six.text_type(x) for x in d[1:] )
 			if   d[0] == 'Impinj':
 				if 'state' in d:
 					self.impinjMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
 				else:
 					self.impinjMessages.write( message )
 					if antennaReadCount is not None:
-						total = max(1, sum( antennaReadCount[i] for i in xrange(1,4+1)) )
+						total = max(1, sum( antennaReadCount[i] for i in six.moves.range(1,4+1)) )
 						label = '{}: {} ({})'.format(
 								'ANT Used' if Impinj.ProcessingMethod != FirstReadMethod else 'ANT Reads',
 								' | '.join('{}:{} {:.1f}%'.format(
 									i,
 									formatAntennaReadCount(antennaReadCount[i]),
-									antennaReadCount[i]*100.0/total) for i in xrange(1,4+1)
+									antennaReadCount[i]*100.0/total) for i in six.moves.range(1,4+1)
 								),
 								'Peak RSSI' if Impinj.ProcessingMethod != FirstReadMethod else 'First Read',
 							)
@@ -829,7 +829,7 @@ def disable_stdout_buffering():
 	sys.stdout.close()
 	os.dup2(temp_fd, fileno)
 	os.close(temp_fd)
-	sys.stdout = os.fdopen(fileno, "w", 0)
+	sys.stdout = os.fdopen(fileno, "w")
 
 redirectFileName = None
 mainWin = None

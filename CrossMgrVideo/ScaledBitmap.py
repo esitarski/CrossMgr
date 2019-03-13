@@ -1,4 +1,5 @@
 import wx
+import six
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -168,12 +169,12 @@ class ScaledBitmap( wx.Panel ):
 		width, height = self.GetSize()
 		self.bitmap = wx.Bitmap( width, height )
 		dc = wx.MemoryDC()
-		dc.SelectObject( bitmap )
+		dc.SelectObject( self.bitmap )
 		
 		wTile = tile.GetWidth()
 		hTile = tile.GetHeight()
-		for y in xrange( 0, height, hTile ):
-			for x in xrange( 0, width, wTile ):
+		for y in six.moves.range( 0, height, hTile ):
+			for x in six.moves.range( 0, width, wTile ):
 				dc.DrawBitmap( tile, x, y )
 		self.Refresh()
 		

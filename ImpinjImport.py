@@ -1,5 +1,6 @@
 import wx
 import sys
+import six
 import math
 import Utils
 import Model
@@ -9,7 +10,10 @@ import datetime
 combine = datetime.datetime.combine
 import string
 
-sepTrans = string.maketrans( '/-:', '   ' )
+if six.PY2:
+	sepTrans = string.maketrans( '/-:', '   ' )
+else:
+	sepTrans = str.maketrans( '/-:', '   ' )
 def timeFromStr( tStr ):
 	try:
 		tStr = tStr.translate( sepTrans )
@@ -78,7 +82,7 @@ AAADDD,	  2016-10-11 23:15:34.305
 
 	errors = []
 	for lineNo, line in enumerate(data.split('\n'), 1):
-		print parseTagTime(line, lineNo, errors)
+		six.print_( parseTagTime(line, lineNo, errors) )
 	sys.exit()
 	
 	app = wx.App(False)

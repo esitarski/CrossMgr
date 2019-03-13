@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import socket 
 import sys
+import six
 import time
 import datetime
 import atexit
@@ -13,8 +14,7 @@ import wx.lib.newevent
 import Utils
 import Model
 from threading import Thread as Process
-from Queue import Queue
-from Queue import Empty
+from six.moves.queue import Queue, Empty
 import JChip
 from RaceResultImport import parseTagTime
 
@@ -25,7 +25,7 @@ def sendReaderEvent( tagTimes ):
 	if tagTimes and readerEventWindow:
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
-EOL = bytes('\r\n')		# RaceResult delimiter
+EOL = '\r\n'		# RaceResult delimiter
 len_EOL = len(EOL)
 
 DEFAULT_PORT = 3601
@@ -54,7 +54,7 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
-	for i in xrange(14):
+	for i in six.moves.range(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )
@@ -362,7 +362,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in xrange(32):
+		for i in six.moves.range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None

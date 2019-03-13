@@ -1,10 +1,11 @@
 import sys
+import six
 import argparse
 import os
 import Utils
 import SeriesModel
 import Results
-import cPickle as pickle
+import six.moves.cPickle as pickle
 
 def CmdLine( args ):	
 	seriesFileName = None
@@ -14,7 +15,7 @@ def CmdLine( args ):
 			with open(seriesFileName, 'rb') as fp:
 				SeriesModel.model = pickle.load( fp )
 		except IOError:
-			print u'cannot open series file "{}".'.format(seriesFileName)
+			print ( u'cannot open series file "{}".'.format(seriesFileName) )
 			return 1
 		SeriesModel.model.postReadFix()
 
@@ -42,7 +43,7 @@ def CmdLine( args ):
 			else:
 				fileName = components[0]
 			if not any( fileName.endswith(suffix) for suffix in ('.xlsx', 'xlsm', '.xls') ):
-				print u'unrecognized file suffix "{}".'.format(fileName)
+				print ( u'unrecognized file suffix "{}".'.format(fileName) )
 				return 2
 				
 		pointStructures = None
@@ -52,7 +53,7 @@ def CmdLine( args ):
 				break
 				
 		if pointStructures is None:
-			print u'cannot find points structure "{}".'.format(pointStructuresName)
+			print ( u'cannot find points structure "{}".'.format(pointStructuresName) )
 			return 3
 		
 		races.append( SeriesModel.Race(fileName, pointStructures) )
@@ -67,7 +68,7 @@ def CmdLine( args ):
 		score_by_points, score_by_time, score_by_percent = False, False, True
 		
 	output_file = args.output or ((os.path.splitext(args.series)[0] + '.html') if args.series else 'SeriesMgr.html')
-	with open( output_file, 'wb' ) as f:
+	with open( output_file, 'w' ) as f:
 		f.write( Results.getHtml(seriesFileName) )
 	
 	return 0

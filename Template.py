@@ -1,5 +1,6 @@
 import os
 import io
+import six
 import json
 import getpass
 import socket
@@ -133,7 +134,7 @@ class Template( object ):
 			return
 		geoTrack = None
 		firstLapDistance = None
-		for attr, value in self.template.iteritems():
+		for attr, value in six.iteritems(self.template):
 			if attr not in self.templateAttributes:
 				continue
 			if attr == 'course':

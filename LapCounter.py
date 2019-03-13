@@ -1,6 +1,7 @@
 import wx
 import wx.lib.colourselect as  csel
 import wx.lib.intctrl as intctrl
+import six
 import math
 import datetime
 import Model
@@ -15,7 +16,7 @@ defaultBackgroundColours = [
 def getForegroundsBackgrounds():
 	race = Model.race
 	foregrounds, backgrounds = [], []
-	for i in xrange(len(defaultBackgroundColours)):
+	for i in six.moves.range(len(defaultBackgroundColours)):
 		try:
 			foregrounds.append( Utils.colorFromStr(race.lapCounterForegrounds[i]) )
 		except (IndexError, AttributeError):
@@ -49,7 +50,7 @@ def getLapCounterOptions( isDialog ):
 			
 			fgs.Add( wx.StaticText(self, label=_('Foregrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 			self.foregrounds = [csel.ColourSelect(self, colour=wx.WHITE, size=(40,-1))
-				for i in xrange(len(defaultBackgroundColours))]
+				for i in six.moves.range(len(defaultBackgroundColours))]
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			for i, cs in enumerate(self.foregrounds):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
@@ -57,7 +58,7 @@ def getLapCounterOptions( isDialog ):
 			
 			fgs.Add( wx.StaticText(self, label=_('Backgrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 			self.backgrounds = [csel.ColourSelect(self, size=(40,-1), colour=defaultBackgroundColours[i])
-				for i in xrange(len(defaultBackgroundColours))]
+				for i in six.moves.range(len(defaultBackgroundColours))]
 			hs = wx.BoxSizer( wx.HORIZONTAL )
 			for i, cs in enumerate(self.backgrounds):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
@@ -104,9 +105,9 @@ def getLapCounterOptions( isDialog ):
 			race = Model.race
 			if race:
 				race.lapCounterForegrounds = [self.foregrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
-					for i in xrange(len(defaultBackgroundColours))]
+					for i in six.moves.range(len(defaultBackgroundColours))]
 				race.lapCounterBackgrounds = [self.backgrounds[i].GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
-					for i in xrange(len(defaultBackgroundColours))]
+					for i in six.moves.range(len(defaultBackgroundColours))]
 				race.lapCounterCycle = self.lapCounterCycle.GetValue() or None
 				race.countdownTimer = (self.counterType.GetSelection() == 1)
 				race.secondsBeforeLeaderToFlipLapCounter = self.slider.GetValue()
@@ -118,7 +119,7 @@ def getLapCounterOptions( isDialog ):
 				self.counterType.SetSelection( 1 if race.countdownTimer else 0 )
 				
 				fg, bg = getForegroundsBackgrounds()
-				for i in xrange(len(defaultBackgroundColours)):
+				for i in six.moves.range(len(defaultBackgroundColours)):
 					self.foregrounds[i].SetColour( fg[i] )
 					self.backgrounds[i].SetColour( bg[i] )
 				
@@ -161,6 +162,7 @@ class LapCounter( wx.Panel ):
 		self.flashOn = False
 		self.font = None
 		self.fontSize = -1
+		self.showTime = False
 		
 		self.SetCursor( wx.Cursor(wx.CURSOR_RIGHT_BUTTON) )
 		self.SetBackgroundColour( wx.BLACK )
@@ -227,7 +229,7 @@ class LapCounter( wx.Panel ):
 				(_('Options') + u'...',		_('Options'),				self.OnOptions),
 			]
 			self.menuOptions = []
-			for caseCode in xrange(2):
+			for caseCode in six.moves.range(2):
 				menu = wx.Menu()
 				for i, (name, text, callback) in enumerate(self.popupInfo):
 					if i == 0 and caseCode == 0:
@@ -487,7 +489,7 @@ if __name__ == '__main__':
 	
 	mainWin.Show()
 	
-	for j, i in enumerate(xrange(0,40,4)):
+	for j, i in enumerate(six.moves.range(0,40,4)):
 		wx.CallLater( 4000*i, lambda a=17-j, b=15-j, c=11-j, d=7-j, e=5-j, f=3-j: lapCounter.SetLabels( (
 			('{}'.format(a), True, i),
 			('{}'.format(b), False, i),

@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-from pyllrp import *
-from Queue import Queue, Empty
+import six
+from six.moves.queue import Queue, Empty
 import socket
 import datetime
 import threading
+from .pyllrp import *
 
 class LLRPConnector( object ):
 	#--------------------------------------------------------------------------

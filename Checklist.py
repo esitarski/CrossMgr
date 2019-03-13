@@ -1,5 +1,5 @@
-
 import wx
+import six
 import wx.dataview
 import io
 import os
@@ -73,29 +73,29 @@ class Task( object ):
 		return True
 		
 	def pprint( self, indent = u'  ', indent_level = 0 ):
-		print '{}task'.format( indent*indent_level )
-		print '{}title = {}'.format( indent*(indent_level+1), self.title )
+		six.print_( '{}task'.format( indent*indent_level ) )
+		six.print_( '{}title = {}'.format( indent*(indent_level+1), self.title ) )
 		if self.note:
-			print '{}note = {}'.format( indent*(indent_level+1), self.note )
-		print '{}status = {}'.format( indent*(indent_level+1), ['NotDone', 'Partial', 'Done'][self.status] )
+			six.print_( '{}note = {}'.format( indent*(indent_level+1), self.note ) )
+		six.print_( '{}status = {}'.format( indent*(indent_level+1), ['NotDone', 'Partial', 'Done'][self.status] ) )
 		if self.requires:
-			print '{}requires'.format( indent*(indent_level+1) )
+			six.print_( '{}requires'.format( indent*(indent_level+1) ) )
 		for req, val in self.requires:
-			print '{}{} = {}'.format( indent*(indent_level+2), req, val )
+			six.print_( '{}{} = {}'.format( indent*(indent_level+2), req, val ) )
 		if self.subtasks:
-			print '{}subtasks'.format( indent*(indent_level+1) )
+			six.print_( '{}subtasks'.format( indent*(indent_level+1) ) )
 			for task in self.subtasks:
 				task.pprint( indent, indent_level + 2 )
 
 def _setTitle( task, val ):
-	task.title = unicode(val[0])
+	task.title = six.text_type(val[0])
 
 def _setNote( task, val ):
-	task.note = unicode(val[0])
+	task.note = six.text_type(val[0])
 
 def _setRequires( task, requires ):
 	for r in requires:
-		task.appendRequires( unicode(r[0]), unicode(r[1][0]))
+		task.appendRequires( six.text_type(r[0]), six.text_type(r[1][0]))
 
 def _setSubtasks( task, subtasks ):
 	for s in subtasks:

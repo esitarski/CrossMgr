@@ -1,4 +1,5 @@
 import wx
+import six
 from wx.lib.intctrl import IntCtrl
 
 class NumberEntryDialog( wx.Dialog ):
@@ -14,7 +15,7 @@ class NumberEntryDialog( wx.Dialog ):
 			'limited': True,
 			'allow_none': False,
 		}
-		self.intctrl = IntCtrl( **{k:v for k,v in kwargs.iteritems() if v is not None} )
+		self.intctrl = IntCtrl( **{k:v for k,v in six.iteritems(kwargs) if v is not None} )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		if message:

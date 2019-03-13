@@ -1,8 +1,9 @@
 from __future__ import print_function
 
+import wx
 import os
 import sys
-import wx
+import six
 import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
@@ -132,7 +133,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		for r, row in enumerate(reader.iter_list(sheetName)):
 			cols = sum( 1 for d in row if d )
 			if cols > 4:
-				self.headers = [unicode(h or '').strip() for h in row]
+				self.headers = [six.text_type(h or '').strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
@@ -140,7 +141,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if d )
 				if cols > 0:
-					self.headers = [unicode(h or '').strip() for h in row]
+					self.headers = [six.text_type(h or '').strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
@@ -148,7 +149,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			self.headers.pop()
 			
 		if not self.headers:
-			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
+			raise ValueError( 'Could not find a Header Row {}::{}.'.format(fileName, sheetName) )
 		
 		# Rename empty columns so as not to confuse the user.
 		self.headers = [h if h else 'BlankHeaderName{:03d}'.format(c+1) for c, h in enumerate(self.headers)]
@@ -323,10 +324,10 @@ class ExcelLink( object ):
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
-		self.fieldCol = dict( (f, c) for c, f in enumerate(Fields) )
+		self.fieldCol = {f:c for c, f in enumerate(Fields) }
 	
-	def __cmp__( self, e ):
-		return cmp((self.fileName, self.sheetName, self.fieldCol), (e.fileName, e.sheetName, e.fieldCol))
+	def __eq__( self, e ):
+		return (self.fileName, self.sheetName, self.fieldCol) == (e.fileName, e.sheetName, e.fieldCol)
 	
 	def setFileName( self, fname ):
 		self.fileName = fname
@@ -354,7 +355,7 @@ class ExcelLink( object ):
 		info = {}
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
-			for field, col in self.fieldCol.iteritems():
+			for field, col in six.iteritems(self.fieldCol):
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
@@ -378,7 +379,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		
 	info = excelLink.read()
 	
-	for num, data in info.iteritems():
+	for num, data in six.iteritems(info):
 		try:
 			startTime = data['StartTime']
 		except KeyError:
@@ -388,7 +389,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		# Try to make sense of the StartTime (Stopwatch time, not clock time).
 		if isinstance(startTime, float):
 			t = startTime * 24.0*60.0*60.0	# Excel decimal days.
-		elif isinstance(startTime, (str, unicode)):
+		elif isinstance(startTime, six.string_types):
 			# Otherwise, string of format hh:mm:ss.ddd or mm:ss.ddd.
 			fields = startTime.split( ':' )
 			try:
@@ -410,7 +411,7 @@ def DoImportTTStartTimes( race, excelLink ):
 	changeCount = 0
 	if startTimes:
 		undo.pushState()
-		for num, startTime in startTimes.iteritems():
+		for num, startTime in six.iteritems(startTimes):
 			rider = race.getRider( num )
 			
 			# Compute the time change difference.

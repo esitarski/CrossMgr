@@ -1,5 +1,6 @@
 import wx
 import os
+import six
 import sys
 import math
 import getpass
@@ -41,12 +42,12 @@ def getCatCountImagesCategoryList( parent ):
 				catCount[c] = race.catCount( c )
 				if catCount[c] == 0:
 					continue
-				index = list.InsertItem(sys.maxint, c.name, sm_rt)
+				index = list.InsertItem(999999, c.name, sm_rt)
 				list.SetItem( index, 1, getattr(c, 'gender', 'Open') )
 				list.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
 				list.SetItem( index, 3, u'{}'.format(catCount[c]) )
 	
-	for col in xrange(4+1):
+	for col in six.moves.range(4+1):
 		list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
 	list.SetColumnWidth( 1, 64 )
 	list.SetColumnWidth( 3, 52 )
@@ -121,7 +122,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 			race.printFormat = event.GetInt()
 		
 	def onSelectAll(self, evt = None):
-		for row in xrange(self.list.GetItemCount()):
+		for row in six.moves.range(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
@@ -167,7 +168,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		race = Model.race
 			
 		self.podiumPositionsLabel = wx.StaticText( self, label=_('Podium Positions to Print:') )
-		self.podiumPositions = wx.Choice( self, choices=[unicode(i+1) for i in xrange(10)] )
+		self.podiumPositions = wx.Choice( self, choices=[six.text_type(i+1) for i in six.moves.range(10)] )
 		self.podiumPositions.SetSelection( 2 )
 		
 		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
@@ -206,7 +207,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		self.categories = []
 
 	def onSelectAll(self, evt = None):
-		for row in xrange(self.list.GetItemCount()):
+		for row in six.moves.range(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
@@ -280,7 +281,7 @@ class CrossMgrPrintout( wx.Printout ):
 				categoryLength = len(GetResults(c))
 				pageNumberTotal = int( math.ceil( float(categoryLength) / float(rowDrawCount) ) + 0.1 )
 				pageNumber = 0
-				for i in xrange(0, categoryLength, rowDrawCount):
+				for i in six.moves.range(0, categoryLength, rowDrawCount):
 					page += 1
 					pageNumber += 1
 					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
@@ -415,7 +416,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			if self.dir and not os.path.isdir( self.dir ):
 				os.mkdir( self.dir )
 			fname = u'{fileBase}.pdf'.format( fileBase=self.fileBase )
-			self.pdf.set_title( unicode(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
+			self.pdf.set_title( six.text_type(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
 			fname = os.path.join( self.dir, fname )
 			self.pdf.output( fname, 'F' )
 			self.lastFName = fname
@@ -443,10 +444,10 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 		if not self.pdf:
 			self.pdf = PDF( orientation = 'L' if self.orientation == wx.LANDSCAPE else 'P' )
 			self.pdf.set_font( 'Arial', '', 12 )
-			self.pdf.set_author( unicode(getpass.getuser()).encode('iso-8859-1','ignore') )
-			self.pdf.set_keywords( unicode('CrossMgr Results').encode('iso-8859-1','ignore') )
-			self.pdf.set_creator( unicode(Version.AppVerName).encode('iso-8859-1','ignore') )
-			self.pdf.set_title( unicode(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
+			self.pdf.set_author( six.text_type(getpass.getuser()).encode('iso-8859-1','ignore') )
+			self.pdf.set_keywords( six.text_type('CrossMgr Results').encode('iso-8859-1','ignore') )
+			self.pdf.set_creator( six.text_type(Version.AppVerName).encode('iso-8859-1','ignore') )
+			self.pdf.set_title( six.text_type(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
 		
 		exportGrid.drawToFitPDF( *([self.pdf, self.orientation] + self.pageInfo[page][1:-1]) )
 		
@@ -482,7 +483,7 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 				categoryLength = min( sum(1 for r in GetResults(c) if r.status == Finisher), rowDrawCount )
 				pageNumberTotal = 1
 				pageNumber = 0
-				for i in xrange(0, categoryLength, rowDrawCount):
+				for i in six.moves.range(0, categoryLength, rowDrawCount):
 					page += 1
 					pageNumber += 1
 					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
@@ -518,6 +519,6 @@ if __name__ == '__main__':
 	mainWin.Show()
 	cpcd.ShowModal()
 	for c in cpcd.categories:
-		print c
+		six.print_( c )
 	app.MainLoop()
 

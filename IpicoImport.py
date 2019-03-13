@@ -1,4 +1,5 @@
 import wx
+import six
 import math
 import Utils
 import Model
@@ -58,8 +59,8 @@ if __name__ == '__main__':
 	for fname in ['Ipico/FS_LS.rtf']:
 		with open(fname) as f:
 			for i, line in enumerate(f):
-				print parseTagTime( line, i, errors )
-			print errors
+				six.print_( parseTagTime( line, i, errors ) )
+			six.print_( errors )
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

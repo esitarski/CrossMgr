@@ -1,5 +1,6 @@
 import wx
 import os
+import six
 import sys
 import math
 import bisect
@@ -119,7 +120,7 @@ class HistogramPanel( wx.Panel ):
 				else:
 					maxLaps = len(rr.raceTimes) - 1
 				if self.lapOption.GetCount() != maxLaps + 1:
-					self.lapOption.SetItems( [_('Last')] + [unicode(i) for i in xrange(1,maxLaps+1)] )
+					self.lapOption.SetItems( [_('Last')] + [six.text_type(i) for i in six.moves.range(1,maxLaps+1)] )
 					if self.lap >= self.lapOption.GetCount():
 						self.lap = 0
 					self.lapOption.SetSelection( self.lap )

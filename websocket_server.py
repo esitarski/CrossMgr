@@ -4,6 +4,7 @@
 
 import re
 import sys
+import six
 import time
 import struct
 from base64 import b64encode
@@ -34,7 +35,7 @@ class Logger( object ):
 	def warning( self, message ):
 		if self.level >= logging.WARNING:
 			msg = 'Websocket Warning: ' + message
-			print msg
+			six.print_( msg )
 			Utils.writeLog( msg )
 	
 	def warn( self, message ):
@@ -43,13 +44,13 @@ class Logger( object ):
 	def info( self, message ):
 		if self.level >= logging.INFO:
 			msg = 'Websocket Info: '
-			print msg
+			six.print_( msg )
 			Utils.writeLog( msg )
 	
 	def error( self, message, exc_info=False ):
 		if self.level >= logging.ERROR:
 			msg = 'Websocket Error: '
-			print msg
+			six.print_( msg )
 			Utils.writeLog( msg )
 
 logger = Logger()
@@ -302,7 +303,7 @@ class WebSocketHandler(StreamRequestHandler):
 			if not message:
 				logger.warning("Can\'t send message, message is not valid UTF-8")
 				return False
-		elif isinstance(message, str) or isinstance(message, unicode):
+		elif isinstance(message, six.string_types):
 			pass
 		else:
 			logger.warning('Can\'t send message, message has to be a string or bytes. Given type is %s' % type(message))
@@ -373,7 +374,7 @@ class WebSocketHandler(StreamRequestHandler):
 
 def encode_to_UTF8(data):
 	try:
-		return data.encode('UTF-8')
+		return data.encode()
 	except UnicodeEncodeError as e:
 		logger.error("Could not encode data to UTF-8 -- %s" % e)
 		return False

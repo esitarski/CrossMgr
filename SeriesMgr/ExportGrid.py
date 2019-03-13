@@ -1,5 +1,6 @@
 import wx
 import os
+import six
 import xlwt
 import Utils
 import Model
@@ -9,6 +10,7 @@ import base64
 import datetime
 from FitSheetWrapper import FitSheetWrapper
 from contextlib import contextmanager
+from PIL import Image
 
 #---------------------------------------------------------------------------
 
@@ -17,7 +19,7 @@ def tag( buf, name, attrs = {} ):
 	if not isinstance(attrs, dict) and attrs:
 		attrs = { 'class': attrs }
 	buf.write(
-		u'<{}>'.format(u' '.join( [name] + [u'{}="{}"'.format(attr, value) for attr, value in attrs.iteritems()] ) )
+		u'<{}>'.format(u' '.join( [name] + [u'{}="{}"'.format(attr, value) for attr, value in six.iteritems(attrs)] ) )
 	)
 	yield
 	buf.write( u'</{}>\n'.format(name) )
@@ -50,8 +52,8 @@ class ExportGrid( object ):
 	def __init__( self, title, grid ):
 		self.title = title
 		self.grid = grid
-		self.colnames = [grid.GetColLabelValue(c) for c in xrange(grid.GetNumberCols())]
-		self.data = [ [grid.GetCellValue(r, c) for r in xrange(grid.GetNumberRows())] for c in xrange(grid.GetNumberCols()) ]
+		self.colnames = [grid.GetColLabelValue(c) for c in six.moves.range(grid.GetNumberCols())]
+		self.data = [ [grid.GetCellValue(r, c) for r in six.moves.range(grid.GetNumberRows())] for c in six.moves.range(grid.GetNumberCols()) ]
 		
 		self.fontName = 'Helvetica'
 		self.fontSize = 16
@@ -187,8 +189,8 @@ class ExportGrid( object ):
 		
 		# Get the max height per row.
 		rowHeight = [0] * (self.grid.GetNumberRows() + 1)
-		for r in xrange(self.grid.GetNumberRows()):
-			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c))[1] for c in xrange(self.grid.GetNumberCols()))
+		for r in six.moves.range(self.grid.GetNumberRows()):
+			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c))[1] for c in six.moves.range(self.grid.GetNumberCols()))
 		
 		# Get the max height of the header row.
 		headerRowHeight = 0
@@ -295,12 +297,12 @@ class ExportGrid( object ):
 				with tag(buf, 'td'):
 					with tag(buf, 'span', {'id': 'idRaceName'}):
 						buf.write( cgi.escape(self.title).replace('\n', '<br/>\n') )
-					if Model.model.organizer:
+					if Model.race.organizer:
 						with tag(buf, 'br'):
 							pass
 						with tag(buf, 'span', {'id': 'idOrganizer'}):
 							buf.write( 'by ' )
-							buf.write( cgi.escape(Model.model.organizer) )
+							buf.write( cgi.escape(Model.race.organizer) )
 		
 		with tag(buf, 'table', {'class': 'results'} ):
 			with tag(buf, 'thead'):
@@ -309,9 +311,9 @@ class ExportGrid( object ):
 						with tag(buf, 'th'):
 							buf.write( cgi.escape(col).replace('\n', '<br/>\n') )
 			with tag(buf, 'tbody'):
-				for row in xrange(max(len(d) for d in self.data)):
+				for row in six.moves.range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr'):
-						for col in xrange(self.grid.GetNumberCols()):
+						for col in six.moves.range(self.grid.GetNumberCols()):
 							with tag(buf, 'td', {'class':'rAlign'} if col not in self.leftJustifyCols else {}):
 								try:
 									buf.write( cgi.escape(self.data[col][row]).replace('\n', '<br/>\n') )

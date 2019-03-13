@@ -1,10 +1,11 @@
-import os
-import sys
 import wx
-import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.adv
+import os
+import sys
+import six
+import copy
 import Utils
 import traceback
 import datetime
@@ -130,7 +131,7 @@ class HeaderNamesPage(wx.adv.WizardPageSimple):
 		for r, row in enumerate(reader.iter_list(sheetName)):
 			cols = sum( 1 for d in row if d )
 			if cols > 4:
-				self.headers = [unicode(h or '').strip() for h in row]
+				self.headers = [six.text_type(h or '').strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
@@ -138,7 +139,7 @@ class HeaderNamesPage(wx.adv.WizardPageSimple):
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if d )
 				if cols > 0:
-					self.headers = [unicode(h or '').strip() for h in row]
+					self.headers = [six.text_type(h or '').strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
@@ -146,7 +147,7 @@ class HeaderNamesPage(wx.adv.WizardPageSimple):
 			self.headers.pop()
 			
 		if not self.headers:
-			raise ValueError, 'Could not find a Header Row %s::%s.' % (fileName, sheetName)
+			raise ValueError( 'Could not find a Header Row %s::%s.' % (fileName, sheetName) )
 		
 		# Rename empty columns so as not to confuse the user.
 		self.headers = [h if h else 'BlankHeaderName%03d' % (c+1) for c, h in enumerate(self.headers)]
@@ -239,18 +240,18 @@ class GetExcelResultsLink( object ):
 		#img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
 		img = wx.Bitmap(os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' ))
 		
-		prewx.advard = wx.adv.PreWizard()
-		prewx.advard.SetExtraStyle( wx.adv.WIZARD_EX_HELPBUTTON )
-		prewx.advard.Create( parent, wx.ID_ANY, _('Link Excel Info'), img )
-		self.wx.advard = prewx.advard
-		self.wx.advard.Bind( wx.adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
-		self.wx.advard.Bind( wx.adv.EVT_WIZARD_HELP,
-			lambda evt: Utils.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
+		prewizard = wx.adv.PreWizard()
+		prewizard.SetExtraStyle( wx.adv.WIZARD_EX_HELPBUTTON )
+		prewizard.Create( parent, wx.ID_ANY, _('Link Excel Info'), img )
+		self.wizard = prewizard
+		self.wizard.Bind( wx.adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
+		#self.wizard.Bind( wx.adv.EVT_WIZARD_HELP,
+		#	lambda evt: Utils.showHelp('Menu-DataMgmt.html#link-to-external-excel-data') )
 		
-		self.fileNamePage = FileNamePage( self.wx.advard )
-		self.sheetNamePage = SheetNamePage( self.wx.advard )
-		self.headerNamesPage = HeaderNamesPage( self.wx.advard )
-		self.summaryPage = SummaryPage( self.wx.advard )
+		self.fileNamePage = FileNamePage( self.wizard )
+		self.sheetNamePage = SheetNamePage( self.wizard )
+		self.headerNamesPage = HeaderNamesPage( self.wizard )
+		self.summaryPage = SummaryPage( self.wizard )
 		
 		wx.adv.WizardPageSimple.Chain( self.fileNamePage, self.sheetNamePage )
 		wx.adv.WizardPageSimple.Chain( self.sheetNamePage, self.headerNamesPage )
@@ -265,12 +266,12 @@ class GetExcelResultsLink( object ):
 			if excelLink.fieldCol:
 				self.headerNamesPage.setExpectedFieldCol( excelLink.fieldCol )
 
-		self.wx.advard.GetPageAreaSizer().Add( self.fileNamePage )
-		self.wx.advard.SetPageSize( wx.Size(500,200) )
-		self.wx.advard.FitToPage( self.fileNamePage )
+		self.wizard.GetPageAreaSizer().Add( self.fileNamePage )
+		self.wizard.SetPageSize( wx.Size(500,200) )
+		self.wizard.FitToPage( self.fileNamePage )
 	
 	def show( self ):
-		if self.wx.advard.RunWizard(self.fileNamePage):
+		if self.wizard.RunWizard(self.fileNamePage):
 			if not self.excelLink:
 				self.excelLink = ExcelLink()
 			self.excelLink.setFileName( self.fileNamePage.getFileName() )
@@ -292,13 +293,13 @@ class GetExcelResultsLink( object ):
 						message = _('Please specify an Excel file.')
 					else:
 						message = _('Cannot open file "{}".\nPlease check the file name and/or its read permissions.').format(fileName)
-					Utils.MessageOK( self.wx.advard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
+					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wx.advard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
+					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.\nCheck the format.'),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
@@ -307,7 +308,7 @@ class GetExcelResultsLink( object ):
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wx.advard, _('You must specify a "{}" column.').format(Fields[0]),
+					Utils.MessageOK( self.wizard, _('You must specify a "{}" column.').format(Fields[0]),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
@@ -316,7 +317,7 @@ class GetExcelResultsLink( object ):
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wx.advard, _('Problem extracting rider info.\nCheck the Excel format.'),
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.\nCheck the Excel format.'),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
@@ -335,8 +336,8 @@ class ExcelLink( object ):
 	def __repr__( self ):
 		return ', '.join( '{}={}'.format(a, getattr(self, a)) for a in ['fileName', 'sheetName', 'raceDate', 'raceTime', 'fieldCol'] )
 	
-	def __cmp__( self, e ):
-		return cmp((self.fileName, self.sheetName, self.fieldCol), (e.fileName, e.sheetName, e.fieldCol))
+	def key( self ):
+		return (self.fileName, self.sheetName, self.fieldCol)
 	
 	def setFileName( self, fileName ):
 		self.fileName = fileName
@@ -371,7 +372,7 @@ class ExcelLink( object ):
 					pass
 				
 			data = {}
-			for field, col in self.fieldCol.iteritems():
+			for field, col in six.iteritems(self.fieldCol):
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
@@ -380,7 +381,7 @@ class ExcelLink( object ):
 					pass
 					
 				try:
-					data[field] = unicode(data[field])
+					data[field] = six.text_type(data[field])
 				except:
 					data[field] = ''
 			

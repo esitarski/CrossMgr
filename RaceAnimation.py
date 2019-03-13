@@ -1,4 +1,5 @@
 import wx
+import six
 import Utils
 import Model
 import string
@@ -9,14 +10,14 @@ from FixCategories import FixCategories
 from GetResults import GetAnimationData, GetCategoryDetails
 
 class NumListValidator(wx.Validator):
-    def __init__(self, pyVar=None):
-        wx.Validator.__init__(self)
-        self.Bind(wx.EVT_CHAR, self.OnChar)
+	def __init__(self, pyVar=None):
+		wx.Validator.__init__(self)
+		self.Bind(wx.EVT_CHAR, self.OnChar)
 
-    def Clone(self):
-        return NumListValidator()
+	def Clone(self):
+		return NumListValidator()
 
-    def Validate(self, win):
+	def Validate(self, win):
 		tc = self.GetWindow()
 		val = tc.GetValue()
 
@@ -26,7 +27,7 @@ class NumListValidator(wx.Validator):
 
 		return True
 
-    def OnChar(self, event):
+	def OnChar(self, event):
 		key = event.GetKeyCode()
 		try:
 			if key <= wx.WXK_SPACE or key == wx.WXK_DELETE or chr(key) == ',' or key > 255 or chr(key) in string.digits:
@@ -90,7 +91,7 @@ class RaceAnimation( wx.Panel ):
 		hs.Add(self.playbackSpeed, 0, flag=wx.ALIGN_CENTER|wx.ALL, border=2 )
 		
 		self.speed = []
-		for i in xrange(5):
+		for i in six.moves.range(5):
 			b = wx.RadioButton( self, name='PlaybackSpeed' )
 			self.speed.append( b )
 			self.Bind( wx.EVT_RADIOBUTTON, self.onPlaybackSpeed, b )
@@ -134,7 +135,7 @@ class RaceAnimation( wx.Panel ):
 			# Swap the animation object.
 			# Find the existing animation widget
 			bs = self.GetSizer()
-			i = (i for i, c in enumerate(bs.GetChildren()) if c.GetWindow() == self.animation).next()
+			i = next(i for i, c in enumerate(bs.GetChildren()) if c.GetWindow() == self.animation)
 
 			if self.playStopButton.GetLabel() == _('Play'):
 				self.onPlayStop()
@@ -239,7 +240,7 @@ class RaceAnimation( wx.Panel ):
 		if not animationData:
 			return 0
 		t = 999999
-		for info in animationData.itervalues():
+		for info in six.itervalues(animationData):
 			try:
 				t = min( t, info['raceTimes'][0] )
 			except:

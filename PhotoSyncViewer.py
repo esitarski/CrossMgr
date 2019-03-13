@@ -1,5 +1,6 @@
 import wx
 import os
+import six
 import sys
 import datetime
 import Model
@@ -92,11 +93,11 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 									self.scrolledWindow,
 									label=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
 									style=wx.BU_AUTODRAW)
-								for i in xrange(self.numPhotos)] for s in xrange(self.numPhotoSeries)]
-		self.photoLabels = [[wx.StaticText(self.scrolledWindow, style=wx.ALIGN_CENTRE) for i in xrange(self.numPhotos)]
-								for s in xrange(self.numPhotoSeries)]
+								for i in six.moves.range(self.numPhotos)] for s in six.moves.range(self.numPhotoSeries)]
+		self.photoLabels = [[wx.StaticText(self.scrolledWindow, style=wx.ALIGN_CENTRE) for i in six.moves.range(self.numPhotos)]
+								for s in six.moves.range(self.numPhotoSeries)]
 		self.titles = [''] * self.numPhotoSeries
-		for s in xrange(self.numPhotoSeries):
+		for s in six.moves.range(self.numPhotoSeries):
 			for i, p in enumerate(self.photoLabels[s]):
 				p.SetLabel( str(i) )
 			for i, w in enumerate(self.photoBitmaps[s]):
@@ -165,7 +166,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 	def clear( self ):
 		self.timeFrames = []
 		self.titles = [''] * self.numPhotoSeries
-		for s in xrange(self.numPhotoSeries):
+		for s in six.moves.range(self.numPhotoSeries):
 			for w in self.photoBitmaps[s]:
 				w.SetBitmapLabel( self.bitmap )
 			for w in self.photoLabels[s]:
@@ -173,8 +174,8 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 	def refresh( self, videoBuffer, t, num = None ):
 		if not videoBuffer:
-			for s in xrange(len(self.photoLabels)):
-				for i in xrange(len(self.photoLabels[s])):
+			for s in six.moves.range(len(self.photoLabels)):
+				for i in six.moves.range(len(self.photoLabels[s])):
 					self.photoBitmaps[s][i].SetBitmapLabel( self.bitmap )
 					self.photoLabels[s][i].SetLabel( '' )
 			return
@@ -276,7 +277,7 @@ if __name__ == '__main__':
 	photoSyncDialog.Show()
 	photoSyncDialog.reset()
 	bib = 100
-	for d in xrange(0, 1000*60, 1000):
+	for d in six.moves.range(0, 1000*60, 1000):
 		wx.CallLater( max(1,d), doRefresh, bib )
 		bib += 1
 	app.MainLoop()

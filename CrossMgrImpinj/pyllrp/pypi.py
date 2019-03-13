@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
-import shutil
 import os
+import io
 import sys
+import six
 import stat
 import glob
+import shutil
 import datetime
 import subprocess
 
 import ParseDef
 
-version = '0.1.4'
+version = '3.0.0'
 
 pypiDir = 'pypi'
 
@@ -30,13 +32,13 @@ def removeTabs( buf, tabStop = 4 ):
 	return '\n'.join( lines ) + '\n'
 
 def writeToFile( s, fname ):
-	print 'creating', fname, '...'
-	with open(os.path.join(pypiDir,fname), 'wb') as f:
+	six.print_( 'creating', fname, '...' )
+	with io.open(os.path.join(pypiDir,fname), 'w') as f:
 		f.write( s )
 
 #------------------------------------------------------
 # Create a release area for pypi
-print 'Clearing previous contents...'
+six.print_( 'Clearing previous contents...' )
 try:
 	subprocess.call( ['rm', '-rf', pypiDir] )
 except:
@@ -111,13 +113,13 @@ writeToFile( manifest, 'MANIFEST.in' )
 srcDir = os.path.join( pypiDir, 'pyllrp' )
 os.mkdir( srcDir )
 
-print 'Copy the src files and add the copyright notice.'
+six.print_( 'Copy the src files and add the copyright notice.' )
 license = license.replace( '\n', '\n# ' )
 for fname in glob.glob( '*.*' ):
 	if not (fname.endswith( '.py' ) or fname.endswith('.pyw')) or fname == 'pypi.py':
 		continue
-	print '   ', fname, '...'
-	with open(fname, 'rb') as f:
+	six.print_( '   ', fname, '...' )
+	with io.open(fname, 'r') as f:
 		contents = f.read()
 	if contents.startswith('import'):
 		p = 0
@@ -137,11 +139,11 @@ for fname in glob.glob( '*.*' ):
 							
 	contents = removeTabs( contents )
 	contents.replace( '\r\n', '\n' )
-	with open(os.path.join(srcDir, fname), 'wb' ) as f:
+	with io.open(os.path.join(srcDir, fname), 'w' ) as f:
 		f.write( contents )
 
 
-print 'Creating setup.py...'
+six.print_( 'Creating setup.py...' )
 setup = {
 	'name':			'pyllrp',
 	'version':		version,
@@ -154,18 +156,25 @@ setup = {
 	'description':	'pyllrp: a pure Python implementation of LLRP (Low Level Reader Protocol).',
 	'install_requires':	[
 		'bitstring >= 3.1.1',
+		'six',
+	],
+	'classifiers' : [
+		'Development Status :: 3 - Alpha',
+		'License :: OSI Approved :: MIT License',
+		'Programming Language :: Python :: 2.7 :: Python :: 3',
+		"Operating System :: OS Independent",
 	],
 }
 
-with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
+with io.open(os.path.join(pypiDir,'setup.py'), 'w') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
-	for key, value in setup.iteritems():
+	for key, value in six.iteritems(setup):
 		f.write( '    {}={},\n'.format(key, repr(value)) )
 	f.write( "    long_description=open('README.txt').read(),\n" )
 	f.write( ')\n' )
 
-print 'Creating install package...'
+six.print_( 'Creating install package...' )
 os.chdir( pypiDir )
 subprocess.call( ['python', 'setup.py', 'sdist'] )
 
@@ -175,4 +184,4 @@ try:
 except:
 	shutil.move( 'pyllrp-{}.tar.gz'.format(version), 'pip-install-pyllrp-{}.tar.gz'.format(version) )
 	
-print 'Done.'
+six.print_( 'Done.' )

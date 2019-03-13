@@ -132,9 +132,10 @@ charwidths = {
 # what Excel reports as the column width is wonky between 0 and 1.
 # The only way I know to find out the padding for a desired font is
 # to set that font as the standard font in Excel and count pixels.
+import six
 import unicodedata
 def remove_accents(input_str):
-    nkfd_form = unicodedata.normalize('NFKD', unicode(input_str))
+    nkfd_form = unicodedata.normalize('NFKD', six.text_type(input_str))
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
 	
 def colwidth(n):

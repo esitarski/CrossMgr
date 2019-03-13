@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import os
+import six
 import sys
 import time
 import socket
 import datetime
-from pyllrp import *
-from LLRPConnector import LLRPConnector
+from .pyllrp import *
+from .LLRPConnector import LLRPConnector
 
 class TagInventory( object ):
 	roSpecID = 123					# Arbitrary roSpecID.
@@ -91,7 +92,7 @@ class TagInventory( object ):
 
 	def GetROSpec( self, antennas = None ):
 		if antennas is not None:
-			if isinstance(antennas, (int, long)):
+			if isinstance(antennas, six.integer_types):
 				antennas = [antennas]
 		else:
 			antennas = [0]
@@ -182,16 +183,17 @@ class TagInventory( object ):
 
 if __name__ == '__main__':
 	'''Read a tag inventory from the reader and shutdown.'''
+	sys.stdout.write( '**** full power\n' )
 	host = '192.168.0.101'
 	ti = TagInventory( host )
 	ti.Connect()
 	tagInventory, otherMessages = ti.GetTagInventory()
-	print '\n'.join( tagInventory )
+	sys.stdout.write( '{}\n'.format('\n'.join(tagInventory)) )
 	ti.Disconnect()
 	
-	for p in xrange(1, 100, 10):
+	for p in six.moves.range(1, 100, 10):
 		ti = TagInventory( host, transmitPower = p )
 		ti.Connect()
 		tagInventory, otherMessages = ti.GetTagInventory()
-		print 'power={}'.format(p), '\n'.join( tagInventory )
+		sys.stdout.write( '**** power={}\n{}\n'.format(p, '\n'.join(tagInventory)) )
 		ti.Disconnect()

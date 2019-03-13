@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-import socket 
+import socket
+import six
 import sys
 import time
 import datetime
@@ -15,8 +16,7 @@ import wx.lib.newevent
 import Utils
 import Model
 from threading import Thread as Process
-from Queue import Queue
-from Queue import Empty
+from six.moves.queue import Queue, Empty
 import JChip
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER
@@ -26,7 +26,7 @@ def sendReaderEvent( tagTimes ):
 	if tagTimes and readerEventWindow:
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
-EOL = bytes('\r')		# Ultra delimiter
+EOL = '\r'		# Ultra delimiter
 len_EOL = len(EOL)
 
 def parseTagTime( s ):
@@ -272,7 +272,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in xrange(32):
+		for i in six.moves.range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None

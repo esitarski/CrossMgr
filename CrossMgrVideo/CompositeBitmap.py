@@ -1,10 +1,14 @@
+import wx
+import io
+import six
 from Database import Database
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw
-import cStringIO as StringIO
+StringIO = six.StringIO
+import io
 
 def scaledBitmapfromJpg( jpg, scale ):
-	image = Image( StringIO.StringIO(jpg) )
+	image = wx.Image( StringIO(jpg) if six.PY2 else io.BytesIO(jpg) )
 	width, height = image.size
 	if self.scale != 1.0:
 		image = image.resize( (int(width*scale), int(height*scale)), Image.ANTIALIAS )
@@ -19,6 +23,7 @@ def CompositeBitmap( qResult, fnameDB, tsLower, tsUpper, pixelsPerSec, scale ):
 	tsFirst = tsJpgs[0][0]
 	times = [(ts - tsFirst).total_seconds() for ts, jpg in tsJpgs]
 	tJpg = {t:jpg for t, (ts, jpg) in zip(times, tsJpgs)}
+	scaledBitmaps = {}
 	def getScaledBitmap( t ):
 		if t not in scaledBitmaps:
 			scaledBitmaps[t] = scaledBitmapFromJpg(tJpg[t], scale)

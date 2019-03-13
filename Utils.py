@@ -1,4 +1,5 @@
 import sys
+import six
 import collections
 from netifaces import interfaces, ifaddresses, AF_INET
 
@@ -11,7 +12,7 @@ def _fix_issue_18015(collections):
 	except AttributeError:
 		# prior to 2.7.4 _class_template didn't exists
 		return
-	if not isinstance(template, basestring):
+	if not isinstance(template, six.string_types):
 		return  # strange
 	if "__dict__" in template or "__getstate__" in template:
 		return  # already patched
@@ -129,10 +130,9 @@ lang = (lang or 'en')[:2]
 import sys
 from Version import AppVerName
 import gettext
-import __builtin__
 initTranslationCalled = False
 translate = None
-__builtin__.__dict__['_'] = translate = lambda s: s
+six.moves.builtins.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
 	global translate
@@ -140,13 +140,16 @@ def initTranslation():
 	if not initTranslationCalled or (lang and not lang.startswith('en')):
 		initTranslationCalled = True
 		
-		gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
+		try:
+			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
+		except:
+			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'))
 		
 		# Try to use a translation matching the user's language.
 		try:
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
-			__builtin__.__dict__['_'] = translate = translation.ugettext
+			six.moves.builtins.__dict__['_'] = translate = translation.ugettext
 		except:
 			pass
 		
@@ -160,10 +163,10 @@ initTranslation()
 class SuspendTranslation( object ):
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
-		self._Save = __builtin__.__dict__['_']
-		__builtin__.__dict__['_'] = lambda x: x
+		self._Save = six.moves.builtins.__dict__['_']
+		six.moves.builtins.__dict__['_'] = lambda x: x
 	def __exit__(self, type, value, traceback):
-		__builtin__.__dict__['_'] = self._Save
+		six.moves.builtins.__dict__['_'] = self._Save
 
 class UIBusy( object ):
 	def __enter__(self):
@@ -193,7 +196,7 @@ def tag( buf, name, attrs = None ):
 	if not isinstance(attrs, dict):
 		attrs = { 'class': attrs }
 	if attrs:
-		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in attrs.iteritems()])) )
+		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in six.iteritems(attrs)])) )
 	else:
 		buf.write( u'<{}>'.format(name) )
 	yield
@@ -258,19 +261,19 @@ def plat_ind_basename( s ):
 def toAscii( s ):
 	if s is None or s == '':
 		return ''
-	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == unicode else str(s)
+	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore').decode() if type(s) == six.text_type else six.text_type(s)
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret
 
-validFilenameChars = set( "-_.() " + string.ascii_letters + string.digits )
+invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
 def RemoveDisallowedFilenameChars( filename ):
-	cleanedFilename = unicodedata.normalize('NFKD', unicode(filename).strip()).encode('ASCII', 'ignore')
+	cleanedFilename = unicodedata.normalize('NFKD', six.text_type(filename).strip()).encode('ASCII', 'ignore').decode()
 	cleanedFilename = cleanedFilename.replace( '/', '_' ).replace( '\\', '_' )
-	return ''.join(c for c in cleanedFilename if c in validFilenameChars)
+	return invalidFilenameChars.sub( '', cleanedFilename )
 
 def RemoveDisallowedSheetChars( sheetName ):
-	sheetName = unicodedata.normalize('NFKD', unicode(sheetName)).encode('ASCII', 'ignore')
+	sheetName = unicodedata.normalize('NFKD', six.text_type(sheetName)).encode('ASCII', 'ignore').decode()
 	return re.sub('[+!#$%&+~`".:;|\\\\/?*\[\] ]+', ' ', sheetName)[:31]		# four backslashes required to match one backslash in re.
 	
 def removeDiacritic(input):
@@ -278,8 +281,8 @@ def removeDiacritic(input):
 	Accept a unicode string, and return a normal string (bytes in Python 3)
 	without any diacritical marks.
 	'''
-	if isinstance(input, unicode):
-		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
+	if isinstance(input, six.string_types):
+		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore').decode()
 	else:
 		return input
 
@@ -311,8 +314,8 @@ def PlaySound( soundFile ):
 
 def GetSelectedRows( grid ):
 	rows = []
-	for row in xrange(grid.GetNumberRows()):
-		if any(grid.IsInSelection(row, col) for col in xrange(grid.GetNumberCols())):
+	for row in six.moves.range(grid.GetNumberRows()):
+		if any(grid.IsInSelection(row, col) for col in six.moves.range(grid.GetNumberCols())):
 			rows.append( row )
 	return rows
 
@@ -369,20 +372,20 @@ def SetLabel( st, label ):
 	return False
 
 def MakeGridReadOnly( grid ):
-	for c in xrange(grid.GetNumberCols()):
+	for c in six.moves.range(grid.GetNumberCols()):
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly()
 		grid.SetColAttr( c, attr )
 
 def SwapGridRows( grid, r, rTarget ):
 	if r != rTarget and 0 <= r < grid.GetNumberRows() and 0 <= rTarget < grid.GetNumberRows():
-		for c in xrange(grid.GetNumberCols()):
+		for c in six.moves.range(grid.GetNumberCols()):
 			vSave = grid.GetCellValue( rTarget, c )
 			grid.SetCellValue( rTarget, c, grid.GetCellValue(r,c) )
 			grid.SetCellValue( r, c, vSave )
 		
 def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
-	# print( 'AdjustGridSize: rowsRequired=', rowsRequired, ' colsRequired=', colsRequired )
+	# six.print_( 'AdjustGridSize: rowsRequired=', rowsRequired, ' colsRequired=', colsRequired )
 
 	if rowsRequired is not None:
 		rowsRequired = int(rowsRequired)
@@ -407,7 +410,7 @@ def colorFromStr( s ):
 	if len(s) == 3:
 		r, g, b = [int(c, 16)<<4 for c in s]
 	else:
-		r, g, b = [int(s[i:i+2], 16) for i in xrange(0, 6, 2)]
+		r, g, b = [int(s[i:i+2], 16) for i in six.moves.range(0, 6, 2)]
 	return wx.Colour(r, g, b)
 
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -593,14 +596,14 @@ def disable_stdout_buffering():
 	sys.stdout.close()
 	os.dup2(temp_fd, fileno)
 	os.close(temp_fd)
-	sys.stdout = os.fdopen(fileno, "w", 0)
+	sys.stdout = os.fdopen(fileno, "w")
 
 def logCall( f ):
 	def _getstr( x ):
 		return u'{}'.format(x) if not isinstance(x, wx.Object) else u'<<{}>>'.format(x.__class__.__name__)
 	
 	def new_f( *args, **kwargs ):
-		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in kwargs.iteritems() ]
+		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in six.iteritems(kwargs) ]
 		writeLog( 'call: {}({})'.format(f.__name__, removeDiacritic(u', '.join(parameters))) )
 		return f( *args, **kwargs)
 	return new_f
@@ -801,13 +804,21 @@ def GetContrastTextColour( backgroundColour ):
 	
 def GetGoogleMapsApiKey():
 	return 'AIzaSyD2sl2JTvnyMcsgWc3tTceWCYo3ZoyWdAI'
-	
+
+import json
+def ToJSon( v, separators=(',',':') ):
+	''' Make sure we always return a unicode string. '''
+	if six.PY2:
+		return json.dumps( v, encoding='utf-8', separators=separators ).decode()
+	else:
+		return json.dumps( v, separators=separators )
+
 if __name__ == '__main__':
 	initTranslation()
 	app = wx.App(False)
 	
-	print RemoveDisallowedSheetChars('Cat A/B')
-	print RemoveDisallowedFilenameChars('Cat A/B')
+	six.print_( RemoveDisallowedSheetChars('Cat A/B') )
+	six.print_(  RemoveDisallowedFilenameChars('Cat A/B') )
 	
 	MessageOK( None, 'Test', 'Test', wx.ICON_INFORMATION )
 	MessageOKCancel( None, 'Test', 'Test' )
@@ -825,7 +836,7 @@ if __name__ == '__main__':
 	hd = getHomeDir()
 	fn = os.path.join(hd, 'Test.txt')
 	with open( fn, 'w' ) as fp:
-		print 'successfully opened: ' + fn
+		six.print_(  'successfully opened: ' + fn )
 
 cameraError = None
 rfidReaderError = None

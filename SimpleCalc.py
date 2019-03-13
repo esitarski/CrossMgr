@@ -1,6 +1,6 @@
-
-import math
 import re
+import six
+import math
 
 tokNum = 'n'
 tokError = 'e'
@@ -96,7 +96,7 @@ class TimeEval( object ):
 		yield tokEnd, None, line, col, i
 	
 	def skip( self ):
-		self.tok, self.value, self.line, self.col, self.iStr = self.parser.next()
+		self.tok, self.value, self.line, self.col, self.iStr = next(self.parser)
 		
 	def expr( self ):
 		x = self.factor()
@@ -192,19 +192,19 @@ def formatTime( secs, highPrecision = False ):
 	else:
 		return "{}{:02d}:{}".format(sign, minutes, secStr)
 
-def testEval( str  ):
+def testEval( ss  ):
 	re = TimeEval()
 	try:
-		x = formatTime( re.eval(str) )
-		print str, '=', x
+		x = formatTime( re.eval(ss) )
+		six.print_(  ss, '=', x )
 	except TimeEvalEmptyExpressionError:
-		print 'empty expression'
+		six.print_(  'empty expression' )
 	except (TimeEvalSyntaxError, TimeEvalDivideByZeroError) as e:
-		print str
-		print ' ' * e.i + '^'
-		print ' ' * e.i + '|'
-		print ' ' * e.i + '+---' + e.error
-	print '--------------------------------------------------------------------'
+		six.print_(  ss )
+		six.print_(  ' ' * e.i + '^' )
+		six.print_(  ' ' * e.i + '|' )
+		six.print_(  ' ' * e.i + '+---' + e.error )
+	six.print_( '--------------------------------------------------------------------' )
 
 if __name__ == '__main__':
 	testEval( '' )

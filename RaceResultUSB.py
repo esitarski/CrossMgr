@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-import socket 
+import socket
+import six
 import sys
 import time
 import datetime
@@ -14,8 +15,7 @@ import serial
 import Utils
 import Model
 from threading import Thread as Process
-from Queue import Queue
-from Queue import Empty
+from six.moves.queue import Queue, Empty
 import JChip
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER
@@ -93,7 +93,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 		cmd = message.split(';', 1)[0]
 		qLog( 'command', u'sending: {}'.format(message) )
 		try:
-			bMsg = bytes(message.encode('utf-8'))
+			bMsg = bytes(message.encode())
 			bytesWritten = s.write( bMsg )
 			if bytesWritten != len(bMsg):
 				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), _('Write length error')) )
@@ -326,7 +326,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 				lines = ret.split( EOL )
 				count = int( lines[0].split(';')[1], 16 )
 			
-				for i in xrange( count ):
+				for i in six.moves.range( count ):
 					line = lines[i+1]
 					if not line:
 						continue
@@ -375,7 +375,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in xrange(32):
+		for i in six.moves.range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None

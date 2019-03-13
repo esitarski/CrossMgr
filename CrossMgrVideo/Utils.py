@@ -2,6 +2,7 @@
 # Set translation locale.
 #
 import wx
+import six
 locale = wx.Locale()
 
 from Version import AppVerName
@@ -10,7 +11,10 @@ initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
+		if six.PY2:
+			gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
+		else:
+			gettext.install(AppVerName.split(None, 1), './locale')
 		initTranslationCalled = True
 		
 initTranslation()
@@ -99,13 +103,13 @@ def formatTimeGap( secs, highPrecision = False ):
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
+		decimal = '.{:02d}'.format(int(f * 100))
 	else:
 		decimal = ''
 	if hours > 0:
-		return "{}{}h{}'{:02d}{}\"" % (sign, hours, minutes, secs, decimal)
+		return "{}{}h{}'{:02d}{}\"" .format(sign, hours, minutes, secs, decimal)
 	else:
-		return "{}{}'{:02d}{}\"" % (sign, minutes, secs, decimal)
+		return "{}{}'{:02d}{}\"".format(sign, minutes, secs, decimal)
 
 def formatTimeCompressed( secs, highPrecision = False ):
 	f = formatTime( secs, highPrecision )
@@ -130,11 +134,11 @@ def StrToSeconds( str = '' ):
 	
 def SecondsToStr( secs = 0 ):
 	secs = int(secs)
-	return '%02d:%02d:%02d' % (secs // (60*60), (secs // 60)%60, secs % 60)
+	return '{:02d}:{:02d}:{:02d}'.format(secs // (60*60), (secs // 60)%60, secs % 60)
 
 def SecondsToMMSS( secs = 0 ):
 	secs = int(secs)
-	return '%02d:%02d' % ((secs // 60)%60, secs % 60)
+	return '{:02d}:{:02d}'.format((secs // 60)%60, secs % 60)
 
 def getHomeDir():
 	sp = wx.StandardPaths.Get()
@@ -208,4 +212,4 @@ def readDelimitedData( s, delim ):
 	yield buffer
 	
 if __name__ == '__main__':
-	print getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png')
+	six.print_( getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png') )

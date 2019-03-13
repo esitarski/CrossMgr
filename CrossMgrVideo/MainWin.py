@@ -4,6 +4,7 @@ import wx.lib.intctrl
 import sys
 import os
 import re
+import six
 import time
 import math
 import threading
@@ -12,7 +13,7 @@ import atexit
 import time
 import platform
 import webbrowser
-from Queue import Queue, Empty
+from six.moves.queue import Queue, Empty
 import CamServer
 from roundbutton import RoundButton
 
@@ -45,7 +46,7 @@ def getCloseFinishBitmaps( size=(16,16) ):
 		bitmap = wx.Bitmap( *size )
 		dc.SelectObject( bitmap )
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
-		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in xrange(0,6,2)]) ) )
+		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in six.moves.range(0,6,2)]) ) )
 		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
 		dc.SelectObject( wx.NullBitmap )
 		bm.append( bitmap )
@@ -78,7 +79,7 @@ class DateSelectDialog( wx.Dialog ):
 		self.triggerDatesList.InsertColumn( 1, 'Entries', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
 		for i, (d, c) in enumerate(triggerDates):
 			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
-			self.triggerDatesList.SetItem( i, 1, unicode(c) )
+			self.triggerDatesList.SetItem( i, 1, six.text_type(c) )
 		
 		if self.triggerDates:
 			self.triggerDatesList.Select( 0 )
@@ -156,7 +157,7 @@ class ConfigDialog( wx.Dialog ):
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera Device'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.cameraDevice = wx.Choice( self, choices=[unicode(i) for i in xrange(8)] )
+		self.cameraDevice = wx.Choice( self, choices=[six.text_type(i) for i in six.moves.range(8)] )
 		self.cameraDevice.SetSelection( cameraDeviceNum )
 		pfgs.Add( self.cameraDevice )
 		
@@ -321,7 +322,7 @@ class TriggerDialog( wx.Dialog ):
 		ef = db.getTriggerEditFields( self.triggerId )
 		ef = ef or ['' for f in Database.triggerEditFields]
 		for e, v in zip(self.editFields, ef):
-			e.SetValue( unicode(v) )
+			e.SetValue( six.text_type(v) )
 	
 	def get( self ):
 		values = []
@@ -650,22 +651,22 @@ class MainWin( wx.Frame ):
 		return self.itemDataMap[data]
 	
 	def getTriggerRowFromID( self, id ):
-		for row in xrange(self.triggerList.GetItemCount()-1, -1, -1):
+		for row in six.moves.range(self.triggerList.GetItemCount()-1, -1, -1):
 			if self.itemDataMap[row][0] == id:
-				return i
+				return row
 		return None
 
 	def updateTriggerRow( self, row, fields ):
 		if 'last_name' in fields and 'first_name' in fields:
 			fields['name'] = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
-		for k, v in fields.iteritems():
+		for k, v in six.iteritems(fields):
 			if k in self.fieldCol:
 				if k == 'bib':
 					v = u'{:>6}'.format(v)
 				elif k == 'frames':
-					v = unicode(v) if v else u''
+					v = six.text_type(v) if v else u''
 				else:
-					v = unicode(v)
+					v = six.text_type(v)
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
 				
 	def updateTriggerRowID( self, id, fields ):
@@ -713,7 +714,7 @@ class MainWin( wx.Frame ):
 			
 			dtFinish = (ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
-			row = self.triggerList.InsertItem( sys.maxint, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
+			row = self.triggerList.InsertItem( 999999, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
 			
 			if not frames:
 				tsLower = min( tsLower, ts-timedelta(seconds=s_before) )
@@ -751,7 +752,7 @@ class MainWin( wx.Frame ):
 					del counts[id]
 			self.db.updateTriggerPhotoCounts( counts )
 			
-		for i in xrange(self.triggerList.GetColumnCount()):
+		for i in six.moves.range(self.triggerList.GetColumnCount()):
 			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
 		if iTriggerRow is not None:
@@ -850,7 +851,7 @@ class MainWin( wx.Frame ):
 		if iTriggerRow < 0:
 			return
 		self.triggerList.EnsureVisible( iTriggerRow )
-		for r in xrange(self.triggerList.GetItemCount()-1):
+		for r in six.moves.range(self.triggerList.GetItemCount()-1):
 			self.triggerList.Select(r, 0)
 		self.triggerList.Select( iTriggerRow )		
 	
@@ -955,7 +956,7 @@ class MainWin( wx.Frame ):
 		
 	def doTriggerDelete( self, confirm=True ):
 		triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
-		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], unicode(triggerInfo['bib']),
+		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], six.text_type(triggerInfo['bib']),
 			triggerInfo['name'], triggerInfo['team'], triggerInfo['wave'], triggerInfo['race_name']) if f )
 		if not confirm or wx.MessageDialog( self, u'{}:\n\n{}'.format(u'Confirm Delete', message), u'Confirm Delete',
 				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
@@ -986,7 +987,7 @@ class MainWin( wx.Frame ):
 			message = self.messageQ.get()
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message
-			print 'Message:', '{}:  {}'.format(cmd, info) if cmd else info
+			six.print_( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 	
 	def delayRefreshTriggers( self ):
@@ -1159,7 +1160,7 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 	
 	def setCameraDeviceNum( self, num ):
-		self.cameraDevice.SetLabel( unicode(num) )
+		self.cameraDevice.SetLabel( six.text_type(num) )
 		
 	def setCameraResolution( self, width, height ):
 		self.cameraResolution.SetLabel( u'{}x{}'.format(width, height) )

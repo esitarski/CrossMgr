@@ -2,6 +2,7 @@ import Model
 from bisect import bisect_left
 from math import floor
 import re
+import six
 import sys
 import copy
 import Utils
@@ -35,8 +36,8 @@ def RidersCanSwap( riderResults, num, numAdjacent ):
 			return False
 		rt1, rt2 = rr1.raceTimes[:], rr2.raceTimes[:]
 		rt1[laps], rt2[laps] = rt2[laps], rt1[laps]
-		if 	all( x < y for x, y in itertools.izip(rt1, rt1[1:]) ) and \
-			all( x < y for x, y in itertools.izip(rt2, rt2[1:]) ):
+		if 	all( x < y for x, y in six.moves.zip(rt1, rt1[1:]) ) and \
+			all( x < y for x, y in six.moves.zip(rt2, rt2[1:]) ):
 			return True
 	except (IndexError, ValueError, KeyError):
 		pass
@@ -193,7 +194,7 @@ def FixPulled( riderResults, race, category ):
 		return
 	
 	pullSort = []
-	for cat, winnerLaps in catWinnerLaps.iteritems():
+	for cat, winnerLaps in six.iteritems(catWinnerLaps):
 		if not winnerLaps:
 			continue
 		for rr in catPull[cat]:
@@ -252,7 +253,7 @@ def _GetResultsCore( category ):
 	# Group finish times are defined as times which are separated from the previous time by at least 1 second.
 	groupFinishTimes = [0 if not entries else floor(entries[0].t)]
 	if roadRaceFinishTimes and not isTimeTrial:
-		groupFinishTimes.extend( [floor(entries[i].t) for i in xrange(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
+		groupFinishTimes.extend( [floor(entries[i].t) for i in six.moves.range(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
 		groupFinishTimes.extend( [sys.float_info.max] * 5 )
 	
 	allRiderTimes = defaultdict( list )
@@ -266,7 +267,7 @@ def _GetResultsCore( category ):
 	fastestRidersLastLapTime = None
 	if allCategoriesFinishAfterFastestRidersLastLap and not isTimeTrial:
 		resultBest = (0, sys.float_info.max)
-		for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+		for c, (times, nums) in six.iteritems(race.getCategoryTimesNums()):
 			if not times:
 				continue
 			try:
@@ -282,7 +283,7 @@ def _GetResultsCore( category ):
 				
 	# Get the number of race laps for each category.
 	categoryWinningTime, categoryWinningLaps = {}, {}
-	for c, (times, nums) in race.getCategoryTimesNums().iteritems():
+	for c, (times, nums) in six.iteritems(race.getCategoryTimesNums()):
 		if category and c != category:
 			continue
 		
@@ -314,7 +315,7 @@ def _GetResultsCore( category ):
 	
 	highPrecision = Model.highPrecisionTimes()
 	getCategory = race.getCategory
-	for rider in list(race.riders.itervalues()):
+	for rider in list(six.itervalues(race.riders)):
 		riderCategory = getCategory( rider.num )
 		
 		if category and riderCategory != category:
@@ -354,7 +355,7 @@ def _GetResultsCore( category ):
 			status = NP
 		rr = RiderResult(	rider.num, status, lastTime,
 							riderCategory.fullname,
-							[times[i] - times[i-1] for i in xrange(1, len(times))],
+							[times[i] - times[i-1] for i in six.moves.range(1, len(times))],
 							times,
 							interp )
 		
@@ -629,7 +630,7 @@ def GetResultsWithData( category ):
 	race = Model.race
 	if category is None:
 		singleCategory = None
-		for c in race.categories.itervalues():
+		for c in six.itervalues(race.categories):
 			if c.active and c.catType == CatWave:
 				if not singleCategory:
 					singleCategory = c
@@ -664,7 +665,7 @@ def GetResultsWithData( category ):
 					if float(v) == int(v):
 						v = int(v)
 				else:
-					v = unicode(v)
+					v = six.text_type(v)
 				setattr( rr, f, v )
 			except (KeyError, ValueError):
 				setattr( rr, f, u'' )
@@ -823,7 +824,7 @@ def UnstartedRaceDataProlog( getExternalData = True ):
 		# Add all numbers from the spreadsheet if they are not already in the race.
 		# Default the status to NP.
 		if externalInfo:
-			for num, info in externalInfo.iteritems():
+			for num, info in six.iteritems(externalInfo):
 				if num not in race.riders and any(info.get(f, None) for f in ['LastName', 'FirstName', 'Team', 'License']):
 					rider = race.getRider( num )
 					rider.status = Model.Rider.NP

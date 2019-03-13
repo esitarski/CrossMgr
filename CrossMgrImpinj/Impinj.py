@@ -1,5 +1,6 @@
 import re
 import os
+import six
 import time
 import math
 import socket
@@ -8,9 +9,9 @@ import datetime
 import random
 import traceback
 from collections import defaultdict
-from Queue import Queue, Empty
+from six.moves.queue import Queue, Empty
 from Utils import readDelimitedData, timeoutSecs, Bell
-import cStringIO as StringIO
+
 try:
 	from pyllrp.pyllrp import *
 except ImportError:
@@ -403,7 +404,7 @@ class Impinj( object ):
 			if msg[0] == 'shutdown':
 				return
 			try:
-				pf = open( self.fname, 'a' )
+				pf = io.open( self.fname, 'a' )
 			except:
 				continue
 			
@@ -524,7 +525,7 @@ class Impinj( object ):
 				try:
 					discoveryTime = utcfromtimestamp( tag['Timestamp'] / 1000000.0 )
 					if ImpinjDebug and lastDiscoveryTime is not None:
-						print '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ),
+						six.print_( '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ) )
 					lastDiscoveryTime = discoveryTime
 				except:
 					pass

@@ -1,4 +1,5 @@
 import wx
+import six
 import datetime
 
 import Utils
@@ -76,7 +77,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		
 		# Adjust all rider times to account for the new start time.
 		if not race.isTimeTrial:
-			for rider in race.riders.itervalues():
+			for rider in six.itervalues(race.riders):
 				try:
 					rider.firstTime = max( 0.0, rider.firstTime - dTime )
 				except TypeError:
@@ -87,7 +88,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			
 			# Also fix any unread tags.
 			if race.unmatchedTags:
-				for times in race.unmatchedTags.itervalues():
+				for times in six.itervalues(race.unmatchedTags):
 					times[:] = [max(0.0, v - dTime) for v in times]
 		
 		race.startTime = startTimeNew

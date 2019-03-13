@@ -2,6 +2,7 @@ import re
 import wx
 import wx.lib.intctrl
 import os
+import six
 import itertools
 import Utils
 from DNSManager import AutoWidthListCtrl
@@ -25,7 +26,7 @@ def SetToIntervals( s ):
 def IntervalsToSet( intervals ):
 	ret = set()
 	for i in intervals:
-		ret.update( xrange(i[0], i[1]+1) )
+		ret.update( six.moves.range(i[0], i[1]+1) )
 	return ret
 
 class CategoryPredicate( object ):
@@ -160,14 +161,13 @@ class CategoryPredicate( object ):
 							bounds[0], bounds[1] = bounds[1], bounds[0]
 							
 						if isExclusion:
-							self.exclude.update( xrange(bounds[0], bounds[1]+1) )
+							self.exclude.update( six.moves.range(bounds[0], bounds[1]+1) )
 						else:
 							self.intervals.append( tuple(bounds) )
 							
 					except Exception as e:
 						# Ignore any parsing errors.
-						print( e )
-						pass
+						six.print_( e )
 						
 				self.intervals.sort()
 

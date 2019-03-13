@@ -1,8 +1,9 @@
 
 import wx
+import six
 import wx.richtext as rt
 from wx.lib.embeddedimage import PyEmbeddedImage
-import StringIO
+StringIO = six.StringIO
 
 #----------------------------------------------------------------------
 _rt_alignleft = PyEmbeddedImage(
@@ -487,7 +488,7 @@ class RichTextFrame(wx.Frame):
 
 		
 	def OnFileSave(self, evt):
-		print self.GetValue()
+		six.print_( self.GetValue() )
 		'''
 		if not self.rtc.GetFilename():
 			self.OnFileSaveAs(evt)
@@ -515,17 +516,16 @@ class RichTextFrame(wx.Frame):
 		handler = rt.RichTextXMLHandler()
 		handler.SetFlags(rt.RICHTEXT_HANDLER_SAVE_IMAGES_TO_BASE64)
 
-		stream = StringIO.StringIO()
+		stream = StringIO()
 		handler.SaveStream( self.rtc.GetBuffer(), stream )
 		value = stream.getvalue()
-		print value
 		return value
 		
 	def SetValue( self, value ):
 		handler = rt.RichTextXMLHandler()
 		handler.SetFlags(rt.RICHTEXT_HANDLER_SAVE_IMAGES_TO_BASE64)
 		
-		stream = StringIO.StringIO( value )
+		stream = StringIO( value )
 		handler.LoadStream( self.rtc.GetBuffer(), stream )
 	
 	def OnFileViewHTML(self, evt):
@@ -536,8 +536,7 @@ class RichTextFrame(wx.Frame):
 		handler.SetFlags(rt.RICHTEXT_HANDLER_SAVE_IMAGES_TO_MEMORY)
 		handler.SetFontSizeMapping([7,9,11,12,14,22,100])
 
-		import cStringIO
-		stream = cStringIO.StringIO()
+		stream = StringIO()
 		if not handler.SaveStream(self.rtc.GetBuffer(), stream):
 			return
 

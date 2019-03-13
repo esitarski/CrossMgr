@@ -1,3 +1,4 @@
+import six
 import Utils
 import Model
 
@@ -46,7 +47,7 @@ def ReadCategoriesFromExcel( reader ):
 			continue
 		
 		catRow = {}
-		for h, c in headerMap.iteritems():
+		for h, c in six.iteritems(headerMap):
 			catField = HeadersToFields[h]
 			if h == 'Race Minutes' and row[c]:
 				try:

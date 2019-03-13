@@ -1,6 +1,7 @@
 import Utils
 from Utils				import logCall
 import wx
+import six
 import wx.lib.intctrl
 import Model
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
@@ -508,15 +509,15 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 		externalInfo = excelLink.read()
 		for f in ['LastName', 'FirstName', 'Team']:
 			try:
-				externalData.append( unicode(externalInfo[num][f] ) )
+				externalData.append( six.text_type(externalInfo[num][f] ) )
 				if f == 'Team':
 					externalData[-1] = u'({})'.format(externalData[-1])
 			except KeyError:
 				pass
 		if len(externalData) == 3:	# Format the team name slightly differently.
-			externalData = u'{}: {}'.format( unicode(num), u', '.join(externalData[:-1]) ) + u' ' + externalData[-1]
+			externalData = u'{}: {}'.format( six.text_type(num), u', '.join(externalData[:-1]) ) + u' ' + externalData[-1]
 		else:
-			externalData = u'{}: {}'.format( unicode(num), u', '.join(externalData) ) if externalData else None
+			externalData = u'{}: {}'.format( six.text_type(num), u', '.join(externalData) ) if externalData else None
 	except:
 		externalData = None
 	
@@ -583,7 +584,7 @@ def AddLapSplits( num, lap, times, splits ):
 				splitTime = firstLapSplitTime = (tRight - tLeft) / float(splits)
 			
 			newTime = tLeft
-			for i in xrange( 1, splits ):
+			for i in six.moves.range( 1, splits ):
 				newTime += (firstLapSplitTime if i == 1 else splitTime)
 				race.numTimeInfo.add( num, newTime, Model.NumTimeInfo.Split )
 				race.addTime( num, newTime + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )

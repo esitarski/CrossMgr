@@ -1,6 +1,7 @@
 import wx
 from wx.lib.masked import NumCtrl
 import os
+import six
 import sys
 import math
 import Utils
@@ -288,13 +289,13 @@ class Primes( wx.Panel ):
 				v = GetTranslation(effortType)
 			elif attr == 'position':
 				position = prime.get('position', 1)
-				v = u'' if position == 0 else unicode(position)
+				v = u'' if position == 0 else six.text_type(position)
 			elif attr == 'points':
 				points = prime.get('points', 0)
-				v = u'' if points == 0 else unicode(points)
+				v = u'' if points == 0 else six.text_type(points)
 			elif attr == 'winnerBib':
 				winnerBib = prime.get('winnerBib', None)
-				v = u'' if not winnerBib else unicode(winnerBib)
+				v = u'' if not winnerBib else six.text_type(winnerBib)
 			elif attr == 'winnerInfo':
 				v = getWinnerInfo(winnerBib)
 			elif dataType == 'f':
@@ -304,7 +305,7 @@ class Primes( wx.Panel ):
 				t = prime.get(attr, 0.0)
 				v = Utils.formatTime(t, forceHours=True, twoDigitHours=True) if t != 0 else u''
 			else:
-				v = unicode(prime.get(attr, u''))
+				v = six.text_type(prime.get(attr, u''))
 			if updateGrid:
 				self.grid.SetCellValue( row, col, v )
 			data.append( v )
@@ -362,7 +363,7 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if not race:
 			return
-		race.primes = [self.getRow(row) for row in xrange(self.grid.GetNumberRows())]
+		race.primes = [self.getRow(row) for row in six.moves.range(self.grid.GetNumberRows())]
 
 def GetGrid():
 	race = Model.race
@@ -421,9 +422,9 @@ def GetGrid():
 	if hasSponsor:
 		colnames.append( _('Sponsor') )
 
-	leftJustifyCols = set( i for i in xrange(len(colnames)) if i not in rightJustifyCols )
+	leftJustifyCols = set( i for i in six.moves.range(len(colnames)) if i not in rightJustifyCols )
 	
-	data = [[] for c in xrange(len(colnames))]	# Column oriented table.
+	data = [[] for c in six.moves.range(len(colnames))]	# Column oriented table.
 	GetTranslation = _
 	for p, prime in enumerate(primes):
 		row = []
@@ -455,7 +456,7 @@ def GetGrid():
 			row.append( prime.get('sponsor',u'') )
 		
 		for c, v in enumerate(row):
-			data[c].append( unicode(v) )
+			data[c].append( six.text_type(v) )
 		
 	return {'title':title, 'colnames':colnames, 'data':data, 'leftJustifyCols':leftJustifyCols}
 

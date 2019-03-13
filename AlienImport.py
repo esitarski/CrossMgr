@@ -1,5 +1,7 @@
 import wx
+import io
 import re
+import six
 import math
 import Utils
 import Model
@@ -32,9 +34,9 @@ def AlienImportDialog( parent, id = wx.ID_ANY ):
 		
 if __name__ == '__main__':
 	errors = []
-	with open("C:\Users\edwar\Downloads\Alien-2017-05-10-18-37-51.txt",'rb') as f:
+	with io.open(r"C:\Users\edwar\Downloads\Alien-2017-05-10-18-37-51.txt",'r',encoding='utf-8') as f:
 		for lineno, line in enumerate(f,1):
-			print parseTagTime( line, lineno, errors )
+			six.print_( parseTagTime( line, lineno, errors ) )
 	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

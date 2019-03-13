@@ -4,6 +4,7 @@ import math
 from math import radians, degrees, sin, cos, asin, sqrt, atan2, exp, modf, pi
 import bisect
 import sys
+import six
 import datetime
 import os
 import re
@@ -116,7 +117,7 @@ def LatLonElesToGpsPoints( latLonEles, useTimes = False, isPointToPoint = False 
 
 	gpsPoints = []
 	dCum = 0.0
-	for i in xrange(len(latLonEles) - (1 if isPointToPoint else 0)):
+	for i in six.moves.range(len(latLonEles) - (1 if isPointToPoint else 0)):
 		p, pNext = latLonEles[i], latLonEles[(i+1) % len(latLonEles)]
 		if hasTimes:
 			if pNext.t > p.t:
@@ -163,7 +164,7 @@ def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 def createAppendChild( doc, parent, name, textAttr={} ):
 	child = doc.createElement( name )
 	parent.appendChild( child )
-	for k, v in textAttr.iteritems():
+	for k, v in six.iteritems(textAttr):
 		attr = doc.createElement( k )
 		if isinstance(v, float) and modf(v)[0] == 0.0:
 			v = int(v)
@@ -233,7 +234,7 @@ class GeoTrack( object ):
 		length = 0.0
 		totalElevationGain = 0.0
 		self.isPointToPoint = getattr( self, 'isPointToPoint', False )
-		for i in xrange(lenGpsPoints - (1 if self.isPointToPoint else 0)):
+		for i in six.moves.range(lenGpsPoints - (1 if self.isPointToPoint else 0)):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance3D( pCur.lat, pCur.lon, pCur.ele, pNext.lat, pNext.lon, pNext.ele )
 			totalElevationGain += max(0.0, pNext.ele - pCur.ele)
@@ -264,14 +265,14 @@ class GeoTrack( object ):
 		return CreateGPX( courseName, self.gpsPoints )
 	
 	def writeGPXFile( self, fname ):
-		with io.open( fname, 'wb' ) as fp:
+		with io.open( fname, 'w') as fp:
 			self.getGPX( os.path.splitext(os.path.basename(fname))[0] ).writexml(fp, indent="", addindent=" ", newl="\n", encoding='utf-8')
 	
 	def readElevation( self, fname ):
 		header = None
 		distance, elevation = [], []
 		iDistance, iElevation =  None, None
-		with open(fname, 'r') as fp:
+		with io.open(fname, 'r') as fp:
 			for line in fp:
 				fields = [f.strip() for f in line.split(',')]
 				if not header:
@@ -291,7 +292,7 @@ class GeoTrack( object ):
 			
 		lenGpsPoints = len(self.gpsPoints)
 		length = 0.0
-		for i in xrange(lenGpsPoints-1):
+		for i in six.moves.range(lenGpsPoints-1):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			length += GreatCircleDistance( pCur.lat, pCur.lon, pNext.lat, pNext.lon )
 			
@@ -300,11 +301,11 @@ class GeoTrack( object ):
 		# Update the known GPS points with the proportional elevation.
 		length = 0.0
 		iSearch = 0
-		for i in xrange(lenGpsPoints):
+		for i in six.moves.range(lenGpsPoints):
 			pCur, pNext = self.gpsPoints[i], self.gpsPoints[(i + 1) % lenGpsPoints]
 			
 			d = min( length * distanceMult, distance[-1] )
-			for iSearch in xrange(iSearch, len(elevation) - 2):
+			for iSearch in six.moves.range(iSearch, len(elevation) - 2):
 				if distance[iSearch] <= d < distance[iSearch+1]:
 					break
 			deltaDistance = max( distance[iSearch+1] - distance[iSearch], 0.000001 )
@@ -327,7 +328,7 @@ class GeoTrack( object ):
 			return []
 		altigraph = [(0.0, self.gpsPoints[0].ele)]
 		p = self.gpsPoints
-		for i in xrange(1, len(p)):
+		for i in six.moves.range(1, len(p)):
 			altigraph.append( (altigraph[-1][0] + GreatCircleDistance(p[i-1].lat, p[i-1].lon, p[i].lat, p[i].lon), p[i].ele) )
 		altigraph.append( (altigraph[-1][0] + GreatCircleDistance(p[-1].lat, p[-1].lon, p[0].lat, p[0].lon), p[0].ele) )
 		return altigraph
@@ -336,14 +337,14 @@ class GeoTrack( object ):
 		if not self.gpsPoints:
 			return False
 		p = self.gpsPoints
-		return sum( (p[j].x - p[j-1].x) * (p[j].y + p[j-1].y) for j in xrange(len(self.gpsPoints)) ) > 0.0
+		return sum( (p[j].x - p[j-1].x) * (p[j].y + p[j-1].y) for j in six.moves.range(len(self.gpsPoints)) ) > 0.0
 		
 	def reverse( self ):
 		''' Reverse the points in the track.  Make sure the distance to the next point and cumDistance is correct. '''
 		self.cumDistance = []
 		gpsPointsReversed = []
 		dCum = 0.0
-		for i in xrange(len(self.gpsPoints)-1, -1, -1):
+		for i in six.moves.range(len(self.gpsPoints)-1, -1, -1):
 			p = self.gpsPoints[i]
 			pPrev = self.gpsPoints[i-1 if i > 0 else len(self.gpsPoints)-1]
 			gpsPointsReversed.append( GpsPoint(p.lat, p.lon, p.ele, p.x, p.y, pPrev.d, dCum) )
@@ -426,7 +427,7 @@ class GeoTrack( object ):
 		
 		# Follow the path through all the points.
 		lenGpsPoints = len(self.gpsPoints)
-		for i in xrange(1, lenGpsPoints + (0 if self.isPointToPoint else 1)):
+		for i in six.moves.range(1, lenGpsPoints + (0 if self.isPointToPoint else 1)):
 			pPrev, p = self.gpsPoints[i-1], self.gpsPoints[i%lenGpsPoints]			
 			fly(doc, Playlist, p, 'smooth',
 				GreatCircleDistance(pPrev.lat, pPrev.lon, p.lat, p.lon) / speed,
@@ -453,7 +454,7 @@ class GeoTrack( object ):
 			'styleUrl': '#thickBlueLine',
 		} )
 		coords = ['']
-		for i in xrange(lenGpsPoints + (0 if self.isPointToPoint else 1)):
+		for i in six.moves.range(lenGpsPoints + (0 if self.isPointToPoint else 1)):
 			p = self.gpsPoints[i % lenGpsPoints]
 			coords.append( '{},{}'.format(p.lon, p.lat) )
 		coords.append('')
@@ -514,7 +515,7 @@ class GeoTrack( object ):
 		try:
 			return self.totalElevationGain
 		except AttributeError:
-			self.totalElevationGain = sum( max(0.0, self.gpsPoints[i].ele - self.gpsPoints[i-1].ele) for i in xrange(len(self.gpsPoints)) )
+			self.totalElevationGain = sum( max(0.0, self.gpsPoints[i].ele - self.gpsPoints[i-1].ele) for i in six.moves.range(len(self.gpsPoints)) )
 			return self.totalElevationGain
 		
 	@property
@@ -541,7 +542,7 @@ class GeoTrack( object ):
 		
 shapes = [ [(cos(a), -sin(a)) \
 					for a in (q*(2.0*pi/i)+pi/2.0+(2.0*pi/(i*2.0) if i % 2 == 0 else 0)\
-						for q in xrange(i))] for i in xrange(3,9)]
+						for q in six.moves.range(i))] for i in six.moves.range(3,9)]
 def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
 	
@@ -585,7 +586,7 @@ class GeoAnimation(wx.Control):
 		
 		self.checkeredFlag = wx.Bitmap(os.path.join(Utils.getImageFolder(), 'CheckeredFlag.png'), wx.BITMAP_TYPE_PNG)	
 		
-		trackRGB = [int('7FE57F'[i:i+2],16) for i in xrange(0, 6, 2)]
+		trackRGB = [int('7FE57F'[i:i+2],16) for i in six.moves.range(0, 6, 2)]
 		self.trackColour = wx.Colour( *trackRGB )
 		
 		self.colours = []
@@ -606,7 +607,7 @@ class GeoAnimation(wx.Control):
 			]
 		while len(self.topFewColours) < self.topFewCount:
 			self.topFewColours.append( wx.Colour(200,200,200) )
-		self.trackColour = wx.Colour( *[int('7FE57F'[i:i+2],16) for i in xrange(0, 6, 2)] )
+		self.trackColour = wx.Colour( *[int('7FE57F'[i:i+2],16) for i in six.moves.range(0, 6, 2)] )
 		
 		# Cache the fonts if the size does not change.
 		self.numberFont	= None
@@ -645,7 +646,7 @@ class GeoAnimation(wx.Control):
 			return
 		if tMax is None:
 			tMax = 0
-			for num, info in self.data.iteritems():
+			for num, info in six.iteritems(self.data):
 				try:
 					tMax = max(tMax, info['raceTimes'][-1])
 				except IndexError:
@@ -721,7 +722,7 @@ class GeoAnimation(wx.Control):
 		"""
 		self.data = data if data else {}
 		self.categoryDetails = categoryDetails if categoryDetails else {}
-		for num, info in self.data.iteritems():
+		for num, info in six.iteritems(self.data):
 			info['iLast'] = 1
 			if info['status'] == 'Finisher' and info['raceTimes']:
 				info['finishTime'] = info['raceTimes'][-1]
@@ -729,7 +730,7 @@ class GeoAnimation(wx.Control):
 				info['finishTime'] = info['lastTime']
 				
 		# Get the units.
-		for num, info in self.data.iteritems():
+		for num, info in six.iteritems(self.data):
 			if info['status'] == 'Finisher':
 				try:
 					self.units = 'miles' if 'mph' in info['speed'] else 'km'
@@ -1000,7 +1001,7 @@ class GeoAnimation(wx.Control):
 		riderPosition = {}
 		if self.data:
 			riderXYPT = []
-			for num, d in self.data.iteritems():
+			for num, d in six.iteritems(self.data):
 				xypt = list(self.getRiderXYPT(num))
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
@@ -1011,7 +1012,7 @@ class GeoAnimation(wx.Control):
 											-x[4] if x[4] is not None else 0.0) )
 			
 			topFew = {}
-			for j, i in enumerate(xrange(len(riderXYPT) - 1, max(-1,len(riderXYPT)-self.topFewCount-1), -1)):
+			for j, i in enumerate(six.moves.range(len(riderXYPT) - 1, max(-1,len(riderXYPT)-self.topFewCount-1), -1)):
 				topFew[riderXYPT[i][0]] = j
 				
 			numRiders = len(riderXYPT)
@@ -1043,7 +1044,7 @@ class GeoAnimation(wx.Control):
 			
 		# Convert topFew from dict to list.
 		leaders = [0] * len(topFew)
-		for num, position in topFew.iteritems():
+		for num, position in six.iteritems(topFew):
 			leaders[position] = num
 		
 		yTop = height - self.infoLines * tHeight
@@ -1138,18 +1139,15 @@ class GeoAnimation(wx.Control):
 		
 if __name__ == '__main__':
 	fname = r'C:\Projects\CrossMgr\bugs\Stuart\20160419-glenlyon\2016-04-19-WTNC Glenlyon 710-r2-Course.gpx'
-	print GpxHasTimes( fname )
+	six.print_( GpxHasTimes( fname ) )
 	
 	data = {}
-	for num in xrange(100,200):
+	for num in six.moves.range(100,200):
 		mean = random.normalvariate(6.0, 0.3)
 		raceTimes = [0]
-		for lap in xrange( 4 ):
+		for lap in six.moves.range( 4 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
 		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'flr': 1.0, 'status':'Finisher', 'speed':'32.7 km/h' }
-
-	# import json
-	# with open('race.json', 'w') as fp: fp.write( json.dumps(data, sort_keys=True, indent=4) )
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="GeoAnimation", size=(800,700))
@@ -1163,7 +1161,7 @@ if __name__ == '__main__':
 	#geoTrack.read( 'Camp Arrowhead mtb GPS course.gpx' )
 	#geoTrack.read( 'Races/Midweek/Midweek_Learn_to_Race_and_Elite_Series_course.gpx' )
 	#geoTrack.reverse()
-	print 'Clockwise:', geoTrack.isClockwise()
+	six.print_( 'Clockwise:', geoTrack.isClockwise() )
 	
 	zf = zipfile.ZipFile( 'track.kmz', 'w', zipfile.ZIP_DEFLATED )
 	zf.writestr( 'track.kml', geoTrack.asKmlTour('Race Track') )
