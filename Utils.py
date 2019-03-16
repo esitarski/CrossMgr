@@ -278,7 +278,7 @@ def RemoveDisallowedSheetChars( sheetName ):
 	
 def removeDiacritic(input):
 	'''
-	Accept a unicode string, and return a normal string (bytes in Python 3)
+	Accept a unicode string, and return a normal string
 	without any diacritical marks.
 	'''
 	if isinstance(input, six.string_types):

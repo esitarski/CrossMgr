@@ -1,14 +1,10 @@
 import sys
-import six
 import codecs
 from .pyllrp import *
 from .TagInventory import TagInventory
 
 def padToWords( epc ):
-	if isinstance(epc, six.integer_types):
-		epc = u'{}'.format(epc)
-	else:
-		epc = epc.lstrip('0')
+	epc = u'{}'.format(epc)
 	len_epc = len(epc)
 	return epc.zfill( len_epc + (-len_epc%4) )
 	
@@ -26,7 +22,7 @@ def addLengthPrefix( epc ):
 	
 def hexToWords( epc ):
 	assert len(epc) % 4 == 0, 'epc must be a 16-bit word multiple'
-	return [int(epc[i:i+4], 16) for i in six.moves.range(0, len(epc), 4)]
+	return [int(epc[i:i+4], 16) for i in range(0, len(epc), 4)]
 
 def hexToBytes( epc ):
 	assert len(epc) % 2 == 0, 'epc must be a byte multiple'

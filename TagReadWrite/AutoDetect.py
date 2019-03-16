@@ -1,4 +1,3 @@
-import six
 import socket
 import Utils
 try:
@@ -10,7 +9,7 @@ def findImpinjHost( impinjPort, callback = None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
-	for i in six.moves.range(14):
+	for i in range(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )

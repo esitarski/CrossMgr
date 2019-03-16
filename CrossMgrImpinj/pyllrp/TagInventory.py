@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-import six
 import sys
 import time
 import socket
@@ -92,7 +91,7 @@ class TagInventory( object ):
 
 	def GetROSpec( self, antennas = None ):
 		if antennas is not None:
-			if isinstance(antennas, six.integer_types):
+			if not isinstance(antennas, list):
 				antennas = [antennas]
 		else:
 			antennas = [0]
@@ -191,7 +190,7 @@ if __name__ == '__main__':
 	sys.stdout.write( '{}\n'.format('\n'.join(tagInventory)) )
 	ti.Disconnect()
 	
-	for p in six.moves.range(1, 100, 10):
+	for p in range(1, 100, 10):
 		ti = TagInventory( host, transmitPower = p )
 		ti.Connect()
 		tagInventory, otherMessages = ti.GetTagInventory()

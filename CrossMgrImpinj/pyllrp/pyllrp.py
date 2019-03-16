@@ -131,7 +131,7 @@ class _FieldDef( object ):
 			else:
 				assert False
 		except bitstring.CreationError as e:
-			six.print_( 'write: {} {} {}\n'.format(ftype, attr, getattr(obj, attr)) )
+			print ( 'write: {} {} {}\n'.format(ftype, attr, getattr(obj, attr)) )
 			raise
 
 	def init( self, obj ):

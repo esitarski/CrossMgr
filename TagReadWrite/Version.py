@@ -1,1 +1,1 @@
-AppVerName="TagReadWrite 2.10.3"
+AppVerName="TagReadWrite 3.0.0"
