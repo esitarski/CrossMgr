@@ -53,15 +53,15 @@ subprocess.call( [
 ] )
 
 # Copy additional dlls to distribution folder.
-wxHome = r'C:\Python27\Lib\site-packages\wx-3.0-msw\wx'
-try:
-	shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
-except:
-	pass
-try:
-	shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
-except:
-	pass
+# wxHome = r'C:\Python27\Lib\site-packages\wx-3.0-msw\wx'
+# try:
+	# shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
+# except:
+	# pass
+# try:
+	# shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
+# except:
+	# pass
 
 # Add images and reference data to the distribution folder.
 def copyDir( d ):
@@ -140,13 +140,14 @@ z.write( newExeName )
 z.close()
 six.print_( 'executable compressed to: ' + newZipName )
 
-shutil.copy( newZipName, googleDrive  )
+# shutil.copy( newZipName, googleDrive  )
 
-cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
-six.print_( cmd )
+from virus_total_apis import PublicApi as VirusTotalPublicApi
+API_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
+vt = VirusTotalPublicApi(API_KEY)
+six.print_( 'VirusTotal Scan' )
+vt.scan_file( os.path.abspath(newExeName) )
 
 os.chdir( '..' )
 shutil.copy( os.path.join('helptxt', 'CrossMgrDocHtml.zip'), googleDrive )
 
-subprocess.call( cmd, shell=True )
-shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )

@@ -533,10 +533,12 @@ OrionTagLength = 16
 
 if six.PY2:
 	trantab = string.maketrans( 'lOo', '100' ) # Translate lower-case l's to ones and Os to zeros. 
+	def GetCleanTag( tag ):
+		return six.text_type(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
 else:
-	trantab = str.maketrans( 'lOo', '100' ) # Translate lower-case l's to ones and Os to zeros. 
-def GetCleanTag( tag ):
-	return six.text_type(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
+	trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. 
+	def GetCleanTag( tag ):
+		return six.text_type(tag).translate(trantab)	# Also, remove any extra spaces.
 
 def FixJChipTag( tag ):
 	return GetCleanTag(tag).zfill(JChipTagLength)

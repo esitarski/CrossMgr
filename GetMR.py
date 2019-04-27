@@ -105,7 +105,7 @@ def GetJSON():
 		raceResults.append( categoryAttr )
 	raceAttr['raceResults'] = raceResults
 
-	return Utils.ToJson raceAttr )
+	return Utils.ToJson( raceAttr )
 	
 from xml.dom import minidom
 if __name__ == '__main__':
