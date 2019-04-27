@@ -12,7 +12,7 @@ from six.moves.queue import Queue, Empty
 
 import unicodedata
 def removeDiacritic( s ):
-	return unicodedata.normalize('NFKD', six.text_type(s)).encode('ascii', 'ignore').decode()
+	return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ascii', 'ignore').decode()
 
 now = datetime.now
 

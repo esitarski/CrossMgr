@@ -261,31 +261,31 @@ def plat_ind_basename( s ):
 def toAscii( s ):
 	if s is None or s == '':
 		return ''
-	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore').decode() if type(s) == six.text_type else six.text_type(s)
+	ret = unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ascii','ignore').decode()
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret
 
 invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
 def RemoveDisallowedFilenameChars( filename ):
-	cleanedFilename = unicodedata.normalize('NFKD', six.text_type(filename).strip()).encode('ASCII', 'ignore').decode()
+	cleanedFilename = unicodedata.normalize('NFKD', u'{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
 	cleanedFilename = cleanedFilename.replace( '/', '_' ).replace( '\\', '_' )
 	return invalidFilenameChars.sub( '', cleanedFilename )
 
 def RemoveDisallowedSheetChars( sheetName ):
-	sheetName = unicodedata.normalize('NFKD', six.text_type(sheetName)).encode('ASCII', 'ignore').decode()
+	sheetName = unicodedata.normalize('NFKD', u'{}'.format(sheetName)).encode('ASCII', 'ignore').decode()
 	return re.sub('[+!#$%&+~`".:;|\\\\/?*\[\] ]+', ' ', sheetName)[:31]		# four backslashes required to match one backslash in re.
 	
-def removeDiacritic(input):
+def removeDiacritic( s ):
 	'''
 	Accept a unicode string, and return a normal string
 	without any diacritical marks.
 	'''
-	if isinstance(input, six.string_types):
-		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore').decode()
-	else:
-		return input
-
+	try:
+		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except:
+		return s
+	
 def GetFileName( rDate, rName, rNum, rMemo ):
 	return u'{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
 		

@@ -67,7 +67,7 @@ class PDF( fpdf.FPDF ):
 		
 		def maxColWidths():
 			cellPad = self.get_string_width( cellSpace )
-			widths = [max(self.get_string_width(row[col]) for row in table) + cellPad for col in six.moves.range(colMax) ]
+			widths = [max(self.get_string_width(row[col]) for row in table) + cellPad for col in range(colMax) ]
 			return widths
 		
 		def widthHeight( fs ):
@@ -127,3 +127,6 @@ class PDF( fpdf.FPDF ):
 		for w in widths:
 			self.xCol.append( self.xCol[-1] + w )
 		return widthMax, heightMax
+	
+	def to_bytes( self ):
+		return self.output( dest='S' ).encode('latin-1', 'ignore') if six.PY3 else self.output( dest='S' )

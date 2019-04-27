@@ -221,7 +221,7 @@ setup = {
 	],
 }
 
-with open(os.path.join(pypiDir,'setup.py'), 'wb') as f:
+with open(os.path.join(pypiDir,'setup.py'), 'w') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
 	for key, value in six.iteritems(setup):

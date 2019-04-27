@@ -94,16 +94,16 @@ del cmdStr
 
 reDateSplit = re.compile( '[/ :]' )		# Characters to split date/time fields.
 
-def removeDiacritic( input ):
+def removeDiacritic( s ):
 	'''
-	Accept a unicode string, and return a unicode string
+	Accept a unicode string, and return a normal string
 	without any diacritical marks.
 	'''
-	if type(input) == str:
-		return input
-	else:
-		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore').decode()
-
+	try:
+		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except:
+		return s
+	
 class Alien( object ):
 	CmdPrefix = chr(1)			# Causes Alien reader to suppress prompt on response.
 	CmdDelim = '\n'				# Delimiter of Alien commands (sent to reader).

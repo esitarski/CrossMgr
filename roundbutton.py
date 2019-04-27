@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------- #
 # ROUNDBUTTON wxPython IMPLEMENTATION
 #
-# Edward Sitarski, @ 07 November 2011
+# Edward Sitarski, @ Updated April 2019
 #
 #
 # TODO List

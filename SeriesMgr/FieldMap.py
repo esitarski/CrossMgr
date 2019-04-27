@@ -1,15 +1,15 @@
 import six
 import unicodedata
 
-def remove_diacritic(input):
+def remove_diacritic( s ):
 	'''
-	Accept a unicode string, and return a normal string (bytes in Python 3)
+	Accept a unicode string, and return a normal string
 	without any diacritical marks.
 	'''
-	if isinstance(input, six.string_types):
-		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore').decode()
-	else:
-		return input
+	try:
+		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except:
+		return s
 
 def normalize( s ):
 	return remove_diacritic( s.replace('.','').replace('_',' ').strip().lower() )

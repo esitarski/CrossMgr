@@ -135,7 +135,7 @@ charwidths = {
 import six
 import unicodedata
 def remove_accents(input_str):
-    nkfd_form = unicodedata.normalize('NFKD', six.text_type(input_str))
+    nkfd_form = unicodedata.normalize('NFKD', u'{}'.format(input_str)).decode()
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
 	
 def colwidth(n):
