@@ -13,7 +13,7 @@ def CmdLine( args ):
 		seriesFileName = args.series
 		try:
 			with open(seriesFileName, 'rb') as fp:
-				SeriesModel.model = pickle.load( fp )
+				SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
 		except IOError:
 			print ( u'cannot open series file "{}".'.format(seriesFileName) )
 			return 1

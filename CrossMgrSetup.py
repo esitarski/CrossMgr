@@ -140,7 +140,7 @@ z.write( newExeName )
 z.close()
 six.print_( 'executable compressed to: ' + newZipName )
 
-# shutil.copy( newZipName, googleDrive  )
+shutil.copy( newZipName, googleDrive  )
 
 from virus_total_apis import PublicApi as VirusTotalPublicApi
 API_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'

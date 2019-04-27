@@ -274,7 +274,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 	fileName = raceInSeries.getFileName()
 	try:
 		with open(fileName, 'rb') as fp, Model.LockRace() as race:
-			race = pickle.load( fp )
+			race = pickle.load( fp, encoding='latin1', errors='replace' )
 			FixExcelSheetLocal( fileName, race )
 			isFinished = race.isFinished()
 			race.tagNums = None

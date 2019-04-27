@@ -2919,10 +2919,10 @@ class MainWin( wx.Frame ):
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
 				try:
-					race = pickle.load( fp, encoding='latin1' )
+					race = pickle.load( fp, encoding='latin1', errors='replace' )
 				except:
 					fp.seek( 0 )
-					race = ModuleUnpickler( fp, module='CrossMgr', encoding='latin1' ).load()
+					race = ModuleUnpickler( fp, module='CrossMgr', encoding='latin1', errors='replace' ).load()
 				race.sortLap = None			# Remove results lap sorting to avoid confusion.
 				isFinished = race.isFinished()
 				race.tagNums = None

@@ -1,1 +1,1 @@
-AppVerName="CrossMgrCamera 2.20.1"
+AppVerName="CrossMgrCamera 3.0.0"

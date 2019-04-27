@@ -153,11 +153,11 @@ six.print_( 'executable compressed.' )
 
 shutil.copy( newZipName, googleDrive )
 
-cmd = 'python virustotal_submit.py "{}"'.format(os.path.abspath(newExeName))
-six.print_( cmd )
-os.chdir( '..' )
-subprocess.call( cmd, shell=True )
-shutil.copy( 'virustotal.html', os.path.join(googleDrive, 'virustotal_v' + vNum + '.html') )
+from virus_total_apis import PublicApi as VirusTotalPublicApi
+API_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
+vt = VirusTotalPublicApi(API_KEY)
+six.print_( 'VirusTotal Scan' )
+vt.scan_file( os.path.abspath(newExeName) )
 
 
 

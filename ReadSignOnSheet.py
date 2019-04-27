@@ -536,9 +536,9 @@ if six.PY2:
 	def GetCleanTag( tag ):
 		return six.text_type(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
 else:
-	trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. 
+	trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. Also, remove any extra spaces.
 	def GetCleanTag( tag ):
-		return six.text_type(tag).translate(trantab)	# Also, remove any extra spaces.
+		return six.text_type(tag).translate(trantab)
 
 def FixJChipTag( tag ):
 	return GetCleanTag(tag).zfill(JChipTagLength)

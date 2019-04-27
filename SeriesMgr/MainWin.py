@@ -704,10 +704,10 @@ table.results tr td.fastest{
 		try:
 			with open(fileName, 'rb') as fp:
 				try:
-					SeriesModel.model = pickle.load( fp )
+					SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
 				except:
 					fp.seek( 0 )
-					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr' ).load()
+					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', , errors='replace' ).load()
 		except IOError:
 			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
