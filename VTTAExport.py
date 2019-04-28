@@ -5,7 +5,7 @@ import Model
 import Utils
 import datetime
 from GetResults import GetResults, GetCategoryDetails
-from FitSheetWrapper import FitSheetWrapper, FitSheetWrapperXLSX
+from FitSheetWrapper import FitSheetWrapperXLSX
 from ReadSignOnSheet import SyncExcelLink
 
 VTTAFields = (
@@ -58,7 +58,7 @@ def VTTAExport( workbook, sheet ):
 	if race.isTimeTrial:
 		raceDiscipline = 'Time Trial'
 
-	sheetFit = FitSheetWrapper( sheet )
+	sheetFit = FitSheetWrapperXLSX( sheet )
 	
 	titleStyle = workbook.add_format({'bold': True})
 	leftAlignStyle = workbook.add_format()

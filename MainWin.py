@@ -3462,7 +3462,7 @@ class MainWin( wx.Frame ):
 
 		wb = xlsxwriter.Workbook( xlFName )
 		sheetCur = wb.add_worksheet( 'Combined Results' )
-		VTTAExport( sheetCur )
+		VTTAExport( wb, sheetCur )
 		
 		try:
 			wb.close()

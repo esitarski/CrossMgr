@@ -339,7 +339,7 @@ class Category(object):
 			i.sort()
 	
 	def getLapDistance( self, lap ):
-		if self.distanceType != Category.DistanceByLap:
+		if lap is None or self.distanceType != Category.DistanceByLap:
 			return None
 		if lap <= 0:
 			return 0
@@ -347,7 +347,7 @@ class Category(object):
 		return self.firstLapDistance if lap == 1 and self.firstLapDistance else self.distance
 	
 	def getDistanceAtLap( self, lap ):
-		if self.distanceType != Category.DistanceByLap:
+		if lap is None or self.distanceType != Category.DistanceByLap:
 			return None
 		if lap == 1 and not (self.firstLapDistance or self.distance):
 			return None
