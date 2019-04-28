@@ -13,8 +13,6 @@ class PDF( fpdf.FPDF ):
 		width *= 1.1
 		height *= 1.25
 		
-		# Encode the text as windows-1252.
-		text = six.text_type(text).encode('windows-1252', 'ignore')
 		fs, fsMin, fsMax = 0.0, 0.0, 720.0
 		
 		def widthHeight( fs ):
@@ -53,8 +51,7 @@ class PDF( fpdf.FPDF ):
 			return
 		leftJustifyCols = set( leftJustifyCols or [] )
 		
-		# Encode the entire table as windows-1252.
-		table = [[six.text_type(v).encode('windows-1252', 'ignore') for v in row] for row in table]
+		table = [[six.text_type(v) for v in row] for row in table]
 		colMax = max( len(row) for row in table )
 		for row in table:
 			if len(row) < colMax:

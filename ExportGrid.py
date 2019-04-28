@@ -533,7 +533,6 @@ class ExportGrid( object ):
 				s = u'{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
 			else:
 				s = u'{} {}'.format(_('Page'), pageNumber)
-			s = six.text_type(s).encode( 'windows-1252' )
 			write_text( widthPix - pdf.get_string_width(s) - borderPix, yFooter, s )
 			
 	def toExcelSheet( self, sheet ):

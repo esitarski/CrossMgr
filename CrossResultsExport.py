@@ -74,7 +74,7 @@ def CrossResultsExport( fname ):
 	
 	lapHeaders = ['lap'] * maxLaps
 			
-	with io.open(fname, 'w', encoding='utf-8') as csvFile:
+	with io.open(fname, 'w', encoding='utf-8', newline='') as csvFile:
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
 		csvWriter.writerow( crossResultsFields + lapHeaders )
 		
@@ -83,7 +83,7 @@ def CrossResultsExport( fname ):
 			if not results:
 				continue
 			
-			csvWriter.writerow( [six.text_type(cat.fullname).encode('utf-8')] )
+			csvWriter.writerow( [cat.fullname] )
 			
 			for rr in results:
 				try:
@@ -110,7 +110,7 @@ def CrossResultsExport( fname ):
 						lapTime = ''
 					dataRow.append( lapTime )
 				
-				csvWriter.writerow( [six.text_type(d).encode('utf-8') for d in dataRow] )
+				csvWriter.writerow( [six.text_type(d) for d in dataRow] )
 				
 			csvWriter.writerow( [] )		# Blank line separates each category.
 			

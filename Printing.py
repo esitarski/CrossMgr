@@ -416,7 +416,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			if self.dir and not os.path.isdir( self.dir ):
 				os.mkdir( self.dir )
 			fname = u'{fileBase}.pdf'.format( fileBase=self.fileBase )
-			self.pdf.set_title( six.text_type(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
+			self.pdf.set_title( six.text_type(os.path.splitext(fname)[0].replace('-', ' ')) )
 			fname = os.path.join( self.dir, fname )
 			self.pdf.output( fname, 'F' )
 			self.lastFName = fname
