@@ -1585,7 +1585,7 @@ class MainWin( wx.Frame ):
 			
 			fname = None
 			success = True
-			for page in six.moves.range(1, pages+1):
+			for page in range(1, pages+1):
 				try:
 					printout.OnPrintPage( page )
 					if fname is None:
@@ -1636,7 +1636,7 @@ class MainWin( wx.Frame ):
 		fname = None
 		success = True
 		with Utils.UIBusy():
-			for page in six.moves.range(1, pages+1):
+			for page in range(1, pages+1):
 				try:
 					printout.OnPrintPage( page )
 					if fname is None:
@@ -2085,8 +2085,9 @@ class MainWin( wx.Frame ):
 			if not silent:
 				Utils.LaunchApplication( fname )
 				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
-		except:
-			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+		except Exception as e:
+			logException( e, sys.exc_info() )
+			Utils.MessageOK(self, u'{}\n\t\t{}\n({}).'.format(_('Cannot write HTML file'), e, fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2097,6 +2098,7 @@ class MainWin( wx.Frame ):
 		try:
 			WebServer.WriteHtmlIndexPage()
 		except Exception as e:
+			logException( e, sys.exc_info() )
 			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('HTML Index Failure'), e),
 							_('Error'), iconMask=wx.ICON_ERROR )
 	
@@ -3603,11 +3605,11 @@ class MainWin( wx.Frame ):
 			
 			url = 'http://www.{Destination}.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
 				Destination = destination.lower(),
-				RaceName	= quote(six.text_type(raceName).encode()),
-				RaceDate	= quote(six.text_type(raceDate).encode()),
-				MD5			= hashlib.md5( race.title + raceDate ).hexdigest(),
-				Location	= quote(six.text_type(u', '.join([race.city, race.stateProv, race.country])).encode()),
-				PresentedBy = quote(six.text_type(race.organizer).encode()),
+				RaceName	= quote(six.text_type(raceName)),
+				RaceDate	= quote(six.text_type(raceDate)),
+				MD5			= hashlib.md5( (race.title + raceDate).encode() ).hexdigest(),
+				Location	= quote(six.text_type(u', '.join([race.city, race.stateProv, race.country]))),
+				PresentedBy = quote(six.text_type(race.organizer)),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
@@ -3652,7 +3654,7 @@ class MainWin( wx.Frame ):
 		try:
 			attr, name, menuItem, dialog = self.menuIdToWindowInfo[menuId]
 		except KeyError:
-			return
+			returnm
 		menuItem.Check( False )
 	
 	@logCall
@@ -3682,7 +3684,7 @@ class MainWin( wx.Frame ):
 		try:
 			webbrowser.open( getHelpURL('QuickStart.html') )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def menuHelpSearch( self, event ):
@@ -3693,28 +3695,28 @@ class MainWin( wx.Frame ):
 		try:
 			webbrowser.open( getHelpURL('Main.html') )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def onContextHelp( self, event ):
 		try:
 			webbrowser.open( getHelpURL(self.attrClassName[self.notebook.GetSelection()][2] + '.html') )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 		
 	@logCall
 	def menuWebIndexPage( self, event ):
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage(), new = 2, autoraise = True )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def menuWebQRCodePage( self, event ):
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new = 2, autoraise = True )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def menuAbout( self, event ):

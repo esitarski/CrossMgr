@@ -134,9 +134,15 @@ charwidths = {
 # to set that font as the standard font in Excel and count pixels.
 import six
 import unicodedata
-def remove_accents(input_str):
-    nkfd_form = unicodedata.normalize('NFKD', u'{}'.format(input_str)).decode()
-    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+def remove_accents( s ):
+	'''
+	Accept a unicode string, and return a normal string
+	without any diacritical marks.
+	'''
+	try:
+		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except:
+		return s
 	
 def colwidth(n):
     '''Translate human-readable units to BIFF column width units'''

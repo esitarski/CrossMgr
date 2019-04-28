@@ -371,14 +371,14 @@ def getIndexPage( share=True ):
 def WriteHtmlIndexPage():
 	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
 	try:
-		with io.open(fname, 'r', encoding='utf-8') as f:
+		with io.open(fname, 'rb') as f:	# Read as bytes as the index pages is already utf-8 encoded.
 			previousContent = f.read()
 	except Exception as e:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
 	if content != previousContent:
-		with io.open(fname, 'w', encoding='utf-8') as f:
+		with io.open(fname, 'wb') as f:	# Write as bytes as the index pages is already utf-8 encoded.
 			f.write( getIndexPage(share=False) )
 	return fname
 
