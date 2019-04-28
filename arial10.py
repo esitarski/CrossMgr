@@ -132,7 +132,6 @@ charwidths = {
 # what Excel reports as the column width is wonky between 0 and 1.
 # The only way I know to find out the padding for a desired font is
 # to set that font as the standard font in Excel and count pixels.
-import six
 import unicodedata
 def remove_accents( s ):
 	'''

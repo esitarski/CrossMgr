@@ -1726,8 +1726,8 @@ class MainWin( wx.Frame ):
 		if silent:
 			try:
 				wb.close()
-			except:
-				pass
+			except Exception as e:
+				logException( e, sys.exc_info() )
 			return
 			
 		try:
@@ -1735,7 +1735,8 @@ class MainWin( wx.Frame ):
 			if self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
-		except IOError:
+		except IOError as e:
+			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,

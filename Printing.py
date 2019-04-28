@@ -444,10 +444,10 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 		if not self.pdf:
 			self.pdf = PDF( orientation = 'L' if self.orientation == wx.LANDSCAPE else 'P' )
 			self.pdf.set_font( 'Arial', '', 12 )
-			self.pdf.set_author( six.text_type(getpass.getuser()).encode('iso-8859-1','ignore') )
-			self.pdf.set_keywords( six.text_type('CrossMgr Results').encode('iso-8859-1','ignore') )
-			self.pdf.set_creator( six.text_type(Version.AppVerName).encode('iso-8859-1','ignore') )
-			self.pdf.set_title( six.text_type(os.path.splitext(fname)[0].replace('-', ' ')).encode('iso-8859-1','ignore') )
+			self.pdf.set_author( getpass.getuser() )
+			self.pdf.set_keywords( 'CrossMgr Results' )
+			self.pdf.set_creator( Version.AppVerName )
+			self.pdf.set_title( os.path.splitext(fname)[0].replace('-', ' ') )
 		
 		exportGrid.drawToFitPDF( *([self.pdf, self.orientation] + self.pageInfo[page][1:-1]) )
 		
