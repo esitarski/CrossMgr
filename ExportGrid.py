@@ -512,7 +512,6 @@ class ExportGrid( object ):
 		yPixMax = yPix + tableHeight
 		if url:
 			yPix = yPixMax + textHeight
-			url = six.text_type(url).encode('windows-1252', 'ignore')
 			write_link( widthPix - borderPix - pdf.get_string_width(url), yPix+h/2, url, url )
 		
 		# Put CrossMgr branding at the bottom of the page.
