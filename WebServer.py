@@ -78,8 +78,8 @@ def gzipEncode( content ):
 		return out.getvalue()
 	else:
 		out = io.BytesIO()
-		with gzip.GzipFile( fileobj=out, mode='w', compresslevel=5 ) as f:
-			f.write( content.encode() )
+		with gzip.GzipFile( fileobj=out, mode='wb', compresslevel=5 ) as f:
+			f.write( content.encode() if not isinstance(content, bytes) else content )
 		return out.getbuffer()
 
 def validContent( content ):
