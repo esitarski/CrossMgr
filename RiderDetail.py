@@ -1381,12 +1381,13 @@ class RiderDetail( wx.Panel ):
 			leaderTimes, leaderNums = race.getLeaderTimesNums(waveCategory)
 			appearedInLap = [False] * (maxLap + 1)
 			appearedInLap[0] = True
-			for e in entries:
-				i = bisect.bisect_left( leaderTimes, e.t, 0, len(leaderTimes)-1 )
-				if e.t < leaderTimes[i]:
-					i -= 1
-				i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
-				appearedInLap[i] = True
+			if leaderTimes is not None:
+				for e in entries:
+					i = bisect.bisect_left( leaderTimes, e.t, 0, len(leaderTimes)-1 )
+					if e.t < leaderTimes[i]:
+						i -= 1
+					i = min( i, len(appearedInLap) - 1 )	# Handle if rider would have been lapped again on the last lap.
+					appearedInLap[i] = True
 
 			try:
 				missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
