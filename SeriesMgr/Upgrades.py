@@ -5,6 +5,7 @@ import wx.lib.agw.floatspin as FS
 import os
 import re
 import sys
+import six
 import SeriesModel
 import Utils
 
@@ -41,7 +42,7 @@ class Upgrades(wx.Panel):
 		fgs.Add( wx.StaticText(self, label=u'{}:'.format('Category Upgrade Progression')) )
 		fgs.Add( wx.StaticText(self, label=u'{}:'.format('Factor')) )
 		self.upgradePaths, self.upgradeFactors = [], []
-		for i in xrange(8):
+		for i in six.moves.range(8):
 			self.upgradePaths.append( wx.TextCtrl(self) )
 			self.upgradeFactors.append( FS.FloatSpin(self, min_val=0.0, max_val=1.0, increment=0.01, value=0.5, agwStyle=FS.FS_RIGHT ) )
 			self.upgradeFactors[-1].SetFormat( '%f' )
@@ -59,14 +60,14 @@ class Upgrades(wx.Panel):
 						
 	def refresh( self ):
 		model = SeriesModel.model
-		for row in xrange(len(self.upgradePaths)):
+		for row in six.moves.range(len(self.upgradePaths)):
 			self.upgradePaths[row].SetValue(model.upgradePaths[row] if row < len(model.upgradePaths) else u'' )			
 			self.upgradeFactors[row].SetValue(model.upgradeFactors[row] if row < len(model.upgradeFactors) else 0.5 )
 	
 	def commit( self ):
 		upgradePaths = []
 		upgradeFactors = []
-		for row in xrange(len(self.upgradePaths)):
+		for row in six.moves.range(len(self.upgradePaths)):
 			path = self.upgradePaths[row].GetValue().strip()
 			components = [re.sub(r'\s+', u' ', p).strip() for p in path.split(u',')]
 			cleanPath = u', '.join( c for c in components if c )

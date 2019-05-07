@@ -1,4 +1,5 @@
 import wx
+import six
 import random
 import bisect
 import sys
@@ -8,7 +9,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
-	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in xrange(len+1)]
+	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in six.moves.range(len+1)]
 	return grad[1:]
 	
 def makePastelColours( len = 50 ):
@@ -27,7 +28,7 @@ def ShimazakiMethod( data, minN = 2, maxN = None ):
 	# Default return: all data points in one bin.
 	best = ([len(data)], sys.float_info.max, 1, T)
 
-	for N in xrange(minN, min(len(data), maxN or len(data))):
+	for N in six.moves.range(minN, min(len(data), maxN or len(data))):
 		width = T / N
 		bins = [0] * N
 		for x in data:
@@ -47,7 +48,7 @@ def ShimazakiMethod( data, minN = 2, maxN = None ):
 def BinByInterval( data, width, minN = 2 ):
 	dataMin = float(min(data))
 	N = int((float(max(data)) - dataMin) / width) + 1
-	bins = [0 for i in xrange(N)]
+	bins = [0 for i in six.moves.range(N)]
 	for x in data:
 		try:
 			bins[int((x-dataMin) / width)] += 1
@@ -69,7 +70,7 @@ def BinBy5Minute( data, minN = 2, maxN = None ):
 			
 class Histogram(wx.Control):
 	BinFunc = [ShimazakiMethod, BinBySecond, BinBy30Second, BinByMinute, BinBy5Minute]
-	BinOptionAuto, BinOptionBySecond, BinOptionBy30Second, BinOptionByMinute, BinOptionBy5Minute = list(xrange(len(BinFunc)))
+	BinOptionAuto, BinOptionBySecond, BinOptionBy30Second, BinOptionByMinute, BinOptionBy5Minute = list(six.moves.range(len(BinFunc)))
 	
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
@@ -148,8 +149,8 @@ class Histogram(wx.Control):
 		self.bins = None
 		self.iSelect = None
 		self.data = []
-		self.label = [unicode(lab) for lab in label]
-		self.category = [unicode(cat) for cat in category]
+		self.label = [six.text_type(lab) for lab in label]
+		self.category = [six.text_type(cat) for cat in category]
 		if data:
 			self.data = [float(x) for x in data]
 			self.setBins()
@@ -190,7 +191,7 @@ class Histogram(wx.Control):
 
 		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
 			
-		xLeft = dc.GetTextExtent( unicode(self.barMax) )[0] + 4 + tickBorder
+		xLeft = dc.GetTextExtent( six.text_type(self.barMax) )[0] + 4 + tickBorder
 		xRight = width - 8 - tickBorder
 		yBottom = height - textHeight - 8
 		yTop = textHeight + 8
@@ -207,7 +208,7 @@ class Histogram(wx.Control):
 		if tStart < int(self.dataMin):
 			tStart += d
 		dc.SetPen(wx.Pen('light gray', 1))
-		for t in xrange(tStart, int(self.dataMax), d):
+		for t in six.moves.range(tStart, int(self.dataMax), d):
 			x = xLeft + (t - self.dataMin) * dFactor
 			if x < xLeft:
 				continue
@@ -227,7 +228,7 @@ class Histogram(wx.Control):
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		dFactor = (yBottom - yTop) / float(self.barMax)
 		dc.SetPen(wx.Pen('light gray', 1))
-		for i in xrange(0, self.barMax+1, d):
+		for i in six.moves.range(0, self.barMax+1, d):
 			s = u'{}'.format(i)
 			y = yBottom - int(i * dFactor)
 			w, h = dc.GetTextExtent(s)
@@ -243,9 +244,9 @@ class Histogram(wx.Control):
 		boxWidth = self.rectField[2] / len(self.bins)
 		boxHeight = self.rectField[3] / self.barMax
 		lenBins = len(self.bins)
-		iBin = [0 for i in xrange(lenBins)]
-		xBin = [xLeft + int(i * boxWidth) for i in xrange(len(self.bins)+1)]
-		yHeight = [yBottom - int(i * boxHeight) for i in xrange(self.barMax+1)]
+		iBin = [0 for i in six.moves.range(lenBins)]
+		xBin = [xLeft + int(i * boxWidth) for i in six.moves.range(len(self.bins)+1)]
+		yHeight = [yBottom - int(i * boxHeight) for i in six.moves.range(self.barMax+1)]
 		self.coords = {}
 		brushes = [wx.Brush(c) for c in self.categoryColor]
 		for i, (v, lab, cat) in enumerate(zip(self.data, self.label, self.category)):
@@ -317,7 +318,7 @@ if __name__ == '__main__':
 1.83 4.13 1.83 4.65 4.20 3.93 4.33 1.83 4.53 2.03 4.18 4.43
 4.07 4.13 3.95 4.10 2.72 4.58 1.90 4.50 1.95 4.83 4.12'''.split()]
 
-	data = sorted(60.0*60.0 + random.normalvariate(10.0*60.0, 5.0*60.0) for i in xrange(100))
+	data = sorted(60.0*60.0 + random.normalvariate(10.0*60.0, 5.0*60.0) for i in six.moves.range(100))
 
 	optimal = ShimazakiMethod( data )
 	sys.stdout.write( '{}\n'.format(optimal) )
@@ -338,7 +339,7 @@ if __name__ == '__main__':
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
-	#histogram.SetData( [random.normalvariate(t, tVar) for x in xrange(90)] )
+	#histogram.SetData( [random.normalvariate(t, tVar) for x in six.moves.range(90)] )
 	histogram.SetData( data, [], [random.randint(0,5) for d in data] )
 
 	mainWin.Show()

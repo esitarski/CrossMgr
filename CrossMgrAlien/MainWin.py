@@ -1,13 +1,13 @@
 import sys
+import six
 import threading
 import socket
 import atexit
 import time
 from roundbutton import RoundButton
 import Utils
-from Queue import Empty
+from six.moves.queue import Queue, Empty
 from threading import Thread as Process
-from Queue import Queue
 from Alien import AlienServer
 import Alien
 from Alien2JChip import CrossMgrServer
@@ -35,45 +35,45 @@ CrossMgrPort = 53135
 NotifyPort = CrossMgrPort + 1
 
 clipboard_xpm = [
-"16 15 23 1",
-"+ c #769CDA",
-": c #DCE6F6",
-"X c #3365B7",
-"* c #FFFFFF",
-"o c #9AB6E4",
-"< c #EAF0FA",
-"# c #B1C7EB",
-". c #6992D7",
-"3 c #F7F9FD",
-", c #F0F5FC",
-"$ c #A8C0E8",
-"  c None",
-"- c #FDFEFF",
-"& c #C4D5F0",
-"1 c #E2EAF8",
-"O c #89A9DF",
-"= c #D2DFF4",
-"4 c #FAFCFE",
-"2 c #F5F8FD",
-"; c #DFE8F7",
-"% c #B8CCEC",
-"> c #E5EDF9",
-"@ c #648FD6",
-" .....XX        ",
-" .oO+@X#X       ",
-" .$oO+X##X      ",
-" .%$o........   ",
-" .&%$.*=&#o.-.  ",
-" .=&%.*;=&#.--. ",
-" .:=&.*>;=&.... ",
-" .>:=.*,>;=&#o. ",
-" .<1:.*2,>:=&#. ",
-" .2<1.*32,>:=&. ",
-" .32<.*432,>:=. ",
-" .32<.*-432,>:. ",
-" .....**-432,>. ",
-"     .***-432,. ",
-"     .......... "
+b"16 15 23 1",
+b"+ c #769CDA",
+b": c #DCE6F6",
+b"X c #3365B7",
+b"* c #FFFFFF",
+b"o c #9AB6E4",
+b"< c #EAF0FA",
+b"# c #B1C7EB",
+b". c #6992D7",
+b"3 c #F7F9FD",
+b", c #F0F5FC",
+b"$ c #A8C0E8",
+b"  c None",
+b"- c #FDFEFF",
+b"& c #C4D5F0",
+b"1 c #E2EAF8",
+b"O c #89A9DF",
+b"= c #D2DFF4",
+b"4 c #FAFCFE",
+b"2 c #F5F8FD",
+b"; c #DFE8F7",
+b"% c #B8CCEC",
+b"> c #E5EDF9",
+b"@ c #648FD6",
+b" .....XX        ",
+b" .oO+@X#X       ",
+b" .$oO+X##X      ",
+b" .%$o........   ",
+b" .&%$.*=&#o.-.  ",
+b" .=&%.*;=&#.--. ",
+b" .:=&.*>;=&.... ",
+b" .>:=.*,>;=&#o. ",
+b" .<1:.*2,>:=&#. ",
+b" .2<1.*32,>:=&. ",
+b" .32<.*432,>:=. ",
+b" .32<.*-432,>:. ",
+b" .....**-432,>. ",
+b"     .***-432,. ",
+b"     .......... "
 ]
 
 
@@ -251,9 +251,9 @@ class MainWin( wx.Frame ):
 		
 		gs = wx.GridSizer( rows=0, cols=4, hgap=2, vgap=2 )
 		self.antennas = []
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			gs.Add( wx.StaticText(self, wx.ID_ANY, '{}'.format(i)), flag=wx.ALIGN_CENTER )
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
 				cb.SetValue( True )
@@ -503,7 +503,7 @@ class MainWin( wx.Frame ):
 		
 	def getAntennaStr( self ):
 		s = []
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			if self.antennas[i].GetValue():
 				s.append( '%d' % i )
 		if not s:
@@ -514,7 +514,7 @@ class MainWin( wx.Frame ):
 		
 	def setAntennaStr( self, s ):
 		antennas = set( int(a) for a in s.split() )
-		for i in xrange(4):
+		for i in six.moves.range(4):
 			self.antennas[i].SetValue( i in antennas )
 	
 	def writeOptions( self ):
@@ -579,7 +579,7 @@ def disable_stdout_buffering():
 	sys.stdout.close()
 	os.dup2(temp_fd, fileno)
 	os.close(temp_fd)
-	sys.stdout = os.fdopen(fileno, "w", 0)
+	sys.stdout = os.fdopen(fileno, "w")
 		
 mainWin = None
 redirectFileName = None

@@ -1,8 +1,8 @@
 import wx
 import os
+import six
 import time
 import subprocess
-import cStringIO as StringIO
 from AddPhotoHeader import AddPhotoHeader
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
 from ComputeSpeed import ComputeSpeed

@@ -1,6 +1,7 @@
 from __future__ import print_function
 import re
-	
+import six
+
 #------------------------------------------------------------------------
 
 class RangeCheck( object ):
@@ -32,11 +33,11 @@ class RangeCheck( object ):
 					else:
 						lo, hi = [int(n) for n in lohi]
 						if lo < hi:
-							self.include.update( xrange(lo, hi+1) )
+							self.include.update( six.moves.range(lo, hi+1) )
 				elif fields == 3:
 					lo, hi = [int(n) for n in lohi[1:]]
 					if lo < hi:
-						self.exclude.update( xrange(lo, hi+1) )
+						self.exclude.update( six.moves.range(lo, hi+1) )
 				
 			except:
 				pass
@@ -116,9 +117,9 @@ class RangeCheck( object ):
 		
 if __name__ == '__main__':
 	r = RangeCheck( '--100-200-300,,,-,100-199,-120-130,asdfasdf,-161,-21' )
-	print( r.include )
-	print( r )
-	print( repr(r) )
-	print( 'prefix:', r.getNumericPrefix() )
-	print( [i for i in xrange(300) if i in r] )
+	six.print_( r.include )
+	six.print_( r )
+	six.print_( repr(r) )
+	six.print_( 'prefix:', r.getNumericPrefix() )
+	six.print_( [i for i in six.moves.range(300) if i in r] )
 	

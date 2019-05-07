@@ -4,10 +4,11 @@ import wx.grid as gridlib
 import os
 import io
 import cgi
+import six
+from six.moves.urllib.parse import quote
 import sys
 import urllib
 import base64
-import StringIO
 import datetime
 
 import Utils
@@ -39,7 +40,7 @@ def getHeaderGraphicBase64():
 		if b64:
 			return b64
 	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
-	with open(graphicFName, 'rb') as f:
+	with io.open(graphicFName, 'rb') as f:
 		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
 
 def formatTeamResults( scoreByPoints, rt ):
@@ -96,7 +97,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
 	def write( s ):
-		html.write( unicode(s) )
+		html.write( six.text_type(s) )
 	
 	with tag(html, 'html'):
 		with tag(html, 'head'):
@@ -422,7 +423,7 @@ function sortTableId( iTable, iCol ) {
 								'name':"categorySelect",
 								'onclick':"selectCategory({});".format(iTable)} ):
 							with tag(html, 'span'):
-								write( unicode(cgi.escape(categoryName)) )
+								write( six.text_type(cgi.escape(categoryName)) )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
@@ -451,7 +452,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( unicode(cgi.escape(col).replace('\n', '<br/>\n')) )
+										write( six.text_type(cgi.escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -461,25 +462,25 @@ function sortTableId( iTable, iCol ) {
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
 										if r[2]:
-											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
-												write( unicode(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
+												write( six.text_type(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
-											write( unicode(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											write( six.text_type(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
-												write( unicode(r[0].strftime('%b %d, %Y')) )
+												write( six.text_type(r[0].strftime('%b %d, %Y')) )
 						with tag(html, 'tbody'):
 							for pos, (team, result, gap, rrs) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( unicode(pos+1) )
+										write( six.text_type(pos+1) )
 									with tag(html, 'td'):
-										write( unicode(team or u'') )
+										write( six.text_type(team or u'') )
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( unicode(result or '') )
+										write( six.text_type(result or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
-										write( unicode(gap or '') )
+										write( six.text_type(gap or '') )
 									for rt in rrs:
 										with tag(html, 'td', {'class': 'centerAlign noprint'}):
 											write( formatTeamResults(scoreByPoints, rt) )
@@ -541,7 +542,7 @@ function sortTableId( iTable, iCol ) {
 								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
 								isFirst = False
 						if model.numPlacesTieBreaker != 0:
-							finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
+							finishOrdinals = [Utils.ordinal(p+1) for p in six.moves.range(model.numPlacesTieBreaker)]
 							if model.numPlacesTieBreaker == 1:
 								finishStr = finishOrdinals[0]
 							else:
@@ -786,14 +787,14 @@ class TeamResults(wx.Panel):
 		self.setColNames( headerNames )
 		
 		for row, (team, points, gap, rrs) in enumerate(results):
-			self.grid.SetCellValue( row, 0, unicode(row+1) )
-			self.grid.SetCellValue( row, 1, unicode(team) )
-			self.grid.SetCellValue( row, 2, unicode(points) )
-			self.grid.SetCellValue( row, 3, unicode(gap) )
+			self.grid.SetCellValue( row, 0, six.text_type(row+1) )
+			self.grid.SetCellValue( row, 1, six.text_type(team) )
+			self.grid.SetCellValue( row, 2, six.text_type(points) )
+			self.grid.SetCellValue( row, 3, six.text_type(gap) )
 			for q, rt in enumerate(rrs):
 				self.grid.SetCellValue( row, 4 + q, formatTeamResults(scoreByPoints, rt) )
 				
-			for c in xrange( 0, len(headerNames) ):
+			for c in six.moves.range( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
 		
@@ -808,8 +809,8 @@ class TeamResults(wx.Panel):
 					return numberMax
 				
 			data = []
-			for r in xrange(0, self.grid.GetNumberRows()):
-				rowOrig = [self.grid.GetCellValue(r, c) for c in xrange(0, self.grid.GetNumberCols())]
+			for r in six.moves.range(0, self.grid.GetNumberRows()):
+				rowOrig = [self.grid.GetCellValue(r, c) for c in six.moves.range(0, self.grid.GetNumberCols())]
 				rowCmp = rowOrig[:]
 				rowCmp[0] = int(rowCmp[0])
 				rowCmp[4] = Utils.StrToSeconds(rowCmp[4])

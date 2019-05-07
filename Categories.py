@@ -1,6 +1,7 @@
 import wx
 import re
 import os
+import six
 import Utils
 import Model
 from Undo import undo
@@ -74,9 +75,9 @@ def getExportGrid():
 	
 	if allZeroStarters:
 		colnames.remove( _('Starters') )
-	data = [[None] * len(catData) for i in xrange(len(colnames))]
-	for row in xrange(len(catData)):
-		for col in xrange(len(colnames)):
+	data = [[None] * len(catData) for i in six.moves.range(len(colnames))]
+	for row in six.moves.range(len(catData)):
+		for col in six.moves.range(len(colnames)):
 			data[col][row] = catData[row][col]
 			
 	exportGrid = ExportGrid( title = title, colnames = colnames, data = data )
@@ -684,7 +685,7 @@ and remove them from other categories.'''),
 			self.grid.SetCellBackgroundColour( row, col, colour if col in self.dependentCols else activeColour )
 		
 	def fixCells( self, event = None ):
-		for row in xrange(self.grid.GetNumberRows()):
+		for row in six.moves.range(self.grid.GetNumberRows()):
 			active = self.grid.GetCellValue( row, self.iCol['active'] )[:1] in 'TtYy1'
 			catType = self.CategoryTypeChoices.index(self.grid.GetCellValue(row, self.iCol['catType']) )
 			self.fixRow( row, catType, active )
@@ -774,7 +775,7 @@ and remove them from other categories.'''),
 			if race is None:
 				return
 			
-			for c in xrange(self.grid.GetNumberCols()):
+			for c in six.moves.range(self.grid.GetNumberCols()):
 				if self.grid.GetColLabelValue(c).startswith(_('Distance')):
 					self.grid.SetColLabelValue( c, u'{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
 					break
@@ -819,8 +820,8 @@ and remove them from other categories.'''),
 			if race is None:
 				return
 			numStrTuples = []
-			for r in xrange(self.grid.GetNumberRows()):
-				values = { name:self.grid.GetCellValue(r, c) for name, c in self.iCol.iteritems()
+			for r in six.moves.range(self.grid.GetNumberRows()):
+				values = { name:self.grid.GetCellValue(r, c) for name, c in six.iteritems(self.iCol)
 																			if name not in self.computedFields }
 				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
 				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
@@ -836,7 +837,7 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in xrange(1, 200, 2)),'gender':'Men'},
+							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in six.moves.range(1, 200, 2)),'gender':'Men'},
 							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
 							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
 							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},

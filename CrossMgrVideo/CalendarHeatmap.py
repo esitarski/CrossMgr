@@ -64,6 +64,7 @@ Version 0.1
 """
 
 import wx
+import six
 import wx.lib.agw.artmanager as AM
 from math import sqrt
 import datetime
@@ -361,7 +362,7 @@ class CalendarHeatmap(wx.Control):
 		colour = self.GetForegroundColour()
 		textColour = am.DarkColour(wx.WHITE, 3.0) if am.IsDark(colour) else am.LightColour(wx.BLACK, 3.0)
 		
-		valueMax = max( v for v in self.dates.itervalues() )
+		valueMax = max( v for v in self.dates.values() )
 		
 		gc = wx.GraphicsContext.Create(dc)
 		
@@ -420,7 +421,7 @@ if __name__ == '__main__':
 	dates = [(d,random.randint(0,1000)) for d in daterange(datetime.date(year, 1, 1), datetime.date(year+1, 1, 1))]
 	chm = CalendarHeatmap( mainWin, dates=dates )
 	def onPress( event ):
-		print 'Pressed: ', event.GetDate()
+		six.print_( 'Pressed: ', event.GetDate() )
 	
 	chm.Bind( wx.EVT_BUTTON, onPress )
 	vs.Add( chm )

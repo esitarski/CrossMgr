@@ -4,10 +4,10 @@ import wx.grid as gridlib
 import os
 import io
 import cgi
+import six
+from six.moves.urllib.parse import quote
 import sys
-import urllib
 import base64
-import StringIO
 import datetime
 
 import Utils
@@ -83,7 +83,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
 	def write( s ):
-		html.write( unicode(s) )
+		html.write( six.text_type(s) )
 	
 	with tag(html, 'html'):
 		with tag(html, 'head'):
@@ -412,7 +412,7 @@ function sortTableId( iTable, iCol ) {
 								'name':"categorySelect",
 								'onclick':"selectCategory({});".format(iTable)} ):
 							with tag(html, 'span'):
-								write( unicode(cgi.escape(categoryName)) )
+								write( six.text_type(cgi.escape(categoryName)) )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
@@ -440,7 +440,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( unicode(cgi.escape(col).replace('\n', '<br/>\n')) )
+										write( six.text_type(cgi.escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -451,14 +451,14 @@ function sortTableId( iTable, iCol ) {
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
 										if r[2]:
-											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], urllib.quote(categoryName.encode('utf8')))) ):
-												write( unicode(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
+												write( six.text_type(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
-											write( unicode(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											write( six.text_type(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
-												write( unicode(r[0].strftime('%b %d, %Y')) )
+												write( six.text_type(r[0].strftime('%b %d, %Y')) )
 										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
@@ -467,21 +467,21 @@ function sortTableId( iTable, iCol ) {
 							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( unicode(pos+1) )
+										write( six.text_type(pos+1) )
 									with tag(html, 'td'):
-										write( unicode(name or u'') )
+										write( six.text_type(name or u'') )
 									with tag(html, 'td', {'class':'noprint'}):
 										if licenseLinkTemplate and license:
 											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
-												write( unicode(license or u'') )
+												write( six.text_type(license or u'') )
 										else:
-											write( unicode(license or u'') )
+											write( six.text_type(license or u'') )
 									with tag(html, 'td'):
-										write( unicode(team or '') )
+										write( six.text_type(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( unicode(points or '') )
+										write( six.text_type(points or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
-										write( unicode(gap or '') )
+										write( six.text_type(gap or '') )
 									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
 										if rPoints:
 											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
@@ -617,7 +617,7 @@ function sortTableId( iTable, iCol ) {
 								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
 								isFirst = False
 						if model.numPlacesTieBreaker != 0:
-							finishOrdinals = [Utils.ordinal(p+1) for p in xrange(model.numPlacesTieBreaker)]
+							finishOrdinals = [Utils.ordinal(p+1) for p in six.moves.range(model.numPlacesTieBreaker)]
 							if model.numPlacesTieBreaker == 1:
 								finishStr = finishOrdinals[0]
 							else:
@@ -639,7 +639,7 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'h2'):
 							write( u"Upgrades Progression" )
 						with tag(html, 'ol'):
-							for i in xrange(len(model.upgradePaths)):
+							for i in six.moves.range(len(model.upgradePaths)):
 								with tag(html, 'li'):
 									write( u"{}: {:.2f} points in pre-upgrade category carried forward".format(model.upgradePaths[i], model.upgradeFactors[i]) )
 			#-----------------------------------------------------------------------------
@@ -879,13 +879,13 @@ class Results(wx.Panel):
 		self.setColNames( headerNames )
 		
 		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
-			self.grid.SetCellValue( row, 0, unicode(row+1) )
-			self.grid.SetCellValue( row, 1, unicode(name or u'') )
+			self.grid.SetCellValue( row, 0, six.text_type(row+1) )
+			self.grid.SetCellValue( row, 1, six.text_type(name or u'') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			self.grid.SetCellValue( row, 2, unicode(license or u'') )
-			self.grid.SetCellValue( row, 3, unicode(team or u'') )
-			self.grid.SetCellValue( row, 4, unicode(points) )
-			self.grid.SetCellValue( row, 5, unicode(gap) )
+			self.grid.SetCellValue( row, 2, six.text_type(license or u'') )
+			self.grid.SetCellValue( row, 3, six.text_type(team or u'') )
+			self.grid.SetCellValue( row, 4, six.text_type(points) )
+			self.grid.SetCellValue( row, 5, six.text_type(gap) )
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 6 + q,
 					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
@@ -895,7 +895,7 @@ class Results(wx.Panel):
 					else u''
 				)
 				
-			for c in xrange( 0, len(headerNames) ):
+			for c in six.moves.range( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
 		
@@ -910,8 +910,8 @@ class Results(wx.Panel):
 					return numberMax
 				
 			data = []
-			for r in xrange(0, self.grid.GetNumberRows()):
-				rowOrig = [self.grid.GetCellValue(r, c) for c in xrange(0, self.grid.GetNumberCols())]
+			for r in six.moves.range(0, self.grid.GetNumberRows()):
+				rowOrig = [self.grid.GetCellValue(r, c) for c in six.moves.range(0, self.grid.GetNumberCols())]
 				rowCmp = rowOrig[:]
 				rowCmp[0] = int(rowCmp[0])
 				rowCmp[4] = Utils.StrToSeconds(rowCmp[4])

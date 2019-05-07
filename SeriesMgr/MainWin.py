@@ -2,6 +2,7 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import wx.adv as adv
 import sys
+import six
 import os
 import re
 import datetime
@@ -28,9 +29,9 @@ except:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 	
-import cPickle as pickle
+import six.moves.cPickle as pickle
 from argparse import ArgumentParser
-import StringIO
+StringIO = six.moves.StringIO
 
 import Dependencies
 
@@ -51,6 +52,7 @@ import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
 from SetGraphic			import SetGraphicDialog
+from ModuleUnpickler	import ModuleUnpickler
 import CmdLine
 
 #----------------------------------------------------------------------------------
@@ -309,25 +311,11 @@ class MainWin( wx.Frame ):
 	def resetEvents( self ):
 		self.events.reset()
 		
-	def menuUndo( self, event ):
-		undo.doUndo()
-		self.refresh()
-		
-	def menuRedo( self, event ):
-		undo.doRedo()
-		self.refresh()
-		
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 
-	def menuChangeProperties( self, event ):
-		if not SeriesModel.model:
-			Utils.MessageOK(self, "You must have a valid Series.", "No Valid Race", iconMask=wx.ICON_ERROR)
-			return
-		ChangeProperties( self )
-				
 	def getDirName( self ):
 		return Utils.getDirName()
 		
@@ -443,10 +431,7 @@ class MainWin( wx.Frame ):
 			grid = page.getGrid()
 			printout = SeriesMgrPrintout( title, grid )
 		except AttributeError:
-			if page == self.graphDraw:
-				printout = GraphDrawPrintout( title, page )
-			else:
-				return
+			return
 		
 		pdd = wx.PrintDialogData(self.printData)
 		pdd.EnablePageNumbers( 0 )
@@ -543,7 +528,7 @@ class MainWin( wx.Frame ):
 
 		title = self.getTitle()
 		
-		html = StringIO.StringIO()
+		html = StringIO()
 		
 		with tag(html, 'html'):
 			with tag(html, 'head'):
@@ -628,7 +613,7 @@ table.results tr td.fastest{
 		html = html.getvalue()
 		
 		try:
-			with open(htmlfileName, 'wb') as fp:
+			with open(htmlfileName, 'w') as fp:
 				fp.write( html )
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
 			#Utils.MessageOK(self, 'Html file written to:\n\n  [}'.format(htmlfileName), 'Html Write')
@@ -719,10 +704,10 @@ table.results tr td.fastest{
 		try:
 			with open(fileName, 'rb') as fp:
 				try:
-					SeriesModel.model = pickle.load( fp )
+					SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
 				except:
 					fp.seek( 0 )
-					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr' ).load()
+					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', , errors='replace' ).load()
 		except IOError:
 			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return

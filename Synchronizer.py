@@ -20,7 +20,7 @@ class Synchronizer( object ):
 		except Exception as e:
 			traceback.print_exc()
 			self.exception = e
-			Utils.logException( e, sys.exc_info )
+			Utils.logException( e, sys.exc_info() )
 		self._sync.release()
 	
 	def Run( self ):

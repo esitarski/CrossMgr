@@ -1,4 +1,5 @@
 import wx
+import six
 import Utils
 from Utils				import logCall
 import Model
@@ -64,7 +65,7 @@ class SetAutoCorrectDialog( wx.Dialog ):
 		
 		undo.pushState()
 		with Model.LockRace() as race:
-			for num, rider in race.riders.iteritems():
+			for num, rider in six.iteritems(race.riders):
 				if doAll or race.getCategory(num) in selectedCats:
 					rider.autocorrectLaps = action
 				race.setChanged()

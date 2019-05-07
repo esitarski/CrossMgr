@@ -2,12 +2,13 @@ import markdown
 import glob
 import os
 import re
+import six
 import base64
 import zipfile
 import shutil
 import codecs
 import datetime
-import cStringIO as StringIO
+StringIO = six.StringIO
 from contextlib import contextmanager
 
 HtmlDocFolder = 'CrossMgrHtmlDoc'
@@ -77,9 +78,9 @@ def CompileHelp( dir = '.' ):
 			links = f.read()
 			
 		for fname in glob.glob("./*.txt"):
-			print fname, '...'
+			six.print_( fname, '...' )
 			with codecs.open(fname, 'r', encoding='utf-8') as f:
-				input = StringIO.StringIO()
+				input = StringIO()
 				input.write( links )
 				input.write( f.read() )
 				

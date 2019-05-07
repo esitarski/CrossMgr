@@ -1,13 +1,14 @@
 import os
 import re
 import sys
+import six
 import cgi
 import copy
 import operator
 import functools
 import datetime
 import GetModelInfo
-import StringIO
+StringIO = six.StringIO
 import Utils
 
 #----------------------------------------------------------------------
@@ -88,10 +89,10 @@ class PointStructure( object ):
 		return ', '.join( str(points) for points in sorted(self.pointsForPlace.values(), reverse=True) )
 	
 	def getHtml( self ):
-		values = [(pos, points) for pos, points in self.pointsForPlace.iteritems()]
+		values = [(pos, points) for pos, points in six.iteritems(self.pointsForPlace)]
 		values.sort()
 		
-		html = StringIO.StringIO()
+		html = StringIO()
 		html.write( '<table class="points">\n' )
 		html.write( '<tbody>\n' )
 		
@@ -322,7 +323,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in dNew.iteritems():
+		for name, aliases in six.iteritems(dNew):
 			if name not in dExisting:
 				changed = True
 				if aliases:
@@ -331,7 +332,7 @@ class SeriesModel( object ):
 				changed = True
 				updated = True
 	
-		for name, aliases in dExisting.iteritems():
+		for name, aliases in six.iteritems(dExisting):
 			if name not in dNew:
 				changed = True
 				if aliases:
@@ -356,7 +357,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in dNew.iteritems():
+		for name, aliases in six.iteritems(dNew):
 			if name not in dExisting:
 				changed = True
 				if aliases:
@@ -365,7 +366,7 @@ class SeriesModel( object ):
 				changed = True
 				updated = True
 	
-		for name, aliases in dExisting.iteritems():
+		for name, aliases in six.iteritems(dExisting):
 			if name not in dNew:
 				changed = True
 				if aliases:
@@ -391,7 +392,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in dNew.iteritems():
+		for name, aliases in six.iteritems(dNew):
 			if name not in dExisting:
 				changed = True
 				if aliases:
@@ -400,7 +401,7 @@ class SeriesModel( object ):
 				changed = True
 				updated = True
 	
-		for name, aliases in dExisting.iteritems():
+		for name, aliases in six.iteritems(dExisting):
 			if name not in dNew:
 				changed = True
 				if aliases:
@@ -437,7 +438,7 @@ class SeriesModel( object ):
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
 		if self.categorySequence or not isinstance(self.categories, dict):
-			self.categories = {name:Category(name, i, name not in self.categoryHide) for name, i in categorySequence.iteritems() }
+			self.categories = {name:Category(name, i, name not in self.categoryHide) for name, i in six.iteritems(categorySequence) }
 			self.categorySequence = {}
 			self.categoryHide = {}
 	
@@ -462,11 +463,11 @@ class SeriesModel( object ):
 			return
 		
 		categories = (self.categories or self.categoriesPrevious)
-		categoryNamesCur = set( self.categories.iterkeys() )
+		categoryNamesCur = set( self.categories.keys() )
 		categoryNamesNew = categoriesFromRaces - categoryNamesCur
 		categoryNamesDel = categoryNamesCur - categoriesFromRaces
 
-		categoryList = sorted( (c for c in categories.itervalues() if c.name not in categoryNamesDel), key=operator.attrgetter('iSequence') )
+		categoryList = sorted( (c for c in categories.values() if c.name not in categoryNamesDel), key=operator.attrgetter('iSequence') )
 		categoryList.extend( [Category(name) for name in sorted(categoryNamesNew)] )
 		for i, c in enumerate(categoryList):
 			c.iSequence = i
@@ -479,7 +480,7 @@ class SeriesModel( object ):
 			
 	def getCategoriesSorted( self ):
 		self.fixCategories()
-		return sorted( self.categories.itervalues(), key=operator.attrgetter('iSequence') )
+		return sorted( self.categories.values(), key=operator.attrgetter('iSequence') )
 		
 	def getCategoriesSortedPublish( self ):
 		self.fixCategories()

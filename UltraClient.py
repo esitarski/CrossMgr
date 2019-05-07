@@ -4,7 +4,9 @@
 #
 # Copyright (C) Edward Sitarski, 2012.
 import re
+import io
 import os
+import six
 import sys
 import time
 import math
@@ -29,7 +31,7 @@ from Ultra import EOL
 random.seed( 10101010 )
 seen = set()
 nums = []
-for i in xrange(25):
+for i in six.moves.range(25):
 	while 1:
 		x = random.randint(1,200)
 		if x not in seen:
@@ -284,7 +286,7 @@ Spin Doctors
 	random.shuffle( teams )
 	random.shuffle( bibs )
 	
-	for i in xrange(starters):
+	for i in six.moves.range(starters):
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i&len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
@@ -297,7 +299,7 @@ for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
 	ws.cell( row = 0, column = col ).value = label
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
-for r, (n, t) in enumerate(tag.iteritems()):
+for r, (n, t) in enumerate(six.iteritems(tag)):
 	if t in ('1', '2'):
 		continue
 	
@@ -311,7 +313,7 @@ wb = None
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with open('UltraTest.csv', 'w') as f:
+with io.open('UltraTest.csv', 'w', encoding='utf-8') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '%d,%s\n' % (n, tag[n]) )
@@ -348,11 +350,11 @@ var = mean / varFactor				# Variance between riders.
 lapMax = 6
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
-	for lap in xrange(0, lapMax+1):
+	for lap in six.moves.range(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
-print 'len(numLapTimes)=', len(numLapTimes)
+six.print_( 'len(numLapTimes)=', len(numLapTimes) )
 
 dBase = now()
 dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
@@ -361,7 +363,7 @@ passingQ = Queue()
 
 def sendData():
 	iPassing = 1
-	for iPassing in xrange(1,len(numLapTimes)):
+	for iPassing in six.moves.range(1,len(numLapTimes)):
 		n, lap, t = numLapTimes[iPassing]
 		dt = t - numLapTimes[iPassing-1][2]
 		time.sleep( dt )
@@ -381,10 +383,10 @@ while 1:
 	clientsocket.settimeout( 2 )
 	
 	def sendResponse( response ):
-		print response
+		six.print_( response )
 		clientsocket.sendall( bytes(response + EOL) )
 	
-	print 'Connection from:', address
+	six.print_( 'Connection from:', address )
 
 	active = False
 	lastVoltage = now()
@@ -410,7 +412,7 @@ while 1:
 		if not message:
 			break
 			
-		print 'message:', message
+		six.print_( 'message:', message )
 		
 		if message.startswith('t'):
 			hh, mm, ss, day, month, year = [int(f) for f in re.split( '[^0-9]', message.split(' ', 1)[1] ) ]
@@ -424,5 +426,5 @@ while 1:
 			active = False
 		
 		else:
-			print 'unknown:', message
+			six.print_( 'unknown:', message )
 

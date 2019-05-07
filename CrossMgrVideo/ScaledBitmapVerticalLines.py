@@ -1,4 +1,5 @@
 import wx
+import six
 from ScaledBitmap import GetScaleRatio
 
 EVT_VERTICAL_LINES_Type = wx.NewEventType()
@@ -28,7 +29,7 @@ class ScaledBitmapVerticalLines( wx.Panel ):
 		super(ScaledBitmapVerticalLines, self).__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		self.bitmap = bitmap
-		self.verticalLines = [None for i in xrange(numLines)]
+		self.verticalLines = [None for i in six.moves.range(numLines)]
 		self.iLineSelected = None
 		self.ratio = None
 		self.controlHeight = None
@@ -129,7 +130,7 @@ class ScaledBitmapVerticalLines( wx.Panel ):
 		self.bitmap = bitmap
 		width, height = self.GetSize()
 		dx = width / (len(self.verticalLines) + 1)
-		self.verticalLines = [int(dx*(i+1)) for i in xrange(len(self.verticalLines))]
+		self.verticalLines = [int(dx*(i+1)) for i in six.moves.range(len(self.verticalLines))]
 		self.doResize = False
 		self.Refresh()
 		

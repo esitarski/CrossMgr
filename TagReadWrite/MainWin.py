@@ -14,14 +14,9 @@ import Utils
 from Version import AppVerName
 import Images
 
-try:
-	from pyllrp.pyllrp import *
-	from pyllrp.pyllrp.TagInventory import TagInventory
-	from pyllrp.pyllrp.TagWriter import TagWriter
-except ImportError:
-	from pyllrp import *
-	from pyllrp.TagInventory import TagInventory
-	from pyllrp.TagWriter import TagWriter
+from pyllrp import *
+from pyllrp.TagInventory import TagInventory
+from pyllrp.TagWriter import TagWriter
 
 from AutoDetect import AutoDetect
 
@@ -235,7 +230,7 @@ class MainWin( wx.Frame ):
 		
 		self.Bind( wx.EVT_CLOSE, self.onClose )
 		
-		idWrite, idRead = wx.NewId(), wx.NewId()
+		idWrite, idRead = self.writeButton.GetId(), self.readButton.GetId()
 		self.Bind(wx.EVT_MENU, self.onWriteButton, id=idWrite)
 		self.Bind(wx.EVT_MENU, self.onReadButton, id=idRead)
 		accelTable = wx.AcceleratorTable([
@@ -441,7 +436,7 @@ def Launch( doRedirect = False ):
 	if doRedirect:
 		dataDir = Utils.getHomeDir()
 		redirectFileName = os.path.join(dataDir, 'TagReadWrite.log')
-		print '"{}"'.format( redirectFileName )
+		print ( '"{}"'.format( redirectFileName ) )
 		
 		# Set up the log file.  Otherwise, show errors on the screen.
 		try:

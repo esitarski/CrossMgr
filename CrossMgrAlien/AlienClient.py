@@ -1,4 +1,5 @@
 import sys
+import six
 import time
 import socket
 import threading
@@ -43,7 +44,7 @@ alienOptions = {
 	'cmdPort':		CmdPort
 }
 
-heartbeat = '''<Alien-RFID-Reader-Heartbeat>
+heartbeat = u'''<Alien-RFID-Reader-Heartbeat>
  <ReaderName>{readerName}</ReaderName>
  <ReaderType>{readerType}</ReaderType>
  <IPAddress>{notifyHost}</IPAddress>
@@ -65,7 +66,7 @@ CR = chr( 0x0d )
 random.seed( 10101010 )
 seen = set()
 nums = []
-for i in xrange(25):
+for i in six.moves.range(25):
 	while 1:
 		x = random.randint(1,200)
 		if x not in seen:
@@ -96,15 +97,15 @@ with open('AlienTest.csv', 'w') as f:
 #------------------------------------------------------------------------------
 		
 def Heartbeat():
-	print heartbeat
+	print ( heartbeat )
 	address = (DEFAULT_HOST, HeartbeatPort)
 	s = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 	while keepGoing:
-		print 'sending heartbeat...', address
-		s.sendto( heartbeat, address )
+		print ( 'sending heartbeat... {}:{}'.format(*address) )
+		s.sendto( heartbeat.encode(), address )
 		time.sleep( 5 )
 		
-intro = '''*****************************************************
+intro = u'''*****************************************************
 *
 * Alien Technology : RFID Reader Test (AlienClient.py)
 *
@@ -123,7 +124,7 @@ def MonitorCmds():
 		s.listen( 5 )
 		conn, addr = s.accept()
 		
-		conn.sendall( intro )
+		conn.sendall( intro.encode() )
 		
 		for cmd in readDelimitedData( conn, '\n' ):
 			if not cmd:
@@ -134,7 +135,7 @@ def MonitorCmds():
 				
 			cmd = cmd.strip()
 			
-			print 'cmd:', cmd
+			print ( 'cmd: {}'.format(cmd) )
 			if cmd.lower().startswith( 'set' ):
 				eq = cmd.find( '=' )
 				response = '{} = {}'.format(cmd[3:eq].strip(), cmd[eq+1:].strip())
@@ -157,7 +158,7 @@ def MonitorCmds():
 count = 0
 def formatMessage( n, lap, t ):
 	global count
-	message = '''<?xml version="1.0" encoding="UTF-8"?>
+	message = u'''<?xml version="1.0" encoding="UTF-8"?>
 <Alien-RFID-Reader-Auto-Notification>
  <ReaderName>{readerName}</ReaderName>
  <ReaderType>{readerType}</ReaderType>
@@ -204,12 +205,12 @@ var = mean / varFactor				# Variance between riders.
 lapMax = 6
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
-	for lap in xrange(0, lapMax+1):
+	for lap in six.moves.range(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
 def SendData():
-	print 'SendData started.  Waiting for commands.'
+	print ( 'SendData started.  Waiting for commands.' )
 	while not haveCommands:
 		time.sleep( 5 )
 
@@ -219,12 +220,12 @@ def SendData():
 	dBase = datetime.datetime.now()
 	#------------------------------------------------------------------------------	
 	time.sleep( 1 )
-	print 'Start sending data...'
+	print ( 'Start sending data...' )
 
 	while iMessage < len(numLapTimes):
 		# Create a socket (SOCK_STREAM means a TCP socket)
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		print 'sending data to', DEFAULT_HOST, NotifyPort
+		print ( 'sending data to {}:{}'.format(DEFAULT_HOST, NotifyPort) )
 		sock.connect((DEFAULT_HOST, NotifyPort))
 		
 		#------------------------------------------------------------------------------	
@@ -235,13 +236,13 @@ def SendData():
 			time.sleep( dt )
 			
 			message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
-			sys.stdout.write( 'sending: {}\n'.format(message[:-3]) )
+			print ( 'sending: {}\n'.format(message[:-3]) )
 			try:
-				sock.send( message )
-				sock.send( message )
+				sock.send( message.encode() )
+				sock.send( message.encode() )
 				iMessage += 1
 			except:
-				print 'Send failed.  Attempting to reconnect...'
+				print ( 'Send failed.  Attempting to reconnect...' )
 				sock.close()
 				break
 			

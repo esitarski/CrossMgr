@@ -4,11 +4,15 @@ import wx.adv as adv
 from wx.lib.wordwrap import wordwrap
 import wx.lib.imagebrowser as imagebrowser
 import wx.lib.agw.flatnotebook as flatnotebook
+import six
 import os
 import re
 import io
-import cgi
 import sys
+if six.PY2:
+	from cgi import escape
+else:
+	from html import escape
 import time
 import copy
 import json
@@ -23,7 +27,7 @@ import platform
 import zipfile
 import base64
 import hashlib
-import urllib
+from six.moves.urllib.parse import quote
 from collections import defaultdict
 
 import locale
@@ -34,7 +38,7 @@ except:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 
-import cPickle as pickle
+import six.moves.cPickle as pickle
 from argparse import ArgumentParser
 import xlwt
 import xlsxwriter
@@ -285,7 +289,7 @@ class SimulateDialog(wx.Dialog):
 		sizer.Fit(self)
 
 def replaceJsonVar( s, varName, value ):
-	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, json.dumps(value, separators=(',',':'))), 1 )
+	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, Utils.ToJSon(value, separators=(',',':'))), 1 )
 
 # Code on web page required by Google Analytics.
 gaSnippet = u'''
@@ -388,7 +392,7 @@ class MainWin( wx.Frame ):
 		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
-		menu = self.fileMenu.Append(wx.ID_ANY, _("Recent Fil&es"), recent)
+		menu = self.fileMenu.AppendSubMenu( recent, _("Recent Fil&es") )
 		menu.SetBitmap( Utils.GetPngBitmap('document-open-recent.png') )
 		self.filehistory.UseMenu( recent )
 		self.filehistory.AddFilesToMenu()
@@ -862,7 +866,7 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
-		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in xrange(min(11,len(jumpToIds)))]
+		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in six.moves.range(min(11,len(jumpToIds)))]
 		self.contextHelp = wx.ID_HELP
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
@@ -1387,7 +1391,7 @@ class MainWin( wx.Frame ):
 		graphicFName = self.config.Read( 'graphic', defaultFName )
 		if graphicFName != defaultFName:
 			try:
-				with open(graphicFName, 'rb') as f:
+				with open(graphicFName, 'r') as f:
 					return graphicFName
 			except IOError:
 				pass
@@ -1491,7 +1495,7 @@ class MainWin( wx.Frame ):
 		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		for i in xrange(3):
+		for i in six.moves.range(3):
 			try:
 				printout = CrossMgrPrintout( categories )
 				printError = False
@@ -1581,7 +1585,7 @@ class MainWin( wx.Frame ):
 			
 			fname = None
 			success = True
-			for page in xrange(1, pages+1):
+			for page in range(1, pages+1):
 				try:
 					printout.OnPrintPage( page )
 					if fname is None:
@@ -1632,7 +1636,7 @@ class MainWin( wx.Frame ):
 		fname = None
 		success = True
 		with Utils.UIBusy():
-			for page in xrange(1, pages+1):
+			for page in range(1, pages+1):
 				try:
 					printout.OnPrintPage( page )
 					if fname is None:
@@ -1722,8 +1726,8 @@ class MainWin( wx.Frame ):
 		if silent:
 			try:
 				wb.close()
-			except:
-				pass
+			except Exception as e:
+				logException( e, sys.exc_info() )
 			return
 			
 		try:
@@ -1731,7 +1735,8 @@ class MainWin( wx.Frame ):
 			if self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
-		except IOError:
+		except IOError as e:
+			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
 						u'{} "{}"\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,
@@ -1800,7 +1805,7 @@ class MainWin( wx.Frame ):
 			notes = notes.replace('<', '{-{').replace( '>', '}-}' )
 			payload['raceNotes']	= notes
 		else:
-			notes = TemplateSubstitute( cgi.escape(notes), race.getTemplateValues() )
+			notes = TemplateSubstitute( escape(notes), race.getTemplateValues() )
 			notes = self.reTagTrainingSpaces.sub( u'>', notes ).replace( '</table>', '</table><br/>' )
 			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
 			payload['raceNotes']	= notes
@@ -1833,7 +1838,7 @@ class MainWin( wx.Frame ):
 		
 		#------------------------------------------------------------------------
 		title = u'{} - {} {} {}'.format( race.title, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
-		html = html.replace( u'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+		html = html.replace( u'CrossMgr Race Results by Edward Sitarski', escape(title) )
 		if getattr(race, 'gaTrackingID', None):
 			html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
 		if race.isRunning():
@@ -1856,9 +1861,9 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------
 		codes = []
 		if 'UCICode' in payload['infoFields']:
-			codes.extend( r['UCICode'] for r in payload['data'].itervalues() if r.get('UCICode',None) )
+			codes.extend( r['UCICode'] for r in six.itervalues(payload['data']) if r.get('UCICode',None) )
 		if 'NatCode' in payload['infoFields']:
-			codes.extend( r['NatCode'] for r in payload['data'].itervalues() if r.get('NatCode',None) )
+			codes.extend( r['NatCode'] for r in six.itervalues(payload['data']) if r.get('NatCode',None) )
 		payload['flags']				= Flags.GetFlagBase64ForUCI( codes )
 		if gpsPoints:
 			payload['gpsPoints']		= gpsPoints
@@ -1879,7 +1884,7 @@ class MainWin( wx.Frame ):
 			# Add the course viewer template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
 			try:
-				with io.open(templateFile, 'r', encoding='utf-8') as fp:
+				with io.open(templateFile, 'r') as fp:
 					template = fp.read()
 				payload['courseViewerTemplate'] = sanitize( template )
 			except:
@@ -1888,7 +1893,7 @@ class MainWin( wx.Frame ):
 		# Add the rider dashboard.
 		templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
 		try:
-			with io.open(templateFile, 'r', encoding='utf-8') as fp:
+			with io.open(templateFile, 'r') as fp:
 				template = fp.read()
 			payload['riderDashboard'] = sanitize( template )
 		except:
@@ -1900,7 +1905,7 @@ class MainWin( wx.Frame ):
 			if excelLink.hasField('City') and any(excelLink.hasField(f) for f in ('Prov','State','StateProv')):
 				templateFile = os.path.join(Utils.getHtmlFolder(), 'TravelMap.html')
 				try:
-					with io.open(templateFile, 'r', encoding='utf-8') as fp:
+					with io.open(templateFile, 'r') as fp:
 						template = fp.read()
 					payload['travelMap'] = sanitize( template )
 				except:
@@ -1967,9 +1972,9 @@ class MainWin( wx.Frame ):
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = u'{} {} {}'.format( race.title, _('Course for'), raceTime.strftime(localDateFormat) )
-			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', escape(title) )
 			
-			payload['raceName']			= cgi.escape(race.title)
+			payload['raceName']			= escape(race.title)
 			payload['organizer']		= getattr(race, 'organizer', '')
 			payload['rfid']				= getattr(race, 'enableJChipIntegration', False)
 			payload['displayUnits']		= race.distanceUnitStr
@@ -1980,7 +1985,7 @@ class MainWin( wx.Frame ):
 				notes = notes.replace('<', '{-{').replace( '>', '}-}' )
 				payload['raceNotes']	= notes
 			else:
-				payload['raceNotes']	= cgi.escape(notes).replace('\n','{-{br/}-}')
+				payload['raceNotes']	= escape(notes).replace('\n','{-{br/}-}')
 			courseCoordinates, gpsAltigraph, totalElevationGain, lengthKm, isPointToPoint = None, None, None, None, None
 			geoTrack = getattr(race, 'geoTrack', None)
 			if geoTrack is not None:
@@ -1998,7 +2003,7 @@ class MainWin( wx.Frame ):
 			# Fix the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
-				with io.open(templateFile, 'r', encoding='utf-8') as fp:
+				with io.open(templateFile, 'r') as fp:
 					template = fp.read()
 				# Sanitize the template into a safe json string.
 				template = self.reLeadingWhitespace.sub( '', template )
@@ -2064,7 +2069,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 		try:
-			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+			with io.open(htmlFile, 'r') as fp:
 				html = fp.read()
 		except:
 			Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
@@ -2076,13 +2081,14 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = self.getFormatFilename('html')
 		try:
-			with io.open(fname, 'w', encoding='utf-8') as fp:
+			with io.open(fname, 'w') as fp:
 				fp.write( html )
 			if not silent:
 				Utils.LaunchApplication( fname )
 				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
-		except:
-			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+		except Exception as e:
+			logException( e, sys.exc_info() )
+			Utils.MessageOK(self, u'{}\n\t\t{}\n({}).'.format(_('Cannot write HTML file'), e, fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2093,6 +2099,7 @@ class MainWin( wx.Frame ):
 		try:
 			WebServer.WriteHtmlIndexPage()
 		except Exception as e:
+			logException( e, sys.exc_info() )
 			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('HTML Index Failure'), e),
 							_('Error'), iconMask=wx.ICON_ERROR )
 	
@@ -2170,7 +2177,7 @@ class MainWin( wx.Frame ):
 		startList = []
 		nationCodes = set()
 		category = None
-		for bib, rider in race.riders.iteritems():
+		for bib, rider in six.iteritems(race.riders):
 			if rider.status == Finisher:
 				try:
 					firstTime = int(rider.firstTime + 0.1)
@@ -2203,8 +2210,8 @@ class MainWin( wx.Frame ):
 
 		html = replaceJsonVar( html, 'payload', payload )
 		html = html.replace( '<title>TTStartPage</title>', '<title>TT {} {} {}</title>'.format(
-				cgi.escape(race.title),
-				cgi.escape(race.date), cgi.escape(race.scheduledStart),
+				escape(race.title),
+				escape(race.date), escape(race.scheduledStart),
 			)
 		)
 		return html
@@ -2232,7 +2239,7 @@ class MainWin( wx.Frame ):
 		for fTemplate in ('TTCountdown.html', 'TTStartList.html'):
 			htmlFile = os.path.join(Utils.getHtmlFolder(), fTemplate)
 			try:
-				with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+				with io.open(htmlFile, 'r') as fp:
 					html = fp.read()
 			except:
 				Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
@@ -2244,7 +2251,7 @@ class MainWin( wx.Frame ):
 			# Write out the results.
 			fname = os.path.splitext(self.fileName)[0] + ('_TTCountdown.html' if fTemplate == 'TTCountdown.html' else '_TTStartList.html')
 			try:
-				with io.open(fname, 'w', encoding='utf-8') as fp:
+				with io.open(fname, 'w') as fp:
 					fp.write( html )
 			except:
 				Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
@@ -2315,7 +2322,7 @@ class MainWin( wx.Frame ):
 		xml = doc.toprettyxml( indent = '', encoding = 'utf-8' )
 		doc.unlink()
 		try:
-			with open(fname, 'wb') as f:
+			with io.open(fname, 'w') as f:
 				f.write( xml )
 			Utils.MessageOK(self, u'{}\n\n    {}.'.format(_('Course written to GPX file'), fname), _('GPX Export'))
 		except Exception as e:
@@ -2358,7 +2365,7 @@ class MainWin( wx.Frame ):
 			# Read the html template.
 			htmlFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewer.html')
 			try:
-				with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+				with io.open(htmlFile, 'r') as fp:
 					html = fp.read()
 			except:
 				Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -2370,7 +2377,7 @@ class MainWin( wx.Frame ):
 		html = self.addCourseToHtmlStr( html )
 		fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'
 		try:
-			with io.open(fname, 'w', encoding='utf-8') as fp:
+			with io.open(fname, 'w') as fp:
 				fp.write( html )
 			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
@@ -2396,7 +2403,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
 		try:
-			with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+			with io.open(htmlFile, 'r') as fp:
 				html = fp.read()
 		except:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -2447,11 +2454,11 @@ class MainWin( wx.Frame ):
 					info['Name'] = Utils.CombineFirstLastName( info.get('FirstName', ''), info.get('LastName', '') )
 			
 			# Remove info that does not correspond to a rider in the race.
-			for num in [n for n in externalInfo.iterkeys() if n not in seen]:
+			for num in [n for n in six.iterkeys(externalInfo) if n not in seen]:
 				del externalInfo[num]
 			
 			# Remove extra info fields.
-			for num, info in externalInfo.iteritems():
+			for num, info in six.iteritems(externalInfo):
 				for f in ignoreFields:
 					try:
 						del info[f]
@@ -2468,7 +2475,7 @@ class MainWin( wx.Frame ):
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
 			title = u'{} Raw Data for {} Start on {}'.format( race.title, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
-			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', cgi.escape(title) )
+			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', escape(title) )
 			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
 			
 		html = replaceJsonVar( html, 'timestamp', now().ctime() )
@@ -2485,7 +2492,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.splitext(self.fileName)[0] + 'RawData.html'
 		try:
-			with io.open(fname, 'w', encoding='utf-8') as fp:
+			with io.open(fname, 'w') as fp:
 				fp.write( html )
 			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
@@ -2504,7 +2511,7 @@ class MainWin( wx.Frame ):
 		fname = os.path.splitext(self.fileName)[0] + '.json'
 		
 		try:
-			with open(fname, 'wb') as fp:
+			with open(fname, 'w') as fp:
 				json.dump( payload, fp, separators=(',',':') )
 		except Exception as e:
 			Utils.writeLog( 'menuExportResultsJSON: error "{}"'.format(e) )			
@@ -2587,7 +2594,7 @@ class MainWin( wx.Frame ):
 			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
 			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
 			if distance > 0.0:
-				for c in race.categories.itervalues():
+				for c in six.itervalues(race.categories):
 					c.distance = distance
 			race.showOval = False
 		if excelLink:
@@ -2618,7 +2625,7 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			with open(fileName, 'wb') as fp:
+			with open(fileName, 'w') as fp:
 				pass
 		except IOError:
 			Utils.MessageOK( self, u'{}\n\n    "{}"'.format(_('Cannot Open File'),fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
@@ -2639,7 +2646,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with io.open(categoriesFile, 'r', encoding='utf-8') as fp:
+				with io.open(categoriesFile, 'r') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -2651,7 +2658,7 @@ class MainWin( wx.Frame ):
 		if not importedCategories:
 			race.categoriesImportFile = ''
 			race.setCategories( [{'name':u'{} {}-{}'.format(_('Category'), max(1, i*100), (i+1)*100-1),
-								  'catStr':u'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in xrange(8)] )
+								  'catStr':u'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in six.moves.range(8)] )
 		else:
 			race.categoriesImportFile = categoriesFile
 			
@@ -2702,7 +2709,7 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			with open(fileName, 'wb') as fp:
+			with open(fileName, 'w') as fp:
 				pass
 		except IOError:
 			Utils.MessageOK(self, u'{}\n\n    "{}".'.format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
@@ -2732,7 +2739,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with io.open(categoriesFile, 'r', encoding='utf-8') as fp:
+				with io.open(categoriesFile, 'r') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -2747,7 +2754,7 @@ class MainWin( wx.Frame ):
 			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
 			distance = geoTrack.lengthKm if race.distanceUnit == race.UnitKm else geoTrack.lengthMiles
 			if distance > 0.0:
-				for c in race.categories.itervalues():
+				for c in six.itervalues(race.categories):
 					c.distance = distance
 			race.showOval = False
 		if excelLink:
@@ -2836,7 +2843,7 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			with open(fileName, 'wb') as fp:
+			with open(fileName, 'w') as fp:
 				pass
 		except IOError:
 			Utils.MessageOK(self, u'{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
@@ -2915,10 +2922,10 @@ class MainWin( wx.Frame ):
 		try:
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
 				try:
-					race = pickle.load( fp )
+					race = pickle.load( fp, encoding='latin1', errors='replace' )
 				except:
 					fp.seek( 0 )
-					race = ModuleUnpickler( fp, module='CrossMgr' ).load()
+					race = ModuleUnpickler( fp, module='CrossMgr', encoding='latin1', errors='replace' ).load()
 				race.sortLap = None			# Remove results lap sorting to avoid confusion.
 				isFinished = race.isFinished()
 				race.tagNums = None
@@ -2948,12 +2955,13 @@ class MainWin( wx.Frame ):
 					exists = u''
 				
 				if not Utils.MessageOKCancel( self, u'{}.\n\n{}:\n\n\t{}{}\n\n{}'.format(
-					_("The FileName does not match the Event Name format"),
-					_("Going forward, this event will saved as"), eventFileName,
-					exists,
-					_('To change the File Name, change the event Date, Name or Race Number in Properties/General Properties'),
-					_('Unmatched Filename'),
-				)):
+						_("The FileName does not match the Event Name format"),
+						_("Going forward, this event will saved as"), eventFileName,
+						exists,
+						_('To change the File Name, change the event Date, Name or Race Number in Properties/General Properties')
+						),
+						_('Unmatched Filename'),
+					):
 					if fileNameSave:
 						self.openRace( fileNameSave )
 					else:
@@ -3075,7 +3083,7 @@ class MainWin( wx.Frame ):
 
 	def genTimes( self, regen = False ):
 		if regen:
-			for k, v in SimulateData().iteritems():
+			for k, v in six.iteritems(SimulateData()):
 				setattr( self, k, v )
 		else:
 			self.raceMinutes = SimulationLapTimes.raceMinutes
@@ -3088,7 +3096,7 @@ class MainWin( wx.Frame ):
 			]
 			
 			# Add some out-of-category numbers to test.
-			for e in xrange(10, 50, 10):
+			for e in six.moves.range(10, 50, 10):
 				self.lapTimes[e] = ( self.lapTimes[e][0], 1111+e )
 		
 		return self.lapTimes
@@ -3134,7 +3142,7 @@ class MainWin( wx.Frame ):
 		
 		# Test if we can write something there.
 		try:
-			with open(fName, 'wb') as fp:
+			with open(fName, 'w') as fp:
 				pass
 		except IOError:
 			Utils.MessageOK(self, u'{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
@@ -3187,7 +3195,7 @@ class MainWin( wx.Frame ):
 					numTimes[num].append( t )
 			
 			numRaceTimes = {}
-			for num, times in numTimes.iteritems():
+			for num, times in six.iteritems(numTimes):
 				times.sort()
 				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 			
@@ -3196,7 +3204,7 @@ class MainWin( wx.Frame ):
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []
-			for num, raceTimes in numRaceTimes.iteritems():
+			for num, raceTimes in six.iteritems(numRaceTimes):
 				startTime = numStartTime[num]
 				race.getRider( num ).firstTime = startTime
 				self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
@@ -3215,10 +3223,9 @@ class MainWin( wx.Frame ):
 			riderInfo = []
 			fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )
 			try:
-				with open(fnameInfo) as fp:
+				with io.open(fnameInfo, encoding='iso-8859-1') as fp:
 					header = None
 					for r, line in enumerate(fp):
-						line = line.decode('iso-8859-1')
 						if not header:
 							header = line.split(',')
 							continue
@@ -3343,7 +3350,7 @@ class MainWin( wx.Frame ):
 		if dlg.ShowModal() == wx.ID_OK:
 			categoriesFile = dlg.GetPath()
 			try:
-				with io.open(categoriesFile, 'r', encoding='utf-8') as fp, Model.LockRace() as race:
+				with io.open(categoriesFile, 'r') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, u"{}:\n\n{}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
@@ -3371,7 +3378,7 @@ class MainWin( wx.Frame ):
 		if dlg.ShowModal() == wx.ID_OK:
 			fname = dlg.GetPath()
 			try:
-				with io.open(fname, 'w', encoding='utf-8') as fp, Model.LockRace() as race:
+				with io.open(fname, 'w') as fp, Model.LockRace() as race:
 					race.exportCategories( fp )
 			except IOError:
 				Utils.MessageOK( self, u"{}:\n{}".format(_('Cannot open file'), fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
@@ -3395,7 +3402,7 @@ class MainWin( wx.Frame ):
 		if data:
 			rowMax = max( len(c) for c in data )
 			colnames = ['Count'] + colnames
-			data = [['{}'.format(i) for i in xrange(1, rowMax+1)]] + data
+			data = [['{}'.format(i) for i in six.moves.range(1, rowMax+1)]] + data
 		with Model.LockRace() as race:
 			title = u'{}\n{}\n{}'.format( race.title, Utils.formatDate(race.date), _('Race Passings') )
 		export = ExportGrid( title, colnames, data )
@@ -3455,7 +3462,7 @@ class MainWin( wx.Frame ):
 
 		wb = xlsxwriter.Workbook( xlFName )
 		sheetCur = wb.add_worksheet( 'Combined Results' )
-		VTTAExport( sheetCur )
+		VTTAExport( wb, sheetCur )
 		
 		try:
 			wb.close()
@@ -3599,11 +3606,11 @@ class MainWin( wx.Frame ):
 			
 			url = 'http://www.{Destination}.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
 				Destination = destination.lower(),
-				RaceName	= urllib.quote(unicode(raceName).encode('utf-8')),
-				RaceDate	= urllib.quote(unicode(raceDate).encode('utf-8')),
-				MD5			= hashlib.md5( race.title + raceDate ).hexdigest(),
-				Location	= urllib.quote(unicode(u', '.join([race.city, race.stateProv, race.country])).encode('utf-8')),
-				PresentedBy = urllib.quote(unicode(race.organizer).encode('utf-8')),
+				RaceName	= quote(six.text_type(raceName)),
+				RaceDate	= quote(six.text_type(raceDate)),
+				MD5			= hashlib.md5( (race.title + raceDate).encode() ).hexdigest(),
+				Location	= quote(six.text_type(u', '.join([race.city, race.stateProv, race.country]))),
+				PresentedBy = quote(six.text_type(race.organizer)),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
@@ -3648,7 +3655,7 @@ class MainWin( wx.Frame ):
 		try:
 			attr, name, menuItem, dialog = self.menuIdToWindowInfo[menuId]
 		except KeyError:
-			return
+			returnm
 		menuItem.Check( False )
 	
 	@logCall
@@ -3667,7 +3674,7 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def openMenuWindow( self, windowAttr ):
-		for attr, name, menuItem, dialog in self.menuIdToWindowInfo.itervalues():
+		for attr, name, menuItem, dialog in six.itervalues(self.menuIdToWindowInfo):
 			if windowAttr == attr:
 				dialog.Show( True )
 				wx.CallAfter( dialog.refresh )
@@ -3678,7 +3685,7 @@ class MainWin( wx.Frame ):
 		try:
 			webbrowser.open( getHelpURL('QuickStart.html') )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def menuHelpSearch( self, event ):
@@ -3689,28 +3696,28 @@ class MainWin( wx.Frame ):
 		try:
 			webbrowser.open( getHelpURL('Main.html') )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def onContextHelp( self, event ):
 		try:
 			webbrowser.open( getHelpURL(self.attrClassName[self.notebook.GetSelection()][2] + '.html') )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 		
 	@logCall
 	def menuWebIndexPage( self, event ):
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage(), new = 2, autoraise = True )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def menuWebQRCodePage( self, event ):
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new = 2, autoraise = True )
 		except Exception as e:
-			pass
+			logException( e, sys.exc_info() )
 	
 	@logCall
 	def menuAbout( self, event ):
@@ -3804,7 +3811,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 
 	def refreshWindows( self ):
 		try:
-			for d in (dialog for attr, name, menuItem, dialog in self.menuIdToWindowInfo.itervalues() if dialog.IsShown()):
+			for d in (dialog for attr, name, menuItem, dialog in six.itervalues(self.menuIdToWindowInfo) if dialog.IsShown()):
 				try:
 					wx.CallAfter( d.refresh )
 				except AttributeError:

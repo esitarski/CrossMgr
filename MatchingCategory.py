@@ -1,3 +1,5 @@
+import six
+import operator
 import Utils
 import ReadSignOnSheet
 import Model
@@ -33,7 +35,7 @@ def AddToMatchingCategory( bib, fields ):
 		if found is None:
 			found = Model.Category(
 				name=categoryName,
-				catStr=unicode(bib),
+				catStr=six.text_type(bib),
 				sequence=len(categories),
 				gender=gender,
 				catType=Model.Category.CatCustom if isCustom else Model.Category.CatWave
@@ -49,14 +51,14 @@ def EpilogMatchingCategory():
 		
 	EmptyInterval = (Model.Category.MaxBib, Model.Category.MaxBib)
 	
-	for key, c in race.categories.iteritems():
+	for key, c in six.iteritems(race.categories):
 		c.intervals.sort()
 		c.normalize()
 	
 	race.adjustAllCategoryWaveNumbers()
 	
 	empty_categories = set()
-	for key, c in race.categories.iteritems():
+	for key, c in six.iteritems(race.categories):
 		if c.intervals[-1] == EmptyInterval:
 			c.intervals.pop()
 		if not c.intervals:
@@ -65,7 +67,7 @@ def EpilogMatchingCategory():
 	for key in empty_categories:
 		del race.categories[key]
 	
-	for sequence, c in enumerate(sorted(race.categories.itervalues())):
+	for sequence, c in enumerate(sorted(six.itervalues(race.categories), key=operator.methodcaller('key'))):
 		c.sequence = sequence
 	
 	race.resetAllCaches()

@@ -1,3 +1,4 @@
+import six
 import random
 import bisect
 from Names import GetNameTeam
@@ -21,7 +22,7 @@ def SimulateData( riders=200 ):
 
 	lapTimes = []
 	riderInfo = []
-	for num in xrange(numStart,numStart+riders+1):
+	for num in six.moves.range(numStart,numStart+riders+1):
 		t = 0
 		if num < numStart + riders // 2:
 			mu = random.normalvariate( mean, mean/20.0 )			# Rider's random average lap time.
@@ -30,7 +31,7 @@ def SimulateData( riders=200 ):
 			mu = random.normalvariate( mean * 1.15, mean/20.0 )		# These riders are slower, on average.
 			riderInfo.append( [num] + list(GetNameTeam(False)) )
 			t += startOffset										# Account for offset start.
-		for laps in xrange(lapsTotal):
+		for laps in six.moves.range(lapsTotal):
 			t += random.normalvariate( mu, var/2.0 )	# Rider's lap time.
 			if random.random() > errorPercent:		# Respect error rate.
 				lapTimes.append( (t, num) )
@@ -82,5 +83,5 @@ def SimulateData( riders=200 ):
 	}
 
 if __name__ == '__main__':
-	print SimulateData()['riderInfo']
+	six.print_( SimulateData()['riderInfo'] )
 

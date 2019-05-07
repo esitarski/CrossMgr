@@ -22,16 +22,17 @@ Todo:
 """
 
 import optparse
-import urllib2
+import six
 import time
 import sys
+urllib = six.moves.urllib
 import os
 import zipfile
 
 try:
     import poster
 except:
-    print('Module poster missing: https://pypi.python.org/pypi/poster')
+    six.print_('Module poster missing: https://pypi.python.org/pypi/poster')
     exit()
 
 try:
@@ -42,7 +43,7 @@ except:
         import simplejson
         jsonalias = simplejson
     except:
-        print('Modules json and simplejson missing')
+        six.print_('Modules json and simplejson missing')
         exit()
 
 VIRUSTOTAL_API2_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
@@ -82,12 +83,12 @@ def VTHTTPScanRequest(filename, options):
     params.append(poster.encode.MultipartParam('apikey', VIRUSTOTAL_API2_KEY))
     params.append(poster.encode.MultipartParam('file', value=data, filename=os.path.basename(postfilename)))
     datagen, headers = poster.encode.multipart_encode(params)
-    req = urllib2.Request(VIRUSTOTAL_SCAN_URL, datagen, headers)
+    req = urllib.request.Request(VIRUSTOTAL_SCAN_URL, datagen, headers)
     try:
         if sys.hexversion >= 0x020601F0:
-            hRequest = urllib2.urlopen(req, timeout=600)
+            hRequest = six.moves.urllib.request.urlopen(req, timeout=600)
         else:
-            hRequest = urllib2.urlopen(req)
+            hRequest = six.moves.urllib.request.urlopen(req)
     except urllib2.HTTPError as e:
         return None, str(e)
     try:
@@ -100,11 +101,11 @@ def VTHTTPScanRequest(filename, options):
 
 def File2Strings(filename):
     try:
-        f = open(filename, 'r')
+        f = io.open(filename, 'r', encoding='utf-8')
     except:
         return None
     try:
-        return map(lambda line:line.rstrip('\n'), f.readlines())
+        return [line.rstrip('\n') for line in f.readlines()]
     except:
         return None
     finally:
@@ -124,14 +125,14 @@ def SetProxiesIfNecessary():
     if os.getenv('https_proxy') != None:
         dProxies['https'] = os.getenv('https_proxy')
     if dProxies != {}:
-        urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler(dProxies), poster.streaminghttp.StreamingHTTPSHandler()))
+        sox.moves.urllib.request.install_opener(urllib2.build_opener(six.urllib.request.ProxyHandler(dProxies), poster.streaminghttp.StreamingHTTPSHandler()))
 
 def VirusTotalSubmit(filenames, options):
 	poster.streaminghttp.register_openers()
 
 	SetProxiesIfNecessary()
 
-	with open('virustotal.html', 'w') as f:
+	with io.open('virustotal.html', 'w', encoding='utf-8') as f:
 		f.write( '<html>\n' )
 		f.write( '<head>\n' )
 		f.write( '<style>body { font-family:sans-serif; font-size:200%; }</style>\n' )
@@ -164,17 +165,17 @@ def Main():
 
     if not options.file and len(args) == 0:
         oParser.print_help()
-        print('')
-        print('  Source code put in the public domain by Didier Stevens, no Copyright')
-        print('  Use at your own risk')
-        print('  https://DidierStevens.com')
+        six.print_('')
+        six.print_('  Source code put in the public domain by Didier Stevens, no Copyright')
+        six.print_('  Use at your own risk')
+        six.print_('  https://DidierStevens.com')
         return
     if os.getenv('VIRUSTOTAL_API2_KEY') != None:
         VIRUSTOTAL_API2_KEY = os.getenv('VIRUSTOTAL_API2_KEY')
     if options.key != '':
         VIRUSTOTAL_API2_KEY = options.key
     if VIRUSTOTAL_API2_KEY == '':
-        print('You need to get a VirusTotal API key and set environment variable VIRUSTOTAL_API2_KEY, use option -k or add it to this program.\nTo get your API key, you need a VirusTotal account.')
+        six.print_('You need to get a VirusTotal API key and set environment variable VIRUSTOTAL_API2_KEY, use option -k or add it to this program.\nTo get your API key, you need a VirusTotal account.')
     elif options.file:
         VirusTotalSubmit(File2Strings(options.file), options)
     else:

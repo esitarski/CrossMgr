@@ -1,11 +1,12 @@
 import wx
 import os
+import io
+import six
 import sys
 import glob
 import math
 import datetime
 import platform
-import cStringIO as StringIO
 from bisect import bisect_left
 from MakeComposite import MakeComposite
 import Utils
@@ -22,6 +23,14 @@ def PilImageToWxImage(pil, alpha=False):
 		image.SetAlphaData(pil.convert("RGBA").tobytes()[3::4])
 
 	return image
+
+if six.PY2:
+	StringIO = six.StringIO
+	def imageFromJpeg( jpeg ):
+		return wx.Image( StringIO(jpeg), wx.BITMAP_TYPE_JPEG )
+else:
+	def imageFromJpeg( jpeg ):
+		return wx.Image( io.BytesIO(jpeg), wx.BITMAP_TYPE_JPEG )
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -117,7 +126,7 @@ class FinishStrip( wx.Panel ):
 		
 		self.tMax = self.times[-1]
 		
-		image = wx.Image( StringIO.StringIO(tsJpgs[0][1]), wx.BITMAP_TYPE_JPEG )
+		image = imageFromJpeg( tsJpgs[0][1] )
 		self.jpgWidth, self.jpgHeight = image.GetSize()
 		self.scale = min( 1.0, float(self.GetSize()[1]) / float(self.jpgHeight) )
 		if self.scale != 1.0:
@@ -200,7 +209,7 @@ class FinishStrip( wx.Panel ):
 		return bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1) if self.times else None
 
 	def getJpg( self, x ):
-		return self.tsJpgs[getIJpg(x)][1] if self.times else None
+		return self.tsJpgs[self.getIJpg(x)][1] if self.times else None
 	
 	def drawZoomPhoto( self, x, y ):
 		if not self.times or not self.jpgWidth:

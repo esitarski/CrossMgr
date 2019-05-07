@@ -1,5 +1,6 @@
 import wx
 import os
+import six
 import sys
 import copy
 import bisect
@@ -32,7 +33,7 @@ def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), f
 	return btn
 
 # backspace, delete, comma, return, digits
-validKeyCodes = set( [8, 127, 44, 13] + [x for x in xrange(48, 48+10)] )
+validKeyCodes = set( [8, 127, 44, 13] + [x for x in six.moves.range(48, 48+10)] )
 
 class Keypad( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
@@ -80,7 +81,7 @@ class Keypad( wx.Panel ):
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(3+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
-		for i in xrange(0, 9):
+		for i in six.moves.range(0, 9):
 			self.num.append( MakeKeypadButton( self.keypadPanel, label=u'&{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
@@ -417,7 +418,7 @@ class NumKeypad( wx.Panel ):
 		
 		def getNoDataCategoryLap( category ):
 			offset = race.categoryStartOffset(category)
-			tLapStart = offset if tCur >= offset else None
+			tLapStart = offset if tCur and tCur >= offset else None
 			cn = race.getNumLapsFromCategory( category )
 			if cn and tCur and tCur > offset + 30.0:
 				cn -= 1
@@ -597,7 +598,7 @@ class NumKeypad( wx.Panel ):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
 			results = list(results)
 			resultNums = set( rr.num for rr in results )
-			for a in race.riders.itervalues():
+			for a in six.itervalues(race.riders):
 				if a.status == Finisher and a.num not in resultNums and a.firstTime is not None:
 					category = getCategory( a.num )
 					if category and t >= a.firstTime and t >= race.getStartOffset(a.num):
@@ -642,12 +643,12 @@ class NumKeypad( wx.Panel ):
 		if not catLapCount:
 			return
 			
-		catLapList = [(category, lap, count) for (category, lap), count in catLapCount.iteritems()]
+		catLapList = [(category, lap, count) for (category, lap), count in six.iteritems(catLapCount)]
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.lapCountList.InsertItem( sys.maxint, u'{}'.format(row[0]) if row else u'' )
-			for c in xrange(1, len(row)):
+			r = self.lapCountList.InsertItem( 999999, u'{}'.format(row[0]) if row else u'' )
+			for c in six.moves.range(1, len(row)):
 				self.lapCountList.SetItem( r, c, u'{}'.format(row[c]) )
 			if colour is not None:
 				item = self.lapCountList.GetItem( r )
@@ -663,8 +664,8 @@ class NumKeypad( wx.Panel ):
 		
 		appendListRow( (
 							_('Total'),
-							u'{}/{}'.format(sum(count for count in catLapCount.itervalues()),
-											sum(count for count in catCount.itervalues()))
+							u'{}/{}'.format(sum(count for count in six.itervalues(catLapCount)),
+											sum(count for count in six.itervalues(catCount)))
 						),
 						colour=wx.BLUE,
 						bold=True )

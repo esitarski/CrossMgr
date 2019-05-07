@@ -1,4 +1,6 @@
+import io
 import csv
+import six
 import math
 import Utils
 import datetime
@@ -49,7 +51,7 @@ def CrossResultsExport( fname ):
 		return False, _('"LastName" must be linked to a column in the Excel sheetl')
 	
 	# Filter the fields by what exists in the data.
-	crossResultsFields = [CrossResultsFields[i][0] for i in xrange(len(hasField)) if hasField[i]]
+	crossResultsFields = [CrossResultsFields[i][0] for i in six.moves.range(len(hasField)) if hasField[i]]
 	
 	year, month, day = race.date.split( '-' )
 	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
@@ -72,7 +74,7 @@ def CrossResultsExport( fname ):
 	
 	lapHeaders = ['lap'] * maxLaps
 			
-	with open(fname, 'w') as csvFile:
+	with io.open(fname, 'w', encoding='utf-8', newline='') as csvFile:
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
 		csvWriter.writerow( crossResultsFields + lapHeaders )
 		
@@ -81,7 +83,7 @@ def CrossResultsExport( fname ):
 			if not results:
 				continue
 			
-			csvWriter.writerow( [unicode(cat.fullname).encode('utf-8')] )
+			csvWriter.writerow( [cat.fullname] )
 			
 			for rr in results:
 				try:
@@ -101,14 +103,14 @@ def CrossResultsExport( fname ):
 					}[field]() )
 				
 				# Lap Times.
-				for i in xrange(maxLaps):
+				for i in six.moves.range(maxLaps):
 					try:
 						lapTime = formatTimeGap(rr.lapTimes[i])
 					except IndexError:
 						lapTime = ''
 					dataRow.append( lapTime )
 				
-				csvWriter.writerow( [unicode(d).encode('utf-8') for d in dataRow] )
+				csvWriter.writerow( [six.text_type(d) for d in dataRow] )
 				
 			csvWriter.writerow( [] )		# Blank line separates each category.
 			

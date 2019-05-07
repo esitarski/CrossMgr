@@ -1,5 +1,5 @@
 import wx
-
+import six
 import os
 import sys
 import SeriesModel
@@ -42,7 +42,7 @@ class Aliases(wx.Panel):
 		self.grid = AliasGrid( self )
 		self.grid.CreateGrid( 0, len(headerNames) )
 		self.grid.SetRowLabelSize( 64 )
-		for col in xrange(self.grid.GetNumberCols()):
+		for col in six.moves.range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, headerNames[col] )
 			
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -89,7 +89,7 @@ class Aliases(wx.Panel):
 		references = []
 		
 		self.grid.SaveEditControlValue()
-		for row in xrange(self.grid.GetNumberRows()):
+		for row in six.moves.range(self.grid.GetNumberRows()):
 			reference = self.getName( self.grid.GetCellValue( row, 0 ) )
 			if reference:
 				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]

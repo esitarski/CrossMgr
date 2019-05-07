@@ -2,13 +2,14 @@
 
 import shutil
 import os
+import six
 import sys
 
-print 'Building help files from markdown...'
+six.print_( 'Building help files from markdown...' )
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
 
-print 'Indexing help files...'
+six.print_( 'Indexing help files...' )
 from HelpIndex import BuildHelpIndex
 BuildHelpIndex()
 
@@ -18,7 +19,7 @@ if sys.platform == 'darwin':
 else:
 	platform = 'Linux'
     
-print 'Copying help, template and image files into the build folder...'
+six.print_( 'Copying help, template and image files into the build folder...' )
 resourceDirs = ['CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex', 'CrossMgrImages']
 
 dest = os.path.join('CrossMgrBuild', 'dist', 'CrossMgr')
@@ -38,11 +39,11 @@ from Version import AppVerName
 fname = platform + '_' + bits + '_' + AppVerName.replace(' ', '_') + '.tar.gz'
 fname = os.path.join( 'CrossMgrBuild', fname )
 
-print 'Combining and compressing the build directory...'
+six.print_( 'Combining and compressing the build directory...' )
 import tarfile
 tr = tarfile.open( fname, 'w:gz' )
 tr.add( dest, 'CrossMgr' )
 tr.close()
 
-print 'Created:', fname
-print 'Done.'
+six.print_( 'Created:', fname )
+six.print_( 'Done.' )

@@ -10,6 +10,7 @@ import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
 import sys
+import six
 import math
 import types
 import threading
@@ -30,7 +31,8 @@ def getRiderName( info ):
 def getFileKey( f ):
 	bib, raceTime, count, photoTime = Utils.ParsePhotoFName(f)
 	return raceTime
-	
+
+'''
 def CmpThumb(first, second):
 	"""
 	Compares two thumbnails by race time, not bib number.
@@ -42,6 +44,7 @@ def CmpThumb(first, second):
 
 # Monkey Patch thumbnail sort by time.
 TC.CmpThumb = CmpThumb
+'''
 	
 def ListDirectory(self, directory, fileExtList):
 	"""
@@ -411,8 +414,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		if self.num is not None and t is not None:
 			# Select the photo specified by the bib and time.
-			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in xrange(2)]
-			for i in xrange(itemCount):
+			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in six.moves.range(2)]
+			for i in six.moves.range(itemCount):
 				fnameToMatch = self.thumbs.GetItem(i).GetFileName()
 				if any( f in fnameToMatch for f in fnames ):
 					break
@@ -420,7 +423,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		elif tClosest is not None:
 			tDeltaBest = 1000.0*24.0*60.0*60.0
 			iBest = None
-			for i in xrange(itemCount):
+			for i in six.moves.range(itemCount):
 				tDelta = abs( getFileKey(self.thumbs.GetItem(i).GetFileName()) - tClosest )
 				if tDelta < tDeltaBest:
 					iBest = i

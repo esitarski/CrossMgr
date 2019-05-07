@@ -3,18 +3,19 @@ import wx
 import os
 import io
 import sys
+import six
 import time
 import threading
 import traceback
-import urlparse
-import urllib
 import webbrowser
-import cStringIO as StringIO
+StringIO = six.StringIO
+from six.moves.urllib.request import url2pathname
+from six.moves.urllib.parse import urlparse
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
-import  wx.html as html
-import  wx.lib.wxpTag
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import wx.html as html
+import wx.lib.wxpTag
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 PORT_NUMBER = 8761
 
@@ -28,16 +29,16 @@ class HelpHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
 	
 	def do_GET(self):
-		up = urlparse.urlparse( self.path )
+		up = urlparse( self.path )
 		try:
 			if up.path=='/favicon.ico' and favicon:
 				content = favicon
 				content_type = 'image/x-icon'
 			else:
-				file = urllib.url2pathname(os.path.basename(up.path.split('#')[0]))
+				file = url2pathname(os.path.basename(up.path.split('#')[0]))
 				fname = os.path.join( Utils.getHelpFolder(), file )
-				with open(fname, 'rb') as fp:
-					content = fp.read().encode('utf-8')
+				with io.open(fname, 'r', encoding='utf-8') as fp:
+					content = fp.read()
 				content_type = self.html_content
 		except Exception as e:
 			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
@@ -50,7 +51,7 @@ class HelpHandler( BaseHTTPRequestHandler ):
 			self.send_header( 'Pragma', 'no-cache' )
 			self.send_header( 'Expires', '0' )
 		self.end_headers()
-		self.wfile.write( content )
+		self.wfile.write( content.encode() )
 	
 	def log_message(self, format, *args):
 		return
@@ -100,7 +101,7 @@ class HelpSearch( wx.Panel ):
 		busy = wx.BusyCursor()
 		text = self.search.GetValue()
 		
-		f = StringIO.StringIO()
+		f = StringIO()
 		try:
 			ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
 		except Exception as e:
@@ -111,7 +112,7 @@ class HelpSearch( wx.Panel ):
 		
 		if ix is not None:
 			with ix.searcher() as searcher:
-				query = QueryParser('content', ix.schema).parse(unicode(text))
+				query = QueryParser('content', ix.schema).parse(text)
 				results = searcher.search(query, limit=20)
 				
 				# Allow larger fragments
@@ -139,9 +140,7 @@ class HelpSearch( wx.Panel ):
 		
 		f.write( u'</html>\n' )
 		
-		htmlTxt = f.getvalue()
-		f.close()
-		self.html.SetPage( htmlTxt )
+		self.html.SetPage( f.getvalue() )
 	
 class HelpSearchDialog( wx.Dialog ):
 	def __init__(

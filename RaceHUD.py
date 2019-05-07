@@ -1,5 +1,6 @@
 import wx
 import os
+import six
 import bisect
 import random
 import Utils
@@ -210,7 +211,7 @@ class RaceHUD(wx.Control):
 
 			lapMax = len(raceTimes) - 2
 			xTextRight = 10000000
-			for i in xrange(len(raceTimes)-1, -1, -1):
+			for i in six.moves.range(len(raceTimes)-1, -1, -1):
 				t = raceTimes[i]
 				x = xLeft + int( t * xMult )
 				dc.DrawLine( x, yTop + hMiddle - tickHeight, x, yTop + hMiddle + tickHeight )
@@ -371,8 +372,8 @@ if __name__ == '__main__':
 	multiple = 10
 	def GetData():
 		return [
-			[t for t in xrange(0, 300*multiple, 32)],
-			[t for t in xrange(0, 300*multiple, 44)],
+			[t for t in six.moves.range(0, 300*multiple, 32)],
+			[t for t in six.moves.range(0, 300*multiple, 44)],
 		]
 
 	app = wx.App(False)

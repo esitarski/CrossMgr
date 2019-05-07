@@ -1,8 +1,10 @@
 import wx
+import io
+import os
+import six
+import datetime
 import wx.lib.intctrl
 import wx.lib.masked			as masked
-import os
-import datetime
 
 import Model
 import Utils
@@ -29,7 +31,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 	errors = []
 	raceStart = None
 	
-	with open(fname) as f, Model.LockRace() as race:
+	with io.open(fname, encoding='utf-8') as f, Model.LockRace() as race:
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
 		JChip.reset( raceDate )
@@ -89,7 +91,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			
 		race.startTime = raceStart
 		
-		for num, lapTimes in riderRaceTimes.iteritems():
+		for num, lapTimes in six.iteritems(riderRaceTimes):
 			for t in lapTimes:
 				raceTime = (t - raceStart).total_seconds()
 				if not race.hasTime(num, raceTime):
@@ -100,9 +102,9 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			
 		# Figure out the race minutes from the recorded laps.
 		if riderRaceTimes:
-			lapNumMax = max( len(ts) for ts in riderRaceTimes.itervalues() )
+			lapNumMax = max( len(ts) for ts in six.itervalues(riderRaceTimes) )
 			if lapNumMax > 0:
-				tElapsed = min( ts[-1] for ts in riderRaceTimes.itervalues() if len(ts) == lapNumMax )
+				tElapsed = min( ts[-1] for ts in six.itervalues(riderRaceTimes) if len(ts) == lapNumMax )
 				raceMinutes = int((tElapsed - raceStart).total_seconds() / 60.0) + 1
 				race.minutes = raceMinutes
 		

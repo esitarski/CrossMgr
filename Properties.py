@@ -4,6 +4,7 @@ from Undo import undo
 import wx
 import re
 import os
+import six
 import wx.lib.intctrl as intctrl
 import wx.lib.masked.numctrl as numctrl
 import wx.lib.masked as masked
@@ -840,7 +841,7 @@ class BatchPublishProperties( wx.Panel ):
 			fgs.Add( st, flag=wx.ALL, border=4 )
 		
 		for i, attr in enumerate(batchPublishAttr):
-			for k in xrange(len(headers)): fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
+			for k in six.moves.range(len(headers)): fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
 		
 			attrCB = wx.CheckBox(self, label=attr.uiname)
 			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )

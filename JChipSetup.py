@@ -4,6 +4,7 @@ import wx.lib.rcsizer  as rcs
 import socket
 import sys
 import re
+import six
 import datetime
 import Model
 import Utils
@@ -379,7 +380,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
-	print GetAllIps()
+	six.print_( GetAllIps() )
 	#sys.exit()
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

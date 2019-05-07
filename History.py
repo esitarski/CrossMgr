@@ -1,6 +1,8 @@
 import wx
 import os
 import re
+import six
+import sys
 from string import Template
 import operator
 import Model
@@ -182,7 +184,7 @@ class History( wx.Panel ):
 			]
 					
 			self.menuOptions = []
-			for caseCode in xrange(3):
+			for caseCode in six.moves.range(3):
 				menu = wx.Menu()
 				for i, (name, text, callback, cCode) in enumerate(self.popupInfo):
 					if not name:
@@ -211,7 +213,7 @@ class History( wx.Panel ):
 		success = False
 		undo.pushState()
 		with Model.LockRace() as race:
-			for rPrev in xrange( r - 1, -1, -1 ):
+			for rPrev in six.moves.range( r - 1, -1, -1 ):
 				if not h[c][rPrev].interp and (self.category is None or race.inCategory(h[c][rPrev].num, self.category)):
 					EditEntry.SwapEntry( h[c][r], h[c][rPrev] )
 					success = True
@@ -226,7 +228,7 @@ class History( wx.Panel ):
 		success = False
 		undo.pushState()
 		with Model.LockRace() as race:
-			for rNext in xrange( r + 1, len(h[c]) ):
+			for rNext in six.moves.range( r + 1, len(h[c]) ):
 				if not h[c][rNext].interp and (self.category is None or race.inCategory(h[c][rNext].num, self.category)):
 					EditEntry.SwapEntry( h[c][r], h[c][rNext] )
 					success = True
@@ -253,8 +255,8 @@ class History( wx.Panel ):
 			race = Model.race
 			race.getRider(entry.num).setStatus( Model.Rider.Pulled, entry.t + 1 )
 			race.setChanged()
-		except:
-			pass
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		
@@ -275,8 +277,8 @@ class History( wx.Panel ):
 			race = Model.race
 			race.getRider(entry.num).setStatus( Model.Rider.DNF, entry.t + 1 )
 			race.setChanged()
-		except:
-			pass
+		except Exception as e:
+			Utils.logException( e, sys.exc_info() )
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		
@@ -339,7 +341,7 @@ class History( wx.Panel ):
 			return
 		for c, h in enumerate(self.history):
 			try:
-				r = (r for r, e in enumerate(h) if e.num == nSelect).next()
+				r = next(r for r, e in enumerate(h) if e.num == nSelect)
 				self.textColour[ (r,c) ] = self.whiteColour
 				self.backgroundColour[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 			except StopIteration:
@@ -446,7 +448,7 @@ class History( wx.Panel ):
 		
 		Finisher = Model.Rider.Finisher
 		results = GetResults( category )
-		lapsDown = { rr.num:rr.gap for rr in results if unicode(rr.gap).startswith('-') }
+		lapsDown = { rr.num:rr.gap for rr in results if six.text_type(rr.gap).startswith('-') }
 		position = { rr.num:pos for pos, rr in enumerate(results, 1) if rr.status == Finisher }
 		winnerLaps = None
 		if results and results[0].status == Finisher:
@@ -482,7 +484,7 @@ class History( wx.Panel ):
 		
 		if isTimeTrial:
 			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
-			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), r.firstTime > tRace) for r in race.riders.itervalues()] )
+			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), r.firstTime > tRace) for r in six.itervalues(race.riders)] )
 			entries.sort( key = operator.attrgetter('t', 'num') )
 		
 		# Collect the number and times for all entries so we can compute lap times.
@@ -606,7 +608,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	for i, rider in enumerate(Model.getRace().riders.itervalues()):
+	for i, rider in enumerate(six.itervalues(Model.getRace().riders)):
 		rider.firstTime = i * 30.0
 	Model.getRace().isTimeTrial = True
 	history = History(mainWin)

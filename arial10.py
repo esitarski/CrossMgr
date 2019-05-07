@@ -133,9 +133,15 @@ charwidths = {
 # The only way I know to find out the padding for a desired font is
 # to set that font as the standard font in Excel and count pixels.
 import unicodedata
-def remove_accents(input_str):
-    nkfd_form = unicodedata.normalize('NFKD', unicode(input_str))
-    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+def remove_accents( s ):
+	'''
+	Accept a unicode string, and return a normal string
+	without any diacritical marks.
+	'''
+	try:
+		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except:
+		return s
 	
 def colwidth(n):
     '''Translate human-readable units to BIFF column width units'''

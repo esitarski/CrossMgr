@@ -1,4 +1,5 @@
 import wx
+import six
 import wx.grid as gridlib
 import wx.lib.intctrl
 
@@ -98,10 +99,10 @@ class Points(wx.Panel):
 		
 		maxOptions = 30
 		self.considerLabel = wx.StaticText( self, label='{}:'.format('Consider') )
-		self.bestResultsToConsider = wx.Choice( self, choices = ['All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in xrange(2,maxOptions+1)] )
+		self.bestResultsToConsider = wx.Choice( self, choices = ['All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in six.moves.range(2,maxOptions+1)] )
 		
 		self.participationLabel = wx.StaticText( self, label='{}:'.format('Must have completed') )
-		self.mustHaveCompleted = wx.Choice( self, choices = ['{} {}'.format(i, 'or more Events') for i in xrange(0,maxOptions+1)] )
+		self.mustHaveCompleted = wx.Choice( self, choices = ['{} {}'.format(i, 'or more Events') for i in six.moves.range(0,maxOptions+1)] )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.considerLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -138,7 +139,7 @@ class Points(wx.Panel):
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 50, len(self.headerNames) )
-		for col in xrange(self.grid.GetNumberCols()):
+		for col in six.moves.range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, self.headerNames[col] + (u'       ' if  self.headerNames[col] == 'DNF' else '') )
 		
 		attr = gridlib.GridCellAttr()
@@ -189,7 +190,7 @@ class Points(wx.Panel):
 	
 	def updateDepth( self, row ):
 		v = self.grid.GetCellValue(row, self.PointsCol).strip()
-		depth = unicode(len(v.split())) if v else u''
+		depth = six.text_type(len(v.split())) if v else u''
 		self.grid.SetCellValue( row, self.DepthCol, depth )
 	
 	def onGridChange( self, event ):
@@ -205,16 +206,16 @@ class Points(wx.Panel):
 	
 	def refresh( self ):
 		model = SeriesModel.model
-		for row in xrange(self.grid.GetNumberRows()):
-			for col in xrange(self.grid.GetNumberCols()):
+		for row in six.moves.range(self.grid.GetNumberRows()):
+			for col in six.moves.range(self.grid.GetNumberCols()):
 				self.grid.SetCellValue( row, col, '' )
 		
 		for row, ps in enumerate(model.pointStructures):
 			self.grid.SetCellValue( row, self.NameCol, ps.name )
 			self.grid.SetCellValue( row, self.OldNameCol, ps.name )
 			self.grid.SetCellValue( row, self.PointsCol, ps.getStr() )
-			self.grid.SetCellValue( row, self.ParticipationCol, unicode(ps.participationPoints) )
-			self.grid.SetCellValue( row, self.DNFCol, unicode(ps.dnfPoints) )
+			self.grid.SetCellValue( row, self.ParticipationCol, six.text_type(ps.participationPoints) )
+			self.grid.SetCellValue( row, self.DNFCol, six.text_type(ps.dnfPoints) )
 			self.updateDepth( row )
 			
 		wx.CallAfter( self.gridAutoSize )
@@ -240,7 +241,7 @@ class Points(wx.Panel):
 		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		pointsList = []
-		for row in xrange(self.grid.GetNumberRows()):
+		for row in six.moves.range(self.grid.GetNumberRows()):
 			if( self.grid.GetCellValue(row, self.NameCol).strip() ):
 				pointsList.append( (self.grid.GetCellValue(row, self.NameCol),
 									self.grid.GetCellValue(row, self.OldNameCol),
@@ -263,7 +264,7 @@ class Points(wx.Panel):
 			'scoreByTrueSkill': self.scoreByTrueSkill.GetValue(),
 		}
 		
-		for attr, value in modelUpdate.iteritems():
+		for attr, value in six.iteritems(modelUpdate):
 			if getattr(model, attr) != value:
 				setattr( model, attr, value )
 				model.setChanged()

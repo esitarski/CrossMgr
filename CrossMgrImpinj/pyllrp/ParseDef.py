@@ -37,7 +37,7 @@ fieldMap = {
 }
 
 def toAscii( s ):
-	return s.encode('ascii', 'ignore')
+	return s.encode('ascii', 'ignore').decode( 'ascii' )
 
 def getEnum( e ):
 	Name = toAscii(e.attributes['name'].value)
@@ -51,7 +51,7 @@ def getParameterMessage( n, isMessage ):
 	Fields = []
 	Parameters = []
 	
-	print Name, 'Message' if isMessage else 'Parameter'
+	sys.stdout.write( '{} {}\n'.format(Name, 'Message' if isMessage else 'Parameter') )
 	try:
 		TypeNum = int(n.attributes['typeNum'].value)
 	except KeyError:

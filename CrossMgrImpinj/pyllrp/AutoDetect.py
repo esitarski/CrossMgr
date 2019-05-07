@@ -1,15 +1,16 @@
 import re
+import six
 import socket
 import subprocess
-from pyllrp.pyllrp import *
+from .pyllrp import UnpackMessageFromSocket, ConnectionAttemptEvent_Parameter, ConnectionAttemptStatusType
 
 def GetDefaultHost():
 	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
 	if DEFAULT_HOST in ('127.0.0.1', '127.0.1.1'):
 		reSplit = re.compile('[: \t]+')
 		try:
-			co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
-			ifconfig = co.stdout.read()
+			co = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE)
+			ifconfig = co.stdout.read().decode()
 			for line in ifconfig.split('\n'):
 				line = line.strip()
 				try:
@@ -19,17 +20,17 @@ def GetDefaultHost():
 						if addr != '127.0.0.1':
 							DEFAULT_HOST = addr
 							break
-				except:
+				except Exception as e:
 					pass
-		except:
+		except Exception as e:
 			pass
 	return DEFAULT_HOST
 	
-def findImpinjHost( impinjPort ):
+def findImpinjHost( impinjPort=5084 ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in GetDefaultHost().split('.')]
 	j = 0
-	for i in xrange(14):
+	for i in six.moves.range(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )
@@ -61,8 +62,8 @@ def findImpinjHost( impinjPort ):
 			
 	return None
 
-def AutoDetect( impinjPort ):
-	return findImpinjHost( impinjPort ), GetDefaultHost()
+def AutoDetect( impinjPort=5084 ):
+	return findImpinjHost(impinjPort), GetDefaultHost()
 		
 if __name__ == '__main__':
-	print AutoDetect(5084)
+	print( AutoDetect() )

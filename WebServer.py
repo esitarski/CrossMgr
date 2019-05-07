@@ -1,19 +1,22 @@
 import os
 import io
 import re
+import six
 import sys
 import gzip
 import glob
 import time
 import json
 import base64
-import urllib
+urllib = six.moves.urllib
+from six.moves.urllib.parse import quote
+from six.moves.urllib.request import url2pathname
 import socket
 import datetime
 import traceback
 import threading
 from collections import defaultdict
-from Queue import Queue
+from six.moves.queue import Queue, Empty
 try:
     # Python 2.x
     from SocketServer import ThreadingMixIn
@@ -27,9 +30,8 @@ except ImportError:
 from qrcode import QRCode
 from tornado.template import Template
 from ParseHtmlPayload import ParseHtmlPayload
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import urlparse
-from StringIO import StringIO
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+StringIO = six.StringIO
 import Utils
 import Model
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
@@ -48,7 +50,7 @@ with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 
 def readBase64( fname ):
 	with io.open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
-		return "data:image/png;base64," + base64.b64encode( f.read() )
+		return "data:image/png;base64," + base64.b64encode( f.read() ).decode('ascii')
 
 with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' ) as f:
 	DefaultLogoSrc = readBase64('CrossMgrHeader.png')
@@ -69,11 +71,16 @@ with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8'
 PORT_NUMBER = 8765
 
 def gzipEncode( content ):
-	out = StringIO()
-	f = gzip.GzipFile(fileobj=out, mode='w', compresslevel=5)
-	f.write(content)
-	f.close()
-	return out.getvalue()
+	if six.PY2:
+		out = StringIO()
+		with gzip.GzipFile( fileobj=out, mode='w', compresslevel=5 ) as f:
+			f.write( content.encode(encoding='utf-8') )
+		return out.getvalue()
+	else:
+		out = io.BytesIO()
+		with gzip.GzipFile( fileobj=out, mode='wb', compresslevel=5 ) as f:
+			f.write( content.encode() if not isinstance(content, bytes) else content )
+		return out.getbuffer()
 
 def validContent( content ):
 	return content.strip().endswith( '</html>' )
@@ -90,16 +97,13 @@ def getCurrentTTCountdownHtml():
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
 	
-with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf-8') as f:
-	lapCounterTemplate = f.read()
+with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html')) as f:
+	lapCounterTemplate = f.read().encode()
 def getLapCounterHtml():
-	# DEBUG DEBUG DEBUG
-	with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf-8') as f:
-		return f.read()
 	return lapCounterTemplate
 	
-with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf-8') as f:
-	announcerHTML = f.read()
+with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html')) as f:
+	announcerHTML = f.read().encode()
 def getAnnouncerHtml():
 	return announcerHTML
 	
@@ -151,8 +155,12 @@ class ContentBuffer( object ):
 					cache['mtime'] = time.time()
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
-					cache['content'] = content.encode('utf-8')
-					cache['gzip_content'] = gzipEncode( cache['content'] )
+					if six.PY2:
+						cache['content'] = content
+						cache['gzip_content'] = gzipEncode( content )
+					else:
+						cache['content'] = content.encode() if not isinstance(content, bytes) else content
+						cache['gzip_content'] = gzipEncode( content )
 					cache['status'] = self.Changed
 					self.fileCache[fname] = cache
 			
@@ -205,7 +213,7 @@ class ContentBuffer( object ):
 	
 	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
-			self.fileCache.iteritems(),
+			six.iteritems(self.fileCache),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
 		) if not (fname.endswith('_TTCountdown.html') or fname.endswith('_TTStartList.html'))]
 	
@@ -234,7 +242,7 @@ class ContentBuffer( object ):
 			
 			result = {
 				'logoSrc': race.headerImage or DefaultLogoSrc,
-				'organizer': race.organizer.encode('utf-8'),
+				'organizer': race.organizer.encode(),
 			}
 			
 			files = self._getFiles()
@@ -252,22 +260,22 @@ class ContentBuffer( object ):
 					name = fnameShow,
 					categories = [
 							(
-								c['name'].encode('utf-8'),
-								urllib.quote(unicode(c['name']).encode('utf-8')),
+								c['name'].encode(),
+								quote(six.text_type(c['name']).encode()),
 								c.get( 'starters', 0 ),
 								c.get( 'finishers', 0 ),
 							)
 						for c in payload.get('catDetails',[]) if c['name'] != 'All'],
-					url = urllib.pathname2url(fname),
+					url = urllib.request.pathname2url(fname),
 					isTimeTrial = payload.get('isTimeTrial',False),
 					raceIsRunning = payload.get('raceIsRunning',False),
 					raceIsFinished = payload.get('raceIsFinished',False),
 				)
 				if g.isTimeTrial:
-					g.urlTTCountdown = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTCountdown.html')
-					g.urlTTStartList = urllib.pathname2url(os.path.splitext(fname)[0] + '_TTStartList.html')
+					g.urlTTCountdown = urllib.request.pathname2url(os.path.splitext(fname)[0] + '_TTCountdown.html')
+					g.urlTTStartList = urllib.request.pathname2url(os.path.splitext(fname)[0] + '_TTStartList.html')
 				else:
-					g.urlLapCounter = urllib.pathname2url('LapCounter.html')
+					g.urlLapCounter = urllib.request.pathname2url('LapCounter.html')
 				info.append( g )
 			
 			result['info'] = info
@@ -306,7 +314,7 @@ def getQRCodePage( urlPage ):
 	qr.add_data( urlPage )
 	qr.make()
 	qrcode = '["' + '",\n"'.join(
-		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in xrange(qr.modules_count)]
+		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in six.moves.range(qr.modules_count)]
 	) + '"]'
 	
 	result = StringIO()
@@ -348,7 +356,7 @@ function Draw() {
 	w( 'Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.' )
 	w( '</body>' )
 	w( '</html>' )
-	return result.getvalue().encode( 'utf-8' )
+	return result.getvalue().encode()
 
 def getIndexPage( share=True ):
 	info = contentBuffer.getIndexInfo()
@@ -363,14 +371,14 @@ def getIndexPage( share=True ):
 def WriteHtmlIndexPage():
 	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
 	try:
-		with io.open(fname, 'rb') as f:
+		with io.open(fname, 'rb') as f:	# Read as bytes as the index pages is already utf-8 encoded.
 			previousContent = f.read()
 	except Exception as e:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
 	if content != previousContent:
-		with io.open(fname, 'wb') as f:
+		with io.open(fname, 'wb') as f:	# Write as bytes as the index pages is already utf-8 encoded.
 			f.write( getIndexPage(share=False) )
 	return fname
 
@@ -380,32 +388,38 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 	reLapCounterHtml = re.compile( r'^\/LapCounter[\d-]*\.html$' )
 	
 	def do_GET(self):
-		up = urlparse.urlparse( self.path )		
+		up = urllib.parse.urlparse( self.path )		
 		content, gzip_content = None,  None
 		try:
 			if up.path=='/':
 				content = getIndexPage()
 				content_type = self.html_content
+				assert isinstance( content, bytes )
 			elif up.path=='/favicon.ico':
 				content = favicon
 				content_type = 'image/x-icon'
+				assert isinstance( content, bytes )
 			elif self.reLapCounterHtml.match( up.path ):
 				content = getLapCounterHtml()
 				content_type = self.html_content
+				assert isinstance( content, bytes )
 			elif up.path=='/Announcer.html':
 				content = getAnnouncerHtml()
 				content_type = self.html_content
+				assert isinstance( content, bytes )
 			elif up.path=='/qrcode.html':
 				urlPage = GetCrossMgrHomePage()
 				content = getQRCodePage( urlPage )
 				content_type = self.html_content
+				assert isinstance( content, bytes )
 			elif up.path=='/servertimestamp.html':
-				content = json.dumps( {
+				content = Utils.ToJSon( {
 						'servertime':time.time()*1000.0,
 						'requesttimestamp':float(up.query),
 					}
-				)
+				).encode()
 				content_type = self.json_content;
+				assert isinstance( content, bytes )
 			else:
 				file = None
 				
@@ -419,9 +433,10 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 					file = GetPreviousFileName()
 				
 				if file is None: 
-					file = urllib.url2pathname(os.path.basename(up.path))
+					file = url2pathname(os.path.basename(up.path))
 				content, gzip_content = contentBuffer.getContent( file )
 				content_type = self.html_content
+				assert isinstance( content, bytes )
 		except Exception as e:
 			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
 			return
@@ -527,7 +542,7 @@ def WsQueueListener( q ):
 		if message.get('cmd', None) == 'exit':
 			keepGoing = False
 		elif wsServer and wsServer.hasClients():
-			wsServer.send_message_to_all( json.dumps(message) )
+			wsServer.send_message_to_all( Utils.ToJSon(message).encode() )
 		q.task_done()
 	
 	wsServer = None	
@@ -621,7 +636,7 @@ def WsLapCounterQueueListener( q ):
 				race = Model.race
 				message['tNow'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
 				message['curRaceTime'] = race.curRaceTime() if race and race.startTime else 0.0
-				wsLapCounterServer.send_message_to_all( json.dumps(message) )
+				wsLapCounterServer.send_message_to_all( Utils.ToJSon(message).encode() )
 		elif cmd == 'exit':
 			keepGoing = False
 		q.task_done()
@@ -652,7 +667,7 @@ def WsLapCounterRefresh():
 			
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )
-	print 'Started httpserver on port ' , PORT_NUMBER
+	six.print_( 'Started httpserver on port ' , PORT_NUMBER )
 	try:
 		time.sleep( 10000 )
 	except KeyboardInterrupt:

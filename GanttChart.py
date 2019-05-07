@@ -1,8 +1,9 @@
 import wx
-import random
-import math
 import sys
+import six
+import math
 import bisect
+import random
 import datetime
 import Utils
 
@@ -25,7 +26,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]
-	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in xrange(len)]
+	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in six.moves.range(len)]
 	return grad
 	
 def makePastelColours( len = 50 ):
@@ -291,7 +292,7 @@ class GanttChart(wx.Control):
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		dFactor = (xRight - xLeft) / float(self.dataMax)
 		dc.SetPen(wx.Pen(wx.BLACK, 1))
-		for t in xrange(0, int(self.dataMax), d):
+		for t in six.moves.range(0, int(self.dataMax), d):
 			x = xLeft + t * dFactor
 			if t < 60*60:
 				s = '%d:%02d' % ((t / 60), t%60)
@@ -463,11 +464,11 @@ if __name__ == '__main__':
 	def GetData():
 		data = []
 		interp = []
-		for i in xrange(20):
-			data.append( [t + i*10 for t in xrange(0, 60*60, 7*60)] )
+		for i in six.moves.range(20):
+			data.append( [t + i*10 for t in six.moves.range(0, 60*60, 7*60)] )
 			if i % 5 == 1:
 				data[-1].insert( (i//3) + 1, data[-1][i//3] + 0.05 )
-			interp.append( [((t + i*10)%100)//10 for t in xrange(0, 60*60, 7*60)] )
+			interp.append( [((t + i*10)%100)//10 for t in six.moves.range(0, 60*60, 7*60)] )
 		return data, interp
 
 	app = wx.App(False)
@@ -479,7 +480,7 @@ if __name__ == '__main__':
 	t = 55*60
 	tVar = t * 0.15
 	data, interp = GetData()
-	gantt.SetData( data, [u'{}'.format(i) for i in xrange(100, 100+len(data))], interp = interp )
+	gantt.SetData( data, [u'{}'.format(i) for i in six.moves.range(100, 100+len(data))], interp = interp )
 
 	mainWin.Show()
 	app.MainLoop()

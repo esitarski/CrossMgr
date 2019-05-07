@@ -3,9 +3,10 @@ import wx.lib.intctrl
 import io
 import os
 import sys
+import six
 import webbrowser
 import ftputil
-import urllib
+from six.moves.urllib.parse import quote
 import datetime
 import threading
 import Utils
@@ -21,7 +22,7 @@ def lineno():
 
 def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', callback=None ):
 	
-	if isinstance(fname, basestring):
+	if isinstance(fname, six.string_types):
 		fname = [fname]
 	
 	# This stops the ftputils from going into an infinite loop.
@@ -33,7 +34,7 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 		import time
 		for i, f in enumerate(fname):
 			fSize = os.path.getsize(f)
-			for s in xrange(0, fSize, 1024 ):
+			for s in six.moves.range(0, fSize, 1024 ):
 				callback( ' '*1024, f, i )
 				time.sleep( 0.1 )
 			if s != fSize:
@@ -276,9 +277,9 @@ class FtpQRCodePrintout( wx.Printout ):
 		heightFieldPix = heightPix - yPix - borderPix
 		url = getattr( race, 'urlFull', '' )
 		if url.startswith( 'http://' ):
-			url = urllib.quote( url[7:] )
+			url = quote( url[7:] )
 		else:
-			url = urllib.quote( url )
+			url = quote( url )
 			
 		qrWidth = int( min(heightPix - yPix - borderPix * 2, widthPix - borderPix * 2) )
 		xLeft = (widthPix - qrWidth) // 2

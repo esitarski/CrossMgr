@@ -1,6 +1,7 @@
 import io
 import os
 import re
+import six
 import json
 import datetime
 
@@ -14,8 +15,10 @@ def ParseHtmlPayload( fname=None, content=None ):
 
 	if not content:
 		try:
-			with io.open(fname, encoding='utf-8') as f:
+			with io.open(fname) as f:
 				content = f.read()
+			if six.PY2:
+				content = content.encode()
 		except Exception as e:
 			return {'success':False, 'error':e, 'payload':None}
 	
@@ -85,10 +88,10 @@ if __name__ == '__main__':
 	result = ParseHtmlPayload( htmlFile )
 	if result['success']:
 		payload = result['payload']
-		print payload['raceScheduledStart']
+		six.print_(  payload['raceScheduledStart'] )
 		catDetails = payload['catDetails']
 		catDetails.sort( key=lambda c: (c['startOffset'], c['name']) )
 		for c in catDetails:
 			if c['name'] != 'All':
-				print c['name'], c['startOffset']
-		print payload['logoSrc']
+				six.print_(  c['name'], c['startOffset'] )
+		six.print_( payload['logoSrc'] )

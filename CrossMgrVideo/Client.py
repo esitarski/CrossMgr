@@ -1,4 +1,5 @@
 import os
+import six
 import json
 import socket
 import random
@@ -17,7 +18,7 @@ def sendMessages( messages ):
 		try:
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.connect((HOST, PORT))
-			s.sendall( delimiter.join(messages) )
+			s.sendall( delimiter.join(messages).encode() )
 		except Exception as e:
 			return False, e
 	
@@ -26,9 +27,9 @@ def sendMessages( messages ):
 def PhotoGetRequest( kwargs, cmd ):
 	assert 'dirName' in kwargs, 'dirName is a required argument'
 	messageArgs = {k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
-			for k, v in kwargs.iteritems() if k in Fields }
+			for k, v in six.iteritems(kwargs) if k in Fields }
 	
-	assert all( k in Fields for k in kwargs.iterkeys() ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in kwargs.iterkeys()]))
+	assert all( k in Fields for k in six.iterkeys(kwargs) ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in six.iterkeys(kwargs)]))
 	messageArgs['cmd'] = cmd
 	
 	return json.dumps( messageArgs, separators=(',',':') )
@@ -37,7 +38,7 @@ def PhotoSendRequests( messages, cmd='photo' ):
 	return sendMessages( [PhotoGetRequest(m, cmd) for m in messages] )
 
 def PhotoAcknowledge():
-	return sendMessage( [json.dumps( {'cmd':'ack'}, separators=(',',':') )] )
+	return sendMessages( [json.dumps( {'cmd':'ack'}, separators=(',',':') )] )
 	
 if __name__ == '__main__':
 	now = datetime.datetime.now
@@ -74,9 +75,9 @@ Trek Factory Racing'''.split( '\n' )
 		shutil.rmtree( dirName )
 	os.mkdir( dirName )
 	
-	for q in xrange(1000):
+	for q in six.moves.range(1000):
 		requests = []
-		for i in xrange(random.randint(1, 2)):
+		for i in six.moves.range(random.randint(1, 2)):
 			tNow = now()
 			requests.append( {
 					'dirName':		dirName,
@@ -88,7 +89,7 @@ Trek Factory Racing'''.split( '\n' )
 			)
 		success, error = PhotoSendRequests( requests, 'photo' )
 		if not success:
-			print error
+			six.print_( error )
 		time.sleep( random.random() * 2 )
 		for request in requests:
 			request.update( {
@@ -99,12 +100,12 @@ Trek Factory Racing'''.split( '\n' )
 			} )
 		success, error = PhotoSendRequests( requests, 'rename' )
 		if not success:
-			print error
+			six.print_( error )
 		time.sleep( random.random() * 2 )
 	
 	while 1:
 		requests = []
-		for i in xrange(random.randint(0, 5)):
+		for i in six.moves.range(random.randint(0, 5)):
 			tNow = now()
 			requests.append( {
 					'dirName':		dirName,
@@ -119,5 +120,5 @@ Trek Factory Racing'''.split( '\n' )
 			)
 		success, error = PhotoSendRequests( requests )
 		if not success:
-			print error
+			six.print_( error )
 		time.sleep( random.random() * 2 )

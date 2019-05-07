@@ -8,7 +8,6 @@ import sqlite3
 import platform
 import datetime
 from PIL import Image
-import StringIO
 from Database import Database
 
 def MPegToDatabase( fnameMPeg, tRecorded=None ):
@@ -51,7 +50,6 @@ def MPegToDatabase( fnameMPeg, tRecorded=None ):
 	del tsJpgs[:]
 	
 	ts = tStart + datetime.timedelta( seconds = (t - tStart).total_seconds()/2.0 )
-	print tStart, ts, t
 	#          ts,ts_start,bib,first_name,last_name,team,wave,race_name
 	trigger = (ts, tStart,  1,     '',    fnameMPeg, '',  '',  'Test'  )
 	database.write( tsTriggers=[trigger] )

@@ -2,6 +2,7 @@ import wx
 import wx.grid			as gridlib
 import re
 import os
+import six
 import sys
 import math
 import operator
@@ -215,7 +216,7 @@ class Pulled( wx.Panel ):
 
 		if colName == 'pulledBib' or colName == 'lapsToGo':
 			bib = int( '0' + re.sub( '[^0-9]', '', self.grid.GetCellValue(row, self.iCol['pulledBib'])) )
-			for r in xrange(row, -1, -1):
+			for r in six.moves.range(row, -1, -1):
 				lapsToGo = int( '0' + self.grid.GetCellValue(r, self.iCol['lapsToGo']) )
 				if lapsToGo:
 					break
@@ -242,7 +243,7 @@ class Pulled( wx.Panel ):
 			'pulledError':self.getError(bib, lapsToGo, laps), 'lapsToGo':lapsToGo
 		}		
 		for col, (name, attr, valuesType) in enumerate(self.colNameFields):
-			self.grid.SetCellValue( row, col, unicode(values[attr]) )
+			self.grid.SetCellValue( row, col, six.text_type(values[attr]) )
 		return values
 	
 	def getRow( self, row ):
@@ -288,7 +289,7 @@ class Pulled( wx.Panel ):
 		
 		# Remove repeated lapsToGo entries.
 		col = self.iCol['lapsToGo']
-		for row in xrange(self.grid.GetNumberRows()-1, 0, -1):
+		for row in six.moves.range(self.grid.GetNumberRows()-1, 0, -1):
 			if self.grid.GetCellValue( row, col) == self.grid.GetCellValue( row-1, col):
 				self.grid.SetCellValue( row, col, u'')
 		
@@ -306,7 +307,7 @@ class Pulled( wx.Panel ):
 			self.grid.ClearGrid()
 			return
 		col = self.iCol['pulledBib']
-		tableBibs = set( int(u'0' + self.grid.GetCellValue(row, col)) for row in xrange(self.grid.GetNumberRows()) )
+		tableBibs = set( int(u'0' + self.grid.GetCellValue(row, col)) for row in six.moves.range(self.grid.GetNumberRows()) )
 		tableBibs.discard( 0 )
 		if not tableBibs:
 			return self.updateGrid()
@@ -323,7 +324,7 @@ class Pulled( wx.Panel ):
 		self.grid.SaveEditControlValue()	# Make sure the current edit is committed.
 		self.grid.DisableCellEditControl()
 		
-		rows = [self.getRow(r) for r in xrange(self.grid.GetNumberRows())]
+		rows = [self.getRow(r) for r in six.moves.range(self.grid.GetNumberRows())]
 		rows = [rv for rv in rows if rv['pulledBib']]
 		if not rows:
 			return True
@@ -353,7 +354,7 @@ class Pulled( wx.Panel ):
 		for rv in rows:
 			lapsToGoPulled[rv['lapsToGo']].append( rv['pulledBib'] )
 			
-		for lapsToGo, bibs in lapsToGoPulled.iteritems():
+		for lapsToGo, bibs in six.iteritems(lapsToGoPulled):
 			if lapsToGo <= 0:
 				continue
 			for seq, bib in enumerate(bibs):

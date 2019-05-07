@@ -1,7 +1,8 @@
 import wx
 import wx.adv
-import datetime
 import os
+import six
+import datetime
 
 DatePickerCtrl = wx.adv.DatePickerCtrl
 
@@ -110,8 +111,8 @@ if __name__ == '__main__':
 	mainWin.Show()
 	
 	dlg = ManageDatabase( mainWin, 1000000, 'TestDatabase', None, None )
-	print dlg.ShowModal() == wx.ID_OK
-	print dlg.GetValues()
+	six.print_( dlg.ShowModal() == wx.ID_OK )
+	six.print_(  dlg.GetValues() )
 	dlg.Destroy()
 	
 	app.MainLoop()

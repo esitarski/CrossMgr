@@ -3,12 +3,13 @@
 import shutil
 import os
 import sys
+import six
 
-print 'Building help files from markdown...'
+six.print_( 'Building help files from markdown...' )
 from helptxt.compile import CompileHelp
 CompileHelp( 'helptxt' )
 
-print 'Indexing help files...'
+six.print_( 'Indexing help files...' )
 from HelpIndex import BuildHelpIndex
 BuildHelpIndex()
 

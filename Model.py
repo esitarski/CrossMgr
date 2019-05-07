@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import io
 import re
+import six
 import sys
 import math
 import time
@@ -130,7 +131,7 @@ def SetToIntervals( s ):
 	return intervals
 	
 def IntervalsToSet( intervals ):
-	return set.union( *[set(xrange(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
+	return set.union( *[set(six.moves.range(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
 
 #----------------------------------------------------------------------
 class Category(object):
@@ -213,7 +214,7 @@ class Category(object):
 					bounds[0], bounds[1] = bounds[1], bounds[0]
 					
 				if isExclusion:
-					self.exclude.update( xrange(bounds[0], bounds[1]+1) )
+					self.exclude.update( six.moves.range(bounds[0], bounds[1]+1) )
 				else:
 					self.intervals.append( tuple(bounds) )
 					
@@ -251,12 +252,12 @@ class Category(object):
 						gender = 'Open', lappedRidersMustContinue = False,
 						catType = CatWave, publishFlag = True, uploadFlag = True, seriesFlag = True ):
 		
-		self.name = unicode(name).strip()
-		self.catStr = unicode(catStr).strip()
+		self.name = six.text_type(name).strip()
+		self.catStr = six.text_type(catStr).strip()
 		self.startOffset = startOffset if startOffset else '00:00:00'
 		
 		self.catType = self.CatWave
-		catType = unicode(catType).strip().lower()
+		catType = six.text_type(catType).strip().lower()
 		try:
 			self.catType = int(catType)
 		except ValueError:
@@ -269,7 +270,7 @@ class Category(object):
 				pass
 		
 		def isBool( v ):
-			v = unicode(v).strip()
+			v = six.text_type(v).strip()
 			return v[:1] in u'TtYy1'
 		
 		self.active = isBool( active )
@@ -318,7 +319,7 @@ class Category(object):
 			
 		self.gender = 'Open'
 		try:
-			genderFirstChar = unicode(gender or u'Open').strip()[:1].lower()
+			genderFirstChar = six.text_type(gender or u'Open').strip()[:1].lower()
 			if genderFirstChar in 'mhu':
 				self.gender = 'Men'
 			elif genderFirstChar in 'wfld':
@@ -338,7 +339,7 @@ class Category(object):
 			i.sort()
 	
 	def getLapDistance( self, lap ):
-		if self.distanceType != Category.DistanceByLap:
+		if lap is None or self.distanceType != Category.DistanceByLap:
 			return None
 		if lap <= 0:
 			return 0
@@ -346,7 +347,7 @@ class Category(object):
 		return self.firstLapDistance if lap == 1 and self.firstLapDistance else self.distance
 	
 	def getDistanceAtLap( self, lap ):
-		if self.distanceType != Category.DistanceByLap:
+		if lap is None or self.distanceType != Category.DistanceByLap:
 			return None
 		if lap == 1 and not (self.firstLapDistance or self.distance):
 			return None
@@ -433,12 +434,6 @@ class Category(object):
 	key_attr = ['sequence', 'name', 'active', 'startOffset', '_numLaps', 'raceMinutes', 'catStr',
 				'distance', 'distanceType', 'firstLapDistance',
 				'gender', 'lappedRidersMustContinue', 'catType', 'publishFlag', 'uploadFlag', 'seriesFlag']
-	def __cmp__( self, c ):
-		for attr in self.key_attr:
-			cCmp = cmp( getattr(self, attr, None), getattr(c, attr, None) )
-			if cCmp != 0:
-				return cCmp 
-		return 0
 	
 	def key( self ):
 		return tuple( getattr(self, attr, None) for attr in self.key_attr )
@@ -452,7 +447,7 @@ class Category(object):
 			return
 		
 		# Remove any singleton intervals.
-		for j in xrange(len(self.intervals)-1, -1, -1):
+		for j in six.moves.range(len(self.intervals)-1, -1, -1):
 			interval = self.intervals[j]
 			if num == interval[0] == interval[1]:
 				self.intervals.pop( j )
@@ -510,11 +505,6 @@ class Category(object):
 		self.intervals = SetToIntervals( s )
 
 #------------------------------------------------------------------------------------------------------------------
-
-def CmpEntryTT( e1, e2 ):
-	if e1.lap == 0 or e2.lap == 0:
-		return cmp( (e1.lap, e1.t), (e2.lap, e2.t) )
-	return e1.__cmp__( e2 )
 
 class Entry(object):
 	__slots__ = ('num', 'lap', 't', 'interp')		# Suppress the default dictionary to save space.
@@ -762,8 +752,8 @@ class Rider(object):
 		while len(iTimes) > 2:
 			try:
 				# Don't correct the last lap - assume the rider looped around and cross the finish again.
-				i = (i for i in xrange(len(iTimes) - 1, 0, -1) \
-						if iTimes[i] - iTimes[i-1] < mustBeRepeatInterval).next()
+				i = next(i for i in six.moves.range(len(iTimes) - 1, 0, -1) \
+						if iTimes[i] - iTimes[i-1] < mustBeRepeatInterval)
 				if i == 1:
 					iDelete = i				# if the short interval is the first one, delete the next entry.
 				elif i == len(iTimes) - 1:
@@ -895,13 +885,13 @@ class Rider(object):
 		iTimes = [(t, False) for t in iTimes]
 		
 		# Check for missing lap data and fill it in.
-		for missing in xrange(1, 3):
+		for missing in six.moves.range(1, 3):
 			mMin = expected * missing + expected * Rider.pMin
 			mMax = expected * missing + expected * Rider.pMax
-			for j in (j for j in xrange(len(iTimes)-1, 0, -1) if mMin < (iTimes[j][0] - iTimes[j-1][0]) < mMax):
+			for j in (j for j in six.moves.range(len(iTimes)-1, 0, -1) if mMin < (iTimes[j][0] - iTimes[j-1][0]) < mMax):
 				tStart = iTimes[j-1][0]
 				interp = float(iTimes[j][0] - tStart) / float(missing + 1)
-				fill = [(tStart + interp * m, True) for m in xrange(1, missing+1)]
+				fill = [(tStart + interp * m, True) for m in six.moves.range(1, missing+1)]
 				iTimes[j:j] = fill
 
 		# Pad out to one entry exceeding stop time if we are less than it.
@@ -910,7 +900,7 @@ class Rider(object):
 			tBegin += expected
 			iMax = max( 1, int(math.ceil(st - tBegin) / expected) if expected > 0 else 1 )
 			iMax = min( iMax, Rider.entriesMax - len(iTimes) )
-			iTimes.extend( [(tBegin + expected * i, True) for i in xrange(iMax)] )
+			iTimes.extend( [(tBegin + expected * i, True) for i in six.moves.range(iMax)] )
 
 		# Remove any entries exceeding the dnfPulledTime.
 		if dnfPulledTime is not None:
@@ -1026,8 +1016,8 @@ class NumTimeInfo(object):
 	
 	def adjustAllTimes( self, dTime ):
 		newInfo = {}
-		for num, numInfo in self.info.iteritems():
-			newInfo[num] = dict( (t+dTime, v) for t, v in numInfo.iteritems() )
+		for num, numInfo in six.iteritems(self.info):
+			newInfo[num] = dict( (t+dTime, v) for t, v in six.iteritems(numInfo) )
 		self.info = newInfo
 	
 	def delete( self, num, t, reason = None ):
@@ -1238,7 +1228,7 @@ class Race( object ):
 		return {
 			u'EventName':	self.name,
 			u'EventTitle':	self.title,
-			u'RaceNum':		unicode(self.raceNum),
+			u'RaceNum':		six.text_type(self.raceNum),
 			u'City':		self.city,
 			u'StateProv':	self.stateProv,
 			u'Country':		self.country,
@@ -1250,10 +1240,10 @@ class Race( object ):
 			u'RaceDate':	self.date,
 			u'MinPossibleLapTime':self.minPossibleLapTime,
 			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
-			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else unicode(self.scheduledStart),
+			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else six.text_type(self.scheduledStart),
 			u'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
 			u'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
-			u'PhotoCount':	unicode(self.photoCount),
+			u'PhotoCount':	six.text_type(self.photoCount),
 			u'ExcelLink':	excelLinkStr,
 			u'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 
@@ -1264,7 +1254,7 @@ class Race( object ):
 	
 	def getBibTimes( self ):
 		bibTimes = []
-		for bib, rider in self.riders.iteritems():
+		for bib, rider in six.iteritems(self.riders):
 			for t in rider.times:
 				bibTimes.append( (bib, t) )
 		bibTimes.sort( key=operator.itemgetter(1, 0) )
@@ -1330,7 +1320,7 @@ class Race( object ):
 	def set( self, values = None ):
 		self.reset()
 		if values is not None:
-			for k, d in values.iteritems():
+			for k, d in six.iteritems(values):
 				if k in self.__dict__:
 					self.__dict__[k] = d
 
@@ -1426,7 +1416,7 @@ class Race( object ):
 		rider.clearCache()
 			
 	def clearAllRiderTimes( self ):
-		for num in self.riders.iterkeys():
+		for num in six.iterkeys(self.riders):
 			self.deleteRiderTimes( num )
 		self.firstRecordedTime = None
 		self.startTime = None
@@ -1502,12 +1492,12 @@ class Race( object ):
 		self.setChanged()
 		
 	def hasRiderTimes( self ):
-		return any( r.hasTimes() for r in self.riders.itervalues() )
+		return any( r.hasTimes() for r in six.itervalues(self.riders) )
 
 	@memoize
 	def getLastKnownTimeRider( self ):
 		tBest, rBest = -1, None
-		for r in self.riders.itervalues():
+		for r in six.itervalues(self.riders):
 			try:
 				t = r.getLastKnownTime()
 				if t > tBest:
@@ -1520,7 +1510,7 @@ class Race( object ):
 	@memoize
 	def getBestLapTime( self, lap ):
 		try:
-			return min( (r.getBestLapTime(lap), n) for n, r in self.riders.iteritems() )
+			return min( (r.getBestLapTime(lap), n) for n, r in six.iteritems(self.riders) )
 		except ValueError:
 			return 0.0
 	
@@ -1528,7 +1518,7 @@ class Race( object ):
 	def getAverageLapTime( self ):
 		Finisher = Rider.Finisher
 		tTotal, count = 0.0, 0
-		for r in self.riders.itervalues():
+		for r in six.itervalues(self.riders):
 			if r.status == Finisher:
 				t, c = r.getTimeCount()
 				tTotal += t
@@ -1543,7 +1533,7 @@ class Race( object ):
 	def getMedianLapTime( self, category=None ):
 		Finisher = Rider.Finisher
 		lapTimes = sorted( itertools.chain.from_iterable( r.getLapTimesForMedian()
-			for r in self.riders.itervalues() if r.status == Finisher and race.inCategory(r.num, category) ) )
+			for r in six.itervalues(self.riders) if r.status == Finisher and race.inCategory(r.num, category) ) )
 		if not lapTimes:
 			return 8.0 * 60.0	# Default to 8 minutes.
 		lapTimesLen = len(lapTimes)
@@ -1553,7 +1543,7 @@ class Race( object ):
 	@memoize
 	def interpolate( self ):
 		return sorted(
-			itertools.chain.from_iterable( rider.interpolate() for rider in self.riders.itervalues() ),
+			itertools.chain.from_iterable( rider.interpolate() for rider in six.itervalues(self.riders) ),
 			key=Entry.key
 		)
 
@@ -1578,7 +1568,7 @@ class Race( object ):
 		
 		# Find the number of laps for the category of each rider.
 		riderNumLapsMax = {}
-		for r in self.riders.iterkeys():
+		for r in six.iterkeys(self.riders):
 			try:
 				catNumLaps = self.getNumLapsFromCategory(self.getCategory(r))
 				riderNumLapsMax[r] = catNumLaps if catNumLaps else 999999
@@ -1600,7 +1590,7 @@ class Race( object ):
 
 		# Find the first entry for the given lap.
 		try:
-			iFirst = (i for i, e in enumerate(entries) if e.lap == lap).next()
+			iFirst = next(i for i, e in enumerate(entries) if e.lap == lap)
 			# Remove all entries except the next time for each rider after the given lap.
 			seen = {}
 			return entries[:iFirst] + [ seen.setdefault(e.num, e) for e in entries[iFirst:] if e.num not in seen ]
@@ -1683,7 +1673,7 @@ class Race( object ):
 		
 		try:
 			if leaderTimesLen > 1 and self.allCategoriesHaveRaceLapsDefined:
-				maxRaceLaps = max( self.getNumLapsFromCategory(category) for category in self.categories.itervalues() if category.active )
+				maxRaceLaps = max( self.getNumLapsFromCategory(category) for category in six.itervalues(self.categories) if category.active )
 				leaderTimes = leaderTimes[:maxRaceLaps + 1]
 				leaderNums = leaderNums[:maxRaceLaps + 1]
 		except:
@@ -1788,7 +1778,7 @@ class Race( object ):
 	def getCategoryRaceLaps( self ):
 		crl = {}
 		raceTime = self.minutes * 60.0
-		for c, (catTimes, catNums) in self.getCategoryTimesNums().iteritems():
+		for c, (catTimes, catNums) in six.iteritems(self.getCategoryTimesNums()):
 			if len(catTimes) < 2 or self.getMaxLap(c) < 2:
 				continue
 			lap = bisect.bisect( catTimes, raceTime, hi=len(catTimes) - 1 )
@@ -1827,7 +1817,7 @@ class Race( object ):
 		entries = self.interpolate()
 		i = bisect.bisect_left( entries, Entry(num = 0, lap = leaderLap, t = leaderTime, interp = False) )
 		try:
-			riderTime = (e.t for e in itertools.islice(entries, i, len(entries)) if e.num == num and e.lap == leaderLap).next()
+			riderTime = next((e.t for e in itertools.islice(entries, i, len(entries)) if e.num == num and e.lap == leaderLap))
 		except StopIteration:
 			return False
 		
@@ -1837,7 +1827,7 @@ class Race( object ):
 	def getCatPrevNextLeaders( self, t ):
 		''' Return a dict accessed by number referring to category. '''
 		catPrevLeaders, catNextLeaders = {}, {}
-		for c, (times, nums) in self.getCategoryTimesNums().iteritems():
+		for c, (times, nums) in six.iteritems(self.getCategoryTimesNums()):
 			i = bisect.bisect_right( times, t ) - 1
 			catPrevLeaders[nums[i]] = c
 			try:
@@ -1855,23 +1845,23 @@ class Race( object ):
 			return None, None
 		
 	def hasDNFRiders( self ):
-		return any(r.status == Rider.DNF for r in self.riders.itervalues())
+		return any(r.status == Rider.DNF for r in six.itervalues(self.riders))
 
 	def numDNFRiders( self ):
-		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.DNF) )
+		return sum( (1 for r in six.itervalues(self.riders) if r.status == Rider.DNF) )
 
 	def hasPulledRiders( self ):
-		return any(r.status == Rider.Pulled for r in self.riders.itervalues())
+		return any(r.status == Rider.Pulled for r in six.itervalues(self.riders))
 
 	def numPulledRiders( self ):
-		return sum( (1 for r in self.riders.itervalues() if r.status == Rider.Pulled) )
+		return sum( (1 for r in six.itervalues(self.riders) if r.status == Rider.Pulled) )
 
 	def getCategories( self, startWaveOnly=True, publishOnly=False, uploadOnly=False, excludeCustom=False, excludeCombined=False ):
 		if startWaveOnly:
 			CatWave = Category.CatWave
-			activeCategories = [c for c in self.categories.itervalues() if c.active and c.catType == CatWave]
+			activeCategories = [c for c in six.itervalues(self.categories) if c.active and c.catType == CatWave]
 		else:
-			activeCategories = [c for c in self.categories.itervalues() if c.active]
+			activeCategories = [c for c in six.itervalues(self.categories) if c.active]
 		
 		if publishOnly:
 			activeCategories = [c for c in activeCategories if c.publishFlag]
@@ -1890,7 +1880,7 @@ class Race( object ):
 			toExclude = set()
 			for i, c in enumerate(activeCategories):
 				if c.catType == Category.CatWave:
-					for j in xrange(i+1, len(activeCategories)):
+					for j in six.moves.range(i+1, len(activeCategories)):
 						if activeCategories[j].catType == Category.CatCustom:
 							continue
 						if activeCategories[j].catType == Category.CatComponent:
@@ -1907,9 +1897,9 @@ class Race( object ):
 		categories = self.getCategories( excludeCustom=True, startWaveOnly=False )
 		CatComponent = Category.CatComponent
 		components = []
-		for i in xrange(len(categories)):
+		for i in six.moves.range(len(categories)):
 			if categories[i] == category:
-				for j in xrange(i+1, len(categories)):
+				for j in six.moves.range(i+1, len(categories)):
 					if categories[j].catType == CatComponent:
 						components.append( categories[j] )
 				return components
@@ -1949,7 +1939,7 @@ class Race( object ):
 		self.categoryMask = ''
 		
 		masks = []
-		for c in self.categories.itervalues():
+		for c in six.itervalues(self.categories):
 			if not c.active:
 				continue
 			maskCur = c.getMask()
@@ -1974,7 +1964,7 @@ class Race( object ):
 		return self.categoryMask
 
 	def getAllCategories( self ):
-		return sorted( self.categories.itervalues(), key=Category.key )
+		return sorted( six.itervalues(self.categories), key=Category.key )
 
 	def setActiveCategories( self, active = None ):
 		for i, c in enumerate(self.getAllCategories()):
@@ -1988,7 +1978,7 @@ class Race( object ):
 			return category
 		if category.catType == Category.CatCustom:
 			return None
-		categories = [c for c in self.categories.itervalues() if c.active and c.catType != Category.CatCustom]
+		categories = [c for c in six.itervalues(self.categories) if c.active and c.catType != Category.CatCustom]
 		if not categories:
 			return None
 		categories.sort( lambda c: c.sequence )
@@ -2006,7 +1996,7 @@ class Race( object ):
 		if not self.hasCategoryCache():
 			self._buildCategoryCache()
 		
-		categories = [c for c in self.categories.itervalues() if c.active and c.catType != Category.CatCustom and c.sequence > category.sequence]
+		categories = [c for c in six.itervalues(self.categories) if c.active and c.catType != Category.CatCustom and c.sequence > category.sequence]
 		categories.sort( key = operator.attrgetter('sequence') )
 		
 		unionNums = set()
@@ -2019,7 +2009,7 @@ class Race( object ):
 			category.setFromSet( unionNums )
 		
 	def adjustAllCategoryWaveNumbers( self ):
-		categories = [c for c in self.categories.itervalues() if c.active and c.catType == Category.CatWave]
+		categories = [c for c in six.itervalues(self.categories) if c.active and c.catType == Category.CatWave]
 		for c in categories:
 			self.adjustCategoryWaveNumbers( c )
 
@@ -2066,7 +2056,7 @@ class Race( object ):
 			args = dict( t )
 			if not 'name' in args or not args['name']:
 				continue
-			if unicode(args.get('active', True)).strip().upper() in u'1YT':
+			if six.text_type(args.get('active', True)).strip().upper() in u'1YT':
 				allInactive = False
 				break
 		
@@ -2100,7 +2090,7 @@ class Race( object ):
 			# Ensure we don't have any duplicate category fullnames.
 			if category.fullname in newCategories:
 				originalName = category.name
-				for count in xrange(1, 999):
+				for count in six.moves.range(1, 999):
 					category.name = u'{} {}({})'.format(originalName, _('Copy'), count)
 					if not category.fullname in newCategories:
 						break
@@ -2110,13 +2100,13 @@ class Race( object ):
 		if self.categories != newCategories:
 			# Copy the new values into the existing categories.
 			# This minimizes the impact if the calling code is in a category loop.
-			for cNewName, cNew in newCategories.iteritems():
+			for cNewName, cNew in six.iteritems(newCategories):
 				try:
 					self.categories[cNewName].copy( cNew )
 				except KeyError:
 					self.categories[cNewName] = cNew
 			
-			self.categories = { cName:cValue for cName, cValue in self.categories.iteritems() if cName in newCategories }
+			self.categories = { cName:cValue for cName, cValue in six.iteritems(self.categories) if cName in newCategories }
 			self.setChanged()
 			
 			changed = True
@@ -2128,7 +2118,7 @@ class Race( object ):
 		if self.categories:
 			self.allCategoriesHaveRaceLapsDefined = True
 			self.categoryLapsMax = 0
-			for category in self.categories.itervalues():
+			for category in six.itervalues(self.categories):
 				if not category.active:
 					continue
 				if self.getNumLapsFromCategory(category):
@@ -2162,7 +2152,7 @@ class Race( object ):
 		fp.write( u'# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
 		fp.write( u'#################################################################\n' )
 		categoryTypeName = ['Wave', 'Component', 'Custom']
-		for c in sorted( self.categories.itervalues(), key = Category.key ):
+		for c in sorted( six.itervalues(self.categories), key = Category.key ):
 			fp.write( u'{}\n'.format( u'|'.join( [
 							c.name.replace('|',''),
 							c.catStr.replace('|',''),
@@ -2188,7 +2178,7 @@ class Race( object ):
 		self.setCategories( self.mergeExistingCategoryAttributes(categories) )
 
 	def catCount( self, category ):
-		return sum( 1 for num in self.riders.iterkeys() if self.inCategory(num, category) )
+		return sum( 1 for num in six.iterkeys(self.riders) if self.inCategory(num, category) )
 
 	def getNumsForCategory( self, category ):
 		try:
@@ -2202,7 +2192,7 @@ class Race( object ):
 
 	def hasCategory( self, category ):
 		# Check if there is at least one rider in this category.
-		return any( self.inCategory(num, category) for num in self.riders.iterkeys() )
+		return any( self.inCategory(num, category) for num in six.iterkeys(self.riders) )
 
 	def hasTime( self, num, t ):
 		try:
@@ -2295,7 +2285,7 @@ class Race( object ):
 	@memoize
 	def getCategoriesInUse( self ):
 		catSet = set()
-		for num in self.riders.iterkeys():
+		for num in six.iterkeys(self.riders):
 			category = self.getCategory( num )
 			if category:
 				catSet.add( category )
@@ -2326,7 +2316,7 @@ class Race( object ):
 			distance = distanceKm if self.distanceUnit == self.UnitKm else distanceKm*0.621371
 		else:
 			distance = None
-		for c in self.categories.itervalues():
+		for c in six.itervalues(self.categories):
 			c.distance = distance
 	
 	def resetCategoryCache( self ):
@@ -2338,7 +2328,7 @@ class Race( object ):
 		self.resetCache();
 		
 	def resetRiderCaches( self ):
-		for rider in self.riders.itervalues():
+		for rider in six.itervalues(self.riders):
 			rider.clearCache()
 	
 	def getRaceIntro( self ):
@@ -2347,7 +2337,7 @@ class Race( object ):
 			u'{}: {} ({})'.format(_('Start'), self.scheduledStart, self.date),
 			_('Time Trial') if self.isTimeTrial else _('Mass Start'),
 		]
-		activeCategories = [c for c in self.categories.itervalues() if c.active]
+		activeCategories = [c for c in self.categories.values() if c.active]
 		if all( c.numLaps for c in activeCategories ):
 			activeCategories.sort( key = Category.key )
 			intro.append( u'{}: {}'.format(_('Category Laps'), ', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
@@ -2376,7 +2366,7 @@ class Race( object ):
 
 		# Check if the leader is expected in the next few riders.
 		pos = bisect.bisect_right( entries, Entry(num=0, lap=0, t=self.curRaceTime(), interp=False) )
-		for i in xrange(pos, min(pos+5, len(entries))):
+		for i in six.moves.range(pos, min(pos+5, len(entries))):
 			if entries[i].num == leader:
 				return True
 		return False
@@ -2429,20 +2419,20 @@ class Race( object ):
 		catTimesNums = self.getCategoryTimesNums()
 		ret = [{},{}]
 		scanMax = len( self.riders ) * 2
-		for cat, catEntries in catEntriesDict.iteritems():
+		for cat, catEntries in six.iteritems(catEntriesDict):
 			try:
 				catTimes, catNums = catTimesNums[cat]
 			except:
 				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
-			for r in xrange(2):
+			for r in six.moves.range(2):
 				if iLap >= len(catTimes):
 					break
 				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
 
 				seen = {}
 				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
-								for i in xrange(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
+								for i in six.moves.range(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				for pos, e in enumerate(catFinishers):
 					ret[r][e.num] = pos + 1
@@ -2462,20 +2452,20 @@ class Race( object ):
 		catTimesNums = self.getCategoryTimesNums()
 		ret = [{},{}]
 		scanMax = len( self.riders ) * 2
-		for cat, catEntries in catEntriesDict.iteritems():
+		for cat, catEntries in six.iteritems(catEntriesDict):
 			try:
 				catTimes, catNums = catTimesNums[cat]
 			except:
 				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
-			for r in xrange(2):
+			for r in six.moves.range(2):
 				if iLap >= len(catTimes):
 					break
 				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
 
 				seen = {}
 				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
-								for i in xrange(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
+								for i in six.moves.range(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				leader = catFinishers[0]
 				for e in catFinishers:
@@ -2526,7 +2516,7 @@ class Race( object ):
 		except ValueError:
 			return
 		
-		for c in self.categories.itervalues():
+		for c in six.itervalues(self.categories):
 			if c != category:
 				c.removeNum( num )
 				c.normalize()
@@ -2543,7 +2533,7 @@ class Race( object ):
 	@memoize
 	def isCategoryEmpty( self, category ):
 		inCategory = self.inCategory
-		return not (category.active and any(inCategory(num, category) for num in self.riders.iterkeys()) )
+		return not (category.active and any(inCategory(num, category) for num in six.iterkeys(self.riders)) )
 	
 	@memoize
 	def allRidersFinished( self ):
@@ -2554,7 +2544,7 @@ class Race( object ):
 			
 		try:
 			entries = self.interpolate()
-			eLastRecorded = (e for e in reversed(entries) if not e.interp).next()
+			eLastRecorded = next(e for e in reversed(entries) if not e.interp)
 			return self.lastRaceTime() - eLastRecorded.t > 60.0*60.0
 		except StopIteration:
 			pass
@@ -2589,7 +2579,7 @@ class Race( object ):
 				return (t + tOffset, num, count)
 		
 		data = []
-		for num, r in self.riders.iteritems():
+		for num, r in six.iteritems(self.riders):
 			entryCount = 1
 			if getattr(self, 'isTimeTrial', False):
 				data.append( dr(r.firstTime, num, entryCount) )
@@ -2619,14 +2609,14 @@ class Race( object ):
 		riders = 30
 		self.startTime = datetime.datetime.now()
 		tMax = 0.0
-		for num in xrange(100,100+riders+1):
+		for num in six.moves.range(100,100+riders+1):
 			t = 0
 			mu = random.normalvariate( mean, var )	# Rider's random average lap time.
-			for laps in xrange(lapsTotal):
+			for laps in six.moves.range(lapsTotal):
 				t += random.normalvariate(mu, var )	# Rider's lap time.
 				tMax = max( tMax, t )
 				self.addTime( num, t )
-		for j, i in enumerate(xrange(100,100+riders+1,10)):
+		for j, i in enumerate(six.moves.range(100,100+riders+1,10)):
 			name = 'Cat{}'.format(j+1)
 			self.categories[name] = Category(True, name, '{}-{}'.format(i, i+9) )
 
@@ -2737,7 +2727,7 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 		
 if __name__ == '__main__':
 	'''
-	s = set.union( set(xrange(10)), set(xrange(20,30)) )
+	s = set.union( set(six.moves.range(10)), set(six.moves.range(20,30)) )
 	i = SetToIntervals( s )
 	ss = IntervalsToSet( i )
 	print( s )
@@ -2749,10 +2739,10 @@ if __name__ == '__main__':
 	r = newRace()
 	
 	'''
-	for i in xrange(1, 11):
+	for i in six.moves.range(1, 11):
 		r.addTime( 10, i*100 )
 	r.addTime( 10, 10*100 + 1 )
-	print( u'\n'.join( unicode(f) for f in r.interpolate()[:20] ) )
+	print( u'\n'.join( six.text_type(f) for f in r.interpolate()[:20] ) )
 	'''
 	
 	categories = [
@@ -2760,7 +2750,7 @@ if __name__ == '__main__':
 	]
 	r.setCategories( categories )
 
-	#for i in xrange(1,8):
+	#for i in six.moves.range(1,8):
 	#	r.addTime( 10, i * 60 )
 	r.addTime( 10, 2 * 60 )
 	r.addTime( 10, 3 * 60 )

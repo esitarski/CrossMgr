@@ -1,6 +1,7 @@
 from __future__ import print_function
 
-import socket 
+import socket
+import six
 import sys
 import time
 import datetime
@@ -14,8 +15,7 @@ import Utils
 import Model
 import select
 from threading import Thread as Process
-from Queue import Queue
-from Queue import Empty
+from six.moves.queue import Queue, Empty
 
 ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
 
@@ -29,7 +29,7 @@ def sendReaderEvent( tagTimes ):
 combine = datetime.datetime.combine
 reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
 
-CR = chr( 0x0d )	# JChip delimiter
+CR = u'\r'			# JChip delimiter
 
 dateToday = datetime.date.today()
 tSameCount = 0
@@ -54,17 +54,17 @@ listener = None
 def socketSend( s, message ):
 	sLen = 0
 	while sLen < len(message):
-		sLen += s.send( message[sLen:] )
+		sLen += s.send( message[sLen:].encode() )
 		
-def socketByLine(s):
-	buffer = s.recv( 4096 )
+def socketByLine( s ):
+	buffer = s.recv( 4096 ).decode()
 	while 1:
 		nl = buffer.find( CR )
 		if nl >= 0:
 			yield buffer[:nl+1]
 			buffer = buffer[nl+1:]
 		else:
-			more = s.recv( 4096 )
+			more = s.recv( 4096 ).decode()
 			if more:
 				buffer = buffer + more
 			else:
@@ -114,7 +114,7 @@ reUnprintable = re.compile( r'[\x00-\x19\x7f-\xff]' )
 def formatAscii( s ):
 	r = []
 	charsPerLine = 40
-	for i in xrange(0, len(s), charsPerLine):
+	for i in six.moves.range(0, len(s), charsPerLine):
 		line = s[i:i+charsPerLine]
 		r.append( ''.join( '.{}'.format(c) for c in reUnprintable.sub('.', line)) )
 		r.append( ''.join( '{:02x}'.format(ord(c)) for c in line ) )
@@ -192,13 +192,13 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				connCur, addr = s.accept()
 				connCur.setblocking( 0 )
 				inputs.append( connCur )
-				readerReadStr[connCur], readerWriteStr[connCur] = '', ''
+				readerReadStr[connCur], readerWriteStr[connCur] = u'', u''
 				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
 			# This socket is a data socket.  Get the data.
 			try:
-				data = s.recv( 4096 )
+				data = s.recv( 4096 ).decode()
 			except Exception as e:
 				qLog( 'connection', 'error: {}'.format(e) )
 				data = None
@@ -288,16 +288,16 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						q.put( ('name', name) )
 						
 						# Now, get the reader's current time.
-						cmd = 'GT'
+						cmd = u'GT'
 						qLog( 'transmitting', '{} command to "{}" (gettime)'.format(cmd, readerName[s]) )
-						readerWriteStr[s] += '{}{}'.format(cmd, CR)
+						readerWriteStr[s] += u'{}{}'.format(cmd, CR)
 						safeAppend( outputs, s )
 					
 					elif line.startswith( 'GT' ):
 						tNow = datetime.datetime.now()
 						
 						iStart = 3
-						hh, mm, ss, hs = [int(line[i:i+2]) for i in xrange(iStart, iStart + 4 * 2, 2)]
+						hh, mm, ss, hs = [int(line[i:i+2]) for i in six.moves.range(iStart, iStart + 4 * 2, 2)]
 						try:
 							iDate = line.index( 'date=' ) + 5
 							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
@@ -324,10 +324,10 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 								) )
 						
 						# Send command to start sending data.
-						cmd = 'S0000'
+						cmd = u'S0000'
 						qLog( 'transmitting', '{} command to "{}" (start transmission)'.format(
 							cmd, readerName.get(s, '<<unknown>>')) )
-						readerWriteStr[s] += '{}{}'.format(cmd, CR)
+						readerWriteStr[s] += u'{}{}'.format(cmd, CR)
 						safeAppend( outputs, s )
 					else:
 						q.put( ('unknown', line ) )
@@ -343,10 +343,10 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		for s in writable:
 			# Write out the waiting data.  If we sent it all, remove it from the outputs list.
 			try:
-				readerWriteStr[s] = readerWriteStr[s][s.send(readerWriteStr[s]):]
+				readerWriteStr[s] = readerWriteStr[s][s.send(readerWriteStr[s].encode()):]
 			except Exception as e:
-				qLog( 'exception', 'send error: {}'.format(e) )
-				readerWriteStr[s] = ''
+				qLog( 'exception', u'send error: {}'.format(e) )
+				readerWriteStr[s] = u''
 			if not readerWriteStr[s]:
 				outputs.remove( s )
 			
@@ -376,7 +376,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in xrange(32):
+		for i in six.moves.range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None
@@ -423,7 +423,7 @@ def CleanupListener():
 if __name__ == '__main__':
 	StartListener()
 	count = 0
-	for count in xrange(50):
+	for count in six.moves.range(50):
 		time.sleep( 1 )
 		sys.stdout.write( '.' )
 		messages = GetData()

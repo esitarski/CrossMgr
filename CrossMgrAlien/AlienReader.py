@@ -331,7 +331,7 @@ for cmd, cmdInfo in cmds.iteritems():
 	try:
 		assert isinstance(cmdInfo, dict)
 	except AssertionError:
-		print 'command: "{}" is described incorrectly:'.format(cmd), cmdInfo
+		print ( 'command: "{}" is described incorrectly:'.format(cmd), cmdInfo )
 		raise
 		
 	# Check if InOut is specified, it is the only type.
@@ -339,7 +339,7 @@ for cmd, cmdInfo in cmds.iteritems():
 		try:
 			assert len(cmdInfo) == 1
 		except AssertionError:
-			print 'command: "{}" specifies InOut but also has other specifier: {}'.format(cmd, tName), ','.join( cmdInfo.keys() )
+			print ( 'command: "{}" specifies InOut but also has other specifier: {}'.format(cmd, tName), ','.join( cmdInfo.keys() ) )
 			raise
 	
 	# Check for any unknown type specifiers.
@@ -347,7 +347,7 @@ for cmd, cmdInfo in cmds.iteritems():
 		try:
 			assert tName in [In, Out, InOut]
 		except AssertionError:
-			print 'command: "{}" has unknown specifier: {}'.format(cmd, tName)
+			print ( 'command: "{}" has unknown specifier: {}'.format(cmd, tName) )
 			raise
 			
 	# Normalize types to In and Out only
@@ -383,7 +383,7 @@ def setter( self, value, cmd, inType, outType ):
 	assert inType.validate(value)
 	
 	inStr = inType.toStr( value )
-	response = sendCmd( self.cmdSocket, cmd, 'set {} = {}'.format(cmd, inStr), outType )
+	response = sendCmd( self.cmdSocket, cmd, u'set {} = {}'.format(cmd, inStr), outType )
 	
 	if not outType:
 		return None
@@ -524,7 +524,7 @@ class AlienReader( object ):
 		except:
 			ret = outType.fromStr( response )
 		if self.testMode:
-			print '{}:'.format(name), ret
+			print ( '{}:'.format(name), ret )
 		return ret
 		
 	def __setattr__( self, name, value ):
@@ -552,7 +552,7 @@ class AlienReader( object ):
 		retName, retValue = response[:ieq], response[ieq+1:]
 		ret = outType.fromStr( retValue.strip() )
 		if self.testMode:
-			print name, '=', ret
+			print ( '{}={}'.format( name, ret )
 		return ret
 	
 	def getResponse( self, conn ):
@@ -576,7 +576,7 @@ class AlienReader( object ):
 			return outType.toStr( outType.repValue() )
 		else:
 			# Send the command to the Alien reader and get the response.
-			self.cmdSocket.sendall( '{}{}{}'.format(self.SupressPrefix, cmdStr, self.CmdDelim) )
+			self.cmdSocket.sendall( u'{}{}{}'.format(self.SupressPrefix, cmdStr, self.CmdDelim).encode() )
 			response = self.getResponse( self.cmdSocket )
 			return response
 	
@@ -585,7 +585,7 @@ class AlienReader( object ):
 			raise ValueError( '{} is not a list for Clear'.format(listName) )
 		ret = self.sendCmd( 'Clear', 'Clear {}'.format(listName) )
 		if self.testMode:
-			print 'Clear:', ret
+			print ( 'Clear:', ret )
 		return ret == '{} has been cleared!'.format(listName if listName != 'IOList' else 'IO List')
 
 	def execCmd( self, cmdStr ):

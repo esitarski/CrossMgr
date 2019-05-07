@@ -1,4 +1,5 @@
 import re
+import six
 import socket
 import subprocess
 
@@ -58,7 +59,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 	success = False
 	ip = [int(i) for i in GetDefaultHost().split('.')]
 	j = 0
-	for i in xrange(14):
+	for i in six.moves.range(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )
@@ -66,7 +67,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 		if not (0 <= ipTest[-1] < 256):
 			continue
 			
-		alienHost = '.'.join( '{}'.format(v) for v in ipTest )
+		alienHost = u'.'.join( u'{}'.format(v) for v in ipTest )
 		
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 		cmdSocket.settimeout( 0.5 )
@@ -77,7 +78,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 		
 		for i, cmd in enumerate(initCmds):
 			try:
-				cmdSocket.sendall( '{}{}{}'.format('' if i < 2 else CmdPrefix, cmd, CmdDelim) )
+				cmdSocket.sendall( u'{}{}{}'.format('' if i < 2 else CmdPrefix, cmd, CmdDelim).encode() )
 			except:
 				continue
 			try:
@@ -105,4 +106,4 @@ def AutoDetect( alienPort = DefaultAlienCmdPort ):
 	return findAlienHost( alienPort ), GetDefaultHost()
 		
 if __name__ == '__main__':
-	print AutoDetect(5084)
+	print ( AutoDetect(5084) )

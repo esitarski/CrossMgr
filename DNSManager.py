@@ -1,6 +1,7 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
 import os
+import six
 import sys
 import itertools
 
@@ -66,12 +67,12 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		bs.SetSizeHints(self)
 	
 	def onSelectAll(self, evt):
-		for row in xrange(self.list.GetItemCount()):
+		for row in six.moves.range(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
 	def onDeselectAll( self, evt ):
-		for row in xrange(self.list.GetItemCount()):
+		for row in six.moves.range(self.list.GetItemCount()):
 			self.list.SetItemState(row, 0, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
@@ -86,7 +87,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			return
 		
 		lines = []
-		for i in xrange( 0, len(nums), 10 ):
+		for i in six.moves.range( 0, len(nums), 10 ):
 			lines.append( ', '.join( '{}'.format(n) for n in itertools.islice( nums, i, min(i+10, len(nums)) ) ) )
 		message = u'{}\n\n{}'.format(_('DNS the following entrants?'), u',\n'.join(lines))
 			
@@ -141,7 +142,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				self.clearGrid()
 				return
 		
-			for num, info in externalInfo.iteritems():
+			for num, info in six.iteritems(externalInfo):
 				if num <= 0 or (self.category and not race.inCategory(num, self.category)):
 					continue
 				rider = race.riders.get( num, None )
@@ -161,14 +162,14 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			self.list.InsertColumn( c+1, GetTranslation(f), wx.LIST_FORMAT_RIGHT if f.startswith('Bib') else wx.LIST_FORMAT_LEFT )
 		
 		# Create the data.  Sort by Bib#
-		data = [tuple( num if i == 0 else info.get(f, '') for i, f in enumerate(externalFields)) for num, info in potentialDNS.iteritems()]
+		data = [tuple( num if i == 0 else info.get(f, '') for i, f in enumerate(externalFields)) for num, info in six.iteritems(potentialDNS)]
 		data.sort()
 		
 		# Populate the list.
 		for row, d in enumerate(data):
-			index = self.list.InsertItem(sys.maxint, u'{}'.format(d[0]), self.sm_rt)
+			index = self.list.InsertItem(888888, u'{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
-				self.list.SetItem( index, i+1, unicode(v) )
+				self.list.SetItem( index, i+1, six.text_type(v) )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
 		
 		# Set the sort fields and configure the sorter mixin.

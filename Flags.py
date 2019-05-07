@@ -1,6 +1,6 @@
-
 import wx
 import os
+import six
 import base64
 import Utils
 
@@ -51,7 +51,7 @@ def GetFlagBase64ForUCI( codes ):
 	return flags
 	
 if __name__ == '__main__':
-	print GetFlagBase64( 'CAN' )
-	print GetFlagBase64( 'USA' )
-	print GetFlagBase64( 'SUI' )
-	print GetFlagBase64ForUCI( ['CAN19920203', 'USA19870407', 'SUI20020905'] )
+	six.print_( GetFlagBase64( 'CAN' ) )
+	six.print_( GetFlagBase64( 'USA' ) )
+	six.print_( GetFlagBase64( 'SUI' ) )
+	six.print_( GetFlagBase64ForUCI( ['CAN19920203', 'USA19870407', 'SUI20020905'] ) )
