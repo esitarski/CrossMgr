@@ -766,7 +766,7 @@ class MainWin( wx.Frame ):
 		Impinj.TransmitPower = int(self.config.Read('TransmitPower', '0')) or None
 		Impinj.TagPopulation = int(self.config.Read('TagPopulation', '0')) or None
 		Impinj.TagTransitTime = int(self.config.Read('TagTransitTime', '0')) or None
-		Impinj.ProcessMethod = int(self.config.Read('ProcessMethod', '0'))		# Default to QuadraticRegression.
+		Impinj.ProcessingMethod = int(self.config.Read('ProcessingMethod', '0'))		# Default to QuadraticRegression.
 		Impinj.AntennaChoice = int(self.config.Read('AntennaChoice', '1'))		# Default to MaxDB antenna.
 		Impinj.RemoveOutliers = (self.config.Read('RemoveOutliers', 'True').upper()[:1] == 'T')
 	
