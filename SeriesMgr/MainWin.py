@@ -210,7 +210,7 @@ class MainWin( wx.Frame ):
 		'''
 		
 		recent = wx.Menu()
-		self.fileMenu.Append(wx.ID_ANY, "&Recent Files", recent)
+		menu = self.fileMenu.AppendSubMenu( recent, _("&Recent Files") )
 		self.filehistory.UseMenu( recent )
 		self.filehistory.AddFilesToMenu()
 		
@@ -707,7 +707,7 @@ table.results tr td.fastest{
 					SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
 				except:
 					fp.seek( 0 )
-					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', , errors='replace' ).load()
+					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', errors='replace' ).load()
 		except IOError:
 			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return

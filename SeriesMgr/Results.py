@@ -851,9 +851,8 @@ class Results(wx.Panel):
 		model = SeriesModel.model
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
-		wait = wx.BusyCursor()
-		self.raceResults = model.extractAllRaceResults()
-		del wait
+		with wx.BusyCursor() as wait:
+			self.raceResults = model.extractAllRaceResults()
 		
 		self.fixCategories()
 		self.grid.ClearGrid()
@@ -871,7 +870,19 @@ class Results(wx.Panel):
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
-		results = [rr for rr in results if rr[3] > 0]
+		
+		def to_num( v ):
+			try:
+				return int(v)
+			except ValueError:
+				pass
+			try:
+				return float(v)
+			except ValueError:
+				pass
+			return 0
+		
+		results = [rr for rr in results if to_num(rr[3]) > 0]
 		
 		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
 		
