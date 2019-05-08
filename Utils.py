@@ -314,8 +314,8 @@ def PlaySound( soundFile ):
 
 def GetSelectedRows( grid ):
 	rows = []
-	for row in six.moves.range(grid.GetNumberRows()):
-		if any(grid.IsInSelection(row, col) for col in six.moves.range(grid.GetNumberCols())):
+	for row in range(grid.GetNumberRows()):
+		if any(grid.IsInSelection(row, col) for col in range(grid.GetNumberCols())):
 			rows.append( row )
 	return rows
 
@@ -372,14 +372,14 @@ def SetLabel( st, label ):
 	return False
 
 def MakeGridReadOnly( grid ):
-	for c in six.moves.range(grid.GetNumberCols()):
+	for c in range(grid.GetNumberCols()):
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly()
 		grid.SetColAttr( c, attr )
 
 def SwapGridRows( grid, r, rTarget ):
 	if r != rTarget and 0 <= r < grid.GetNumberRows() and 0 <= rTarget < grid.GetNumberRows():
-		for c in six.moves.range(grid.GetNumberCols()):
+		for c in range(grid.GetNumberCols()):
 			vSave = grid.GetCellValue( rTarget, c )
 			grid.SetCellValue( rTarget, c, grid.GetCellValue(r,c) )
 			grid.SetCellValue( r, c, vSave )
@@ -410,7 +410,7 @@ def colorFromStr( s ):
 	if len(s) == 3:
 		r, g, b = [int(c, 16)<<4 for c in s]
 	else:
-		r, g, b = [int(s[i:i+2], 16) for i in six.moves.range(0, 6, 2)]
+		r, g, b = [int(s[i:i+2], 16) for i in range(0, 6, 2)]
 	return wx.Colour(r, g, b)
 
 epoch = datetime.datetime.utcfromtimestamp(0)

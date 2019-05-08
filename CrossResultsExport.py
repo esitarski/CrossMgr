@@ -51,7 +51,7 @@ def CrossResultsExport( fname ):
 		return False, _('"LastName" must be linked to a column in the Excel sheetl')
 	
 	# Filter the fields by what exists in the data.
-	crossResultsFields = [CrossResultsFields[i][0] for i in six.moves.range(len(hasField)) if hasField[i]]
+	crossResultsFields = [CrossResultsFields[i][0] for i in range(len(hasField)) if hasField[i]]
 	
 	year, month, day = race.date.split( '-' )
 	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
@@ -103,7 +103,7 @@ def CrossResultsExport( fname ):
 					}[field]() )
 				
 				# Lap Times.
-				for i in six.moves.range(maxLaps):
+				for i in range(maxLaps):
 					try:
 						lapTime = formatTimeGap(rr.lapTimes[i])
 					except IndexError:

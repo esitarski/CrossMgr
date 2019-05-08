@@ -3,7 +3,7 @@ import six
 import Utils
 
 class GrowTable( object ):
-	bold, alignLeft, alignCentre, alignRight, alignTop, alignMiddle, alignBottom = [1<<i for i in six.moves.range(7)]
+	bold, alignLeft, alignCentre, alignRight, alignTop, alignMiddle, alignBottom = [1<<i for i in range(7)]
 	alignCenter = alignCentre
 	attrDefault = alignRight|alignTop
 	
@@ -39,15 +39,15 @@ class GrowTable( object ):
 		if grid.GetRowLabelSize() > 0:
 			colLabel = 1
 		if grid.GetColLabelSize() > 0:
-			for c in six.moves.range(grid.GetNumberCols()):
+			for c in range(grid.GetNumberCols()):
 				self.set( 0, c+colLabel, grid.GetColLabelValue(), self.bold )
 			rowLabel = 1
 		if colLabel > 0:
-			for r in six.moves.range(grid.GetNumberRows()):
+			for r in range(grid.GetNumberRows()):
 				self.set( r+rowLabel, 0, grid.GetRowLabelValue(), self.bold )
 		
-		for r in six.moves.range(grid.GetNumberRows()):
-			for c in six.moves.range(grid.GetNumberCols()):
+		for r in range(grid.GetNumberRows()):
+			for c in range(grid.GetNumberCols()):
 				v = grid.GetCellValue( r+1, c )
 				if not v:
 					continue
@@ -59,18 +59,18 @@ class GrowTable( object ):
 			self.hLine( 0, 0, numCols )
 			if rowLabel > 0:
 				self.hLine( 1, 0, numCols, True )
-			for r in six.moves.range(rowLabel+1, grid.GetNumberRows()+1):
+			for r in range(rowLabel+1, grid.GetNumberRows()+1):
 				self.hLine( r+rowLabel, 0, numCols )
 		if verticalGridlines:
 			self.vLine( 0, 0, numRows )
 			if colLabel > 0:
 				self.hLine( 1, 0, numRows, True )
-			for c in six.moves.range(colLabel+1, grid.GetNumberCols()+1):
+			for c in range(colLabel+1, grid.GetNumberCols()+1):
 				self.hLine( c+colLabel, 0, numRows )
 		
 	def set( self, row, col, value, attr=attrDefault ):
-		self.table += [[] for i in six.moves.range(max(0, row+1 - len(self.table)))]
-		self.table[row] += [(u'', self.attrDefault) for i in six.moves.range(max(0, col+1 - len(self.table[row])))]
+		self.table += [[] for i in range(max(0, row+1 - len(self.table)))]
+		self.table[row] += [(u'', self.attrDefault) for i in range(max(0, col+1 - len(self.table[row])))]
 		self.table[row][col] = (value, attr)
 		return row, col
 		
@@ -151,7 +151,7 @@ class GrowTable( object ):
 		self.penThick = None
 		
 		fontSizeLeft, fontSizeRight = 2, 512
-		for i in six.moves.range(20):
+		for i in range(20):
 			fontSize = (fontSizeLeft + fontSizeRight) // 2
 			tWidth, tHeight = self.getSize( dc, fontSize )
 			if tWidth < width and tHeight < height:

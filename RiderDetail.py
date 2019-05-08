@@ -535,7 +535,7 @@ class RiderDetail( wx.Panel ):
 				(_('Note') + u'...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
 			]
 			self.menuOptions = []
-			for caseCode in six.moves.range(3):
+			for caseCode in range(3):
 				menu = wx.Menu()
 				for name, text, callback, cCase in self.popupInfo:
 					if name:
@@ -595,10 +595,10 @@ class RiderDetail( wx.Panel ):
 					pass
 			timeStr = []
 			timesPerRow = 4
-			for i in six.moves.range(0, len(times), timesPerRow):
+			for i in range(0, len(times), timesPerRow):
 				timeStr.append(
 					u',  '.join( u'{} {}: {}'.format(_('Lap'), rows[j]+1, Utils.formatTime(times[i]))
-							for j in six.moves.range(i, min(len(times), i+timesPerRow) ) ) )
+							for j in range(i, min(len(times), i+timesPerRow) ) ) )
 			timeStr = u',\n'.join( timeStr )
 			message = u'{} {}:\n\n{}\n\n{}?'.format(_('Delete entries of Bib'), num, timeStr, _('Confirm Delete'))
 			if Utils.MessageOKCancel( self, message, _('Delete Times'), wx.ICON_WARNING ):
@@ -1070,10 +1070,10 @@ class RiderDetail( wx.Panel ):
 			]
 			self.splitMenuInfo = [
 					(u'{} {}'.format( split-1, _('Splits') if split > 2 else _('Split') ),
-					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in six.moves.range(2,8) ] + [
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in range(2,8) ] + [
 					(_('Custom') + u'...', lambda evt, s = self: s.doCustomSplitLap())]
 			self.menuCase = {}
-			for caseCodeCur in six.moves.range(3):
+			for caseCodeCur in range(3):
 				menu = wx.Menu()
 				for name, text, callback, cCase in self.ganttMenuInfo:
 					if not name:
@@ -1208,7 +1208,7 @@ class RiderDetail( wx.Panel ):
 		visibleRow = self.visibleRow
 		self.visibleRow = None
 
-		data = [ [] for c in six.moves.range(len(self.colnames)) ]
+		data = [ [] for c in range(len(self.colnames)) ]
 		self.grid.Set( data = data )
 		self.grid.Reset()
 		self.category.Clear()
@@ -1406,7 +1406,7 @@ class RiderDetail( wx.Panel ):
 				raceTime = 0.0
 			ganttData = [raceTime]
 			ganttInterp = [False]
-			data = [ [] for c in six.moves.range(len(self.colnames)) ]
+			data = [ [] for c in range(len(self.colnames)) ]
 			graphData = []
 			numTimeInfo = race.numTimeInfo
 			tSum = 0.0
@@ -1455,7 +1455,7 @@ class RiderDetail( wx.Panel ):
 					data[i].append( fields.get(name, u'') )
 				if fields.get('highlightColour',None):
 					highlightColour = fields.get('highlightColour',None)
-					for i in six.moves.range(len(self.colnames)):
+					for i in range(len(self.colnames)):
 						backgroundColour[(r,i)] = highlightColour
 			
 			self.grid.Set( data=data, backgroundColour=backgroundColour, colnames=self.colnames )
@@ -1603,7 +1603,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
 	riderDetail = RiderDetail(mainWin)
 	riderDetail.refresh()
-	lineData = [random.normalvariate(100,15) for x in six.moves.range(12)]
+	lineData = [random.normalvariate(100,15) for x in range(12)]
 	ganttData = [0, lineData[0] * 3]
 	ganttInterp = [False, False]
 	for i, d in enumerate(lineData):

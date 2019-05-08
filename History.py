@@ -184,7 +184,7 @@ class History( wx.Panel ):
 			]
 					
 			self.menuOptions = []
-			for caseCode in six.moves.range(3):
+			for caseCode in range(3):
 				menu = wx.Menu()
 				for i, (name, text, callback, cCode) in enumerate(self.popupInfo):
 					if not name:
@@ -213,7 +213,7 @@ class History( wx.Panel ):
 		success = False
 		undo.pushState()
 		with Model.LockRace() as race:
-			for rPrev in six.moves.range( r - 1, -1, -1 ):
+			for rPrev in range( r - 1, -1, -1 ):
 				if not h[c][rPrev].interp and (self.category is None or race.inCategory(h[c][rPrev].num, self.category)):
 					EditEntry.SwapEntry( h[c][r], h[c][rPrev] )
 					success = True
@@ -228,7 +228,7 @@ class History( wx.Panel ):
 		success = False
 		undo.pushState()
 		with Model.LockRace() as race:
-			for rNext in six.moves.range( r + 1, len(h[c]) ):
+			for rNext in range( r + 1, len(h[c]) ):
 				if not h[c][rNext].interp and (self.category is None or race.inCategory(h[c][rNext].num, self.category)):
 					EditEntry.SwapEntry( h[c][r], h[c][rNext] )
 					success = True

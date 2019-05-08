@@ -26,7 +26,7 @@ def SetToIntervals( s ):
 def IntervalsToSet( intervals ):
 	ret = set()
 	for i in intervals:
-		ret.update( six.moves.range(i[0], i[1]+1) )
+		ret.update( range(i[0], i[1]+1) )
 	return ret
 
 class CategoryPredicate( object ):
@@ -161,7 +161,7 @@ class CategoryPredicate( object ):
 							bounds[0], bounds[1] = bounds[1], bounds[0]
 							
 						if isExclusion:
-							self.exclude.update( six.moves.range(bounds[0], bounds[1]+1) )
+							self.exclude.update( range(bounds[0], bounds[1]+1) )
 						else:
 							self.intervals.append( tuple(bounds) )
 							

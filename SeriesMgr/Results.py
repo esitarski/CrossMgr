@@ -906,7 +906,7 @@ class Results(wx.Panel):
 					else u''
 				)
 				
-			for c in six.moves.range( 0, len(headerNames) ):
+			for c in range( len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
 		
@@ -921,7 +921,7 @@ class Results(wx.Panel):
 					return numberMax
 				
 			data = []
-			for r in six.moves.range(0, self.grid.GetNumberRows()):
+			for r in range(self.grid.GetNumberRows()):
 				rowOrig = [self.grid.GetCellValue(r, c) for c in six.moves.range(0, self.grid.GetNumberCols())]
 				rowCmp = rowOrig[:]
 				rowCmp[0] = int(rowCmp[0])

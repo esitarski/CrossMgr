@@ -38,7 +38,7 @@ class AliasesLicense(wx.Panel):
 		self.grid = AliasGrid( self )
 		self.grid.CreateGrid( 0, len(headerNames) )
 		self.grid.SetRowLabelSize( 64 )
-		for col in six.moves.range(self.grid.GetNumberCols()):
+		for col in range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, headerNames[col] )
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -78,7 +78,7 @@ class AliasesLicense(wx.Panel):
 		references = []
 		
 		self.grid.SaveEditControlValue()
-		for row in six.moves.range(self.grid.GetNumberRows()):
+		for row in range(self.grid.GetNumberRows()):
 			reference = self.grid.GetCellValue( row, 0 ).strip()
 			if reference:
 				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]

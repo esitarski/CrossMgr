@@ -108,7 +108,7 @@ class ColTable( Grid.GridTableBase ):
 			elementIndex = [(e, i) for i, e in enumerate(self.data[iCol])]
 		elementIndex.sort()
 		
-		for c in six.moves.range(len(self.data)):
+		for c in range(len(self.data)):
 			self.data[c] = [self.data[c][i] for e, i in elementIndex]
 			if descending:
 				self.data[c].reverse()

@@ -119,7 +119,7 @@ class TimeTrialRecord( wx.Panel ):
 		for col, name in enumerate(self.headerNames):
 			self.grid.SetColLabelValue( col, name )
 		self.grid.SetLabelFont( self.font )
-		for col in six.moves.range(self.grid.GetNumberCols()):
+		for col in range(self.grid.GetNumberCols()):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( self.font )
 			if col == 0:
@@ -179,8 +179,8 @@ class TimeTrialRecord( wx.Panel ):
 		
 		emptyRow = self.grid.GetNumberRows() + 1
 		success = False
-		for i in six.moves.range(2):
-			for row in six.moves.range(self.grid.GetNumberRows()):
+		for i in range(2):
+			for row in range(self.grid.GetNumberRows()):
 				if not self.grid.GetCellValue(row, 0):
 					emptyRow = row
 					break
@@ -200,7 +200,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
 		
 		# Set the edit cursor at the first empty bib position.
-		for row in six.moves.range(self.grid.GetNumberRows()):
+		for row in range(self.grid.GetNumberRows()):
 			text = self.grid.GetCellValue(row, 1)
 			if not text or text == '0':
 				self.grid.SetGridCursor( row, 1 )
@@ -212,7 +212,7 @@ class TimeTrialRecord( wx.Panel ):
 		# Find the last row without a time.
 		timesBibs = []
 		timesNoBibs = []
-		for row in six.moves.range(self.grid.GetNumberRows()):
+		for row in range(self.grid.GetNumberRows()):
 			tStr = self.grid.GetCellValue(row, 0).strip()
 			if not tStr:
 				continue
@@ -228,8 +228,8 @@ class TimeTrialRecord( wx.Panel ):
 			else:
 				timesNoBibs.append( tStr )
 				
-		for row in six.moves.range(self.grid.GetNumberRows()):
-			for column in six.moves.range(self.grid.GetNumberCols()):
+		for row in range(self.grid.GetNumberRows()):
+			for column in range(self.grid.GetNumberCols()):
 				self.grid.SetCellValue(row, column, '' )
 		
 		'''

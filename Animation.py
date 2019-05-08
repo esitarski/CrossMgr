@@ -9,7 +9,7 @@ import Utils
 
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
-						for q in six.moves.range(i))] for i in six.moves.range(3,9)]
+						for q in range(i))] for i in range(3,9)]
 def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
 
@@ -29,7 +29,7 @@ def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
 		lapRatio = 1.0
 	else:
 		iLapHint = max( 0, min(maxLaps, iLapHint) )
-		for iLapHint in six.moves.range(iLapHint+1 if leaderRaceTimes[iLapHint] < tCur else 0, maxLaps):
+		for iLapHint in range(iLapHint+1 if leaderRaceTimes[iLapHint] < tCur else 0, maxLaps):
 			if leaderRaceTimes[iLapHint] <= tCur:
 				break
 		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint])
@@ -104,7 +104,7 @@ class Animation(wx.Control):
 											241)
 		'''
 		
-		trackRGB = [int('7FE57F'[i:i+2],16) for i in six.moves.range(0, 6, 2)]
+		trackRGB = [int('7FE57F'[i:i+2],16) for i in range(0, 6, 2)]
 		self.trackColour = wx.Colour( *trackRGB )
 		
 		self.colours = []
@@ -123,7 +123,7 @@ class Animation(wx.Control):
 			wx.Colour(230,230,230),
 			wx.Colour(205,133,63)
 			]
-		self.trackColour = wx.Colour( *[int('7FE57F'[i:i+2],16) for i in six.moves.range(0, 6, 2)] )
+		self.trackColour = wx.Colour( *[int('7FE57F'[i:i+2],16) for i in range(0, 6, 2)] )
 		
 		# Cache the fonts if the size does not change.
 		self.numberFont	= None
@@ -472,7 +472,7 @@ class Animation(wx.Control):
 											-x[4] if x[4] is not None else 0.0) )
 			
 			topThree = {}
-			for j, i in enumerate(six.moves.range(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):
+			for j, i in enumerate(range(len(riderXYPT) - 1, max(-1,len(riderXYPT)-4), -1)):
 				topThree[riderXYPT[i][0]] = j
 			
 			numRiders = len(riderXYPT)
@@ -552,11 +552,11 @@ class Animation(wx.Control):
 			if tDistance:
 				table.append( tDistance.split(',') )
 			table = list(zip(*table))	# Transpose the table.  Nice!
-			for col in six.moves.range(len(table[0])-1, -1, -1):
-				tWidth = max( dc.GetTextExtent(table[row][col])[0] for row in six.moves.range(len(table)) )
+			for col in range(len(table[0])-1, -1, -1):
+				tWidth = max( dc.GetTextExtent(table[row][col])[0] for row in range(len(table)) )
 				xRight -= tWidth
 				yCur = r + r/2 - laneWidth - tHeight * 1.25 - tHeight
-				for row in six.moves.range(len(table)):
+				for row in range(len(table)):
 					t = table[row][col]
 					tShow = t.lstrip('0')
 					if tShow.startswith('.'):
@@ -640,10 +640,10 @@ class Animation(wx.Control):
 		
 if __name__ == '__main__':
 	data = {}
-	for num in six.moves.range(100,200):
+	for num in range(100,200):
 		mean = random.normalvariate(6.0, 0.3)
 		raceTimes = [0]
-		for lap in six.moves.range( 5 ):
+		for lap in range( 5 ):
 			raceTimes.append( raceTimes[-1] + random.normalvariate(mean, mean/20)*60.0 )
 		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes[-1], 'status':'Finisher', 'speed':'32.7 km/h' , 'flr':1.0 }
 

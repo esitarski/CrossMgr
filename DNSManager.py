@@ -67,12 +67,12 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		bs.SetSizeHints(self)
 	
 	def onSelectAll(self, evt):
-		for row in six.moves.range(self.list.GetItemCount()):
+		for row in range(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
 	def onDeselectAll( self, evt ):
-		for row in six.moves.range(self.list.GetItemCount()):
+		for row in range(self.list.GetItemCount()):
 			self.list.SetItemState(row, 0, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
@@ -87,7 +87,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			return
 		
 		lines = []
-		for i in six.moves.range( 0, len(nums), 10 ):
+		for i in range( 0, len(nums), 10 ):
 			lines.append( ', '.join( '{}'.format(n) for n in itertools.islice( nums, i, min(i+10, len(nums)) ) ) )
 		message = u'{}\n\n{}'.format(_('DNS the following entrants?'), u',\n'.join(lines))
 			

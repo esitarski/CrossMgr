@@ -343,7 +343,7 @@ class Results( wx.Panel ):
 			self.menuOptions = {}
 			for numBefore in [False, True]:
 				for numAfter in [False, True]:
-					for caseCode in six.moves.range(3):
+					for caseCode in range(3):
 						menu = wx.Menu()
 						for name, text, callback, cCase in self.popupInfo:
 							if not name:
@@ -469,23 +469,23 @@ class Results( wx.Panel ):
 		backgroundColourLabel = {}
 		
 		timeCol = None
-		for c in six.moves.range(self.labelGrid.GetNumberCols()):
+		for c in range(self.labelGrid.GetNumberCols()):
 			if self.labelGrid.GetColLabelValue(c) == _('Time'):
 				timeCol = c
 				break
 		
-		for r in six.moves.range(self.lapGrid.GetNumberRows()):		
+		for r in range(self.lapGrid.GetNumberRows()):		
 			try:
 				cellNum = int(self.labelGrid.GetCellValue(r,1))
 			except:
 				continue
 			
 			if cellNum == numSelectSearch:
-				for c in six.moves.range(self.labelGrid.GetNumberCols()):
+				for c in range(self.labelGrid.GetNumberCols()):
 					textColourLabel[ (r,c) ] = self.whiteColour
 					backgroundColourLabel[ (r,c) ] = self.blackColour
 
-				for c in six.moves.range(self.lapGrid.GetNumberCols()):
+				for c in range(self.lapGrid.GetNumberCols()):
 					textColourLap[ (r,c) ] = self.whiteColour
 					backgroundColourLap[ (r,c) ] = self.blackColour if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 					
@@ -497,17 +497,17 @@ class Results( wx.Panel ):
 					backgroundColourLabel[ (r,timeCol) ] = self.lightBlueColour
 		
 		# Highlight the sorted columns.
-		for c in six.moves.range(self.lapGrid.GetNumberCols()):
+		for c in range(self.lapGrid.GetNumberCols()):
 			if self.lapGrid.GetColLabelValue(c).startswith('<'):
-				for r in six.moves.range(self.lapGrid.GetNumberRows()):
+				for r in range(self.lapGrid.GetNumberRows()):
 					textColourLap[ (r,c) ] = self.whiteColour
 					backgroundColourLap[ (r,c) ] = self.blackColour \
 						if (r,c) not in self.rcInterp and (r,c) not in self.rcNumTime else self.greyColour
 				break
 			
-		for c in six.moves.range(self.labelGrid.GetNumberCols()):
+		for c in range(self.labelGrid.GetNumberCols()):
 			if self.labelGrid.GetColLabelValue(c).startswith('<'):
-				for r in six.moves.range(self.labelGrid.GetNumberRows()):
+				for r in range(self.labelGrid.GetNumberRows()):
 					textColourLabel[ (r,c) ] = self.whiteColour
 					backgroundColourLabel[ (r,c) ] = self.blackColour
 				break
@@ -632,7 +632,7 @@ class Results( wx.Panel ):
 				if rr.status==Model.Rider.Finisher and rr.lapTimes and getSortTime(rr) > 0),
 			key = getSortTime
 		)
-		for i in six.moves.range(1, len(results)):
+		for i in range(1, len(results)):
 			if results[i]._lastTimeOrig - results[i-1]._lastTimeOrig <= CloseFinishTime:
 				self.closeFinishBibs[results[i-1].num].append( results[i].num )
 				self.closeFinishBibs[results[i].num].append( results[i-1].num )
@@ -792,12 +792,12 @@ class Results( wx.Panel ):
 				sortPairs.append( (k, r) )
 			sortPairs.sort()
 			
-			for c in six.moves.range(len(data)):
+			for c in range(len(data)):
 				col = data[c]
 				data[c] = [col[i] if i < len(col) else u'' for k, i in sortPairs]
 			
 			if colnames[sortCol] != _('Bib'):
-				for r in six.moves.range(len(data[sortCol])):
+				for r in range(len(data[sortCol])):
 					if data[sortCol][r]:
 						data[sortCol][r] = u'{} [{}: {}]'.format(data[sortCol][r], r+1, data[1][r])
 		
@@ -856,7 +856,7 @@ class Results( wx.Panel ):
 		with Model.LockRace() as race:
 			numTimeInfo = race.numTimeInfo
 			riders = race.riders
-			for r in six.moves.range(self.lapGrid.GetNumberRows()):
+			for r in range(self.lapGrid.GetNumberRows()):
 				try:
 					rider = riders[int(self.labelGrid.GetCellValue(r, 1))]
 				except:
@@ -869,7 +869,7 @@ class Results( wx.Panel ):
 				
 				if not entries:
 					continue
-				for c in six.moves.range(self.lapGrid.GetNumberCols()):
+				for c in range(self.lapGrid.GetNumberCols()):
 					if not self.lapGrid.GetCellValue(r, c):
 						break
 					try:

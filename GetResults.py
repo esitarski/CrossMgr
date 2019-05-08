@@ -253,7 +253,7 @@ def _GetResultsCore( category ):
 	# Group finish times are defined as times which are separated from the previous time by at least 1 second.
 	groupFinishTimes = [0 if not entries else floor(entries[0].t)]
 	if roadRaceFinishTimes and not isTimeTrial:
-		groupFinishTimes.extend( [floor(entries[i].t) for i in six.moves.range(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
+		groupFinishTimes.extend( [floor(entries[i].t) for i in range(1, len(entries)) if entries[i].t - entries[i-1].t >= 1.0] )
 		groupFinishTimes.extend( [sys.float_info.max] * 5 )
 	
 	allRiderTimes = defaultdict( list )
@@ -355,7 +355,7 @@ def _GetResultsCore( category ):
 			status = NP
 		rr = RiderResult(	rider.num, status, lastTime,
 							riderCategory.fullname,
-							[times[i] - times[i-1] for i in six.moves.range(1, len(times))],
+							[times[i] - times[i-1] for i in range(1, len(times))],
 							times,
 							interp )
 		
