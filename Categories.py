@@ -8,7 +8,6 @@ from Undo import undo
 import wx.grid			as gridlib
 from ReorderableGrid import ReorderableGrid
 import wx.lib.masked	as  masked
-import xlwt
 import xlsxwriter
 
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
@@ -437,11 +436,11 @@ class Categories( wx.Panel ):
 		xlFName = Utils.getMainWin().getFormatFilename('excel')
 		xlFName = os.path.splitext( xlFName )[0] + '-Categories' + os.path.splitext( xlFName )[1]
 
-		wb = xlwt.Workbook()
-		sheetCur = wb.add_sheet( _('Categories') )
-		export.toExcelSheet( sheetCur )
+		wb = xlsxwriter.Workbook( xlFName )
+		sheetCur = wb.add_worksheet( _('Categories') )
+		export.toExcelSheetXLSX( wb, sheetCur )
 		try:
-			wb.save( xlFName )
+			wb.close()
 			if Utils.getMainWin().launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
 			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))

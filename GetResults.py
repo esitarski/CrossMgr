@@ -630,7 +630,7 @@ def GetResultsWithData( category ):
 	race = Model.race
 	if category is None:
 		singleCategory = None
-		for c in six.itervalues(race.categories):
+		for c in race.categories.values():
 			if c.active and c.catType == CatWave:
 				if not singleCategory:
 					singleCategory = c

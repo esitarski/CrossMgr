@@ -3408,9 +3408,9 @@ class MainWin( wx.Frame ):
 		export = ExportGrid( title, colnames, data )
 
 		wb = xlsxwriter.Workbook( xlFName )
-		formats = ExportGrid.getExcelFormatsXLSX(wb)
+		formats = ExportGrid.getExcelFormatsXLSX( wb )
 		sheetCur = wb.add_worksheet( 'Passings' )
-		export.toExcelSheet( formats, sheetCur )
+		export.toExcelSheetXLSX( formats, sheetCur )
 		
 		try:
 			wb.close()

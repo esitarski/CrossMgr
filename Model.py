@@ -2266,6 +2266,8 @@ class Race( object ):
 		return num in category.bibSet
 		
 	def getStartOffset( self, num ):
+		if self.isTimeTrial:
+			return 0.0
 		try:
 			return self.startOffsetCache[num]
 		except KeyError:
@@ -2581,7 +2583,7 @@ class Race( object ):
 		data = []
 		for num, r in six.iteritems(self.riders):
 			entryCount = 1
-			if getattr(self, 'isTimeTrial', False):
+			if self.isTimeTrial:
 				data.append( dr(r.firstTime, num, entryCount) )
 				entryCount += 1
 				for t in r.times:
