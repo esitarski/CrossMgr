@@ -148,14 +148,14 @@ class Gantt( wx.Panel ):
 			
 			self.splitMenuInfo = [
 					(u'{} {}'.format(split-1, _('Split') if split-1 == 1 else _('Splits')),
-					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in six.moves.range(2,8) ] + [
+					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in range(2,8) ] + [
 					(_('Custom') + u'...',
 					lambda evt, s = self: s.doCustomSplitLap())]
 
 			self.menuOptions = {}
 			for numBefore in [False, True]:
 				for numAfter in [False, True]:
-					for caseCode in six.moves.range(3):
+					for caseCode in range(3):
 						menu = wx.Menu()
 						for name, text, callback, cCase in self.popupInfo:
 							if not name:

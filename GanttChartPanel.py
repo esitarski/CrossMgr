@@ -14,7 +14,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
-	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in six.moves.range(len+1)]
+	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in range(len+1)]
 	return grad[1:]
 	
 def makePastelColours( len = 50 ):
@@ -267,7 +267,7 @@ class GanttChartPanel(wx.Panel):
 			xPos, yPos = event.GetPosition()
 			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
 
-	intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60] + [24*60*60*k for k in six.moves.range(1,200)]
+	intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60] + [24*60*60*k for k in range(1,200)]
 	def Draw( self, dc ):
 		size = self.GetClientSize()
 		width = size.width
@@ -660,7 +660,7 @@ class GanttChartPanel(wx.Panel):
 			angle = (math.pi * 2.0) / numPoints
 			angle2 = angle / 2.0
 			path.MoveToPoint( 0, -radius )
-			for p in six.moves.range(numPoints):
+			for p in range(numPoints):
 				a = p * angle + angle2 + math.pi / 2.0
 				path.AddLineToPoint( math.cos(a) * radiusInner, -math.sin(a) * radiusInner )
 				a = (p + 1) * angle + math.pi / 2.0
@@ -732,7 +732,7 @@ if __name__ == '__main__':
 	def GetData():
 		data = []
 		interp = []
-		for i in six.moves.range(40):
+		for i in range(40):
 			data.append( [t + i*10.0 for t in six.moves.range(0, 60*60 * 3, 7*60)] )
 			if i % 5 == 1:
 				data[-1].insert( (i//3) + 1, data[-1][i//3] + 0.05 )
@@ -749,7 +749,7 @@ if __name__ == '__main__':
 	data, interp = GetData()
 	gantt.SetData( data, ['{}'.format(i) for i in six.moves.range(100, 100+len(data))],
 		interp = interp,
-		status = [['','PUL ', 'DNF ', 'DQ ', 'NP '][i%5] for i in six.moves.range(len(data))],
+		status = [['','PUL ', 'DNF ', 'DQ ', 'NP '][i%5] for i in range(len(data))],
 	)
 
 	mainWin.Show()

@@ -1,13 +1,12 @@
 import wx
-import six
 import math
 import datetime
 import wx.lib.newevent
 
 CountdownEvent, EVT_COUNTDOWN = wx.lib.newevent.NewEvent()
 
-tCos60 = [math.cos((i/60.0)*2.0*math.pi-math.pi/2.0) for i in six.moves.range(60)]
-tSin60 = [math.sin((i/60.0)*2.0*math.pi-math.pi/2.0) for i in six.moves.range(60)]
+tCos60 = [math.cos((i/60.0)*2.0*math.pi-math.pi/2.0) for i in range(60)]
+tSin60 = [math.sin((i/60.0)*2.0*math.pi-math.pi/2.0) for i in range(60)]
 
 def GetCos( pos ):
 	return math.cos(pos*2.0*math.pi-math.pi/2.0)
@@ -186,7 +185,7 @@ class CountdownClock(wx.Control):
 		ctx.DrawEllipse( xCenter - rOutside, yCenter - rOutside, rOutside*2, rOutside*2 )
 
 		penCur = None
-		for i in six.moves.range(60):
+		for i in range(60):
 			if i % 5 == 0:
 				rIn = rInHourTicks
 				pen = penHour

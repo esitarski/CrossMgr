@@ -1897,9 +1897,9 @@ class Race( object ):
 		categories = self.getCategories( excludeCustom=True, startWaveOnly=False )
 		CatComponent = Category.CatComponent
 		components = []
-		for i in six.moves.range(len(categories)):
+		for i range(len(categories)):
 			if categories[i] == category:
-				for j in six.moves.range(i+1, len(categories)):
+				for j in range(i+1, len(categories)):
 					if categories[j].catType == CatComponent:
 						components.append( categories[j] )
 				return components

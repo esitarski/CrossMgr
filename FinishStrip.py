@@ -297,7 +297,7 @@ class FinishStrip( wx.Panel ):
 				bmRightEdge.append( (bm, xRight) )
 			bmRightEdge.append( (None, 0) )
 			
-			for i in six.moves.range(0, len(bmRightEdge)-1):
+			for i in range(0, len(bmRightEdge)-1):
 				bm, xRight = bmRightEdge[i]
 				bmNext, xRightNext = bmRightEdge[i+1]
 				bmWidth = max( xRight - xRightNext, widthPhoto )

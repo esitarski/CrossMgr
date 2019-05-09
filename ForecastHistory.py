@@ -379,7 +379,7 @@ class ForecastHistory( wx.Panel ):
 		value = int(value)
 		
 		self.entryCur = None
-		for k in six.moves.range(1, 2*max(r, len(self.quickExpected) - r)):
+		for k in range(1, 2*max(r, len(self.quickExpected) - r)):
 			i = r + (k//2 if k&1 else -k//2)
 			if 0 <= i < len(self.quickExpected):
 				if self.quickExpected[i].num == value:
@@ -603,7 +603,7 @@ class ForecastHistory( wx.Panel ):
 		tMissing = tRace - averageLapTime / 8.0
 		iNotMissing = 0
 		for r in (i for i, e in enumerate(expected) if e.t < tMissing):
-			for c in six.moves.range(iExpectedColMax):
+			for c in range(iExpectedColMax):
 				backgroundColour[(r, c)] = self.orangeColour
 			iNotMissing = r + 1
 			
@@ -686,7 +686,7 @@ class ForecastHistory( wx.Panel ):
 		# Highlight the leader in the recorded list.
 		for r, e in enumerate(recorded):
 			if e.isGap():
-				for i in six.moves.range( iRecordedColMax ):
+				for i in range( iRecordedColMax ):
 					backgroundColour[(r, i)] = self.groupColour
 			if prevRiderPosition.get(e.num,-1) == 1:
 				backgroundColour[(r, iRecordedNoteCol)] = wx.GREEN
