@@ -692,8 +692,6 @@ table.results tr td.fastest{
 		self.config.Flush()
 		
 	def openSeries( self, fileName ):
-		wait = wx.BusyCursor()
-		
 		if not fileName:
 			return
 		

@@ -755,9 +755,8 @@ class TeamResults(wx.Panel):
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
-		wait = wx.BusyCursor()
-		self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
-		del wait
+		with wx.BusyCursor() as wait:
+			self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 		
 		self.fixCategories()
 		

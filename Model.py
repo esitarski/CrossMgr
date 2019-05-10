@@ -1897,7 +1897,7 @@ class Race( object ):
 		categories = self.getCategories( excludeCustom=True, startWaveOnly=False )
 		CatComponent = Category.CatComponent
 		components = []
-		for i range(len(categories)):
+		for i in range(len(categories)):
 			if categories[i] == category:
 				for j in range(i+1, len(categories)):
 					if categories[j].catType == CatComponent:
