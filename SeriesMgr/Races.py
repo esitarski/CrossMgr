@@ -48,7 +48,7 @@ class Races(wx.Panel):
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 0, len(self.headerNames) )
-		for col in six.moves.range(self.grid.GetNumberCols()):
+		for col in range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, self.headerNames[col] )
 		
 		self.pointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
@@ -207,7 +207,7 @@ class Races(wx.Panel):
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		
 		raceList = []
-		for row in six.moves.range(self.grid.GetNumberRows()):
+		for row in range(self.grid.GetNumberRows()):
 			race = SeriesModel.model.races[row]
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )

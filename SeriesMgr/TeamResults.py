@@ -542,7 +542,7 @@ function sortTableId( iTable, iCol ) {
 								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
 								isFirst = False
 						if model.numPlacesTieBreaker != 0:
-							finishOrdinals = [Utils.ordinal(p+1) for p in six.moves.range(model.numPlacesTieBreaker)]
+							finishOrdinals = [Utils.ordinal(p+1) for p in range(model.numPlacesTieBreaker)]
 							if model.numPlacesTieBreaker == 1:
 								finishStr = finishOrdinals[0]
 							else:
@@ -793,7 +793,7 @@ class TeamResults(wx.Panel):
 			for q, rt in enumerate(rrs):
 				self.grid.SetCellValue( row, 4 + q, formatTeamResults(scoreByPoints, rt) )
 				
-			for c in six.moves.range( 0, len(headerNames) ):
+			for c in range( 0, len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
 		
@@ -808,8 +808,8 @@ class TeamResults(wx.Panel):
 					return numberMax
 				
 			data = []
-			for r in six.moves.range(0, self.grid.GetNumberRows()):
-				rowOrig = [self.grid.GetCellValue(r, c) for c in six.moves.range(0, self.grid.GetNumberCols())]
+			for r in range(0, self.grid.GetNumberRows()):
+				rowOrig = [self.grid.GetCellValue(r, c) for c in range(0, self.grid.GetNumberCols())]
 				rowCmp = rowOrig[:]
 				rowCmp[0] = int(rowCmp[0])
 				rowCmp[4] = Utils.StrToSeconds(rowCmp[4])

@@ -22,7 +22,7 @@ class Errors(wx.Panel):
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 0, len(self.headerNames) )
-		for col in six.moves.range(self.grid.GetNumberCols()):
+		for col in range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, self.headerNames[col] )
 			attr = gridlib.GridCellAttr()
 			attr.SetReadOnly( True )

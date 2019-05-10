@@ -99,10 +99,10 @@ class Points(wx.Panel):
 		
 		maxOptions = 30
 		self.considerLabel = wx.StaticText( self, label='{}:'.format('Consider') )
-		self.bestResultsToConsider = wx.Choice( self, choices = ['All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in six.moves.range(2,maxOptions+1)] )
+		self.bestResultsToConsider = wx.Choice( self, choices = ['All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in range(2,maxOptions+1)] )
 		
 		self.participationLabel = wx.StaticText( self, label='{}:'.format('Must have completed') )
-		self.mustHaveCompleted = wx.Choice( self, choices = ['{} {}'.format(i, 'or more Events') for i in six.moves.range(0,maxOptions+1)] )
+		self.mustHaveCompleted = wx.Choice( self, choices = ['{} {}'.format(i, 'or more Events') for i in range(0,maxOptions+1)] )
 		
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.considerLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -139,7 +139,7 @@ class Points(wx.Panel):
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 50, len(self.headerNames) )
-		for col in six.moves.range(self.grid.GetNumberCols()):
+		for col in range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, self.headerNames[col] + (u'       ' if  self.headerNames[col] == 'DNF' else '') )
 		
 		attr = gridlib.GridCellAttr()
@@ -206,8 +206,8 @@ class Points(wx.Panel):
 	
 	def refresh( self ):
 		model = SeriesModel.model
-		for row in six.moves.range(self.grid.GetNumberRows()):
-			for col in six.moves.range(self.grid.GetNumberCols()):
+		for row in range(self.grid.GetNumberRows()):
+			for col in range(self.grid.GetNumberCols()):
 				self.grid.SetCellValue( row, col, '' )
 		
 		for row, ps in enumerate(model.pointStructures):
@@ -241,7 +241,7 @@ class Points(wx.Panel):
 		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		pointsList = []
-		for row in six.moves.range(self.grid.GetNumberRows()):
+		for row in range(self.grid.GetNumberRows()):
 			if( self.grid.GetCellValue(row, self.NameCol).strip() ):
 				pointsList.append( (self.grid.GetCellValue(row, self.NameCol),
 									self.grid.GetCellValue(row, self.OldNameCol),

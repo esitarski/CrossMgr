@@ -6,7 +6,7 @@ SpiceLen = 13
 
 def pair_swap( a ):
 	r = list( a )
-	for i in six.moves.range(0, len(r)-1, 2):
+	for i in range(0, len(r)-1, 2):
 		r[i], r[i+1] = r[i+1], r[i]
 	return r
 
@@ -24,7 +24,7 @@ def encode( s ):
 		return s
 	
 	s = s.encode()
-	enc = [ random.randint(0,255) for i in six.moves.range(SpiceLen) ]
+	enc = [ random.randint(0,255) for i in range(SpiceLen) ]
 	totCur = sum( enc )
 	for i, c in enumerate(s):
 		j = ord(c) if six.PY2 else c
@@ -55,6 +55,6 @@ def decode( s ):
 
 if __name__ == '__main__':
 	s = "this_is_a_test"
-	for i in six.moves.range(10):
+	for i in range(10):
 		c = encode( s )
 		six.print_( s, c, decode(c) )

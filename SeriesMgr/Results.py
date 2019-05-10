@@ -1101,8 +1101,9 @@ class Results(wx.Panel):
 	
 	def commit( self ):
 		model = SeriesModel.model
-		if model.postPublishCmd != self.postPublishCmd.GetValue().strip():
-			model.postPublishCmd = self.postPublishCmd.GetValue().strip()
+		postPublishCmd = self.postPublishCmd.GetValue().strip()
+		if model.postPublishCmd != postPublishCmd:
+			model.postPublishCmd = postPublishCmd
 			model.setChanged()
 
 	def callPostPublishCmd( self, fname ):

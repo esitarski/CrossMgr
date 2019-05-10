@@ -52,8 +52,8 @@ class ExportGrid( object ):
 	def __init__( self, title, grid ):
 		self.title = title
 		self.grid = grid
-		self.colnames = [grid.GetColLabelValue(c) for c in six.moves.range(grid.GetNumberCols())]
-		self.data = [ [grid.GetCellValue(r, c) for r in six.moves.range(grid.GetNumberRows())] for c in six.moves.range(grid.GetNumberCols()) ]
+		self.colnames = [grid.GetColLabelValue(c) for c in range(grid.GetNumberCols())]
+		self.data = [ [grid.GetCellValue(r, c) for r in range(grid.GetNumberRows())] for c in range(grid.GetNumberCols()) ]
 		
 		self.fontName = 'Helvetica'
 		self.fontSize = 16
@@ -189,8 +189,8 @@ class ExportGrid( object ):
 		
 		# Get the max height per row.
 		rowHeight = [0] * (self.grid.GetNumberRows() + 1)
-		for r in six.moves.range(self.grid.GetNumberRows()):
-			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c))[1] for c in six.moves.range(self.grid.GetNumberCols()))
+		for r in range(self.grid.GetNumberRows()):
+			rowHeight[r] = max( dc.GetMultiLineTextExtent(self.grid.GetCellValue(r, c))[1] for c in range(self.grid.GetNumberCols()))
 		
 		# Get the max height of the header row.
 		headerRowHeight = 0
@@ -311,9 +311,9 @@ class ExportGrid( object ):
 						with tag(buf, 'th'):
 							buf.write( cgi.escape(col).replace('\n', '<br/>\n') )
 			with tag(buf, 'tbody'):
-				for row in six.moves.range(max(len(d) for d in self.data)):
+				for row in range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr'):
-						for col in six.moves.range(self.grid.GetNumberCols()):
+						for col in range(self.grid.GetNumberCols()):
 							with tag(buf, 'td', {'class':'rAlign'} if col not in self.leftJustifyCols else {}):
 								try:
 									buf.write( cgi.escape(self.data[col][row]).replace('\n', '<br/>\n') )
