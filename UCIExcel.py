@@ -23,11 +23,16 @@ def UCIExcel( category, fname, startList=False ):
 	Finisher = Model.Rider.Finisher
 	statusNames = Model.Rider.statusNames
 	
+	rrWinner = None
 	if race.isUnstarted():
 		with UnstartedRaceWrapper():
 			results = GetResults( category )
 	else:
 		results = GetResults( category )
+		try:
+			rrWinner = results[0]
+		except:
+			pass
 	
 	if startList:
 		results = sorted( copy.deepcopy(results), key=operator.attrgetter('num') )
@@ -122,6 +127,8 @@ def UCIExcel( category, fname, startList=False ):
 	def getFinishTime( rr ):
 		if rr.status != Finisher:
 			return u''
+		if rrWinner and rrWinner.laps != rr.laps:
+			return rr.laps - rrWinner.laps
 		try:
 			finishTime = rr.lastTime - rr.raceTimes[0]
 			return Utils.formatTime(finishTime, forceHours=True, twoDigitHours=True)
@@ -131,6 +138,8 @@ def UCIExcel( category, fname, startList=False ):
 	def getIRM( rr ):
 		if 'REL' in six.text_type(rr.pos):
 			return 'REL'
+		if rrWinner and rr.laps != rrWinner.laps:
+			return 'LAPS'
 		return u'' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
 	
 	getValue = {
