@@ -1,7 +1,7 @@
 import sys
 import codecs
 from .pyllrp import *
-from .TagInventory import TagInventory
+from . import TagInventory
 
 def padToWords( epc ):
 	epc = u'{}'.format(epc)
@@ -28,7 +28,7 @@ def hexToBytes( epc ):
 	assert len(epc) % 2 == 0, 'epc must be a byte multiple'
 	return codec.decode(epc, 'hex_codec')
 
-class TagWriter( TagInventory ):
+class TagWriter( TagInventory.TagInventory ):
 	accessSpecID = 456
 
 	def GetAccessSpec(	self,
