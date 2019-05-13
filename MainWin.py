@@ -2042,7 +2042,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('No Race'), _('New/Open a Race and try again.')),
 				_('No Race'), iconMask=wx.ICON_ERROR )
 			return
-		if not race.email:
+		if race and not race.email:
 			if Utils.MessageOKCancel( self,
 				_('Your Email contact is not set.\n\nConfigure it now?'),
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
