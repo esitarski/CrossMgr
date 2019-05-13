@@ -438,7 +438,7 @@ class Categories( wx.Panel ):
 
 		wb = xlsxwriter.Workbook( xlFName )
 		sheetCur = wb.add_worksheet( _('Categories') )
-		export.toExcelSheetXLSX( wb, sheetCur )
+		export.toExcelSheetXLSX( ExportGrid.getExcelFormatsXLSX(wb), sheetCur )
 		try:
 			wb.close()
 			if Utils.getMainWin().launchExcelAfterPublishingResults:
