@@ -17,13 +17,15 @@ def AddToMatchingCategory( bib, fields ):
 	race = Model.race
 	if not race:
 		return None
-	for isCustom, CategoryType in ((False, 'EventCategory'), (True, 'CustomCategory')):
+	categories = race.categories
+	getFullName = Model.Category.getFullName
+		
+	categoryTypes = ['EventCategory', 'CustomCategory'] + ['CustomCategory{}'.format(i) for i in range(1,10)]
+	for CategoryType in categoryTypes:
+		isCustom = 'Custom' in CategoryType
 		categoryName, gender = fields.get(CategoryType,None), fields.get('Gender',None)
 		if not categoryName:
 			continue
-		
-		categories = race.categories
-		getFullName = Model.Category.getFullName
 		
 		found = None
 		if gender:
@@ -35,7 +37,7 @@ def AddToMatchingCategory( bib, fields ):
 		if found is None:
 			found = Model.Category(
 				name=categoryName,
-				catStr=six.text_type(bib),
+				catStr=u'{}'.format(bib),
 				sequence=len(categories),
 				gender=gender,
 				catType=Model.Category.CatCustom if isCustom else Model.Category.CatWave
@@ -51,14 +53,14 @@ def EpilogMatchingCategory():
 		
 	EmptyInterval = (Model.Category.MaxBib, Model.Category.MaxBib)
 	
-	for key, c in six.iteritems(race.categories):
+	for key, c in race.categories.items():
 		c.intervals.sort()
 		c.normalize()
 	
 	race.adjustAllCategoryWaveNumbers()
 	
 	empty_categories = set()
-	for key, c in six.iteritems(race.categories):
+	for key, c in race.categories.items():
 		if c.intervals[-1] == EmptyInterval:
 			c.intervals.pop()
 		if not c.intervals:
@@ -67,7 +69,7 @@ def EpilogMatchingCategory():
 	for key in empty_categories:
 		del race.categories[key]
 	
-	for sequence, c in enumerate(sorted(six.itervalues(race.categories), key=operator.methodcaller('key'))):
+	for sequence, c in enumerate(sorted(race.categories.values(), key=operator.methodcaller('key'))):
 		c.sequence = sequence
 	
 	race.resetAllCaches()

@@ -39,13 +39,14 @@ License|Optional.  Rider's license.  This can be the UCI code, a national code, 
 UCI ID|Optional.  Rider's UDI ID.  Will be included in UCI DataRiver upload Excel sheets.
 NatCode|Optional.  Rider's Nation Code.  Will be included in UCI DataRiver upload Excel sheets.
 Factor|Optional.  Athlete's Performance Factor, as a Percent.  Used for Para Cycling to rank athletes with different abilities competing in the same combined event.  The athlete's race time is multiplied by the Factor, yielding an adjusted time.  The athlete's are then ranked by the adjusted times.  The Performance Factor will depend on the athlete's classification, as well as the classifications of the other athlete's in the combined race.  When using Performance Factors, you almost always want to set the "Lapped Riders Continue" option (see [Categories][]).  This is because, after applying the Performance Factors, lapped athletes may still be in contention for winning the combined category.
-Tag1-N|Optional for manual input, required for chip input.  Rider's chip tag.
+Tag1-9|Optional for manual input, required for chip input.  Rider's chip tag.
+CustomCategory1-9|Custom categories to add this rider to.
 
 To save space, CrossMgr may combine the first and last names into one field as "LASTNAME, Firstname".  In the scoreboard, it uses a further shorthand of "LASTNAME, F" where "F" is the first letter of the first name.
 
 ### Notes on __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__
 
-This feature is useful if you do not have number ranges for different categories and you want to initialize the bib numbers and categories from the Excel spreadsheet using the __Bib#__ and __EventCategory__ columns.  The behavior is as follows:
+This feature is useful if you do not have number ranges for different categories and you want to initialize the bib numbers and categories from the Excel spreadsheet using the __Bib#__,  __EventCategory__ and __Custom Category__ columns.  The behavior is as follows:
 
 1. Initialization:  For each existing Category in CrossMgr, remove all Bib numbers.
 1. New Category: If a category is found in the spreadsheet in the EventCategory column that does not exist in CrossMgr, add the new category (StartOffset=00:00:00, Gender=Open, Type=Wave), and insert the Bib# of that rider.

@@ -23,7 +23,12 @@ import HelpSearch
 
 with Utils.SuspendTranslation():
 	TagFields = [
-		_('Tag'), _('Tag2'), _('Tag3'), _('Tag4'), _('Tag5'), _('Tag6'), _('Tag7'), _('Tag8'), _('Tag9'),
+		_('Tag'), _('Tag1'), _('Tag2'), _('Tag3'), _('Tag4'), _('Tag5'), _('Tag6'), _('Tag7'), _('Tag8'), _('Tag9'),
+	]
+
+with Utils.SuspendTranslation():
+	CustomCategoryFields = [
+		_('CustomCategory'), _('CustomCategory1'), _('CustomCategory2'), _('CustomCategory3'), _('CustomCategory4'), _('CustomCategory5'), _('CustomCategory6'), _('CustomCategory7'), _('CustomCategory8'), _('CustomCategory9'),
 	]
 
 with Utils.SuspendTranslation():
@@ -32,11 +37,11 @@ with Utils.SuspendTranslation():
 		_('LastName'), _('FirstName'),
 		_('Team'),
 		_('City'), _('State'), _('Prov'), _('StateProv'), _('Nat.'),
-		_('Category'), _('EventCategory'), _('CustomCategory'), _('Age'), _('Gender'),
+		_('Category'), _('EventCategory'), _('Age'), _('Gender'),
 		_('License'),
 		_('NatCode'), _('UCIID'), _('UCICode'), _('TeamCode'),
 		_('Factor'),
-	] + TagFields
+	] + TagFields + CustomCategoryFields
 
 IgnoreFields = ['Bib#', 'Factor', 'EventCategory', 'CustomCategory', 'TeamCode'] + TagFields	# Fields to ignore when adding data to standard reports.
 NumericFields = ['Age','Factor']
@@ -778,9 +783,10 @@ class ExcelLink( object ):
 		info = {}
 		rowInfo = []
 		hasTags = False
+		
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
-			for field, col in six.iteritems(self.fieldCol):
+			for field, col in self.fieldCol.items():
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
@@ -935,9 +941,9 @@ class ExcelLink( object ):
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 			
 		if not self.hasCategoriesSheet and self.initCategoriesFromExcel and (
-				self.hasField('EventCategory') or self.hasField('CustomCategory')):
+				self.hasField('EventCategory') or any( self.hasField(f) for f in CustomCategoryFields )):
 			MatchingCategory.PrologMatchingCategory()
-			for bib, fields in six.iteritems(infoCache):
+			for bib, fields in infoCache.items():
 				MatchingCategory.AddToMatchingCategory( bib, fields )
 			MatchingCategory.EpilogMatchingCategory()
 			
