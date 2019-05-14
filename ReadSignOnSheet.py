@@ -172,7 +172,7 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 			# If we don't get a high enough match, set to blank.
 			if matchBest <= 0.34:
 				try:
-					iBest = min( expectedFieldCol[h], iNoMatch )
+					iBest = min( expectedFieldCol[c], iNoMatch )
 				except (TypeError, KeyError):
 					iBest = iNoMatch			
 		
