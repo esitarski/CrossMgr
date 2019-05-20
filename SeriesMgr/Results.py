@@ -33,6 +33,21 @@ def getHeaderNames():
 
 #----------------------------------------------------------------------------------
 
+def toFloat( n ):
+	try:
+		return float(n)
+	except:
+		pass
+	try:
+		return float(n.split()[0])
+	except:
+		pass
+	try:
+		return float(n.split(',')[0])
+	except:
+		pass
+	return -1.0
+
 def getHeaderGraphicBase64():
 	if Utils.mainWin:
 		b64 = Utils.mainWin.getGraphicBase64()
@@ -420,7 +435,7 @@ function sortTableId( iTable, iCol ) {
 					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if rr[3] > 0]
+				results = [rr for rr in results if toFloat(rr[3]) > 0]
 				
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
 				
