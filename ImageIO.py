@@ -45,7 +45,7 @@ if __name__ == '__main__':
 	buf3 = toBufFromFile( os.path.join(Utils.getImageFolder(), 'CrossMgr.png'), wx.BITMAP_TYPE_PNG )
 	assert buf1 == buf2
 	assert buf2 == buf3
-	six.print_( len(buf1), len(buf2), len(buf3) )
-	six.print_( Utils.ToJson(buf1) )
+	print ( len(buf1), len(buf2), len(buf3) )
+	print ( Utils.ToJSon(buf1) )
 	img = toImageFromBuf( buf1 )
 	bmp = toBitmapFromBuf( buf2 )

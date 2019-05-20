@@ -55,7 +55,8 @@ def getHeaderGraphicBase64():
 			return b64
 	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
 	with open(graphicFName, 'rb') as f:
-		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
+		s64 = base64.standard_b64encode(f.read())
+		return 'data:image/png;base64,{}'.format(s64)
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -886,18 +887,7 @@ class Results(wx.Panel):
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
 		
-		def to_num( v ):
-			try:
-				return int(v)
-			except ValueError:
-				pass
-			try:
-				return float(v)
-			except ValueError:
-				pass
-			return 0
-		
-		results = [rr for rr in results if to_num(rr[3]) > 0]
+		results = [rr for rr in results if toFloat(rr[3]) > 0]
 		
 		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
 		

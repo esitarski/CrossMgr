@@ -344,7 +344,7 @@ class MainWin( wx.Frame ):
 			return None
 		try:
 			with open(graphicFName, 'rb') as f:
-				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read()))
+				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read()).decode())
 				return b64
 		except IOError:
 			pass
