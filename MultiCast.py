@@ -68,7 +68,7 @@ class MultiCastSender( threading.Thread ):
 				break
 			
 			try:
-				response = json.loads( data )
+				response = json.loads( data.decode() )
 			except Exception as e:
 				continue
 			
