@@ -494,7 +494,7 @@ class History( wx.Panel ):
 		
 		if not isTimeTrial:
 			# Trim out the lap 0 starts.
-			entries = [e for e in entries if e.lap > 0]
+			entries = [e for e in entries if (e.lap or 0) > 0]
 		
 		if not entries:
 			self.clearGrid()
@@ -505,11 +505,11 @@ class History( wx.Panel ):
 		if isTimeTrial:
 			leaderTimes = []
 			for e in entries:
-				while len(self.history) <= e.lap:
+				while len(self.history) <= (e.lap or 0):
 					self.history.append( [] )
-				if e.lap >= len(leaderTimes):
+				if (e.lap or 0) >= len(leaderTimes):
 					leaderTimes.append( e.t )
-				self.history[e.lap].append( e )
+				self.history[(e.lap or 0)].append( e )
 		else:
 			numSeen = set()
 			lapCur = 0

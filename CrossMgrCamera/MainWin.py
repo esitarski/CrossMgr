@@ -16,7 +16,7 @@ import atexit
 import time
 import threading
 import platform
-from Queue import Queue, Empty, Full
+from six.moves.queue import Queue, Empty, Full
 
 import Utils
 from SocketListener import SocketListener

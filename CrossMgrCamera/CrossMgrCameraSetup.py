@@ -97,7 +97,7 @@ def make_inno_version():
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrCamera.iss'
-print cmd
+print ( cmd )
 os.system( cmd )
 
 # Create versioned executable.
@@ -127,7 +127,7 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-print 'executable compressed.'
+print ( 'executable compressed.' )
 
 shutil.copy( newZipName, googleDrive )
 

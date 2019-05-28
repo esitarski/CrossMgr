@@ -201,7 +201,7 @@ class ShiftNumberDialog( wx.Dialog ):
 			undo.pushState()
 			with Model.LockRace() as race:
 				rider = race.getRider( num )
-				if self.entry.lap != 0:
+				if (self.entry.lap or 0) != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
 					race.deleteTime( self.entry.num, self.entry.t )
 					race.addTime( num, t + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
@@ -381,7 +381,7 @@ def InsertNumber( parent, entry ):
 		
 @logCall
 def SplitNumber( parent, entry ):
-	if entry.lap == 0:
+	if (entry.lap or 0) == 0:
 		return
 		
 	dlg = SplitNumberDialog( parent, entry )
@@ -390,7 +390,7 @@ def SplitNumber( parent, entry ):
 		
 @logCall
 def DeleteEntry( parent, entry ):
-	if entry.lap == 0:
+	if (entry.lap or 0) == 0:
 		return
 	
 	race = Model.race

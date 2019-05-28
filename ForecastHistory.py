@@ -512,7 +512,7 @@ class ForecastHistory( wx.Panel ):
 		if not tRace:
 			tRace = race.curRaceTime()
 		getT = self.getETATimeFunc()
-		self.expectedGrid.SetColumn( iExpectedTimeCol, [formatTime(getT(e) - tRace) if e.lap > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001))))\
+		self.expectedGrid.SetColumn( iExpectedTimeCol, [formatTime(getT(e) - tRace) if (e.lap or 0) > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001))))\
 										for e in self.quickExpected] )
 	
 	def addGaps( self, recorded ):
@@ -552,7 +552,7 @@ class ForecastHistory( wx.Panel ):
 		isTimeTrial = race.isTimeTrial
 		if isTimeTrial and expected:
 			for e in expected:
-				if e.lap == 0:
+				if (e.lap or 0) == 0:
 					# Schedule a refresh later to update started riders.
 					milliSeconds = max( 1, int((e.t - tRace)*1000.0 + 10.0) )
 					if self.callLaterRefresh is None:
@@ -628,11 +628,11 @@ class ForecastHistory( wx.Panel ):
 		data = [None] * iExpectedColMax
 		data[iExpectedNumCol] = [u'{}'.format(e.num) for e in expected]
 		getT = self.getETATimeFunc()
-		data[iExpectedTimeCol] = [formatTime(getT(e) - tRace) if e.lap > 0
+		data[iExpectedTimeCol] = [formatTime(getT(e) - tRace) if (e.lap or 0) > 0
 			else (u'[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999)))) for e in expected]
-		data[iExpectedLapCol] = [u'{}'.format(e.lap) if e.lap > 0 else u'' for e in expected]
+		data[iExpectedLapCol] = [u'{}'.format(e.lap) if (e.lap or 0) > 0 else u'' for e in expected]
 		def getNoteExpected( e ):
-			if e.lap == 0:
+			if (e.lap or 0) == 0:
 				return _('Start')
 			try:
 				position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
@@ -700,7 +700,7 @@ class ForecastHistory( wx.Panel ):
 		data = [None] * iRecordedColMax
 		data[iRecordedNumCol] = [u'{}{}'.format(e.num,u"\u2190" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
 		data[iRecordedTimeCol] = [
-			formatTime(e.t) if e.lap > 0 else
+			formatTime(e.t) if (e.lap or -1) > 0 else
 			(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
 			u'[{}]'.format(formatTime(e.t)) for e in recorded]
 		data[iRecordedLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
@@ -708,7 +708,7 @@ class ForecastHistory( wx.Panel ):
 			if e.isGap():
 				return u'{}'.format(e.groupCount)
 			
-			if e.lap == 0:
+			if (e.lap or 0) == 0:
 				return _('Start')
 
 			position = nextRiderPosition.get(e.num, -1)
@@ -720,7 +720,7 @@ class ForecastHistory( wx.Panel ):
 				return ' '
 		data[iRecordedNoteCol] = [getNoteHistory(e) for e in recorded]
 		def getGapHistory( e ):
-			if e.lap == 0:
+			if (e.lap or 0) == 0:
 				return ' '
 			return prevRiderGap.get(e.num, u'')
 		data[iRecordedGapCol] = [getGapHistory(e) for e in recorded]
