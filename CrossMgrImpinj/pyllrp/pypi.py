@@ -176,12 +176,10 @@ with io.open(os.path.join(pypiDir,'setup.py'), 'w') as f:
 
 six.print_( 'Creating install package...' )
 os.chdir( pypiDir )
-subprocess.call( ['python', 'setup.py', 'sdist'] )
+subprocess.call( ['python', 'setup.py', 'sdist', '--formats=gztar,zip'] )
 
 os.chdir( 'dist' )
-try:
-	shutil.move( 'pyllrp-{}.zip'.format(version), 'pip-install-pyllrp-{}.zip'.format(version) )
-except:
-	shutil.move( 'pyllrp-{}.tar.gz'.format(version), 'pip-install-pyllrp-{}.tar.gz'.format(version) )
+shutil.move( 'pyllrp-{}.zip'.format(version), 'pip-install-pyllrp-{}.zip'.format(version) )
+shutil.move( 'pyllrp-{}.tar.gz'.format(version), 'pip-install-pyllrp-{}.tar.gz'.format(version) )
 	
 six.print_( 'Done.' )

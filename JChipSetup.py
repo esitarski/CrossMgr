@@ -264,7 +264,7 @@ class JChipSetupDialog( wx.Dialog ):
 		tagNums = {}
 		race = Model.race
 		if race:
-			if not getattr(race, 'enableUSBCamera', False):
+			if not race.enableUSBCamera:
 				return
 			tagNums = GetTagNums()
 		

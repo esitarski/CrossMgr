@@ -289,7 +289,7 @@ class SimulateDialog(wx.Dialog):
 		sizer.Fit(self)
 
 def replaceJsonVar( s, varName, value ):
-	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, Utils.ToJSon(value, separators=(',',':'))), 1 )
+	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, Utils.ToJson(value, separators=(',',':'))), 1 )
 
 # Code on web page required by Google Analytics.
 gaSnippet = u'''

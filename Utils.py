@@ -806,12 +806,9 @@ def GetGoogleMapsApiKey():
 	return 'AIzaSyD2sl2JTvnyMcsgWc3tTceWCYo3ZoyWdAI'
 
 import json
-def ToJSon( v, separators=(',',':') ):
+def ToJson( v, separators=(',',':') ):
 	''' Make sure we always return a unicode string. '''
-	if six.PY2:
-		return json.dumps( v, encoding='utf-8', separators=separators ).decode()
-	else:
-		return json.dumps( v, separators=separators )
+	return json.dumps( v, separators=separators )
 
 if __name__ == '__main__':
 	initTranslation()

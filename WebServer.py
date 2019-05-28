@@ -413,7 +413,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content_type = self.html_content
 				assert isinstance( content, bytes )
 			elif up.path=='/servertimestamp.html':
-				content = Utils.ToJSon( {
+				content = Utils.ToJson( {
 						'servertime':time.time()*1000.0,
 						'requesttimestamp':float(up.query),
 					}
@@ -542,7 +542,7 @@ def WsQueueListener( q ):
 		if message.get('cmd', None) == 'exit':
 			keepGoing = False
 		elif wsServer and wsServer.hasClients():
-			wsServer.send_message_to_all( Utils.ToJSon(message).encode() )
+			wsServer.send_message_to_all( Utils.ToJson(message).encode() )
 		q.task_done()
 	
 	wsServer = None	
@@ -636,7 +636,7 @@ def WsLapCounterQueueListener( q ):
 				race = Model.race
 				message['tNow'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
 				message['curRaceTime'] = race.curRaceTime() if race and race.startTime else 0.0
-				wsLapCounterServer.send_message_to_all( Utils.ToJSon(message).encode() )
+				wsLapCounterServer.send_message_to_all( Utils.ToJson(message).encode() )
 		elif cmd == 'exit':
 			keepGoing = False
 		q.task_done()

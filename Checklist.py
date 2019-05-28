@@ -21,9 +21,9 @@ def _toBool( s ):
 
 _processRequirementLookup = {
 	u'RaceStatus'.lower():	_checkRaceStatus,
-	u'TimeTrial'.lower(): 	lambda race, v: getattr(race, 'isTimeTrial', False) == _toBool(v),
-	u'ChipReader'.lower(): 	lambda race, v: getattr(race, 'enableJChipIntegration', False) == _toBool(v),
-	u'Camera'.lower(): 		lambda race, v: getattr(race, 'enableUSBCamera', False) ==_toBool(v),
+	u'TimeTrial'.lower(): 	lambda race, v: race.isTimeTrial == _toBool(v),
+	u'ChipReader'.lower(): 	lambda race, v: race.enableJChipIntegration == _toBool(v),
+	u'Camera'.lower(): 		lambda race, v: race.enableUSBCamera ==_toBool(v),
 }
 
 class Task( object ):

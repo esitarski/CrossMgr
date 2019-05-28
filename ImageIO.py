@@ -46,6 +46,6 @@ if __name__ == '__main__':
 	assert buf1 == buf2
 	assert buf2 == buf3
 	print ( len(buf1), len(buf2), len(buf3) )
-	print ( Utils.ToJSon(buf1) )
+	print ( Utils.ToJson(buf1) )
 	img = toImageFromBuf( buf1 )
 	bmp = toBitmapFromBuf( buf2 )

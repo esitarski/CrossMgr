@@ -14,6 +14,9 @@ now = datetime.now
 multicast_group = '225.3.14.15'
 multicast_port = 10083
 
+def ToJson( v ):
+	return json.dumps( v, separators=(',',':') )
+
 def makeJSONCompatible( info ):
 	info = info.copy()
 	v = info['ts']
@@ -53,7 +56,7 @@ class MultiCastSender( threading.Thread ):
 			{ 'ts_sender': [tNow.year, tNow.month, tNow.day, tNow.hour, tNow.minute, tNow.second, tNow.microsecond] }
 		]
 		try:
-			sent = sock.sendto(Utils.ToJson(message).encode(), (multicast_group, multicast_port))
+			sent = sock.sendto(ToJson(message).encode(), (multicast_group, multicast_port))
 		except Exception as e:
 			return receivers
 		
@@ -131,7 +134,7 @@ class MultiCastSender( threading.Thread ):
 			for message in messages:
 				if message[0] == 'trigger':
 					try:
-						sent = sock.sendto(ToJSon([message[0], makeJSONCompatible(message[1])]).encode(), (multicast_group, multicast_port))
+						sent = sock.sendto(ToJson([message[0], makeJSONCompatible(message[1])]).encode(), (multicast_group, multicast_port))
 					except Exception as e:
 						# six.print_( 'MultiCastSender:', e )
 						pass
@@ -215,7 +218,7 @@ class MultiCastReceiver( threading.Thread ):
 			tNow = now()
 			
 			try:
-				message = json.loads( data )
+				message = json.loads( data.decode() )
 			except Exception as e:
 				continue
 			
@@ -240,7 +243,7 @@ class MultiCastReceiver( threading.Thread ):
 				self.recentCorrections.append( (tNow - datetime( *message[1]['ts_sender'] )).total_seconds() )
 
 				ts_receiver = [tNow.year, tNow.month, tNow.day, tNow.hour, tNow.minute, tNow.second, tNow.microsecond]
-				sock.sendto( Utils.ToJSon(
+				sock.sendto( ToJson(
 					['idreply', {
 						'hostname':socket.gethostname(),
 						'name':self.name,
@@ -282,7 +285,7 @@ if __name__ == '__main__':
 			for r in receivers:
 				six.print_( r )
 		
-		for i in six.moves.range(200):
+		for i in range(200):
 			SendTrigger( ('trigger', {'bib':200+i, 'team':'MyTeam', 'ts':now()}) )
 			time.sleep( 0.0001 if 10 < i < 20 else 1 )
 		
