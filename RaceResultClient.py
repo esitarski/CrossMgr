@@ -13,7 +13,7 @@ import socket
 import random
 import datetime
 import threading
-from openpyxl.workbook import Workbook
+import xlwt
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port and socket.
@@ -276,7 +276,7 @@ Spin Doctors
 	firstNames = [line.split('.')[1].strip() for line in firstNames.split('\n') if line.strip()]
 	lastNames = [line.split('.')[1].strip() for line in lastNames.split('\n') if line.strip()]
 	teams = [line.strip() for line in teams.split('\n') if line.strip()]
-	bibs = range( 100, 100+starters )
+	bibs = list(range( 100, 100+starters ))
 	
 	random.shuffle( firstNames )
 	random.shuffle( lastNames )
@@ -289,20 +289,19 @@ Spin Doctors
 #------------------------------------------------------------------------------	
 # Write out as a .xlsx file with the number tag data.
 #
-wb = Workbook()
-ws = wb.get_active_sheet()
-ws.title = "RaceResultTest"
+wb = xlwt.Workbook()
+ws = wb.add_sheet( "RaceResultTest" )
 for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
-	ws.cell( row = 0, column = col ).value = label
+	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
-for r, (n, t) in enumerate(six.iteritems(tag)):
+for r, (n, t) in enumerate(tag.items()):
 	if t in ('1', '2'):
 		continue
 	
 	bib, firstName, lastName, Team = rdata[r]
 	for c, v in enumerate([n, lastName, firstName, Team, t]):
-		ws.cell( row = rowCur, column = c ).value = v
+		ws.write( rowCur, c, v )
 	rowCur += 1
 wb.save('RaceResultTest.xlsx')
 wb = None
@@ -310,7 +309,7 @@ wb = None
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with io.open('RaceResultTest.csv', 'w', encoding='utf-8') as f:
+with io.open('RaceResultTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '%d,%s\n' % (n, tag[n]) )
@@ -374,21 +373,21 @@ while 1:
 	clientsocket.settimeout( 5 )
 	
 	def sendResponse( response ):
-		six.print_( response )
-		clientsocket.sendall( bytes(response + EOL) )
+		print ( response )
+		clientsocket.sendall( u'{}{}'.format(response, EOL).encode() )
 	
 	six.print_(  'Connection from:', address )
 	PROTOCOL = '1.1'
 
 	while 1:
 		try:
-			message = clientsocket.recv( 4096 ).strip()
+			message = clientsocket.recv( 4096 ).decode().strip()
 		except Exception as e:
 			break
 		if not message:
 			break
 			
-		six.print_(  'message:', message )
+		print ( 'message:', message )
 		
 		cmd = message.split( ';', 1 )[0]
 		

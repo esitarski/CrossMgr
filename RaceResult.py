@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import socket 
 import sys
 import six
@@ -17,6 +15,7 @@ from threading import Thread as Process
 from six.moves.queue import Queue, Empty
 import JChip
 from RaceResultImport import parseTagTime
+from Utils import logCall, logException
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER
 
@@ -36,14 +35,16 @@ shutdownQ = None
 listener = None
 
 def socketSend( s, message ):
+	if not isinstance(message, bytes):
+		message = message.encode()
 	sLen = 0
 	while sLen < len(message):
 		sLen += s.send( message[sLen:] )
 		
 def socketReadDelimited( s, delimiter=EOL ):
-	buffer = s.recv( 4096 )
+	buffer = s.recv( 4096 ).decode()
 	while not buffer.endswith( delimiter ):
-		more = s.recv( 4096 )
+		more = s.recv( 4096 ).decode()
 		if more:
 			buffer += more
 		else:
@@ -54,7 +55,7 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
 	ip = [int(i) for i in Utils.GetDefaultHost().split('.')]
 	j = 0
-	for i in six.moves.range(14):
+	for i in range(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )
@@ -76,7 +77,7 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 
 		cmd = 'GETSTATUS'
 		try:
-			socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+			socketSend( s, u'{}{}'.format(cmd, EOL) )
 		except Exception as e:
 			continue
 			
@@ -131,20 +132,20 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		return False
 	
 	def autoDetectCallback( m ):
-		qLog( 'autodetect', '{} {}'.format(_('Checking'), m) )
+		qLog( 'autodetect', u'{} {}'.format(_('Checking'), m) )
 		return keepGoing()
 		
 	def makeCall( s, message ):
 		cmd = message.split(';', 1)[0]
 		qLog( 'command', u'sending: {}'.format(message) )
 		try:
-			socketSend( s, bytes('{}{}'.format(message,EOL)) )
+			socketSend( s, u'{}{}'.format(message,EOL) )
 			buffer = socketReadDelimited( s )
 		except Exception as e:
 			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
-		if not buffer.startswith( '{};'.format(cmd) ):
+		if not buffer.startswith( u'{};'.format(cmd) ):
 			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 			raise ValueError
 		
@@ -183,7 +184,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		crossMgrMinProtocolStr = '.'.join('{}'.format(p) for p in crossMgrMinProtocol)
 		try:
 			buffer = makeCall( s, 'GETPROTOCOL' )
-		except ValueError:
+		except ValueError as e:
+			logException( e, sys.exc_info() )
 			continue
 		
 		current, minSupported, maxSupported = [f.strip() for f in buffer.strip().split(';')[1:]]
@@ -255,7 +257,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			#-------------------------------------------------------------------------------------------------
 			cmd = 'PASSINGS'
 			try:
-				socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+				socketSend( s, u'{}{}'.format(cmd, EOL) )
 				buffer = socketReadDelimited( s )
 				if buffer.startswith( '{};'.format(cmd) ):
 					try:
@@ -285,7 +287,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				qLog( 'command', u'sending: {} ({}+{}={} passings)'.format(cmd, passingsCur, passingsCount, passingsNew) )
 				try:
 					# Get the passing data.
-					socketSend( s, bytes('{}{}'.format(cmd, EOL)) )
+					socketSend( s, u'{}{}'.format(cmd, EOL) )
 				except Exception as e:
 					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 					break
@@ -338,7 +340,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	# Final cleanup.
 	cmd = 'STOPOPERATION'
 	try:
-		socketSend( s, '{}{}'.format(cmd, EOL) )
+		socketSend( s, u'{}{}'.format(cmd, EOL) )
 		buffer = socketReadDelimited( s )
 		s.shutdown( socket.SHUT_RDWR )
 		s.close()
@@ -362,7 +364,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in six.moves.range(32):
+		for i in range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None
