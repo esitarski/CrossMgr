@@ -392,7 +392,7 @@ while 1:
 		cmd = message.split( ';', 1 )[0]
 		
 		if cmd == 'PASSINGS':
-			sendResponse( 'PASSINGS;{}'.format(len(passings)) )
+			sendResponse( 'PASSINGS;{};2112'.format(len(passings)) )
 			
 		elif cmd == 'SETTIME':
 			tFields = [int(f) for f in re.split( '[^0-9]', message.split(';', 1)[1] ) ]

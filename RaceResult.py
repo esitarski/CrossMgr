@@ -260,11 +260,19 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				socketSend( s, u'{}{}'.format(cmd, EOL) )
 				buffer = socketReadDelimited( s )
 				if buffer.startswith( '{};'.format(cmd) ):
+					fields = buffer.split(';')
 					try:
-						passingsNew = int( reNonDigit.sub(' ', buffer).strip() )
+						passingsText = fields[1]
 					except Exception as e:
 						qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
 						continue
+					
+					try:
+						passingsNew = int( reNonDigit.sub(' ', passingsText).strip() )
+					except Exception as e:
+						qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
+						continue
+					
 				else:
 					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 					continue

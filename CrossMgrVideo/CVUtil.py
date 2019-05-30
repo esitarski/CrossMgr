@@ -96,5 +96,5 @@ def adjustContrastBitmap( bitmap ):
 	return frameToBitmap( adjustContrastFrame(bitmapToFrame(bitmap)) )
 
 if __name__ == '__main__':
-	six.print_( rescaleToRect( 200, 100, 100, 50 ) )
-	six.print_( rescaleToRect( 1080, 800, 640, 480 ) )
+	print ( rescaleToRect( 200, 100, 100, 50 ) )
+	print ( rescaleToRect( 1080, 800, 640, 480 ) )
