@@ -249,7 +249,8 @@ class RaceDB( wx.Dialog ):
 					url=self.fixUrl(),
 					date=datetime.date( d.GetYear(), d.GetMonth()+1, d.GetDay() ),
 				)
-			except Exception as e:
+			except Exception as _e:
+				e = _e
 				events = {'events':[]}
 
 		if not e and not (events and events.get('events',None)):
