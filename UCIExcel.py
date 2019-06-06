@@ -135,7 +135,7 @@ def UCIExcel( category, fname, startList=False ):
 		if 'REL' in six.text_type(rr.pos):
 			return 'REL'
 		if rrWinner and rr.laps != rrWinner.laps:
-			return 'LAPS'
+			return 'LAP'
 		return u'' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
 	
 	getValue = {
