@@ -8,12 +8,8 @@ import xlsxwriter
 import operator
 
 def formatUciId( uci_id ):
-	return u' '.join( uci_id[i:i+3] for i in six.moves.range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id
-	
-def countryFromUciId( uci_id ):
-	if uci_id.isdigit():
-		return u''
-	return uci_id[:3]
+	s = u' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id
+	return s.replace( ' ', '' )		# UCI does not want spaces in UCI IDs.
 	
 def UCIExcel( category, fname, startList=False ):
 	race = Model.race
@@ -79,7 +75,7 @@ def UCIExcel( category, fname, startList=False ):
 			ww( row, col, v, fmt )
 		fmt = general_format
 
-	for col, width in six.iteritems(colWidths):
+	for col, width in colWidths.items():
 		ws.set_column( col, col, width+2 )
 
 	#-------------------------------------------------------------------------------------------------------	
@@ -165,7 +161,7 @@ def UCIExcel( category, fname, startList=False ):
 		for col, name in enumerate(colNames):
 			ww( row, col, getValue.get(name, lambda rr:u'')(rr), getFmt(name, row) )
 	
-	for col, width in six.iteritems(colWidths):
+	for col, width in colWidths.items():
 		ws.set_column( col, col, width+2 )
 	
 	ws.autofilter( 0, 0, len(results)+1, len(colNames) )	
