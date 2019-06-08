@@ -19,7 +19,7 @@ def fixUrl( url ):
 	url = url.strip()
 	if not url:
 		url = RaceDBUrlDefault()
-	if not url.startswith('http://'):
+	if not (url.startswith('http://') or url.startswith('https://')):
 		url = 'http://' + url.lstrip('/')
 	url = url.split('RaceDB')[0] + 'RaceDB'
 	url = url.rstrip('/')
