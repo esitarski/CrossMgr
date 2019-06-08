@@ -3,7 +3,6 @@ import datetime
 import re
 import os
 import wx
-import six
 import wx.dataview as dataview
 import Utils
 import Model
@@ -14,7 +13,20 @@ globalRaceDBUrl = ''
 def RaceDBUrlDefault():
 	#return 'http://{}:8000/RaceDB'.format( Utils.GetDefaultHost() )
 	return globalRaceDBUrl or 'http://{}:8000/RaceDB'.format( '127.0.0.1' )
-	
+
+def fixUrl( url ):
+	global globalRaceDBUrl
+	url = url.strip()
+	if not url:
+		url = RaceDBUrlDefault()
+	if not url.startswith('http://'):
+		url = url.lstrip('/')
+		url = 'http://' + url
+	url = url.split('RaceDB')[0] + 'RaceDB'
+	url = url.rstrip('/')
+	globalRaceDBUrl = url
+	return url
+
 def CrossMgrFolderDefault():
 	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaces' )
 
@@ -162,15 +174,8 @@ class RaceDB( wx.Dialog ):
 		wx.CallAfter( self.refresh )
 	
 	def fixUrl( self ):
-		global globalRaceDBUrl
-		url = self.raceDBUrl.GetValue().strip()
-		if not url:
-			url = RaceDBUrlDefault()
-		url = url.split('RaceDB')[0] + 'RaceDB'
-		while url.endswith( '/' ):
-			url = url[:-1]
+		url = fixUrl( self.raceDBUrl.GetValue() )
 		self.raceDBUrl.SetValue( url )
-		globalRaceDBUrl = url
 		return url
 	
 	def doOK( self, event ):
@@ -255,7 +260,7 @@ class RaceDB( wx.Dialog ):
 
 		if not e and not (events and events.get('events',None)):
 			e = u'{} {:04d}-{:02d}-{:02d}'.format( _('No Events found on'), d.GetYear(), d.GetMonth()+1, d.GetDay() )
-		self.status.SetLabel( six.text_type(e) if e else u'{}.'.format(_('Events retrieved successfully')) )
+		self.status.SetLabel( u'{}'.format(e) if e else u'{}.'.format(_('Events retrieved successfully')) )
 				
 		competitions = {}
 		for e in events['events']:
@@ -291,9 +296,9 @@ class RaceDB( wx.Dialog ):
 		self.dataSelect = None
 		
 		for cName, events, participant_count, num in sorted(
-				((c['name'], c['events'], c['participant_count'], c['num']) for c in six.itervalues(competitions)), key=lambda x: x[-1] ):
+				((c['name'], c['events'], c['participant_count'], c['num']) for c in competitions.values()), key=lambda x: x[-1] ):
 			competition = self.tree.AppendItem( self.root, cName )
-			self.tree.SetItemText( competition, self.participantCountCol, six.text_type(participant_count) )
+			self.tree.SetItemText( competition, self.participantCountCol, u'{}'.format(participant_count) )
 			for e in events:
 				eventData = e
 				event = self.tree.AppendItem( competition,
@@ -305,7 +310,7 @@ class RaceDB( wx.Dialog ):
 				)
 				self.tree.SetItemText( event, self.startTimeCol, get_tod(e['date_time']) )
 				self.tree.SetItemText( event, self.eventTypeCol, _('Mass Start') if e['event_type'] == 0 else _('Time Trial') )
-				self.tree.SetItemText( event, self.participantCountCol, six.text_type(e['participant_count']) )
+				self.tree.SetItemText( event, self.participantCountCol, u'{}'.format(e['participant_count']) )
 				
 				tEvent = datetime.datetime.combine( tNow.date(), get_time(e['date_time']) )
 				if eventClosest is None and tEvent > tNow:
@@ -314,13 +319,13 @@ class RaceDB( wx.Dialog ):
 				
 				for w in e['waves']:
 					wave = self.tree.AppendItem( event, u'{}: {}'.format(_('Wave'), w['name']), data=eventData )
-					self.tree.SetItemText( wave, self.participantCountCol, six.text_type(w['participant_count']) )
+					self.tree.SetItemText( wave, self.participantCountCol, u'{}'.format(w['participant_count']) )
 					start_offset = w.get('start_offset',None)
 					if start_offset:
 						self.tree.SetItemText( wave, self.startTimeCol, '+' + start_offset )
 					for cat in w['categories']:
 						category = self.tree.AppendItem( wave, cat['name'], data=eventData )
-						self.tree.SetItemText( category, self.participantCountCol, six.text_type(cat['participant_count']) )
+						self.tree.SetItemText( category, self.participantCountCol, u'{}'.format(cat['participant_count']) )
 			self.tree.Expand( competition )
 						
 		self.tree.Expand( self.root )
@@ -394,15 +399,8 @@ class RaceDBUpload( wx.Dialog ):
 		self.refresh()
 
 	def fixUrl( self ):
-		global globalRaceDBUrl
-		url = self.raceDBUrl.GetValue().strip()
-		if not url:
-			url = RaceDBUrlDefault()
-		url = url.split('RaceDB')[0] + 'RaceDB'
-		while url.endswith( '/' ):
-			url = url[:-1]
+		url = fixUrl( self.raceDBUrl.GetValue() )
 		self.raceDBUrl.SetValue( url )
-		globalRaceDBUrl = url
 		return url
 	
 	def refresh( self, events=None ):
@@ -423,7 +421,7 @@ class RaceDBUpload( wx.Dialog ):
 		try:
 			response = PostEventCrossMgr( url )
 		except Exception as e:
-			response = {'errors':[six.text_type(e)], 'warnings':[]}
+			response = {'errors':[u'{}'.format(e)], 'warnings':[]}
 		
 		if response.get('errors',None) or response.get('warnings',None):
 			resultText = u'\n'.join( u'RaceDB{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
@@ -439,6 +437,9 @@ class RaceDBUpload( wx.Dialog ):
 			else:
 				resultText += _('Upload Successful.')
 		
+		if resultText:
+			resultText = u'url="{}"'.format( url ) + '\n' + resultText
+		
 		self.uploadStatus.SetValue( resultText )
 		del busy
 		Utils.MessageOK( self, u'{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
@@ -453,8 +454,8 @@ if __name__ == '__main__':
 	else:
 
 		events = GetRaceDBEvents()
-		six.print_( GetRaceDBEvents( date=datetime.date.today() ) )
-		six.print_( GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) ) )
+		print ( GetRaceDBEvents( date=datetime.date.today() ) )
+		print ( GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) ) )
 		
 		app = wx.App(False)
 		mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
