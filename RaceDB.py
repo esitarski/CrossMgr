@@ -1,8 +1,8 @@
-import requests
-import datetime
 import re
 import os
 import wx
+import requests
+import datetime
 import wx.dataview as dataview
 import Utils
 import Model
