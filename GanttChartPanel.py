@@ -7,8 +7,8 @@ import bisect
 import Utils
 from PhotoFinish import hasPhoto
 
-def SetScrollbarParameters( sb, thumbSize, range, pageSize  ):
-	sb.SetScrollbar( min(sb.GetThumbPosition(), range - thumbSize), thumbSize, range, pageSize )
+def SetScrollbarParameters( sb, thumbSize, rng, pageSize  ):
+	sb.SetScrollbar( min(sb.GetThumbPosition(), rng - thumbSize), thumbSize, rng, pageSize )
 
 def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,

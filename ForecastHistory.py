@@ -278,7 +278,7 @@ class ForecastHistory( wx.Panel ):
 		race = Model.race
 		if race and race.isTimeTrial:
 			rider = race.riders.get(e.num, None)
-			startTime = (rider.getattr('firstTime',0.0) or 0.0) if rider else 0.0
+			startTime = (getattr(rider,'firstTime',0.0) or 0.0) if rider else 0.0
 			return Model.Entry( e.num, e.lap, e.t-startTime, e.interp )
 		return e
 	
