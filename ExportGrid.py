@@ -706,7 +706,8 @@ class ExportGrid( object ):
 		self.data[col][row] = value
 	
 	def setResultsOneList( self, category = None, getExternalData = True,
-							showLapsFrequency = None, showLapTimes = True ):
+							showLapsFrequency = None, showLapTimes = True,
+							showPrizes = False ):
 		''' Format the results into columns. '''
 		self.data = []
 		self.colnames = []
@@ -718,6 +719,8 @@ class ExportGrid( object ):
 		
 		Finisher = Model.Rider.Finisher
 		race = Model.race
+		prizes = category.prizes if category else []
+		showPrizes = showPrizes and bool(prizes)
 		
 		catDetails = { cd['name']:cd for cd in GetCategoryDetails() }
 		try:
@@ -785,7 +788,9 @@ class ExportGrid( object ):
 						([_('Clock'),_('Start'),_('Finish')] if isTimeTrial else []) +
 						([_('ElapsedTime'), _('Factor %')] if hasFactor else []) +
 						[_('Time')] +
-						([_('Gap')] if not hasFactor else [])
+						([_('Gap')] if not hasFactor else []) +
+						([_('Prize')] if showPrizes else [])
+						
 		)
 		if hasSpeeds:
 			self.colnames += [_('Speed')]
@@ -808,7 +813,8 @@ class ExportGrid( object ):
 					infoFields +
 					(['clockStartTime','startTime','finishTime'] if isTimeTrial else []) +
 					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTime']) +
-					(['gap'] if not hasFactor else [])
+					(['gap'] if not hasFactor else []) +
+					(['prize'] if showPrizes else [])
 		)
 		if hasSpeeds:
 			rrFields += ['speed']
@@ -840,6 +846,11 @@ class ExportGrid( object ):
 						data[col].append( u'{:.2f}'.format(factor) )
 					else:
 						data[col].append( u'' )
+			elif f == 'prize':
+				try:
+					data[col].append( category.prizes[row] )
+				except IndexError:
+					data[col].append( u'' )
 			else:
 				for row, rr in enumerate(results):
 					data[col].append( getattr(rr, f, u'') )

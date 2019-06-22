@@ -503,7 +503,7 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 				if self.pageInfo[page][0] == 'Primes':
 					exportGrid = ExportGrid( **Primes.GetGrid() )
 				else:
-					exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False )
+					exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False, showPrizes=True )
 		except KeyError:
 			return ExportGrid()
 		exportGrid.title = u'\n'.join( [_('Podium Results'), u'', exportGrid.title] )

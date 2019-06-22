@@ -63,6 +63,7 @@ from Situation			import Situation
 from LapCounter			import LapCounter
 from Announcer			import Announcer
 from Primes				import Primes, GetGrid
+from Prizes				import Prizes
 from HistogramPanel		import HistogramPanel
 from UnmatchedTagsGantt	import UnmatchedTagsGantt
 import FtpWriteFile
@@ -670,6 +671,7 @@ class MainWin( wx.Frame ):
 			[ 'recommendations',Recommendations,	_('Recommendations') ],
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
+			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'primes',			Primes,				_('Primes') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			[ 'situation',		Situation,			_('Situation') ],

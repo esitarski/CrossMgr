@@ -158,6 +158,8 @@ class Category(object):
 	
 	lappedRidersMustContinue = False
 	
+	prizes = []
+	
 	MaxBib = 999999
 	
 	# Attributes to be merged from existing catgories in category import or when reading categories from the Excel sheet.
