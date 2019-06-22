@@ -788,12 +788,12 @@ class ExportGrid( object ):
 						([_('Clock'),_('Start'),_('Finish')] if isTimeTrial else []) +
 						([_('ElapsedTime'), _('Factor %')] if hasFactor else []) +
 						[_('Time')] +
-						([_('Gap')] if not hasFactor else []) +
-						([_('Prize')] if showPrizes else [])
-						
+						([_('Gap')] if not hasFactor else [])
 		)
 		if hasSpeeds:
-			self.colnames += [_('Speed')]
+			self.colnames.append( _('Speed') )
+		if showPrizes:
+			self.colnames.append( _('Prize') )
 			
 		self.colnames = [u'{} {}'.format(name[:-len(_('Name'))], _('Name')) if name.endswith(_('Name')) else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
@@ -813,11 +813,12 @@ class ExportGrid( object ):
 					infoFields +
 					(['clockStartTime','startTime','finishTime'] if isTimeTrial else []) +
 					(['lastTimeOrig', 'factor', 'lastTime'] if hasFactor else ['lastTime']) +
-					(['gap'] if not hasFactor else []) +
-					(['prize'] if showPrizes else [])
+					(['gap'] if not hasFactor else []) 
 		)
 		if hasSpeeds:
-			rrFields += ['speed']
+			rrFields.append( 'speed' )
+		if showPrizes:
+			rrFields.append( 'prize' )
 		for col, f in enumerate( rrFields ):
 			if f in ('lastTime', 'lastTimeOrig'):
 				for row, rr in enumerate(results):
@@ -847,10 +848,11 @@ class ExportGrid( object ):
 					else:
 						data[col].append( u'' )
 			elif f == 'prize':
-				try:
-					data[col].append( category.prizes[row] )
-				except IndexError:
-					data[col].append( u'' )
+				for row, rr in enumerate(results):
+					try:
+						data[col].append( prizes[row] )
+					except IndexError:
+						data[col].append( u'' )
 			else:
 				for row, rr in enumerate(results):
 					data[col].append( getattr(rr, f, u'') )
