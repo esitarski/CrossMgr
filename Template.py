@@ -96,12 +96,12 @@ class Template( object ):
 			self.fromRace( race )
 		
 	def write( self, fname ):
-		with io.open( fname, 'wb' ) as fp:
+		with open( fname, 'w' ) as fp:
 			json.dump( self.template, fp, indent=1, sort_keys=True )
 		self.fileName = fname
 		
 	def read( self, fname ):
-		with io.open( fname, 'rb' ) as fp:
+		with open( fname, 'r' ) as fp:
 			self.template = json.load( fp )
 		self.fileName = fname
 	
