@@ -4,7 +4,6 @@ import os
 import six
 import datetime
 import wx.lib.intctrl
-import wx.lib.masked			as masked
 
 import Model
 import Utils
@@ -181,7 +180,7 @@ class ChipImportDialog( wx.Dialog ):
 		self.manualStartTime = wx.CheckBox(self, label = _('Race Start Time (if NOT first recorded time):') )
 		self.Bind( wx.EVT_CHECKBOX, self.onChangeManualStartTime, self.manualStartTime )
 		gs.Add( self.manualStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.raceStartTime = masked.TimeCtrl( self, fmt24hr=True, value="10:00:00" )
+		self.raceStartTime = HighPrecisionTimeEdit( self, seconds=10*60*60 )
 		self.raceStartTime.Enable( False )
 		gs.Add( self.raceStartTime, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT)
 		gs.AddSpacer(1)
@@ -288,7 +287,10 @@ class ChipImportDialog( wx.Dialog ):
 			startTime = Model.race.startTime.time()
 		else:
 			if self.manualStartTime.IsChecked():
-				startTime = datetime.time(*[int(x) for x in self.raceStartTime.GetValue().split(':')])
+				startSeconds = self.raceStartTime.GetSeconds()
+				seconds, fraction = math.modf( startSeconds )
+				seconds = int(seconds)
+				startTime = datetime.time( (seconds//(60*60))%24, (seconds//60)%60, seconds%60, int(fraction*1000000) )
 			else:
 				startTime = None
 			
