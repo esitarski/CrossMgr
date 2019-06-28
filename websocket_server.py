@@ -319,7 +319,7 @@ class WebSocketHandler(StreamRequestHandler):
 			header.append(payload_length)
 
 		# Extended payload
-		elif payload_length >= 126 and payload_length <= 65535:
+		elif payload_length <= 65535:
 			header.append(FIN | opcode)
 			header.append(PAYLOAD_LEN_EXT16)
 			header.extend(struct.pack(">H", payload_length))

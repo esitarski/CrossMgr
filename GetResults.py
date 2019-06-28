@@ -901,6 +901,7 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 		'laps'			: 0,
 		'pos'			: [rr.num for rr in results],
 		'gapValue'		: [getattr(rr, 'gapValue', 0) for rr in results],
+		'iSort'			: 0,
 	}
 	catDetails.append( info )
 	
@@ -908,7 +909,7 @@ def GetCategoryDetails( ignoreEmptyCategories=True, publishOnly=False ):
 	lastWaveLaps = 0
 	lastWaveCat = None
 	lastWaveStartOffset = 0
-	for iSort, cat in enumerate(race.getCategories( startWaveOnly=False, publishOnly=publishOnly )):
+	for iSort, cat in enumerate(race.getCategories( startWaveOnly=False, publishOnly=publishOnly ), 1):
 		results = GetResults( cat )
 		if ignoreEmptyCategories and not results:
 			continue
