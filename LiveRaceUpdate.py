@@ -8,6 +8,9 @@ PORT_NUMBER = 8765 + 1
 
 def applyRAM( dest, ram ):
 	# Apply the RAM information (RAM = Remove, Add, Modify).
+	# It is only safe to apply the RAM update *if* the update versionCount is one greater than the last versionCount.
+	# Otherwise if it necessary to request a new baseline.
+	
 	# First apply Add and Modify, which are key/object pairs.
 	dest.update( ram['a'] )
 	dest.update( ram['m'] )
@@ -62,15 +65,16 @@ class SynchronizedRaceData:
 		if 'cmd' not in message:
 			return
 		
-		if message['cmd'] == 'ram' and not self.baselinePending:
-			if self.versionCount + 1 != message['reference']['versionCount'] or self.raceName != message['reference']['raceName']:
-				# The versionCount or raceName is out of sync.  Request a full update.
-				ws.send(json.dumps({'cmd':'send_baseline', 'raceName':message['reference']['raceName']}).encode())
-				self.baselinePending = True	# Set a flag to ignore incremental updates until we get the new baseline.
-			else:
-				# This delta-update is for the next versionCount and is for this race.  Apply the incremental change.
-				self.processRAM( message )
-				self.onChange()
+		if message['cmd'] == 'ram':
+			if not self.baselinePending:
+				# If the versionCount or raceName is out of sync.  Request a full update.
+				if self.versionCount + 1 != message['reference']['versionCount'] or self.raceName != message['reference']['raceName']:
+					ws.send( json.dumps({'cmd':'send_baseline', 'raceName':message['reference']['raceName']}).encode() )
+					self.baselinePending = True	# Set flag to ignore incremental updates until we get the new baseline.
+				else:
+					# Otherwise, it is safe to apply this update.
+					self.processRAM( message )
+					self.onChange()
 			
 		elif message['cmd'] == 'baseline':
 			self.processBaseline( message )
@@ -80,7 +84,7 @@ class SynchronizedRaceData:
 		while True:
 			try:
 				ws = websocket.create_connection( self.wsurl )
-				ws.send(json.dumps({'cmd':'send_baseline', 'raceName':'CurrentResults'}).encode())
+				ws.send( json.dumps({'cmd':'send_baseline', 'raceName':'CurrentResults'}).encode() )
 				while True:
 					self.onMessage( ws, ws.recv() )
 			except Exception as e:
