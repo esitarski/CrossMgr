@@ -18,7 +18,7 @@ def applyRAM( dest, ram ):
 class SynchronizedRaceData:
 	def __init__( self, hostname='localhost', port=PORT_NUMBER ):
 		self.info = {}					# Reference data accessed by bib number.
-		self.categoryDetails = {}		# Category details accessed by category name.  Includes categyr name, position order.
+		self.categoryDetails = {}		# Category details accessed by category name.  Includes position order.
 		
 		self.raceName = ''				# Name of current race.
 		self.versionCount = -1			# Current version of the local race.
