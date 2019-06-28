@@ -7,20 +7,18 @@ import websocket
 PORT_NUMBER = 8765 + 1
 
 def applyRAM( dest, ram ):
-	# Apply the RAM information to a dict.
-	# RAM = Remove, Add, Modify.
-	# First apply Adds and Modifies.
-	for r in ('a', 'm'):
-		for k, v in ram[r].items():
-			dest[k] = v
-	# Then apply Deletes.
+	# Apply the RAM information (RAM = Remove, Add, Modify).
+	# First apply Add and Modify, which are key/object pairs.
+	dest.update( ram['a'] )
+	dest.update( ram['m'] )
+	# Then apply Deletes, which are an array of keys to delete.
 	for k in ram['r']:
 		dest.pop( k, None )	# Use pop instead of del (safer).
 
 class SynchronizedRaceData:
 	def __init__( self, hostname='localhost', port=PORT_NUMBER ):
 		self.info = {}					# Reference data accessed by bib number.
-		self.categoryDetails = {}		# Category details accessed by category name.
+		self.categoryDetails = {}		# Category details accessed by category name.  Includes categyr name, position order.
 		
 		self.raceName = ''				# Name of current race.
 		self.versionCount = -1			# Current version of the local race.
@@ -42,7 +40,7 @@ class SynchronizedRaceData:
 		applyRAM( self.categoryDetails, message['categoryRAM'] );
 		self.setRaceState( message )
 
-	def updateTop( self ):
+	def printTop( self ):
 		showTop = 5
 		print( '********* Top {} Leaders ********* {}'.format(showTop, datetime.datetime.now()) )
 		for cat in sorted( self.categoryDetails.values(), key=operator.itemgetter('iSort') ):
@@ -52,6 +50,9 @@ class SynchronizedRaceData:
 			for rank, bib in enumerate(cat['pos'][:showTop], 1):
 				r = self.info.get(str(bib), {})	# Access as a string, not an integer.
 				print( '{}. {:4d}: {} {} ({})'.format( rank, bib, r.get('FirstName', ''), r.get('LastName', ''), r.get('Team','') ) )
+
+	def onChange( self ):
+		self.printTop()
 
 	def onMessage( self, ws, btext ):
 		try:
@@ -69,11 +70,11 @@ class SynchronizedRaceData:
 			else:
 				# This delta-update is for the next versionCount and is for this race.  Apply the incremental change.
 				self.processRAM( message )
-				self.updateTop()
+				self.onChange()
 			
 		elif message['cmd'] == 'baseline':
 			self.processBaseline( message )
-			self.updateTop()
+			self.onChange()
 	
 	def eventLoop( self ):
 		while True:
@@ -88,4 +89,4 @@ class SynchronizedRaceData:
 		
 if __name__ == '__main__':
 	rd = SynchronizedRaceData()
-	rd.eventLoop()
+	rd.eventLoop()	# Never returns.
