@@ -536,6 +536,7 @@ def ordinal( value ):
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
 		'es': lambda v: u'{}.\u00B0'.format(v),
+		'it': lambda v: u'{}o'.format(v),
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
 	}.get( lang[:2], lambda v: '{}'.format(v) )( value )
 

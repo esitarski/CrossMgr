@@ -9,11 +9,15 @@ cmd = ['pybabel']
 
 CrossMgrLocale = 'CrossMgrLocale'
 
-try:
-	os.makedirs( os.path.join(CrossMgrLocale,'fr','LC_MESSAGES') )
-except OSError as e:
-	if not os.path.join(CrossMgrLocale,'fr','LC_MESSAGES'):
-		raise
+languages = ('fr', 'es', 'it')
+
+for lang in languages:
+	dir = os.path.join(CrossMgrLocale,lang,'LC_MESSAGES')
+	try:
+		os.makedirs( dir )
+	except OSError as e:
+		if not os.path.isdir( dir ):
+			raise
 
 #-----------------------------------------------------------------------
 # Extract the strings.
@@ -39,17 +43,18 @@ contents = contents.replace( 'locale_src/', '' )
 with io.open(pot, 'w', encoding='utf-8') as f:
 	f.write( contents )
 
-#-----------------------------------------------------------------------
-# Create/Merge translation file.
-#
-po = os.path.join(CrossMgrLocale, 'fr', 'LC_MESSAGES', 'messages.po')
+for lang in languages:
+	#-----------------------------------------------------------------------
+	# Create/Merge translation file.
+	#
+	po = os.path.join(CrossMgrLocale, lang, 'LC_MESSAGES', 'messages.po')
 
-if os.path.exists( po ):
-	subprocess.call( cmd + ["update", "-d", CrossMgrLocale, "-i", pot] )
-else:
-	subprocess.call( cmd + ["init", "-d", CrossMgrLocale, "-l", "fr", "-i", pot] )
-	
-#-----------------------------------------------------------------------
-# Compile the translation file.
-#
-subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", "fr", "-i", po] )
+	if os.path.exists( po ):
+		subprocess.call( cmd + ["update", "-d", CrossMgrLocale, "-i", pot] )
+	else:
+		subprocess.call( cmd + ["init", "-d", CrossMgrLocale, "-l", lang, "-i", pot] )
+		
+	#-----------------------------------------------------------------------
+	# Compile the translation file.
+	#
+	subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )
