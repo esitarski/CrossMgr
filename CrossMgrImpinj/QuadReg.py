@@ -1,4 +1,3 @@
-import six
 import numpy as np
 import warnings
 warnings.simplefilter('ignore', np.RankWarning)
@@ -145,7 +144,7 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
 	
 	# Bias the sample to consider the strongest reads.
-	indexes = sorted( list(six.moves.range(lenData)), key=lambda i: data[i][1], reverse=True )
+	indexes = sorted( list(range(lenData)), key=lambda i: data[i][1], reverse=True )
 	indexes = np.fromiter( (i for i in indexes[:max(int(lenData*0.75), 6)]), int )
 	
 	P = 0.99		# Desired probability that we have found an uncontaminated model.
@@ -237,6 +236,6 @@ if __name__ == '__main__':
 			fields = line.split()
 			points.append( (float(fields[1]), -float(fields[2])) )
 	
-	six.print_( points )
-	six.print_( QuadReg(points), QuadRegExtreme(points, QuadReg), QuadRegExtreme(points, QuadRegRemoveOutliersRobust) )
+	print( points )
+	print( QuadReg(points), QuadRegExtreme(points, QuadReg), QuadRegExtreme(points, QuadRegRemoveOutliersRobust) )
 	

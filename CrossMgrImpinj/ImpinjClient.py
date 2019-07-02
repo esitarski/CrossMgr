@@ -13,7 +13,7 @@ from pyllrp.pyllrp import *
 random.seed( 10101010 )
 seen = set()
 nums = []
-for i in six.moves.range(25):
+for i in range(25):
 	while 1:
 		x = random.randint(1,200)
 		if x not in seen:
@@ -72,7 +72,7 @@ var = mean / varFactor				# Variance between riders.
 lapMax = 6
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
-	for lap in six.moves.range(0, lapMax+1):
+	for lap in range(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
