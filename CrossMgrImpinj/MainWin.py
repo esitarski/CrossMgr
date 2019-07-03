@@ -14,6 +14,7 @@ from Impinj2JChip import CrossMgrServer
 from pyllrp.AutoDetect import AutoDetect
 import QuadReg
 from TagGroup import QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MethodNames, MostReadsChoice, DBMaxChoice, AntennaChoiceNames
+from AntennaReads import AntennaReads
 
 import wx
 import wx.lib.masked			as masked
@@ -364,10 +365,10 @@ class MainWin( wx.Frame ):
 		gs = wx.GridSizer( rows=0, cols=4, vgap=0, hgap=2 )
 		self.antennaLabels = []
 		self.antennas = []
-		for i in six.moves.range(4):
+		for i in range(4):
 			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
 			gs.Add( self.antennaLabels[-1], flag=wx.ALIGN_CENTER|wx.EXPAND )
-		for i in six.moves.range(4):
+		for i in range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
 				cb.SetValue( True )
@@ -413,6 +414,10 @@ class MainWin( wx.Frame ):
 		
 		self.useHostName.SetValue( True )
 		self.useStaticAddress.SetValue( False )
+		
+		iRow += 1
+		self.antennaReads = AntennaReads( self )
+		gbs.Add( self.antennaReads, pos=(iRow,0), span=(1,3), flag=wx.ALIGN_LEFT|wx.EXPAND )
 		
 		iRow += 1
 		self.antennaReadCount = wx.StaticText( self, label='ANT Reads: 1:0 0% | 2:0 0% | 3:0 0% | 4:0 0%               ' )
@@ -479,7 +484,7 @@ class MainWin( wx.Frame ):
 	def readerStatusCB( self, **kwargs ):
 		# As this is called from another thread, make sure all UI updates are done from CallAfter.
 		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
-		for i in six.moves.range(4):
+		for i in range(4):
 			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
 
 	def refreshMethodName( self ):
@@ -510,7 +515,7 @@ class MainWin( wx.Frame ):
 		for tag, discovered in strays:
 			i = self.strays.InsertItem( 1000000, tag )
 			self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
-		for c in six.moves.range(self.strays.GetColumnCount()):
+		for c in range(self.strays.GetColumnCount()):
 			self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
 			
 	def strayHandler( self, strayQ ):
@@ -710,7 +715,7 @@ class MainWin( wx.Frame ):
 		return self.crossMgrHost.GetAddress()
 		
 	def getAntennaStr( self ):
-		selectedAntennas = [ i for i in six.moves.range(4) if self.antennas[i].GetValue() ]
+		selectedAntennas = [ i for i in range(4) if self.antennas[i].GetValue() ]
 		# Ensure at least one antenna is selected.
 		if not selectedAntennas:
 			self.antennas[0].SetValue( True )
@@ -719,7 +724,7 @@ class MainWin( wx.Frame ):
 	
 	def setAntennaStr( self, s ):
 		antennas = set( int(a) for a in s.split() )
-		for i in six.moves.range(4):
+		for i in range(4):
 			self.antennas[i].SetValue( (i+1) in antennas )
 	
 	def writeOptions( self ):
@@ -803,17 +808,18 @@ class MainWin( wx.Frame ):
 				else:
 					self.impinjMessages.write( message )
 					if antennaReadCount is not None:
-						total = max(1, sum( antennaReadCount[i] for i in six.moves.range(1,4+1)) )
+						total = max(1, sum( antennaReadCount[i] for i in range(1,4+1)) )
 						label = '{}: {} ({})'.format(
 								'ANT Used' if Impinj.ProcessingMethod != FirstReadMethod else 'ANT Reads',
 								' | '.join('{}:{} {:.1f}%'.format(
 									i,
 									formatAntennaReadCount(antennaReadCount[i]),
-									antennaReadCount[i]*100.0/total) for i in six.moves.range(1,4+1)
+									antennaReadCount[i]*100.0/total) for i in range(1,4+1)
 								),
 								'Peak RSSI' if Impinj.ProcessingMethod != FirstReadMethod else 'First Read',
 							)
 						self.antennaReadCount.SetLabel( label )
+						self.antennaReads.Set( [antennaReadCount[i] for i in range(1,4+1)] )
 				self.refreshMethodName()
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:

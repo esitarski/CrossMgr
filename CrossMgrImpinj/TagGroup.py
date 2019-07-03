@@ -166,7 +166,7 @@ class TagGroup( object ):
 		reads, strays = [], []
 		toDelete = []
 		
-		for tag, tge in six.iteritems(self.tagInfo):
+		for tag, tge in self.tagInfo,items():
 			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
 					t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice, removeOutliers)
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 		db = int(fields[4])
 		tg.add( 1, fields[1], t + timedelta( seconds=tCur - tFirst ), db  )
 	reads, strays = tg.getReadsStrays( t + timedelta(seconds=5.0) )
-	six.print_( reads )
+	print( reads )
 	
 	def genReadProfile( tg, t, tag, antenna=1, yTop=-47, stddev=10.0 ):
 		#pointCount = 15
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 		
 		yMult = yRange / ((pointCount/2.0) ** 2)
 		tDelta = xRange / pointCount
-		for i in six.moves.range(pointCount):
+		for i in range(pointCount):
 			x = i - pointCount/2.0
 			noise = random.normalvariate( 0.0, stddev )
 			y = yTop - x * x * yMult
@@ -230,24 +230,24 @@ if __name__ == '__main__':
 			tg.add( antenna, tag, t + timedelta( seconds=x*tDelta ), round(y+noise)  )
 	
 	t = datetime.now()
-	for stddev in six.moves.range(10+1):
+	for stddev in range(10+1):
 		variance = 0.0
 		samples = 1000
-		for k in six.moves.range(samples):
+		for k in range(samples):
 			tg = TagGroup()
 			genReadProfile( tg, t, '111', stddev=float(stddev) )
 			tg.flush()
 			tEst, sampleSize, antennaID = tg.tagInfo['111'].getBestEstimate( method )
 			variance += (t - tEst).total_seconds() ** 2
-		six.print_( '{},{}'.format( stddev, (variance / samples)**0.5 ) )
+		print( '{},{}'.format( stddev, (variance / samples)**0.5 ) )
 	
-	six.print_()
+	print()
 	tg = TagGroup()
-	for antennaID in six.moves.range(1,3):
+	for antennaID in range(1,3):
 		genReadProfile( tg, t, '111', antenna=antennaID, yTop=-47+antennaID )
 		genReadProfile( tg, t-timedelta(seconds=3), '222', antenna=antennaID, yTop=-47+antennaID )
 	sleep( 1.0 )
-	six.print_( t, t-timedelta(seconds=3) )
+	print( t, t-timedelta(seconds=3) )
 	reads, strays = tg.getReadsStrays(method=method)
 	for tag, t, sampleSize, antennaID in reads:
-		six.print_( t, tag, sampleSize, antennaID )
+		print( t, tag, sampleSize, antennaID )
