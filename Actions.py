@@ -199,8 +199,8 @@ class StartRaceAtTime( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 #-------------------------------------------------------------------------------------------
-StartText = u'\n'.join(_('Start Race').split())
-FinishText = u'\n'.join(_('Finish Race').split())
+StartText = u'\n'.join(_('Start Race').split(maxsplit=1))
+FinishText = u'\n'.join(_('Finish Race').split(maxsplit=1))
 
 class Actions( wx.Panel ):
 	iResetStartClockOnFirstTag = 1

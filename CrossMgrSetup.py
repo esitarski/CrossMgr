@@ -73,6 +73,18 @@ def copyDir( d ):
 for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
 	copyDir( dir )
 
+# Compile all the language files.
+print( "Compiling language files..." )
+cmd = ['pybabel']
+CrossMgrLocale = 'CrossMgrLocale'
+languages = ('fr', 'es', 'it')
+for lang in languages:
+	#-----------------------------------------------------------------------
+	# Compile the translation file.
+	#
+	po = os.path.join(CrossMgrLocale, lang, 'LC_MESSAGES', 'messages.po')
+	subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )
+
 # Copy the locale.
 localeD = 'CrossMgrLocale'
 destD = os.path.join(distDir, localeD)
@@ -110,7 +122,7 @@ def make_inno_version():
 make_inno_version()
 
 cmd = '"' + inno + '" ' + 'CrossMgr.iss'
-six.print_( cmd )
+print( cmd )
 subprocess.call( cmd, shell=True )
 
 # Create versioned executable.
@@ -123,7 +135,7 @@ except:
 	pass
 
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
-six.print_( 'executable copied to: ' + newExeName )
+print( 'executable copied to: ' + newExeName )
 
 # Create compressed executable.
 os.chdir( 'install' )
@@ -138,14 +150,14 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-six.print_( 'executable compressed to: ' + newZipName )
+print( 'executable compressed to: ' + newZipName )
 
 shutil.copy( newZipName, googleDrive  )
 
 from virus_total_apis import PublicApi as VirusTotalPublicApi
 API_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
 vt = VirusTotalPublicApi(API_KEY)
-six.print_( 'VirusTotal Scan' )
+print( 'VirusTotal Scan' )
 vt.scan_file( os.path.abspath(newExeName) )
 
 os.chdir( '..' )
