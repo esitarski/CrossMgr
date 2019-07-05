@@ -1325,11 +1325,13 @@ class Properties( wx.Panel ):
 		if Model.race:
 			wx.CallAfter( self.commit )
 		else:
-			Utils.MessageOK( self,
-				_('You must have a valid race File|Open...') + u'\n' + _('Or create one with File|New....'), _('Valid Race Required'),
-				wx.ICON_WARNING )
+			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
 	
 	def loadTemplateButtonCallback( self, event ):
+		race = Model.race
+		if not race:
+			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			return
 		templatesFolder = GetTemplatesFolder()
 		try:
 			os.makedirs( templatesFolder )
@@ -1365,6 +1367,10 @@ class Properties( wx.Panel ):
 				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
 	
 	def saveTemplateButtonCallback( self, event ):
+		race = Model.race
+		if not race:
+			Utils.MessageOK(self, _("You must have a valid race.  Open or New a race first."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			return			
 		self.commit()
 		templatesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 		try:
@@ -1383,7 +1389,7 @@ class Properties( wx.Panel ):
 			path = fd.GetPath()
 			try:
 				template.write( path )
-				Model.race.templateFileName = path
+				race.templateFileName = path
 				self.refresh()
 				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
 			except Exception as e:
