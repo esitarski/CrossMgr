@@ -131,7 +131,7 @@ def SetToIntervals( s ):
 	return intervals
 	
 def IntervalsToSet( intervals ):
-	return set.union( *[set(six.moves.range(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
+	return set.union( *[set(range(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
 
 #----------------------------------------------------------------------
 class Category(object):
@@ -216,7 +216,7 @@ class Category(object):
 					bounds[0], bounds[1] = bounds[1], bounds[0]
 					
 				if isExclusion:
-					self.exclude.update( six.moves.range(bounds[0], bounds[1]+1) )
+					self.exclude.update( range(bounds[0], bounds[1]+1) )
 				else:
 					self.intervals.append( tuple(bounds) )
 					
@@ -449,7 +449,7 @@ class Category(object):
 			return
 		
 		# Remove any singleton intervals.
-		for j in six.moves.range(len(self.intervals)-1, -1, -1):
+		for j in range(len(self.intervals)-1, -1, -1):
 			interval = self.intervals[j]
 			if num == interval[0] == interval[1]:
 				self.intervals.pop( j )
@@ -754,7 +754,7 @@ class Rider(object):
 		while len(iTimes) > 2:
 			try:
 				# Don't correct the last lap - assume the rider looped around and cross the finish again.
-				i = next(i for i in six.moves.range(len(iTimes) - 1, 0, -1) \
+				i = next(i for i in range(len(iTimes) - 1, 0, -1) \
 						if iTimes[i] - iTimes[i-1] < mustBeRepeatInterval)
 				if i == 1:
 					iDelete = i				# if the short interval is the first one, delete the next entry.
@@ -887,13 +887,13 @@ class Rider(object):
 		iTimes = [(t, False) for t in iTimes]
 		
 		# Check for missing lap data and fill it in.
-		for missing in six.moves.range(1, 3):
+		for missing in range(1, 3):
 			mMin = expected * missing + expected * Rider.pMin
 			mMax = expected * missing + expected * Rider.pMax
-			for j in (j for j in six.moves.range(len(iTimes)-1, 0, -1) if mMin < (iTimes[j][0] - iTimes[j-1][0]) < mMax):
+			for j in (j for j in range(len(iTimes)-1, 0, -1) if mMin < (iTimes[j][0] - iTimes[j-1][0]) < mMax):
 				tStart = iTimes[j-1][0]
 				interp = float(iTimes[j][0] - tStart) / float(missing + 1)
-				fill = [(tStart + interp * m, True) for m in six.moves.range(1, missing+1)]
+				fill = [(tStart + interp * m, True) for m in range(1, missing+1)]
 				iTimes[j:j] = fill
 
 		# Pad out to one entry exceeding stop time if we are less than it.
@@ -902,7 +902,7 @@ class Rider(object):
 			tBegin += expected
 			iMax = max( 1, int(math.ceil(st - tBegin) / expected) if expected > 0 else 1 )
 			iMax = min( iMax, Rider.entriesMax - len(iTimes) )
-			iTimes.extend( [(tBegin + expected * i, True) for i in six.moves.range(iMax)] )
+			iTimes.extend( [(tBegin + expected * i, True) for i in range(iMax)] )
 
 		# Remove any entries exceeding the dnfPulledTime.
 		if dnfPulledTime is not None:
@@ -1882,7 +1882,7 @@ class Race( object ):
 			toExclude = set()
 			for i, c in enumerate(activeCategories):
 				if c.catType == Category.CatWave:
-					for j in six.moves.range(i+1, len(activeCategories)):
+					for j in range(i+1, len(activeCategories)):
 						if activeCategories[j].catType == Category.CatCustom:
 							continue
 						if activeCategories[j].catType == Category.CatComponent:
@@ -2092,7 +2092,7 @@ class Race( object ):
 			# Ensure we don't have any duplicate category fullnames.
 			if category.fullname in newCategories:
 				originalName = category.name
-				for count in six.moves.range(1, 999):
+				for count in range(1, 999):
 					category.name = u'{} {}({})'.format(originalName, _('Copy'), count)
 					if not category.fullname in newCategories:
 						break
@@ -2370,7 +2370,7 @@ class Race( object ):
 
 		# Check if the leader is expected in the next few riders.
 		pos = bisect.bisect_right( entries, Entry(num=0, lap=0, t=self.curRaceTime(), interp=False) )
-		for i in six.moves.range(pos, min(pos+5, len(entries))):
+		for i in range(pos, min(pos+5, len(entries))):
 			if entries[i].num == leader:
 				return True
 		return False
@@ -2429,14 +2429,14 @@ class Race( object ):
 			except:
 				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
-			for r in six.moves.range(2):
+			for r in range(2):
 				if iLap >= len(catTimes):
 					break
 				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
 
 				seen = {}
 				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
-								for i in six.moves.range(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
+								for i in range(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				for pos, e in enumerate(catFinishers):
 					ret[r][e.num] = pos + 1
@@ -2462,14 +2462,14 @@ class Race( object ):
 			except:
 				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
-			for r in six.moves.range(2):
+			for r in range(2):
 				if iLap >= len(catTimes):
 					break
 				iFirst = bisect.bisect_left( catEntries, Entry(catNums[iLap], iLap, catTimes[iLap], False) )
 
 				seen = {}
 				catFinishers = [ seen.setdefault(catEntries[i].num, catEntries[i])
-								for i in six.moves.range(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
+								for i in range(iFirst, min(len(catEntries),iFirst+scanMax)) if catEntries[i].num not in seen ]
 				catFinishers.sort( key = lambda x: (-x.lap, x.t, x.num) )
 				leader = catFinishers[0]
 				for e in catFinishers:
@@ -2613,14 +2613,14 @@ class Race( object ):
 		riders = 30
 		self.startTime = datetime.datetime.now()
 		tMax = 0.0
-		for num in six.moves.range(100,100+riders+1):
+		for num in range(100,100+riders+1):
 			t = 0
 			mu = random.normalvariate( mean, var )	# Rider's random average lap time.
-			for laps in six.moves.range(lapsTotal):
+			for laps in range(lapsTotal):
 				t += random.normalvariate(mu, var )	# Rider's lap time.
 				tMax = max( tMax, t )
 				self.addTime( num, t )
-		for j, i in enumerate(six.moves.range(100,100+riders+1,10)):
+		for j, i in enumerate(range(100,100+riders+1,10)):
 			name = 'Cat{}'.format(j+1)
 			self.categories[name] = Category(True, name, '{}-{}'.format(i, i+9) )
 
@@ -2731,7 +2731,7 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 		
 if __name__ == '__main__':
 	'''
-	s = set.union( set(six.moves.range(10)), set(six.moves.range(20,30)) )
+	s = set.union( set(range(10)), set(range(20,30)) )
 	i = SetToIntervals( s )
 	ss = IntervalsToSet( i )
 	print( s )
@@ -2743,7 +2743,7 @@ if __name__ == '__main__':
 	r = newRace()
 	
 	'''
-	for i in six.moves.range(1, 11):
+	for i in range(1, 11):
 		r.addTime( 10, i*100 )
 	r.addTime( 10, 10*100 + 1 )
 	print( u'\n'.join( six.text_type(f) for f in r.interpolate()[:20] ) )
@@ -2754,7 +2754,7 @@ if __name__ == '__main__':
 	]
 	r.setCategories( categories )
 
-	#for i in six.moves.range(1,8):
+	#for i in range(1,8):
 	#	r.addTime( 10, i * 60 )
 	r.addTime( 10, 2 * 60 )
 	r.addTime( 10, 3 * 60 )

@@ -9,7 +9,7 @@ def SimulateCategory( numStart, riders, factor = 1.0, errorRate = 0.0, raceTime 
 	var = mean/varFactor		# Variance between riders.
 	
 	lapTimes = []
-	for num in six.moves.range(numStart,numStart+riders):
+	for num in range(numStart,numStart+riders):
 		mu = random.normalvariate( mean, mean/(varFactor * 4.0) )			# Rider's random average lap time.
 		t = offset
 		lap = 0
@@ -29,13 +29,13 @@ def Simulate():
 	
 	wbProb = pyXL.Workbook()
 	wbSol = pyXL.Workbook()
-	for p in six.moves.range(8):
+	for p in range(8):
 		numCategories = 3
 		numRiders = 20
 		if p >= 5:
 			numRiders = 25
 		lapTimes = []
-		for i in six.moves.range(1, numCategories + 1):
+		for i in range(1, numCategories + 1):
 			lapTimes.extend( SimulateCategory(i * 100, numRiders, 1.0 + i * 0.05, raceTime = raceTime, offset = (60.0 * (i-1)) ) )
 			
 		lapTimes.sort( key = lambda x : (x[1], -x[2]) )
@@ -71,7 +71,7 @@ def Simulate():
 		col = 0
 		sheet = wbSol.add_sheet( 'Solution %d' % (p + 1) )
 		sheet.write( 0, 0, 'Solution %d' % (p + 1) )
-		for i in six.moves.range(1, numCategories + 1):
+		for i in range(1, numCategories + 1):
 			sheet.write( 1, col+1, "%d's" % (i * 100) )
 			sheet.write( 1, col+2, "Laps" )
 			row = rowStart

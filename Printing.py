@@ -47,7 +47,7 @@ def getCatCountImagesCategoryList( parent ):
 				list.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
 				list.SetItem( index, 3, u'{}'.format(catCount[c]) )
 	
-	for col in six.moves.range(4+1):
+	for col in range(4+1):
 		list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
 	list.SetColumnWidth( 1, 64 )
 	list.SetColumnWidth( 3, 52 )
@@ -122,7 +122,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 			race.printFormat = event.GetInt()
 		
 	def onSelectAll(self, evt = None):
-		for row in six.moves.range(self.list.GetItemCount()):
+		for row in range(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
@@ -168,7 +168,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		race = Model.race
 			
 		self.podiumPositionsLabel = wx.StaticText( self, label=_('Podium Positions to Print:') )
-		self.podiumPositions = wx.Choice( self, choices=[six.text_type(i+1) for i in six.moves.range(10)] )
+		self.podiumPositions = wx.Choice( self, choices=[six.text_type(i+1) for i in range(10)] )
 		self.podiumPositions.SetSelection( 2 )
 		
 		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
@@ -207,7 +207,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		self.categories = []
 
 	def onSelectAll(self, evt = None):
-		for row in six.moves.range(self.list.GetItemCount()):
+		for row in range(self.list.GetItemCount()):
 			self.list.SetItemState(row, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 		wx.CallAfter( self.list.SetFocus )
 		
@@ -281,7 +281,7 @@ class CrossMgrPrintout( wx.Printout ):
 				categoryLength = len(GetResults(c))
 				pageNumberTotal = int( math.ceil( float(categoryLength) / float(rowDrawCount) ) + 0.1 )
 				pageNumber = 0
-				for i in six.moves.range(0, categoryLength, rowDrawCount):
+				for i in range(0, categoryLength, rowDrawCount):
 					page += 1
 					pageNumber += 1
 					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]
@@ -483,7 +483,7 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 				categoryLength = min( sum(1 for r in GetResults(c) if r.status == Finisher), rowDrawCount )
 				pageNumberTotal = 1
 				pageNumber = 0
-				for i in six.moves.range(0, categoryLength, rowDrawCount):
+				for i in range(0, categoryLength, rowDrawCount):
 					page += 1
 					pageNumber += 1
 					self.pageInfo[page] = [c, i, min(categoryLength, rowDrawCount), pageNumber, pageNumberTotal, categoryLength]

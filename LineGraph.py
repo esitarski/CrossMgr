@@ -259,9 +259,9 @@ if __name__ == '__main__':
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
-	lineGraph.SetData( [[random.normalvariate(t, tVar) for x in six.moves.range(9)],
-						[random.normalvariate(t, tVar) for x in six.moves.range(10)]] )
-	#lineGraph.SetData( [[random.normalvariate(t, tVar) for x in six.moves.range(9)]] )
+	lineGraph.SetData( [[random.normalvariate(t, tVar) for x in range(9)],
+						[random.normalvariate(t, tVar) for x in range(10)]] )
+	#lineGraph.SetData( [[random.normalvariate(t, tVar) for x in range(9)]] )
 	#lineGraph.SetData( [GetData()] )
 
 	mainWin.Show()

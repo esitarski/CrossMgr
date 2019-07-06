@@ -868,7 +868,7 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
-		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in six.moves.range(min(11,len(jumpToIds)))]
+		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in range(min(11,len(jumpToIds)))]
 		self.contextHelp = wx.ID_HELP
 		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
 		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
@@ -1497,7 +1497,7 @@ class MainWin( wx.Frame ):
 		pdd.EnablePrintToFile( False )
 		
 		printer = wx.Printer(pdd)
-		for i in six.moves.range(3):
+		for i in range(3):
 			try:
 				printout = CrossMgrPrintout( categories )
 				printError = False
@@ -2660,7 +2660,7 @@ class MainWin( wx.Frame ):
 		if not importedCategories:
 			race.categoriesImportFile = ''
 			race.setCategories( [{'name':u'{} {}-{}'.format(_('Category'), max(1, i*100), (i+1)*100-1),
-								  'catStr':u'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in six.moves.range(8)] )
+								  'catStr':u'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in range(8)] )
 		else:
 			race.categoriesImportFile = categoriesFile
 			
@@ -3098,7 +3098,7 @@ class MainWin( wx.Frame ):
 			]
 			
 			# Add some out-of-category numbers to test.
-			for e in six.moves.range(10, 50, 10):
+			for e in range(10, 50, 10):
 				self.lapTimes[e] = ( self.lapTimes[e][0], 1111+e )
 		
 		return self.lapTimes
@@ -3404,7 +3404,7 @@ class MainWin( wx.Frame ):
 		if data:
 			rowMax = max( len(c) for c in data )
 			colnames = ['Count'] + colnames
-			data = [['{}'.format(i) for i in six.moves.range(1, rowMax+1)]] + data
+			data = [['{}'.format(i) for i in range(1, rowMax+1)]] + data
 		with Model.LockRace() as race:
 			title = u'{}\n{}\n{}'.format( race.title, Utils.formatDate(race.date), _('Race Passings') )
 		export = ExportGrid( title, colnames, data )

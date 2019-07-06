@@ -31,7 +31,7 @@ from Ultra import EOL
 random.seed( 10101010 )
 seen = set()
 nums = []
-for i in six.moves.range(25):
+for i in range(25):
 	while 1:
 		x = random.randint(1,200)
 		if x not in seen:
@@ -286,7 +286,7 @@ Spin Doctors
 	random.shuffle( teams )
 	random.shuffle( bibs )
 	
-	for i in six.moves.range(starters):
+	for i in range(starters):
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i&len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
@@ -350,7 +350,7 @@ var = mean / varFactor				# Variance between riders.
 lapMax = 6
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
-	for lap in six.moves.range(0, lapMax+1):
+	for lap in range(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
@@ -363,7 +363,7 @@ passingQ = Queue()
 
 def sendData():
 	iPassing = 1
-	for iPassing in six.moves.range(1,len(numLapTimes)):
+	for iPassing in range(1,len(numLapTimes)):
 		n, lap, t = numLapTimes[iPassing]
 		dt = t - numLapTimes[iPassing-1][2]
 		time.sleep( dt )

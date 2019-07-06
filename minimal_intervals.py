@@ -45,8 +45,8 @@ def minimal_intervals( numbers ):
 			nums = sorted( n )
 			intervalCur = []			
 			nRange = [nums[0], nums[0]]
-			for i in six.moves.range(1, len(nums)):
-				if other_nums.isdisjoint( six.moves.range(nums[i-1], nums[i]+1) ):
+			for i in range(1, len(nums)):
+				if other_nums.isdisjoint( range(nums[i-1], nums[i]+1) ):
 					nRange[1] = nums[i]
 				else:
 					if intervalCur and intervalCur[-1][1]+1 == nRange[0]:
@@ -67,10 +67,10 @@ def interval_to_str( intervals ):
 	
 if __name__ == '__main__':
 	for i in minimal_intervals( [
-					set( six.moves.range(1,99+1) ),
-					set( six.moves.range(1,10+1) ),
-					set( six.moves.range(10,19+1) ),
-					set( six.moves.range(20,29+1) ),
+					set( range(1,99+1) ),
+					set( range(1,10+1) ),
+					set( range(10,19+1) ),
+					set( range(20,29+1) ),
 				]
 			):
 		six.print_( interval_to_str( i ) )
