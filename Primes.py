@@ -363,7 +363,7 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if not race:
 			return
-		race.primes = [self.getRow(row) for row in six.moves.range(self.grid.GetNumberRows())]
+		race.primes = [self.getRow(row) for row in range(self.grid.GetNumberRows())]
 
 def GetGrid():
 	race = Model.race
@@ -422,9 +422,9 @@ def GetGrid():
 	if hasSponsor:
 		colnames.append( _('Sponsor') )
 
-	leftJustifyCols = set( i for i in six.moves.range(len(colnames)) if i not in rightJustifyCols )
+	leftJustifyCols = set( i for i in range(len(colnames)) if i not in rightJustifyCols )
 	
-	data = [[] for c in six.moves.range(len(colnames))]	# Column oriented table.
+	data = [[] for c in range(len(colnames))]	# Column oriented table.
 	GetTranslation = _
 	for p, prime in enumerate(primes):
 		row = []

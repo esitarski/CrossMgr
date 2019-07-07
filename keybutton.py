@@ -656,7 +656,7 @@ if __name__ == '__main__':
 	# Draw a keyboard with keybuttons.
 	# Define the key labels for each row.
 	keyRows = [
-		['Esc'] + ['F%d' % (i+1) for i in six.moves.range(12)],
+		['Esc'] + ['F%d' % (i+1) for i in range(12)],
 		['%s\n%s' % (u,l) for u, l in zip('~!@#$%^&*()_+','`1234567890-=')] + ['Backspace'],
 		['Tab'] + [k for k in 'QWERTYUIOP'] + ['%s\n%s' % (u,l) for u, l in zip('{}|','[]\\')],
 		['Caps Lock'] + [k for k in 'ASDFGHJKL'] + ['%s\n%s' % (u,l) for u, l in zip(':"',';\'')] + ['Enter'],

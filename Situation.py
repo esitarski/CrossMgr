@@ -407,7 +407,7 @@ class SituationPanel(wx.Panel):
 			
 			# Insert the new rectangle into the list.  Keep sequenced by decreasing GetRight().
 			existingRects.append( gRect )
-			for i in six.moves.range(len(existingRects)-2, -1, -1):
+			for i in range(len(existingRects)-2, -1, -1):
 				if existingRects[i].GetRight() < existingRects[i+1].GetRight():
 					existingRects[i], existingRects[i+1] = existingRects[i+1], existingRects[i]
 				else:
@@ -450,7 +450,7 @@ class SituationPanel(wx.Panel):
 					fieldWidths[-1] += spaceWidth/2
 					iBrush = 0 if len(fieldWidths) > 2 else 2
 					xLast = xText
-					for iField in six.moves.range(1, len(fieldWidths)):
+					for iField in range(1, len(fieldWidths)):
 						tWidth = fieldWidths[iField] - fieldWidths[iField-1]
 						dc.SetBrush( groupTitleBrushes[iBrush] )
 						dc.DrawRectangle( xLast, yText, tWidth, fontHeight*1.08 )
@@ -475,7 +475,7 @@ class SituationPanel(wx.Panel):
 		leftArrow = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
 		rightArrow = [wx.Point(-p.x, p.y) for p in leftArrow]
 
-		for iGroup in six.moves.range(1, len(groups)):
+		for iGroup in range(1, len(groups)):
 			groupPrev, groupNext = groups[iGroup-1:iGroup+1]
 			tPrev, tNext = groupPrev[-1][0], groupNext[0][0]
 			xPrev, xNext = xLeft + tPrev * xScale, xLeft + tNext * xScale

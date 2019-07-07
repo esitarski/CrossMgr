@@ -297,7 +297,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						tNow = datetime.datetime.now()
 						
 						iStart = 3
-						hh, mm, ss, hs = [int(line[i:i+2]) for i in six.moves.range(iStart, iStart + 4 * 2, 2)]
+						hh, mm, ss, hs = [int(line[i:i+2]) for i in range(iStart, iStart + 4 * 2, 2)]
 						try:
 							iDate = line.index( 'date=' ) + 5
 							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
