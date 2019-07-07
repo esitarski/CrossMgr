@@ -302,15 +302,15 @@ msgstr "Errore della fotocamera"
 
 #: CameraTest.py:126
 msgid "Save Photo as PNG File:"
-msgstr "Salva foto come file PNG:"
+msgstr "Guarda foto come file PNG:"
 
 #: CameraTest.py:143
 msgid "Cannot save photo:"
-msgstr "Impossibile salvare la foto:"
+msgstr "Impossibile guarda la foto:"
 
 #: CameraTest.py:144
 msgid "Save Error"
-msgstr "Errore salvataggio"
+msgstr "Errore guarda"
 
 #: CatPredicate.py:190 Categories.py:36 Categories.py:313
 msgid "Numbers"
@@ -1091,7 +1091,7 @@ msgstr "Copia negli appunti"
 
 #: FinishStrip.py:430 TimeTrialRecord.py:134
 msgid "Save"
-msgstr "Salvare"
+msgstr "Guarda"
 
 #: FinishStrip.py:441
 msgid "Pixels/Sec"
@@ -1119,7 +1119,7 @@ msgstr "Errore"
 
 #: FinishStrip.py:500
 msgid "Save Finish as"
-msgstr "Salva Arrivo come"
+msgstr "Guarda Arrivo come"
 
 #: FinishStrip.py:501
 msgid "files"
@@ -2991,7 +2991,7 @@ msgstr "Il nome del file non ha riscontro con il formato \"Event Name\""
 
 #: MainWin.py:2961
 msgid "Going forward, this event will saved as"
-msgstr "Andando avanti, questo evento sarà salvato come"
+msgstr "Andando avanti, questo evento sarà guarda come"
 
 #: MainWin.py:2963
 msgid "To change the File Name, change the event Date, Name or Race Number in Properties/General Properties"
@@ -3933,7 +3933,7 @@ msgstr "Pubblica tutto"
 
 #: Properties.py:1066
 msgid "Save Options and Close"
-msgstr "Salva le Opzioni e Chiudi"
+msgstr "Guarda le Opzioni e Chiudi"
 
 #: Properties.py:1120
 msgid "Notes to appear on Html output:"
@@ -4005,7 +4005,7 @@ msgstr "Conferma"
 
 #: Properties.py:1276
 msgid "Save Template"
-msgstr "Salva modello"
+msgstr "Guarda modello"
 
 #: Properties.py:1279 Properties.py:1341 Properties.py:1349
 msgid "Load Template"
@@ -4013,7 +4013,7 @@ msgstr "Carica modello"
 
 #: Properties.py:1290
 msgid "Save as \"default\" for a default Template that is applied automatically to all New races"
-msgstr "Salva come \\ \"default \" per un modello predefinito che viene applicato automaticamente a tutte le nuove razze"
+msgstr "Guarda come \\ \"default \" per un modello predefinito che viene applicato automaticamente a tutte le nuove razze"
 
 #: Properties.py:1329
 msgid "You must have a valid race File|Open..."
@@ -4041,11 +4041,11 @@ msgstr "Errore di caricamento del Modello"
 
 #: Properties.py:1377
 msgid "Save as Template"
-msgstr "Salva come Modello"
+msgstr "Guarda come Modello"
 
 #: Properties.py:1388
 msgid "Template Saved to"
-msgstr "Modello salvato in"
+msgstr "Modello Guardó in"
 
 #: Properties.py:1388
 msgid "Save Template Successful"
@@ -4053,7 +4053,7 @@ msgstr "Salvataggio Modello riuscito"
 
 #: Properties.py:1390
 msgid "Template Save Failure"
-msgstr "Errore di salvataggio del Modello"
+msgstr "Errore di Guarda del Modello"
 
 #: Properties.py:1522
 msgid "Race File Folder"
@@ -5185,7 +5185,7 @@ msgstr "Doppiato dal Leader"
 
 #: RiderDetail.py:1523
 msgid "Save (Ctrl-S)"
-msgstr "Save (Ctrl-S)"
+msgstr "Guarda (Ctrl-S)"
 
 #: Search.py:26
 msgid "Search:"
@@ -5303,7 +5303,7 @@ msgstr "Toccare per ottenere un tempo o premere \\ \"t \"."
 
 #: TimeTrialRecord.py:95
 msgid "Then enter the Bib number(s) and Save."
-msgstr "Quindi inserire il pettorale/i e salvare."
+msgstr "Quindi inserire il pettorale/i e guarda."
 
 #: TimeTrialRecord.py:98
 msgid "(or press \"t\")"
@@ -5315,7 +5315,7 @@ msgstr "(o premi \\ \"s \")"
 
 #: TimeTrialRecord.py:141
 msgid "Save Entries (or press \"s\")"
-msgstr "Salva voci (o premi \\ \"s \")"
+msgstr "Guarda voci (o premi \\ \"s \")"
 
 #: TimeTrialRecord.py:195
 msgid "Insufficient space to Record Time."
@@ -5465,7 +5465,7 @@ msgstr "LastName deve essere collegato a una colonna nel foglio Excel."
 #~ msgstr "Imposta \"Auto correzione dei dati sui Giri\" come impostazione predefinita"
 
 #~ msgid "Save as\"default\" for a default Template that is applied automatically to all New races"
-#~ msgstr "Salva come \"default\" questo Modello sarà il predefinito verrà applicato automaticamente a tutte le Nuove Gare"
+#~ msgstr "Guarda come \"default\" questo Modello sarà il predefinito verrà applicato automaticamente a tutte le Nuove Gare"
 
 #~ msgid "Tap to get a Time, or press\"t\"."
 #~ msgstr "Premi per ottenere un tempo o premere \"t\"."
@@ -5477,4 +5477,4 @@ msgstr "LastName deve essere collegato a una colonna nel foglio Excel."
 #~ msgstr "(o premi\"s\")"
 
 #~ msgid "Save Entries (or press\"s\")"
-#~ msgstr "Salva inseriti (o premi\"s\")"
+#~ msgstr "Guarda inseriti (o premi\"s\")"
