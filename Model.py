@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import io
 import re
@@ -271,14 +270,13 @@ class Category(object):
 			except:
 				pass
 		
-		def isBool( v ):
-			v = six.text_type(v).strip()
-			return v[:1] in u'TtYy1'
+		def toBool( v ):
+			return u'{}'.format(v).strip()[:1] in u'TtYy1'
 		
-		self.active = isBool( active )
-		self.publishFlag = isBool( publishFlag )
-		self.uploadFlag = isBool( uploadFlag )
-		self.seriesFlag = isBool( seriesFlag )
+		self.active = toBool( active )
+		self.publishFlag = toBool( publishFlag )
+		self.uploadFlag = toBool( uploadFlag )
+		self.seriesFlag = toBool( seriesFlag )
 			
 		try:
 			self._numLaps = int(numLaps)
@@ -887,6 +885,20 @@ class Rider(object):
 		iTimes = [(t, False) for t in iTimes]
 		
 		# Check for missing lap data and fill it in.
+		pDown, pUp = 1.0-Rider.pMin, Rider.pMax-1.0
+		missingMinMax = [(missing, expected * (missing-pDown), expected * (missing+pUp)) for missing in range(2, 5)]
+		for j in range(len(iTimes)-1, 0, -1):	# Traverse backwards so we can add missing times as we go.
+			tDur = iTimes[j][0] - iTimes[j-1][0]
+			for missing, mMin, mMax in missingMinMax:
+				if tDur < mMin:
+					break
+				if mMin <= tDur < mMax:					
+					tStart = iTimes[j-1][0]
+					interp = float(iTimes[j][0] - tStart) / float(missing)
+					iTimes[j:j] = [(tStart + interp * m, True) for m in range(1, missing)]
+					break
+		
+		'''
 		for missing in range(1, 3):
 			mMin = expected * missing + expected * Rider.pMin
 			mMax = expected * missing + expected * Rider.pMax
@@ -895,6 +907,7 @@ class Rider(object):
 				interp = float(iTimes[j][0] - tStart) / float(missing + 1)
 				fill = [(tStart + interp * m, True) for m in range(1, missing+1)]
 				iTimes[j:j] = fill
+		'''
 
 		# Pad out to one entry exceeding stop time if we are less than it.
 		tBegin = iTimes[-1][0]
@@ -2780,6 +2793,7 @@ if __name__ == '__main__':
 	r.addTime( 10, 30 )
 	#r.addTime( 10, 35 )
 	rider = r.getRider( 10 )
+	rider = r.getRider( 10 )
 	entries = rider.interpolate( 36 )
 	print( [(e.t, e.interp) for e in entries] )
 
@@ -2796,4 +2810,3 @@ if __name__ == '__main__':
 						{'name':'test3', 'catStr':'1300-1399'}] )
 	print( r.getCategoryMask() )
 	print( r.getCategory( 2002 ) )
-
