@@ -324,7 +324,7 @@ msgstr "Impossibile salvare la foto:"
 
 #: CameraTest.py:144
 msgid "Save Error"
-msgstr "Error de guardado"
+msgstr "Errore di salvataggio"
 
 #: CatPredicate.py:190 Categories.py:36 Categories.py:313
 msgid "Numbers"
@@ -4042,13 +4042,13 @@ msgstr "Carica modello"
 
 #: Properties.py:1290
 msgid ""
-"Save as\"default\" for a default Template that is applied automatically to all "
+"Save as \"default\" for a default Template that is applied automatically to all "
 "New races"
-msgstr "Salva come\"default\" per un modello predefinito che viene applicato automaticamente a tutte le nuove razze"
+msgstr "Salva come \"default\" per un modello predefinito che viene applicato automaticamente a tutte le nuove razze"
 
 #: Properties.py:1329
 msgid "You must have a valid race File|Open..."
-msgstr "Devi avere un file di gara valido | Apri..."
+msgstr "Devi avere un file di gara valido"
 
 #: Properties.py:1329
 msgid "Or create one with File|New...."
