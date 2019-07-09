@@ -36,6 +36,18 @@ if os.path.exists(distDirParent):
 if not os.path.exists( distDirParent ):
 	os.makedirs( distDirParent )
 
+# Compile all the language files.
+print( "Compiling language files..." )
+cmd = ['pybabel']
+CrossMgrLocale = 'CrossMgrLocale'
+languages = ('fr', 'es', 'it')
+for lang in languages:
+	#-----------------------------------------------------------------------
+	# Compile the translation file.
+	#
+	po = os.path.join(CrossMgrLocale, lang, 'LC_MESSAGES', 'messages.po')
+	subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )
+
 subprocess.call( [
 	'pyinstaller',
 	#'--debug',
@@ -72,18 +84,6 @@ def copyDir( d ):
 			
 for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
 	copyDir( dir )
-
-# Compile all the language files.
-print( "Compiling language files..." )
-cmd = ['pybabel']
-CrossMgrLocale = 'CrossMgrLocale'
-languages = ('fr', 'es', 'it')
-for lang in languages:
-	#-----------------------------------------------------------------------
-	# Compile the translation file.
-	#
-	po = os.path.join(CrossMgrLocale, lang, 'LC_MESSAGES', 'messages.po')
-	subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )
 
 # Copy the locale.
 localeD = 'CrossMgrLocale'
