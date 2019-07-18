@@ -422,7 +422,22 @@ class LapCounter( wx.Panel ):
 			lineBorderWidth = 4
 			dc.SetPen( wx.Pen(wx.BLACK, lineBorderWidth) )
 			dc.DrawRectangle( x, y, w, h )
-						
+								
+			# Draw the lapcount identifier.
+			if len(self.labels) > 1:
+				text = chr( ord('A') + i )
+				hCC = int( h * 0.15 )
+				yCC = y + h - hCC
+				getFontSizeToFit( text, hCC, hCC )
+				drawText( text, self.foregrounds[i], x, yCC, hCC, hCC )
+
+			if label == '1':
+				text = u"\U0001F514"
+				hCC = int( h * 0.15 )
+				yCC = y + h - hCC
+				getFontSizeToFit( text, hCC, hCC )
+				drawText( text, self.foregrounds[i], x + w - hCC, yCC, hCC, hCC )
+
 			if self.lapElapsedClock:
 				hCC = int( h * 0.15 )
 				yCC = y + h - hCC
