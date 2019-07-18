@@ -3985,9 +3985,9 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.clprTime = now() + datetime.timedelta( seconds=delayIntervals[0] )
 			if not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
 				self.processRfidRefresh()
-		elif (		(self.clprTime - now()).total_seconds() > delayIntervals[self.clprIndex] * 0.66 and
+		elif (		(self.clprTime - now()).total_seconds() > delayIntervals[self.clprIndex] * 0.75 and
 					self.clprIndex < len(delayIntervals)-1 ):
-			# If we get another read within the last 33% of the interval, increase the update to the next interval.
+			# If we get another read within the last 25% of the interval, increase the update to the next interval.
 			self.callLaterProcessRfidRefresh.Stop()
 			self.clprIndex += 1
 			self.clprTime += datetime.timedelta( seconds = delayIntervals[self.clprIndex] - delayIntervals[self.clprIndex-1] )
