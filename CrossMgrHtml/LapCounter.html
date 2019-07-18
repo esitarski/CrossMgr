@@ -282,9 +282,10 @@ function LapCounter( aCanvas ) {
 			}
 			
 			if( label == '1' ) {
+				// Draw a bell in the last lap.
 				hCC = h * footerMult;
 				yCC = y + h - hCC;
-				drawText( dc, "\u1F514", this.foregrounds[i], x + w - hCC, yCC, hCC, hCC );
+				drawText( dc, '\uD83D\uDD14', this.foregrounds[i], x + w - hCC, yCC, hCC, hCC );
 			}
 			
 			if( this.lapElapsedClock ) {
