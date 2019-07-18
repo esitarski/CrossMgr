@@ -264,6 +264,7 @@ function LapCounter( aCanvas ) {
 			var rect = rects[i];
 			if( rect == undefined )
 				continue;
+			var hCC, yCC;
 			var entry = this.labels[i];
 			var label = entry[0] + '', flash = entry[1], tLapStart = entry[2];
 			var x = rect[0], y = rect[1], w = rect[2], h = rect[3];
@@ -275,10 +276,9 @@ function LapCounter( aCanvas ) {
 			dc.strokeRect( x, y, w, h );
 			
 			if( this.labels.length > 1 ) {
-				var text = String.fromCharCode('A'.charCodeAt(0) + i);
-				var hCC = h * footerMult;
-				var yCC = y + h - hCC;
-				drawText( dc, text, this.foregrounds[i], x, yCC, hCC, hCC );
+				hCC = h * footerMult;
+				yCC = y + h - hCC;
+				drawText( dc, String.fromCharCode('A'.charCodeAt(0) + i), this.foregrounds[i], x, yCC, hCC, hCC );
 			}
 			
 			if( label == '1' ) {
@@ -289,8 +289,8 @@ function LapCounter( aCanvas ) {
 			}
 			
 			if( this.lapElapsedClock ) {
-				var hCC = h * footerMult;
-				var yCC = y + h - hCC;
+				hCC = h * footerMult;
+				yCC = y + h - hCC;
 				h -= hCC;
 				if( tLapStart != null && this.tRaceStart ) {
 					var tLap = this.tRaceStart + tLapStart*1000.0;
