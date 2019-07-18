@@ -11,7 +11,7 @@ from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOu
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()
 
-tQuiet = 0.5		# Seconds of quiet after which the tag is considered read.
+tQuiet = 0.4		# Seconds of quiet after which the tag is considered read.
 tStray = 8.0		# Seconds of continuous reads for tag to be considered a stray.
 
 def datetimeToTr( t ):

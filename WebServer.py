@@ -96,7 +96,7 @@ def getCurrentTTCountdownHtml():
 @syncfunc
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
-	
+
 with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html')) as f:
 	lapCounterTemplate = f.read().encode()
 def getLapCounterHtml():
@@ -385,7 +385,7 @@ def WriteHtmlIndexPage():
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
 	json_content = 'application/json'
-	reLapCounterHtml = re.compile( r'^\/LapCounter[\d-]*\.html$' )
+	reLapCounterHtml = re.compile( r'^\/LapCounter[0-9A-Z-]*\.html$' )
 	
 	def do_GET(self):
 		up = urllib.parse.urlparse( self.path )		

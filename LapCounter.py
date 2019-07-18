@@ -55,7 +55,6 @@ def getLapCounterOptions( isDialog ):
 			for i, cs in enumerate(self.foregrounds):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
 			fgs.Add( hs )
-			
 			fgs.Add( wx.StaticText(self, label=_('Backgrounds')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 			self.backgrounds = [csel.ColourSelect(self, size=(40,-1), colour=defaultBackgroundColours[i])
 				for i in range(len(defaultBackgroundColours))]
@@ -412,6 +411,7 @@ class LapCounter( wx.Panel ):
 		race = Model.race
 		tRace = race.curRaceTime() if self.lapElapsedClock and race and race.isRunning() else None
 		
+		footerMult = 0.15
 		rects = self.tessellate(len(self.labels))
 		for i, (label, flash, tLapStart) in enumerate(self.labels):
 			x, y, w, h = rects[i]
@@ -426,20 +426,20 @@ class LapCounter( wx.Panel ):
 			# Draw the lapcount identifier.
 			if len(self.labels) > 1:
 				text = chr( ord('A') + i )
-				hCC = int( h * 0.15 )
+				hCC = int( h * footerMult )
 				yCC = y + h - hCC
 				getFontSizeToFit( text, hCC, hCC )
 				drawText( text, self.foregrounds[i], x, yCC, hCC, hCC )
 
 			if label == '1':
 				text = u"\U0001F514"
-				hCC = int( h * 0.15 )
+				hCC = int( h * footerMult )
 				yCC = y + h - hCC
 				getFontSizeToFit( text, hCC, hCC )
 				drawText( text, self.foregrounds[i], x + w - hCC, yCC, hCC, hCC )
 
 			if self.lapElapsedClock:
-				hCC = int( h * 0.15 )
+				hCC = int( h * footerMult )
 				yCC = y + h - hCC
 				h -= hCC
 				if tLapStart is not None and tRace:

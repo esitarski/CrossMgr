@@ -19,14 +19,18 @@ function color( r, g, b ) {
 }
 
 function CleanLCLabel( lcLabelIn ) {
+	lcLabelIn = lcLabelIn.toUpperCase();
 	var lcLabel = '';
 	for( var i = 0; i < lcLabelIn.length; ++i ) {
 		var c = lcLabelIn.charAt(i);
+		// Accept letters and numbers for lap display.
+		if( '1' <= c && c <= '9' )
+			c = String.fromCharCode('A'.charCodeAt(0) + c.charCodeAt(0) - '1'.charCodeAt(0));
 		if( c == '-' ) {
 			if( lcLabel && lcLabel.charAt([lcLabel.length-1]) != '-' )
 				lcLabel += '-';
 		}
-		else if ( '1' <= c && c <= cMaxLabels )
+		else if ( 'A' <= c && c <= cMaxLabels )
 			lcLabel += c;
 	}
 	return lcLabel;
@@ -34,7 +38,7 @@ function CleanLCLabel( lcLabelIn ) {
 
 function GetLCLabel() {
 	var lcLabel = '';
-	var matches = /^\/LapCounter([\d-]+)\.html$/.exec( window.location.pathname );
+	var matches = /^\/LapCounter([1-9A-Z-]+)\.html$/.exec( window.location.pathname );
 	if( matches != null && matches.length == 2 )
 		lcLabel = matches[1];
 	return CleanLCLabel( lcLabel );
@@ -68,7 +72,7 @@ function strToMillis( s ) {
 }
 
 var MaxLabels = 6;
-var cMaxLabels = MaxLabels.toString(10);
+var cMaxLabels = String.fromCharCode('A'.charCodeAt(0) + MaxLabels - 1);
 
 function LapCounter( aCanvas ) {
 	this.canvas = aCanvas;
@@ -112,13 +116,16 @@ function LapCounter( aCanvas ) {
 		var lcs = [];
 		for( var i = 0; i < lcLabel.length; ++i ) {
 			var c = lcLabel.charAt(i);
+			if( '1' <= c && c <= '9' )
+				c = String.fromCharCode( c.charCodeAt(0) - '1'.charCodeAt(0) + 'A'.charCodeAt(0) );
 			if( c == '-' )
 				colsPerRow.push( 0 );
-			else {
+			else if( 'A' <= c && c <= cMaxLabels) {
 				++colsPerRow[colsPerRow.length-1];
-				lcs.push( parseInt(c)-1 );
+				lcs.push( c.charCodeAt(0) - 'A'.charCodeAt(0) );
 			}
 		}
+		
 		var lcPositions = new Array( MaxLabels );
 		if( colsPerRow.length == 1 && colsPerRow[0] == 0 )
 			return lcPositions;
@@ -200,8 +207,8 @@ function LapCounter( aCanvas ) {
 		var drawSomething = (this.labels.length > 0);
 		if( lcLabel ) {
 			drawSomething = false;
-			for( var i = 1; !drawSomething && i <= this.labels.length; ++i )
-				drawSomething = (lcLabel.indexOf(i.toString()) >= 0);
+			for( var i = 0; !drawSomething && i < this.labels.length; ++i )
+				drawSomething = (lcLabel.indexOf(String.fromCharCode('A'.charCodeAt(0) + i)) >= 0);
 		}
 		if( !drawSomething ) {
 			dc.fillStyle = '#D3D3D3';
@@ -251,6 +258,7 @@ function LapCounter( aCanvas ) {
 		// Get the position of each label on the screen.
 		var rects = (lcLabel ? this.getRectangles(lcLabel) : this.tessellate(this.labels.length));
 		
+		var footerMult = 0.18;
 		var lineBorderWidth = 4;
 		for(var i = 0; i < this.labels.length; ++i ) {
 			var rect = rects[i];
@@ -266,8 +274,21 @@ function LapCounter( aCanvas ) {
 			dc.strokeStyle = '#000000';
 			dc.strokeRect( x, y, w, h );
 			
+			if( this.labels.length > 1 ) {
+				var text = String.fromCharCode('A'.charCodeAt(0) + i);
+				var hCC = h * footerMult;
+				var yCC = y + h - hCC;
+				drawText( dc, text, this.foregrounds[i], x, yCC, hCC, hCC );
+			}
+			
+			if( label == '1' ) {
+				hCC = h * footerMult;
+				yCC = y + h - hCC;
+				drawText( dc, "\u1F514", this.foregrounds[i], x + w - hCC, yCC, hCC, hCC );
+			}
+			
 			if( this.lapElapsedClock ) {
-				var hCC = h * 0.20;
+				var hCC = h * footerMult;
 				var yCC = y + h - hCC;
 				h -= hCC;
 				if( tLapStart != null && this.tRaceStart ) {
@@ -332,7 +353,7 @@ function CloseWebSocket() {
 
 function SetLabelsToDraw() {
 	var lcLabel = GetLCLabel();
-	var lcLabelNew = prompt("Enter the Lap Counters to Display (eg. 1, 2, 12, 34, 123-45):", lcLabel);
+	var lcLabelNew = prompt("Enter the Lap Counters to Display (eg. A, B, AB, CD, ABC-DE):", lcLabel);
 	if( lcLabelNew == null || lcLabelNew == lcLabel )
 		return;
 	

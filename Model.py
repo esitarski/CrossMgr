@@ -1151,7 +1151,7 @@ class Race( object ):
 	
 	lapCounterForegrounds = []
 	lapCounterBackgrounds = []
-	secondsBeforeLeaderToFlipLapCounter = 15.0
+	secondsBeforeLeaderToFlipLapCounter = 20.0
 	countdownTimer = False
 	lapCounterCycle = None
 	lapElapsedClock = True
