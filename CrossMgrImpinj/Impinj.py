@@ -1,6 +1,5 @@
 import re
 import os
-import six
 import time
 import math
 import socket
@@ -397,19 +396,19 @@ class Impinj( object ):
 		self.tagGroupTimer.start()
 	
 	def handleLogFile( self ):
-		while 1:
+		while True:
 			msg = self.logQ.get()
 			self.logQ.task_done()
 			
 			if msg[0] == 'shutdown':
 				return
 			try:
-				pf = io.open( self.fname, 'a' )
+				pf = open( self.fname, 'a' )
 			except:
 				continue
 			
 			pf.write( msg[1] if msg[1].endswith('\n') else msg[1] + '\n' )
-			while 1:
+			while True:
 				try:
 					msg = self.logQ.get( False )
 				except Empty:
@@ -525,7 +524,7 @@ class Impinj( object ):
 				try:
 					discoveryTime = utcfromtimestamp( tag['Timestamp'] / 1000000.0 )
 					if ImpinjDebug and lastDiscoveryTime is not None:
-						six.print_( '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ) )
+						print( '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ) )
 					lastDiscoveryTime = discoveryTime
 				except:
 					pass
@@ -586,7 +585,7 @@ class Impinj( object ):
 		return True
 		
 	def purgeDataQ( self ):
-		while 1:
+		while True:
 			try:
 				d = self.dataQ.get( False )
 			except Empty:

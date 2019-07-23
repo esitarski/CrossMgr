@@ -1,5 +1,4 @@
 import sys
-import six
 import time
 import socket
 import random
@@ -30,7 +29,7 @@ def toHexFormat( tag ):
 	if len(s) & 1:		# Pad to an even number of chars.
 		s = '0' + s
 	b = []
-	for i in six.moves.range(0, len(s), 2):				# Convert pairs of decimals to hex.
+	for i in range(0, len(s), 2):				# Convert pairs of decimals to hex.
 		b.append( chr(int(s[i:i+2], 16)) )
 	return bytes( ''.join(b) )
 
@@ -51,7 +50,7 @@ def formatMessage( n, lap, t ):
 	count += 1
 	MessageID += 1
 	ts = calendar.timegm(t.utctimetuple()) + t.microsecond / 1000000.0
-	six.print_( 'timestamp:', ts )
+	print( 'timestamp:', ts )
 	message = RO_ACCESS_REPORT_Message( MessageID = MessageID, Parameters = [
 			TagReportData_Parameter( Parameters = [
 					EPCData_Parameter( EPC=toHexFormat(n) ),
@@ -77,7 +76,7 @@ for n in nums:
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
 def StartClient():
-	six.print_( 'StartClient: Setting up connection...' )
+	print( 'StartClient: Setting up connection...' )
 	
 	sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 	sock.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
@@ -87,10 +86,10 @@ def StartClient():
 	try:
 		clientSocket, addr = sock.accept()
 	except socket.error as e:
-		six.print_( e )
+		print( e )
 		raise
 	
-	six.print_( 'StatClient: Sending  event notification - everything is OK.' )
+	print( 'StatClient: Sending  event notification - everything is OK.' )
 	ms = long((datetime.datetime.now() - datetime.datetime( 1970, 1, 1, 0, 0, 0 )).total_seconds() * 1000000)
 	READER_EVENT_NOTIFICATION_Message( Parameters = [
 			ReaderEventNotificationData_Parameter( Parameters = [
@@ -100,13 +99,13 @@ def StartClient():
 		]
 	).send( clientSocket )
 	
-	six.print_( 'StartClient: Waiting for commands.' )
+	print( 'StartClient: Waiting for commands.' )
 	llrpSuccess = LLRPStatus_Parameter( StatusCode = StatusCode.M_Success, ErrorDescription = 'Success')
 	while 1:
 		message = UnpackMessageFromSocket( clientSocket )
 		
-		six.print_( 'Received:' )
-		six.print_( message )
+		print( 'Received:' )
+		print( message )
 		
 		if isinstance( message, SET_READER_CONFIG_Message ):
 			response = SET_READER_CONFIG_RESPONSE_Message( MessageID = message.MessageID, Parameters = [llrpSuccess] )
@@ -123,8 +122,8 @@ def StartClient():
 		else:
 			assert False, 'Unknown message.'
 		
-		six.print_( 'Response:' )
-		six.print_( response )
+		print( 'Response:' )
+		print( response )
 		
 		response.send( clientSocket )
 		
@@ -135,7 +134,7 @@ def StartClient():
 	dBase = datetime.datetime.now()
 	#------------------------------------------------------------------------------
 	time.sleep( 1 )
-	six.print_( 'Start sending data...' )
+	print( 'Start sending data...' )
 
 	while iMessage < len(numLapTimes):
 		#------------------------------------------------------------------------------
@@ -144,7 +143,7 @@ def StartClient():
 			dt = t - numLapTimes[iMessage-1][2]
 			
 			# Wait for the next event.  Make sure we send a KEEP_ALIVE every 2 seconds.
-			for i in six.moves.range(1000):
+			for i in range(1000):
 				if i >= dt:
 					break
 				time.sleep( min(2, dt - i) )
@@ -153,7 +152,7 @@ def StartClient():
 				assert isinstance( response, KEEPALIVE_ACK_Message )
 			
 			message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t) )
-			six.print_( 'sending: %s\n' % message )
+			print( 'sending: %s\n' % message )
 			message.send( clientSocket )
 			iMessage += 1
 			

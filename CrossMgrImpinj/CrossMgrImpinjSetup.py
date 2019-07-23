@@ -89,12 +89,12 @@ def make_inno_version():
 		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
 		'VersionInfoVersion':	AppVerName.split()[1],
 	}
-	with io.open('inno_setup.txt', 'w') as f:
-		for k, v in six.iteritems(setup):
+	with open('inno_setup.txt', 'w') as f:
+		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrImpinj.iss'
-six.print_( cmd )
+print( cmd )
 os.system( cmd )
 
 # Create versioned executable.
@@ -109,7 +109,7 @@ except:
 	pass
 	
 shutil.copy( os.path.join('install', 'CrossMgrImpinj_Setup.exe'), os.path.join('install', newExeName) )
-six.print_(  'executable copied to: ' + newExeName )
+print(  'executable copied to: ' + newExeName )
 
 # Create compressed executable.
 os.chdir( 'install' )
@@ -124,7 +124,7 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-six.print_(  'executable compressed.' )
+print(  'executable compressed.' )
 
 shutil.copy( newZipName, googleDrive  )
 shutil.copy( '../CrossMgrImpinjReadme.pdf', googleDrive  )
