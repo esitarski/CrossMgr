@@ -166,7 +166,7 @@ class TagGroup( object ):
 		reads, strays = [], []
 		toDelete = []
 		
-		for tag, tge in self.tagInfo,items():
+		for tag, tge in self.tagInfo.items():
 			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 				if not tge.isStray:
 					t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice, removeOutliers)
