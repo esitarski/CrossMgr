@@ -1,6 +1,5 @@
 import re
 import os
-import io
 import six
 import time
 import math
@@ -374,7 +373,7 @@ class Alien( object ):
 						
 					# Open the log file.
 					try:
-						pf = io.open( self.fname, 'a' )
+						pf = open( self.fname, 'a' )
 					except:
 						pf = None
 

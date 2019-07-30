@@ -1,5 +1,4 @@
 import sys
-import six
 import threading
 import socket
 import atexit
@@ -14,8 +13,8 @@ from Alien2JChip import CrossMgrServer
 from AutoDetect import AutoDetect, DefaultAlienCmdPort
 
 import wx
-import wx.lib.masked             as masked
-import wx.lib.intctrl			as intctrl
+import wx.lib.masked        as masked
+import wx.lib.intctrl		as intctrl
 import sys
 import os
 import re
@@ -251,9 +250,9 @@ class MainWin( wx.Frame ):
 		
 		gs = wx.GridSizer( rows=0, cols=4, hgap=2, vgap=2 )
 		self.antennas = []
-		for i in six.moves.range(4):
+		for i in range(4):
 			gs.Add( wx.StaticText(self, wx.ID_ANY, '{}'.format(i)), flag=wx.ALIGN_CENTER )
-		for i in six.moves.range(4):
+		for i in range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
 				cb.SetValue( True )
@@ -503,7 +502,7 @@ class MainWin( wx.Frame ):
 		
 	def getAntennaStr( self ):
 		s = []
-		for i in six.moves.range(4):
+		for i in range(4):
 			if self.antennas[i].GetValue():
 				s.append( '%d' % i )
 		if not s:
@@ -514,7 +513,7 @@ class MainWin( wx.Frame ):
 		
 	def setAntennaStr( self, s ):
 		antennas = set( int(a) for a in s.split() )
-		for i in six.moves.range(4):
+		for i in range(4):
 			self.antennas[i].SetValue( i in antennas )
 	
 	def writeOptions( self ):

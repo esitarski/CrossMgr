@@ -59,7 +59,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 	success = False
 	ip = [int(i) for i in GetDefaultHost().split('.')]
 	j = 0
-	for i in six.moves.range(14):
+	for i in range(14):
 		j = -j if j > 0 else -j + 1
 		
 		ipTest = list( ip )

@@ -2731,7 +2731,7 @@ class MainWin( wx.Frame ):
 
 		Model.newRace()
 		properties.commit()			# Apply the new properties
-		ftpPublish.commit()	# Apply the ftp properties
+		ftpPublish.commit()			# Apply the ftp properties
 		ftpPublish.Destroy()
 		
 		self.updateRecentFiles()
@@ -2741,7 +2741,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with io.open(categoriesFile, 'r') as fp:
+				with open(categoriesFile, 'r') as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:

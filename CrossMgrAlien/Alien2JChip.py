@@ -68,7 +68,7 @@ class Alien2JChip( object ):
 					break
 				except socket.error:
 					self.messageQ.put( ('Alien2JChip', u'CrossMgr Connection Failed.  Trying a "{}" again in 2 secs...'.format(instance_name)) )
-					for t in six.moves.range(2):
+					for t in range(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():
 							break

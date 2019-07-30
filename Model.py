@@ -20,6 +20,7 @@ from os.path import commonprefix
 from collections import defaultdict
 
 import Utils
+import LapStats
 import Version
 from BatchPublishAttrs import setDefaultRaceAttr
 import minimal_intervals
@@ -879,39 +880,36 @@ class Rider(object):
 		if not iTimes:
 			return self.getEntries( [] )
 
+		lapTimes = [tb-ta for tb, ta in (zip(iTimes[2:], iTimes[1:]) if len(iTimes) > 1 else zip(iTimes[1:], iTimes))]
+		
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )
 		
 		iTimes = [(t, False) for t in iTimes]
-		
-		# Check for missing lap data and fill it in.
-		pDown, pUp = 1.0-Rider.pMin, Rider.pMax-1.0
-		missingMinMax = [(missing, expected * (missing-pDown), expected * (missing+pUp)) for missing in range(2, 5)]
-		for j in range(len(iTimes)-1, 0, -1):	# Traverse backwards so we can add missing times as we go.
-			tDur = iTimes[j][0] - iTimes[j-1][0]
-			for missing, mMin, mMax in missingMinMax:
-				if tDur < mMin:
-					break
-				if mMin <= tDur < mMax:					
-					tStart = iTimes[j-1][0]
-					interp = float(iTimes[j][0] - tStart) / float(missing)
-					iTimes[j:j] = [(tStart + interp * m, True) for m in range(1, missing)]
-					break
-		
-		'''
-		for missing in range(1, 3):
-			mMin = expected * missing + expected * Rider.pMin
-			mMax = expected * missing + expected * Rider.pMax
-			for j in (j for j in range(len(iTimes)-1, 0, -1) if mMin < (iTimes[j][0] - iTimes[j-1][0]) < mMax):
-				tStart = iTimes[j-1][0]
-				interp = float(iTimes[j][0] - tStart) / float(missing + 1)
-				fill = [(tStart + interp * m, True) for m in range(1, missing+1)]
-				iTimes[j:j] = fill
-		'''
 
+		if len(iTimes) > 2:
+			# Check for missing lap data and fill it in.
+			pDown, pUp = 1.0-Rider.pMin, Rider.pMax-1.0
+			missingMinMax = [(missing, expected * (missing-pDown), expected * (missing+pUp)) for missing in range(2, 5)]
+			
+			# lapStats = LapStats.LapStats( lapTimes )
+			# missingMinMax = lapStats.probable_lap_ranges( 5, 0.75 )
+			
+			for j in range(len(iTimes)-1, 0, -1):	# Traverse backwards so we can add missing times as we go.
+				tDur = iTimes[j][0] - iTimes[j-1][0]
+				for missing, mMin, mMax in missingMinMax:
+					if tDur < mMin:
+						break
+					if mMin <= tDur < mMax:					
+						tStart = iTimes[j-1][0]
+						interp = float(iTimes[j][0] - tStart) / float(missing)
+						iTimes[j:j] = [(tStart + interp * m, True) for m in range(1, missing)]
+						break
+			
 		# Pad out to one entry exceeding stop time if we are less than it.
 		tBegin = iTimes[-1][0]
 		if tBegin < st and len(iTimes) < Rider.entriesMax:
+			expected = self.getExpectedLapTime( [t for t, i in iTimes] )
 			tBegin += expected
 			iMax = max( 1, int(math.ceil(st - tBegin) / expected) if expected > 0 else 1 )
 			iMax = min( iMax, Rider.entriesMax - len(iTimes) )

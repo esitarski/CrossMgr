@@ -9,9 +9,9 @@ sheetName = '--CrossMgr-Properties'
 
 def ReadPropertiesFromExcel( reader ):
 	race = Model.race
-	if not race:
+	if not race or sheetName not in reader.sheet_names():
 		return False
-		
+			
 	HeadersFields = (
 		('Event Name',		'name', 			's'),
 		('Event Organizer',	'organizer',	 	's'),
@@ -51,9 +51,6 @@ def ReadPropertiesFromExcel( reader ):
 	reStartDate = re.compile( '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$' )
 	reStartTime = re.compile( '^[0-2][0-9]:[0-9][0-9]$' )
 
-	if sheetName not in reader.sheet_names():
-		return False
-	
 	headerMap = {}
 	for r, row in enumerate(reader.iter_list(sheetName)):
 		# Since this is machine generated, assume the headers are always in the first row.
