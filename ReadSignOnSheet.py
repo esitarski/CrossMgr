@@ -942,7 +942,7 @@ class ExcelLink( object ):
 		self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
 		
 		# Process any unknown tags with the updates.
-		if self.hasCategoriesSheet and Model.race and Model.race.startTime::
+		if self.hasCategoriesSheet and Model.race and Model.race.startTime:
 			UnmatchedTagsUpdate()
 			
 		if not self.hasCategoriesSheet and self.initCategoriesFromExcel and (
