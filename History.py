@@ -484,7 +484,7 @@ class History( wx.Panel ):
 		
 		if isTimeTrial:
 			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
-			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), r.firstTime > tRace) for r in six.itervalues(race.riders)] )
+			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), (r.firstTime or 0.0) > tRace) for r in six.itervalues(race.riders)] )
 			entries.sort( key = operator.attrgetter('t', 'num') )
 		
 		# Collect the number and times for all entries so we can compute lap times.
