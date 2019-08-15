@@ -691,6 +691,30 @@ table.results tr td.fastest{
 		self.filehistory.Save(self.config)
 		self.config.Flush()
 		
+	def fixPaths( self ):
+		model = SeriesModel.model
+		if not self.fileName or not model or not model.races:
+			return
+		race = model.races[0]
+		if os.path.isfile(race.fileName):
+			return
+		path = os.path.dirname( self.fileName )
+		fname = os.path.basename(race.fileName)
+		curFileName = os.path.join( path, fname )
+		if os.path.isfile(curFileName):
+			return
+		if Utils.MessageOKCancel(
+				self,
+				"Cannot find race:\n\n\t{}\n\nBut found file with same name in:\n\n\t{}\n\nFix file paths?".format(fname, path),
+				'Fix Race Paths?') != wx.ID_OK:
+			return			
+		model.setRootFolder( path )
+		try:
+			self.writeSeries()
+		except:
+			Utils.MessageOK(self, 'Write Failed.  Series NOT saved..\n\n    "{}"'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+			return			
+		
 	def openSeries( self, fileName ):
 		if not fileName:
 			return
@@ -713,6 +737,9 @@ table.results tr td.fastest{
 		SeriesModel.model.postReadFix()
 		self.fileName = fileName
 		self.updateRecentFiles()
+		
+		self.fixPaths();
+		
 		SeriesModel.model.setChanged( False )
 		self.readResetAll()
 		try:

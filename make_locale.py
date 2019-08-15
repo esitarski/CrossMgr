@@ -10,7 +10,6 @@ cmd = ['pybabel']
 CrossMgrLocale = 'CrossMgrLocale'
 
 languages = ('fr', 'es', 'it')
-
 for lang in languages:
 	dir = os.path.join(CrossMgrLocale,lang,'LC_MESSAGES')
 	try:
