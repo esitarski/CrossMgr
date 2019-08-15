@@ -516,7 +516,7 @@ class SeriesModel( object ):
 		else:
 			fixFName = lambda fn: fn.replace( '\\', '/' )
 		
-		raceFileNames = {os.path.basename(fixFName(r.fileName)):r for r in self.races }
+		raceFileNames = { os.path.basename(fixFName(r.fileName)):r for r in self.races }
 		
 		for top, directories, files in os.walk(path):
 			for f in files:
