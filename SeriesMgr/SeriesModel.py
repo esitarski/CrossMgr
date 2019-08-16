@@ -8,6 +8,7 @@ import operator
 import functools
 import datetime
 import GetModelInfo
+from .FileTrie import FileTrie
 StringIO = six.StringIO
 import Utils
 
@@ -511,20 +512,15 @@ class SeriesModel( object ):
 			return False
 			
 	def setRootFolder( self, path ):
-		if 'win' in sys.platform:
-			fixFName = lambda fn: fn.replace( '/', '\\' )
-		else:
-			fixFName = lambda fn: fn.replace( '\\', '/' )
-		
-		raceFileNames = { os.path.basename(fixFName(r.fileName)):r for r in self.races }
-		
+		ft = FileTrie()
 		for top, directories, files in os.walk(path):
 			for f in files:
-				try:
-					r = raceFileNames[f]
-				except KeyError:
-					continue
-				r.fileName = os.path.join( top, f )
+				ft.add( os.path.join(top, f) )
+				
+		for r in races:
+			m = ft.best_match( r.fileName )
+			if m:
+				r.fileName = m
 				self.setChanged()
 	
 	def setChanged( self, changed = True ):
