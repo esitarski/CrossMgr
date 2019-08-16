@@ -8,7 +8,7 @@ import operator
 import functools
 import datetime
 import GetModelInfo
-from .FileTrie import FileTrie
+from FileTrie import FileTrie
 StringIO = six.StringIO
 import Utils
 
