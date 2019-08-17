@@ -36,6 +36,7 @@ class FileTrie:
 
 	def add( self, p ):
 		node = self.node
+		p = re.sub( r'[\\/]+', '/', p )
 		for c in reversed(re.split( r'[\\/]', p)):
 			c = filesystem_str( c )
 			if c not in node:
@@ -45,6 +46,7 @@ class FileTrie:
 	def best_match( self, p ):
 		path = []
 		node = self.node
+		p = re.sub( r'[\\/]+', '/', p )
 		for c in reversed(re.split( r'[\\/]', p)):
 			c = filesystem_str( c )
 			try:
@@ -61,6 +63,9 @@ class FileTrie:
 			node = v
 		
 		path.reverse()
+		if re.match( '^[a-zA-Z]:$', path[0] ):
+			path[0] += '\\'
+			
 		return os.path.join( *path )
 
 if __name__ == '__main__':

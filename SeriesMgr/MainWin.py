@@ -694,7 +694,7 @@ table.results tr td.fastest{
 	def fixPaths( self ):
 		model = SeriesModel.model
 		if not self.fileName or not model:
-			return
+			return False
 
 		# Check if we can find all race files.
 		for r in model.races:
@@ -702,20 +702,23 @@ table.results tr td.fastest{
 				fname = os.path.basename( r.fileName )
 				break
 		else:
-			return
-		
-		path = os.path.dirname( self.fileName )
-		if Utils.MessageOKCancel(
+			return False
+			
+		if not Utils.MessageOKCancel(
 				self,
-				'Cannot find Race:\n\n\t{}\nUpdate file paths starting from:\n\n\t{}?'.format(fname, path),
-				'Update Race File Paths?') != wx.ID_OK:
-			return
-		model.setRootFolder( path )
-		if model.changed:
-			try:
-				self.writeSeries()
-			except:
-				Utils.MessageOK(self, 'Write Failed.  Series NOT saved..\n\n    "{}"'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+				'Cannot find Race File:\n\n    "{}"\n\nSet new Root Folder?'.format(fname),
+				'Cannot find Race Files'
+				):
+			return False
+		
+		dlg = wx.DirDialog(
+			self,
+			message='Select Root Folder where Race Files can be Found under:',
+			defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
+		)
+		result = (dlg.ShowModal() == wx.ID_OK) and model.setRootFolder( dlg.GetPath() )
+		dlg.Destroy()
+		return result
 		
 	def openSeries( self, fileName ):
 		if not fileName:
@@ -740,9 +743,7 @@ table.results tr td.fastest{
 		self.fileName = fileName
 		self.updateRecentFiles()
 		
-		self.fixPaths();
-		
-		SeriesModel.model.setChanged( False )
+		SeriesModel.model.setChanged( self.fixPaths() )
 		self.readResetAll()
 		try:
 			self.refreshAll()
@@ -752,7 +753,7 @@ table.results tr td.fastest{
 
 	def menuOpen( self, event ):
 		if SeriesModel.model.changed:
-			if Utils.MessageOKCancel(self, 'You have Unsaved Changes.  Save Now?', 'Unsaved Changes') == wx.ID_OK:
+			if Utils.MessageOKCancel(self, 'You have Unsaved Changes.  Save Now?', 'Unsaved Changes'):
 				try:
 					self.writeSeries()
 				except:

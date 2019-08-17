@@ -516,12 +516,16 @@ class SeriesModel( object ):
 		for top, directories, files in os.walk(path):
 			for f in files:
 				ft.add( os.path.join(top, f) )
-				
-		for r in races:
+		
+		success = False
+		for r in self.races:
 			m = ft.best_match( r.fileName )
 			if m:
 				r.fileName = m
+				success = True
 				self.setChanged()
+		
+		return success
 	
 	def setChanged( self, changed = True ):
 		self.changed = changed
