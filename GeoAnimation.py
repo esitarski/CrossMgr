@@ -1055,9 +1055,9 @@ class GeoAnimation(wx.Control):
 		# Draw the race time
 		secs = int( self.t )
 		if secs < 60*60:
-			tStr = '%d:%02d ' % ((secs / 60)%60, secs % 60 )
+			tStr = '%d:%02d ' % ((secs // 60)%60, secs % 60 )
 		else:
-			tStr = '%d:%02d:%02d ' % (secs / (60*60), (secs / 60)%60, secs % 60 )
+			tStr = '%d:%02d:%02d ' % (secs // (60*60), (secs // 60)%60, secs % 60 )
 		tWidth = dc.GetTextExtent( tStr )[0]
 		dc.DrawText( tStr, width - tWidth, yCur )
 		yCur += tHeight

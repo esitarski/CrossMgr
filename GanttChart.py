@@ -295,9 +295,9 @@ class GanttChart(wx.Control):
 		for t in range(0, int(self.dataMax), d):
 			x = xLeft + t * dFactor
 			if t < 60*60:
-				s = '%d:%02d' % ((t / 60), t%60)
+				s = '%d:%02d' % ((t // 60), t%60)
 			else:
-				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
+				s = '%d:%02d:%02d' % (t//(60*60), (t // 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, x - w/2, 0 + 4 )
 			if not self.minimizeLabels:

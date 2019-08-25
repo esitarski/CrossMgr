@@ -83,7 +83,7 @@ class StartRaceAtTime( wx.Dialog ):
 			startOffset = 3 * 60
 			startSeconds = nowSeconds - nowSeconds % startOffset
 			startSeconds = nowSeconds + startOffset
-			value = u'{:02d}:{:02d}'.format(startSeconds / (60*60), (startSeconds / 60) % 60)
+			value = u'{:02d}:{:02d}'.format(startSeconds // (60*60), (startSeconds // 60) % 60)
 		
 		self.autoStartTime = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value=value, size=wx.Size(60,-1) )
 		

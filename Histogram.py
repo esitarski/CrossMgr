@@ -213,9 +213,9 @@ class Histogram(wx.Control):
 			if x < xLeft:
 				continue
 			if t < 60*60:
-				s = '{}:{:02d}'.format((t / 60), t%60)
+				s = '{}:{:02d}'.format((t // 60), t%60)
 			else:
-				s = '{}:{:02d}:{:02d}'.format(t/(60*60), (t / 60)%60, t%60)
+				s = '{}:{:02d}:{:02d}'.format(t//(60*60), (t // 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, x - w/2, yBottom + 4)
 			dc.DrawText( s, x - w/2, 0 + 4 )
@@ -276,7 +276,7 @@ class Histogram(wx.Control):
 				if t < 60*60:
 					s = '{}:{:02d}'.format((t/60), t%60)
 				else:
-					s = '{}:{:02d}:{:02d}'.format(t/(60*60), (t/60)%60, t%60)
+					s = '{}:{:02d}:{:02d}'.format(t//(60*60), (t//60)%60, t%60)
 
 			label = self.label[self.iSelect]
 			category = self.category[self.iSelect]

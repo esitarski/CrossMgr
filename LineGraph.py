@@ -186,9 +186,9 @@ class LineGraph(wx.Control):
 			if y < yTop:
 				break
 			if t < 60*60:
-				s = '%d:%02d' % ((t / 60), t%60)
+				s = '%d:%02d' % ((t // 60), t%60)
 			else:
-				s = '%d:%02d:%02d' % (t/(60*60), (t / 60)%60, t%60)
+				s = '%d:%02d:%02d' % (t/(60*60), (t // 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, textWidth - w, y-textHeight/2 - 2 )
 			dc.DrawLine( xLeft-3, y, xRight, y )
