@@ -374,6 +374,8 @@ class Results( wx.Panel ):
 			caseCode = 1 if self.entry.interp else 2
 		except (TypeError, IndexError, KeyError):
 			caseCode = 0
+		except StopIteration:
+			return
 	
 		self.numBefore, self.numAfter = None, None
 		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:

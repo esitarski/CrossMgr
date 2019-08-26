@@ -76,7 +76,7 @@ def ConvertBMP(file_nm):
     return BAD_IMAGE
 
 
-def GetCheckeredBitmap(blocksize=8,ntiles=4,rgb0='\xFF', rgb1='\xCC'):
+def GetCheckeredBitmap(blocksize=8,ntiles=4,rgb0=b'\xFF', rgb1=b'\xCC'):
     """Creates a square RGB checkered bitmap using the two specified colors.
 
     Inputs:
@@ -98,10 +98,10 @@ def GetCheckeredBitmap(blocksize=8,ntiles=4,rgb0='\xFF', rgb1='\xCC'):
     strip1 = (rgb1*blocksize + rgb0*blocksize)*(ntiles*blocksize)
     band = strip0 + strip1
     data = band * ntiles
-    return wx.BitmapFromBuffer(size, size, data)
+    return wx.Bitmap(data, size, size)
 
 def GetNamedBitmap(name):
-    return IMG_CATALOG[name].getBitmap()
+    return IMG_CATALOG[name].GetBitmap()
 
 
 class ImageView(wx.Window):
@@ -175,7 +175,7 @@ class ImageView(wx.Window):
         else:
             if self.check_bmp is None:
                 self.check_bmp = GetCheckeredBitmap()
-                self.check_dim_bmp = GetCheckeredBitmap(rgb0='\x7F', rgb1='\x66')
+                self.check_dim_bmp = GetCheckeredBitmap(rgb0=b'\x7F', rgb1=b'\x66')
             if border == ID_CROP_FRAME:
                 self.dark_bg = self.check_dim_bmp
                 self.lite_bg = self.check_bmp
