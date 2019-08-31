@@ -436,7 +436,7 @@ function sortTableId( iTable, iCol ) {
 					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if toFloat(rr[3]) > 0]
+				results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 				
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
 				
@@ -887,7 +887,7 @@ class Results(wx.Panel):
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
 		
-		results = [rr for rr in results if toFloat(rr[3]) > 0]
+		results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 		
 		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
 		
@@ -988,17 +988,6 @@ class Results(wx.Panel):
 		
 		wb = xlwt.Workbook()
 		
-		def safe_float( v ):
-			if isinstance(v, str):
-				try:
-					return float(v.split()[0])
-				except:
-					pass
-			try:
-				return float(v)
-			except:
-				return None
-
 		for categoryName in categoryNames:
 			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 				categoryName,
@@ -1007,7 +996,7 @@ class Results(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if safe_float(rr[3]) is not None]
+			results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			

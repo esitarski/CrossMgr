@@ -34,6 +34,21 @@ def getHeaderNames():
 
 #----------------------------------------------------------------------------------
 
+def toFloat( n ):
+	try:
+		return float(n)
+	except:
+		pass
+	try:
+		return float(n.split()[0])
+	except:
+		pass
+	try:
+		return float(n.split(',')[0])
+	except:
+		pass
+	return -1.0
+
 def getHeaderGraphicBase64():
 	if Utils.mainWin:
 		b64 = Utils.mainWin.getGraphicBase64()
@@ -432,7 +447,7 @@ function sortTableId( iTable, iCol ) {
 					teamPointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if rr[1] > 0]
+				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 				
 				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
 				
@@ -778,7 +793,7 @@ class TeamResults(wx.Panel):
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
-		results = [rr for rr in results if rr[1] > 0]
+		results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 		
 		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
 		
@@ -871,7 +886,7 @@ class TeamResults(wx.Panel):
 		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 		
 		wb = xlwt.Workbook()
-
+		
 		for categoryName in categoryNames:
 			results, races = GetModelInfo.GetCategoryResultsTeam(
 				categoryName,
@@ -881,7 +896,7 @@ class TeamResults(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if rr[1] > 0]
+			results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
