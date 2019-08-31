@@ -987,6 +987,17 @@ class Results(wx.Panel):
 		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 		
 		wb = xlwt.Workbook()
+		
+		def safe_float( v ):
+			if isinstance(v, str):
+				try:
+					return float(v.split()[0])
+				except:
+					pass
+			try:
+				return float(v)
+			except:
+				return None
 
 		for categoryName in categoryNames:
 			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
@@ -996,7 +1007,7 @@ class Results(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if rr[3] > 0]
+			results = [rr for rr in results if safe_float(rr[3]) is not None]
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
