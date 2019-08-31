@@ -11,6 +11,7 @@ import platform
 # Copy all dependent files into this folder.
 copyFiles = [
 	"Model.py",
+	"LapStats.py",
 	"InSortedIntervalList.py",
 	"minimal_intervals.py",
 	"Utils.py",

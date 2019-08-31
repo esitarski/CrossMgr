@@ -84,6 +84,7 @@ from SimulateData		import SimulateData
 from NonBusyCall		import NonBusyCall
 from Playback			import Playback
 from Pulled				import Pulled
+from TeamResults		import TeamResults
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -678,8 +679,9 @@ class MainWin( wx.Frame ):
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 			[ 'announcer',		Announcer,			_('Announcer') ],
 			[ 'histogram',		HistogramPanel,		_('Histogram') ],
+			[ 'teamResults',	TeamResults,		_('Team Results') ],
 		]
-		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'announcer', 'lapCounter'}
+		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'announcer', 'lapCounter', 'teamResults'}
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )

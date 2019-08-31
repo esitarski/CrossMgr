@@ -85,6 +85,17 @@ class Template( object ):
 			'postPublishCmd',
 			
 			'course',
+			
+			'teamRankByRiderTime',
+			'teamRankBySumTime',
+			'teamRankBySumPoints',
+			'teamRankBySumPercentTime',
+			
+			'teamRankOption',
+
+			'nthTeamRider',
+			'topTeamResults',
+			'finishPointsStructure',
 		},
 		set(batchPublishRaceAttr),
 	)

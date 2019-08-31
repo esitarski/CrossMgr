@@ -1161,6 +1161,21 @@ class Race( object ):
 	email = None
 	postPublishCmd = ''
 	longName = ''
+
+	#--------------------------------------
+	# Team results criteria
+	teamRankByRiderTime = 0
+	teamRankBySumTime = 1
+	teamRankBySumPoints = 2
+	teamRankBySumPercentTime = 3
+	
+	teamRankOption = teamRankByRiderTime
+
+	nthTeamRider = 3		# Used for teamRankByRiderTime
+	topTeamResults = 3		# Used for teamRankBySumTime, teamRankBySumPercentTime and teamRankBySumPoints
+	finishPointsStructure = "20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1"
+	#--------------------------------------
+	
 	
 	def __init__( self ):
 		self.reset()

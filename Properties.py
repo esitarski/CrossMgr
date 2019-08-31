@@ -780,7 +780,6 @@ class CameraProperties( wx.Panel ):
 			race.photosAtRaceEndOnly = True
 
 #------------------------------------------------------------------------------------------------
-
 class AnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super(AnimationProperties, self).__init__( parent, id )
@@ -810,6 +809,70 @@ class AnimationProperties( wx.Panel ):
 		race = Model.race
 		race.reverseDirection = self.reverseDirection.GetValue()
 		race.finishTop = self.finishTop.GetValue()
+
+#------------------------------------------------------------------------------------------------
+class TeamResultsProperties( wx.Panel ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super(TeamResultsProperties, self).__init__( parent, id )
+		
+		self.teamRankOptionLabel = wx.StaticText( self, label=_('Team Rank Criteria') )
+		choices = [
+			_('by Nth Rider Time'),
+			_('by Sum Time'),
+			_('by Sum Points'),
+			_('by Sum Percent Time'),
+		]
+		self.teamRankOption = wx.Choice( self, choices=choices )
+		
+		self.nthTeamRiderLabel = wx.StaticText( self, label=_('Nth Rider') )
+		self.nthTeamRider = wx.Choice( self, choices=[u'{}'.format(i) for i in range(1,16)] )
+		self.nthTeamRiderNote = wx.StaticText( self, label=_('for Nth Rider Time') )
+		
+		self.topTeamResultsLabel = wx.StaticText( self, label=_('# Top Results') )
+		self.topTeamResults = wx.Choice( self, choices=[u'{}'.format(i) for i in range(1,16)] )
+		self.topTeamResultsNote = wx.StaticText( self, label=_('for Sum Time, Points and Percent') )
+		
+		self.finishPointsStructureLabel = wx.StaticText( self, label=_('Finish Points') )
+		self.finishPointsStructure = wx.TextCtrl( self, value="", style=wx.TE_PROCESS_ENTER, size=(240,-1) )
+		self.finishPointsStructureNote = wx.StaticText( self, label=_('for Sum Points') )
+		
+		#-------------------------------------------------------------------------------
+		ms = wx.BoxSizer( wx.VERTICAL )
+		self.SetSizer( ms )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.teamRankOptionLabel, flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( self.teamRankOption, flag=wx.LEFT, border=4 )
+		ms.Add( hs, flag=wx.ALL, border=4 )
+		
+		fgs = wx.FlexGridSizer( 3, 3, 4 )
+		fgs.Add( self.nthTeamRiderLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.nthTeamRider )
+		fgs.Add( self.nthTeamRiderNote, flag=wx.ALIGN_CENTER_VERTICAL )
+		
+		fgs.Add( self.topTeamResultsLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.topTeamResults )
+		fgs.Add( self.topTeamResultsNote, flag=wx.ALIGN_CENTER_VERTICAL )
+
+		fgs.Add( self.finishPointsStructureLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.finishPointsStructure )
+		fgs.Add( self.finishPointsStructureNote, flag=wx.ALIGN_CENTER_VERTICAL )
+
+		ms.Add( fgs, flag=wx.ALL, border=4 )
+		
+	def refresh( self ):
+		race = Model.race
+		self.teamRankOption.SetSelection( race.teamRankOption )
+		self.nthTeamRider.SetSelection( race.nthTeamRider - 1 )
+		self.topTeamResults.SetSelection( race.topTeamResults - 1 )
+		self.finishPointsStructure.SetValue( race.finishPointsStructure )
+		
+	def commit( self ):
+		race = Model.race
+		race.teamRankOption = self.teamRankOption.GetSelection()
+		race.nthTeamRider = self.nthTeamRider.GetSelection() + 1
+		race.topTeamResults = self.topTeamResults.GetSelection() + 1
+		race.finishPointsStructure = ','.join( re.sub( '[^0-9]', ' ', self.finishPointsStructure.GetValue() ).split() )
 
 #------------------------------------------------------------------------------------------------
 class BatchPublishProperties( wx.Panel ):
@@ -1259,6 +1322,7 @@ class Properties( wx.Panel ):
 			('lapCounterProperties',	LapCounterProperties,		_('Lap Counter') ),
 			('animationProperties',		AnimationProperties,		_('Animation') ),
 			('filesProperties',			FilesProperties,			_('Files/Excel') ),
+			('teamResultsProperties',	TeamResultsProperties,		_('Team Results') ),
 		]
 		for prop, PropClass, name in self.propClassName:
 			setattr( self, prop, PropClass(self.notebook) )

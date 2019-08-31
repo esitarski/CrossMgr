@@ -201,7 +201,7 @@ class ColTable( Grid.GridTableBase ):
 		except KeyError:
 			# Create an attribute for the cache.
 			attr = Grid.GridCellAttr()
-			attr.SetReadOnly( 1 )			# All cells read-only.
+			attr.SetReadOnly( True )			# All cells read-only.
 			if rc in self.textColour:
 				attr.SetTextColour( self.textColour[rc] )
 			if rc in self.backgroundColour:
