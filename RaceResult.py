@@ -26,6 +26,7 @@ def sendReaderEvent( tagTimes ):
 
 EOL = '\r\n'		# RaceResult delimiter
 len_EOL = len(EOL)
+EOL_encode = EOL.encode()
 
 DEFAULT_PORT = 3601
 DEFAULT_HOST = '127.0.0.1'		# Port to connect to the RaceResult receiver.
@@ -34,22 +35,24 @@ q = None
 shutdownQ = None
 listener = None
 
-def socketSend( s, message ):
+def socketSend( s, message ):	# Requires message to be a str.  Assumes message is delimited (if required).
 	if not isinstance(message, bytes):
 		message = message.encode()
 	sLen = 0
 	while sLen < len(message):
 		sLen += s.send( message[sLen:] )
 		
-def socketReadDelimited( s, delimiter=EOL ):
-	buffer = s.recv( 4096 ).decode()
+def socketReadDelimited( s, delimiter=EOL_encode ):
+	if not isinstance(delimiter, bytes):
+		delimiter = delimiter.encode()
+	buffer = s.recv( 4096 )
 	while not buffer.endswith( delimiter ):
-		more = s.recv( 4096 ).decode()
+		more = s.recv( 4096 )
 		if more:
 			buffer += more
 		else:
 			break
-	return buffer
+	return buffer.decode()		# returns an str.
 	
 def AutoDetect( raceResultPort=3601, callback=None ):
 	''' Search ip addresses adjacent to the computer in an attempt to find the reader. '''
