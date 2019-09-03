@@ -931,19 +931,14 @@ class ExcelLink( object ):
 		except AttributeError:
 			pass
 		
-		# Do not read properties after the race has started to avoid overwriting local changes.
+		# Do not read properties or categories after the race has started to avoid overwriting local changes.
 		if Model.race and Model.race.startTime:
 			self.hasPropertiesSheet = False
+			self.hasCategoriesSheet = False
 			UnmatchedTagsUpdate()
 		else:
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
-			
-		# Unconditionally update the categories from Excel.  This will overwrite any local changes.
-		self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
-		
-		# Process any unknown tags with the updates.
-		if self.hasCategoriesSheet and Model.race and Model.race.startTime:
-			UnmatchedTagsUpdate()
+			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
 			
 		if not self.hasCategoriesSheet and self.initCategoriesFromExcel and (
 				self.hasField('EventCategory') or any( self.hasField(f) for f in CustomCategoryFields )):
