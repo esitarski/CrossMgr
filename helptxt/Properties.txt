@@ -276,8 +276,6 @@ Options for FTP upload including host, password, directory and real-time publish
 CrossMgr can record photos from an inexpensive USB camera as riders cross the finish line.
 In addition to making nice pictures of the event for publishing later, this feature is useful in resolving disputes.
 
-Windows Only (currently).
-
 It can be used with RFID or manual entry to automatically take a photo of riders as they cross the finish line.
 
 This requires a separate program:  __CrossMgrCamera__.  If you have not done so, download and install this program from the CrosMgr web site.
@@ -391,6 +389,37 @@ Excel Sheet|Externally Linked Excel Sheet name.
 Categories Imported From|File name of the categories import file.  Of course, the Category properties can be changed afterwards.
 File Name|File name generated for this race.
 
+## Team Results
+
+Controls options for the TeamResults page.
+
+### Team Rank Criteria
+Team Results can be computed as follows:
+
+1. by Nth Rider Time: time of the nth rider's finish of the team (eg. team time trial, time taken by 5rd team member)
+1. by Sum Time: sum of the times of the top results for the team (eg. team results finish, sum time for top 3 team members)
+1. by Sum Points: sum of the points of the top results for the team (eg. team results finish, sum points for top 3 team members)
+1. by Sum Percent Time: like "by Sum Points", but points are computed as a percentage of the winner's time.
+
+### Nth Rider
+Only used if __Rank Option__ is __by Nth Rider Time__ option.  Indicates which rider's finish time counts for the team.  Not used otherwise.
+
+### # Top Results
+Used if __Rank Option__ is __by Sum Time__, __by Sum Points__ or __by Sum Percent Time__.  Indicates the number of top team rider finishers to include in the ranking calculation.
+
+### Finish Points
+Only used if __Rank Option__ is "by Sum Points".  Indicates the points-for-position for the ranking calculation.  A comma-separated list of numbers in order of 1st place, 2nd place, etc.
+Points must be the same or decreasing for lower finish positions.
+
+## Notes
+Teams that have fewer riders than __Nth Rider__ or __# Top Results__ (depending on the option) will not be shown in Team Results.
+
+For example, if a team Time Trial is taken on the 4th rider, and only 3 riders finish, then the team will not be shown.
+
+For example, if a team is to be ranked by the sum of times for the tope 3 riders, and only 2 riders finish, then the team will not be shown.
+
+Of course, riders with no team, or have team __Independent__ or __Ind.__ are not included in the Team Results.
+
 # Further Details:
 ## Time Trial Mode
 Time Trial mode is a special mode that works differently from the regular race mode.  In TT mode, the first read for a rider starts his/her clock, and subsequent reads are all taken with respect to the rider's start time.
@@ -428,3 +457,4 @@ This feature is related to File|New Next..., which create a new race based on th
 
 However, a template can be loaded into a completely New race, and by saving a template as "default", it will be automatically applied to new and RaceDB races.
 
+.

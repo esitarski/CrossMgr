@@ -21,14 +21,14 @@ Selects the Category of the animation.  Category "All" will show an animation fo
 Draws the animation with the finish line on the top of the screen rather than on the bottom.
 Use this option to give a better approximation of the course layout.
 Html output will respect this option.
-This option can also be changed in Properties.
+This option can also be changed in [Properties][].
 Does not apply in a GPX display.
 
 ## Reverse Direction
 Changes the direction of the animation.
 Use this option to give a better approximation of the direction of prevailing turns in the race.
 Html output will respect this option.
-This option can also be changed in Properties.
+This option can also be changed in [Properties][].
 Does not apply in a GPX display.
 
 ## Rewind

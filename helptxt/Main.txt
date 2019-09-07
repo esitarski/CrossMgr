@@ -33,6 +33,7 @@ Get started with CrossMgr now!
 * [Situation][]
 * [LapCounter][]
 * [Histogram][]
+* [TeamResults][]
 
 ## [Para-Cycling][]
 
