@@ -399,7 +399,7 @@ Team Results can be computed as follows:
 1. by Nth Rider Time: time of the nth rider's finish of the team (eg. team time trial, time taken by 5rd team member)
 1. by Sum Time: sum of the times of the top results for the team (eg. team results finish, sum time for top 3 team members)
 1. by Sum Points: sum of the points of the top results for the team (eg. team results finish, sum points for top 3 team members)
-1. by Sum Percent Time: like "by Sum Points", but points are computed as a percentage of the winner's time.
+1. by Sum Percent Time: like __by Sum Points__, but points are computed as a percentage of the winner's time.
 
 ### Nth Rider
 Only used if __Rank Option__ is __by Nth Rider Time__ option.  Indicates which rider's finish time counts for the team.  Not used otherwise.
@@ -408,7 +408,7 @@ Only used if __Rank Option__ is __by Nth Rider Time__ option.  Indicates which r
 Used if __Rank Option__ is __by Sum Time__, __by Sum Points__ or __by Sum Percent Time__.  Indicates the number of top team rider finishers to include in the ranking calculation.
 
 ### Finish Points
-Only used if __Rank Option__ is "by Sum Points".  Indicates the points-for-position for the ranking calculation.  A comma-separated list of numbers in order of 1st place, 2nd place, etc.
+Only used if __Rank Option__ is __by Sum Points__.  Indicates the points-for-position for the ranking calculation.  A comma-separated list of numbers in order of 1st place, 2nd place, etc.
 Points must be the same or decreasing for lower finish positions.
 
 ## Notes
