@@ -131,7 +131,7 @@ class TeamResults( wx.Panel ):
 			colnames[col] = u'{}\n{} {}'.format(_('Sum %'), _('Top'), race.topTeamResults)
 			
 		if race.showNumTeamParticipants:
-			colnames.append( _('# Participants') )
+			colnames.append( _('Participants') )
 		return colnames
 	
 	def updateGrid( self ):
