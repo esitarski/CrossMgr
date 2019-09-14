@@ -1174,6 +1174,7 @@ class Race( object ):
 	nthTeamRider = 3		# Used for teamRankByRiderTime
 	topTeamResults = 3		# Used for teamRankBySumTime, teamRankBySumPercentTime and teamRankBySumPoints
 	finishPointsStructure = "20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1"
+	showNumTeamParticipants = False
 	#--------------------------------------
 	
 	

@@ -6,13 +6,14 @@ import Utils
 from GetResults import GetResults
 
 class TeamResult:
-	def __init__( self, team, t=None, points=None, bestPos=0, note=u'' ):
+	def __init__( self, team, t=None, points=None, bestPos=0, note=u'', numParticipants=None ):
 		self.team = team
 		self.t = t
 		self.points = points
 		self.bestPos = bestPos
 		self.note = note
 		self.criteria = ''
+		self.numParticipants = numParticipants
 		self.gap = ''
 		
 	def __repr__( self ):
@@ -53,11 +54,18 @@ def GetTeamResults( category ):
 	teamResults = []
 	if race.teamRankOption == race.teamRankByRiderTime:		# by nth rider (team time trial)
 		for team, rrs in teamInfo.items():
+			numParticipants = len(rrs)
 			try:
 				rr = rrs[race.nthTeamRider-1]
 			except IndexError:
 				continue
-			teamResults.append( TeamResult(team, t=rr.lastTime - race.getStartOffset(rr.num),  note=u'{}'.format(rr.num)) )
+			teamResults.append( TeamResult(
+					team,
+					t=rr.lastTime - race.getStartOffset(rr.num),
+					note=u'{}'.format(rr.num),
+					numParticipants=numParticipants,
+				)
+			)
 			
 		if teamResults:
 			teamResults.sort( key=operator.attrgetter('t') )
@@ -69,6 +77,7 @@ def GetTeamResults( category ):
 	elif race.teamRankOption == race.teamRankBySumPoints:		# sum of individual points
 		pointsForPos = {pos:points for pos, points in enumerate( (int(v.strip()) for v in race.finishPointsStructure.split(',')), 1) }
 		for team, rrs in teamInfo.items():
+			numParticipants = len(rrs)
 			if len(rrs) < race.topTeamResults:
 				continue
 			rrs = rrs[:race.topTeamResults]
@@ -77,7 +86,8 @@ def GetTeamResults( category ):
 					team,
 					points=sum(pointsForPos.get(rr.pos, 0) for rr in rrs),
 					bestPos=rrs[0].pos,
-					note=u', '.join(u'{}:{} ({})'.format(pointsForPos.get(rr.pos, 0), rr.pos, rr.num))
+					note=u', '.join(u'{}:{} ({})'.format(pointsForPos.get(rr.pos, 0), rr.pos, rr.num)),
+					numParticipants=numParticipants,
 				)
 			)
 		if teamResults:
@@ -89,6 +99,7 @@ def GetTeamResults( category ):
 	
 	elif race.teamRankOption == race.teamRankBySumTime:		# sum of individual times
 		for team, rrs in teamInfo.items():
+			numParticipants = len(rrs)
 			if len(rrs) < race.topTeamResults:
 				continue
 			rrs = rrs[:race.topTeamResults]
@@ -97,7 +108,8 @@ def GetTeamResults( category ):
 					team,
 					t=sum(rr.lastTime - race.getStartOffset(rr.num) for rr in rrs),
 					bestPos=rrs[0].pos,
-					note=u', '.join(u'{}:{} ({})'.format(formatTime(rr.lastTime - race.getStartOffset(rr.num)), rr.pos, rr.num))
+					note=u', '.join(u'{}:{} ({})'.format(formatTime(rr.lastTime - race.getStartOffset(rr.num)), rr.pos, rr.num)),
+					numParticipants=numParticipants,
 				)
 			)
 		if teamResults:
@@ -109,6 +121,7 @@ def GetTeamResults( category ):
 
 	elif race.teamRankOption == race.teamRankBySumPercentTime and fastestTime:	# sum of percent times of winner.  Must be the last in the if-else.
 		for team, rrs in teamInfo.items():
+			numParticipants = len(rrs)
 			if len(rrs) < race.topTeamResults:
 				continue
 			rrs = rrs[:race.topTeamResults]
@@ -117,7 +130,8 @@ def GetTeamResults( category ):
 					team,
 					points=sum(getPercentTime(rr) for rr in rrs),
 					bestPos=rrs[0].pos,
-					note=u', '.join(u'{:.2f}:{} ({})'.format(getPercentTime(rr), rr.pos, rr.num))
+					note=u', '.join(u'{:.2f}:{} ({})'.format(getPercentTime(rr), rr.pos, rr.num)),
+					numParticipants=numParticipants,
 				)
 			)
 		if teamResults:

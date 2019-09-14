@@ -836,6 +836,7 @@ class TeamResultsProperties( wx.Panel ):
 		self.finishPointsStructure = wx.TextCtrl( self, value="", style=wx.TE_PROCESS_ENTER, size=(240,-1) )
 		self.finishPointsStructureNote = wx.StaticText( self, label=_('for Sum Points') )
 		
+		self.showNumTeamParticipants = wx.CheckBox( self, label=_('Show # of Team Participants'))
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
@@ -845,7 +846,7 @@ class TeamResultsProperties( wx.Panel ):
 		hs.Add( self.teamRankOption, flag=wx.LEFT, border=4 )
 		ms.Add( hs, flag=wx.ALL, border=4 )
 		
-		fgs = wx.FlexGridSizer( 3, 3, 4 )
+		fgs = wx.FlexGridSizer( 3, 4, 4 )
 		fgs.Add( self.nthTeamRiderLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.nthTeamRider )
 		fgs.Add( self.nthTeamRiderNote, flag=wx.ALIGN_CENTER_VERTICAL )
@@ -857,6 +858,9 @@ class TeamResultsProperties( wx.Panel ):
 		fgs.Add( self.finishPointsStructureLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		fgs.Add( self.finishPointsStructure )
 		fgs.Add( self.finishPointsStructureNote, flag=wx.ALIGN_CENTER_VERTICAL )
+
+		fgs.Add( wx.StaticText(self, label='') )
+		fgs.Add( self.showNumTeamParticipants, flag=wx.ALIGN_CENTER_VERTICAL )
 
 		ms.Add( fgs, flag=wx.ALL, border=4 )
 		
@@ -873,6 +877,7 @@ class TeamResultsProperties( wx.Panel ):
 		race.nthTeamRider = self.nthTeamRider.GetSelection() + 1
 		race.topTeamResults = self.topTeamResults.GetSelection() + 1
 		race.finishPointsStructure = ','.join( re.sub( '[^0-9]', ' ', self.finishPointsStructure.GetValue() ).split() )
+		race.showNumTeamParticipants = self.showNumTeamParticipants.GetValue()
 
 #------------------------------------------------------------------------------------------------
 class BatchPublishProperties( wx.Panel ):

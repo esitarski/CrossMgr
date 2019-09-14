@@ -129,6 +129,9 @@ class TeamResults( wx.Panel ):
 			colnames[col] = u'{}\n{} {}'.format(_('Sum Time'), _('Top'), race.topTeamResults)
 		elif race.teamRankOption == race.teamRankBySumPercentTime:
 			colnames[col] = u'{}\n{} {}'.format(_('Sum %'), _('Top'), race.topTeamResults)
+			
+		if race.showNumTeamParticipants:
+			colnames.append( _('# Participants') )
 		return colnames
 	
 	def updateGrid( self ):
@@ -144,7 +147,7 @@ class TeamResults( wx.Panel ):
 				si.GetWindow().Refresh()
 		self.category = category
 		
-		colnames = [c.replace('\n', ' ') for c in self.getColNames()]
+		colnames = self.getColNames()
 		
 		results = GetTeamResults( self.category )
 		Utils.AdjustGridSize( self.grid, len(results), len(colnames) )
@@ -162,6 +165,8 @@ class TeamResults( wx.Panel ):
 			self.grid.SetCellValue( row, 1, r.team )
 			self.grid.SetCellValue( row, 2, r.criteria )
 			self.grid.SetCellValue( row, 3, r.gap )
+			if race.showNumTeamParticipants:
+				self.grid.SetCellValue( row, 4, u'{}'.format(r.numParticipants) )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
@@ -173,15 +178,17 @@ class TeamResults( wx.Panel ):
 			return None
 		
 		title = '\n'.join( [race.title, _('Team Results'), category.fullname,] )
-		colnames = self.getColNames()
+		colnames = [c.replace('\n', ' ') for c in self.getColNames()]
 		data = [[] for c in colnames]
 		for pos, r in enumerate( GetTeamResults(category), 1 ):
 			data[0].append( u'{}'.format(pos) )
 			data[1].append( r.team )
 			data[2].append( r.criteria )
 			data[3].append( r.gap )
+			if race.showNumTeamParticipants:
+				data[4].append( u'{}'.format(r.numParticipants) )
 		
-		return ExportGrid.ExportGrid( colnames=colnames, data=data, title=title, leftJustifyCols={1,} )
+		return ExportGrid.ExportGrid( colnames=colnames, data=data, title=title, leftJustifyCols=[1] )
 	
 	def refresh( self ):
 		self.updateGrid()

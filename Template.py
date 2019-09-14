@@ -96,6 +96,7 @@ class Template( object ):
 			'nthTeamRider',
 			'topTeamResults',
 			'finishPointsStructure',
+			'showNumTeamParticipants',
 		},
 		set(batchPublishRaceAttr),
 	)
