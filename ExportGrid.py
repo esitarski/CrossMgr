@@ -89,7 +89,7 @@ def drawQRCode( url, dc, x, y, size ):
 class ExportGrid( object ):
 	PDFLineFactor = 1.10
 
-	def __init__( self, title = '', colnames = [], data = [], footer = '', leftJustifyCols=None, infoColumns=None ):
+	def __init__( self, title='', colnames=[], data=[], footer='', leftJustifyCols=None, infoColumns=None ):
 		self.title = title
 		self.footer = footer
 		self.colnames = colnames

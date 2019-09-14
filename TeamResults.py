@@ -53,7 +53,7 @@ class TeamResults( wx.Panel ):
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
 		self.exportButton = wx.Button( self, label='{} {}/{}'.format(_('Export'), _('Excel'), _('PDF')) )
-		self.exportButton.Bind( wx.EVT_BUTTON, self.doChooseCategory )
+		self.exportButton.Bind( wx.EVT_BUTTON, self.doExport )
 		
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP|wx.BOTTOM|wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL|wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -84,11 +84,11 @@ class TeamResults( wx.Panel ):
 
 		try:
 			wb = xlsxwriter.Workbook( xlFileName )
-			formats = ExportGrid.getExcelFormatsXLSX( wb )
+			formats = ExportGrid.ExportGrid.getExcelFormatsXLSX( wb )
 			for category in race.getCategories( publishOnly=True ):
 				eg = self.toExportGrid( category )
 				if eg:
-					ws = wb.add_worksheet( Utils.RemoveDisallowedSheetChars(category.full_name) )
+					ws = wb.add_worksheet( Utils.RemoveDisallowedSheetChars(category.fullname) )
 					eg.toExcelSheetXLSX( formats, ws )
 			wb.close()
 		except Exception as e:
@@ -144,7 +144,7 @@ class TeamResults( wx.Panel ):
 				si.GetWindow().Refresh()
 		self.category = category
 		
-		colnames = self.getColNames()
+		colnames = [c.replace('\n', ' ') for c in self.getColNames()]
 		
 		results = GetTeamResults( self.category )
 		Utils.AdjustGridSize( self.grid, len(results), len(colnames) )
@@ -181,7 +181,7 @@ class TeamResults( wx.Panel ):
 			data[2].append( r.criteria )
 			data[3].append( r.gap )
 		
-		return ExportGrid.ExportGrid( colnames=colnames, data=data, leftJustifyCols={1,} )
+		return ExportGrid.ExportGrid( colnames=colnames, data=data, title=title, leftJustifyCols={1,} )
 	
 	def refresh( self ):
 		self.updateGrid()
