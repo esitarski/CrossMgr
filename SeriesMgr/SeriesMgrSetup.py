@@ -46,18 +46,10 @@ with open('Dependencies.py', 'w') as fp:
 	for f in copyFiles:
 		fp.write( 'import {}\n'.format(f[:-3]) )
 
-subprocess.call( [
-		'python',
-		'-mcompileall',
-		'-l',
-		'.'
-	]
-)
-
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
 	
-if platform.platform() == 'Linux':
+if 'win' not in sys.platform.lower():
 	sys.exit()
 
 gds = [
