@@ -2,6 +2,7 @@ import wx
 import io
 import os
 import six
+import math
 import datetime
 import wx.lib.intctrl
 
