@@ -1114,7 +1114,8 @@ class MainWin( wx.Frame ):
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
 		if hasattr(self, 'dbWriterThread'):
-			self.camInQ.put( {'cmd':'terminate'} )
+			if hasattr(self, 'camInQ' ):
+				self.camInQ.put( {'cmd':'terminate'} )
 			self.dbWriterQ.put( ('terminate', ) )
 			self.dbWriterThread.join( 2.0 )
 			

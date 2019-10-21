@@ -308,7 +308,7 @@ class FinishStrip( wx.Panel ):
 			else:
 				x, y = self.GetClientSize()[0]-4, 4
 			for i in range(50):
-				wx.CallLater( i*4, self.drawZoomPhoto, x, y )
+				wx.CallLater( i*5, self.drawZoomPhoto, x, y )
 		
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():
