@@ -9,6 +9,9 @@ def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
 	return int(w_src * scale), int(h_src * scale)
 
+def frameToWidthHeight( frame ):
+	return frame.shape[:2]
+
 def frameToBitmap( frame, w_req=None, h_req=None ):
 	h_frame, w_frame, layers = frame.shape
 	if w_req is not None:

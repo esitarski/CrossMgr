@@ -5,6 +5,7 @@ import six
 import sys
 import glob
 import math
+from time import sleep
 import datetime
 import platform
 from bisect import bisect_left
@@ -306,7 +307,8 @@ class FinishStrip( wx.Panel ):
 				x, y = event.GetX(), event.GetY()
 			else:
 				x, y = self.GetClientSize()[0]-4, 4
-			wx.CallAfter( self.drawZoomPhoto, x, y )
+			for i in range(50):
+				wx.CallLater( i*4, self.drawZoomPhoto, x, y )
 		
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():

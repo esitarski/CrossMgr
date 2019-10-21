@@ -132,15 +132,18 @@ cameraResolutionChoices = (
 	'1280x1024',
 	'1920x1080',
 	'1600x1200',
+	'MAXxMAX',
 )
 
+def pixelsFromRes( res ):
+	return tuple( (int(v) if v.isdigit() else 10000) for v in res.split('x') )
+
 def getCameraResolutionChoice( resolution ):
-	res = '{}x{}'.format( *resolution )
 	for i, c in enumerate(cameraResolutionChoices):
-		if c == res:
+		if resolution == pixelsFromRes(c):
 			return i
-	return 0
-		
+	return len(cameraResolutionChoices) - 1
+	
 class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, cameraDeviceNum=0, fps=30, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
 		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Configuration') )
@@ -207,7 +210,7 @@ class ConfigDialog( wx.Dialog ):
 		return self.cameraDevice.GetSelection()
 		
 	def GetCameraResolution( self ):
-		return tuple(int(v) for v in cameraResolutionChoices[self.cameraResolution.GetSelection()].split('x'))
+		return tuple((int(v) if v.isdigit() else 10000) for v in cameraResolutionChoices[self.cameraResolution.GetSelection()].split('x'))
 
 	def GetFPS( self ):
 		return self.fps.GetValue()
@@ -444,6 +447,7 @@ class MainWin( wx.Frame ):
 		self.cameraResolution = wx.StaticText( self )
 		self.targetFPS = wx.StaticText( self, label='30 fps' )
 		self.actualFPS = wx.StaticText( self, label='30.0 fps' )
+		self.frameShape = (0,0,0)
 		
 		boldFont = self.cameraDevice.GetFont()
 		boldFont.SetWeight( wx.BOLD )
@@ -624,6 +628,7 @@ class MainWin( wx.Frame ):
 		self.tsQueryLower = d
 		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
 		self.refreshTriggers( True )
+		wx.CallAfter( self.date.SetValue, wx.DateTime(d.day, d.month-1, d.year) )
 		
 	def onDateSelect( self, event ):
 		triggerDates = self.db.getTriggerDates()
@@ -1059,11 +1064,17 @@ class MainWin( wx.Frame ):
 							wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
 							lastPrimaryTime = primaryTime
 							primaryCount = 0
+							
 					elif name == 'focus':
 						if self.focusDialog.IsShown():
 							wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
 						else:
 							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+					
+					if lastFrame.shape != self.frameShape:
+						self.frameShape = lastFrame.shape
+						wx.CallAfter( setCameraResolution, self.frameShape[0], self.frameShape[1] )
+			
 			elif cmd == 'snapshot':
 				lastFrame = lastFrame if msg['frame'] is None else msg['frame']
 				wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
@@ -1133,7 +1144,6 @@ class MainWin( wx.Frame ):
 			return False
 		
 		self.setCameraDeviceNum( cameraDeviceNum )
-		self.setCameraResolution( *cameraResolution )
 		self.updateFPS( fps )
 		self.writeOptions()
 		
@@ -1173,8 +1183,7 @@ class MainWin( wx.Frame ):
 		
 	def getCameraResolution( self ):
 		try:
-			resolution = [int(v) for v in self.cameraResolution.GetLabel().split('x')]
-			return resolution[0], resolution[1]
+			return pixelsFromRes( self.cameraResolution.GetLabel() )
 		except:
 			return 640, 480
 		

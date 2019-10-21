@@ -262,7 +262,10 @@ class CrossMgrPrintout( wx.Printout ):
 
 	def GetPageInfo(self):
 		self.pageInfo = {}
-		numCategories = len(self.categories or [])
+		try:
+			numCategories = len(self.categories)
+		except:
+			numCategories = 0
 		if numCategories == 0:
 			return (1,1,1,1)
 			

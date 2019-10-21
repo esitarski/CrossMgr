@@ -1,12 +1,12 @@
 import io
 import csv
-import six
 import math
 import Utils
 import datetime
 import Model
 from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import SyncExcelLink
+from UCIExcel import formatUciId
 
 def formatTimeGap( secs, forceHours=False ):
 	return Utils.formatTimeGap(
@@ -61,7 +61,7 @@ def CrossResultsExport( fname ):
 			return int(n.split()[0])
 		except:
 			return n
-
+	
 	maxLaps = 1
 	for cat in publishCategories:
 		results = GetResults( cat )
@@ -106,11 +106,11 @@ def CrossResultsExport( fname ):
 				for i in range(maxLaps):
 					try:
 						lapTime = formatTimeGap(rr.lapTimes[i])
-					except IndexError:
+					except (AttributeError, IndexError) as e:
 						lapTime = ''
 					dataRow.append( lapTime )
 				
-				csvWriter.writerow( [six.text_type(d) for d in dataRow] )
+				csvWriter.writerow( [u'{}'.format(d) for d in dataRow] )
 				
 			csvWriter.writerow( [] )		# Blank line separates each category.
 			

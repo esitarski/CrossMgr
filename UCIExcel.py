@@ -8,8 +8,14 @@ import xlsxwriter
 import operator
 
 def formatUciId( uci_id ):
-	s = u' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id
-	return s.replace( ' ', '' )		# UCI does not want spaces in UCI IDs.
+	# Normalize to a string.
+	if isinstance(uci_id, float):
+		uci_id = '{:.0f}'.format( uci_id )
+	else:
+		uci_id = '{}'.format( uci_id )
+	#s = u' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id	# add separating spaces to UCI ID.
+	s = uci_id
+	return s.replace( ' ', '' )		# UCI does not accept spaces in UCI IDs.
 	
 def UCIExcel( category, fname, startList=False ):
 	race = Model.race

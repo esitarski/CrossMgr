@@ -1,1 +1,1 @@
-AppVerName="CrossMgrVideo 3.0.1"
+AppVerName="CrossMgrVideo 3.0.2"

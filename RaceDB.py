@@ -420,21 +420,24 @@ class RaceDBUpload( wx.Dialog ):
 		try:
 			response = PostEventCrossMgr( url )
 		except Exception as e:
-			response = {'errors':[u'{}'.format(e)], 'warnings':[]}
+			response = {'errors':[u'{}'.format(e)], 'warnings':[], 'info':[] }
 		
-		if response.get('errors',None) or response.get('warnings',None):
-			resultText = u'\n'.join( u'RaceDB{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
-			if resultText:
-				resultText += u'\n\n'
-			resultText += u'\n'.join( u'RaceDB{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+		resultText = ''
+		if 'errors' in response or 'warnings' in response:
+			if 'errors' in response:
+				resultText += (u'\n\n' if resultText else u'') + u'\n'.join( u'{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
+			
+			if 'warnings' in response:
+				resultText += (u'\n\n' if resultText else u'') + u'\n'.join( u'{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+			
+			if 'info' in response:
+				resultText += (u'\n\n' if resultText else u'') + u'\n'.join( u'{}: {}'.format(_('Info'), i) for i in response.get('info',[]) )			
 		
-		if not response.get('errors',None):
-			if resultText:
-				resultText += u'\n\n'
-			if response.get('warnings',None):
-				resultText += _('Otherwise, Upload Successful.')
+		if 'errors' not in response:
+			if 'warnings' in response:
+				resultText += (u'\n\n' if resultText else u'') + _('Otherwise, Upload Successful.')
 			else:
-				resultText += _('Upload Successful.')
+				resultText += (u'\n\n' if resultText else u'') + _('Upload Successful.')
 		
 		if resultText:
 			resultText = u'url="{}"'.format( url ) + '\n' + resultText

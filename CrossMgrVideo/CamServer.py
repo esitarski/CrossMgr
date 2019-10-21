@@ -11,16 +11,26 @@ from FrameCircBuf import FrameCircBuf
 
 now = datetime.now
 
+retvals = []
 def getVideoCapture( usb=1, fps=30, width=640, height=480 ):
+	global retvals
+	
 	cap = cv2.VideoCapture( usb )
-	cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-	cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-	cap.set(cv2.CAP_PROP_FPS, fps)
+	properties = [
+		('frame_width', cv2.CAP_PROP_FRAME_WIDTH, width),
+		('frame_height', cv2.CAP_PROP_FRAME_HEIGHT, height),
+		('fps', cv2.CAP_PROP_FPS, fps),
+	]
+	retvals = []
+	for pname, pindex, pvalue in properties:
+		retvals.append( (pname, pindex, cap.set(pindex, pvalue), cap.get(pindex)) )
+	
 	try:
 		if platform.system() == 'Linux':	# HACK HACK HACK
 			cap.set(cv2.CAP_PROP_MODE, cv2.CAP_MODE_YUYV)
 	except:
 		pass
+	
 	return cap
 
 class VideoCaptureManager( object ):
