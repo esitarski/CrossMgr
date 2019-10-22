@@ -139,8 +139,8 @@ def pixelsFromRes( res ):
 	return tuple( (int(v) if v.isdigit() else 10000) for v in res.split('x') )
 
 def getCameraResolutionChoice( resolution ):
-	for i, c in enumerate(cameraResolutionChoices):
-		if resolution == pixelsFromRes(c):
+	for i, res in enumerate(cameraResolutionChoices):
+		if resolution == pixelsFromRes(res):
 			return i
 	return len(cameraResolutionChoices) - 1
 	
@@ -210,7 +210,7 @@ class ConfigDialog( wx.Dialog ):
 		return self.cameraDevice.GetSelection()
 		
 	def GetCameraResolution( self ):
-		return tuple((int(v) if v.isdigit() else 10000) for v in cameraResolutionChoices[self.cameraResolution.GetSelection()].split('x'))
+		return pixelsFromRes(cameraResolutionChoices[self.cameraResolution.GetSelection()])
 
 	def GetFPS( self ):
 		return self.fps.GetValue()
@@ -1073,7 +1073,7 @@ class MainWin( wx.Frame ):
 					
 					if lastFrame.shape != self.frameShape:
 						self.frameShape = lastFrame.shape
-						wx.CallAfter( setCameraResolution, self.frameShape[0], self.frameShape[1] )
+						wx.CallAfter( self.setCameraResolution, self.frameShape[1], self.frameShape[0] )
 			
 			elif cmd == 'snapshot':
 				lastFrame = lastFrame if msg['frame'] is None else msg['frame']
@@ -1144,14 +1144,14 @@ class MainWin( wx.Frame ):
 		if ret != wx.ID_OK:
 			return False
 		
+		info = {'usb':cameraDeviceNum, 'fps':fps, 'width':cameraResolution[0], 'height':cameraResolution[1]}
+		self.camInQ.put( {'cmd':'cam_info', 'info':info} )			
+
 		self.setCameraDeviceNum( cameraDeviceNum )
-		self.updateFPS( fps )
-		self.writeOptions()
-		
-		if hasattr(self, 'camInQ'):
-			self.camInQ.put( {'cmd':'cam_info', 'info':self.getCameraInfo(),} )
-			
+		self.updateFPS( fps )		
 		self.GetSizer().Layout()
+
+		self.writeOptions()
 		return True
 	
 	def manageDatabase( self, event ):
@@ -1280,12 +1280,9 @@ def MainLoop():
 	except:
 		pass
 
-	mainWin.Refresh()
-	if not mainWin.resetCamera():
-		return
-	
 	# Start processing events.
 	mainWin.Start()
+	wx.CallLater( 200, mainWin.resetCamera )
 	app.MainLoop()
 
 @atexit.register
