@@ -1,7 +1,6 @@
 import wx
 import io
 import cv2
-import six
 import numpy as np
 from LRUCache import LRUCache
 
@@ -75,16 +74,10 @@ def adjustContrastFrame( frame ):
 	# convert the YUV image back to RGB format
 	return cv2.cvtColor(frame_yuv, cv2.COLOR_YUV2BGR)
 
-StringIO = six.StringIO
 def imageToFrame( image ):
-	if six.PY2:
-		s = StringIO()
-		image.SaveFile( s, wx.BITMAP_TYPE_BMP )
-		return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
-	else:
-		s = io.BytesIO()
-		image.SaveFile( s, wx.BITMAP_TYPE_BMP )
-		return cv2.imdecode( np.fromstring(s.getbuffer(), dtype='B'), 1 )
+	s = io.BytesIO()
+	image.SaveFile( s, wx.BITMAP_TYPE_BMP )
+	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
 
 def bitmapToFrame( bitmap ):
 	return imageToFrame( bitmap.ConvertToImage() )
