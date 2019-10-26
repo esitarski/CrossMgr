@@ -1,9 +1,8 @@
 import numpy as np
 import cv2
 import time
-import six
 import platform
-from six.moves.queue import Empty
+from queue import Empty
 from multiprocessing import Process, Pipe, Queue
 from threading import Thread, Timer
 from datetime import datetime, timedelta
@@ -74,7 +73,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 		try:
 			pWriter.send( msg )
 		except MemoryError as e:
-			six.print_( 'pWriterSend: ', e )
+			print( 'pWriterSend: ', e )
 	
 	while 1:
 		with VideoCaptureManager(**camInfo) as cap:
@@ -158,7 +157,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 						
 				# Send update messages.  If there was a backlog, don't send the frame as we can use the last frame sent.
 				updateFrame = None if backlog and backlog[-1][0] == ts else frame
-				for name, f in six.iteritems(sendUpdates):
+				for name, f in sendUpdates.items():
 					#if frameCount % (f if backlog else 8) == 0:
 					if frameCount % f == 0:
 						pWriterSend( {'cmd':'update', 'name':name, 'frame':updateFrame} )
@@ -186,7 +185,7 @@ if __name__ == '__main__':
 	def handleMessages( q ):
 		while 1:
 			m = q.get()
-			six.print_( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in six.iteritems(m)) )
+			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
 	qIn, pWriter = getCamServer( dict(usb=1, width=1920, height=1080, fps=30) )
 	thread = Thread( target=handleMessages, args=(pWriter,) )

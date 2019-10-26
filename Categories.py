@@ -414,10 +414,10 @@ class Categories( wx.Panel ):
 				
 			self.grid.SetColAttr( col, attr )
 		
-		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
-		self.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
-		self.Bind( gridlib.EVT_GRID_CELL_CHANGED, self.onCellChanged )
-		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
+		self.grid.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
+		self.grid.Bind( gridlib.EVT_GRID_SELECT_CELL, self.onCellSelected )
+		self.grid.Bind( gridlib.EVT_GRID_CELL_CHANGED, self.onCellChanged )
+		self.grid.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onEditorCreated )
 		
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.grid, 1, flag=wx.GROW|wx.ALL|wx.EXPAND )
@@ -494,7 +494,7 @@ class Categories( wx.Panel ):
 	def onCellChanged( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
-		if self.colCur in [1, 2]:
+		if self.colCur in (1, 2):
 			wx.CallAfter( self.fixCells )
 		event.Skip()
 
