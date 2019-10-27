@@ -193,6 +193,7 @@ class RaceOptionsProperties( wx.Panel ):
 		super(RaceOptionsProperties, self).__init__( parent, id )
 		
 		self.timeTrial = wx.CheckBox( self, label=_('Time Trial') )
+		self.timeTrial.Bind(wx.EVT_CHECKBOX, self.onChangeTimeTrial )
 		
 		self.allCategoriesFinishAfterFastestRidersLastLap = wx.CheckBox( self, label=_("All Categories Finish After Fastest Rider's Last Lap") )
 		self.allCategoriesFinishAfterFastestRidersLastLap.SetValue( True )
@@ -236,6 +237,7 @@ class RaceOptionsProperties( wx.Panel ):
 		
 		self.winAndOut = wx.CheckBox( self, label=_("Win and Out") )
 		self.winAndOut.SetValue( False )
+		self.winAndOut.Bind(wx.EVT_CHECKBOX, self.onChangeWinAndOut )
 
 		#-------------------------------------------------------------------------------
 		ms = wx.BoxSizer( wx.HORIZONTAL )
@@ -269,6 +271,16 @@ class RaceOptionsProperties( wx.Panel ):
 		
 		ms.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=16 )
 
+	def onChangeTimeTrial( self, event=None ):
+		self.timeTrial.SetBackgroundColour( wx.Colour(255, 204, 153) if self.timeTrial.GetValue() else wx.WHITE )
+		if event:
+			event.Skip()
+     
+	def onChangeWinAndOut( self, event=None ):
+		self.winAndOut.SetBackgroundColour( wx.Colour(255, 204, 153) if self.winAndOut.GetValue() else wx.WHITE )
+		if event:
+			event.Skip()
+     
 	def refresh( self ):
 		race = Model.race
 		self.timeTrial.SetValue( getattr(race, 'isTimeTrial', False) )
@@ -288,6 +300,8 @@ class RaceOptionsProperties( wx.Panel ):
 		self.showDetails.SetValue( not race.hideDetails )
 		self.showCourseAnimationInHtml.SetValue( race.showCourseAnimationInHtml )
 		self.licenseLinkTemplate.SetValue( race.licenseLinkTemplate )
+		self.onChangeWinAndOut()
+		self.onChangeTimeTrial()
 		
 	@property
 	def distanceUnitValue( self ):
