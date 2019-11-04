@@ -85,6 +85,7 @@ from NonBusyCall		import NonBusyCall
 from Playback			import Playback
 from Pulled				import Pulled
 from TeamResults		import TeamResults
+from BibEnter			import BibEnter
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -695,6 +696,8 @@ class MainWin( wx.Frame ):
 		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 256+80)
 		self.splitter.UpdateSize()
+		
+		self.bibEnter = BibEnter( self )
 
 		#-----------------------------------------------------------------------
 		self.chipMenu = wx.Menu()
@@ -808,6 +811,10 @@ class MainWin( wx.Frame ):
 
 		#------------------------------------------------------------------------------
 		self.windowMenu = wx.Menu()
+		
+		item = self.windowMenu.Append( wx.ID_ANY, _("&Bib Enter..."), _("Bib Enter...") )
+		self.Bind( wx.EVT_MENU, self.menuShowBibEnter, item )
+		self.windowMenu.AppendSeparator()
 
 		self.menuIdToWindowInfo = {}
 		
@@ -1286,6 +1293,9 @@ class MainWin( wx.Frame ):
 	def menuShowPage( self, event ):
 		self.showPage( self.idPage[event.GetId()] )
 		
+	def menuShowBibEnter( self, event ):
+		self.bibEnter.Show()
+		
 	def getDirName( self ):
 		return Utils.getDirName()
 		
@@ -1713,10 +1723,14 @@ class MainWin( wx.Frame ):
 		formats = ExportGrid.getExcelFormatsXLSX( wb )
 		with UnstartedRaceWrapper():
 			raceCategories = getRaceCategories()
+			
+			ues = Utils.UniqueExcelSheetName()
 			for catName, category in raceCategories:
+			
 				if catName == 'All' and len(raceCategories) > 1:
 					continue
-				sheetCur = wb.add_worksheet( Utils.RemoveDisallowedSheetChars(catName) )
+								
+				sheetCur = wb.add_worksheet( ues.getSheetName(catName) )
 				export = ExportGrid()
 				export.setResultsOneList( category, showLapsFrequency = 1 )
 				export.toExcelSheetXLSX( formats, sheetCur )

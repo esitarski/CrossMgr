@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import copy
 import bisect
@@ -22,6 +21,18 @@ from TimeTrialRecord import TimeTrialRecord
 from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
 
+# codes to cause an enter.
+enterCodes = {
+	wx.WXK_RETURN,
+	wx.WXK_SPACE,
+	wx.WXK_TAB,
+	wx.WXK_NUMPAD_ENTER,
+	wx.WXK_NUMPAD_SPACE,
+	wx.WXK_NUMPAD_TAB,
+}
+# backspace, delete, comma, return, digits
+validKeyCodes = set( [8, 127, 44, 13] + [x for x in range(48, 48+10)] )
+
 SplitterMinPos = 390
 SplitterMaxPos = 530
 
@@ -32,8 +43,21 @@ def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), f
 		btn.SetFont( font )
 	return btn
 
-# backspace, delete, comma, return, digits
-validKeyCodes = set( [8, 127, 44, 13] + [x for x in six.moves.range(48, 48+10)] )
+def getRiderNumsFromText( txt ):
+	nums = []
+	mask = Model.race.getCategoryMask() if Model.race else None
+	for num in txt.split( ',' ):
+		if not num:
+			continue
+		if mask:	# Add common prefix numbers to the entry.
+			s = num
+			dLen = len(mask) - len(s)
+			if dLen > 0:
+				sAdjust = mask[:dLen] + s
+				sAdjust = sAdjust.replace( '.', '0' )
+				num = sAdjust
+		nums.append( int(num) )
+	return nums
 
 class Keypad( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
@@ -81,7 +105,7 @@ class Keypad( wx.Panel ):
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(3+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
-		for i in six.moves.range(0, 9):
+		for i in range(9):
 			self.num.append( MakeKeypadButton( self.keypadPanel, label=u'&{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
@@ -141,34 +165,9 @@ class Keypad( wx.Panel ):
 		if txt is not None:
 			self.numEdit.SetValue( txt[:-1] )
 	
-	def getRiderNums( self ):
-		nums = []
-		txt = self.numEdit.GetValue()
-		mask = Model.race.getCategoryMask() if Model.race else None
-		for num in txt.split( ',' ):
-			if not num:
-				continue
-			if mask:	# Add common prefix numbers to the entry.
-				s = num
-				dLen = len(mask) - len(s)
-				if dLen > 0:
-					sAdjust = mask[:dLen] + s
-					sAdjust = sAdjust.replace( '.', '0' )
-					num = sAdjust
-			nums.append( int(num) )
-		return nums
-	
-	enterCodes = {
-		wx.WXK_RETURN,
-		wx.WXK_SPACE,
-		wx.WXK_TAB,
-		wx.WXK_NUMPAD_ENTER,
-		wx.WXK_NUMPAD_SPACE,
-		wx.WXK_NUMPAD_TAB,
-	}
 	def handleNumKeypress(self, event):
 		keycode = event.GetKeyCode()
-		if keycode in self.enterCodes:
+		if keycode in enterCodes:
 			self.onEnterPress()
 		elif keycode < 255:
 			if keycode in validKeyCodes:
@@ -177,7 +176,7 @@ class Keypad( wx.Panel ):
 			event.Skip()
 	
 	def onEnterPress( self, event = None ):
-		nums = self.getRiderNums()
+		nums = getRiderNumsFromText( self.numEdit.GetValue() )
 		if nums:
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
@@ -189,7 +188,7 @@ class Keypad( wx.Panel ):
 		race = Model.race
 		t = race.curRaceTime() if race and race.isRunning() else None
 		success = False
-		for num in self.getRiderNums():
+		for num in getRiderNumsFromText( self.numEdit.GetValue() ):
 			if action(self, num, t):
 				success = True
 		if success:
@@ -598,7 +597,7 @@ class NumKeypad( wx.Panel ):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
 			results = list(results)
 			resultNums = set( rr.num for rr in results )
-			for a in six.itervalues(race.riders):
+			for a in race.riders.values():
 				if a.status == Finisher and a.num not in resultNums and a.firstTime is not None:
 					category = getCategory( a.num )
 					if category and t >= a.firstTime and t >= race.getStartOffset(a.num):
@@ -643,12 +642,12 @@ class NumKeypad( wx.Panel ):
 		if not catLapCount:
 			return
 			
-		catLapList = [(category, lap, count) for (category, lap), count in six.iteritems(catLapCount)]
+		catLapList = [(category, lap, count) for (category, lap), count in catLapCount.items()]
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
 			r = self.lapCountList.InsertItem( 999999, u'{}'.format(row[0]) if row else u'' )
-			for c in six.moves.range(1, len(row)):
+			for c in range(1, len(row)):
 				self.lapCountList.SetItem( r, c, u'{}'.format(row[c]) )
 			if colour is not None:
 				item = self.lapCountList.GetItem( r )
@@ -664,8 +663,8 @@ class NumKeypad( wx.Panel ):
 		
 		appendListRow( (
 							_('Total'),
-							u'{}/{}'.format(sum(count for count in six.itervalues(catLapCount)),
-											sum(count for count in six.itervalues(catCount)))
+							u'{}/{}'.format(sum(count for count in catLapCount.items()),
+											sum(count for count in catCount.items()))
 						),
 						colour=wx.BLUE,
 						bold=True )

@@ -85,10 +85,12 @@ class TeamResults( wx.Panel ):
 		try:
 			wb = xlsxwriter.Workbook( xlFileName )
 			formats = ExportGrid.ExportGrid.getExcelFormatsXLSX( wb )
-			for category in race.getCategories( publishOnly=True ):
+			
+			ues = Utils.UniqueExcelSheetName()
+			for category in race.getCategories( publishOnly=True ):			
 				eg = self.toExportGrid( category )
 				if eg:
-					ws = wb.add_worksheet( Utils.RemoveDisallowedSheetChars(category.fullname) )
+					ws = wb.add_worksheet( ues.getSheetName(category.fullname) )
 					eg.toExcelSheetXLSX( formats, ws )
 			wb.close()
 		except Exception as e:
