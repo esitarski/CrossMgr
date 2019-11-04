@@ -2,7 +2,6 @@ import wx
 import wx.grid			as gridlib
 import re
 import os
-import six
 import sys
 import math
 import operator
@@ -243,7 +242,7 @@ class Pulled( wx.Panel ):
 			'pulledError':self.getError(bib, lapsToGo, laps), 'lapsToGo':lapsToGo
 		}		
 		for col, (name, attr, valuesType) in enumerate(self.colNameFields):
-			self.grid.SetCellValue( row, col, six.text_type(values[attr]) )
+			self.grid.SetCellValue( row, col, str(values[attr]) )
 		return values
 	
 	def getRow( self, row ):
@@ -326,8 +325,6 @@ class Pulled( wx.Panel ):
 		
 		rows = [self.getRow(r) for r in range(self.grid.GetNumberRows())]
 		rows = [rv for rv in rows if rv['pulledBib']]
-		if not rows:
-			return True
 		
 		# Fix any missing data lapsToGo in the table.
 		lapsToGoLast = 1
@@ -342,6 +339,7 @@ class Pulled( wx.Panel ):
 		race, category, results, laps = info
 		rule80LapTime = race.getRule80LapTime( category )
 		
+		changed = False
 		Finisher, Pulled = Model.Rider.Finisher, Model.Rider.Pulled
 		for rr in results:
 			rider = race.riders.get(rr.num, None)
@@ -349,12 +347,13 @@ class Pulled( wx.Panel ):
 				continue
 			if rider.status == Pulled:
 				rider.status = Finisher
+				changed = True
 		
 		lapsToGoPulled = defaultdict( list )
 		for rv in rows:
 			lapsToGoPulled[rv['lapsToGo']].append( rv['pulledBib'] )
 			
-		for lapsToGo, bibs in six.iteritems(lapsToGoPulled):
+		for lapsToGo, bibs in lapsToGoPulled.items():
 			if lapsToGo <= 0:
 				continue
 			for seq, bib in enumerate(bibs):
@@ -366,8 +365,10 @@ class Pulled( wx.Panel ):
 				rider.status = Pulled
 				rider.pulledLapsToGo = lapsToGo
 				rider.pulledSequence = seq
-					
-		race.setChanged()
+				changed = True
+
+		if changed:
+			race.setChanged()
 		self.updateGrid()
 
 if __name__ == '__main__':
