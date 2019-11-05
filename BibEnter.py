@@ -9,7 +9,7 @@ class BibEnter( wx.Dialog ):
 		wx.Dialog.__init__( self, parent, id, _("Bib Enter"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL|wx.STAY_ON_TOP )
 
-		fontPixels = 16
+		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 						
 		self.numEditLabel = wx.StaticText(self, label=u'{}'.format(_('Bib')))
@@ -23,18 +23,17 @@ class BibEnter( wx.Dialog ):
 		nes.Add( self.numEditLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
 		nes.Add( self.numEdit, 1, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.EXPAND, border=4 )
 		
-		hbs = wx.BoxSizer( wx.HORIZONTAL )
+		hbs = wx.GridSizer( 4 , 2, 2)
 		for i, (label, actionFn) in enumerate( ((_('DN&F'),DoDNF), (_('DN&S'),DoDNS), (_('&Pull'),DoPull), (_('D&Q'),DoDQ)) ):
 			btn = wx.Button( self, label=label, style=wx.BU_EXACTFIT )
 			btn.SetFont( font )
 			btn.Bind( wx.EVT_BUTTON, lambda event, fn = actionFn: self.doAction(fn) )
-			hbs.Add( btn, flag=wx.EXPAND|(wx.LEFT if i != 0 else 0), border=2 )
+			hbs.Add( btn, flag=wx.EXPAND )
 			
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
-		mainSizer.Add( nes, 1, flag=wx.ALL|wx.EXPAND, border=2 )
+		mainSizer.Add( nes, flag=wx.ALL|wx.EXPAND, border=2 )
 		mainSizer.Add( hbs, flag=wx.ALL, border=2 )
-		self.SetSizer( mainSizer )
-		self.Fit()
+		self.SetSizerAndFit( mainSizer )
 		
 	def handleNumKeypress(self, event):
 		keycode = event.GetKeyCode()
