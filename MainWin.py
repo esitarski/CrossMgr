@@ -688,11 +688,9 @@ class MainWin( wx.Frame ):
 			setattr( self, a, c(self.notebook) )
 			getattr( self, a ).SetDropTarget( self.fileDrop )
 			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
-			if a == 'history':
-				self.iHistoryPage = i
-			if a == 'record':
-				self.iRecordPage = i
-
+			setattr( self, 'i' + a[0].upper() + a[1:] + 'Page', i )
+		self.iChartPage = self.iGanttPage
+		
 		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 256+80)
 		self.splitter.UpdateSize()
@@ -812,7 +810,7 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		self.windowMenu = wx.Menu()
 		
-		item = self.windowMenu.Append( wx.ID_ANY, _("&Bib Enter..."), _("Bib Enter...") )
+		item = self.windowMenu.Append( wx.ID_ANY, _("&Bib Enter...\tCtrl+B"), _("Bib Enter...") )
 		self.Bind( wx.EVT_MENU, self.menuShowBibEnter, item )
 		self.windowMenu.AppendSeparator()
 
@@ -1149,7 +1147,7 @@ class MainWin( wx.Frame ):
 				OutputStreamer.getFileName()), _("No Data Found")
 			)
 			return
-		self.showPageName( _('Actions') )
+		self.showPage( self.iActionsPage )
 		undo.pushState()
 		
 		DNS, Finisher = Model.Rider.DNS, Model.Rider.Finisher
@@ -1174,7 +1172,7 @@ class MainWin( wx.Frame ):
 			race.setChanged()
 		
 		self.refreshAll()
-		self.showPageName( _('Results') )
+		self.showResultsPage()
 			
 	def menuChangeProperties( self, event ):
 		if not Model.race:
@@ -1390,7 +1388,7 @@ class MainWin( wx.Frame ):
 		ResetVersionRAM()
 		self.playback = Playback( bibTimes, lambda: wx.CallAfter(NonBusyCall(self.refresh)) )
 		self.playback.start()
-		self.showPageName( _('Chart') )
+		self.showPage( self.iChartPage )
 		self.refresh()
 	
 	def menuReloadChecklist( self, event ):
@@ -1680,7 +1678,7 @@ class MainWin( wx.Frame ):
 		if not Model.race:
 			Utils.MessageOK(self, _("You must have a valid race."), _("Link ExcelSheet"), iconMask=wx.ICON_ERROR)
 			return
-		self.showPageName( _('Results') )
+		self.showResultsPageName()
 		self.closeFindDialog()
 		ResetExcelLinkCache()
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
@@ -1705,7 +1703,7 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.menuFind )
 		try:
 			if race.excelLink.initCategoriesFromExcel:
-				wx.CallAfter( self.showPageName, _('Categories') )
+				wx.CallAfter( self.showPage, self.iCategoriesPage )
 		except AttributeError:
 			pass
 	
@@ -2299,7 +2297,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
 		
-		self.showPageName( _('Animation') )
+		self.showPage(self.iAnimationPage)
 		if not Model.race:
 			return
 		race = Model.race
@@ -2536,7 +2534,7 @@ class MainWin( wx.Frame ):
 	
 	#--------------------------------------------------------------------------------------------
 	def doCleanup( self ):
-		self.showPageName( _('Results') )
+		self.showResultsPage()
 		race = Model.race
 		if race:
 			try:
@@ -2590,7 +2588,7 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuNew( self, event ):
-		self.showPageName( _('Actions') )
+		self.showPage(self.iActionsPage)
 		self.closeFindDialog()
 		self.writeRace()
 		
@@ -2682,7 +2680,7 @@ class MainWin( wx.Frame ):
 			
 		self.setNumSelect( None )
 		self.writeRace()
-		self.showPageName( _('Actions') )
+		self.showPage(self.iActionsPage)
 		self.refreshAll()
 	
 	@logCall
@@ -2693,7 +2691,7 @@ class MainWin( wx.Frame ):
 			return
 
 		self.closeFindDialog()
-		self.showPageName( _('Actions') )
+		self.showPage(self.iActionsPage)
 		race.resetAllCaches()
 		ResetExcelLinkCache()
 		self.writeRace()
@@ -2781,19 +2779,20 @@ class MainWin( wx.Frame ):
 		self.setActiveCategories()
 		self.setNumSelect( None )
 		self.writeRace()
-		self.showPageName( _('Actions') )
+		self.showPage(self.iActionsPage)
 		self.refreshAll()
 
 	@logCall
 	def openRaceDBExcel( self, fname, overwriteExisting=True ):
 		race = Model.race
-		self.showPageName( _('Actions') )
+		self.showPage(self.iActionsPage)
 		self.closeFindDialog()
 		
 		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
 		
 		geoTrack, geoTrackFName = None, None
 		if race:
+			self.commit()
 			race.resetAllCaches()
 			ResetExcelLinkCache()
 			self.writeRace()
@@ -2927,7 +2926,7 @@ class MainWin( wx.Frame ):
 	def openRace( self, fileName ):
 		if not fileName:
 			return
-		self.showPageName( _('Results') )
+		self.showResultsPage()
 		self.refresh()
 		Model.resetCache()
 		ResetExcelLinkCache()
@@ -2960,7 +2959,7 @@ class MainWin( wx.Frame ):
 			
 			self.setNumSelect( None )
 			self.record.setTimeTrialInput( race.isTimeTrial )
-			self.showPageName( _('Results') if isFinished else _('Actions'))
+			self.showPage( self.iResultsPage if isFinished else self.iActionsPage )
 			self.refreshAll()
 			Utils.writeLog( u'{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
 			Utils.writeLog( u'call: openRace: "{}"'.format(fileName) )
@@ -3052,7 +3051,7 @@ class MainWin( wx.Frame ):
 				return
 			race.finishRaceNow()
 			self.writeRace()
-			
+		
 		path, fnameCur = os.path.split( self.fileName )
 		prefix, suffix = os.path.splitext( race.getFileName(raceNum=race.raceNum+1, includeMemo=False) )
 
@@ -3166,7 +3165,7 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, u'{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
 			return
 
-		self.showPageName( _('Results') )	# Switch to a read-only view and force a commit.
+		self.showResultsPage()	# Switch to a read-only view and force a commit.
 		self.updateLapCounter()
 		self.closeFindDialog()
 		self.refresh()
@@ -3269,7 +3268,7 @@ class MainWin( wx.Frame ):
 			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 
 		# Start the simulation.
-		self.showPageName( _('Record') if isTimeTrial else _('Chart') )
+		self.showPage( self.iRecordPage if isTimeTrial else self.iChartPage )
 		self.record.setTimeTrialInput( race.isTimeTrial )
 
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
@@ -3355,7 +3354,6 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuImportCategories( self, event ):
-		self.commit()
 		if not Model.race:
 			Utils.MessageOK( self, _("A race must be loaded first."), _("Import Categories"), iconMask=wx.ICON_ERROR)
 			return
@@ -3366,6 +3364,7 @@ class MainWin( wx.Frame ):
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
 							style=wx.FD_OPEN )
 		if dlg.ShowModal() == wx.ID_OK:
+			self.showResultsPage()
 			categoriesFile = dlg.GetPath()
 			try:
 				with io.open(categoriesFile, 'r') as fp, Model.LockRace() as race:
@@ -3376,6 +3375,7 @@ class MainWin( wx.Frame ):
 				Utils.MessageOK( self, u"{}:\n\n{}".format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
 			else:
 				self.refresh()
+			self.showPage( self.iCategoriesPage )
 				
 		dlg.Destroy()
 	
@@ -3409,7 +3409,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
-		self.showPageName( _('Passings') )
+		self.showPage( self.iPassingsPage )
 		self.history.setCategoryAll()
 		self.history.refresh()
 		
@@ -3449,7 +3449,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
-		self.showPageName( _('Results') )
+		self.showResultsPage()
 		
 		xlFName = self.getFormatFilename( 'usacexcel' )
 		
@@ -3474,7 +3474,7 @@ class MainWin( wx.Frame ):
 		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
 			return
 
-		self.showPageName( _('Results') )
+		self.showPage( self.iResultsPage )
 		
 		xlFName = self.getFormatFilename( 'vttaexcel' )
 
@@ -3599,13 +3599,13 @@ class MainWin( wx.Frame ):
 							_('Please fill in these fields in Properties.'),
 						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
 			ChangeProperties( self )
-			self.showPageName( _('Properties') )
+			self.showPage( self.iPropertiesPage )
 			return
 			
 		if not self.resultsCheck():
 			return
 			
-		self.showPageName( _('Results') )
+		self.showResultsPage()
 		
 		fname = os.path.splitext(self.fileName)[0] + '-{}.csv'.format(destination)
 		
@@ -3648,7 +3648,7 @@ class MainWin( wx.Frame ):
 		if not silent and not self.resultsCheck():
 			return
 			
-		self.showPageName( _('Results') )
+		self.showResultsPage()
 		
 		fname = self.getFormatFilename( 'webscorertxt' )
 		
@@ -3793,22 +3793,12 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 	def isShowingPage( self, page ):
 		return page == self.pages[self.notebook.GetSelection()]
 	
-	def showRiderDetail( self, num = None ):
-		self.riderDetail.setRider( num )
-		for i, p in enumerate(self.pages):
-			if p == self.riderDetail:
-				self.showPage( i )
-				break
-
-	def setRiderDetail( self, num = None ):
-		self.riderDetail.setRider( num )
-
 	def showPage( self, iPage ):
 		self.callPageCommit( self.notebook.GetSelection() )
 		self.callPageRefresh( iPage )
 		self.notebook.SetSelection( iPage )
 		self.pages[self.notebook.GetSelection()].Layout()
-
+		
 	def showPageName( self, name ):
 		name = name.replace(' ', '')
 		for i, (a, c, n) in enumerate(self.attrClassName):
@@ -3816,12 +3806,21 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				self.showPage( i )
 				break
 
+	def showRiderDetail( self, num = None ):
+		self.riderDetail.setRider( num )
+		self.showPage( self.iRiderDetaiPage )
+
+	def setRiderDetail( self, num = None ):
+		self.riderDetail.setRider( num )
+
+	def showResultsPage( self ):
+		self.showPage( self.iResultsPage )
+
 	def callPageRefresh( self, i ):
 		try:
 			page = self.pages[i]
 		except IndexError:
 			return
-		
 		try:
 			page.refresh()
 		except AttributeError:

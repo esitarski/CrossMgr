@@ -104,7 +104,7 @@ class Search( wx.Panel ):
 			mainWin.riderDetail.commit()
 		self.doNumSelect( event )
 		if self.numSelect is not None and mainWin:
-			mainWin.showPageName( _('RiderDetail') )
+			mainWin.showPage( mainWin.iRiderDetailPage )
 	
 	def getCellNum( self, row, col ):
 		numSelect = None

@@ -92,13 +92,15 @@ class Pulled( wx.Panel ):
 		self.categoryLabel = wx.StaticText( self, label=_('Category:') )
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
+		self.useTableToPullRidersCkBox = wx.CheckBox( self, label=_('Use this Table to Pull Riders') )
 		self.commitBtn = wx.Button( self, label=_('Commit') )
 		self.commitBtn.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.hbs.Add( self.showingCategoryLabel, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=0 )
 		self.hbs.Add( self.showingCategory, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=2 )
 		self.hbs.Add( self.categoryLabel, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=18 )
 		self.hbs.Add( self.categoryChoice, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=2 )
-		self.hbs.Add( self.commitBtn, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=64 )
+		self.hbs.Add( self.useTableToPullRidersCkBox, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=18 )
+		self.hbs.Add( self.commitBtn, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=32 )
 		
 		#---------------------------------------------------------------
 		self.colNameFields = (
@@ -322,6 +324,15 @@ class Pulled( wx.Panel ):
 	def commit( self ):
 		self.grid.SaveEditControlValue()	# Make sure the current edit is committed.
 		self.grid.DisableCellEditControl()
+		
+		race = Model.race
+		if not race:
+			return
+		race.useTableToPullRiders = self.useTableToPullRidersCkBox.GetValue()
+		if not race.useTableToPullRiders:
+			self.grid.ClearGrid()
+			Utils.AdjustGridSize( self.grid, 20 )
+			return
 		
 		rows = [self.getRow(r) for r in range(self.grid.GetNumberRows())]
 		rows = [rv for rv in rows if rv['pulledBib']]

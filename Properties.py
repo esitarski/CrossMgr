@@ -1585,7 +1585,7 @@ class Properties( wx.Panel ):
 			wx.CallAfter( mainWin.writeRace, False )
 		wx.CallAfter( Utils.refreshForecastHistory )
 		if not success and mainWin:
-			wx.CallAfter( mainWin.showPageName, _("Properties") )
+			wx.CallAfter( mainWin.showPage, mainWin.iPropertiesPage )
 		
 class PropertiesDialog( wx.Dialog ):
 	def __init__(

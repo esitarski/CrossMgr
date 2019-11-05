@@ -438,8 +438,9 @@ class Results( wx.Panel ):
 		self.swapEntries( int(self.numSelect), self.numAfter )
 	
 	def OnPopupHistory( self, event ):
-		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( _('Passings') )
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.showPageName( mainWin.iPassingsPage )
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )

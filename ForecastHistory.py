@@ -233,7 +233,7 @@ class ForecastHistory( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if mainWin:
 			mainWin.setNumSelect( numSelect )
-			mainWin.showPageName( _('RiderDetail') )
+			mainWin.showPage( mainWin.iRiderDetailPage )
 	
 	def doHistoryPopup( self, event ):
 		r = event.GetRow()
@@ -309,7 +309,7 @@ class ForecastHistory( wx.Panel ):
 		except:
 			pass
 	
-	def SelectNumShowPage( self, num, pageName ):
+	def SelectNumShowPage( self, num, iPageAttr ):
 		race = Model.race
 		mainWin = Utils.getMainWin()
 		if not race or not mainWin or not num:
@@ -320,7 +320,7 @@ class ForecastHistory( wx.Panel ):
 		# If this page supports a category, make sure we show it too.
 		category = None
 		CatComponent = Model.Category.CatComponent
-		if pageName != _('Passings'):
+		if iPageAttr != 'iPassingsPage':
 			# Check Component categories first.
 			for c in race.getCategories( startWaveOnly=False ):
 				if c.catType == CatComponent and race.inCategory(num, c):
@@ -334,27 +334,26 @@ class ForecastHistory( wx.Panel ):
 						break
 
 		# Set the category of the num.
-		for a, cls, name in mainWin.attrClassName:
-			if name == pageName:
-				try:
-					getattr(mainWin, a).setCategory( category )
-				except AttributeError:
-					pass
-				break
+		iPage = getattr(mainWin, iPageAttr, 0)
+		a = mainWin.attrClassName[iPage][0]
+		try:
+			getattr(mainWin, a).setCategory( category )
+		except AttributeError:
+			pass
 		
-		mainWin.showPageName( pageName )
+		mainWin.showPage( iPage )
 		
 	def OnPopupHistoryRiderDetail( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('RiderDetail') )
+		self.SelectNumShowPage( self.entryCur.num, 'iRiderDetailPage' )
 	
 	def OnPopupHistoryResults( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('Results') )
+		self.SelectNumShowPage( self.entryCur.num, 'iResultsPage' )
 	
 	def OnPopupHistoryPassings( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('Passings') )
+		self.SelectNumShowPage( self.entryCur.num, 'iPassingsPage' )
 				
 	def OnPopupHistoryChart( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('Chart') )
+		self.SelectNumShowPage( self.entryCur.num, 'iChartPage' )
 				
 	#--------------------------------------------------------------------
 	
@@ -433,16 +432,16 @@ class ForecastHistory( wx.Panel ):
 			pass
 
 	def OnPopupExpectedRiderDetail( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('RiderDetail') )
+		self.SelectNumShowPage( self.entryCur.num, 'iRiderDetailPage' )
 	
 	def OnPopupExpectedResults( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('Results') )
+		self.SelectNumShowPage( self.entryCur.num, 'iResultsPage' )
 	
 	def OnPopupExpectedPassings( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('Passings') )
+		self.SelectNumShowPage( self.entryCur.num, 'iPassingsPage' )
 				
 	def OnPopupExpectedChart( self, event ):
-		self.SelectNumShowPage( self.entryCur.num, _('Chart') )
+		self.SelectNumShowPage( self.entryCur.num, 'iChartPage' )
 				
 	#--------------------------------------------------------------------
 	

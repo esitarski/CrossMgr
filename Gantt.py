@@ -494,7 +494,7 @@ class Gantt( wx.Panel ):
 		
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( _('Results') )
+			Utils.getMainWin().showResultsPage()
 			
 	def OnPopupRiderDetail( self, event ):
 		from RiderDetail import ShowRiderDetailDialog

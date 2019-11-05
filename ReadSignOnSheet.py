@@ -410,7 +410,8 @@ class SummaryPage(adv.WizardPageSimple):
 		self.Layout()
 		
 		if hasPropertiesSheet and Utils.getMainWin():
-			wx.CallAfter( Utils.getMainWin().showPageName, _('Properties') )
+			mainWin = Utils.getMainWin()
+			wx.CallAfter( mainWin.showPage, mainWin.iPropertiesPage )
 	
 class GetExcelLink( object ):
 	def __init__( self, parent, excelLink = None ):

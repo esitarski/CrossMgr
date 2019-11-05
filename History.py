@@ -304,7 +304,7 @@ class History( wx.Panel ):
 		
 	def OnPopupResults( self, event ):
 		if Utils.isMainWin():
-			Utils.getMainWin().showPageName( _('Results') )
+			Utils.getMainWin().showResultsPage()
 			
 	def OnPopupRiderDetail( self, event ):
 		ShowRiderDetailDialog( self, self.numSelect )
