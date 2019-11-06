@@ -93,6 +93,7 @@ class Pulled( wx.Panel ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		self.useTableToPullRidersCkBox = wx.CheckBox( self, label=_('Use this Table to Pull Riders') )
+		self.useTableToPullRidersCkBox.SetToolTip( wx.ToolTip(_('Also requires Laps to be set in Categories screen.')) )
 		self.commitBtn = wx.Button( self, label=_('Commit') )
 		self.commitBtn.Bind( wx.EVT_BUTTON, self.doCommit )
 		self.hbs.Add( self.showingCategoryLabel, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=0 )

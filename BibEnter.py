@@ -23,7 +23,7 @@ class BibEnter( wx.Dialog ):
 		nes.Add( self.numEditLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
 		nes.Add( self.numEdit, 1, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT|wx.EXPAND, border=4 )
 		
-		hbs = wx.GridSizer( 4 , 2, 2)
+		hbs = wx.GridSizer( 4, 2, 2 )
 		for i, (label, actionFn) in enumerate( ((_('DN&F'),DoDNF), (_('DN&S'),DoDNS), (_('&Pull'),DoPull), (_('D&Q'),DoDQ)) ):
 			btn = wx.Button( self, label=label, style=wx.BU_EXACTFIT )
 			btn.SetFont( font )

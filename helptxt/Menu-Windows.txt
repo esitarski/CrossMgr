@@ -3,6 +3,13 @@
 
 # Windows
 
+## Bib Enter...
+Shows the __Bib Enter__ dialog.  This small dialog allows you to manually enter bib numbers, similar to the [Record][] screen.
+
+Use the __Bib Enter__ dialog when you wish to keep up another screen while doing manual bib entry.  For example, if you are working with an official, you may wish to show the [Passings][] screen at all times so you can check entered numbers.  Or, you watch the [Chart][] screen and correct missing splits.
+
+You can move the __Bib Enter__ dialog to the most convenient part of the screen.
+
 ## Windows
 Opens/Closes screens in a separate window.  This is especially useful if you are using multiple screens and wish to show additional CrossMgr information while entering data in the main screen, or you wish to display the [LapCounter][] on another screen to show the riders.
 
@@ -10,7 +17,7 @@ Choose the screen you wish to open in a separate window.  Drag it/resize it as n
 
 For example, you can show the Animation while doing data entry.  Or Results.  Or the Chart.  Or the Situation screen.  Or the Lap Counter.  Any, or all of the above.  Your choice.
 
-The separate screens have identical display and edit capabilities as the regular screens.
+The separate screens have identical capabilities as the regular screens.
 
 ## Unmatched RFID Tags
 This window shows unmatched RFID tags in a Chart.

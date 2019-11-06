@@ -31,7 +31,7 @@ enterCodes = {
 	wx.WXK_NUMPAD_TAB,
 }
 # backspace, delete, comma, return, digits
-validKeyCodes = set( [8, 127, 44, 13] + [x for x in range(48, 48+10)] )
+validKeyCodes = set( [8, 127, 44, 13] + list(range(48, 48+10)) )
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
