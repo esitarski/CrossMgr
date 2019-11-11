@@ -1678,7 +1678,7 @@ class MainWin( wx.Frame ):
 		if not Model.race:
 			Utils.MessageOK(self, _("You must have a valid race."), _("Link ExcelSheet"), iconMask=wx.ICON_ERROR)
 			return
-		self.showResultsPageName()
+		self.showResultsPage()
 		self.closeFindDialog()
 		ResetExcelLinkCache()
 		gel = GetExcelLink( self, getattr(Model.race, 'excelLink', None) )
