@@ -19,13 +19,11 @@ import json
 import glob
 import shutil
 import random
-import bisect
 import datetime
 import operator
 import webbrowser
 import platform
 import zipfile
-import base64
 import hashlib
 from six.moves.urllib.parse import quote
 from collections import defaultdict
@@ -42,7 +40,6 @@ import six.moves.cPickle as pickle
 from argparse import ArgumentParser
 import xlwt
 import xlsxwriter
-from setpriority import setpriority
 
 import Utils
 
@@ -150,7 +147,7 @@ def ShowSplashScreen():
 	dc.SelectObject( wx.NullBitmap )
 	
 	showSeconds = 2.5
-	frame = adv.SplashScreen(bitmap, adv.SPLASH_CENTRE_ON_SCREEN|adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	adv.SplashScreen(bitmap, adv.SPLASH_CENTRE_ON_SCREEN|adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 			
 #----------------------------------------------------------------------------------
 
@@ -3673,7 +3670,7 @@ class MainWin( wx.Frame ):
 		try:
 			attr, name, menuItem, dialog = self.menuIdToWindowInfo[menuId]
 		except KeyError:
-			returnm
+			return
 		menuItem.Check( False )
 	
 	@logCall
