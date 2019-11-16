@@ -2,7 +2,6 @@ import Utils
 import Model
 import wx
 import re
-import six
 from GetResults import GetResults
 from math import modf
 from ForecastHistory import getExpectedRecorded

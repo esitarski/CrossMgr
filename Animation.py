@@ -4,7 +4,6 @@ import random
 import math
 import bisect
 import datetime
-import random
 import Utils
 
 shapes = [ [(math.cos(a), -math.sin(a)) \
