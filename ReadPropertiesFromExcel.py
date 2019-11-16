@@ -101,7 +101,7 @@ def ReadPropertiesFromExcel( reader ):
 					Utils.logException( e, sys.exc_info() )
 					continue
 			
-			if v is not u'' and v is not None:
+			if v != u'' and v is not None:
 				setattr( race, a, v )
 		
 		return True

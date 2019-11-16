@@ -15,7 +15,6 @@ import socket
 import datetime
 import traceback
 import threading
-from collections import defaultdict
 from six.moves.queue import Queue, Empty
 try:
     # Python 2.x
@@ -45,14 +44,14 @@ now = datetime.datetime.now
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
 futureDate = datetime.datetime( now().year+20, 1, 1 )
 
-with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
+with open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 	favicon = f.read()
 
 def readBase64( fname ):
-	with io.open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
+	with open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
 		return "data:image/png;base64," + base64.b64encode( f.read() ).decode('ascii')
 
-with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' ) as f:
+with open( os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), 'rb' ) as f:
 	DefaultLogoSrc = readBase64('CrossMgrHeader.png')
 
 icons = {
@@ -65,7 +64,7 @@ icons = {
 	'AnnouncerIconSrc': readBase64('announcer.png'),
 }
 
-with io.open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf-8') as f:
+with open(os.path.join(Utils.getHtmlFolder(), 'Index.html')) as f:
 	indexTemplate = Template( f.read() )
 
 PORT_NUMBER = 8765
@@ -97,12 +96,12 @@ def getCurrentTTCountdownHtml():
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
 
-with io.open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html')) as f:
+with open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html')) as f:
 	lapCounterTemplate = f.read().encode()
 def getLapCounterHtml():
 	return lapCounterTemplate
 	
-with io.open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html')) as f:
+with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html')) as f:
 	announcerHTML = f.read().encode()
 def getAnnouncerHtml():
 	return announcerHTML
@@ -178,7 +177,7 @@ class ContentBuffer( object ):
 			
 		cache['status'] = self.Changed
 		try:
-			with io.open(fnameFull, encoding='utf-8') as f:
+			with open(fnameFull) as f:
 				content = f.read()
 		except Exception as e:
 			cache['status'] = self.ReadError
@@ -371,14 +370,14 @@ def getIndexPage( share=True ):
 def WriteHtmlIndexPage():
 	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
 	try:
-		with io.open(fname, 'rb') as f:	# Read as bytes as the index pages is already utf-8 encoded.
+		with open(fname, 'rb') as f:	# Read as bytes as the index pages is already utf-8 encoded.
 			previousContent = f.read()
 	except Exception as e:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
 	if content != previousContent:
-		with io.open(fname, 'wb') as f:	# Write as bytes as the index pages is already utf-8 encoded.
+		with open(fname, 'wb') as f:	# Write as bytes as the index pages is already utf-8 encoded.
 			f.write( getIndexPage(share=False) )
 	return fname
 

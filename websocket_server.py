@@ -236,7 +236,7 @@ class WebSocketHandler(StreamRequestHandler):
 	def read_next_message(self):
 		try:
 			b1, b2 = self.read_bytes(2)
-		except ValueError as e:
+		except ValueError:
 			b1, b2 = 0, 0
 
 		fin    = b1 & FIN

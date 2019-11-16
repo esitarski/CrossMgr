@@ -1,11 +1,5 @@
-import os
-import io
 import six
 import json
-import getpass
-import socket
-import datetime
-import Version
 import Utils
 import Model
 from GeoAnimation import GpsPoint, GeoTrack

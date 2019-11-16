@@ -2,7 +2,6 @@
 import os
 import io
 import sys
-import six
 import shutil
 import zipfile
 import datetime
@@ -118,7 +117,7 @@ def make_inno_version():
 		'VersionInfoVersion':	AppVerName.split()[1],
 	}
 	with io.open('inno_setup.txt', 'w', encoding='utf-8') as f:
-		for k, v in six.iteritems(setup):
+		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
 

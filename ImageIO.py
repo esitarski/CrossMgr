@@ -1,6 +1,5 @@
 import os
 import wx
-import six
 import Utils
 import base64
 

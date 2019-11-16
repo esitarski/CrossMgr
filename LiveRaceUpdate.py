@@ -99,7 +99,7 @@ class SynchronizedRaceData:
 	def onMessage( self, ws, btext ):
 		try:
 			message = json.loads( btext )
-		except Exception as e:
+		except Exception:
 			return
 		if 'cmd' not in message:
 			return

@@ -64,7 +64,7 @@ class Clock(wx.Control):
 				if self.timer.IsRunning():
 					self.timer.Stop()
 				self.timer.Start( 1001 - now().microsecond//1000, True )			
-		except Exception as e:
+		except Exception:
 			pass
 	
 	def Start( self ):

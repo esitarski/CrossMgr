@@ -1,7 +1,5 @@
-import six
 import operator
 import Utils
-import ReadSignOnSheet
 import Model
 
 def PrologMatchingCategory():

@@ -1,6 +1,4 @@
-import six
 import xlwt
-import math
 import Model
 import Utils
 import datetime
@@ -102,7 +100,7 @@ def USACExport( workbook, sheet ):
 				if hasDistance:
 					sheetFit.write( row, lenUSACFields  , 'Race Distance', titleStyle, bold=True )
 					sheetFit.write( row, lenUSACFields+1, 'Race Distance Type', titleStyle, bold=True )
-				for i in six.moves.range(maxLaps):
+				for i in range(maxLaps):
 					sheetFit.write( row, lapTimeStartCol + i, 'Rider Lap {}'.format(i + 1), titleStyle, bold=True )
 				row += 1
 			

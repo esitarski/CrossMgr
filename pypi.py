@@ -3,8 +3,6 @@
 import shutil
 import os
 import io
-import sys
-import six
 import stat
 import glob
 import datetime
@@ -14,7 +12,7 @@ from Version import AppVerName
 pypiDir = 'pypi'
 version = AppVerName.split(' ')[1]
 
-six.print_( 'version=', version )
+print( 'version=', version )
 
 def removeTabs( buf, tabStop = 4 ):
 	# Remove tabs from Python code and preserve formatting.
@@ -33,7 +31,7 @@ def removeTabs( buf, tabStop = 4 ):
 	return '\n'.join( lines ) + '\n'
 
 def writeToFile( s, fname ):
-	six.print_( 'creating', fname, '...' )
+	print( 'creating', fname, '...' )
 	with io.open(os.path.join(pypiDir,fname), 'w', encoding='utf-8') as f:
 		f.write( s )
 
@@ -49,7 +47,7 @@ BuildHelpIndex()
 
 #------------------------------------------------------
 # Create a release area for pypi
-six.print_( 'Clearing previous contents...' )
+print( 'Clearing previous contents...' )
 try:
 	subprocess.call( ['rm', '-rf', pypiDir] )
 except:
@@ -142,21 +140,21 @@ def get_dir_suffixes( data_dirs ):
 	return sorted(dir_suffixes)
 
 for dir in data_dirs:
-	six.print_( 'copying', dir, 'to', os.path.join(pypiDir,'CrossMgr',dir) )
+	print( 'copying', dir, 'to', os.path.join(pypiDir,'CrossMgr',dir) )
 	shutil.copytree( dir, os.path.join(pypiDir,'CrossMgr',dir) )
 
-six.print_( 'Copying doc files to doc directory.' )
+print( 'Copying doc files to doc directory.' )
 docDir = os.path.join( pypiDir, 'CrossMgr','CrossMgrDoc' )
 os.mkdir( docDir )
 for f in ['MacInstallReadme.txt', 'LinuxInstallReadme.txt', 'CrossMgrTutorial.doc']:
 	shutil.copy( f, os.path.join(docDir, f) )
 
-six.print_( 'Copy the src files and add the copyright notice.' )
+print( 'Copy the src files and add the copyright notice.' )
 license = license.replace( '\n', '\n# ' )
 for fname in glob.glob( '*.*' ):
 	if not (fname.endswith('.py') or fname.endswith('.pyw')):
 		continue
-	six.print_( '   ', fname, '...' )
+	print( '   ', fname, '...' )
 	with open(fname, 'r', encoding='utf-8') as f:
 		contents = f.read()
 	if contents.startswith('import'):
@@ -180,7 +178,7 @@ for fname in glob.glob( '*.*' ):
 	with io.open(os.path.join(srcDir, fname), 'w') as f:
 		f.write( contents )
 
-six.print_( 'Adding script to bin dir..' )
+print( 'Adding script to bin dir..' )
 binDir = os.path.join( pypiDir, 'bin' )
 os.mkdir( binDir )
 exeName = os.path.join(binDir,'CrossMgrRun')
@@ -191,7 +189,7 @@ shutil.copy( os.path.join(srcDir,'CrossMgr.pyw'), exeName+'.pyw' )
 os.chmod( exeName, os.stat(exeName)[0] | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH )
 os.chmod( exeName, os.stat(exeName+'.pyw')[0] | stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH )
 
-six.print_( 'Creating setup.py...' )
+print( 'Creating setup.py...' )
 setup = {
 	'name':			'CrossMgr',
 	'version':		version,
@@ -224,12 +222,12 @@ setup = {
 with open(os.path.join(pypiDir,'setup.py'), 'w') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
-	for key, value in six.iteritems(setup):
+	for key, value in setup.items():
 		f.write( '    {}={},\n'.format(key, repr(value)) )
 	f.write( "    long_description=open('README.txt').read(),\n" )
 	f.write( ')\n' )
 
-six.print_( 'Creating install package...' )
+print( 'Creating install package...' )
 os.chdir( pypiDir )
 subprocess.call( ['python', 'setup.py', 'sdist'] )
 
@@ -242,19 +240,19 @@ except:
     
 	shutil.move( 'CrossMgr-{}.tar.gz'.format(version), pipName )
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
-	six.print_()
-	six.print_( '********************' )
-	six.print_( installDir )
-	six.print_( '********************' )
-	six.print_( '\n'.join( os.listdir(installDir) ) )
+	print()
+	print( '********************' )
+	print( installDir )
+	print( '********************' )
+	print( '\n'.join( os.listdir(installDir) ) )
 	
 	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'All Platforms', 'CrossMgr')
 	shutil.copyfile( pipName, os.path.join( installDir, pipName) )
 	shutil.copyfile( '../../LinuxInstallReadme.txt', os.path.join(installDir, 'LinuxInstallReadme.txt') )
-	six.print_()
-	six.print_( '********************' )
-	six.print_( installDir )
-	six.print_( '********************' )
-	six.print_( '\n'.join( os.listdir(installDir) ) )
+	print()
+	print( '********************' )
+	print( installDir )
+	print( '********************' )
+	print( '\n'.join( os.listdir(installDir) ) )
 	
-six.print_( 'Done.' )
+print( 'Done.' )

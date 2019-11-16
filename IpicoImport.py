@@ -1,10 +1,8 @@
 import wx
-import six
-import math
+import datetime
 import Utils
 import Model
 from ChipImport import ChipImportDialog
-import datetime
 
 def parseTagTime( line, lineNo, errors ):
 	line = line.strip()
@@ -59,8 +57,8 @@ if __name__ == '__main__':
 	for fname in ['Ipico/FS_LS.rtf']:
 		with open(fname) as f:
 			for i, line in enumerate(f):
-				six.print_( parseTagTime( line, i, errors ) )
-			six.print_( errors )
+				print( parseTagTime( line, i, errors ) )
+			print( errors )
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

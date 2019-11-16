@@ -7,6 +7,8 @@ for f in sorted(glob.glob('*.py')):
 		ret = p.stdout.read().decode()
 		for line in ret.split('\r\n'):
 			line = line.strip()
+			if not line:
+				continue
 			if "undefined name '_'" in line:
 				continue
 				

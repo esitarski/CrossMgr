@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from __future__ import print_function
-
 import biplist
-import os.path
-import os.path, sys
+import os, sys
 
 sys.path.append(os.path.dirname('.'))
 from Version import AppVerName

@@ -4,10 +4,6 @@
 #
 # Copyright (C) Edward Sitarski, 2012.
 import re
-import io
-import os
-import six
-import sys
 import time
 import math
 import socket
@@ -299,7 +295,7 @@ for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
 	ws.cell( row = 0, column = col ).value = label
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
-for r, (n, t) in enumerate(six.iteritems(tag)):
+for r, (n, t) in enumerate(tag.items()):
 	if t in ('1', '2'):
 		continue
 	
@@ -313,7 +309,7 @@ wb = None
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with io.open('UltraTest.csv', 'w', encoding='utf-8') as f:
+with open('UltraTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '%d,%s\n' % (n, tag[n]) )
@@ -354,7 +350,7 @@ for n in nums:
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = lambda x: (x[1], x[2]) )	# Sort by lap, then race time.
 
-six.print_( 'len(numLapTimes)=', len(numLapTimes) )
+print( 'len(numLapTimes)=', len(numLapTimes) )
 
 dBase = now()
 dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
@@ -383,10 +379,10 @@ while 1:
 	clientsocket.settimeout( 2 )
 	
 	def sendResponse( response ):
-		six.print_( response )
+		print( response )
 		clientsocket.sendall( bytes(response + EOL) )
 	
-	six.print_( 'Connection from:', address )
+	print( 'Connection from:', address )
 
 	active = False
 	lastVoltage = now()
@@ -406,13 +402,13 @@ while 1:
 				sendResponse( 'V=25.0000' )
 				lastVoltage = now()
 			continue
-		except Exception as e:
+		except Exception:
 			break
 		
 		if not message:
 			break
 			
-		six.print_( 'message:', message )
+		print( 'message:', message )
 		
 		if message.startswith('t'):
 			hh, mm, ss, day, month, year = [int(f) for f in re.split( '[^0-9]', message.split(' ', 1)[1] ) ]
@@ -426,5 +422,5 @@ while 1:
 			active = False
 		
 		else:
-			six.print_( 'unknown:', message )
+			print( 'unknown:', message )
 

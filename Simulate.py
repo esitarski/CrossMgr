@@ -1,4 +1,3 @@
-import six
 import random
 import pyExcelerator as pyXL
 

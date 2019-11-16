@@ -1,5 +1,4 @@
 import re
-import six
 import math
 
 tokNum = 'n'
@@ -116,7 +115,6 @@ class TimeEval( object ):
 			op = self.tok
 			self.skip()
 			lineSave, colSave, iStrSave = self.line, self.col, self.iStr
-			tokSave = self
 			right = self.factor()
 			if op == '*':
 				x *= right
@@ -196,15 +194,15 @@ def testEval( ss  ):
 	re = TimeEval()
 	try:
 		x = formatTime( re.eval(ss) )
-		six.print_(  ss, '=', x )
+		print(  ss, '=', x )
 	except TimeEvalEmptyExpressionError:
-		six.print_(  'empty expression' )
+		print(  'empty expression' )
 	except (TimeEvalSyntaxError, TimeEvalDivideByZeroError) as e:
-		six.print_(  ss )
-		six.print_(  ' ' * e.i + '^' )
-		six.print_(  ' ' * e.i + '|' )
-		six.print_(  ' ' * e.i + '+---' + e.error )
-	six.print_( '--------------------------------------------------------------------' )
+		print(  ss )
+		print(  ' ' * e.i + '^' )
+		print(  ' ' * e.i + '|' )
+		print(  ' ' * e.i + '+---' + e.error )
+	print( '--------------------------------------------------------------------' )
 
 if __name__ == '__main__':
 	testEval( '' )

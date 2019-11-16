@@ -1,5 +1,4 @@
 import wx
-import math
 import Utils
 
 if 'WXMAC' not in wx.Platform:

@@ -1,5 +1,4 @@
 import re
-import math
 import xlwt
 import Model
 import Utils
@@ -59,7 +58,7 @@ def UCIExport( sheet, cat ):
 	for rr in results:
 		try:
 			finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
-		except Exception as e:
+		except Exception:
 			finishTime = ''
 			
 		gap = getattr(rr, 'gap', '')

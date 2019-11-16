@@ -3,17 +3,13 @@
 # JChipClient.py: JChip simulator program for testing JChip interface and CrossMgr.
 #
 # Copyright (C) Edward Sitarski, 2012.
-import re
 import os
-import sys
-import six
 import time
 import xlwt
 import socket
 import random
 import operator
 import datetime
-import subprocess
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port and socket.
@@ -29,7 +25,7 @@ NumberOfStarters = 50
 #------------------------------------------------------------------------------	
 # Create some random rider numbers.
 random.seed( 10101010 )
-nums = [n for n in six.moves.range(1,799+1)]
+nums = [n for n in range(1,799+1)]
 random.shuffle( nums )
 nums = nums[:NumberOfStarters]
 
@@ -273,13 +269,13 @@ Spin Doctors
 	firstNames = [line.split('.')[1].strip() for line in firstNames.split('\n') if line.strip()]
 	lastNames = [line.split('.')[1].strip() for line in lastNames.split('\n') if line.strip()]
 	teams = [line.strip() for line in teams.split('\n') if line.strip()]
-	bibs = [n for n in six.moves.range(1,1+starters)]
+	bibs = [n for n in range(1,1+starters)]
 	
 	random.shuffle( firstNames )
 	random.shuffle( lastNames )
 	random.shuffle( teams )
 	
-	for i in six.moves.range(starters):
+	for i in range(starters):
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i%len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
@@ -291,7 +287,7 @@ for col, label in enumerate(u'Bib#,LastName,FirstName,Team,Tag,StartTime'.split(
 	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
-for r, (n, t) in enumerate(six.iteritems(tag)):
+for r, (n, t) in enumerate(tag.items()):
 	if t in ('1', '2'):
 		continue
 	
@@ -338,7 +334,7 @@ var = mean / varFactor				# Variance between riders.
 lapMax = 61
 for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
-	for lap in six.moves.range(0, lapMax+1):
+	for lap in range(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time.
 
@@ -350,30 +346,30 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Connect to the CrossMgr server.
 iMessage = 1
 while 1:
-	six.print_( u'Trying to connect to server...' )
+	print( u'Trying to connect to server...' )
 	while 1:
 		try:
 			sock.connect((DEFAULT_HOST, DEFAULT_PORT))
 			break
 		except:
-			six.print_( u'Connection failed.  Waiting 5 seconds...' )
+			print( u'Connection failed.  Waiting 5 seconds...' )
 			time.sleep( 5 )
 
 	#------------------------------------------------------------------------------	
-	six.print_( u'Connection succeeded!' )
+	print( u'Connection succeeded!' )
 	name = u'{}-{}'.format(socket.gethostname(), os.getpid())
-	six.print_( u'Sending name...', name )
+	print( u'Sending name...', name )
 	message = u"N0000{}{}".format(name, CR)
 	sock.send( message.encode() )
 
 	#------------------------------------------------------------------------------	
-	six.print_( u'Waiting for get time command...' )
+	print( u'Waiting for get time command...' )
 	while 1:
 		received = sock.recv(1).decode()
 		if received == u'G':
 			while received[-1] != CR:
 				received += sock.recv(1).decode()
-			six.print_( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
+			print( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
 			break
 
 	#------------------------------------------------------------------------------	
@@ -381,27 +377,27 @@ while 1:
 	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
 
 	#------------------------------------------------------------------------------	
-	six.print_( u'Send gettime data...' )
+	print( u'Send gettime data...' )
 	# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
 	message = u'GT0%02d%02d%02d%02d%s%s' % (
 		dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 100.0),
 		u' date={}'.format( dBase.strftime('%Y%m%d') ) if sendDate else u'',
 		CR)
-	six.print_( message[:-1] )
-	sock.send( message if six.PY2 else message.encode() )
+	print( message[:-1] )
+	sock.send( message.encode() )
 
 	#------------------------------------------------------------------------------	
-	six.print_( u'Waiting for send command from CrossMgr...' )
+	print( u'Waiting for send command from CrossMgr...' )
 	while 1:
 		received = sock.recv(1).decode()
 		if received == u'S':
 			while received[-1] != CR:
 				received += sock.recv(1).decode()
-			six.print_( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
+			print( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
 			break
 
 	#------------------------------------------------------------------------------	
-	six.print_( u'Start sending data...' )
+	print( u'Start sending data...' )
 
 	while iMessage < len(numLapTimes):
 		n, lap, t = numLapTimes[iMessage]
@@ -411,12 +407,12 @@ while 1:
 		
 		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t - 0.5) )
 		if iMessage & 15 == 0:
-			six.print_( u'sending: {}: {}\n'.format(iMessage, message[:-1]) )
+			print( u'sending: {}: {}\n'.format(iMessage, message[:-1]) )
 		try:
 			sock.send( message.encode() )
 			iMessage += 1
 		except:
-			six.print_( u'Disconnected.  Attempting to reconnect...' )
+			print( u'Disconnected.  Attempting to reconnect...' )
 			break
 		
 		

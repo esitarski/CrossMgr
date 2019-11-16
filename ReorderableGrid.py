@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import wx.grid as gridlib
 import wx.lib.mixins.gridlabelrenderer as glr
 import wx.lib.mixins.grid as gae

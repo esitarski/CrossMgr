@@ -1,5 +1,3 @@
-import os
-import six
 import datetime
 import xml.etree.ElementTree as ET
 import Utils
@@ -7,7 +5,6 @@ from GetResults import GetResults
 from ReadSignOnSheet	import ReportFields
 import Model
 import Version
-from collections import OrderedDict
 
 def getRaceAttr( race ):
 	try:
@@ -16,7 +13,7 @@ def getRaceAttr( race ):
 	except AttributeError:
 		infoFields = []
 	
-	return OrderedDict([
+	return dict([
 		('version',		Version.AppVerName),
 		('created',		datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
 		('raceName',	race.name),
@@ -38,7 +35,7 @@ def getRaceAttr( race ):
 	])
 
 def getCategoryAttr( category ):
-	return OrderedDict([
+	return dict([
 		('categoryFullName',	category.fullname),
 		('categoryName',		category.name),
 		('categoryGender',		category.gender),
@@ -48,8 +45,8 @@ def getCategoryAttr( category ):
 ignoreAttr = { 'lastTimeOrig', 'raceCat', 'interp', 'gapValue', 'raceTimes' }
 attrSub = { 'num': 'bib' }
 def getRaceResultsAttr( rr ):
-	attrs = OrderedDict()
-	for attr, value in six.iteritems(rr.__dict__):
+	attrs = {}
+	for attr, value in rr.__dict__.items():
 		if attr.startswith('_') or attr in ignoreAttr:
 			continue
 		if attr == 'status':
@@ -65,30 +62,30 @@ def GetXML():
 	eventE = ET.Element('event')
 	
 	raceAttr = getRaceAttr( race )
-	for k, v in six.iteritems(raceAttr):
+	for k, v in raceAttr.items():
 		if k == 'infoFields':
 			infoFieldsE = ET.SubElement( eventE, k )
 			for f in v:
-				ET.SubElement( infoFieldsE, 'f' ).text = six.text_type( f )
+				ET.SubElement( infoFieldsE, 'f' ).text = '{}'.format( f )
 		else:
-			ET.SubElement( eventE, k ).text = six.text_type( v )
+			ET.SubElement( eventE, k ).text = '{}'.format( v )
 	
 	raceResultsE = ET.SubElement( eventE, 'raceResults' )
 	for category in race.getCategories(startWaveOnly=False, publishOnly=False):
 		categoryE = ET.SubElement( raceResultsE, 'category' )
-		for k, v in six.iteritems(getCategoryAttr(category)):
-			ET.SubElement( categoryE, k ).text = six.text_type( v )
+		for k, v in getCategoryAttr(category).items():
+			ET.SubElement( categoryE, k ).text = '{}'.format( v )
 		categoryResultsE = ET.SubElement( categoryE, 'categoryResults' )
 		results = GetResults( category )
 		for rr in results:
 			entryE = ET.SubElement( categoryResultsE, 'entry' )
-			for k, v in six.iteritems(getRaceResultsAttr(rr)):
+			for k, v in getRaceResultsAttr(rr).items():
 				if k == 'lapTimes':
 					attrE = ET.SubElement( entryE, k )
 					for t in v:
-						ET.SubElement( attrE, 't' ).text = six.text_type(t)
+						ET.SubElement( attrE, 't' ).text = '{}'.format(t)
 				else:
-					ET.SubElement( entryE, k ).text = six.text_type(v)
+					ET.SubElement( entryE, k ).text = '{}'.format(v)
 				
 	return ET.tostring(eventE, 'utf-8')
 	
@@ -113,6 +110,6 @@ if __name__ == '__main__':
 	race._populate()
 
 	xml = GetXML()
-	six.print_( xml )
-	six.print_( '\n'.join( minidom.parseString( xml ).toprettyxml(indent=" ").split('\n')[:50] ) )
-	six.print_( GetJSON() )
+	print( xml )
+	print( '\n'.join( minidom.parseString( xml ).toprettyxml(indent=" ").split('\n')[:50] ) )
+	print( GetJSON() )

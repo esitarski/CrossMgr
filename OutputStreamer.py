@@ -2,7 +2,6 @@ import io
 import os
 import six
 import time
-import math
 import atexit
 import datetime
 import threading
@@ -48,7 +47,7 @@ def Server( q, fname ):
 					f.write( u''.join(messages) )
 				for m in messages:
 					q.task_done()
-			except IOError as e:
+			except IOError:
 				pass
 
 def StopStreamer():

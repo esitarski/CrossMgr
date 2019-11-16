@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function
-
 import xlrd
 import xml.etree.ElementTree
 import os
 import six
 import math
-import itertools
 import unicodedata
 from mmap import mmap, ACCESS_READ
 

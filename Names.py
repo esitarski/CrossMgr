@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import six
 import random
-import six
 import unicodedata
 
 def clean( names ):
