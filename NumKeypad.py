@@ -663,8 +663,8 @@ class NumKeypad( wx.Panel ):
 		
 		appendListRow( (
 							_('Total'),
-							u'{}/{}'.format(sum(count for count in catLapCount.items()),
-											sum(count for count in catCount.items()))
+							u'{}/{}'.format(sum(count for count in catLapCount.values()),
+											sum(count for count in catCount.values()))
 						),
 						colour=wx.BLUE,
 						bold=True )
