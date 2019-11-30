@@ -71,6 +71,7 @@ from USACExport			import USACExport
 from UCIExport			import UCIExport
 from UCIExcel			import UCIExcel
 from VTTAExport			import VTTAExport
+from JPResultsExport	import JPResultsExport
 from CrossResultsExport	import CrossResultsExport
 from WebScorerExport	import WebScorerExport
 from HelpSearch			import HelpSearchDialog, getHelpURL
@@ -499,6 +500,12 @@ class MainWin( wx.Frame ):
 							_("&VTTA Excel Publish..."), _("Publish Results in Excel Format for VTTA analysis"),
 							Utils.GetPngBitmap('vtta-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuExportVTTA, item )
+
+		self.publishMenu.AppendSeparator()
+		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
+							_("&JPResults Excel Publish..."), _("Publish Results in JP Excel Format"),
+							Utils.GetPngBitmap('vtta-icon.png') )
+		self.Bind(wx.EVT_MENU, self.menuExportJPResults, item )
 
 		self.publishMenu.AppendSeparator()
 		item = AppendMenuItemBitmap( self.publishMenu, wx.ID_ANY,
@@ -3478,6 +3485,31 @@ class MainWin( wx.Frame ):
 		wb = xlsxwriter.Workbook( xlFName )
 		sheetCur = wb.add_worksheet( 'Combined Results' )
 		VTTAExport( wb, sheetCur )
+		
+		try:
+			wb.close()
+			if not silent:
+				if self.launchExcelAfterPublishingResults:
+					webbrowser.open( xlFName, new = 2, autoraise = True )
+				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+		except IOError:
+			Utils.MessageOK(self,
+						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+						_('Excel File Error'), iconMask=wx.ICON_ERROR )
+	
+	@logCall
+	def menuExportJPResults( self, event=None, silent=False ):
+		self.commit()
+		if self.fileName is None or len(self.fileName) < 4 or not Model.race:
+			return
+
+		self.showPage( self.iResultsPage )
+		
+		xlFName = self.getFormatFilename( 'jpresultsexcel' )
+
+		wb = xlsxwriter.Workbook( xlFName )
+		sheetCur = wb.add_worksheet( 'JP Results' )
+		JPResultsExport( wb, sheetCur )
 		
 		try:
 			wb.close()

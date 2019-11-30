@@ -19,6 +19,8 @@ batchPublishAttr = (
 		None),
 	BatchAttr('VTTA',	_('VTTA'),	 		'vttaexcel', 	'menuExportVTTA', True, _('as .xlsx file'),
 		lambda fnameBase: fnameBase + '-VTTA.xlsx'),
+	BatchAttr('JPResults',	_('JPResults'),	 		'jpresultsexcel', 	'menuExportJPResults', True, _('as .xlsx file'),
+		lambda fnameBase: fnameBase + '-JP.xlsx'),
 	BatchAttr('WebScorer', _('WebScorer'),	'webscorertxt',	'menuExportWebScorer', True, _('as .txt upload file'),
 		lambda fnameBase: fnameBase + '-WebScorer.txt'),
 	BatchAttr('Facebook', _('Facebook'),	None,			'menuPrintPNG', False, _('as .png upload files in Facebook folder'),
