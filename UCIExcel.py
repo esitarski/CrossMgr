@@ -61,7 +61,7 @@ def UCIExcel( category, fname, startList=False ):
 		(u'Field',				u'Value',		u'Description',								u'Comment'),
 		(u'Competition Code',	u'',			u'UCI unique competition code',				u'Filled by the system'),
 		(u'Event Code',			u'',			u'UCI unique event code',					u'Filled by the system'),
-		(u'Race Type',			u'IRR',			u'Race type of the Event (IRR, XCO, OM)',	u'Optional'),
+		(u'Race Type',			u'',			u'Race type of the Event (IRR, XCO, OM)',	u'Optional'),
 		(u'Competitor Type',	u'A',			u'A or T (Athlete or Team)',				u'Mandatory'),
 		(u'Result type',		u'Time',		u'Points or Time',							u'Mandatory'),
 		(u'Document version',	1.0,			u'Version number of the file',				u'Mandatory'),

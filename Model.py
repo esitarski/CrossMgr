@@ -254,12 +254,12 @@ class Category(object):
 						gender = 'Open', lappedRidersMustContinue = False,
 						catType = CatWave, publishFlag = True, uploadFlag = True, seriesFlag = True ):
 		
-		self.name = six.text_type(name).strip()
-		self.catStr = six.text_type(catStr).strip()
+		self.name = '{}'.format(name).strip()
+		self.catStr = '{}'.format(catStr).strip()
 		self.startOffset = startOffset if startOffset else '00:00:00'
 		
 		self.catType = self.CatWave
-		catType = six.text_type(catType).strip().lower()
+		catType = '{}'.format(catType).strip().lower()
 		try:
 			self.catType = int(catType)
 		except ValueError:
