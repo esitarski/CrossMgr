@@ -1,0 +1,10 @@
+CrossMgrHtmlDoc/
+env/
+src/
+dist/
+__pycache__/
+build/
+helptxt/
+CrossMgrHelpIndex/
+*.spec
+*.AppImage
