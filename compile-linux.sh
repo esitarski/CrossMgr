@@ -29,5 +29,6 @@ fi
 echo "Building Help..."
 python3 buildhelp.py
 cp -rv CrossMgrHelpIndex dist/CrossMgr/usr/bin
+export ARCH=x86_64
 linuxdeploy-plugin-appimage-x86_64.AppImage --appdir dist/CrossMgr
 

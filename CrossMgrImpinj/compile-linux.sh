@@ -19,5 +19,6 @@ cp -rv CrossMgrImpinjImages dist/CrossMgrImpinj/usr/bin
 cp -v appimage/* dist/CrossMgrImpinj
 chmod 755 dist/CrossMgrImpinj/AppRun
 cp -v CrossMgrImpinjImages/CrossMgrImpinj.png dist/CrossMgrImpinj
+export ARCH=x86_64
 linuxdeploy-plugin-appimage-x86_64.AppImage --appdir dist/CrossMgrImpinj
 

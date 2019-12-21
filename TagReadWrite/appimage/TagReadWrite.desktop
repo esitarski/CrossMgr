@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment[en_CA]=
+Comment=
+Exec=CrossMgr
+GenericName[en_CA]=TagReadWrite
+GenericName=TagReadWrite
+Icon=TagReadWrite
+MimeType=
+Name[en_CA]=TagReadWrite
+Name=TagReadWrite
+Path=/
+StartupNotify=true
+Categories=Network;
+Terminal=false
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
