@@ -69,7 +69,7 @@ class Impinj2JChip( object ):
 		instance_name = u'{}-{}'.format(socket.gethostname(), os.getpid())
 		while self.checkKeepGoing():
 			self.messageQ.put( ('Impinj2JChip', 'state', False) )
-			self.messageQ.put( ('Impinj2JChip', u'Trying to connect to CrossMgr as "{}"...'.format(instance_name)) )
+			self.messageQ.put( ('Impinj2JChip', u'Trying to connect to CrossMgr at {}:{} as "{}"...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
 			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 
 			#------------------------------------------------------------------------------	
@@ -81,7 +81,7 @@ class Impinj2JChip( object ):
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except socket.error:
-					self.messageQ.put( ('Impinj2JChip', u'CrossMgr Connection Failed.  Trying again as "{}" in 2 sec...'.format(instance_name)) )
+					self.messageQ.put( ('Impinj2JChip', u'CrossMgr Connection Failed.  Trying again at {}:{} as "{}" in 2 sec...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():

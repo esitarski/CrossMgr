@@ -1,5 +1,6 @@
 CrossMgrHtmlDoc/
 env/
+env38/
 src/
 dist/
 __pycache__/
@@ -8,3 +9,6 @@ helptxt/
 CrossMgrHelpIndex/
 *.spec
 *.AppImage
+*.dmg
+CrossMgrImpinj/*.dmg
+
