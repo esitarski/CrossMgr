@@ -3790,8 +3790,8 @@ A brief list of features:
 		info.WebSite = ("http://sites.google.com/site/crossmgrsoftware/", "CrossMgr Home Page")
 		info.Developers = [
 					"Edward Sitarski (edward.sitarski@gmail.com)",
+					"Mark Buckaway (mark@buckaway.ca),"
 					"Andrew Paradowski (andrew.paradowski@gmail.com)",
-					"Mark Buckaway"
 					]
 
 		licenseText = \
