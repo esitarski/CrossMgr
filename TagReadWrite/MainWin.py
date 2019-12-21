@@ -113,7 +113,7 @@ class MainWin( wx.Frame ):
 			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_AUTODETECT,"&Autodetect Reader"))
 			self.fileMenu.Append(wx.ID_EXIT)
 			self.Bind(wx.EVT_MENU, self.doAutoDetect, id=ID_MENU_AUTODETECT)
-			self.Bind(wx.EVT_MENU, self.onCloseWindow, id=wx.ID_EXIT)
+			self.Bind(wx.EVT_MENU, self.onClose, id=wx.ID_EXIT)
 			self.menuBar.Append(self.fileMenu, "&File")
 			self.helpMenu = wx.Menu()
 			self.helpMenu.Insert(0, wx.ID_ABOUT, "&About")
