@@ -46,6 +46,53 @@ Each platform has a build script to install the dependancies, build the binaries
 | CrossMgrImpinj/compile-Linux.sh | Build CrossMgrImping as Linux AppImage file images |
 | compile.bat | Old Windows build script |
 
-Windows builds make certain assumptions about the build environment. The Windows build system will be replaced with a powershell script that works simular to the Mac and Linux platforms.
+Windows builds require InnoSetup from [https://www.jrsoftware.org/isdl.php].
 
- 
+Mac builds currently require a virtualenv using python 3.7 in order to build the package. Changes to pyinstaller are required to make it work with python 3.7. The compile-mac-all.sh script sets up the virtualenv before it starts. No special programs are required to build the mac app as the mac app directory is build "by hand".
+
+The Linux build requires the libpython3.8-dev package (Ubuntu) and the linuxdeploy-plugin-appimage-x86_64.AppImage binary from https://github.com/linuxdeploy/linuxdeploy-plugin-appimage. The compile-linux-all.sh will attempt to download https://github.com/linuxdeploy/linuxdeploy-plugin-appimage if it does not exist in the current directory.
+
+The build procedure for all platforms starts as follows:
+
+- Setup a virtual env and activate:
+
+Linux:
+```bash
+  virtualenv env
+  . env/bin/activate
+```
+
+MacOSX:
+```bash
+  virtualenv -p python3.7 env
+  . env/bin/activate
+```
+
+MacOSX requires Python3.7 as Python 3.8.1 does not support pyinstaller.
+
+Windows:
+```cmd
+  virtualenv env
+  env\scripts\activate.cmd
+```
+or
+
+```powershell
+  virtualenv env
+  env\scripts\activate.ps
+```
+
+DO NOT SETUP CROSS MANAGER OUTSIDE OF A VIRTUAL ENVIRONMENT AS CONFLICTS CAN ARRISE.
+
+- Run pip to install the requirements:
+
+```bash
+pip3 install -r requirements.txt
+```
+
+The requirements.txt has all modules required to build and run CrossManager.
+
+
+
+
+   
