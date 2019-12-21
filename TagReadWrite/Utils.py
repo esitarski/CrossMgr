@@ -196,24 +196,38 @@ def getDocumentsDir():
 	return sp.GetDocumentsDir()
 	
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'WXMAC' in wx.Platform:
+	try:
+		topdirName = os.environ['RESOURCEPATH']
+	except:
+		topdirName = os.path.dirname(os.path.realpath(__file__))
+	if os.path.isdir( os.path.join(topdirName, 'TagReadWriteImages') ):
+		dirName = topdirName
+	else:
+		dirName = os.path.normpath(topdirName + '/../Resources/')
+	if not os.path.isdir(dirName):
+		dirName = os.path.normpath(topdirName + '/../../Resources/')
+	if not os.path.isdir(dirName):
+		raise Exception("Resource Directory does not exist:" + dirName)
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
-if 'CrossMgr?' in os.path.basename(dirName):
-	dirName = os.path.dirname(dirName)
+	if os.path.basename(dirName) == 'library.zip':
+		dirName = os.path.dirname(dirName)
+	if 'TagReadWrite?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
 
-if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
-	pass
-elif os.path.isdir( '/usr/local/CrossMgrImages' ):
-	dirName = '/usr/local'
+	if os.path.isdir( os.path.join(dirName, 'TagReadWriteImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/TagReadWriteImages' ):
+		dirName = '/usr/local'
 
-imageFolder = os.path.join(dirName, 'CrossMgrImages')
-htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
-helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
+imageFolder = os.path.join(dirName, 'TagReadWriteImages')
+htmlFolder = os.path.join(dirName, 'TagReadWriteHtml')
+helpFolder = os.path.join(dirName, 'TagReadWritHtmlDoc')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
