@@ -9,3 +9,6 @@ helptxt/
 CrossMgrHelpIndex/
 *.spec
 *.AppImage
+*.dmg
+CrossMgrImpinj/*.dmg
+
