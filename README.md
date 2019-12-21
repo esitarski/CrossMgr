@@ -32,4 +32,20 @@ Next, just run the AppImage with:
 
 Alternative, setup a desktop icon to call it directly.
 
+## Building Cross Manager
 
+Each platform has a build script to install the dependancies, build the binaries for the application, and package the programs.
+
+| Script  | Purpose |
+|---------|---------|
+| compile-mac-all.sh | Install dependancies, build CrossMgr and CrossMgrImpinj as Mac DMG file images |
+| compile-mac.sh | Build CrossMgr as Mac DMG file images |
+| CrossMgrImpinj/compile-mac.sh | Build CrossMgrImping as Mac DMG file images |
+| compile-linux-all.sh | Install dependancies, build CrossMgr and CrossMgrImpinj as Linux AppImage file images |
+| compile-linux.sh | Build CrossMgr as Linux AppImage file images |
+| CrossMgrImpinj/compile-Linux.sh | Build CrossMgrImping as Linux AppImage file images |
+| compile.bat | Old Windows build script |
+
+Windows builds make certain assumptions about the build environment. The Windows build system will be replaced with a powershell script that works simular to the Mac and Linux platforms.
+
+ 
