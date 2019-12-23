@@ -30,7 +30,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: release/*.dmg
-          draft: true
           body_path: .github/release.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,5 +60,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: release/*.AppImage
+          body_path: .github/release.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,5 @@
-![](https://github.com/mbuckaway/CrossMgr/workflows/buildmac/badge.svg)
-![](https://github.com/mbuckaway/CrossMgr/workflows/buildlinux/badge.svg)
+![](https://github.com/mbuckaway/CrossMgr/workflows/Build%20MacOSX/badge.svg)
+![](https://github.com/mbuckaway/CrossMgr/workflows/Build%20Linux/badge.svg)
 
 # Cross Manager Race Scoring Software
 
