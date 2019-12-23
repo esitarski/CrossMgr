@@ -11,7 +11,7 @@ if [ "$OSNAME" == "Darwin" ]; then
 	PYTHONVER="python3.7"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.6"
+	PYTHONVER="python3.7"
 fi
 
 getBuildDir() {
@@ -216,6 +216,10 @@ envSetup() {
 		else
 			echo "Creating virtual env in $ENVDIR..."
 			$PYTHONVER -mpip install virtualenv
+            if [ $? -ne 0 ];then
+                echo "Virtual env setup failed. Aborting..."
+                exit 1
+            fi
 			$PYTHONVER -mvirtualenv $ENVDIR -p $PYTHONVER
             if [ $? -ne 0 ];then
                 echo "Virtual env setup failed. Aborting..."
@@ -227,7 +231,11 @@ envSetup() {
 		echo "Already using $VIRTUAL_ENV"
 	fi
 	pip3 install -r requirements.txt
-	if [ $OSNAME == "Darwin" ];then
+    if [ $? -ne 0 ];then
+        echo "Pip requirememnts install failed. Aborting..."
+        exit 1
+    fi
+    if [ $OSNAME == "Darwin" ];then
 		pip3 install dmgbuild
 	else
 		downloadAppImage
