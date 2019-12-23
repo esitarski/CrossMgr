@@ -22,9 +22,22 @@ getBuildDir() {
 	fi
 }
 
+checkEnvActive() {
+	if [ -z "$VIRTUAL_ENV" -a -d $ENVDIR ]; then
+        . $ENVDIR/bin/activate
+        echo "Virtual env ($VIRTUAL_ENV) activated"
+    elif [ -n "$VIRTUAL_ENV" ]; then
+        echo "Using existing environment ($VIRTUAL_ENV)"
+    else
+        echo "Python environment not active. Aborting..."
+        exit 1
+    fi
+}
+
 doPyInstaller() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
+    checkEnvActive
 	ICONPATH=${BUILDDIR}/${PROGRAM}Images/
 	case $OSNAME in
 		Darwin)	echo pyinstaller ${BUILDDIR}/${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
@@ -88,6 +101,7 @@ downloadAppImage() {
 compileCode() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
+    checkEnvActive
 	echo "Compiling code"
 	python3 -mcompileall -l $BUILDDIR
 	if [ $? -ne 0 ];then
@@ -144,6 +158,7 @@ copyAssets(){
 package() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
+    checkEnvActive
 
 	if [ $OSNAME == "Darwin" ];then
 		#if [ "$PROGRAM" != "Crossmgr" ];then
@@ -200,7 +215,11 @@ envSetup() {
 			. env/bin/activate
 		else
 			echo "Creating virtual env in $ENVDIR..."
-			virtualenv $ENVDIR -p $PYTHONVER
+			$PYTHONVER -mvirtualenv $ENVDIR -p $PYTHONVER
+            if [ $? -ne 0 ];then
+                echo "Virtual env setup failed. Aborting..."
+                exit 1
+            fi
 			. env/bin/activate
 		fi
 	else
@@ -208,7 +227,7 @@ envSetup() {
 	fi
 	pip3 install -r requirements.txt
 	if [ $OSNAME == "Darwin" ];then
-		pip3 install dmgsetup
+		pip3 install dmgbuild
 	else
 		downloadAppImage
 	fi
@@ -216,7 +235,7 @@ envSetup() {
 
 buildall() {
 		if [ -n "$PROGRAMS" ]; then
-			downloadAppImage
+            checkEnvSetup
 			cleanup
 			for program in $PROGRAMS
 			do
@@ -233,6 +252,14 @@ buildall() {
 		fi
 }
 
+listFiles() {
+    let count=0
+    ls -1 release | while read file
+    do
+        echo "FILE_${count}=$file"
+        let count=count+1
+    done
+}
 
 doHelp() {
 	cat <<EOF
@@ -255,6 +282,7 @@ $0 [ -hcCtaep: ]
  -k        - Package application
  -m        - Move package to release directory
  -A        - Build everything and package
+ -l        - list files in release directory
 
 Running on: $OSNAME
 
@@ -269,7 +297,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkom" option
+while getopts "hcitaviCdPBASkomzl" option
 do
 	gotarg=1
 	case ${option} in
@@ -348,6 +376,10 @@ do
 			fi
 		;;
 		A) buildall
+		;;
+		z) checkEnvActive
+		;;
+		l) listFiles
 		;;
 		*) doHelp
 		;;
