@@ -19,11 +19,11 @@ jobs:
         uses: actions/checkout@master
       - name: Setup Environment
         run: |
-          cd $GITHUB_WORKSPACE/CrossMgr
+          cd $GITHUB_WORKSPACE
           bash compile.sh -S
       - name: Build project
         run: |
-          cd $GITHUB_WORKSPACE/CrossMgr
+          cd $GITHUB_WORKSPACE
           bash compile.sh -a -A
       - name: Release
         uses: softprops/action-gh-release@v1
