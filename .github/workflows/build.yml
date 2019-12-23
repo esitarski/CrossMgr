@@ -44,6 +44,9 @@ jobs:
           python-version: 3.6.*
       - name: Checkout code
         uses: actions/checkout@master
+      - name: Linux Lib Install
+        run: |
+          apt install libwxgtk3.0-gtk3-dev 
       - name: Setup Environment
         run: |
           cd $GITHUB_WORKSPACE
