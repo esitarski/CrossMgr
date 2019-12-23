@@ -1,3 +1,6 @@
+![](https://github.com/mbuckaway/CrossMgr/workflows/buildmac/badge.svg)
+![](https://github.com/mbuckaway/CrossMgr/workflows/buildlinux/badge.svg)
+
 # Cross Manager Race Scoring Software
 
 Welcome to Cross Manager. Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
