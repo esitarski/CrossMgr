@@ -9,7 +9,7 @@ name: Build CrossMgr and Tools
 jobs:
   buildmac:
     name: Build MacOSX
-    runs-on: macos
+    runs-on: macos-latest
     steps:
       - name: Setup Python environment
         uses: actions/setup-python@v1.1.1
@@ -36,7 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   buildlinux:
     name: Build Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Setup Python environment
         uses: actions/setup-python@v1.1.1
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@master
       - name: Linux Lib Install
         run: |
-          apt install libwxgtk3.0-gtk3-dev 
+          sudo apt install libwxgtk3.0-gtk3-dev 
       - name: Setup Environment
         run: |
           cd $GITHUB_WORKSPACE
