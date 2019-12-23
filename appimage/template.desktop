@@ -1,0 +1,15 @@
+[Desktop Entry]
+Comment[en_CA]=
+Comment=
+Exec=%PROGRAM%
+GenericName[en_CA]=%PROGRAM%
+GenericName=%PROGRAM%
+Icon=%PROGRAM%
+MimeType=
+Name[en_CA]=%PROGRAM%
+Name=%PROGRAM%
+Path=/
+StartupNotify=true
+Categories=Network;
+Terminal=false
+Type=Application
