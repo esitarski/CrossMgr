@@ -11,7 +11,7 @@ if [ "$OSNAME" == "Darwin" ]; then
 	PYTHONVER="python3.7"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.7"
+	PYTHONVER="python3.6"
 fi
 
 getBuildDir() {
@@ -69,6 +69,7 @@ getVersion() {
 	fi
 	. ${BUILDDIR}/Version.py
 	VERSION=$(echo $AppVerName | awk '{print $2}')
+	export VERSION
 	echo "$PROGRAM Version is $VERSION"
 }
 
@@ -77,12 +78,6 @@ cleanup() {
 	rm -rf __pycache__ CrossMgrImpinj/__pycache__ TagReadWrite/__pycache__ 
 	rm -rf dist build release
 	rm -f *.spec
-	case $OSNAME in
-		Darwin) rm -f *.dmg
-		;;
-		Linux) rm -f *.AppImage
-		;;
-	esac
 }
 
 downloadAppImage() {
@@ -122,6 +117,8 @@ copyAssets(){
 	fi
 	mkdir -p $RESOURCEDIR
 	if [ "$OSNAME" == "Linux" ];then
+                mv dist/${PROGRAM}/* $RESOURCEDIR
+                cp -v "${BUILDDIR}/${PROGRAM}Images/${PROGRAM}.png" "dist/${PROGRAM}"
 		echo "Setting up AppImage in dist/${PROGRAM}"
 		sed "s/%PROGRAM%/$PROGRAM/g" appimage/AppRun.tmpl > "dist/${PROGRAM}/AppRun"
 		chmod 755 "dist/${PROGRAM}/AppRun"
@@ -158,7 +155,7 @@ copyAssets(){
 package() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
-    checkEnvActive
+        checkEnvActive
 
 	if [ $OSNAME == "Darwin" ];then
 		#if [ "$PROGRAM" != "Crossmgr" ];then
@@ -176,9 +173,7 @@ package() {
 			exit 1
 		fi
 	else
-		if [ ! -f $LINUXDEPLOY ]; then
-			downloadAppImage
-		fi
+		downloadAppImage
 		echo "Packaging Linux app to AppImage..."
 		export ARCH=x86_64
 		./${LINUXDEPLOY} --appdir "dist/${PROGRAM}"
@@ -244,7 +239,7 @@ envSetup() {
 
 buildall() {
 		if [ -n "$PROGRAMS" ]; then
-            checkEnvSetup
+                        checkEnvSetup
 			cleanup
 			for program in $PROGRAMS
 			do
