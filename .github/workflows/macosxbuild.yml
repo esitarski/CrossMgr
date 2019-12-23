@@ -1,8 +1,8 @@
 on:
   push:
     # Sequence of patterns matched against refs/tags
-    tags:
-    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    #tags:
+    #- 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 name: Build MacOSX
 
@@ -19,11 +19,11 @@ jobs:
         uses: actions/checkout@master
       - name: Setup Environment
         run: |
-          cd CrossMgr
+          cd $GITHUB_WORKSPACE/CrossMgr
           bash compile.sh -S
       - name: Build project
         run: |
-          cd CrossMgr
+          cd $GITHUB_WORKSPACE/CrossMgr
           bash compile.sh -a -A
       - name: Release
         uses: softprops/action-gh-release@v1
