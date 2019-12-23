@@ -61,6 +61,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: release/*.AppImage
-          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
