@@ -215,6 +215,7 @@ envSetup() {
 			. env/bin/activate
 		else
 			echo "Creating virtual env in $ENVDIR..."
+			$PYTHONVER -mpip install virtualenv
 			$PYTHONVER -mvirtualenv $ENVDIR -p $PYTHONVER
             if [ $? -ne 0 ];then
                 echo "Virtual env setup failed. Aborting..."
