@@ -34,6 +34,8 @@ Next, just run the AppImage with:
 
 ...from the command prompt.
 
+CrossMgrImpinj and TagReadWriter follow the same install process.
+
 Alternative, setup a desktop icon to call it directly.
 
 ## Building Cross Manager
