@@ -239,7 +239,7 @@ envSetup() {
 
 buildall() {
 		if [ -n "$PROGRAMS" ]; then
-                        checkEnvSetup
+            checkEnvActive
 			cleanup
 			for program in $PROGRAMS
 			do
