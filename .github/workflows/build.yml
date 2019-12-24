@@ -4,22 +4,6 @@ on:
         - README.md
 name: CrossMgr_Build
 jobs:
-    release:
-        name: Create_Release
-        runs-on: ubuntu-latest
-        if: startsWith(github.ref, 'refs/tags/')
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v1         
-              if: startsWith(github.ref, 'refs/tags/')
-            - name: Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              with:
-                body_path: .github/release.txt
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     buildmac:
         name: MacOSX
         runs-on: macos-latest
@@ -39,12 +23,13 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Release
-              uses: fnkr/github-action-ghr@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              env:
-                GHR_PATH: release/
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+                uses: softprops/action-gh-release@v1
+                if: startsWith(github.ref, 'refs/tags/')
+                with:
+                  body_path: .github/release.txt
+                  files: release/*
+                env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildlinux:
         name: Linux
         runs-on: ubuntu-18.04
@@ -68,8 +53,10 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Release
-              uses: fnkr/github-action-ghr@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              env:
-                GHR_PATH: release/
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                uses: softprops/action-gh-release@v1
+                if: startsWith(github.ref, 'refs/tags/')
+                with:
+                  body_path: .github/release.txt
+                  files: release/*
+                env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
