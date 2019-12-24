@@ -1,5 +1,7 @@
 on:
     push:
+        paths-ignore:
+        - README.md
 name: CrossMgr_Build
 jobs:
     release:
