@@ -23,12 +23,12 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Release
-                uses: softprops/action-gh-release@v1
-                if: startsWith(github.ref, 'refs/tags/')
-                with:
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
                   body_path: .github/release.txt
                   files: release/*
-                env:
+              env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildlinux:
         name: Linux
@@ -53,10 +53,10 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Release
-                uses: softprops/action-gh-release@v1
-                if: startsWith(github.ref, 'refs/tags/')
-                with:
-                  body_path: .github/release.txt
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+              body_path: .github/release.txt
                   files: release/*
-                env:
+              env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
