@@ -4,6 +4,7 @@ name: CrossMgr_Build
 jobs:
     release:
         name: Create_Release
+        runs-on: ubuntu-latest
         steps:
             - name: Release
               uses: softprops/action-gh-release@v1
