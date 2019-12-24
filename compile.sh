@@ -150,6 +150,20 @@ copyAssets(){
 		python3 buildhelp.py
 		cp -rv CrossMgrHelpIndex $RESOURCEDIR
 	fi
+	if [ "$PROGRAM" == "SeriesMgr" ];then
+        cd SeriesMgr
+		if [ -d CrossMgrHelpIndex ]
+		then
+			rm -rf CrossMgrHelpIndex
+		fi
+		echo "Building Help for SeriesMgr ..."
+        rm -f HelpIndex.py
+        ln -s ../HelpIndex.py HelpIndex.py
+		python3 buildhelp.py
+		cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
+        cd ..
+	fi
+
 }
 
 package() {
@@ -243,6 +257,9 @@ buildall() {
 			cleanup
 			for program in $PROGRAMS
 			do
+                if [ "$program" == "SeriesMgr" ]; then
+                    fixSeriesMgrFiles
+                fi
 				getVersion $program
 				compileCode $program
 				doPyInstaller $program
@@ -265,6 +282,17 @@ listFiles() {
     done
 }
 
+fixSeriesMgrFiles() {
+    cd SeriesMgr
+    cat Dependencies.py | while read import file
+    do
+        echo "Linking; $file"
+        rm -f ${file}.py
+        ln -s "../${file}.py" "${file}.py"
+    done
+    cd ..
+}
+
 tagrelease() {
 	getVersion "CrossMgr"
 	DATETIME=$(date +%Y%m%d%H%M%S)
@@ -283,7 +311,7 @@ $0 [ -hcCtaep: ]
  -c        - Build CrossMgr
  -i        - Build CrossMgrImpinj
  -t        - Build TagReadWrite
- -y        - Build CrossMgrAlien
+ -y        - Build SeriesMgr
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -296,6 +324,7 @@ $0 [ -hcCtaep: ]
  -m        - Move package to release directory
  -A        - Build everything and package
  -l        - list files in release directory
+ -f        - Fix SeriesMgr files
 
  -T        - Tag for release
 
@@ -312,7 +341,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlT" option
+while getopts "hcitaviCdPBASkomzlTfy" option
 do
 	gotarg=1
 	case ${option} in
@@ -327,9 +356,12 @@ do
 		;;
 		t) PROGRAMS="$PROGRAMS TagReadWrite"
 		;;
+		y) PROGRAMS="$PROGRAMS SeriesMgr"
+		;;
 		v) 	getVersion "CrossMgr"
 			getVersion "CrossMgrImpinj"
-			getVersion "CrossMgrAlien"
+			getVersion "TagReadWrite"
+			getVersion "SeriesMgr"
 		;;
 		C) 	cleanup
 		;;
@@ -397,6 +429,8 @@ do
 		l) listFiles
 		;;
 		T) tagrelease
+		;;
+		f) fixSeriesMgrFiles
 		;;
 		*) doHelp
 		;;
