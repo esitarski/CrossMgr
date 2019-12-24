@@ -51,7 +51,7 @@ Mac and Linux builds currently support Python 3.7.x. Python 3.8 thus far has cau
 
 Linux dependancies are contained in the linuxdeps.sh script. The linuxdeploy-plugin-appimage-x86_64.AppImage binary is required from https://github.com/linuxdeploy/linuxdeploy-plugin-appimage. The compile.sh script will download linuxdeploy-plugin-appimage if it does not exist in the current directory automatically.
 
-The build procedure for Linux and Windows platforms are as follows:
+The build procedure for Linux and MacOSX platforms are as follows:
 
 - Install the Linux dependancies (Linux only!)
 
