@@ -1,69 +1,68 @@
 on:
-  push:
-
+    push:
 name: CrossMgr_Build
-
 jobs:
-  release:
-	name: Create_Release
-	steps:
-		- name: Release
-		  uses: softprops/action-gh-release@v1
-		  if: startsWith(github.ref, 'refs/tags/')
-		  with:
-		  body_path: .github/release.txt
-		  env:
-			GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  buildmac:
-    name: MacOSX
-    runs-on: macos-latest
-    steps:
-      - name: Setup Python environment
-        uses: actions/setup-python@v1.1.1
-        with:
-          python-version: 3.7.*
-      - name: Checkout code
-        uses: actions/checkout@master
-      - name: Setup Environment
-        run: |
-          cd $GITHUB_WORKSPACE
-          bash compile.sh -S
-      - name: Build project
-        run: |
-          cd $GITHUB_WORKSPACE
-          bash compile.sh -a -A
-      - name: Release
-        uses: fnkr/github-action-ghr@v1
-        if: startsWith(github.ref, 'refs/tags/')
-		env:
-		  GHR_PATH: release/
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  buildlinux:
-    name: Linux
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Setup Python environment
-        uses: actions/setup-python@v1.1.1
-        with:
-          python-version: 3.7.*
-      - name: Checkout code
-        uses: actions/checkout@master
-      - name: Linux Lib Install
-        run: |
-          cd $GITHUB_WORKSPACE
-          bash linuxdeps.sh
-      - name: Setup Environment
-        run: |
-          cd $GITHUB_WORKSPACE
-          bash compile.sh -S
-      - name: Build project
-        run: |
-          cd $GITHUB_WORKSPACE
-		  bash compile.sh -a -A
-	  - name: Release
-		  uses: fnkr/github-action-ghr@v1
-		  if: startsWith(github.ref, 'refs/tags/')
-		  env:
-			GHR_PATH: release/
-			GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+    release:
+        name: Create_Release
+        steps:
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+                body_path: .github/release.txt
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    buildmac:
+        name: MacOSX
+        runs-on: macos-latest
+        steps:
+            - name: Setup Python environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Setup Environment
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -S
+            - name: Build project
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -a -A
+            - name: Release
+              uses: fnkr/github-action-ghr@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              env:
+                GHR_PATH: release/
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    buildlinux:
+        name: Linux
+        runs-on: ubuntu-18.04
+        steps:
+            - name: Setup Python environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Linux Lib Install
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash linuxdeps.sh
+            - name: Setup Environment
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -S
+            - name: Build project
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -a -A
+            - name: Release
+              uses: fnkr/github-action-ghr@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              env:
+                GHR_PATH: release/
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
