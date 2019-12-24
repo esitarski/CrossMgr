@@ -11,7 +11,7 @@ if [ "$OSNAME" == "Darwin" ]; then
 	PYTHONVER="python3.7"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.6"
+	PYTHONVER="python3.7"
 fi
 
 getBuildDir() {
@@ -265,6 +265,15 @@ listFiles() {
     done
 }
 
+tagrelease() {
+	getVersion "CrossMgr"
+	DATETIME=$(date +%Y%m%d%H%M%S)
+	TAGNAME="v$VERSION-$DATETIME"
+	echo "Tagging with $TAGNAME"
+	git tag $TAGNAME
+	git push --tags
+}
+
 doHelp() {
 	cat <<EOF
 $0 [ -hcCtaep: ]
@@ -288,6 +297,8 @@ $0 [ -hcCtaep: ]
  -A        - Build everything and package
  -l        - list files in release directory
 
+ -T        - Tag for release
+
 Running on: $OSNAME
 
 To setup the build environment after a fresh checkout, use:
@@ -301,7 +312,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzl" option
+while getopts "hcitaviCdPBASkomzlT" option
 do
 	gotarg=1
 	case ${option} in
@@ -384,6 +395,8 @@ do
 		z) checkEnvActive
 		;;
 		l) listFiles
+		;;
+		T) tagrelease
 		;;
 		*) doHelp
 		;;
