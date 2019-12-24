@@ -312,6 +312,7 @@ $0 [ -hcCtaep: ]
  -i        - Build CrossMgrImpinj
  -t        - Build TagReadWrite
  -y        - Build SeriesMgr
+ -w        - Build SeriesMgr
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -341,14 +342,14 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfy" option
+while getopts "hcitaviCdPBASkomzlTfyw" option
 do
 	gotarg=1
 	case ${option} in
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgr CrossMgrImpinj TagReadWrite"
+ 		    PROGRAMS="CrossMgr CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
@@ -358,10 +359,13 @@ do
 		;;
 		y) PROGRAMS="$PROGRAMS SeriesMgr"
 		;;
+		w) PROGRAMS="$PROGRAMS CrossMgrAlien"
+		;;
 		v) 	getVersion "CrossMgr"
 			getVersion "CrossMgrImpinj"
 			getVersion "TagReadWrite"
 			getVersion "SeriesMgr"
+			getVersion "CrossMgrAlien"
 		;;
 		C) 	cleanup
 		;;

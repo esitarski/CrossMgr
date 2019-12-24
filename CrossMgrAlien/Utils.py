@@ -171,22 +171,38 @@ def getDocumentsDir():
 	return sp.GetDocumentsDir()
 	
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'WXMAC' in wx.Platform:
+	try:
+		topdirName = os.environ['RESOURCEPATH']
+	except:
+		topdirName = os.path.dirname(os.path.realpath(__file__))
+	if os.path.isdir( os.path.join(topdirName, 'CrossMgrAlienImages') ):
+		dirName = topdirName
+	else:
+		dirName = os.path.normpath(topdirName + '/../Resources/')
+	if not os.path.isdir(dirName):
+		dirName = os.path.normpath(topdirName + '/../../Resources/')
+	if not os.path.isdir(dirName):
+		raise Exception("Resource Directory does not exist:" + dirName)
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgrAlien.exe']:
+		dirName = os.path.dirname(dirName)
+	if 'CrossMgr?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrAlienImages') ):
+		dirName = os.path.dirname(dirName)
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
-if 'CrossMgr?' in os.path.basename(dirName):
-	dirName = os.path.dirname(dirName)
+	if os.path.isdir( os.path.join(dirName, 'CrossMgrAlienImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/CrossMgrAlienImages' ):
+		dirName = '/usr/local'
 
-if os.path.isdir( os.path.join(dirName, 'images') ):
-	pass
-elif os.path.isdir( '/usr/local/CrossMgrImages' ):
-	dirName = '/usr/local'
-
-imageFolder = os.path.join(dirName, 'images')
+imageFolder = os.path.join(dirName, 'CrossMgrAlienImages')
 htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
 helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
 
