@@ -34,25 +34,44 @@ checkEnvActive() {
     fi
 }
 
+goBack() {
+	PROGRAM=$1
+	if [ "$PROGRAM" != "CrossMgr" ]; then
+		cd ..
+	fi
+}
+
 doPyInstaller() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
     checkEnvActive
-	ICONPATH=${BUILDDIR}/${PROGRAM}Images/
+	ICONPATH=${PROGRAM}Images/
+	DISTPATH=dist
+	BUILDPATH=build
+	if [ "$PROGRAM" != "CrossMgr" ]; then
+		DISTPATH=../dist
+		BUILDPATH=../build
+	fi
 	case $OSNAME in
-		Darwin)	echo pyinstaller ${BUILDDIR}/${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
-			pyinstaller ${BUILDDIR}/${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+		Darwin)	echo pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+			cd $BUILDDIR
+			pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
 			if [ $? -ne 0 ]; then
+				goBack $PROGRAM
 				echo "Build Failed!"
 				exit 1
 			fi
+			goBack $PROGRAM
 		;;
-		Linux) echo pyinstaller ${BUILDDIR}/${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
-			pyinstaller ${BUILDDIR}/${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+		Linux) echo pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+			cd $BUILDDIR
+			pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
 			if [ $? -ne 0 ]; then
+				goBack $PROGRAM
 				echo "Build Failed!"
 				exit 1
 			fi
+			goBack $PROGRAM
 		;;
 		*) echo "Unknown OS."
 		exit
@@ -148,6 +167,10 @@ copyAssets(){
 		fi
 		echo "Building Help for CrossMgr ..."
 		python3 buildhelp.py
+		if [ $? -ne 0 ]; then
+			echo "Building help failed. Aborting..."
+			exit 1
+		fi
 		cp -rv CrossMgrHelpIndex $RESOURCEDIR
 	fi
 	if [ "$PROGRAM" == "SeriesMgr" ];then
@@ -160,6 +183,10 @@ copyAssets(){
         rm -f HelpIndex.py
         ln -s ../HelpIndex.py HelpIndex.py
 		python3 buildhelp.py
+		if [ $? -ne 0 ]; then
+			echo "Building help failed. Aborting..."
+			exit 1
+		fi
 		cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
         cd ..
 	fi
@@ -312,7 +339,7 @@ $0 [ -hcCtaep: ]
  -i        - Build CrossMgrImpinj
  -t        - Build TagReadWrite
  -y        - Build SeriesMgr
- -w        - Build SeriesMgr
+ -w        - Build CrossMgrAlien
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -349,7 +376,7 @@ do
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgr CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien"
+ 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;

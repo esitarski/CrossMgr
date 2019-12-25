@@ -16,7 +16,6 @@ SeriesMgr/Model.py
 SeriesMgr/LapStats.py
 SeriesMgr/InSortedIntervalList.py
 SeriesMgr/minimal_intervals.py
-SeriesMgr/Utils.py
 SeriesMgr/rsonlite.py
 SeriesMgr/Checklist.py
 SeriesMgr/GpxParse.py
