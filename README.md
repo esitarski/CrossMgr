@@ -18,6 +18,17 @@ From the Releases tab, download the CrossMgr-VERSION.dmg file. From the finder, 
 
 CrossMgrImpinj, TagReadWriter, and SeriesMgr follow the same install process.
 
+#### Debugging the Mac Apps
+
+Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting. First, and foremore, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then clock Open on the dialog box to start the application the first time. Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc.. Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application. Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run. Additionally, someitmes the application just won't start. Typically, it's icon will start to flash, and then nothing. To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
+
+```bash
+cd /Applications/CrossMgr.app/Content/MacOS
+./CrossMgr
+```
+
+Python is setup to dump logs to stdout which usually indicates the problem. Sometimes, the problem of starting the application will just go away.
+
 ### Linux Installation
 
 Download the CrossMgr-VERSION.AppImage file. Store this file in a convenient location such as $HOME/bin. Make the executable with
