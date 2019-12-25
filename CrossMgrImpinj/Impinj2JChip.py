@@ -70,7 +70,7 @@ class Impinj2JChip( object ):
 		while self.checkKeepGoing():
 			self.messageQ.put( ('Impinj2JChip', 'state', False) )
 			self.messageQ.put( ('Impinj2JChip', u'Trying to connect to CrossMgr at {}:{} as "{}"...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
-			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+			sock = None
 
 			#------------------------------------------------------------------------------	
 			# Connect to the CrossMgr server.
@@ -78,9 +78,11 @@ class Impinj2JChip( object ):
 			self.tagCount = 0
 			while self.checkKeepGoing():
 				try:
+					sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except socket.error:
+					sock = None
 					self.messageQ.put( ('Impinj2JChip', u'CrossMgr Connection Failed.  Trying again at {}:{} as "{}" in 2 sec...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )
@@ -105,6 +107,7 @@ class Impinj2JChip( object ):
 			except socket.timeout:
 				self.messageQ.put( ('Impinj2JChip', 'CrossMgr connection timed out [1].') )
 				sock.close()
+				sock = None
 				continue
 
 			#------------------------------------------------------------------------------	
@@ -115,11 +118,13 @@ class Impinj2JChip( object ):
 			if timedOut:
 				self.messageQ.put( ('Impinj2JChip', u'CrossMgr connection timed out [2].') )
 				sock.close()
+				sock = None
 				continue
 			self.messageQ.put( ('Impinj2JChip', u'Received: "{}" from CrossMgr'.format(received)) )
 			if received != 'GT':
 				self.messageQ.put( ('Impinj2JChip', u'Incorrect command (expected GT).') )
 				sock.close()
+				sock = None
 				continue
 
 			# Send 'GT' (GetTime response to CrossMgr).
@@ -136,6 +141,7 @@ class Impinj2JChip( object ):
 			except socket.timeout:
 				self.messageQ.put( ('Impinj2JChip', u'CrossMgr connection timed out [3].') )
 				sock.close()
+				sock = None
 				continue
 
 			#------------------------------------------------------------------------------	
@@ -149,11 +155,13 @@ class Impinj2JChip( object ):
 			if timedOut:
 				self.messageQ.put( ('Impinj2JChip', u'CrossMgr connection timed out [4].') )
 				sock.close()
+				sock = None
 				continue
 			self.messageQ.put( ('Impinj2JChip', u'Received: "{}" from CrossMgr'.format(received)) )
 			if not received.startswith('S'):
 				self.messageQ.put( ('Impinj2JChip', u'Incorrect command (expected S0000).') )
 				sock.close()
+				sock = None
 				continue
 
 			#------------------------------------------------------------------------------
@@ -182,6 +190,7 @@ class Impinj2JChip( object ):
 					break
 		
 			sock.close()
+			sock = None
 			
 def CrossMgrServer( dataQ, messageQ, shutdownQ, crossMgrHost, crossMgrPort ):
 	impinj2JChip = Impinj2JChip( dataQ, messageQ, shutdownQ, crossMgrHost, crossMgrPort )

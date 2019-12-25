@@ -345,7 +345,7 @@ class MainWin( wx.Frame ):
 		self.LightRed = wx.Colour(255,153,153)
 		
 		font = self.GetFont()
-		bigFont = wx.Font( int(font.GetPointSize() * 1.5), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+		bigFont = wx.Font( int(font.GetPointSize() * 1.2), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 		titleFont = wx.Font( int(bigFont.GetPointSize()*2.2), bigFont.GetFamily(), bigFont.GetStyle(), bigFont.GetWeight() )
 		
 		self.vbs = wx.BoxSizer( wx.VERTICAL )
