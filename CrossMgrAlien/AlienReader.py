@@ -392,7 +392,7 @@ def setter( self, value, cmd, inType, outType ):
 	retcmd, retValue = response[:ieq], response[ieq+1:]
 	ret = outType.fromStr( retValue.strip() )
 	if self.testMode:
-		print cmd, '=', ret
+		print(cmd, '=', ret)
 	return ret
 
 def getter( self, cmd, inType, outType ):
@@ -409,7 +409,7 @@ def getter( self, cmd, inType, outType ):
 	except:
 		ret = outType.fromStr( response )
 	if self.testMode:
-		print '{}:'.format(cmd), ret
+		print('{}:'.format(cmd), ret)
 	return ret
 	
 def deleter( self, cmd, inType, outType ):
@@ -420,7 +420,7 @@ for cmd, cmdInfo in cmds.iteritems():
 	alienProperties[cmd] = property( partial(getter,**context), partial(setter,**context), partial(deleter,**context), cmd )
 
 AlienProperties = type( 'AlienProperties', (object,), alienProperties )
-print dir(AlienProperties)
+print(dir(AlienProperties))
 
 class AlienRdr( AlienProperties ):
 	def __init__( self ):
@@ -552,7 +552,7 @@ class AlienReader( object ):
 		retName, retValue = response[:ieq], response[ieq+1:]
 		ret = outType.fromStr( retValue.strip() )
 		if self.testMode:
-			print ( '{}={}'.format( name, ret )
+			print('{}={}'.format( name, ret ))
 		return ret
 	
 	def getResponse( self, conn ):

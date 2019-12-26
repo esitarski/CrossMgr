@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment[en_CA]=
+Comment=
+Exec=CrossMgr
+GenericName[en_CA]=CrossManager
+GenericName=CrossManager
+Icon=CrossMgr
+MimeType=
+Name[en_CA]=CrossManager
+Name=CrossManager
+Path=/
+StartupNotify=true
+Categories=Network;
+Terminal=false
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=

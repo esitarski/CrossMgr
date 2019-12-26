@@ -327,9 +327,11 @@ class MainWin( wx.Frame ):
 
 		# Add code to configure file history.
 		self.filehistory = wx.FileHistory(8)
+		dataDir = Utils.getHomeDir()
+		configFileName = os.path.join(dataDir, 'CrossMgr.cfg')
 		self.config = wx.Config(appName="CrossMgr",
 								vendorName="SmartCyclingSolutions",
-		#						style=wx.CONFIG_USE_LOCAL_FILE
+								localFilename=configFileName
 		)
 		self.filehistory.Load(self.config)
 		
@@ -3790,8 +3792,8 @@ A brief list of features:
 		info.WebSite = ("http://sites.google.com/site/crossmgrsoftware/", "CrossMgr Home Page")
 		info.Developers = [
 					"Edward Sitarski (edward.sitarski@gmail.com)",
+					"Mark Buckaway (mark@buckaway.ca),"
 					"Andrew Paradowski (andrew.paradowski@gmail.com)",
-					"Mark Buckaway"
 					]
 
 		licenseText = \

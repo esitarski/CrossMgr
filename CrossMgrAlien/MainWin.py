@@ -13,6 +13,7 @@ from Alien2JChip import CrossMgrServer
 from AutoDetect import AutoDetect, DefaultAlienCmdPort
 
 import wx
+import wx.adv
 import wx.lib.masked        as masked
 import wx.lib.intctrl		as intctrl
 import sys
@@ -176,11 +177,52 @@ class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
 
+		dataDir = Utils.getHomeDir()
+		configFileName = os.path.join(dataDir, 'CrossMgrAlien.cfg')
 		self.config = wx.Config(appName="CrossMgrAlien",
 						vendorName="SmartCyclingSolutions",
-						#style=wx.CONFIG_USE_LOCAL_FILE
-		)
-						
+						localFilename=configFileName
+						)
+
+		ID_MENU_ADVANCECONFIG = wx.NewIdRef()
+		ID_MENU_COPYLOGS = wx.NewIdRef()
+		ID_MENU_AUTODETECT = wx.NewIdRef()
+		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
+		if 'WXMAC' in wx.Platform:
+			self.appleMenu = self.menuBar.OSXGetAppleMenu()
+			self.appleMenu.SetTitle("CrossMgrAlien")
+
+			self.appleMenu.Insert(0, wx.ID_ABOUT, "&About")
+
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
+
+			self.editMenu = wx.Menu()
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_ADVANCECONFIG,"A&dvanced Configuration"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_COPYLOGS,"&Copy Logs to Clipboard"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_AUTODETECT,"&Autodetect Reader"))
+
+			self.Bind(wx.EVT_MENU, self.doAdvanced, id=ID_MENU_ADVANCECONFIG)
+			self.Bind(wx.EVT_MENU, self.doCopyToClipboard, id=ID_MENU_COPYLOGS)
+			self.Bind(wx.EVT_MENU, self.doAutoDetect, id=ID_MENU_AUTODETECT)
+			self.menuBar.Append(self.editMenu, "&Edit")
+
+		else:
+			self.fileMenu = wx.Menu()
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_ADVANCECONFIG,"A&dvanced Configuration"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_COPYLOGS,"&Copy Logs to Clipboard"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_AUTODETECT,"&Autodetect Reader"))
+			self.fileMenu.Append(wx.ID_EXIT)
+			self.Bind(wx.EVT_MENU, self.doAdvanced, id=ID_MENU_ADVANCECONFIG)
+			self.Bind(wx.EVT_MENU, self.doCopyToClipboard, id=ID_MENU_COPYLOGS)
+			self.Bind(wx.EVT_MENU, self.doAutoDetect, id=ID_MENU_AUTODETECT)
+			self.Bind(wx.EVT_MENU, self.onCloseWindow, id=wx.ID_EXIT)
+			self.menuBar.Append(self.fileMenu, "&File")
+			self.helpMenu = wx.Menu()
+			self.helpMenu.Insert(0, wx.ID_ABOUT, "&About")
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
+			self.menuBar.Append(self.helpMenu, "&Help")
+
+		self.SetMenuBar(self.menuBar)
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
 		self.LightGreen = wx.Colour(153,255,153)
@@ -334,7 +376,38 @@ class MainWin( wx.Frame ):
 		
 		self.SetSizer( self.vbs )
 		self.start()
-	
+
+	def OnAboutBox(self, e):
+			description = """CrossMgrAlien is an Impinj interface to CrossMgr
+	"""
+
+			licence = """CrossMgrAlien is free software; you can redistribute 
+	it and/or modify it under the terms of the GNU General Public License as 
+	published by the Free Software Foundation; either version 2 of the License, 
+	or (at your option) any later version.
+
+	CrossMgrImpinj is distributed in the hope that it will be useful, 
+	but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+	See the GNU General Public License for more details. You should have 
+	received a copy of the GNU General Public License along with File Hunter; 
+	if not, write to the Free Software Foundation, Inc., 59 Temple Place, 
+	Suite 330, Boston, MA  02111-1307  USA"""
+
+			info = wx.adv.AboutDialogInfo()
+
+			crossMgrPng = Utils.getImageFolder() + '/CrossMgrAlien.png'
+			info.SetIcon(wx.Icon(crossMgrPng, wx.BITMAP_TYPE_PNG))
+			info.SetName('CrossMgrAlien')
+			info.SetVersion(AppVerName.split(' ')[1])
+			info.SetDescription(description)
+			info.SetCopyright('(C) 2020 Edward Sitarski')
+			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
+			info.SetLicence(licence)
+
+			wx.adv.AboutBox(info, self)
+
+
 	def start( self ):
 		self.dataQ = Queue()
 		self.messageQ = Queue()

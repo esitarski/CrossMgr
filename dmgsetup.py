@@ -1,13 +1,28 @@
 import biplist
 import os, sys
 
-sys.path.append(os.path.dirname('.'))
-from Version import AppVerName
+builddir = defines.get('builddir')
+if builddir:
+	print("Using builddir: {}".format(builddir))
+else:
+	builddir = '.'
+	print("WARNING: builddir is not defined!")
+
+filename = os.path.join(builddir, 'Version.py')
+verfile = open(filename, 'r')
+line = verfile.readline()
+verfile.close()
+AppVerName = line.split('=')[1]
+AppVerName = AppVerName.replace('"', '')
+AppVerName = AppVerName.rstrip()
+
+print("AppVersion: {}".format(AppVerName))
 
 MacApp = AppVerName.split(' ')[0]
 MacAppVersion = AppVerName.split(' ')[1]
 MacAppFullName = MacApp + '_' + MacAppVersion
-print("Mac App Version:", MacAppVersion)
+print("Mac App Version: {}".format(MacAppVersion))
+print("Mac App Fullname: {}".format(MacAppFullName))
 #
 # Example settings file for dmgbuild
 #
@@ -101,7 +116,7 @@ icon_locations = {
 # as percentages (e.g. 60% is equivalent to 0.6).
 #background = defines.get('background', 'CrossMgrImages/dmgbg.png')
 #background = 'builtin-arrow'
-background = MacApp +'Images/dmgbg.png'
+background = os.path.join(builddir, MacApp +'Images/dmgbg.png')
 
 print("Background: ", background)
 

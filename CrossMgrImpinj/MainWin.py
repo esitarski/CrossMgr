@@ -19,6 +19,7 @@ from AntennaReads import AntennaReads
 import wx
 import wx.lib.masked			as masked
 import wx.lib.intctrl			as intctrl
+import wx.adv
 import sys
 import os
 import io
@@ -39,7 +40,8 @@ if 'WXMSW' in wx.Platform:
 else:
 	class IpAddrCtrl( wx.TextCtrl ):
 		def GetAddress( self ):
-			return self.GetValue()
+			ipaddress = self.GetValue()
+			return ipaddress.strip()
 
 clipboard_xpm = [
 b"16 15 23 1",
@@ -291,18 +293,59 @@ class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
 
+		dataDir = Utils.getHomeDir()
+		configFileName = os.path.join(dataDir, 'CrossMgrImpinj.cfg')
 		self.config = wx.Config(appName="CrossMgrImpinj",
 						vendorName="SmartCyclingSolutions",
-						#style=wx.Config.CONFIG_USE_LOCAL_FILE
+						localFilename=configFileName
 						)
 						
+		ID_MENU_ADVANCECONFIG = wx.NewIdRef()
+		ID_MENU_COPYLOGS = wx.NewIdRef()
+		ID_MENU_AUTODETECT = wx.NewIdRef()
+		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
+		if 'WXMAC' in wx.Platform:
+			self.appleMenu = self.menuBar.OSXGetAppleMenu()
+			self.appleMenu.SetTitle("CrossMgrImpinj")
+
+			self.appleMenu.Insert(0, wx.ID_ABOUT, "&About")
+
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
+
+			self.editMenu = wx.Menu()
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_ADVANCECONFIG,"A&dvanced Configuration"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_COPYLOGS,"&Copy Logs to Clipboard"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_AUTODETECT,"&Autodetect Reader"))
+
+			self.Bind(wx.EVT_MENU, self.doAdvanced, id=ID_MENU_ADVANCECONFIG)
+			self.Bind(wx.EVT_MENU, self.doCopyToClipboard, id=ID_MENU_COPYLOGS)
+			self.Bind(wx.EVT_MENU, self.doAutoDetect, id=ID_MENU_AUTODETECT)
+			self.menuBar.Append(self.editMenu, "&Edit")
+
+		else:
+			self.fileMenu = wx.Menu()
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_ADVANCECONFIG,"A&dvanced Configuration"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_COPYLOGS,"&Copy Logs to Clipboard"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_AUTODETECT,"&Autodetect Reader"))
+			self.fileMenu.Append(wx.ID_EXIT)
+			self.Bind(wx.EVT_MENU, self.doAdvanced, id=ID_MENU_ADVANCECONFIG)
+			self.Bind(wx.EVT_MENU, self.doCopyToClipboard, id=ID_MENU_COPYLOGS)
+			self.Bind(wx.EVT_MENU, self.doAutoDetect, id=ID_MENU_AUTODETECT)
+			self.Bind(wx.EVT_MENU, self.onCloseWindow, id=wx.ID_EXIT)
+			self.menuBar.Append(self.fileMenu, "&File")
+			self.helpMenu = wx.Menu()
+			self.helpMenu.Insert(0, wx.ID_ABOUT, "&About")
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
+			self.menuBar.Append(self.helpMenu, "&Help")
+
+		self.SetMenuBar(self.menuBar)
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
 		self.LightGreen = wx.Colour(153,255,153)
 		self.LightRed = wx.Colour(255,153,153)
 		
 		font = self.GetFont()
-		bigFont = wx.Font( int(font.GetPointSize() * 1.5), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+		bigFont = wx.Font( int(font.GetPointSize() * 1.2), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 		titleFont = wx.Font( int(bigFont.GetPointSize()*2.2), bigFont.GetFamily(), bigFont.GetStyle(), bigFont.GetWeight() )
 		
 		self.vbs = wx.BoxSizer( wx.VERTICAL )
@@ -391,12 +434,19 @@ class MainWin( wx.Frame ):
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( wx.StaticText(self, label=ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
-		self.impinjHostName = masked.TextCtrl( self,
-							mask         = 'NN-NN-NN',
-							defaultValue = '00-00-00',
-							useFixedWidthFont = True,
-							size=(80, -1),
-						)
+		if 'WXMAC' in wx.Platform:
+			self.impinjHostName = masked.TextCtrl( self,
+								defaultValue = '00-00-00',
+								useFixedWidthFont = True,
+								size=(80, -1),
+							)
+		else:
+			self.impinjHostName = masked.TextCtrl( self,
+								mask         = 'NN-NN-NN',
+								defaultValue = '00-00-00',
+								useFixedWidthFont = True,
+								size=(80, -1),
+							)
 		hb.Add( self.impinjHostName )
 		hb.Add( wx.StaticText(self, label=ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb.Add( wx.StaticText(self, label=' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -480,7 +530,37 @@ class MainWin( wx.Frame ):
 		
 		self.SetSizer( self.vbs )
 		self.start()
-	
+
+	def OnAboutBox(self, e):
+			description = """CrossMgrImpinj is an Impinj interface to CrossMgr
+	"""
+
+			licence = """CrossMgrImpinjis free software; you can redistribute 
+	it and/or modify it under the terms of the GNU General Public License as 
+	published by the Free Software Foundation; either version 2 of the License, 
+	or (at your option) any later version.
+
+	CrossMgrImpinj is distributed in the hope that it will be useful, 
+	but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+	See the GNU General Public License for more details. You should have 
+	received a copy of the GNU General Public License along with File Hunter; 
+	if not, write to the Free Software Foundation, Inc., 59 Temple Place, 
+	Suite 330, Boston, MA  02111-1307  USA"""
+
+			info = wx.adv.AboutDialogInfo()
+
+			crossMgrPng = Utils.getImageFolder() + '/CrossMgrImpinj.png'
+			info.SetIcon(wx.Icon(crossMgrPng, wx.BITMAP_TYPE_PNG))
+			info.SetName('CrossMgrImpinj')
+			info.SetVersion(AppVerName.split(' ')[1])
+			info.SetDescription(description)
+			info.SetCopyright('(C) 2020 Edward Sitarski')
+			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
+			info.SetLicence(licence)
+
+			wx.adv.AboutBox(info, self)
+
 	def readerStatusCB( self, **kwargs ):
 		# As this is called from another thread, make sure all UI updates are done from CallAfter.
 		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
@@ -525,7 +605,7 @@ class MainWin( wx.Frame ):
 				wx.CallAfter( self.refreshStrays, msg[1] )
 			elif msg[0] == 'shutdown':
 				break
-	
+
 	def start( self ):
 		self.dataQ = Queue()
 		self.strayQ = Queue()

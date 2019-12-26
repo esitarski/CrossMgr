@@ -773,11 +773,11 @@ def GetDefaultHost():
 	return DEFAULT_HOST
 	
 if sys.platform == 'darwin':
-	webbrowser.register("chrome", None, webbrowser.MacOSXOSAScript('chrome'), -1)
+	webbrowser.register("chrome", None, webbrowser.MacOSXOSAScript('chrome'))
 
 def LaunchApplication( fnames ):
 	for fname in (fnames if isinstance(fnames, list) else [fnames]):
-		if os.name is 'nt':							# Windows.
+		if os.name == 'nt':							# Windows.
 			subprocess.call(('cmd', '/C', 'start', '', fname))
 		elif sys.platform.startswith('darwin'):
 			subprocess.call(('open', fname))		# Apple

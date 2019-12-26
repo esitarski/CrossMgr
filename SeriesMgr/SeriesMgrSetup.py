@@ -8,43 +8,17 @@ import datetime
 import subprocess
 import platform
 
-# Copy all dependent files into this folder.
-copyFiles = [
-	"Model.py",
-	"LapStats.py",
-	"InSortedIntervalList.py",
-	"minimal_intervals.py",
-	"Utils.py",
-	"rsonlite.py",
-	"Checklist.py",
-	"GpxParse.py",
-	"GeoAnimation.py",
-	"Animation.py",
-	"GanttChart.py",
-	"Excel.py",
-	"arial10.py",
-	"GetResults.py",
-	"FitSheetWrapper.py",
-	"ReadSignOnSheet.py",
-	"HelpSearch.py",
-	"MatchingCategory.py",
-	"ModuleUnpickler.py",
-	"BatchPublishAttrs.py",
-	"ReadCategoriesFromExcel.py",
-	"ReadPropertiesFromExcel.py",
-	"ModuleUnpickler.py",
-	"GetMatchingExcelFile.py",
-	"SetGraphic.py",
-	"imagebrowser.py",
-	"scramble.py",
-]
+# Copy all dependent files from the CrossMgr directory into this directory because we are just being lazy
+# We use the Dependencies file to figure out what files we want and we do this because it's easier
+# to have ONE file for all operating systems to read from
 
-for f in copyFiles:
-	shutil.copy( os.path.join( '..', f), f )
-	
-with open('Dependencies.py', 'w') as fp:
-	for f in copyFiles:
-		fp.write( 'import {}\n'.format(f[:-3]) )
+with open('Dependencies.py', 'r') as fp:
+    content = fp.readlines()
+
+for line in content:
+    filename = line.strip().split(' ')[1] + '.py'
+    print("Copying file: {}".format(filename))
+    shutil.copy( os.path.join( '..', filename), filename )
 
 if os.path.exists('build'):
 	shutil.rmtree( 'build' )
@@ -82,7 +56,7 @@ subprocess.call( [
 	'pyinstaller',
 	
 	'SeriesMgr.pyw',
-	'--icon=CrossMgrImages\SeriesMgr.ico',
+    '--icon=SeriesMgrImages\SeriesMgr.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -93,7 +67,7 @@ subprocess.call( [
 	'--exclude-module=_tkinter',
 ] )
 
-# Copy additional dlls to distribution folder.
+# Copy additional dlls to distribution folder. (Python 2.7? really?)
 wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'
 try:
 	shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
@@ -115,7 +89,7 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-copyDir( 'CrossMgrImages' )
+copyDir( 'SeriesMgrImages' )
 copyDir( 'SeriesMgrHtmlDoc' )
 #copyDir( 'data' )
 
