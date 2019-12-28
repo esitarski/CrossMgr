@@ -3,14 +3,11 @@
 [Setup]
 #include "inno_setup.txt"
 ArchitecturesInstallIn64BitMode=x64
-DefaultDirName={pf}\TagReadWrite
-DefaultGroupName=TagReadWrite
+DefaultDirName={commonpf}\TagReadWrite
+DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\TagReadWrite.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist\TagReadWrite
-OutputDir=..\..\install
-OutputBaseFilename=TagReadWrite_Setup
 ChangesAssociations=yes
 
 [Registry]

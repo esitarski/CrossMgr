@@ -18,3 +18,5 @@ bs4
 -e git+https://github.com/mbuckaway/pyllrp.git#egg=pyllrp
 trueskill
 pyinstaller
+pybabel
+opencv-python

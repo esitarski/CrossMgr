@@ -1,6 +1,6 @@
 import os
 import wx
-import cStringIO as StringIO
+import io as StringIO
 import Utils
 from GetPhotoFName import GetPhotoFName
 from AddPhotoHeader import AddPhotoHeader

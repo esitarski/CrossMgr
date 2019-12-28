@@ -416,6 +416,53 @@ class MainWin( wx.Frame ):
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
+
+		ID_MENU_RESETCAMERA = wx.NewIdRef()
+		ID_MENU_FOCUS = wx.NewIdRef()
+		ID_MENU_CONFIGAUTOCAPTURE = wx.NewIdRef()
+		ID_MENU_MANAGEDATABASE = wx.NewIdRef()
+		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
+		if 'WXMAC' in wx.Platform:
+			self.appleMenu = self.menuBar.OSXGetAppleMenu()
+			self.appleMenu.SetTitle("CrossMgrVideo")
+
+			self.appleMenu.Insert(0, wx.ID_ABOUT, "&About")
+
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
+
+			self.editMenu = wx.Menu()
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_RESETCAMERA,"R&eset Camera"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_FOCUS,"&Focus"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_CONFIGAUTOCAPTURE,"&Configure Autocapture"))
+			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_MANAGEDATABASE,"&Manage Database"))
+
+			self.Bind(wx.EVT_MENU, self.resetCamera, id=ID_MENU_RESETCAMERA)
+			self.Bind(wx.EVT_MENU, self.onFocus, id=ID_MENU_FOCUS)
+			self.Bind(wx.EVT_MENU, self.autoCaptureConfig, id=ID_MENU_CONFIGAUTOCAPTURE)
+			self.Bind(wx.EVT_MENU, self.manageDatabase, id=ID_MENU_MANAGEDATABASE)
+			self.menuBar.Append(self.editMenu, "&Edit")
+
+		else:
+			self.fileMenu = wx.Menu()
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_RESETCAMERA,"R&eset Camera"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_FOCUS,"&Focus"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_CONFIGAUTOCAPTURE,"&Configure Autocapture"))
+			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_MANAGEDATABASE,"&Manage Database"))
+			self.fileMenu.Append(wx.ID_EXIT)
+			self.Bind(wx.EVT_MENU, self.resetCamera, id=ID_MENU_RESETCAMERA)
+			self.Bind(wx.EVT_MENU, self.onFocus, id=ID_MENU_FOCUS)
+			self.Bind(wx.EVT_MENU, self.autoCaptureConfig, id=ID_MENU_CONFIGAUTOCAPTURE)
+			self.Bind(wx.EVT_MENU, self.manageDatabase, id=ID_MENU_MANAGEDATABASE)
+			self.Bind(wx.EVT_MENU, self.onCloseWindow, id=wx.ID_EXIT)
+			self.menuBar.Append(self.fileMenu, "&File")
+			self.helpMenu = wx.Menu()
+			self.helpMenu.Insert(0, wx.ID_ABOUT, "&About")
+			self.helpMenu.Insert(1, wx.ID_HELP, "&Help")
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
+			self.Bind(wx.EVT_MENU, self.onHelp, id=wx.ID_HELP)
+			self.menuBar.Append(self.helpMenu, "&Help")
+
+		self.SetMenuBar(self.menuBar)
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
@@ -598,6 +645,36 @@ class MainWin( wx.Frame ):
 		
 		wx.CallLater( 300, self.refreshTriggers )
 	
+	def OnAboutBox(self, e):
+			description = """CrossMgrVideo is an Impinj interface to CrossMgr
+	"""
+
+			licence = """CrossMgrVideo free software; you can redistribute 
+	it and/or modify it under the terms of the GNU General Public License as 
+	published by the Free Software Foundation; either version 2 of the License, 
+	or (at your option) any later version.
+
+	CrossMgrImpinj is distributed in the hope that it will be useful, 
+	but WITHOUT ANY WARRANTY; without even the implied warranty of 
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+	See the GNU General Public License for more details. You should have 
+	received a copy of the GNU General Public License along with File Hunter; 
+	if not, write to the Free Software Foundation, Inc., 59 Temple Place, 
+	Suite 330, Boston, MA  02111-1307  USA"""
+
+			info = wx.adv.AboutDialogInfo()
+
+			crossMgrPng = Utils.getImageFolder() + '/CrossMgrVideo.png'
+			info.SetIcon(wx.Icon(crossMgrPng, wx.BITMAP_TYPE_PNG))
+			info.SetName('CrossMgrVideo')
+			info.SetVersion(AppVerName.split(' ')[1])
+			info.SetDescription(description)
+			info.SetCopyright('(C) 2020 Edward Sitarski')
+			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
+			info.SetLicence(licence)
+
+			wx.adv.AboutBox(info, self)
+
 	def onHelp( self, event ):
 		OpenHelp()
 	

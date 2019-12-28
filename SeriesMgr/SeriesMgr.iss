@@ -3,14 +3,11 @@
 [Setup]
 #include "inno_setup.txt"
 ArchitecturesInstallIn64BitMode=x64
-DefaultDirName={pf}\SeriesMgr
-DefaultGroupName=SeriesMgr
+DefaultDirName={commonpf}\SeriesMgr
+DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\SeriesMgr.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist\SeriesMgr
-OutputDir=..\..\install
-OutputBaseFilename=SeriesMgr_Setup
 ChangesAssociations=yes
 
 [Registry]

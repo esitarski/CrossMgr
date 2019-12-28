@@ -33,7 +33,7 @@ imageWidth, imageHeight = 640, 480
 
 try:
 	#from VideoCapture import Device
-	from jaraco.video.capture_nofont import Device
+	from jaraco.video.capture import Device
 except:
 	if platform.system() == 'Windows':
 		raise
@@ -222,12 +222,14 @@ class MainWin( wx.Frame ):
 		self.fpt = timedelta(seconds=0)
 		
 		self.fcb = FrameCircBuf( self.bufferSecs * self.fps )
-		
+
+		dataDir = Utils.getHomeDir()
+		configFileName = os.path.join(dataDir, 'CrossMgrCamera.cfg')
 		self.config = wx.Config(appName="CrossMgrCamera",
 						vendorName="SmartCyclingSolutions",
-						#style=wx.CONFIG_USE_LOCAL_FILE
-		)
-		
+						localFilename=configFileName
+						)
+
 		self.requestQ = Queue()			# Select photos from photobuf.
 		self.writerQ = Queue( 400 )		# Selected photos waiting to be written out.
 		self.ftpQ = Queue()				# Photos waiting to be ftp'd.

@@ -1,17 +1,13 @@
 ; -- CrossMgrAlien.iss --
 
 [Setup]
-AppName=CrossMgrAlien
-#include "Version.py"
+#include "inno_setup.txt"
 ArchitecturesInstallIn64BitMode=x64
-DefaultDirName={pf}\CrossMgrAlien
-DefaultGroupName=CrossMgrAlien
+DefaultDirName={commonpf}\CrossMgrAlien
+DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\CrossMgrAlien.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist\CrossMgrAlien
-OutputDir=..\..\install
-OutputBaseFilename=CrossMgrAlien_Setup
 ChangesAssociations=yes
 
 [Registry]

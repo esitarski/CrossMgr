@@ -94,7 +94,7 @@ getVersion() {
 
 cleanup() {
 	echo "Cleaning up everything..."
-	rm -rf __pycache__ CrossMgrImpinj/__pycache__ TagReadWrite/__pycache__ 
+	rm -rf __pycache__ CrossMgrImpinj/__pycache__ TagReadWrite/__pycache__ CrossMgrAlien/__pycache__ SeriesMgr/__pycache__
 	rm -rf dist build release
 	rm -f *.spec
 }
