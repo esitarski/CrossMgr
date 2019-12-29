@@ -399,7 +399,7 @@ do
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgr"
+ 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
