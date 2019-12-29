@@ -5,15 +5,17 @@ import wx
 locale = wx.Locale()
 
 from Version import AppVerName
-import gettext
-initTranslationCalled = False
-def initTranslation():
-	global initTranslationCalled
-	if not initTranslationCalled:
-		gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
-		initTranslationCalled = True
+
+# Currently only CrossMgr has translation files
+#import gettext
+#initTranslationCalled = False
+#def initTranslation():
+#	global initTranslationCalled
+#	if not initTranslationCalled:
+#		gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
+#		initTranslationCalled = True
 		
-initTranslation()
+#initTranslation()
 
 #-----------------------------------------------------------------------
 # Monkey-patch font so we always fetch a default font face.
@@ -160,17 +162,38 @@ def getDocumentsDir():
 	return sp.GetDocumentsDir()
 	
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'WXMAC' in wx.Platform:
+	try:
+		topdirName = os.environ['RESOURCEPATH']
+	except:
+		topdirName = os.path.dirname(os.path.realpath(__file__))
+	if os.path.isdir( os.path.join(topdirName, 'CrossMgrCameraImages') ):
+		dirName = topdirName
+	else:
+		dirName = os.path.normpath(topdirName + '/../Resources/')
+	if not os.path.isdir(dirName):
+		dirName = os.path.normpath(topdirName + '/../../Resources/')
+	if not os.path.isdir(dirName):
+		raise Exception("Resource Directory does not exist:" + dirName)
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgrCamera.exe']:
+		dirName = os.path.dirname(dirName)
+	if 'CrossMgrCamera?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrCameraImages') ):
+		dirName = os.path.dirname(dirName)
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
-if 'CrossMgr?' in os.path.basename(dirName):
-	dirName = os.path.dirname(dirName)
+	if os.path.isdir( os.path.join(dirName, 'CrossMgrCameraImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/CrossMgrCameraImages' ):
+		dirName = '/usr/local'
 
-imageFolder = os.path.join(dirName, 'images')
+imageFolder = os.path.join(dirName, 'CrossMgrCameraImages')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
@@ -203,4 +226,4 @@ def readDelimitedData( s, delim ):
 	yield buffer
 	
 if __name__ == '__main__':
-	print getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png')
+	print(getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png'))

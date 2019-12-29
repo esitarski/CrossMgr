@@ -2,7 +2,7 @@ import os
 import wx
 import ftplib
 import datetime
-from Queue import Empty
+from queue import Empty
 
 now = datetime.datetime.now()
 

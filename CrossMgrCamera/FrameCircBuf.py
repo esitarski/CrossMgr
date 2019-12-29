@@ -125,23 +125,23 @@ if __name__ == '__main__':
 		fcb.append( tStart + datetime.timedelta(seconds=i*1.0/25.0), None )
 	
 	for t in fcb.times:
-		print (t-tStart).total_seconds()
-	print
+		print((t-tStart).total_seconds())
+	print()
 	
 	times, frames = fcb.findBeforeAfter( tStart + datetime.timedelta(seconds=2.01), 1, 1 )
-	print [(t-tStart).total_seconds() for t in times]
+	print([(t-tStart).total_seconds() for t in times])
 	
 	tSearch = datetime.datetime.now() - datetime.timedelta(seconds = 4)
 	i = fcb._find( tSearch )
-	print i, tSearch.strftime( '%H:%M:%S.%f' ), fcb.times[i].strftime( '%H:%M:%S.%f' )
+	print(i, tSearch.strftime( '%H:%M:%S.%f' ), fcb.times[i].strftime( '%H:%M:%S.%f' ))
 	
-	print 'getFrames'
+	print('getFrames')
 	times, frames = fcb.findBeforeAfter( tSearch, 1, 1 )
 	for t in times:
-		print t.strftime( '%H:%M:%S.%f' )
+		print(t.strftime( '%H:%M:%S.%f' ))
 	
 	
-	print 'Validation'
+	print('Validation')
 	tSearch = datetime.datetime.now()
 	for i in xrange(300000):
 		tSearchCur = tSearch - datetime.timedelta(seconds = i%bufSize)
@@ -157,14 +157,14 @@ if __name__ == '__main__':
 		'''
 		assert fcb._find( tSearchCur ) == fcb._loopFind( tSearchCur )
 	
-	print 'Performance'
+	print('Performance')
 	t = datetime.datetime.now()
 	for i in xrange(300000):
 		fcb._find( tSearch - datetime.timedelta(seconds = i%bufSize) )
-	print datetime.datetime.now() - t
+	print(datetime.datetime.now() - t)
 	
 	t = datetime.datetime.now()
 	for i in xrange(300000):
 		fcb._loopFind( t - datetime.timedelta( seconds = i%bufSize ) )
-	print datetime.datetime.now() - t
+	print(datetime.datetime.now() - t)
 	

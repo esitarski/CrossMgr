@@ -6,21 +6,25 @@ Welcome to Cross Manager. Cross Manager is software used to score bike races. It
 
 ## User Installation
 
-As a user, you can install CrossManager on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. Cross has gone through many iterations. Previous versions require Mac and Linux users to install Python, the source code, and fight with it to get it working. This is no longer the case. As with the Windows version, the MacOSX and Linux versions are available as binary releases. The MacOSX and Linux versions are built on github as a release automatically when the code changes. See the Releases tab for binaries.
+As a user, you can install CrossManager on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. CrossMgr has gone through many iterations. Previous versions require Mac and Linux users to install Python, the source code, and fight with it to get it working. This is no longer the case. As with the Windows version, the MacOSX and Linux versions are available as binary releases. The MacOSX and Linux versions are built on github as a release automatically when the code changes. See the Releases tab in the github repo for binaries.
 
 ### Windows Installation
 
-Download the CrossManager-Install.exe (from https://sites.google.com/site/crossmgrsoftware/) and run it. This will setup Cross Manager on your system, and add an icon to your desktop. Additional utilities such as CrossMgrImpinj are required to connect to a RFID reader.
+From the Releases tab, download the CrossMgr-Setup_x64_VERSION.exe file. Run the file and follow the on screen instructions. By default, the program will be installed in C:\Program Files\CrossMgr. You can find Crossmgr from the start menu in the CrossMgr program group.
+
+When running the installer, Windows will complain that it is a unknown publish. Click the MORE INFORMATION link in that dialog, and then click the RUN ANYWAYS button. The install will proceed.
+
+CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process. They will all install into the CrossMgr program group.
 
 ### Mac OSX Installation
 
 From the Releases tab, download the CrossMgr-VERSION.dmg file. From the finder, double click the DMG file to open it. Once the window comes up, you simply drag and drop the CrossMgr.app folder to your Applications directory. From the Applications folder, you can now run CrossMgr like any other Mac app. Most recent Mac OSX versions will require you to press CTRL before clicking on the app for the first time, and then clicking open. The app is a non-signed program that MacOSX will not open otherwise. This is only require the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
 
-CrossMgrImpinj, TagReadWriter, and SeriesMgr follow the same install process.
+CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process.
 
 #### Debugging the Mac Apps
 
-Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting. First, and foremore, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then clock Open on the dialog box to start the application the first time. Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc.. Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application. Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run. Additionally, someitmes the application just won't start. Typically, it's icon will start to flash, and then nothing. To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
+Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting. First, and foremost, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then click Open on the dialog box to start the application the first time. Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc.. Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application. Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run. Additionally, sometimes the application just won't start. Typically, it's icon will start to flash, and then nothing. To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
 
 ```bash
 cd /Applications/CrossMgr.app/Content/MacOS
@@ -45,7 +49,7 @@ Next, just run the AppImage with:
 
 ...from the command prompt.
 
-CrossMgrImpinj, TagReadWriter, and SeriesMgr follow the same install process.
+CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process.
 
 Alternative, setup a desktop icon to call it directly.
 
@@ -53,14 +57,18 @@ Alternative, setup a desktop icon to call it directly.
 
 There are two scripts to build CrossMgr and the associated tools. One for Linux/Mac and one for Windows. Each platform has a build script to install the dependancies, build the binaries for the application, and package the programs.
 
-| Script  | Purpose |
-|---------|---------|
-| compile.sh | Install dependancies, build CrossMgr and CrossMgrImpinj as Mac DMG file images |
-| compile.bat | Old Windows build script |
+| Script  | Help Parameter |Purpose |
+|---------|---------|--------|
+| compile.sh | -h | Linux/MacOSX Build script |
+| compile.ps1 | -help | Windows build script |
 
-Windows builds require InnoSetup from [https://www.jrsoftware.org/isdl.php].
+Use the help parameter to find the available command line options. You can build programs individual or run parts of the build process individual using different command line options.
 
-Mac and Linux builds currently support Python 3.7.x. Python 3.8 thus far has cause build errors with pyinstaller. The build has been automated, and compile.sh script does everything to enable the developer to build CrossMgr and the associated tools. However, you can also download the binary from the github Releases tag.
+All platforms currently work with Python 3.7.x. Python 3.8 and newer is not yet supported by pyinstaller which freezes the python code to binary form.
+
+Windows builds require InnoSetup V6.x from [https://www.jrsoftware.org/isdl.php]. If you do not have Inno Setup installed, the windows build will fail.
+
+The build has been automated, and compile.sh/ps1 script does everything to enable the developer to build CrossMgr and the associated tools. However, you can also download the binary from the github Releases tab.
 
 Linux dependancies are contained in the linuxdeps.sh script. The linuxdeploy-plugin-appimage-x86_64.AppImage binary is required from https://github.com/linuxdeploy/linuxdeploy-plugin-appimage. The compile.sh script will download linuxdeploy-plugin-appimage if it does not exist in the current directory automatically.
 
@@ -86,32 +94,37 @@ bash compile.sh -a -A
 
 When the build is complete, the resultant DMG/AppImage files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/build.yaml) uses to build the code on GitHub.
 
-The build procedure for windows currently is a manual process:
+The build procedure for windows are as follows:
 
-Windows:
-```cmd
-  virtualenv env
-  env\scripts\activate.cmd
-```
-or
+- Setup a virtual env, download the required python modules:
 
 ```powershell
-  virtualenv env
-  env\scripts\activate.ps
+.\compile.ps1 -setupenv
 ```
 
-DO NOT SETUP CROSS MANAGER OUTSIDE OF A VIRTUAL ENVIRONMENT AS CONFLICTS CAN ARRISE.
+- Build all the code and publish to releases directory
 
-- Run pip to install the requirements:
+```powershell
+.\compile.ps1 -all -everything
+```
+When the build is complete, the resultant exe installer files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/build.yaml) uses to build the code on GitHub.
+
+### Making a Release
+
+With the workflow setup on Github, builds are automatic. Every time a change it checked into the repo, github will build the code. The purpose of this build is to ensure the code will build on all platforms. To make a release, a tag is added to the repo. When a tag is added, it will appear in the releases tab, and github will run the workflow to build the code for MacOSX, Linux, and Windows.
+
+To make a release, do the following:
+
+Linux/Mac:
 
 ```bash
-pip3 install -r requirements.txt
+bash compile.sh -T
 ```
 
-- Build the code and installer
+Windows:
 
 ```powershell
-python3 CrossMgrSetup.py
+.\compile.ps1 -tag
 ```
 
-The requirements.txt has all modules required to build and run CrossManager. CrossMgrSetup.py currently assumes you have a Google Drive configured to publish the code. This will be fixed in the future.
+This will tag the repo and cause github to build the code and create a new release.

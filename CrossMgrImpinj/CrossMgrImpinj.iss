@@ -3,14 +3,11 @@
 [Setup]
 #include "inno_setup.txt"
 ArchitecturesInstallIn64BitMode=x64
-DefaultDirName={pf}\CrossMgrImpinj
-DefaultGroupName=CrossMgrImpinj
+DefaultDirName={commonpf}\CrossMgrImpinj
+DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\CrossMgrImpinj.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist/CrossMgrImpinj
-OutputDir=..\..\install
-OutputBaseFilename=CrossMgrImpinj_Setup
 ChangesAssociations=yes
 
 [Registry]

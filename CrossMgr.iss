@@ -3,15 +3,12 @@
 [Setup]
 #include "inno_setup.txt"
 ArchitecturesInstallIn64BitMode=x64
-DefaultDirName={pf}\CrossMgr
+DefaultDirName={commonpf}\CrossMgr
 DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\CrossMgr.exe
-SourceDir=dist\CrossMgr
-OutputBaseFilename=CrossMgr_Setup
 ChangesAssociations=yes
 Compression=lzma2/ultra64
 SolidCompression=yes
-OutputDir=..\..\install
 
 [Registry]
 ; Automatically configure CrossMgr to launch .cmn files.
@@ -25,7 +22,7 @@ Name: "desktopicon"; Description: "Create a &desktop icon";
 	
 [Files]
 Source: "*.*"; DestDir: "{app}"; Flags: recursesubdirs
-Source: "..\..\CrossMgrTutorial.doc"; DestDir: "{app}";
+Source: "CrossMgrTutorial.pdf"; DestDir: "{app}";
 
 [Icons]
 Name: "{group}\CrossMgr"; Filename: "{app}\CrossMgr.exe"

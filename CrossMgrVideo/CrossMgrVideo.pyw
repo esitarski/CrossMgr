@@ -5,7 +5,7 @@
 try:
 	import MainWin
 except ImportError:
-	from CrossMgrCamera import MainWin
+	from CrossMgrVideo import MainWin
 
 import multiprocessing
 if __name__ == '__main__':

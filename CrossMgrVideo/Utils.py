@@ -157,17 +157,36 @@ def getDocumentsDir():
 	return sp.GetDocumentsDir()
 	
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'WXMAC' in wx.Platform:
+	try:
+		topdirName = os.environ['RESOURCEPATH']
+	except:
+		topdirName = os.path.dirname(os.path.realpath(__file__))
+	if os.path.isdir( os.path.join(topdirName, 'CrossMgrVideoImages') ):
+		dirName = topdirName
+	else:
+		dirName = os.path.normpath(topdirName + '/../Resources/')
+	if not os.path.isdir(dirName):
+		dirName = os.path.normpath(topdirName + '/../../Resources/')
+	if not os.path.isdir(dirName):
+		raise Exception("Resource Directory does not exist:" + dirName)
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
-if 'CrossMgr?' in os.path.basename(dirName):
-	dirName = os.path.dirname(dirName)
+	if os.path.basename(dirName) == 'library.zip':
+		dirName = os.path.dirname(dirName)
+	if 'CrossMgrVideo?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
 
-imageFolder = os.path.join(dirName, 'images')
+	if os.path.isdir( os.path.join(dirName, 'CrossMgrVideoImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/CrossMgrVideoImages' ):
+		dirName = '/usr/local'
+
+imageFolder = os.path.join(dirName, 'CrossMgrVideoImages')
 helpFolder = os.path.join(dirName, 'CrossMgrVideoHtmlDoc')
 
 def getDirName():		return dirName

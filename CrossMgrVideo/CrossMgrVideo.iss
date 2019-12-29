@@ -3,14 +3,11 @@
 [Setup]
 #include "inno_setup.txt"
 ArchitecturesInstallIn64BitMode=x64
-DefaultDirName={pf}\CrossMgrVideo
-DefaultGroupName=CrossMgrVideo
+DefaultDirName={commonpf}\CrossMgrVideo
+DefaultGroupName=CrossMgr
 UninstallDisplayIcon={app}\CrossMgrVideo.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
-SourceDir=dist\CrossMgrVideo
-OutputDir=..\..\install
-OutputBaseFilename=CrossMgrVideo_Setup
 ChangesAssociations=yes
 
 [Registry]
