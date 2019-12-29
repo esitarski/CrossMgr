@@ -12,6 +12,8 @@ As a user, you can install CrossManager on Windows, Mac OSX, and Linux. Only x86
 
 From the Releases tab, download the CrossMgr-Setup_x64_VERSION.exe file. Run the file and follow the on screen instructions. By default, the program will be installed in C:\Program Files\CrossMgr. You can find Crossmgr from the start menu in the CrossMgr program group.
 
+When running the installer, Windows will complain that it is a unknown publish. Click the MORE INFORMATION link in that dialog, and then click the RUN ANYWAYS button. The install will proceed.
+
 CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process. They will all install into the CrossMgr program group.
 
 ### Mac OSX Installation
