@@ -22,7 +22,7 @@ CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follo
 
 #### Debugging the Mac Apps
 
-Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting. First, and foremore, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then clock Open on the dialog box to start the application the first time. Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc.. Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application. Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run. Additionally, someitmes the application just won't start. Typically, it's icon will start to flash, and then nothing. To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
+Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting. First, and foremost, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then click Open on the dialog box to start the application the first time. Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc.. Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application. Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run. Additionally, sometimes the application just won't start. Typically, it's icon will start to flash, and then nothing. To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
 
 ```bash
 cd /Applications/CrossMgr.app/Content/MacOS
@@ -90,7 +90,7 @@ bash compile.sh -a -A
 
 When the build is complete, the resultant DMG/AppImage files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/build.yaml) uses to build the code on GitHub.
 
-The build procedure for windows currently is a manual process:
+The build procedure for windows are as follows:
 
 - Setup a virtual env, download the required python modules:
 
@@ -107,7 +107,7 @@ When the build is complete, the resultant exe installer files will be in the rel
 
 ### Making a Release
 
-With the workflow setup on Github, builds are automatic. Every time a change it checked into the repo, github will build the code. To make a release, a tag is added to the repo.
+With the workflow setup on Github, builds are automatic. Every time a change it checked into the repo, github will build the code. The purpose of this build is to ensure the code will build on all platforms. To make a release, a tag is added to the repo. When a tag is added, it will appear in the releases tab, and github will run the workflow to build the code for MacOSX, Linux, and Windows.
 
 To make a release, do the following:
 
