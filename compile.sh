@@ -124,6 +124,25 @@ compileCode() {
 	fi
 }
 
+buildLocale() {
+	PROGRAM=$1
+	getBuildDir $PROGRAM
+
+	localepath="${BUILDDIR}/${PROGRAM}Locale"
+	echo $localepath
+	locales=$(find $localepath -type d -depth 1)
+	for locale in $locales
+	do
+		pofile="${locale}/LC_MESSAGES/messages.po"
+		echo "Building Locale: $locale"
+		echo "python -mbabel compile -f -d $localepath -l $locale -i $pofile"
+		python -mbabel compile -f -d $localepath -l $locale -i $pofile
+		if [ $? -ne 0 ]; then
+			echo "Locale $locale failed. Aborting..."
+			exit 1
+		fi
+	done
+}
 
 copyAssets(){
 	PROGRAM=$1
@@ -156,6 +175,7 @@ copyAssets(){
 		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
 	fi
 	if [ -d "${BUILDDIR}/${PROGRAM}Locale" ]; then
+		buildLocale $PROGRAM
 		echo "Copying Locale to $RESOURCEDIR"
 		cp -rv "${BUILDDIR}/${PROGRAM}Locale" $RESOURCEDIR
 	fi
@@ -372,7 +392,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfywV" option
+while getopts "hcitaviCdPBASkomzlTfywVZ" option
 do
 	gotarg=1
 	case ${option} in
@@ -423,6 +443,16 @@ do
 				for program in $PROGRAMS
 				do
 					doPyInstaller $program
+				done
+			else
+				echo "No programs enabled. Use -t, -c, -i, or -a."
+				exit
+			fi
+		;;
+		Z) if [ -n "$PROGRAMS" ]; then
+				for program in $PROGRAMS
+				do
+					buildLocale $program
 				done
 			else
 				echo "No programs enabled. Use -t, -c, -i, or -a."
