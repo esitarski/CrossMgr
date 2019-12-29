@@ -18,12 +18,12 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@master
             - name: Setup Environment
-              shell: pwsh
+              shell: powershell
               run: |
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -setupenv
             - name: Build project
-              shell: pwsh
+              shell: powershell
               run: |
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -setupenv
