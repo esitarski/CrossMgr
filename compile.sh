@@ -284,8 +284,8 @@ buildall() {
 			cleanup
 			for program in $PROGRAMS
 			do
-                if [ "$program" == "SeriesMgr" ]; then
-                    fixSeriesMgrFiles
+                if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo" ]; then
+                    fixSeriesMgrFiles $program
                 fi
 				getVersion $program
 				compileCode $program
@@ -310,7 +310,9 @@ listFiles() {
 }
 
 fixSeriesMgrFiles() {
-    cd SeriesMgr
+	PROGRAM=$1
+	echo "Fixing: $PROGRAM"
+    cd $PROGRAM
     cat Dependencies.py | while read import file
     do
         echo "Linking; $file"
@@ -340,6 +342,7 @@ $0 [ -hcCtaep: ]
  -t        - Build TagReadWrite
  -y        - Build SeriesMgr
  -w        - Build CrossMgrAlien
+ -V        - Build CrossMgrVideo
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -369,7 +372,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfyw" option
+while getopts "hcitaviCdPBASkomzlTfywV" option
 do
 	gotarg=1
 	case ${option} in
@@ -388,11 +391,14 @@ do
 		;;
 		w) PROGRAMS="$PROGRAMS CrossMgrAlien"
 		;;
+		V) PROGRAMS="$PROGRAMS CrossMgrVideo"
+		;;
 		v) 	getVersion "CrossMgr"
 			getVersion "CrossMgrImpinj"
 			getVersion "TagReadWrite"
 			getVersion "SeriesMgr"
 			getVersion "CrossMgrAlien"
+			getVersion "CrossMgrVideo"
 		;;
 		C) 	cleanup
 		;;
@@ -461,7 +467,8 @@ do
 		;;
 		T) tagrelease
 		;;
-		f) fixSeriesMgrFiles
+		f) fixSeriesMgrFiles 'SeriesMgr'
+		   fixSeriesMgrFiles 'CrossMgrVideo'
 		;;
 		*) doHelp
 		;;

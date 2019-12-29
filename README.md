@@ -55,12 +55,14 @@ There are two scripts to build CrossMgr and the associated tools. One for Linux/
 
 | Script  | Purpose |
 |---------|---------|
-| compile.sh | Install dependancies, build CrossMgr and CrossMgrImpinj as Mac DMG file images |
-| compile.bat | Old Windows build script |
+| compile.sh | Linux/MacOSX Build script |
+| compile.ps1 | Windows build script |
 
-Windows builds require InnoSetup from [https://www.jrsoftware.org/isdl.php].
+All platforms currently work with Python 3.7.x. Python 3.8 and newer is not yet supported by pyinstaller which freezes the python code to binary form.
 
-Mac and Linux builds currently support Python 3.7.x. Python 3.8 thus far has cause build errors with pyinstaller. The build has been automated, and compile.sh script does everything to enable the developer to build CrossMgr and the associated tools. However, you can also download the binary from the github Releases tag.
+Windows builds require InnoSetup V6.x from [https://www.jrsoftware.org/isdl.php]. If you do not have Inno Setup installed, the windows build will fail.
+
+The build has been automated, and compile.sh/ps1 script does everything to enable the developer to build CrossMgr and the associated tools. However, you can also download the binary from the github Releases tab.
 
 Linux dependancies are contained in the linuxdeps.sh script. The linuxdeploy-plugin-appimage-x86_64.AppImage binary is required from https://github.com/linuxdeploy/linuxdeploy-plugin-appimage. The compile.sh script will download linuxdeploy-plugin-appimage if it does not exist in the current directory automatically.
 
@@ -88,30 +90,35 @@ When the build is complete, the resultant DMG/AppImage files will be in the rele
 
 The build procedure for windows currently is a manual process:
 
-Windows:
-```cmd
-  virtualenv env
-  env\scripts\activate.cmd
-```
-or
+- Setup a virtual env, download the required python modules:
 
 ```powershell
-  virtualenv env
-  env\scripts\activate.ps
+.\compile.ps1 -setupenv
 ```
 
-DO NOT SETUP CROSS MANAGER OUTSIDE OF A VIRTUAL ENVIRONMENT AS CONFLICTS CAN ARRISE.
+- Build all the code and publish to releases directory
 
-- Run pip to install the requirements:
+```powershell
+.\compile.ps1 -all -everything
+```
+When the build is complete, the resultant exe installer files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/build.yaml) uses to build the code on GitHub.
+
+### Making a Release
+
+With the workflow setup on Github, builds are automatic. Every time a change it checked into the repo, github will build the code. To make a release, a tag is added to the repo.
+
+To make a release, do the following:
+
+Linux/Mac:
 
 ```bash
-pip3 install -r requirements.txt
+bash compile.sh -T
 ```
 
-- Build the code and installer
+Windows:
 
 ```powershell
-python3 CrossMgrSetup.py
+.\compile.ps1 -tag
 ```
 
-The requirements.txt has all modules required to build and run CrossManager. CrossMgrSetup.py currently assumes you have a Google Drive configured to publish the code. This will be fixed in the future.
+This will tag the repo and cause github to build the code and create a new release.
