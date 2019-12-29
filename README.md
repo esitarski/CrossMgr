@@ -55,10 +55,12 @@ Alternative, setup a desktop icon to call it directly.
 
 There are two scripts to build CrossMgr and the associated tools. One for Linux/Mac and one for Windows. Each platform has a build script to install the dependancies, build the binaries for the application, and package the programs.
 
-| Script  | Purpose |
-|---------|---------|
-| compile.sh | Linux/MacOSX Build script |
-| compile.ps1 | Windows build script |
+| Script  | Help Parameter |Purpose |
+|---------|---------|--------|
+| compile.sh | -h | Linux/MacOSX Build script |
+| compile.ps1 | -help | Windows build script |
+
+Use the help parameter to find the available command line options. You can build programs individual or run parts of the build process individual using different command line options.
 
 All platforms currently work with Python 3.7.x. Python 3.8 and newer is not yet supported by pyinstaller which freezes the python code to binary form.
 
