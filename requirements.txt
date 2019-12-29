@@ -15,7 +15,7 @@ ftputil
 wxWidgets
 markdown
 bs4
--e git+https://github.com/mbuckaway/pyllrp.git#egg=pyllrp
+-e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
 trueskill
 pyinstaller
 pybabel
