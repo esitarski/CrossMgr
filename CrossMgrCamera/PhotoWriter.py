@@ -1,6 +1,6 @@
 from wx import BITMAP_TYPE_JPEG
 import os
-import cStringIO as StringIO
+import io as StringIO
 
 def PhotoWriter( qWriter, qMessage, qFTP ):
 	keepGoing = True

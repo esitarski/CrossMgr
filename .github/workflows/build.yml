@@ -3,7 +3,6 @@ on:
         paths-ignore:
         - README.md
         - CHANGELOG.md
-        - .github/workflows/build.yml
         - .grenrc.yml
 name: CrossMgr_Build
 jobs:
@@ -35,6 +34,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildlinux:
         name: Linux
+        needs: buildmac
         runs-on: ubuntu-18.04
         steps:
             - name: Setup Python environment
@@ -55,6 +55,35 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+                  body_path: .github/release.txt
+                  files: release/*
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    buildwindows:
+        name: Windows
+        needs: buildmac
+        runs-on: windows-latest
+        steps:
+            - name: Setup Python environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Setup Environment
+              shell: powershell
+              run: |
+                cd $env:GITHUB_WORKSPACE
+                .\compile.ps1 -setupenv
+            - name: Build project
+              shell: powershell
+              run: |
+                cd $env:GITHUB_WORKSPACE
+                .\compile.ps1 -all -everything
             - name: Release
               uses: softprops/action-gh-release@v1
               if: startsWith(github.ref, 'refs/tags/')

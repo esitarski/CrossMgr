@@ -1,0 +1,523 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="CrossMgr Documentation and Help">
+<meta name="keywords" content="CrossMgr,documentation,help">
+<meta name="author" content="Edward Sitarski">
+<meta name="generator" content="CrossMgr Help" />
+<title>CrossMgr Documentation</title>
+<style type="text/css">
+body{
+    margin: 0 auto;
+    font-family: Georgia, Palatino, serif;
+    color: #444444;
+    line-height: 1;
+    max-width: 960px;
+    padding: 12px;
+}
+h1, h2, h3, h4 {
+    color: #111111;
+    font-weight: 400;
+}
+h1, h2, h3, h4, h5, p {
+    margin-bottom: 24px;
+    padding: 0;
+}
+h1 {
+    font-size: 48px;
+}
+h2 {
+    font-size: 36px;
+    /* The bottom margin is small. It's designed to be used with gray meta text
+     * below a post title. */
+    margin: 24px 0 6px;
+}
+h3 {
+    font-size: 24px;
+}
+h4 {
+    font-size: 21px;
+}
+h5 {
+    font-size: 18px;
+}
+a {
+    color: #0099ff;
+    margin: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+a:hover {
+    text-decoration: none;
+    color: #ff6600;
+}
+a:visited {
+    color: purple;
+}
+ul {
+    padding: 0px;
+    margin-left: 24px;
+}
+ol {
+    padding: 0px;
+    margin-left: 48px;
+}
+li {
+    line-height: 24px;
+}
+//li ul, li ul {
+//    margin-left: 48px;
+//}
+p, ul, ol {
+    font-size: 16px;
+    line-height: 24px;
+    max-width: 540px;
+}
+pre {
+    padding: 0px 24px;
+    max-width: 800px;
+    white-space: pre-wrap;
+}
+code {
+    font-family: Consolas, Monaco, Andale Mono, monospace;
+    line-height: 1.5;
+    font-size: 13px;
+}
+aside {
+    display: block;
+    float: right;
+    width: 390px;
+}
+blockquote {
+    border-left:.5em solid #eee;
+    padding: 0 2em;
+    margin-left:0;
+    max-width: 476px;
+}
+blockquote  cite {
+    font-size:14px;
+    line-height:20px;
+    color:#bfbfbf;
+}
+blockquote cite:before {
+    content: '\2014 \00A0';
+}
+
+blockquote p {  
+    color: #666;
+    max-width: 460px;
+}
+hr {
+    width: 540px;
+    text-align: left;
+    margin: 0 auto 0 0;
+    color: #999;
+}
+
+/* Code below this line is copyright Twitter Inc. */
+
+button,
+input,
+select,
+textarea {
+  font-size: 100%;
+  margin: 0;
+  vertical-align: baseline;
+  *vertical-align: middle;
+}
+button, input {
+  line-height: normal;
+  *overflow: visible;
+}
+button::-moz-focus-inner, input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  cursor: pointer;
+  -webkit-appearance: button;
+}
+input[type=checkbox], input[type=radio] {
+  cursor: pointer;
+}
+/* override default chrome & firefox settings */
+input:not([type="image"]), textarea {
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+input[type="search"] {
+  -webkit-appearance: textfield;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+label,
+input,
+select,
+textarea {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: normal;
+  margin-bottom: 18px;
+}
+input[type=checkbox], input[type=radio] {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+input[type=text],
+input[type=password],
+textarea,
+select {
+  display: inline-block;
+  width: 210px;
+  padding: 4px;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 18px;
+  height: 18px;
+  color: #808080;
+  border: 1px solid #ccc;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+select, input[type=file] {
+  height: 27px;
+  line-height: 27px;
+}
+textarea {
+  height: auto;
+}
+
+/* grey out placeholders */
+:-moz-placeholder {
+  color: #bfbfbf;
+}
+::-webkit-input-placeholder {
+  color: #bfbfbf;
+}
+
+input[type=text],
+input[type=password],
+select,
+textarea {
+  -webkit-transition: border linear 0.2s, box-shadow linear 0.2s;
+  -moz-transition: border linear 0.2s, box-shadow linear 0.2s;
+  transition: border linear 0.2s, box-shadow linear 0.2s;
+  -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+input[type=text]:focus, input[type=password]:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(82, 168, 236, 0.8);
+  -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
+  -moz-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(82, 168, 236, 0.6);
+}
+
+/* buttons */
+button {
+  display: inline-block;
+  padding: 4px 14px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  background-color: #0064cd;
+  background-repeat: repeat-x;
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#049cdb), to(#0064cd));
+  background-image: -moz-linear-gradient(top, #049cdb, #0064cd);
+  background-image: -ms-linear-gradient(top, #049cdb, #0064cd);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #049cdb), color-stop(100%, #0064cd));
+  background-image: -webkit-linear-gradient(top, #049cdb, #0064cd);
+  background-image: -o-linear-gradient(top, #049cdb, #0064cd);
+  background-image: linear-gradient(top, #049cdb, #0064cd);
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  border: 1px solid #004b9a;
+  border-bottom-color: #003f81;
+  -webkit-transition: 0.1s linear all;
+  -moz-transition: 0.1s linear all;
+  transition: 0.1s linear all;
+  border-color: #0064cd #0064cd #003f81;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+}
+button:hover {
+  color: #fff;
+  background-position: 0 -15px;
+  text-decoration: none;
+}
+button:active {
+  -webkit-box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+button::-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}
+
+div.toc {
+	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	font-size: 130:
+}
+
+//------------------------------------------------------------------
+
+table
+{
+	background: #fff;
+	margin: 45px;
+	width: 480px;
+	border-collapse: collapse;
+	text-align: left;
+}
+th
+{
+	font-size: 120%;
+	font-weight: normal;
+	padding: 10px 8px;
+	border-bottom: 2px solid #6678b1;
+}
+td
+{
+	border-bottom: 1px solid #ccc;
+	padding: 6px 8px;
+}
+tbody tr:hover td
+{
+	color: #00f;
+}
+
+//------------------------------------------------------------------
+
+
+.container {
+	width:960px;
+	margin:20px auto;
+}
+
+.toc {
+	float:left;
+	width:300px;
+}
+
+.content {
+	float:left;
+	width:660px;
+}
+
+
+#idRaceName
+{
+	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	font-size: 600%;
+	font-weight: bold;
+}
+
+#idImgHeader
+{
+	box-shadow: 4px 4px 4px #888888;
+}
+
+</style>
+</script>
+
+</head>
+<body>
+<p>
+<table cellspacing="8"><tr>
+<td><a href="Main.html"><img id="idImgHeader" alt="CrossMgr Logo" src="data:image/png;base64,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" /></a></td>
+<td valign="top"><span id="idRaceName">CrossMgrVideo</span></td>
+</tr></table>
+<p/>
+<div class="container">
+<div class="toc">
+<ul>
+<li><a href="#quick-start">Quick Start</a><ul>
+<li><a href="#overview">Overview</a><ul>
+<li><a href="#typical-scenarios">Typical Scenarios</a><ul>
+<li><a href="#conventional-finish-line">Conventional Finish Line</a></li>
+<li><a href="#finish-line-with-crossmgr">Finish Line with CrossMgr</a></li>
+<li><a href="#live-feed-example-velodrome">Live Feed (example: Velodrome)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#starting-crossmgr-video">Starting CrossMgr Video</a></li>
+<li><a href="#main-screen">Main Screen</a><ul>
+<li><a href="#buttons-on-top">Buttons on Top</a><ul>
+<li><a href="#focus">Focus</a></li>
+<li><a href="#reset-camera">Reset Camera</a></li>
+<li><a href="#manage-database">Manage Database</a></li>
+<li><a href="#config-auto-capture">Config Auto Capture</a></li>
+<li><a href="#snapshot">Snapshot</a></li>
+<li><a href="#auto-capture">Auto Capture</a></li>
+<li><a href="#capture">Capture</a></li>
+</ul>
+</li>
+<li><a href="#finish-strip">Finish Strip</a><ul>
+<li><a href="#photo-dialog">Photo Dialog</a><ul>
+<li><a href="#drag-zoom">Drag Zoom</a></li>
+<li><a href="#header">Header</a></li>
+<li><a href="#buttons">Buttons</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#buttons-on-bottom">Buttons on Bottom</a><ul>
+<li><a href="#finish-direction">Finish Direction</a></li>
+<li><a href="#zoom-image-quality">Zoom Image Quality</a></li>
+</ul>
+</li>
+<li><a href="#panes-on-bottom">Panes on Bottom</a><ul>
+<li><a href="#camera-window">Camera Window</a></li>
+<li><a href="#triggers">Triggers</a><ul>
+<li><a href="#show-triggers-for">Show Triggers for</a></li>
+<li><a href="#trigger-window">Trigger Window</a></li>
+</ul>
+</li>
+<li><a href="#message-window">Message Window</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="content">
+<h1 id="quick-start">Quick Start</h1>
+<p>Welcome to <strong>CrossMgrVideo!</strong></p>
+<p><strong>CrossMgrVideo</strong> makes it easy to capture and analyze finish line video taken from inexpensive USB webcams.
+Video can be triggered manually, or automatically by CrossMgr.</p>
+<h2 id="overview">Overview</h2>
+<p><strong>CrossMgrVideo</strong> has two primary panes:</p>
+<ol>
+<li>Finish Strip (top)</li>
+<li>Trigger List (middle of the bottom)</li>
+</ol>
+<p>The <strong>Finish Stip</strong> shows photos captured by triggers spread out by time.  Triggers are shown in the <strong>Trigger List</strong>.</p>
+<p>A trigger event could be a race finish, a close finish, a points lap, or potentially a race indicent from a live feed.</p>
+<p><strong>CrossMgr</strong> can automatically generate triggers for <strong>CrossMgrVideo</strong> evey time a bib number is entered (can be RFID or manual entry).
+Alternatively, you can generate triggers in <strong>CrossMgrVideo</strong> manually with the <strong>AUTO CAPTURE</strong> and <strong>CAPTURE</strong> buttons.</p>
+<h3 id="typical-scenarios">Typical Scenarios</h3>
+<h4 id="conventional-finish-line">Conventional Finish Line</h4>
+<p>You want to check finishes quickly.  You are not using <strong>CrossMgr</strong>.</p>
+<p>On each finish, press the <strong>CAPTURE</strong> button until all the riders have passed.  Then use the <strong>Finish Strip</strong> and <strong>Photo Dialog</strong> (with Zoom) to check the finish order of the bib numbers.
+Since each <strong>CAPTURE</strong> is a trigger, it is easy to jump to different finishes.</p>
+<h4 id="finish-line-with-crossmgr">Finish Line with CrossMgr</h4>
+<p>You have <strong>CrossMgr</strong>, but only want to check close finishes that RFID may not have gotten right.</p>
+<p>Set the option in <strong>CrossMgr</strong> to support a Camera (this can be done for every passing, or just the end of the race).
+<strong>CrossMgr</strong> will then send triggers to <strong>CrossMgrVideo</strong>.
+Check the <strong>Trigger List</strong> for close finishes marked in red and make corrections as necessary.</p>
+<h4 id="live-feed-example-velodrome">Live Feed (example: Velodrome)</h4>
+<p>You have a live feed of an event.  You see "something" in real-time but want to check it in detail later for an infraction.</p>
+<p>Use a second monitor.  Open the <strong>Focus</strong> screen and drag it to the second monitor.  The camera operator watches the <strong>Focus</strong> window and uses it to follow the race with a tripod mounted camera.  When a disturbance is seen, press the <strong>AUTO CAPTURE</strong> button.  This will capture the action.  Make sure it is configured to capture before the press (<strong>Seconds Before</strong> &gt; 0).  Capturing video before the incident gives you time to press the button as well as recording what lead up to the incident.</p>
+<h2 id="starting-crossmgr-video">Starting CrossMgr Video</h2>
+<p>When <strong>CrossMgrVideo</strong> starts, you are prompted for the USB port and camera resolution.
+Device 0 is usually the built-in camera, Device 1 is usually the first USB camera available.</p>
+<p>You are also prompted for the resolution and frames per second of your camera.  Check your camera for its details.</p>
+<h2 id="main-screen">Main Screen</h2>
+<h3 id="buttons-on-top">Buttons on Top</h3>
+<h4 id="focus">Focus</h4>
+<p>Opens a big window suitable for focusing the camera.  Also useful in the <strong>Live Feed</strong> scenario to allow the camera operator to follow the action.</p>
+<h4 id="reset-camera">Reset Camera</h4>
+<p>Allows the camera to be reset including the USB port, resolution and frames per second.</p>
+<h4 id="manage-database">Manage Database</h4>
+<p>Opens a dialog to manage the database including:</p>
+<ul>
+<li>Location and size of the database</li>
+<li>Deleting Triggers and Photos from the database</li>
+<li>"Vacuuming" the database to reduce the database file size</li>
+</ul>
+<p>Deleting items from the database will not reduce the file size.  However,
+"holes" in the database will be reused by future database activity.</p>
+<p>To actually reduce the database size, select the "Vacuum" option.
+Warning - this can take a few minutes.</p>
+<h4 id="config-auto-capture">Config Auto Capture</h4>
+<p>Opens a dialog to configure the <strong>Auto Capture Time Interval</strong> defined by <strong>Seconds Before</strong> and <strong>Seconds After</strong>.</p>
+<p>When the <strong>AUTO CAPTURE</strong> button is pressed, it captures video during the <strong>Auto Capture Time Interval</strong>, then stops automatically.</p>
+<p>For example, say <strong>Seconds Before</strong>=0.5 and <strong>Seconds After=2.0 and the __AUTO CAPTURE</strong> button is pressed at 14:07:21.0.
+<strong>CrossMgrVideo</strong> will capture video from 14:07:20.5 to 14:07:22.</p>
+<p><strong>CrossMgrVideo</strong> can capture video up to 10 seconds "in the past" because it keeps a 10-second circular buffer </p>
+<h4 id="snapshot">Snapshot</h4>
+<p>Takes a single snapshot and save it to the database.</p>
+<h4 id="auto-capture">Auto Capture</h4>
+<p>When pressed, captures frames for the time interval <strong>Seconds Before</strong> to <strong>Seconds After</strong> as configured in the dialog above.</p>
+<p>This is primarily intended when using CrossMgrVideo to follow live-action track racing.
+When you see potential inteference, pressing the <strong>AUTO CAPTURE</strong> button will save the frames before and after the incident for review.</p>
+<p>This is much faster than searching through video.</p>
+<h4 id="capture">Capture</h4>
+<p>Captures video frames as long as the <strong>CAPTURE</strong> button is pressed.
+Useful for capturing traditional finishes.</p>
+<h3 id="finish-strip">Finish Strip</h3>
+<p>Shows all the frames recorded around the trigger event.</p>
+<ul>
+<li>Move the mouse across the Finish Strip to seen the current frame in the Zoom window.</li>
+<li>Shift-mouse-wheel to change magnification in the zoom window.</li>
+<li>Mouse-wheel, or use the Stretch slider to space the frames so that the objects between frames line up.</li>
+<li>Left-click and Drag (or Scroll Bar) to move sideways.</li>
+<li>Left-click move the current time line.</li>
+<li>Right-click brings up the <strong>Photo Dialog</strong>.</li>
+</ul>
+<h4 id="photo-dialog">Photo Dialog</h4>
+<h5 id="drag-zoom">Drag Zoom</h5>
+<p>Dragging a box in the photo will zoom in on the region of interest.
+Useful for checking bib numbers, etc.</p>
+<h5 id="header">Header</h5>
+<p>Select if you want the Trigger header shown on the photo.</p>
+<h5 id="buttons">Buttons</h5>
+<ul>
+<li>Print</li>
+<li>Copy to Clipboard</li>
+<li>Contrast - increases contrast in the photo</li>
+<li>Save as PNG - save the photo in PNG format</li>
+<li>Save as MPG - save an mpg file of the entire clip</li>
+<li>Save as GIF - save an animated gif file.  Caution: these files can be large.</li>
+<li>Compute Speed</li>
+</ul>
+<p><strong>Compute Speed</strong> opens a wizard that enables you to estimate the speed of a bicycle by analyzing how far the bicycle moved between two video frames.</p>
+<p><strong>CrossMgrVideo</strong> requires you to indicate the dimensions of a bicycle wheel to establish a reference for the speed calculation.</p>
+<h3 id="buttons-on-bottom">Buttons on Bottom</h3>
+<h4 id="finish-direction">Finish Direction</h4>
+<p>Controls the direction of the Finish Strip.  Ensure that it matches the direction of the finishers.</p>
+<h4 id="zoom-image-quality">Zoom Image Quality</h4>
+<p>Unless you have a very fast processor, leave it at Normal.  <strong>High</strong> is slightly better quality, but much more CPU.</p>
+<h3 id="panes-on-bottom">Panes on Bottom</h3>
+<h4 id="camera-window">Camera Window</h4>
+<p>Shows what the Camera is looking at.  For performance reasons, this has a much slower frame rate than the camera.</p>
+<h4 id="triggers">Triggers</h4>
+<h5 id="show-triggers-for">Show Triggers for</h5>
+<p>Sets the Date to show triggers.  Can also use the <strong>Select Data</strong> function.  Set <strong>Filter by Bib</strong> if there is a particular bib number you are interested in.</p>
+<h5 id="trigger-window">Trigger Window</h5>
+<p>Window containing the triggers.</p>
+<ul>
+<li>Left-click: shows the photos associated with the trigger.</li>
+<li>Right-click:  brings up a delete menu.</li>
+</ul>
+<h4 id="message-window">Message Window</h4>
+<ul>
+<li>Shows the camera connection status and other messages.</li>
+</ul>
+</div>
+<br/>
+Copyright &copy; 2012-2019, Edward Sitarski
+</div>
+</body>
+</html>

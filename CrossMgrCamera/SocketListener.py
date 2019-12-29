@@ -1,6 +1,6 @@
 import threading
 import datetime
-from MultiCast import MultiCastReceiver
+from Multicast import MultiCastReceiver
 
 now = datetime.datetime.now
 minDelay = 0.2

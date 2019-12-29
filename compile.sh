@@ -94,7 +94,7 @@ getVersion() {
 
 cleanup() {
 	echo "Cleaning up everything..."
-	rm -rf __pycache__ CrossMgrImpinj/__pycache__ TagReadWrite/__pycache__ 
+	rm -rf __pycache__ CrossMgrImpinj/__pycache__ TagReadWrite/__pycache__ CrossMgrAlien/__pycache__ SeriesMgr/__pycache__
 	rm -rf dist build release
 	rm -f *.spec
 }
@@ -124,6 +124,25 @@ compileCode() {
 	fi
 }
 
+buildLocale() {
+	PROGRAM=$1
+	getBuildDir $PROGRAM
+
+	localepath="${BUILDDIR}/${PROGRAM}Locale"
+	echo $localepath
+	locales=$(find $localepath -type d -depth 1)
+	for locale in $locales
+	do
+		pofile="${locale}/LC_MESSAGES/messages.po"
+		echo "Building Locale: $locale"
+		echo "python -mbabel compile -f -d $localepath -l $locale -i $pofile"
+		python -mbabel compile -f -d $localepath -l $locale -i $pofile
+		if [ $? -ne 0 ]; then
+			echo "Locale $locale failed. Aborting..."
+			exit 1
+		fi
+	done
+}
 
 copyAssets(){
 	PROGRAM=$1
@@ -156,6 +175,7 @@ copyAssets(){
 		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
 	fi
 	if [ -d "${BUILDDIR}/${PROGRAM}Locale" ]; then
+		buildLocale $PROGRAM
 		echo "Copying Locale to $RESOURCEDIR"
 		cp -rv "${BUILDDIR}/${PROGRAM}Locale" $RESOURCEDIR
 	fi
@@ -284,8 +304,8 @@ buildall() {
 			cleanup
 			for program in $PROGRAMS
 			do
-                if [ "$program" == "SeriesMgr" ]; then
-                    fixSeriesMgrFiles
+                if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo" ]; then
+                    fixSeriesMgrFiles $program
                 fi
 				getVersion $program
 				compileCode $program
@@ -310,7 +330,9 @@ listFiles() {
 }
 
 fixSeriesMgrFiles() {
-    cd SeriesMgr
+	PROGRAM=$1
+	echo "Fixing: $PROGRAM"
+    cd $PROGRAM
     cat Dependencies.py | while read import file
     do
         echo "Linking; $file"
@@ -340,6 +362,7 @@ $0 [ -hcCtaep: ]
  -t        - Build TagReadWrite
  -y        - Build SeriesMgr
  -w        - Build CrossMgrAlien
+ -V        - Build CrossMgrVideo
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -369,14 +392,14 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfyw" option
+while getopts "hcitaviCdPBASkomzlTfywVZ" option
 do
 	gotarg=1
 	case ${option} in
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgr"
+ 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
@@ -388,11 +411,14 @@ do
 		;;
 		w) PROGRAMS="$PROGRAMS CrossMgrAlien"
 		;;
+		V) PROGRAMS="$PROGRAMS CrossMgrVideo"
+		;;
 		v) 	getVersion "CrossMgr"
 			getVersion "CrossMgrImpinj"
 			getVersion "TagReadWrite"
 			getVersion "SeriesMgr"
 			getVersion "CrossMgrAlien"
+			getVersion "CrossMgrVideo"
 		;;
 		C) 	cleanup
 		;;
@@ -417,6 +443,16 @@ do
 				for program in $PROGRAMS
 				do
 					doPyInstaller $program
+				done
+			else
+				echo "No programs enabled. Use -t, -c, -i, or -a."
+				exit
+			fi
+		;;
+		Z) if [ -n "$PROGRAMS" ]; then
+				for program in $PROGRAMS
+				do
+					buildLocale $program
 				done
 			else
 				echo "No programs enabled. Use -t, -c, -i, or -a."
@@ -461,7 +497,8 @@ do
 		;;
 		T) tagrelease
 		;;
-		f) fixSeriesMgrFiles
+		f) fixSeriesMgrFiles 'SeriesMgr'
+		   fixSeriesMgrFiles 'CrossMgrVideo'
 		;;
 		*) doHelp
 		;;
