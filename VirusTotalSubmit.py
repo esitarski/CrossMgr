@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 import argparse
@@ -12,7 +14,7 @@ vt = VirusTotalPublicApi( API_KEY )
 
 parser = argparse.ArgumentParser(description='Submit executabes to virustotal.')
 parser.add_argument('executables', type=str, nargs='+', help='executable files')
-parser.add_argument("-v", "--verbose", help="verbose output", action="store_true")
+parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
 
 args = parser.parse_args()
 for exe in args.executables:
