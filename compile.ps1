@@ -459,8 +459,12 @@ function FixSeriesMgrFiles($program)
 
 function TagRelease
 {
-	$tagname = 'none'
-	Write-Host "Tagging with $tagname"	
+	$version = GetVersion('CrossMgr')
+	$date = Get-Date -format "yyyyMMddHHmmss"
+	$tagname = "v$version-$date"
+	Write-Host "Tagging with $tagname"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push --tags"
 }
 
 function doHelp
@@ -508,6 +512,12 @@ if ($help -eq $true)
 }
 
 $programs = @()
+
+if ($tag -eq $true)
+{
+	tagRelease
+	exit 1
+}
 
 if ($checkver)
 {

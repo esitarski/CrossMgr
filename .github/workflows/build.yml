@@ -83,7 +83,7 @@ jobs:
               shell: powershell
               run: |
                 cd $env:GITHUB_WORKSPACE
-                .\compile.ps1 -setupenv
+                .\compile.ps1 -all -everything
             - name: Release
               uses: softprops/action-gh-release@v1
               if: startsWith(github.ref, 'refs/tags/')
