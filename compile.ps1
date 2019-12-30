@@ -459,6 +459,8 @@ function FixSeriesMgrFiles($program)
 
 function Virustotal
 {
+	CheckPythonVersion
+	CheckEnvActive
 	Write-Host "Sending files to VirusTotal..."
 	$files = Get-ChildItem -Path "release\*.exe"
 	
