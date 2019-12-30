@@ -20,3 +20,4 @@ trueskill
 pyinstaller
 pybabel
 opencv-python
+virus_total_apis

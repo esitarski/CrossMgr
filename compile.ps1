@@ -35,7 +35,8 @@ param (
 	[switch]$fixsmgr = $false,
 	[switch]$tag = $false,
 	[switch]$checkver = $false,
-	[switch]$locale = $false
+	[switch]$locale = $false,
+	[switch]$virus = $false
 )
 
 # Globals
@@ -438,7 +439,6 @@ function BuildAll($programs)
 		CopyAssets($program)
 		Package($program)
 	}
-	
 }
 
 function FixSeriesMgrFiles($program)
@@ -455,6 +455,19 @@ function FixSeriesMgrFiles($program)
 		Copy-Item -Path "..\${file}.py" -Destination "${file}.py"
 	}
 	Set-Location -Path '..'
+}
+
+function Virustotal
+{
+	Write-Host "Sending files to VirusTotal..."
+	$files = Get-ChildItem -Path "release\*.exe"
+	
+	foreach ($file in $files)
+	{
+		Write-Host "Uploading $file to VirusTotal..."
+		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "VirusTotalSubmit.py -v $file"
+	}
+		
 }
 
 function TagRelease
@@ -493,6 +506,7 @@ function doHelp
 	-copy         - Copy Assets to dist directory
 	-package      - Package application
 	-everything   - Build everything and package
+    -virus        - Send releases to VirusTotal
 	-fix          - Fix SeriesMgr files
 	
 	-tag          - Tag for release
@@ -649,5 +663,9 @@ if ($everything -eq $false)
 else
 {
 	BuildAll($programs)
+}
+if ($virus -eq $true)
+{
+	Virustotal
 }
 
