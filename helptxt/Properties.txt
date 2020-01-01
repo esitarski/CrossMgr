@@ -145,12 +145,12 @@ Variable|Value
 {=PhotoCount}|Number of photos taken during the race.  Will be zero if the usb camera is not enabled.
 {=ExcelLink}|The file and sheet name of the Excel sheet linked to this race.
 {=GPXFile}|The file name of the course in GPX format.
-{=Bib NNN}|Expand the bib number NNN to show rider information including "Bib: Last Name, First Name, License, UCI Code, Team".
+{=Bib NNN}|Expand the bib number NNN to show rider information including "Bib: Last Name, First Name, License, UCIID, Team".
 {=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCIID, Team" in each line.
 {=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCIID, Team" in each row.
 {=Path}|Full path name of the race file.
-{=DirName}|Directory of the race file.
-{=FileName}|File name to the race file (no directory name).
+{=DirName}|Directory of the race file (no file name).
+{=FileName}|File name of the race file (no directory name).
 
 
 ## RFID Options

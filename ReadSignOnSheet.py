@@ -113,17 +113,17 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 	# Try to find the header columns.
 	# Look for the first row with more than 4 columns.
 	for r, row in enumerate(reader.iter_list(sheetName)):
-		cols = sum( 1 for d in row if d and six.text_type(d).strip() )
+		cols = sum( 1 for d in row if d and '{}'.format(d).strip() )
 		if cols > 4:
-			headers = [six.text_type(h or '').strip() for h in row]
+			headers = ['{}'.format(h or '').strip() for h in row]
 			break
 
 	# If we haven't found a header row yet, assume the first non-empty row is the header.
 	if not headers:
 		for r, row in enumerate(reader.iter_list(sheetName)):
-			cols = sum( 1 for d in row if d and six.text_type(d).strip() )
+			cols = sum( 1 for d in row if d and '{}'.format(d).strip() )
 			if cols > 0:
-				headers = [six.text_type(h or '').strip() for h in row]
+				headers = ['{}'.format(h or '').strip() for h in row]
 				break
 	
 	# Ignore empty columns on the end.
@@ -540,11 +540,11 @@ OrionTagLength = 16
 if six.PY2:
 	trantab = string.maketrans( 'lOo', '100' ) # Translate lower-case l's to ones and Os to zeros. 
 	def GetCleanTag( tag ):
-		return six.text_type(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
+		return '{}'.format(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
 else:
 	trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. Also, remove any extra spaces.
 	def GetCleanTag( tag ):
-		return six.text_type(tag).translate(trantab)
+		return '{}'.format(tag).translate(trantab)
 
 def FixJChipTag( tag ):
 	return GetCleanTag(tag).zfill(JChipTagLength)
@@ -555,7 +555,7 @@ def FixOrionTag( tag ):
 def GetFixTag( externalInfo ):
 	# Check if we have JChip or Orion tags.
 	countJChip, countOrion = 0, 0
-	for num, edata in six.iteritems(externalInfo):
+	for num, edata in externalInfo.items():
 		for tagName in TagFields:
 			try:
 				tag = edata[tagName]
@@ -572,7 +572,7 @@ def GetFixTag( externalInfo ):
 
 def FixTagFormat( externalInfo ):
 	fixTagFunc = GetFixTag( externalInfo )
-	for num, edata in six.iteritems(externalInfo):
+	for num, edata in externalInfo.items():
 		for tagName in TagFields:
 			try:
 				tag = edata[tagName]
@@ -601,9 +601,9 @@ def GetTagNums( forceUpdate = False ):
 				for tagName in TagFields:
 					if excelLink.hasField( tagName ):
 						tn = {}
-						for num, edata in six.iteritems(externalInfo):
+						for num, edata in externalInfo.items():
 							try:
-								tag = Utils.removeDiacritic(six.text_type(edata[tagName] or '')).lstrip('0').upper()
+								tag = Utils.removeDiacritic('{}'.format(edata[tagName] or '')).lstrip('0').upper()
 							except (KeyError, ValueError):
 								continue
 							if tag:
@@ -618,7 +618,7 @@ def UnmatchedTagsUpdate():
 	
 	tagNums = GetTagNums( forceUpdate=True )
 	tagsFound = False
-	for tag, times in six.iteritems(race.unmatchedTags):
+	for tag, times in race.unmatchedTags.items():
 		try:
 			num = tagNums[tag]
 		except KeyError:
@@ -629,7 +629,7 @@ def UnmatchedTagsUpdate():
 		tagsFound = True
 	
 	if tagsFound:
-		race.unmatchedTags = { tag: times for tag, times in six.iteritems(race.unmatchedTags) if tag not in tagNums }
+		race.unmatchedTags = { tag: times for tag, times in race.unmatchedTags.items() if tag not in tagNums }
 	
 #-----------------------------------------------------------------------------------------------------
 # Cache the Excel sheet so we don't have to re-read if it has not changed.
@@ -801,7 +801,7 @@ class ExcelLink( object ):
 						
 					if field == 'LastName':
 						try:
-							data[field] = six.text_type(data[field] or '').upper()
+							data[field] = '{}'.format(data[field] or '').upper()
 						except:
 							data[field] = _('Unknown')
 					elif field.startswith('Tag'):
@@ -810,14 +810,14 @@ class ExcelLink( object ):
 						except (ValueError, TypeError):
 							pass
 						try:
-							data[field] = six.text_type(data[field] or '').upper()
+							data[field] = '{}'.format(data[field] or '').upper()
 							hasTags = True
 						except:
 							pass
 					elif field == 'Gender':
 						# Normalize and encode the gender information.
 						try:
-							genderFirstChar = six.text_type(data[field] or 'Open').strip().lower()[:1]
+							genderFirstChar = '{}'.format(data[field] or 'Open').strip().lower()[:1]
 							if genderFirstChar in 'mhu':	# Men, Male, Hommes, Uomini
 								data[field] = 'Men'
 							elif genderFirstChar in 'wlfd':	# Women, Ladies, Female, Femmes, Donne
@@ -836,7 +836,7 @@ class ExcelLink( object ):
 							except ValueError:
 								data[field] = 0
 						else:
-							data[field] = six.text_type(data[field])
+							data[field] = '{}'.format(data[field])
 						
 				except IndexError:
 					pass
@@ -894,7 +894,7 @@ class ExcelLink( object ):
 					)
 					continue
 					
-				tag = six.text_type(data.get(tField,u'')).lstrip('0').upper()
+				tag = '{}'.format(data.get(tField,u'')).lstrip('0').upper()
 				if tag:
 					if tag in tRow:
 						errors.append( (
@@ -1004,7 +1004,7 @@ class BibInfo( object ):
 			return {}
 		
 		try:
-			data = { k:six.text_type(v) for k, v in six.iteritems(self.externalInfo.get(bib, {})) }
+			data = { k:'{}'.format(v) for k, v in self.externalInfo.get(bib, {}).items() }
 		except ValueError:
 			data = {}
 		
@@ -1017,7 +1017,7 @@ class BibInfo( object ):
 	def bibField( self, bib ):
 		data = self.getData( bib )
 		if not data:
-			return six.text_type(bib)
+			return '{}'.format(bib)
 		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(data[f])) for f in self.fields if data.get(f, None)]
 		return u'{}: {}'.format(bib, u', '.join(values))
 	
@@ -1047,7 +1047,7 @@ class BibInfo( object ):
 					with tag( html, 'tr' ):
 						data = self.getData( bib )
 						with tag( html, 'td', {'style':"text-align:right"} ):
-							html.write( six.text_type(bib) )
+							html.write( '{}'.format(bib) )
 						for f in self.fields:
 							with tag( html, 'td', {'style':"text-align:left"}):
 								if 'Name' in f:
