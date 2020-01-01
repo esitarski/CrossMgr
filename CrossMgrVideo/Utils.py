@@ -231,4 +231,4 @@ def readDelimitedData( s, delim ):
 	yield buffer
 	
 if __name__ == '__main__':
-	six.print_( getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png') )
+	print_( getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png') )

@@ -411,7 +411,12 @@ class MainWin( wx.Frame ):
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
 
-		self.config = wx.Config()
+		dataDir = Utils.getHomeDir()
+		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
+		self.config = wx.Config(appName="CrossMgrVideo",
+								vendorName="Edward.Sitarski@gmail.com",
+								localFilename=configFileName
+		)
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
