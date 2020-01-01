@@ -1,7 +1,9 @@
 import wx
 import Utils
+import platform
 
-if 'WXMAC' not in wx.Platform:
+# Masked controls still don't work on anything but Windows.  Sigh :(
+if platform.system() == 'Windows':
 	import wx.lib.masked  as  masked
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = u'##:##:##.###'
