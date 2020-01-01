@@ -983,7 +983,7 @@ class BibInfo( object ):
 	AllFields = (
 		'Name',
 		'License',
-		'UCICode',
+		'UCIID',
 		'Team',
 		'Wave',
 	)
