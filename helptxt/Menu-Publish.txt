@@ -143,7 +143,7 @@ Runs a command after the publish.  This is useful if you want to move the files 
 Substitution|Description
 :-----------|:----------
 %*         |Inserts all the published file names.
-{=Value}    |Inserts a [Properties][] Notes value, for example {=Name}, {=RaceDate}
+{=Value}    |Inserts a [Properties][] Notes value, for example {=EventName}, {=RaceDate}
 
 ### Details, Logic and Example of Live Results:
 
