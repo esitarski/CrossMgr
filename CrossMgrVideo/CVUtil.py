@@ -82,6 +82,9 @@ def imageToFrame( image ):
 def bitmapToFrame( bitmap ):
 	return imageToFrame( bitmap.ConvertToImage() )
 	
+def bitmapToJPeg( bitmap ):
+	return frameToJPeg(bitmapToFrame(bitmap))
+	
 def adjustGammaImage( image, gamma=1.0 ):
 	return frameToImage( adjustGammaFrame(imageToFrame(image), gamma) )
 

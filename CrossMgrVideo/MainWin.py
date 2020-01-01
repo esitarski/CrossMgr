@@ -30,6 +30,7 @@ from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoDialog
 from Clock import Clock
+from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
 
 imageWidth, imageHeight = 640, 480
@@ -594,6 +595,11 @@ class MainWin( wx.Frame ):
 		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
 		hsDate.Add( self.bib, flag=wx.LEFT, border=2 )
 		
+		self.publishPhotos = wx.Button( self, label="Publish Photos" )
+		self.publishPhotos.SetToolTip( "Write a JPG for each Trigger into a Folder" )
+		self.publishPhotos.Bind( wx.EVT_BUTTON, self.onPublishPhotos )
+		hsDate.Add( self.publishPhotos, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
+		
 		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		self.bibQuery = None
@@ -726,6 +732,26 @@ class MainWin( wx.Frame ):
 	def onQueryBibChanged( self, event ):
 		self.bibQuery = self.bib.GetValue()
 		self.refreshTriggers( True )
+		
+	def onPublishPhotos( self, event ):
+		with wx.DirDialog(self, 'Folder to write Photos') as dlg:
+			if dlg.ShowModal() == wx.ID_OK:				
+				dirname = dlg.GetPath()
+				for row in range(self.triggerList.GetItemCount()):
+					info = self.getTriggerInfo( row )
+					tsBest, jpgBest = self.db.getPhotoClosest( info['ts'] )
+					args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+					try:
+						args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
+					except:
+						args['raceSeconds'] = None
+					jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
+					fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{} {}.jpg'.format(info['bib'], info['first_name'], info['last_name']) )
+					try:
+						with open(os.path.join(dirname, fname), 'wb') as f:
+							f.write( jpg )
+					except:
+						pass
 	
 	def GetListCtrl( self ):
 		return self.triggerList
@@ -738,7 +764,7 @@ class MainWin( wx.Frame ):
 		return self.itemDataMap[data]
 	
 	def getTriggerRowFromID( self, id ):
-		for row in six.moves.range(self.triggerList.GetItemCount()-1, -1, -1):
+		for row in range(self.triggerList.GetItemCount()-1, -1, -1):
 			if self.itemDataMap[row][0] == id:
 				return row
 		return None
@@ -746,7 +772,7 @@ class MainWin( wx.Frame ):
 	def updateTriggerRow( self, row, fields ):
 		if 'last_name' in fields and 'first_name' in fields:
 			fields['name'] = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
-		for k, v in six.iteritems(fields):
+		for k, v in fields.items():
 			if k in self.fieldCol:
 				if k == 'bib':
 					v = u'{:>6}'.format(v)

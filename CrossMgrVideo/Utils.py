@@ -24,12 +24,14 @@ initTranslation()
 #
 FontFace = 'Arial'
 
-import datetime
 import os
 import re
 import sys
 import math
+import string
 import socket
+import datetime
+import unicodedata
 
 timeoutSecs = None
 
@@ -205,6 +207,12 @@ def getFFMegExe():
 
 def GetPngBitmap( fname ):
 	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )
+	
+invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
+def RemoveDisallowedFilenameChars( filename ):
+	cleanedFilename = unicodedata.normalize('NFKD', u'{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
+	cleanedFilename = cleanedFilename.replace( '/', '_' ).replace( '\\', '_' )
+	return invalidFilenameChars.sub( '', cleanedFilename )
 #------------------------------------------------------------------------
 
 def disable_stdout_buffering():
