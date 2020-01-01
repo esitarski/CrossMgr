@@ -740,6 +740,8 @@ class MainWin( wx.Frame ):
 				for row in range(self.triggerList.GetItemCount()):
 					info = self.getTriggerInfo( row )
 					tsBest, jpgBest = self.db.getPhotoClosest( info['ts'] )
+					if jpgBest is None:
+						continue
 					args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 					try:
 						args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
