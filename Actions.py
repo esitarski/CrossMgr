@@ -112,6 +112,7 @@ class StartRaceAtTime( wx.Dialog ):
 		self.pages.SetSelection( 0 )	# Record screen.
 		
 		self.countdown = CountdownClock( self, size=(400,400), tFuture=None )
+		self.countdown.SetBackgroundColour( wx.WHITE );
 		self.Bind( EVT_COUNTDOWN, self.onCountdown )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK, label=_('Start at Above Time') )
