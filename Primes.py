@@ -1,7 +1,6 @@
 import wx
 from wx.lib.masked import NumCtrl
 import os
-import six
 import sys
 import math
 import Utils
@@ -289,13 +288,13 @@ class Primes( wx.Panel ):
 				v = GetTranslation(effortType)
 			elif attr == 'position':
 				position = prime.get('position', 1)
-				v = u'' if position == 0 else six.text_type(position)
+				v = u'' if position == 0 else '{}'.format(position)
 			elif attr == 'points':
 				points = prime.get('points', 0)
-				v = u'' if points == 0 else six.text_type(points)
+				v = u'' if points == 0 else '{}'.format(points)
 			elif attr == 'winnerBib':
 				winnerBib = prime.get('winnerBib', None)
-				v = u'' if not winnerBib else six.text_type(winnerBib)
+				v = u'' if not winnerBib else '{}'.format(winnerBib)
 			elif attr == 'winnerInfo':
 				v = getWinnerInfo(winnerBib)
 			elif dataType == 'f':
@@ -305,7 +304,7 @@ class Primes( wx.Panel ):
 				t = prime.get(attr, 0.0)
 				v = Utils.formatTime(t, forceHours=True, twoDigitHours=True) if t != 0 else u''
 			else:
-				v = six.text_type(prime.get(attr, u''))
+				v = '{}'.format(prime.get(attr, u''))
 			if updateGrid:
 				self.grid.SetCellValue( row, col, v )
 			data.append( v )
@@ -456,7 +455,7 @@ def GetGrid():
 			row.append( prime.get('sponsor',u'') )
 		
 		for c, v in enumerate(row):
-			data[c].append( six.text_type(v) )
+			data[c].append( '{}'.format(v) )
 		
 	return {'title':title, 'colnames':colnames, 'data':data, 'leftJustifyCols':leftJustifyCols}
 

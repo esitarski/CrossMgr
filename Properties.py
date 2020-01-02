@@ -4,10 +4,8 @@ from Undo import undo
 import wx
 import re
 import os
-import six
 import wx.lib.intctrl as intctrl
 import wx.lib.masked.numctrl as numctrl
-import wx.lib.masked as masked
 import wx.lib.agw.flatnotebook as flatnotebook
 import glob
 import webbrowser
@@ -100,7 +98,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		
 		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start') )
-		self.scheduledStart = masked.TimeCtrl( self, fmt24hr=True, display_seconds=False, value='10:00:00', )
+		self.scheduledStart = HighPrecisionTimeEdit( self, display_seconds=False, value='10:00' )
 		self.scheduledStart.SetSize( (64,-1) )
 		
 		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes') )
@@ -923,7 +921,7 @@ class BatchPublishProperties( wx.Panel ):
 			fgs.Add( st, flag=wx.ALL, border=4 )
 		
 		for i, attr in enumerate(batchPublishAttr):
-			for k in six.moves.range(len(headers)): fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
+			for k in range(len(headers)): fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
 		
 			attrCB = wx.CheckBox(self, label=attr.uiname)
 			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )

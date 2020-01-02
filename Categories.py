@@ -1,14 +1,13 @@
 import wx
+import wx.grid as gridlib
 import re
 import os
-import six
+import xlsxwriter
 import Utils
 import Model
 from Undo import undo
-import wx.grid			as gridlib
 from ReorderableGrid import ReorderableGrid
-import wx.lib.masked	as  masked
-import xlsxwriter
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
@@ -149,7 +148,7 @@ class TimeEditor(gridlib.GridCellEditor):
 		gridlib.GridCellEditor.__init__(self)
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
-		self._tc = masked.TimeCtrl( parent, id, style=wx.TE_CENTRE, fmt24hr=True, displaySeconds = True, value=self.defaultValue )
+		self._tc = HighPrecisionTimeEdit( parent, id, style=wx.TE_CENTRE, value=self.defaultValue, display_milliseconds=False )
 		self.SetControl( self._tc )
 		if evtHandler:
 			self._tc.PushEventHandler( evtHandler )
@@ -163,13 +162,8 @@ class TimeEditor(gridlib.GridCellEditor):
 		self._tc.SetFocus()
 		
 	def EndEdit( self, row, col, grid, value = None ):
-		changed = False
 		val = self._tc.GetValue()
-		if val != self.startValue:
-			changed = True
-			grid.GetTable().SetValue( row, col, val )
-		self.startValue = '00:00:00'
-		self._tc.SetValue( self.startValue )
+		grid.GetTable().SetValue( row, col, val )
 		
 	def Reset( self ):
 		self._tc.SetValue( self.startValue )
@@ -820,7 +814,7 @@ and remove them from other categories.'''),
 				return
 			numStrTuples = []
 			for r in range(self.grid.GetNumberRows()):
-				values = { name:self.grid.GetCellValue(r, c) for name, c in six.iteritems(self.iCol)
+				values = { name:self.grid.GetCellValue(r, c) for name, c in self.iCol.items()
 																			if name not in self.computedFields }
 				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
 				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
