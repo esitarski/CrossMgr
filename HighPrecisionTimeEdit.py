@@ -160,6 +160,8 @@ else:
 			v = self.reNonTimeChars.sub( '', v )
 			if v == self.emptyValue and self.allow_none:
 				return None
+			if not self.display_seconds:
+				v += ':00'
 			secs = Utils.StrToSeconds( v )
 			return secsToValue( secs, self.allow_none, self.display_seconds, self.display_milliseconds )
 		
