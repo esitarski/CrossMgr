@@ -19,7 +19,7 @@ def secsToValue( secs, allow_none, display_seconds, display_milliseconds ):
 	return v
 	
 # Masked controls still don't work on anything but Windows.  Sigh :(
-if False and platform.system() == 'Windows':
+if platform.system() == 'Windows':
 	import wx.lib.masked as masked
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = '##:##:##.###'
@@ -72,7 +72,7 @@ if False and platform.system() == 'Windows':
 			super( HighPrecisionTimeEdit, self ).SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
 			
 		def SetValue( self, v ):
-			if isinstance(v, (float, int)):
+			if isinstance( v, (float, int) ):
 				self.SetSeconds( v )
 			elif isinstance( v, wx.DateTime ):
 				self.SetSeconds( v.GetHour()*60*60 + v.GetMinute()*60 + v.GetSecond() + v.GetMillisecond()/1000.0 )
@@ -146,7 +146,7 @@ else:
 			super( HighPrecisionTimeEdit, self ).SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
 			
 		def SetValue( self, v ):
-			if isinstance(v, (float, int)):
+			if isinstance( v, (float, int) ):
 				self.SetSeconds( v )
 			elif isinstance( v, wx.DateTime ):
 				self.SetSeconds( v.GetHour()*60*60 + v.GetMinute()*60 + v.GetSecond() + v.GetMillisecond()/1000.0 )
