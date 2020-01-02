@@ -19,7 +19,7 @@ def secsToValue( secs, allow_none, display_seconds, display_milliseconds ):
 	return v
 	
 # Masked controls still don't work on anything but Windows.  Sigh :(
-if False and platform.system() == 'Windows':
+if platform.system() == 'Windows':
 	import wx.lib.masked as masked
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = '##:##:##.###'
