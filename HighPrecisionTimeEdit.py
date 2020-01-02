@@ -19,12 +19,10 @@ def secsToValue( secs, allow_none, display_seconds, display_milliseconds ):
 	return v
 	
 # Masked controls still don't work on anything but Windows.  Sigh :(
-if platform.system() == 'Windows':
+if False and platform.system() == 'Windows':
 	import wx.lib.masked as masked
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = '##:##:##.###'
-		defaultValue = '00:00:00.000'
-		emptyValue   = '  :  :  .   '
 		validRegex   = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'
 
 		def __init__( self, parent, id=wx.ID_ANY, seconds=None, display_seconds=True, display_milliseconds=True, value=None, allow_none=False, style=0, size=wx.DefaultSize ):
@@ -34,16 +32,14 @@ if platform.system() == 'Windows':
 			self.display_seconds = display_seconds
 			self.display_milliseconds = display_milliseconds
 			if not display_seconds:
-				self.mask = '##:##'
-				self.defaultValue = '00:00'
-				self.emptyValue = '  :  '
+				self.mask       = '##:##'
 				self.validRegex = '[0-9][0-9]:[0-5][0-9]'
 			elif not display_milliseconds:
-				self.mask = '##:##:##'
-				self.defaultValue = '00:00:00'
-				self.emptyValue = '  :  :  '
+				self.mask       = '##:##:##'
 				self.validRegex = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]'			
 			
+			self.defaultValue = self.mask.replace('#', '0')
+			self.emptyValue   = self.mask.replace('#', ' ')
 			super( HighPrecisionTimeEdit, self ).__init__(
 				parent, id,
 				mask		 = self.mask,
@@ -161,7 +157,10 @@ else:
 			v = super( HighPrecisionTimeEdit, self ).GetValue()
 			if v is None:
 				return None
-			secs = Utils.StrToSeconds(self.reNonTimeChars.sub('',v))
+			v = self.reNonTimeChars.sub( '', v )
+			if v == self.emptyValue and self.allow_none:
+				return None
+			secs = Utils.StrToSeconds( v )
 			return secsToValue( secs, self.allow_none, self.display_seconds, self.display_milliseconds )
 		
 if __name__ == '__main__':
