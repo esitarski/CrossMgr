@@ -1,55 +1,12 @@
 # Changelog
 
-## vv3.0.42-20191224204317 (24/12/2019)
-- [Fixed major issue with CrossMgrImpinj](https://github.com/mbuckaway/CrossMgr/commit/08c01851f2ffff9c180266651405b024e2f51ad1) - @mbuckaway
-- [Added missing requirement](https://github.com/mbuckaway/CrossMgr/commit/c4f33c750d2f3ccedf13434b4e99cc761e8a8b03) - @mbuckaway
-- [Fixed build system for CrossMgrImpinj added missing file](https://github.com/mbuckaway/CrossMgr/commit/169bcfafbde1afbe3cf994239470946773c5ce67) - @mbuckaway
-- [CrossMgrAlien built on MacOS](https://github.com/mbuckaway/CrossMgr/commit/3f138262464ccf66ea9db4c1d9fee40c63d764e9) - @mbuckaway
-- [fixed Readme](https://github.com/mbuckaway/CrossMgr/commit/1a85ee301e16093cede71662ebaad41d61db9f37) - @mbuckaway
-- [Updated seriesmgr to build on MacOSX](https://github.com/mbuckaway/CrossMgr/commit/9c6a65669c21f06c34767cb4bb54c86c02dd3846) - @mbuckaway
-- [fixed compile.sh issue again](https://github.com/mbuckaway/CrossMgr/commit/977e7f8c704d6c49a938cc29363f97891990e536) - @mbuckaway
-- [Again...](https://github.com/mbuckaway/CrossMgr/commit/2ec272e765b5e1e00a93bdfa179d6b2decf92b0d) - @mbuckaway
-- [Workflow error](https://github.com/mbuckaway/CrossMgr/commit/b907e7abb49bf1a732ce255fa2660b143b1b216f) - @mbuckaway
-- [Workflow correction](https://github.com/mbuckaway/CrossMgr/commit/0654609763fdf40a724a4a5bda003b7088330add) - @mbuckaway
-- [Tabs are evil!](https://github.com/mbuckaway/CrossMgr/commit/54bd3676128e8e36c495e1da9814d8b56e378308) - @mbuckaway
-- [fixed workflow again...](https://github.com/mbuckaway/CrossMgr/commit/7a256bfb220a72c2ab99cb7eeb63b4a049a3cd55) - @mbuckaway
-- [Fixed wording](https://github.com/mbuckaway/CrossMgr/commit/ec5e6cc83387e17cb7e623f56bce65e2bc11e23e) - @mbuckaway
-- [Spelling](https://github.com/mbuckaway/CrossMgr/commit/466f96f48f59770d40d5f361fdc498afed249fb2) - @mbuckaway
-- [Updates to readme](https://github.com/mbuckaway/CrossMgr/commit/aaa84e6a864bdd4c6978396620591d707e4495bf) - @mbuckaway
-- [Yet another workflow error fix](https://github.com/mbuckaway/CrossMgr/commit/9b6f2fca47fab2fc5953519247432503d560ead8) - @mbuckaway
-- [Fixed yaml formating in workflow file](https://github.com/mbuckaway/CrossMgr/commit/dfee809eb6fa7fed077a21cce3ee2aee888b5184) - @mbuckaway
-- [Changes to release workflow](https://github.com/mbuckaway/CrossMgr/commit/b65c259569c60185d2e56ee29f95158c6c209aa1) - @mbuckaway
-- [Build fix](https://github.com/mbuckaway/CrossMgr/commit/d4a82f72f445209a601a20a8fba94ff490664846) - @mbuckaway
-- [Added workflow badge](https://github.com/mbuckaway/CrossMgr/commit/c85b5a5a1d19c4385758585f3604217fdc9799f7) - @mbuckaway
-- [Changed release](https://github.com/mbuckaway/CrossMgr/commit/afd55eeecfc46c648214da4e4954272a262fbf01) - @mbuckaway
-- [apt update required](https://github.com/mbuckaway/CrossMgr/commit/5393133eb8c2001a7d5ccf01ca482e7501b990a5) - @mbuckaway
-- [Linux build fixes](https://github.com/mbuckaway/CrossMgr/commit/d91c2651b17525470c237b3a42016188498e393d) - @mbuckaway
-- [Linux worker updates](https://github.com/mbuckaway/CrossMgr/commit/91285824b29c7af29f16a8d9f796244def7c7be1) - @mbuckaway
-- [Fixes to workflow](https://github.com/mbuckaway/CrossMgr/commit/5b3022dfda69b30ad2492cc4afedc161179be4ce) - @mbuckaway
-- [Added libgtk+-dev to linux build](https://github.com/mbuckaway/CrossMgr/commit/c7a06eb2c33c44964731818caac9575eb9716985) - @mbuckaway
-- [Workflow fix](https://github.com/mbuckaway/CrossMgr/commit/d45e2cae5817c3ca3ee9b2e35d75a90c4a311af2) - @mbuckaway
-- [Added Linux Build](https://github.com/mbuckaway/CrossMgr/commit/a79ea625e92050b1502dcc489f78737fdaefc1d5) - @mbuckaway
-- [Added virtualenv on setup](https://github.com/mbuckaway/CrossMgr/commit/6ca5d8a09ef894a850e69e5432386f929ca1edff) - @mbuckaway
-- [Another workflow fix](https://github.com/mbuckaway/CrossMgr/commit/d17cb3eeb757f47f510d7e1ef9be4c04773eec59) - @mbuckaway
-- [Changed MacOSX action](https://github.com/mbuckaway/CrossMgr/commit/fb98ad70df303f721f26b201e7af57531897962e) - @mbuckaway
-- [Python 3.7.*](https://github.com/mbuckaway/CrossMgr/commit/e385d1544aef1114352e88d334582138b86e6a0b) - @mbuckaway
-- [Updated MacOSX Build](https://github.com/mbuckaway/CrossMgr/commit/3e873ad97049ad3eabeb28897f65dc7a0172dc39) - @mbuckaway
-- [Updated compile.sh to work correct on clean checkout](https://github.com/mbuckaway/CrossMgr/commit/2ad939ad3bc69eb0a122b907aefd79fb9051ccc5) - @mbuckaway
-- [MacOSX Build Action](https://github.com/mbuckaway/CrossMgr/commit/b166063c33d9a2f9ac71988f10f2f1568e3cd81a) - @mbuckaway
-- [Removing dead scripts](https://github.com/mbuckaway/CrossMgr/commit/65e8872983049c2b88f7b723ccfd5bca27eabd34) - @mbuckaway
-- [Adding the remaining changes](https://github.com/mbuckaway/CrossMgr/commit/234d6abefe9c0a1fd6444e3187b7b2c01ed38c80) - @mbuckaway
-- [Rebuild Mac-Linux compile.sh into one script](https://github.com/mbuckaway/CrossMgr/commit/a2e42f143f687f1251ff8cd31b9e6f24f6f9ac0f) - @mbuckaway
-- [Fixed MacOSX startup issue (again), fixed the build](https://github.com/mbuckaway/CrossMgr/commit/1c229fa40d56cda73b8da35081b333494c895519) - @mbuckaway
-- [Fixed compile issue on Linux](https://github.com/mbuckaway/CrossMgr/commit/a92b05aa5df97a4434da6a88e04ab205ca89967e) - @mbuckaway
-- [Update TagReadWrite to work better](https://github.com/mbuckaway/CrossMgr/commit/d6d69393b2a6bd45c9b12a560ded6b73ec25deb5) - @mbuckaway
-- [Merge branch 'master' of github.com:mbuckaway/CrossMgr](https://github.com/mbuckaway/CrossMgr/commit/095837e2089e20accea3283f3d0108f5b017302d) - @mbuckaway
-- [Added TagReadWrite to publish](https://github.com/mbuckaway/CrossMgr/commit/4199a701f2e5bbc24812175b8ac6facdca27507d) - @mbuckaway
-- [Updated readme](https://github.com/mbuckaway/CrossMgr/commit/ebca2ed1dfb3563c305bb066fa09e3e988ef6572) - @mbuckaway
-- [Merge branch 'master' of github.com:mbuckaway/CrossMgr](https://github.com/mbuckaway/CrossMgr/commit/229d4bda387c62b2aaf9256dbf4d9c1dc9d28587) - @mbuckaway
-- [Added Menus to CrMgrImpinj. remove old stuff](https://github.com/mbuckaway/CrossMgr/commit/2db06f3a48852d37c74b7dd12ac564246e7e4e8f) - @mbuckaway
-- [Ignoring DMG files](https://github.com/mbuckaway/CrossMgr/commit/b0d69821803b1c467ee6d871aa13a399dad88f0d) - @mbuckaway
-- [Updated to compile CrMgr and CrMgrImping on MacOSX](https://github.com/mbuckaway/CrossMgr/commit/f8b838ea336bb3588940ead099ec9a2ff159a12e) - @mbuckaway
-- [Removed invalid cert](https://github.com/mbuckaway/CrossMgr/commit/c92535d8c14d6bc28d1133e67360df51a671c503) - @mbuckaway
-- [CrossMgrImpinj AppImage added](https://github.com/mbuckaway/CrossMgr/commit/2360fdbc0d80403fe147c854d9c901e0953e0dd7) - @mbuckaway
-- [Remove old and stale readmes](https://github.com/mbuckaway/CrossMgr/commit/338e364fd50a9e23ca2a9ba4c7fe98fbb88b50d1) - @mbuckaway
-- [Added master readme](https://github.com/mbuckaway/CrossMgr/commit/0016453aef6c6922d72d33e75b2f991fa1fa06ab) - @mbuckaway
+## vv3.0.44-20200103135644 (03/01/2020)
+- [Updated version.](https://github.com/esitarski/CrossMgr/commit/50bf878f66c9c5738f6abf44014a03e10769b78c) - @esitarski
+- [Fixed SetValue bug in HighPrecisionTimeEdit.](https://github.com/esitarski/CrossMgr/commit/7c8721ff317e0bb776daed24d5639a3fde3ca623) - @esitarski
+- [Fixed bug in Linux/MacOS initialization.](https://github.com/esitarski/CrossMgr/commit/80310a2d481658eca0b0faabe4b74727b915353a) - @esitarski
+- [Fixed time return for Mac/Linux when no seconds displayed.](https://github.com/esitarski/CrossMgr/commit/4f551beffdf308501dfefa9fca8cb6b6d99c0bd4) - @esitarski
+- [Fixed background color in Start Race At Futire Time dialog.](https://github.com/esitarski/CrossMgr/commit/fabf080ad09a958a2749e0f6da8cabca78c5419b) - @esitarski
+- [Remove forgotten debug code.](https://github.com/esitarski/CrossMgr/commit/f187eb6824824b44055c16347a8332d5b4eeb0f1) - @esitarski
+- [Fixed None sematics on blank field.](https://github.com/esitarski/CrossMgr/commit/01fc63848aec741fca02e3a62585a15cc9ee92ac) - @esitarski
+- [Fixed some inconsistent formatting.](https://github.com/esitarski/CrossMgr/commit/3e3584849220ad807faf40140bae79bb2af4bfc2) - @esitarski
+- [Removed all instanced of masked.TimeCtrl and substituted](https://github.com/esitarski/CrossMgr/commit/64dcc4537aefbdd0dc076184d3405a9754a2b640) - @esitarski
