@@ -1271,7 +1271,7 @@ class Race( object ):
 			u'RaceDate':	self.date,
 			u'MinPossibleLapTime':self.minPossibleLapTime,
 			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
-			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else six.text_type(self.scheduledStart),
+			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
 			u'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
 			u'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
 			u'PhotoCount':	'{}'.format(self.photoCount),

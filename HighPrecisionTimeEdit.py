@@ -21,17 +21,29 @@ def secsToValue( secs, allow_none, display_seconds, display_milliseconds ):
 			v = v[:v.find('.')]
 	return v
 	
-def valueToSecs( value, display_seconds, display_milliseconds ):
-	if value is None:
-		return value
-	value = reNonTimeChars.sub( '', '{}'.format(value) )
+def valueToSecs( v, display_seconds, display_milliseconds ):
+	if v is None:
+		return v
+	v = reNonTimeChars.sub( '', '{}'.format(v) )
 	if not display_seconds:
-		if len(value.split(':')) < 3:
-			value += ':00'
+		if len(v.split(':')) < 3:
+			v += ':00'
 	elif not display_milliseconds:
-		value = value[:value.find('.')] if '.' in value else value
-	return Utils.StrToSeconds( value )
-	
+		v = v[:v.find('.')] if '.' in v else v
+	return Utils.StrToSeconds( v )
+
+def getSeconds( v, display_seconds, display_milliseconds ):
+	if   isinstance( v, str ):
+		return valueToSecs( v, display_seconds, display_milliseconds )
+	elif isinstance( v, wx.DateTime ):
+		return v.GetHour()*60*60 + v.GetMinute()*60 + v.GetSecond() + v.GetMillisecond()/1000.0
+	elif isinstance( v, (datetime.datetime, datetime.time) ):
+		return v.hour*60*60 + v.minute*60 + v.second + v.microsecond/1000000.0
+	elif isinstance( v, (float, int) ):
+		return v
+	else:
+		return 0.0
+
 # Masked controls still don't work on anything but Windows.  Sigh :(
 if platform.system() == 'Windows':
 	import wx.lib.masked as masked
@@ -76,16 +88,10 @@ if platform.system() == 'Windows':
 			super( HighPrecisionTimeEdit, self ).SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
 			
 		def SetValue( self, v ):
-			if isinstance( v, (float, int) ):
-				self.SetSeconds( v )
-			elif isinstance( v, wx.DateTime ):
-				self.SetSeconds( v.GetHour()*60*60 + v.GetMinute()*60 + v.GetSecond() + v.GetMillisecond()/1000.0 )
-			elif isinstance( v, (datetime.datetime, datetime.time) ):
-				self.SetSeconds( v.hour*60*60 + v.minute*60 + v.second + v.microsecond/1000000.0 )
-			elif isinstance( v, str ):
-				self.SetSeconds( Utils.StrToSeconds(v) )
+			if self.allow_none and v is None:
+				super( HighPrecisionTimeEdit, self ).SetValue( '' )
 			else:
-				super( HighPrecisionTimeEdit, self ).SetValue( v )
+				self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
 
 else:
 	import string
@@ -143,16 +149,10 @@ else:
 			super( HighPrecisionTimeEdit, self ).SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
 			
 		def SetValue( self, v ):
-			if isinstance( v, (float, int) ):
-				self.SetSeconds( v )
-			elif isinstance( v, wx.DateTime ):
-				self.SetSeconds( v.GetHour()*60*60 + v.GetMinute()*60 + v.GetSecond() + v.GetMillisecond()/1000.0 )
-			elif isinstance( v, (datetime.datetime, datetime.time) ):
-				self.SetSeconds( v.hour*60*60 + v.minute*60 + v.second + v.microsecond/1000000.0 )
-			elif isinstance( v, str ):
-				self.SetSeconds( Utils.StrToSeconds(reNonTimeChars.sub('',v)) )
+			if self.allow_none and v is None:
+				super( HighPrecisionTimeEdit, self ).SetValue( '' )
 			else:
-				super( HighPrecisionTimeEdit, self ).SetValue( v )
+				self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
 		
 		def GetValue( self ):
 			v = super( HighPrecisionTimeEdit, self ).GetValue()

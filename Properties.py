@@ -98,8 +98,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.Bind(intctrl.EVT_INT, self.onChanged, self.raceNum)
 		
 		self.scheduledStartLabel = wx.StaticText( self, label=_('Scheduled Start') )
-		self.scheduledStart = HighPrecisionTimeEdit( self, display_seconds=False, value='10:00' )
-		self.scheduledStart.SetSize( (64,-1) )
+		self.scheduledStart = HighPrecisionTimeEdit( self, display_seconds=False, value='10:00', size=(64,-1) )
 		
 		self.minutesLabel = wx.StaticText( self, label=_('Race Minutes') )
 		self.minutes = intctrl.IntCtrl( self, min=1, max=60*48, allow_none=False, value=40, size=(64,-1), style=wx.ALIGN_RIGHT )
@@ -1494,7 +1493,7 @@ class Properties( wx.Panel ):
 			gi.scheduledStart.SetValue( '13:00' )
 			gi.minutes.SetValue( 60 )
 		else:
-			sStr = '{}'.format(gi.scheduledStart.GetValue())
+			sStr = gi.scheduledStart.GetValue()
 			fields = sStr.split(':')
 			if len(fields) == 2:
 				mins = int(fields[0],10) * 60 + int(fields[1],10)
