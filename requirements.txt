@@ -20,4 +20,5 @@ trueskill
 pyinstaller
 pybabel
 opencv-python
+piexif
 virustotal-api
