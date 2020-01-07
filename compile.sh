@@ -348,7 +348,7 @@ tagrelease() {
 	TAGNAME="v$VERSION-$DATETIME"
 	echo "Tagging with $TAGNAME"
 	git tag $TAGNAME
-	git push --tags
+	git push --all
 }
 
 doHelp() {
