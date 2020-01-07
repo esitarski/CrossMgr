@@ -479,7 +479,7 @@ function TagRelease
 	$tagname = "v$version-$date"
 	Write-Host "Tagging with $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
-	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push --tags"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push --all"
 }
 
 function doHelp
