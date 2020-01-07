@@ -84,6 +84,7 @@ from Playback			import Playback
 from Pulled				import Pulled
 from TeamResults		import TeamResults
 from BibEnter			import BibEnter
+from BackgroundJobMgr	import BackgroundJobMgr
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -732,6 +733,8 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.chipMenu, _("Chip&Reader") )
 
 		#----------------------------------------------------------------------------------------------
+		self.backgroundJobMgr = BackgroundJobMgr( self )
+		
 		self.toolsMenu = wx.Menu()
 		
 		item = self.toolsMenu.Append( wx.ID_ANY, _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
@@ -749,6 +752,10 @@ class MainWin( wx.Frame ):
 
 		item = self.toolsMenu.Append( wx.ID_ANY, _("&Reload Checklist..."), _("Reload the Checklist from the Checklist File") )
 		self.Bind(wx.EVT_MENU, self.menuReloadChecklist, item )
+		
+		self.toolsMenu.AppendSeparator()
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Jobs..."), _("Show background jobs.") )
+		self.Bind(wx.EVT_MENU, self.menuJobs, item )
 		
 		self.toolsMenu.AppendSeparator()
 		item = self.toolsMenu.Append( wx.ID_ANY, _("&Playback..."), _("Playback this race from original data.") )
@@ -1380,6 +1387,9 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK(self, u'\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
+	
+	def menuJobs( self, event ):
+		self.backgroundJobMgr.Show()
 	
 	def menuPlayback( self, event ):
 		if not Model.race or not Model.race.isFinished():
