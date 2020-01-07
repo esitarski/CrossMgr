@@ -412,8 +412,7 @@ def UCIExcel( category, fname, startList=False ):
 	ws = wb.add_worksheet('Reference')
 	colWidths.clear()
 	rowLast = len(reference.split('\n'))
-	merge = {}
-	rowMergeLast = None
+	merge = []
 	for row, line in enumerate(reference.split('\n')):
 		fields = line.split('\t')
 		for col, v in enumerate(fields):
@@ -425,13 +424,12 @@ def UCIExcel( category, fname, startList=False ):
 				fmt = odd_format
 			if row != 0 and col == 0:
 				if v:
-					merge[row] = {'data':v}
-					rowMergeLast = row
-				merge[rowMergeLast]['last_row'] = row
+					merge.append( {'first_row':row, 'data':v} )
+				merge[-1]['last_row'] = row
 			else:
 				ww( row, col, v, fmt )
-	for first_row, md in merge.items():
-		ws.merge_range(first_row, 0, md['last_row'], 0, md['data'], odd_format_merge)
+	for md in merge:
+		ws.merge_range( md['first_row'], 0, md['last_row'], 0, md['data'], odd_format_merge )
 		colWidths[0] = max( colWidths.get(0, 0), len('{}'.format(md['data'])) )
 	for col, width in colWidths.items():
 		ws.set_column( col, col, width+2 )
