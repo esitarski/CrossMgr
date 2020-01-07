@@ -7,6 +7,7 @@ import re
 import six
 import time
 import math
+import json
 import threading
 import socket
 import atexit
@@ -32,6 +33,7 @@ from PhotoDialog import PhotoDialog
 from Clock import Clock
 from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
+from AddExifToJpeg import AddExifToJpeg
 
 imageWidth, imageHeight = 640, 480
 
@@ -736,25 +738,41 @@ class MainWin( wx.Frame ):
 	def onPublishPhotos( self, event ):
 		with wx.DirDialog(self, 'Folder to write Photos') as dlg:
 			if dlg.ShowModal() == wx.ID_OK:				
-				dirname = dlg.GetPath()
-				for row in range(self.triggerList.GetItemCount()):
-					info = self.getTriggerInfo( row )
-					tsBest, jpgBest = self.db.getPhotoClosest( info['ts'] )
-					if jpgBest is None:
-						continue
-					args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
-					try:
-						args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
-					except:
-						args['raceSeconds'] = None
-					jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
-					fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{} {}.jpg'.format(info['bib'], info['first_name'], info['last_name']) )
-					try:
-						with open(os.path.join(dirname, fname), 'wb') as f:
-							f.write( jpg )
-					except:
-						pass
-	
+				def write_photos( dirname, infoList, dbFName, fps ):
+					db = Database( dbFName, initTables=False, fps=fps )
+					for info in infoList:
+						tsBest, jpgBest = db.getPhotoClosest( info['ts'] )
+						if jpgBest is None:
+							continue
+						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						try:
+							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
+						except:
+							args['raceSeconds'] = None
+						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
+						fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
+								info['bib'],
+								info['ts'].strftime('%Y%m%dT%H%M%S'),
+								info['last_name'],
+								info['first_name'],
+							)
+						)
+						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+						try:
+							with open(os.path.join(dirname, fname), 'wb') as f:
+								f.write( AddExifToJpeg(jpg, info['ts'], comment) )
+						except:
+							pass
+				
+				# Start a thread so we don't slow down the main capture loop.
+				args = (
+					dlg.GetPath(),
+					list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+					self.db.fname,
+					self.db.fps,
+				)
+				threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
+				
 	def GetListCtrl( self ):
 		return self.triggerList
 	
