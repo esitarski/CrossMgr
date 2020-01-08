@@ -7,6 +7,7 @@ import re
 import six
 import time
 import math
+import json
 import threading
 import socket
 import atexit
@@ -30,7 +31,9 @@ from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoDialog
 from Clock import Clock
+from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
+from AddExifToJpeg import AddExifToJpeg
 
 imageWidth, imageHeight = 640, 480
 
@@ -411,7 +414,12 @@ class MainWin( wx.Frame ):
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
 
-		self.config = wx.Config()
+		dataDir = Utils.getHomeDir()
+		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
+		self.config = wx.Config(appName="CrossMgrVideo",
+								vendorName="Edward.Sitarski@gmail.com",
+								localFilename=configFileName
+		)
 		
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
@@ -589,6 +597,11 @@ class MainWin( wx.Frame ):
 		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
 		hsDate.Add( self.bib, flag=wx.LEFT, border=2 )
 		
+		self.publishPhotos = wx.Button( self, label="Publish Photos" )
+		self.publishPhotos.SetToolTip( "Write a JPG for each Trigger into a Folder" )
+		self.publishPhotos.Bind( wx.EVT_BUTTON, self.onPublishPhotos )
+		hsDate.Add( self.publishPhotos, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
+		
 		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		self.bibQuery = None
@@ -721,7 +734,45 @@ class MainWin( wx.Frame ):
 	def onQueryBibChanged( self, event ):
 		self.bibQuery = self.bib.GetValue()
 		self.refreshTriggers( True )
-	
+		
+	def onPublishPhotos( self, event ):
+		with wx.DirDialog(self, 'Folder to write Photos') as dlg:
+			if dlg.ShowModal() == wx.ID_OK:				
+				def write_photos( dirname, infoList, dbFName, fps ):
+					db = Database( dbFName, initTables=False, fps=fps )
+					for info in infoList:
+						tsBest, jpgBest = db.getPhotoClosest( info['ts'] )
+						if jpgBest is None:
+							continue
+						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						try:
+							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
+						except:
+							args['raceSeconds'] = None
+						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
+						fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
+								info['bib'],
+								info['ts'].strftime('%Y%m%dT%H%M%S'),
+								info['last_name'],
+								info['first_name'],
+							)
+						)
+						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+						try:
+							with open(os.path.join(dirname, fname), 'wb') as f:
+								f.write( AddExifToJpeg(jpg, info['ts'], comment) )
+						except:
+							pass
+				
+				# Start a thread so we don't slow down the main capture loop.
+				args = (
+					dlg.GetPath(),
+					list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+					self.db.fname,
+					self.db.fps,
+				)
+				threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
+				
 	def GetListCtrl( self ):
 		return self.triggerList
 	
@@ -733,7 +784,7 @@ class MainWin( wx.Frame ):
 		return self.itemDataMap[data]
 	
 	def getTriggerRowFromID( self, id ):
-		for row in six.moves.range(self.triggerList.GetItemCount()-1, -1, -1):
+		for row in range(self.triggerList.GetItemCount()-1, -1, -1):
 			if self.itemDataMap[row][0] == id:
 				return row
 		return None
@@ -741,7 +792,7 @@ class MainWin( wx.Frame ):
 	def updateTriggerRow( self, row, fields ):
 		if 'last_name' in fields and 'first_name' in fields:
 			fields['name'] = u', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
-		for k, v in six.iteritems(fields):
+		for k, v in fields.items():
 			if k in self.fieldCol:
 				if k == 'bib':
 					v = u'{:>6}'.format(v)

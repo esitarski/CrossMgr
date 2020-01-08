@@ -1,0 +1,5 @@
+site_name: CrossMgr Tutorial
+nav: 
+    - Home: CrossMgrTutorial
+theme: readthedocs
+

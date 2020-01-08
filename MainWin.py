@@ -330,7 +330,7 @@ class MainWin( wx.Frame ):
 		dataDir = Utils.getHomeDir()
 		configFileName = os.path.join(dataDir, 'CrossMgr.cfg')
 		self.config = wx.Config(appName="CrossMgr",
-								vendorName="SmartCyclingSolutions",
+								vendorName="Edward.Sitarski@gmail.com",
 								localFilename=configFileName
 		)
 		self.filehistory.Load(self.config)

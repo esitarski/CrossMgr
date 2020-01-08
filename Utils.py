@@ -398,7 +398,7 @@ def SwapGridRows( grid, r, rTarget ):
 			grid.SetCellValue( r, c, vSave )
 		
 def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
-	# six.print_( 'AdjustGridSize: rowsRequired=', rowsRequired, ' colsRequired=', colsRequired )
+	# print( 'AdjustGridSize: rowsRequired=', rowsRequired, ' colsRequired=', colsRequired )
 
 	if rowsRequired is not None:
 		rowsRequired = int(rowsRequired)
@@ -826,8 +826,8 @@ if __name__ == '__main__':
 	initTranslation()
 	app = wx.App(False)
 	
-	six.print_( RemoveDisallowedSheetChars('Cat A/B') )
-	six.print_(  RemoveDisallowedFilenameChars('Cat A/B') )
+	print( RemoveDisallowedSheetChars('Cat A/B') )
+	print( RemoveDisallowedFilenameChars('Cat A/B') )
 	
 	MessageOK( None, 'Test', 'Test', wx.ICON_INFORMATION )
 	MessageOKCancel( None, 'Test', 'Test' )
@@ -845,7 +845,7 @@ if __name__ == '__main__':
 	hd = getHomeDir()
 	fn = os.path.join(hd, 'Test.txt')
 	with open( fn, 'w' ) as fp:
-		six.print_(  'successfully opened: ' + fn )
+		print(  'successfully opened: ' + fn )
 
 cameraError = None
 rfidReaderError = None

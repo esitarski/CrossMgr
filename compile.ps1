@@ -35,7 +35,8 @@ param (
 	[switch]$fixsmgr = $false,
 	[switch]$tag = $false,
 	[switch]$checkver = $false,
-	[switch]$locale = $false
+	[switch]$locale = $false,
+	[switch]$virus = $false
 )
 
 # Globals
@@ -438,7 +439,6 @@ function BuildAll($programs)
 		CopyAssets($program)
 		Package($program)
 	}
-	
 }
 
 function FixSeriesMgrFiles($program)
@@ -457,6 +457,21 @@ function FixSeriesMgrFiles($program)
 	Set-Location -Path '..'
 }
 
+function Virustotal
+{
+	CheckPythonVersion
+	CheckEnvActive
+	Write-Host "Sending files to VirusTotal..."
+	$files = Get-ChildItem -Path "release\*.exe"
+	
+	foreach ($file in $files)
+	{
+		Write-Host "Uploading $file to VirusTotal..."
+		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "VirusTotalSubmit.py -v $file"
+	}
+		
+}
+
 function TagRelease
 {
 	$version = GetVersion('CrossMgr')
@@ -464,7 +479,7 @@ function TagRelease
 	$tagname = "v$version-$date"
 	Write-Host "Tagging with $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
-	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push --tags"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push --all"
 }
 
 function doHelp
@@ -493,6 +508,7 @@ function doHelp
 	-copy         - Copy Assets to dist directory
 	-package      - Package application
 	-everything   - Build everything and package
+    -virus        - Send releases to VirusTotal
 	-fix          - Fix SeriesMgr files
 	
 	-tag          - Tag for release
@@ -649,5 +665,9 @@ if ($everything -eq $false)
 else
 {
 	BuildAll($programs)
+}
+if ($virus -eq $true)
+{
+	Virustotal
 }
 

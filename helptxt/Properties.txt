@@ -118,7 +118,7 @@ Notes get more powerful with html and variables.  For example:
     </html>
 
 Take notice of the "{=BibList 113, 117, 164}" variable.
-"BibList" takes a list of bib numbers and expands them into a list with the "Bib: Last Name, First Name, License, UCI Code, Team" fields from the spreadsheet.  The "Bib", "BibList" and "BibTable" variables  make it easy to add full information about riders (see below for more details).
+"BibList" takes a list of bib numbers and expands them into a list with the "Bib: Last Name, First Name, License, UCI ID, Team" fields from the spreadsheet.  The "Bib", "BibList" and "BibTable" variables  make it easy to add full information about riders (see below for more details).
 
 Variables can be conveniently inserted from the "Insert Variable..." button.  This is also helpful if you forget a variable name.
 
@@ -126,17 +126,18 @@ Variables are case sensitive, so be careful.  The supported variables are:
 
 Variable|Value
 :-------|:----
-{=EventName}|Name of the event as specified in General Options
-{=RaceNum}|Race number as specified in General Options
-{=City}|City as specified in General Options
-{=StateProv}|StateProv as specified in General Options
-{=Country}|Country as specified in General Options
-{=Commissaire}|Commissaire as specified in General Options
-{=Organizer}|Organizer as specified in General Options
-{=Memo}|Memo as specified in General Options
-{=Discipline}|Discipline as specified in General Options
+{=EventName}|Name of the event
+{=EventTitle}|Title of the event
+{=RaceNum}|Race number
+{=City}|City
+{=StateProv}|StateProv
+{=Country}|Country
+{=Commissaire}|Commissaire
+{=Organizer}|Organizer
+{=Memo}|Memo
+{=Discipline}|Discipline
 {=RaceType}|"Time Trial" if the the Time Trial flag is set, otherwise "Mass Start"
-{=RaceDate}|Date of the race as specified in General Options
+{=RaceDate}|Date of the race
 {=InputMethod}|Data input method.  Either "RFID" or "Manual".
 {=StartTime}|Actual start time of the race if the races is started, else the "Scheduled Start Time" from General Options.
 {=StartMethod}|Either "Automatic: Triggered by first tag read" or "Manual"
@@ -144,9 +145,13 @@ Variable|Value
 {=PhotoCount}|Number of photos taken during the race.  Will be zero if the usb camera is not enabled.
 {=ExcelLink}|The file and sheet name of the Excel sheet linked to this race.
 {=GPXFile}|The file name of the course in GPX format.
-{=Bib NNN}|Expand the bib number NNN to show rider information including "Bib: Last Name, First Name, License, UCI Code, Team".
-{=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCI Code, Team" in each line.
-{=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCI Code, Team" in each row.
+{=Bib NNN}|Expand the bib number NNN to show rider information including "Bib: Last Name, First Name, License, UCIID, Team".
+{=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCIID, Team" in each line.
+{=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCIID, Team" in each row.
+{=Path}|Full path name of the race file.
+{=DirName}|Directory of the race file (no file name).
+{=FileName}|File name of the race file (no directory name).
+
 
 ## RFID Options
 Property|Description

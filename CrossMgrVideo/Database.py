@@ -173,10 +173,9 @@ class Database( object ):
 			self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
-		data = [(f,v) for f,v in six.iteritems(data)]
 		with self.conn:
-			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f,v in data)),
-				[v for f,v in data] + [id]
+			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in data.keys())),
+				list(data.values()) + [id]
 			)
 	
 	def updateTriggerKMH( self, id, kmh ):
@@ -233,6 +232,18 @@ class Database( object ):
 		with self.conn:
 			count = self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()
 		return count[0] if count else 0
+	
+	def getPhotoClosest( self, ts ):
+		deltaSecondsBest = 1.0
+		tsBest = ts + timedelta(seconds=deltaSecondsBest)
+		jpgBest = None
+		for ts, jpg in self.getPhotos(ts - timedelta(seconds=0.1), ts + timedelta(seconds=0.1)):
+			deltaSecondsCur = abs((tsBest - ts).total_seconds())
+			if deltaSecondsCur < deltaSecondsBest:
+				deltaSecondsBest = deltaSecondsCur
+				tsBest = ts
+				jpgBest = jpg
+		return tsBest if jpgBest else None, jpgBest
 	
 	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
 		with self.conn:

@@ -432,6 +432,8 @@ class Impinj( object ):
 		utcfromtimestamp = datetime.datetime.utcfromtimestamp
 		
 		while self.checkKeepGoing():
+			self.readerSocket = None	# Voodoo to ensure that the socket is reset properly.
+			
 			#------------------------------------------------------------
 			# Connect Mode.
 			#
