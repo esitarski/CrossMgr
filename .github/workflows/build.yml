@@ -50,6 +50,7 @@ jobs:
                   files: release/*
                   prerelease: true
                   name: BetaBuild-${{github.sha}}
+                  tag_name: dev-${{github.sha}}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildlinux:
@@ -91,6 +92,7 @@ jobs:
                   files: release/*
                   prerelease: true
                   name: BetaBuild-${{github.sha}}
+                  tag_name: dev-${{github.sha}}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildwindows:
@@ -128,6 +130,7 @@ jobs:
                   files: release/*
                   prerelease: true
                   name: BetaBuild-${{github.sha}}
+                  tag_name: dev-${{github.sha}}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Release
