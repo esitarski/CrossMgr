@@ -15,6 +15,11 @@ jobs:
         name: MacOSX
         runs-on: macos-latest
         steps:
+            - name: Display Ref
+              run: |
+                echo "EVENT: $GITHUB_EVENT_NAME"
+                echo "REF: $GITHUB_REF"
+                echo "SHA: $GITHUB_SHA"
             - name: Setup Python environment
               uses: actions/setup-python@v1.1.1
               with:
@@ -39,11 +44,12 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Dev Release
               uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/branch/dev')
+              if: endsWith(github.ref, '/dev')
               with:
                   body_path: .github/release.txt
                   files: release/*
                   prerelease: true
+                  name: BetaBuild-${{github.sha}}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildlinux:
@@ -79,11 +85,12 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Dev Release
               uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/branch/dev')
+              if: endsWith(github.ref, '/dev')
               with:
                   body_path: .github/release.txt
                   files: release/*
                   prerelease: true
+                  name: BetaBuild-${{github.sha}}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildwindows:
@@ -115,11 +122,12 @@ jobs:
                 .\compile.ps1 -virus
             - name: Dev Release
               uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/branch/dev')
+              if: endsWith(github.ref, '/dev')
               with:
                   body_path: .github/release.txt
                   files: release/*
-                  preelease: true
+                  prerelease: true
+                  name: BetaBuild-${{github.sha}}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Release
