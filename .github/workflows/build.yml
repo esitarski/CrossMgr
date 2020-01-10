@@ -1,9 +1,14 @@
 on:
     push:
+        branches:
+            - dev
+        tags:
+            - v3
         paths-ignore:
         - README.md
         - CHANGELOG.md
         - .grenrc.yml
+
 name: CrossMgr_Build
 jobs:
     buildmac:
@@ -24,12 +29,21 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
-            - name: Release
+            - name: Production Release
               uses: softprops/action-gh-release@v1
               if: startsWith(github.ref, 'refs/tags/')
               with:
                   body_path: .github/release.txt
                   files: release/*
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Dev Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/branch/dev')
+              with:
+                  body_path: .github/release.txt
+                  files: release/*
+                  prerelease: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildlinux:
@@ -55,12 +69,21 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
-            - name: Release
+            - name: Production Release
               uses: softprops/action-gh-release@v1
               if: startsWith(github.ref, 'refs/tags/')
               with:
                   body_path: .github/release.txt
                   files: release/*
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Dev Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/branch/dev')
+              with:
+                  body_path: .github/release.txt
+                  files: release/*
+                  prerelease: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     buildwindows:
@@ -90,6 +113,15 @@ jobs:
               run: |
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -virus
+            - name: Dev Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/branch/dev')
+              with:
+                  body_path: .github/release.txt
+                  files: release/*
+                  preelease: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Release
               uses: softprops/action-gh-release@v1
               if: startsWith(github.ref, 'refs/tags/')
