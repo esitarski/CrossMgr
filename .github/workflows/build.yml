@@ -2,24 +2,19 @@ on:
     push:
         branches:
             - dev
-        tags:
-            - v3
         paths-ignore:
         - README.md
         - CHANGELOG.md
         - .grenrc.yml
 
-name: CrossMgr_Build
+name: DevelopmentBuild
 jobs:
     buildmac:
         name: MacOSX
         runs-on: macos-latest
         steps:
             - name: Display Ref
-              run: |
-                echo "EVENT: $GITHUB_EVENT_NAME"
-                echo "REF: $GITHUB_REF"
-                echo "SHA: $GITHUB_SHA"
+              uses: hmarr/debug-action
             - name: Setup Python environment
               uses: actions/setup-python@v1.1.1
               with:
@@ -34,110 +29,11 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
-            - name: Production Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Dev Release
-              uses: softprops/action-gh-release@v1
-              if: endsWith(github.ref, '/dev')
+              uses: "marvinpinto/action-automatic-releases@latest"
               with:
-                  body_path: .github/release.txt
-                  files: release/*
-                  prerelease: true
-                  name: BetaBuild-${{github.sha}}
-                  tag_name: dev-${{github.sha}}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    buildlinux:
-        name: Linux
-        needs: buildmac
-        runs-on: ubuntu-18.04
-        steps:
-            - name: Setup Python environment
-              uses: actions/setup-python@v1.1.1
-              with:
-                python-version: 3.7.*
-            - name: Checkout code
-              uses: actions/checkout@master
-            - name: Linux Lib Install
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash linuxdeps.sh
-            - name: Setup Environment
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -S
-            - name: Build project
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -a -A
-            - name: Production Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            - name: Dev Release
-              uses: softprops/action-gh-release@v1
-              if: endsWith(github.ref, '/dev')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-                  prerelease: true
-                  name: BetaBuild-${{github.sha}}
-                  tag_name: dev-${{github.sha}}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    buildwindows:
-        name: Windows
-        needs: buildmac
-        runs-on: windows-latest
-        steps:
-            - name: Setup Python environment
-              uses: actions/setup-python@v1.1.1
-              with:
-                python-version: 3.7.*
-            - name: Checkout code
-              uses: actions/checkout@master
-            - name: Setup Environment
-              shell: powershell
-              run: |
-                cd $env:GITHUB_WORKSPACE
-                .\compile.ps1 -setupenv
-            - name: Build project
-              shell: powershell
-              run: |
-                cd $env:GITHUB_WORKSPACE
-                .\compile.ps1 -all -everything
-            - name: VirusTotal Upload
-              shell: powershell
-              if: startsWith(github.ref, 'refs/tags/')
-              run: |
-                cd $env:GITHUB_WORKSPACE
-                .\compile.ps1 -virus
-            - name: Dev Release
-              uses: softprops/action-gh-release@v1
-              if: endsWith(github.ref, '/dev')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-                  prerelease: true
-                  name: BetaBuild-${{github.sha}}
-                  tag_name: dev-${{github.sha}}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            - name: Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                 automatic_release_tag: "latest"
+                 prerelease: true
+                 title: "Development Build"
+                 files: release/*
