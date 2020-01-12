@@ -249,9 +249,7 @@ package() {
 moveRelease() {
 	PROGRAM=$1
 	echo "Moving to release directory..."
-	if [ -z "$VERSION" ]; then
-		getVersion $PROGRAM
-	fi
+	getVersion $PROGRAM
 	mkdir -p release
 	if [ "$OSNAME" == "Darwin" ]; then
 		mv "${PROGRAM}_${VERSION}.dmg" release/
@@ -315,14 +313,24 @@ updateversion() {
 			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-6)
 			VERSION=$(echo $VERSION | awk -F - '{print $1}')
 			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "dev" ]; then
-				APPVERNAME="AppVerName=$program $VERSION-beta-$SHORTSHA"
+				APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""
 				VERSION="$VERSION-beta-$SHORTSHA"
 			fi
 			if [ "$GIT_TYPE" == "tag" ]; then
-				APPVERNAME="AppVerName=$program $GIT_TAG"
+				VERNO=$(echo $GIT_TAG | awk -F '-' '{print $1}')
+				REFDATE=$(echo $GIT_TAG | awk -F '-' '{print $2}')
+				MAJOR=$(echo $VERNO | awk -F '.' '{print $1}')
+				MINOR=$(echo $VERNO | awk -F '.' '{print $2}')
+				RELEASE=$(echo $VERNO | awk -F '.' '{print $3}')
+				if [ "$MAJOR" != "v3" -o -z "$MINOR" -o -z "$RELEASE" -o -z "$REFDATE" ]; then
+					echo "Invalid tag format. Must be v3.0.3-20200101010101. Refusing to build!"
+					exit 1
+				fi
+				APPVERNAME="AppVerName=\"$program $VERSION-$REFDATE\""
 				VERSION="$GIT_TAG"
 			fi
 			echo "$program version is now $VERSION"
+			echo "$APPVERNAME" > $BUILDDIR/Version.py
 		done
 	else
 		echo "Running a local build"
