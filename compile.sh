@@ -299,14 +299,33 @@ envSetup() {
 }
 
 updateversion() {
+	if [ -z "$PROGRAMS" ]; then
+		echo "Updateversion: no programs defined!!"
+		exit 1
+	fi
 	if [ -n "$GITHUB_REF" ]; then
+		echo "GITHUB_REF=$GITHUB_REF"
 		for program in $PROGRAMS
 		do
 			getBuildDir $program
+			getVersion $program
 			# development build
-			if [ "$GITHUB_REF" == "ref/heads/dev" ]; then
-				$VERSION_TAG="beta-"
+			GIT_TYPE=$(echo $GITHUB_REF | awk -F '/' '{print $2'})
+			GIT_TAG=$(echo $GITHUB_REF | awk -F '/' '{print $3'})
+			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-6)
+			VERSION=$(echo $VERSION | awk -F - '{print $1}')
+			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "dev" ]; then
+				APPVERNAME="AppVerName=$program $VERSION-beta-$SHORTSHA"
+				VERSION="$VERSION-beta-$SHORTSHA"
+			fi
+			if [ "$GIT_TYPE" == "tag" ]; then
+				APPVERNAME="AppVerName=$program $GIT_TAG"
+				VERSION="$GIT_TAG"
+			fi
+			echo "$program version is now $VERSION"
 		done
+	else
+		echo "Running a local build"
 	fi
 }
 
@@ -314,6 +333,7 @@ buildall() {
 		if [ -n "$PROGRAMS" ]; then
             checkEnvActive
 			cleanup
+			updateversion
 			for program in $PROGRAMS
 			do
                 if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo" ]; then
@@ -355,7 +375,13 @@ fixSeriesMgrFiles() {
 }
 
 tagrelease() {
+	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
+	if [ "$CURRENT_BRANCH" != "master" ]; then
+		echo "Unable to tag $CURRENT_BRANCH branch for release. Releases are from master only!"
+	fi
 	getVersion "CrossMgr"
+	# Remove the -private from the version
+	$VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
 	DATETIME=$(date +%Y%m%d%H%M%S)
 	TAGNAME="v$VERSION-$DATETIME"
 	echo "Tagging with $TAGNAME"
@@ -404,7 +430,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfywVZ" option
+while getopts "hcitaviCdPBASkomzlTfywVZU" option
 do
 	gotarg=1
 	case ${option} in
@@ -500,6 +526,8 @@ do
 				echo "No programs enabled. Use -t, -c, -i, or -a."
 				exit
 			fi
+		;;
+		U) updateversion
 		;;
 		A) buildall
 		;;
