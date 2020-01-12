@@ -13,8 +13,8 @@ jobs:
         name: MacOSX
         runs-on: macos-latest
         steps:
-            - name: Display Ref
-              uses: hmarr/debug-action
+            - name: Show Environment
+              uses: hmarr/debug-action@latest
             - name: Setup Python environment
               uses: actions/setup-python@v1.1.1
               with:
