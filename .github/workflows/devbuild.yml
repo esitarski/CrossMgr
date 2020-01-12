@@ -1,0 +1,99 @@
+on:
+    push:
+        branches:
+            - dev
+        paths-ignore:
+        - README.md
+        - CHANGELOG.md
+        - .grenrc.yml
+
+name: DevelopmentBuild
+jobs:
+    buildmac:
+        name: MacOSX
+        runs-on: macos-latest
+        steps:
+            - name: Show Environment
+              run: set | grep GIT
+            - name: Setup Python environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Setup Environment
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -S
+            - name: Build project
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -a -A
+            - name: Dev Release
+              uses: "marvinpinto/action-automatic-releases@latest"
+              with:
+                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                 automatic_release_tag: "latest"
+                 prerelease: true
+                 title: "Development Build"
+                 files: release/*
+    buildlinux:
+        name: Linux
+        needs: buildmac
+        runs-on: ubuntu-16.04
+        steps:
+            - name: Setup Python Environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Linux Lib Install
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash linuxdeps.sh
+            - name: Setup Environment
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -S
+            - name: Build project
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -a -A
+            - name: Dev Release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: latest
+                overwrite: true
+                file_glob: true
+    buildwindows:
+        name: Windows
+        needs: buildmac
+        runs-on: windows-latest
+        steps:
+            - name: Setup Python environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Setup Environment
+              shell: powershell
+              run: |
+                cd $env:GITHUB_WORKSPACE
+                .\compile.ps1 -setupenv
+            - name: Build project
+              shell: powershell
+              run: |
+                cd $env:GITHUB_WORKSPACE
+                .\compile.ps1 -all -everything
+            - name: Dev Release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: latest
+                overwrite: true
+                file_glob: true

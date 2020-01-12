@@ -310,7 +310,7 @@ updateversion() {
 			# development build
 			GIT_TYPE=$(echo $GITHUB_REF | awk -F '/' '{print $2'})
 			GIT_TAG=$(echo $GITHUB_REF | awk -F '/' '{print $3'})
-			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-6)
+			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-7)
 			VERSION=$(echo $VERSION | awk -F - '{print $1}')
 			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "dev" ]; then
 				APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""

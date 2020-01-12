@@ -1,20 +1,22 @@
 on:
     push:
         branches:
-            - dev
+            - master
+        tags:
+            - "v3*"
         paths-ignore:
         - README.md
         - CHANGELOG.md
         - .grenrc.yml
 
-name: CrossMgr_Compile
+name: DevelopmentBuild
 jobs:
     buildmac:
         name: MacOSX
         runs-on: macos-latest
         steps:
-            - name: Display Ref
-              uses: hmarr/debug-action
+            - name: Show Environment
+              run: set | grep GIT
             - name: Setup Python environment
               uses: actions/setup-python@v1.1.1
               with:
@@ -28,13 +30,19 @@ jobs:
             - name: Build project
               run: |
                 cd $GITHUB_WORKSPACE
-                bash compile.sh -C -c -p -A
+                bash compile.sh -a -A
+            - name: Dev Release
+              uses: "marvinpinto/action-automatic-releases@latest"
+              with:
+                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                 prerelease: False
+                 files: release/*
     buildlinux:
         name: Linux
         needs: buildmac
         runs-on: ubuntu-16.04
         steps:
-            - name: Setup Python environment
+            - name: Setup Python Environment
               uses: actions/setup-python@v1.1.1
               with:
                 python-version: 3.7.*
@@ -53,24 +61,13 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Production Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/v3')
+              uses: svenstaro/upload-release-action@v1-release
               with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            - name: Dev Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/beta-v3')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-                  prerelease: true
-                  name: BetaBuild-${{github.sha}}
-                  tag_name: dev-${{github.sha}}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: ${{ github.ref }}
+                overwrite: true
+                file_glob: true
     buildwindows:
         name: Windows
         needs: buildmac
@@ -98,22 +95,11 @@ jobs:
               run: |
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -virus
-            - name: Dev Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/beta-v3')
+            - name: Production Release
+              uses: svenstaro/upload-release-action@v1-release
               with:
-                  body_path: .github/release.txt
-                  files: release/*
-                  prerelease: true
-                  name: BetaBuild-${{github.sha}}
-                  tag_name: dev-${{github.sha}}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            - name: Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
-              with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: ${{ github.ref }}
+                overwrite: true
+                file_glob: true
