@@ -298,6 +298,18 @@ envSetup() {
 	fi
 }
 
+updateversion() {
+	if [ -n "$GITHUB_REF" ]; then
+		for program in $PROGRAMS
+		do
+			getBuildDir $program
+			# development build
+			if [ "$GITHUB_REF" == "ref/heads/dev" ]; then
+				$VERSION_TAG="beta-"
+		done
+	fi
+}
+
 buildall() {
 		if [ -n "$PROGRAMS" ]; then
             checkEnvActive
