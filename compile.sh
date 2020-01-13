@@ -412,6 +412,10 @@ dorelease() {
         echo "$CURRENT_BRANCH has uncommited changed. Refusing to release. Commit your code."
         exit 1
     fi
+    if [ x"$(git rev-parse $CURRENT_BRANCH)" != x"$(git rev-parse origin/$CURRENT_BRANCH)" ]; then
+        echo "$CURRENT_BRANCH is not in sync with origin. Please push your changes."
+        exit 1
+    fi
 	getVersion "CrossMgr"
 	# Remove the -private from the version
 	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
