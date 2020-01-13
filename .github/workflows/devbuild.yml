@@ -1,15 +1,20 @@
 on:
     push:
+        branches:
+            - dev
         paths-ignore:
         - README.md
         - CHANGELOG.md
         - .grenrc.yml
-name: CrossMgr_Build
+
+name: DevelopmentBuild
 jobs:
     buildmac:
         name: MacOSX
         runs-on: macos-latest
         steps:
+            - name: Show Environment
+              run: set | grep GIT
             - name: Setup Python environment
               uses: actions/setup-python@v1.1.1
               with:
@@ -24,20 +29,20 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
-            - name: Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
+            - name: Dev Release
+              uses: "marvinpinto/action-automatic-releases@latest"
               with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                 automatic_release_tag: "latest"
+                 prerelease: true
+                 title: "Development Build"
+                 files: release/*
     buildlinux:
         name: Linux
         needs: buildmac
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-16.04
         steps:
-            - name: Setup Python environment
+            - name: Setup Python Environment
               uses: actions/setup-python@v1.1.1
               with:
                 python-version: 3.7.*
@@ -55,14 +60,14 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
-            - name: Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
+            - name: Dev Release
+              uses: svenstaro/upload-release-action@v1-release
               with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: latest
+                overwrite: true
+                file_glob: true
     buildwindows:
         name: Windows
         needs: buildmac
@@ -84,17 +89,11 @@ jobs:
               run: |
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -all -everything
-            - name: VirusTotal Upload
-              shell: powershell
-              if: startsWith(github.ref, 'refs/tags/')
-              run: |
-                cd $env:GITHUB_WORKSPACE
-                .\compile.ps1 -virus
-            - name: Release
-              uses: softprops/action-gh-release@v1
-              if: startsWith(github.ref, 'refs/tags/')
+            - name: Dev Release
+              uses: svenstaro/upload-release-action@v1-release
               with:
-                  body_path: .github/release.txt
-                  files: release/*
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: latest
+                overwrite: true
+                file_glob: true

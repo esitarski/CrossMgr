@@ -36,7 +36,8 @@ param (
 	[switch]$tag = $false,
 	[switch]$checkver = $false,
 	[switch]$locale = $false,
-	[switch]$virus = $false
+	[switch]$virus = $false,
+	[switch]$updatever = $false
 )
 
 # Globals
@@ -292,6 +293,11 @@ function Package($program)
 	$curdir = (Get-Item -Path ".\").FullName
 	$sourcepath = "$curdir\dist\$program"
 	$releasepath = "$curdir\release"
+	$setupversion = $version.Split('-')[0]
+	if ($version.Split('-')[1] -eq 'private')
+	{
+		$setupversion = "${setupversion}.99"
+	}
 	
 	Write-Host "Packaging $program from $sourcepath to $newinstallname in $releasepath..."
 	$setup = "AppName=$program
@@ -302,7 +308,7 @@ AppCopyright=Copyright (C) 2004-$yeartoday Edward Sitarski
 AppVerName=$program
 AppPublisherURL=http://www.sites.google.com/site/crossmgrsoftware/
 AppUpdatesURL=http://github.com/estarski/crossmgr/
-VersionInfoVersion=$version
+VersionInfoVersion=$setupversion
 VersionInfoCompany=Edward Sitarski
 VersionInfoProductName=$program
 VersionInfoCopyright=Copyright (C) 2004-$yeartoday Edward Sitarski
@@ -418,6 +424,50 @@ function EnvSetup($program)
 	
 }
 
+function updateVersion($programs)
+{
+	if ($programs.Length -eq 0)
+	{
+		Write-Host "No programs selected"
+		exit 1
+	}
+	if (-not [string]::IsNullOrEmpty($env:GITHUB_REF))
+	{
+		Write-Host "GITHUB_REF=$env:GITHUB_REF"
+		foreach ($program in $programs)
+		{
+			$builddir = GetBuildDir($program)
+			$version = GetVersion($program)
+			$githubref = $env:GITHUB_REF.Split('/')
+			$version = $version.Split('-')[0]
+			$shortsha=$env:GITHUB_SHA.SubString(0,7)
+			if ($githubref[1] -eq 'heads' -and $githubref[2] -eq 'dev')
+			{
+				$appvername = "AppVerName=`"$program $version-beta-$shortsha`""
+				$version="${version}-beta-${shortsha}"
+			}
+			if ($githubref[1] -eq 'tag')
+			{
+				$verno = $githubref[2].Split('-')[0]
+				$refdate = $githubref[2].Split('-')[1]
+				$major = $verno.Split('.')[0]
+				$minor = $verno.Split('.')[1]
+				$release = $verno.Split('.')[2]
+				if ($major -ne 'v3' -or [string]::IsNullOrEmpty($minor) -or [string]::IsNullOrEmpty($release) -or [string]::IsNullOrEmpty($refdate))
+				{
+					Write-Host "Invalid Tag format. Must be v3.0.3-20200101010101. Refusing to build!"
+					exit 1
+				}
+				$appvername = "AppVerName=`"$program $version-$refdate`""
+				$version = $githubref[2]
+			}
+			Write-Host "$program version is now $version"
+			Set-Content -Path "$builddir\Version.py" -Value "$appvername"
+		}
+		
+	}
+	
+}
 function BuildAll($programs)
 {
 	CheckPythonVersion
@@ -428,6 +478,7 @@ function BuildAll($programs)
 		exit 1
 	}
 	Cleanup
+	updateVersion($programs)
 	foreach ($program in $programs)
 	{
 		if (($program -eq "SeriesMgr") -or ($program -eq "CrossMgrVideo"))
@@ -659,7 +710,10 @@ if ($everything -eq $false)
 		{
 			Package($program)
 		}
-		
+	}
+	if ($updatever -eq $true)
+	{
+		updateVersion($programs)
 	}
 }
 else

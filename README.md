@@ -1,4 +1,5 @@
-![](https://github.com/mbuckaway/CrossMgr/workflows/CrossMgr_Build/badge.svg)
+![](https://github.com/mbuckaway/CrossMgr/workflows/DevelopmentBuild/badge.svg)
+![](https://github.com/mbuckaway/CrossMgr/workflows/ReleaseBuild/badge.svg)
 
 # Cross Manager Race Scoring Software
 
