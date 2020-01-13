@@ -317,7 +317,7 @@ updateversion() {
 				APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""
 				VERSION="$VERSION-beta-$SHORTSHA"
 			fi
-			if [ "$GIT_TYPE" == "tag" ]; then
+			if [ "$GIT_TYPE" == "tags" ]; then
 				VERNO=$(echo $GIT_TAG | awk -F '-' '{print $1}')
 				REFDATE=$(echo $GIT_TAG | awk -F '-' '{print $2}')
 				MAJOR=$(echo $VERNO | awk -F '.' '{print $1}')
@@ -330,6 +330,10 @@ updateversion() {
 				APPVERNAME="AppVerName=\"$program $VERSION-$REFDATE\""
 				VERSION="$GIT_TAG"
 			fi
+            if [ -z "$APPVERNAME" ]; then
+                echo "APPVERNAME is empty! [$APPVERNAME] Aborting..."
+                exit 1
+            fi
 			echo "$program version is now $VERSION"
             echo "New Version.py: [$APPVERNAME] - [$BUILDDIR/Version.py]"
 			echo "$APPVERNAME" > $BUILDDIR/Version.py
