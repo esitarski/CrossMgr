@@ -406,9 +406,7 @@ dorelease() {
 		echo "Unable to do release on $CURRENT_BRANCH branch. You must be on dev branch to cut a release".
         exit 1
 	fi
-    if git diff-index --quiet HEAD --; then
-        echo "Clean repo. Proceeding..."
-    else
+    if ! git diff-index --quiet HEAD --; then
         echo "$CURRENT_BRANCH has uncommited changed. Refusing to release. Commit your code."
         exit 1
     fi
