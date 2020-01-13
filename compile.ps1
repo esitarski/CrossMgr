@@ -446,7 +446,7 @@ function updateVersion($programs)
 				$appvername = "AppVerName=`"$program $version-beta-$shortsha`""
 				$version="${version}-beta-${shortsha}"
 			}
-			if ($githubref[1] -eq 'tag')
+			if ($githubref[1] -eq 'tags')
 			{
 				$verno = $githubref[2].Split('-')[0]
 				$refdate = $githubref[2].Split('-')[1]
