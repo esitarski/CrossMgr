@@ -331,6 +331,7 @@ updateversion() {
 				VERSION="$GIT_TAG"
 			fi
 			echo "$program version is now $VERSION"
+            echo "New Version.py: [$APPVERNAME] - [$BUILDDIR/Version.py]"
 			echo "$APPVERNAME" > $BUILDDIR/Version.py
 		done
 	else
@@ -419,11 +420,16 @@ dorelease() {
 	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
 	DATETIME=$(date +%Y%m%d%H%M%S)
 	TAGNAME="v$VERSIONNO-$DATETIME"
-	echo "releasing with $TAGNAME"
-    echo git checkout master
-    echo git merge dev
-	echo git tag $TAGNAME
-	echo git push origin $TAGNAME
+	echo "Releasing with $TAGNAME"
+    git checkout master
+    git merge dev -m "Release $TAGNAME"
+    git push
+    echo "Code merged into master..."
+	git tag $TAGNAME
+	git push origin $TAGNAME
+    echo "Code tagged with $TAGNAME for release"
+    git checkout dev
+    echo "Current branch set back to dev..."
 }
 
 
