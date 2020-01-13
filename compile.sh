@@ -1,10 +1,7 @@
 #!/bin/bash
 
-BUILD_CROSSMGR=0
-BUILD_CROSSMGRIMPINJ=0
-BUILD_TAGREADWRITE=0
 OSNAME=$(uname -s)
-PYTHONVER=python3.8
+PYTHONVER=python3.7
 ENVDIR=env
 LINUXDEPLOY=linuxdeploy-plugin-appimage-x86_64.AppImage
 if [ "$OSNAME" == "Darwin" ]; then
@@ -382,20 +379,42 @@ fixSeriesMgrFiles() {
     cd ..
 }
 
-tagrelease() {
+tagrepo() {
 	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
 	if [ "$CURRENT_BRANCH" != "master" ]; then
 		echo "Unable to tag $CURRENT_BRANCH branch for release. Releases are from master only!"
+        exit 1
 	fi
+    echo "Crossmgr version will be updated by the auto-build system to match the tag"
 	getVersion "CrossMgr"
 	# Remove the -private from the version
-	$VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
+	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
 	DATETIME=$(date +%Y%m%d%H%M%S)
-	TAGNAME="v$VERSION-$DATETIME"
+	TAGNAME="v$VERSIONNO-$DATETIME"
 	echo "Tagging with $TAGNAME"
 	git tag $TAGNAME
 	git push --all
 }
+
+dorelease() {
+	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
+	if [ "$CURRENT_BRANCH" != "dev" ]; then
+		echo "Unable to do release on $CURRENT_BRANCH branch. You must be on dev branch to cut a release and have git flow installed."
+	fi
+    if ! git flow version > /dev/null; then
+        echo "git flow is required for a release. Please install."
+        exit 1
+    fi
+	getVersion "CrossMgr"
+	# Remove the -private from the version
+	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
+	DATETIME=$(date +%Y%m%d%H%M%S)
+	TAGNAME="v$VERSIONNO-$DATETIME"
+	echo "releasing with $TAGNAME and branch 'release/$TAGNAME'"
+    git flow release start $TAGNAME
+    echo "Now, make your release changes, and run 'git flow release finish' to release the code"
+}
+
 
 doHelp() {
 	cat <<EOF
@@ -438,7 +457,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfywVZU" option
+while getopts "hcitaviCdPBASkomzlTfywVZUr" option
 do
 	gotarg=1
 	case ${option} in
@@ -543,7 +562,9 @@ do
 		;;
 		l) listFiles
 		;;
-		T) tagrelease
+		T) tagrepo
+		;;
+		r) dorelease
 		;;
 		f) fixSeriesMgrFiles 'SeriesMgr'
 		   fixSeriesMgrFiles 'CrossMgrVideo'

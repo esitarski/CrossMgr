@@ -9,7 +9,7 @@ on:
         - CHANGELOG.md
         - .grenrc.yml
 
-name: DevelopmentBuild
+name: ReleaseBuild
 jobs:
     buildmac:
         name: MacOSX
