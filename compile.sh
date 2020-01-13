@@ -400,6 +400,7 @@ dorelease() {
 	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
 	if [ "$CURRENT_BRANCH" != "dev" ]; then
 		echo "Unable to do release on $CURRENT_BRANCH branch. You must be on dev branch to cut a release and have git flow installed."
+        exit 1
 	fi
     if ! git flow version > /dev/null; then
         echo "git flow is required for a release. Please install."
@@ -412,7 +413,7 @@ dorelease() {
 	TAGNAME="v$VERSIONNO-$DATETIME"
 	echo "releasing with $TAGNAME and branch 'release/$TAGNAME'"
     git flow release start $TAGNAME
-    echo "Now, make your release changes, and run 'git flow release finish' to release the code"
+    echo "Now, make your release changes, and run 'git flow release finish $TAGNAME' to release the code"
 }
 
 
