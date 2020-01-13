@@ -309,6 +309,10 @@ updateversion() {
 			GIT_TAG=$(echo $GITHUB_REF | awk -F '/' '{print $3'})
 			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-7)
 			VERSION=$(echo $VERSION | awk -F - '{print $1}')
+			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "master" ]; then
+                echo "Refusing to build an untagged master build. Release builds on a tag only!"
+                exit 1
+            fi
 			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "dev" ]; then
 				APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""
 				VERSION="$VERSION-beta-$SHORTSHA"
@@ -393,17 +397,19 @@ tagrepo() {
 	TAGNAME="v$VERSIONNO-$DATETIME"
 	echo "Tagging with $TAGNAME"
 	git tag $TAGNAME
-	git push --all
+	git push origin $TAGNAME
 }
 
 dorelease() {
 	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
 	if [ "$CURRENT_BRANCH" != "dev" ]; then
-		echo "Unable to do release on $CURRENT_BRANCH branch. You must be on dev branch to cut a release and have git flow installed."
+		echo "Unable to do release on $CURRENT_BRANCH branch. You must be on dev branch to cut a release".
         exit 1
 	fi
-    if ! git flow version > /dev/null; then
-        echo "git flow is required for a release. Please install."
+    if git diff-index --quiet HEAD --; then
+        echo "Clean repo. Proceeding..."
+    else
+        echo "$CURRENT_BRANCH has uncommited changed. Refusing to release. Commit your code."
         exit 1
     fi
 	getVersion "CrossMgr"
@@ -411,9 +417,11 @@ dorelease() {
 	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
 	DATETIME=$(date +%Y%m%d%H%M%S)
 	TAGNAME="v$VERSIONNO-$DATETIME"
-	echo "releasing with $TAGNAME and branch 'release/$TAGNAME'"
-    git flow release start $TAGNAME
-    echo "Now, make your release changes, and run 'git flow release finish $TAGNAME' to release the code"
+	echo "releasing with $TAGNAME"
+    echo git checkout master
+    echo git merge dev
+	echo git tag $TAGNAME
+	echo git push origin $TAGNAME
 }
 
 
