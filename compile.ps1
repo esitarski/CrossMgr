@@ -574,6 +574,15 @@ function DoRelease
 
 function TagRelease
 {
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "rev-parse --abbrev-ref HEAD --" -RedirectStandardOutput out.txt
+	$text = Get-Content -Path out.txt
+	Remove-Item 'out.txt'
+	$current_branch = $text[0]
+	if ($current_branch -ne 'master')
+	{
+		Write-Host "Unable to do release on $current_branch. You must be on the master branch to tag a release"
+		exit 1
+	}
 	$version = GetVersion('CrossMgr')
 	$versionno = $version.Split('-')[0]
 	$date = Get-Date -format "yyyyMMddHHmmss"
