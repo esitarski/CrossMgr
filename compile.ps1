@@ -563,7 +563,6 @@ function DoRelease
 	$date = Get-Date -format "yyyyMMddHHmmss"
 	$tagname = "v$versionno-$date"
 	Write-Host "Tagging with $tagname"
-	exit 1
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "checkout master"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "merge dev -m 'Release $tagname'"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push"
