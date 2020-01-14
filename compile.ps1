@@ -559,9 +559,11 @@ function DoRelease
 	}
 	
 	$version = GetVersion('CrossMgr')
+	$versionno = $version.Split('-')[0]
 	$date = Get-Date -format "yyyyMMddHHmmss"
-	$tagname = "v$version-$date"
+	$tagname = "v$versionno-$date"
 	Write-Host "Tagging with $tagname"
+	exit 1
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "checkout master"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "merge dev -m 'Release $tagname'"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push"
@@ -573,8 +575,9 @@ function DoRelease
 function TagRelease
 {
 	$version = GetVersion('CrossMgr')
+	$versionno = $version.Split('-')[0]
 	$date = Get-Date -format "yyyyMMddHHmmss"
-	$tagname = "v$version-$date"
+	$tagname = "v$versionno-$date"
 	Write-Host "Tagging with $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push origin $tagname"
