@@ -564,7 +564,7 @@ function DoRelease
 	$tagname = "v$versionno-$date"
 	Write-Host "Tagging with $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "checkout master"
-	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "merge dev -m 'Release $tagname'"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "merge dev -m `"Release $tagname`""
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push origin $tagname"
