@@ -38,7 +38,7 @@ jobs:
     buildlinux:
         name: Linux
         needs: buildmac
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-16.04
         steps:
             - name: Setup Python Environment
               uses: actions/setup-python@v1.1.1
