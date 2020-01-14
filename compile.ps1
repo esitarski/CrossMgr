@@ -37,7 +37,8 @@ param (
 	[switch]$checkver = $false,
 	[switch]$locale = $false,
 	[switch]$virus = $false,
-	[switch]$updatever = $false
+	[switch]$updatever = $false,
+	[switch]$release = $false
 )
 
 # Globals
@@ -523,6 +524,52 @@ function Virustotal
 		
 }
 
+function DoRelease
+{
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "rev-parse --abbrev-ref HEAD --" -RedirectStandardOutput out.txt
+	$text = Get-Content -Path out.txt
+	Remove-Item 'out.txt'
+	$current_branch = $text[0]
+	if ($current_branch -ne 'dev')
+	{
+		Write-Host "Unable to do release on $current_branch. You must be on the dev branch to cut a release"
+		exit 1
+	}
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "diff-index HEAD --" -RedirectStandardOutput out.txt
+	$changes = Get-Content -Path out.txt
+	Remove-Item 'out.txt'
+	if (![string]::IsNullOrEmpty($changes))
+	{
+		Write-Host "$current_branch has uncommitted changes. Refusing to release. Checkin your code."
+		exit 1
+	}
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "rev-parse $current_branch" -RedirectStandardOutput out.txt
+	$text = Get-Content -Path out.txt
+	Remove-Item 'out.txt'
+	$local = $text
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "rev-parse origin/$current_branch" -RedirectStandardOutput out.txt
+	$text = Get-Content -Path out.txt
+	Remove-Item 'out.txt'
+	$remote = $text
+	Write-Host "$local vs $remote"
+	if ($local -ne $remote)
+	{
+		Write-Host "$current_branch is not in sync with origin. Please push your changes."
+		exit 1
+	}
+	
+	$version = GetVersion('CrossMgr')
+	$date = Get-Date -format "yyyyMMddHHmmss"
+	$tagname = "v$version-$date"
+	Write-Host "Tagging with $tagname"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "checkout master"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "merge dev -m 'Release $tag'"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push origin $tagname"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "checkout dev"
+}
+
 function TagRelease
 {
 	$version = GetVersion('CrossMgr')
@@ -530,7 +577,7 @@ function TagRelease
 	$tagname = "v$version-$date"
 	Write-Host "Tagging with $tagname"
 	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "tag $tagname"
-	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push --all"
+	Start-Process -Wait -NoNewWindow -FilePath "git.exe" -ArgumentList "push origin $tagname"
 }
 
 function doHelp
@@ -579,6 +626,12 @@ if ($help -eq $true)
 }
 
 $programs = @()
+
+if ($release -eq $true)
+{
+	doRelease
+	exit 1
+}
 
 if ($tag -eq $true)
 {
