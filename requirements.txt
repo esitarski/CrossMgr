@@ -1,3 +1,4 @@
+setuptools==v44.0.0
 requests
 waitress
 xlsxwriter
