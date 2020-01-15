@@ -1,8 +1,33 @@
-![](https://github.com/mbuckaway/CrossMgr/workflows/CrossMgr_Build/badge.svg)
+![](https://github.com/esitarski/CrossMgr/workflows/DevelopmentBuild/badge.svg)
+![](https://github.com/esitarski/CrossMgr/workflows/ReleaseBuild/badge.svg)
 
 # Cross Manager Race Scoring Software
 
 Welcome to Cross Manager. Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
+
+## System Requirements
+
+CrossMgr is a cross platform application written in Python and compiled into machine code. Builds are made available for Windows, MacOSX, and Linux. In order to publish results, an internet connect is required.
+
+The minimum system requires are as follows:
+
+### Windows
+
+- Windows 10 x64 (32 bit systems are not supported)
+- 4G RAM
+- 10G HD space
+
+### MacOSX
+
+- Apple MacOSX 10.10 or better
+- 4G RAM
+- 10G HD space
+
+### Linux
+
+- Ubuntu 16.04 LTS or newer (other linux distributions may work but are not offically supported)
+- 4G RAM
+- 10G HD space
 
 ## User Installation
 
@@ -77,7 +102,7 @@ The build procedure for Linux and MacOSX platforms are as follows:
 - Install the Linux dependancies (Linux only!)
 
 ```bash
-  bash linuxdeps.h
+  bash linuxdeps.sh
 ```
 
 - Setup a virtual env, download the required python modules:
@@ -107,24 +132,33 @@ The build procedure for windows are as follows:
 ```powershell
 .\compile.ps1 -all -everything
 ```
-When the build is complete, the resultant exe installer files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/build.yaml) uses to build the code on GitHub.
+When the build is complete, the resultant exe installer files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/devbuild.yaml) uses to build the code on GitHub.
 
 ### Making a Release
 
-With the workflow setup on Github, builds are automatic. Every time a change it checked into the repo, github will build the code. The purpose of this build is to ensure the code will build on all platforms. To make a release, a tag is added to the repo. When a tag is added, it will appear in the releases tab, and github will run the workflow to build the code for MacOSX, Linux, and Windows.
+By default, the version of the programs is setup with -private in the name to indicate any local builds are alpha versions and not meant for distribution. Any local builds will receive this version number tag and it will be displays on startup and in the About dialog. Updating the version number for any one of the applications requires that this private tag remain intacted, or the build will fail on github. The private tag is replaced with the appropriate version by the build script on github on a development or release build.
+
+With the workflow setup on Github, builds are automatic. Development is a two stream or branch system. The dev branch is where all development work occurs. Developers are encouraged to branch dev into feature and bugfix branches to do actual work, and then merge changes back into dev. Changes to the dev branch pushed to github are automatically built as a "Development Release" under the 'latest' tag. Only one development release is available at any one time. The purpose of the development release is to allow for beta testing of new code before it is released. The version number of all applications will be denoted with "beta" and the git short release number to ensure users can report issues against a specific version.
+
+When code is complete, and ready for a production release, the code is merged back into master, and tagged with a semver style tag. The tag format must be in the format v3.0.0-2020010101010. The tag number is used to create the version number for each application. The build is setup to reject building a release where the tag is not this format. Developers should use the compile script to create the release to ensure a proper merge and tag is created. The build system automatically creates a release build on github when the tag is detected and places the binaries in the Releases tab on github.
+
+Every time a build is run, github will build the code. The purpose of this build is to ensure the code will build on all platforms. When a release is added, it will appear in the releases tab, and github will run the workflow to build the code for MacOSX, Linux, and Windows.
 
 To make a release, do the following:
 
 Linux/Mac:
 
 ```bash
-bash compile.sh -T
+bash compile.sh -r
 ```
 
 Windows:
 
 ```powershell
-.\compile.ps1 -tag
+.\compile.ps1 -release
 ```
 
-This will tag the repo and cause github to build the code and create a new release.
+You must be on the dev branch without any pending changes to make a release. If the version number of an application is to be incremented, it should be done in the dev branch, and checked in prior to making the release.
+
+A build can also be forced by tagging the master branch.  This is done with the -T option (Linux/Mac) and -tag (windows). You can only tag the master branch with this option.
+
