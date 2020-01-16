@@ -1,5 +1,6 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
+import sys
 import threading
 import datetime
 import Utils
@@ -73,8 +74,6 @@ class BackgroundJobMgr( wx.Dialog ):
 		for i in range(self.jobList.GetColumnCount()):
 			self.jobList.SetColumnWidth( i, wx.LIST_AUTOSIZE )
 		
-
-		
 	def findThread( self, uid ):
 		for row in range(self.jobList.GetItemCount()):
 			v = self.jobList.GetItem(row, self.idCol).GetText()
@@ -92,10 +91,14 @@ class BackgroundJobMgr( wx.Dialog ):
 	def runAsThread( self, target, name, args=(), kwargs={} ):
 		uid = '{:X}'.format(random.getrandbits(31))
 		def wrapTarget():
-			message = target( *args, **kwargs )
+			try:
+				message = target( *args, **kwargs )
+			except Exception as e:
+				Utils.logException( e, sys.exc_info() )
+				message = '{}: {}'.format( _('Exception'), e )
 			wx.CallAfter( self.endThread, uid, '{}'.format(message) if message is not None else _('Success') )
-		thread = threading.Thread( target=wrapTarget, name=name, daemon=True )
 		self.set( uid, name, _('Running...') )
+		thread = threading.Thread( target=wrapTarget, name=name, daemon=True )
 		thread.start()
 		
 if __name__ == '__main__':
