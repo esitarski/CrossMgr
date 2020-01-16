@@ -1,10 +1,7 @@
 #!/bin/bash
 
-BUILD_CROSSMGR=0
-BUILD_CROSSMGRIMPINJ=0
-BUILD_TAGREADWRITE=0
 OSNAME=$(uname -s)
-PYTHONVER=python3.8
+PYTHONVER=python3.7
 ENVDIR=env
 LINUXDEPLOY=linuxdeploy-plugin-appimage-x86_64.AppImage
 if [ "$OSNAME" == "Darwin" ]; then
@@ -249,9 +246,7 @@ package() {
 moveRelease() {
 	PROGRAM=$1
 	echo "Moving to release directory..."
-	if [ -z "$VERSION" ]; then
-		getVersion $PROGRAM
-	fi
+	getVersion $PROGRAM
 	mkdir -p release
 	if [ "$OSNAME" == "Darwin" ]; then
 		mv "${PROGRAM}_${VERSION}.dmg" release/
@@ -298,10 +293,61 @@ envSetup() {
 	fi
 }
 
+updateversion() {
+	if [ -z "$PROGRAMS" ]; then
+		echo "Updateversion: no programs defined!!"
+		exit 1
+	fi
+	if [ -n "$GITHUB_REF" ]; then
+		echo "GITHUB_REF=$GITHUB_REF"
+		for program in $PROGRAMS
+		do
+			getBuildDir $program
+			getVersion $program
+			# development build
+			GIT_TYPE=$(echo $GITHUB_REF | awk -F '/' '{print $2'})
+			GIT_TAG=$(echo $GITHUB_REF | awk -F '/' '{print $3'})
+			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-7)
+			VERSION=$(echo $VERSION | awk -F - '{print $1}')
+			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "master" ]; then
+                echo "Refusing to build an untagged master build. Release builds on a tag only!"
+                exit 1
+            fi
+			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "dev" ]; then
+				APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""
+				VERSION="$VERSION-beta-$SHORTSHA"
+			fi
+			if [ "$GIT_TYPE" == "tags" ]; then
+				VERNO=$(echo $GIT_TAG | awk -F '-' '{print $1}')
+				REFDATE=$(echo $GIT_TAG | awk -F '-' '{print $2}')
+				MAJOR=$(echo $VERNO | awk -F '.' '{print $1}')
+				MINOR=$(echo $VERNO | awk -F '.' '{print $2}')
+				RELEASE=$(echo $VERNO | awk -F '.' '{print $3}')
+				if [ "$MAJOR" != "v3" -o -z "$MINOR" -o -z "$RELEASE" -o -z "$REFDATE" ]; then
+					echo "Invalid tag format. Must be v3.0.3-20200101010101. Refusing to build!"
+					exit 1
+				fi
+				APPVERNAME="AppVerName=\"$program $VERSION-$REFDATE\""
+				VERSION="$GIT_TAG"
+			fi
+            if [ -z "$APPVERNAME" ]; then
+                echo "APPVERNAME is empty! [$APPVERNAME] Aborting..."
+                exit 1
+            fi
+			echo "$program version is now $VERSION"
+            echo "New Version.py: [$APPVERNAME] - [$BUILDDIR/Version.py]"
+			echo "$APPVERNAME" > $BUILDDIR/Version.py
+		done
+	else
+		echo "Running a local build"
+	fi
+}
+
 buildall() {
 		if [ -n "$PROGRAMS" ]; then
             checkEnvActive
 			cleanup
+			updateversion
 			for program in $PROGRAMS
 			do
                 if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo" ]; then
@@ -342,14 +388,54 @@ fixSeriesMgrFiles() {
     cd ..
 }
 
-tagrelease() {
+tagrepo() {
+	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
+	if [ "$CURRENT_BRANCH" != "master" ]; then
+		echo "Unable to tag $CURRENT_BRANCH branch for release. Releases are from master only!"
+        exit 1
+	fi
+    echo "Crossmgr version will be updated by the auto-build system to match the tag"
 	getVersion "CrossMgr"
+	# Remove the -private from the version
+	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
 	DATETIME=$(date +%Y%m%d%H%M%S)
-	TAGNAME="v$VERSION-$DATETIME"
+	TAGNAME="v$VERSIONNO-$DATETIME"
 	echo "Tagging with $TAGNAME"
 	git tag $TAGNAME
-	git push --all
+	git push origin $TAGNAME
 }
+
+dorelease() {
+	CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD -- | head -1)
+	if [ "$CURRENT_BRANCH" != "dev" ]; then
+		echo "Unable to do release on $CURRENT_BRANCH branch. You must be on dev branch to cut a release".
+        exit 1
+	fi
+    if ! git diff-index --quiet HEAD --; then
+        echo "$CURRENT_BRANCH has uncommited changed. Refusing to release. Commit your code."
+        exit 1
+    fi
+    if [ x"$(git rev-parse $CURRENT_BRANCH)" != x"$(git rev-parse origin/$CURRENT_BRANCH)" ]; then
+        echo "$CURRENT_BRANCH is not in sync with origin. Please push your changes."
+        exit 1
+    fi
+	getVersion "CrossMgr"
+	# Remove the -private from the version
+	VERSIONNO=$(echo $VERSION | awk -F - '{print $1}')
+	DATETIME=$(date +%Y%m%d%H%M%S)
+	TAGNAME="v$VERSIONNO-$DATETIME"
+	echo "Releasing with $TAGNAME"
+    git checkout master
+    git merge dev -m "Release $TAGNAME"
+    git push
+    echo "Code merged into master..."
+	git tag $TAGNAME
+	git push origin $TAGNAME
+    echo "Code tagged with $TAGNAME for release"
+    git checkout dev
+    echo "Current branch set back to dev..."
+}
+
 
 doHelp() {
 	cat <<EOF
@@ -392,7 +478,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfywVZ" option
+while getopts "hcitaviCdPBASkomzlTfywVZUr" option
 do
 	gotarg=1
 	case ${option} in
@@ -489,13 +575,17 @@ do
 				exit
 			fi
 		;;
+		U) updateversion
+		;;
 		A) buildall
 		;;
 		z) checkEnvActive
 		;;
 		l) listFiles
 		;;
-		T) tagrelease
+		T) tagrepo
+		;;
+		r) dorelease
 		;;
 		f) fixSeriesMgrFiles 'SeriesMgr'
 		   fixSeriesMgrFiles 'CrossMgrVideo'
