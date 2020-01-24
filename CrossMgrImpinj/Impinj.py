@@ -504,19 +504,6 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Listening for Impinj reader data...') )
 						tUpdateLast = t
 					continue
-				except Exception as e:
-					t = getTimeNow()
-					
-					if (t - tKeepaliveLast).total_seconds() > KeepaliveSeconds * 2:
-						self.messageQ.put( ('Impinj', 'Reader Connection Lost (Check your network adapter).') )
-						self.readerSocket.close()
-						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
-						break
-					
-					if (t - tUpdateLast).total_seconds() >= ReaderUpdateMessageSeconds:
-						self.messageQ.put( ('Impinj', 'Listening for Impinj reader data...') )
-						tUpdateLast = t
-					continue
 				
 				if isinstance(response, KEEPALIVE_Message):
 					# Respond to the KEEP_ALIVE message with KEEP_ALIVE_ACK.
