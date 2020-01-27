@@ -125,11 +125,12 @@ else:
 			keycode = event.GetKeyCode()
 			obj = event.GetEventObject()
 			val = obj.GetValue()
+			
 			# filter unicode characters
 			if keycode == wx.WXK_NONE:
 				pass 
 			# allow digits
-			elif chr(keycode) in string.digits or keycode == 9:
+			elif chr(keycode) in string.digits or keycode == 9 or keycode == 58:
 				event.Skip()
 			# allow special, non-printable keycodes
 			elif chr(keycode) not in string.printable:
