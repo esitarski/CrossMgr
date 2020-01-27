@@ -129,7 +129,7 @@ else:
 			# filter unicode characters
 			if keycode == wx.WXK_NONE:
 				pass 
-			# allow digits
+			# allow digits and colon
 			elif chr(keycode) in string.digits or keycode == 9 or keycode == 58:
 				event.Skip()
 			# allow special, non-printable keycodes
