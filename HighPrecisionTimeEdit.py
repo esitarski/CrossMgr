@@ -95,6 +95,17 @@ if platform.system() == 'Windows':
 
 else:
 	import string
+
+	class TextBoxTipPopup( wx.PopupTransientWindow ):
+		"""Basic Tooltip"""
+		def __init__(self, parent, style, text):
+			wx.PopupTransientWindow.__init__(self, parent, style)
+			self.SetBackgroundColour(wx.YELLOW)
+			border = 10
+			st = wx.StaticText(self, label = text, pos=(border/2,border/2))
+			sz = st.GetBestSize()
+			self.SetSize( (sz.width+border, sz.height+border) )
+
 	class HighPrecisionTimeEdit( wx.TextCtrl ):
 		defaultValue = u'00:00:00.000'
 		emptyValue   = u''
@@ -120,6 +131,8 @@ else:
 			seconds = seconds if seconds is not None else valueToSecs( value, self.display_seconds, self.display_milliseconds )
 			self.SetSeconds( seconds )
 			self.Bind(wx.EVT_CHAR, self.onKeypress)
+			self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
+			self.Bind(wx.EVT_LEFT_DCLICK, self.onDoubleClick)
 
 		def onKeypress(self, event):
 			keycode = event.GetKeyCode()
@@ -139,7 +152,47 @@ else:
 			elif chr(keycode) == '.' and '.' not in val:
 				event.Skip()
 			return
-					
+		
+		def onPaste(self, event):
+			self.text_data = wx.TextDataObject()
+			if wx.TheClipboard.Open():
+				success = wx.TheClipboard.GetData(self.text_data)
+				wx.TheClipboard.Close()
+			if success:
+				self.text_data = self.text_data.GetText()
+				if self.ValidateTimeFormat(self.text_data):
+					self.SetValue(self.text_data)
+					return
+				else:
+					WarnTip = TextBoxTipPopup(self, wx.SIMPLE_BORDER,"Incorrect time format on the clipboard")
+					xPos, yPos = self.GetPosition()
+					height = WarnTip.GetClientSize()[1]
+					pos = self.ClientToScreen( (xPos - xPos, yPos - yPos + height) )
+					WarnTip.Position( pos, (0,0) )
+					WarnTip.Popup()
+
+		def onDoubleClick(self, event):
+			self.SetSelection(-1,-1)
+			pass
+
+		def ValidateTimeFormat(self, time):
+			try:
+				datetime.datetime.strptime(time, '%H:%M')
+			except Exception:
+				try:
+					datetime.datetime.strptime(time, '%H:%M:%S')
+				except Exception:
+					try:
+						datetime.datetime.strptime(time, '%H:%M:%S.%f')
+					except Exception:
+						return False
+					else:
+						return True
+				else:
+					return True
+			else:
+				return True
+
 		def GetSeconds( self ):
 			v = self.GetValue()
 			if self.allow_none and v == self.emptyValue:
@@ -166,7 +219,7 @@ else:
 				v += ':00'
 			secs = Utils.StrToSeconds( v )
 			return secsToValue( secs, self.allow_none, self.display_seconds, self.display_milliseconds )
-		
+
 if __name__ == '__main__':
 
 	# Self-test.
