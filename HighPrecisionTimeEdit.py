@@ -176,22 +176,17 @@ else:
 			pass
 
 		def ValidateTimeFormat(self, time):
-			try:
-				datetime.datetime.strptime(time, '%H:%M')
-			except Exception:
-				try:
-					datetime.datetime.strptime(time, '%H:%M:%S')
-				except Exception:
-					try:
-						datetime.datetime.strptime(time, '%H:%M:%S.%f')
-					except Exception:
-						return False
-					else:
-						return True
-				else:
-					return True
-			else:
+			if not time and self.allow_none:
 				return True
+			
+			for format in ('%H:%M', '%H:%M:%S', '%H:%M:%S.%f'):
+				try:
+					datetime.datetime.strptime(time, format)
+					return True
+				except Exception:
+					pass
+				
+			return False
 
 		def GetSeconds( self ):
 			v = self.GetValue()

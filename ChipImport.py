@@ -1,5 +1,4 @@
 import wx
-import io
 import os
 import six
 import math
@@ -24,16 +23,6 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 						title = _('Cannot Import into Running Race'), iconMask = wx.ICON_ERROR )
 		return
 
-	try:
-		if HighPrecisionTimeEdit.ValidateTimeFormat(startTime):
-			return True
-		# datetime.datetime.strptime(timeAdjustment, '%H:%M:%S')
-	except Exception:
-		Utils.MessageOK( Utils.getMainWin(), u'\n\n'.join( [_('Invalid time formatting'), _('You must ensure that the time contains at least "HH:MM:SS".'),
-		_('Fractions of a second are optional. Default time formatting is 00:00:00.000 in 24-hour format')] ),
-					title = _('Invalid time formatting'), iconMask = wx.ICON_ERROR )
-		return errors
-	
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
 	
@@ -42,7 +31,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 	
 	raceStart = None
 	
-	with io.open(fname, encoding='utf-8') as f, Model.LockRace() as race:
+	with open(fname) as f, Model.LockRace() as race:
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
 		JChip.reset( raceDate )
@@ -300,7 +289,7 @@ class ChipImportDialog( wx.Dialog ):
 		else:
 			if self.manualStartTime.IsChecked():
 				startSeconds = self.raceStartTime.GetSeconds()
-				seconds, fraction = math.modf( startSeconds )
+				fraction, seconds = math.modf( startSeconds )
 				seconds = int(seconds)
 				startTime = datetime.time( (seconds//(60*60))%24, (seconds//60)%60, seconds%60, int(fraction*1000000) )
 			else:

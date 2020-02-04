@@ -1,6 +1,5 @@
 import wx
 import sys
-import six
 import math
 import Utils
 import Model
@@ -8,12 +7,8 @@ import JChip
 from ChipImport import ChipImportDialog
 import datetime
 combine = datetime.datetime.combine
-import string
 
-if six.PY2:
-	sepTrans = string.maketrans( '/-:', '   ' )
-else:
-	sepTrans = str.maketrans( '/-:', '   ' )
+sepTrans = str.maketrans( '/-:', '   ' )
 def timeFromStr( tStr ):
 	try:
 		tStr = tStr.translate( sepTrans )
@@ -79,11 +74,34 @@ if __name__ == '__main__':
 AAABBB,	2016-09-11 09:15:34.305
 AAADDD,	  2016-10-11 23:15:34.305
 '''
+	data = '''s
+20200201FC000004,Sat Feb 01 14:11:29.139089  2020-02-01
+20200201FC000021,Sat Feb 01 14:11:29.516689  2020-02-01
+20200201FC000004,Sat Feb 01 14:11:35.530523  2020-02-01
+20200201FC000004,Sat Feb 01 14:11:42.412994  2020-02-01
+20200201FC000047,Sat Feb 01 14:11:43.256820  2020-02-01
+20200201FC000044,Sat Feb 01 14:11:44.576765  2020-02-01
+10522C54AFCC0DA3F415C69A,Sat Feb 01 14:11:44.671056  2020-02-01
+20200201FC000043,Sat Feb 01 14:11:45.535942  2020-02-01
+20200201FC000057,Sat Feb 01 14:11:46.125401  2020-02-01
+20200201FC000003,Sat Feb 01 14:11:46.783155  2020-02-01
+20200201FC000021,Sat Feb 01 14:11:49.850968  2020-02-01
+20200201FC000004,Sat Feb 01 14:11:59.852483  2020-02-01
+20200201FC000047,Sat Feb 01 14:12:00.111699  2020-02-01
+20200201FC000044,Sat Feb 01 14:12:00.432677  2020-02-01
+10522C54AFCC0DA3F415C69A,Sat Feb 01 14:12:00.638752  2020-02-01
+20200201FC000043,Sat Feb 01 14:12:01.199199  2020-02-01
+20200201FC000057,Sat Feb 01 14:12:01.508610  2020-02-01
+20200201FC000003,Sat Feb 01 14:12:02.413108  2020-02-01
+20200201FC000004,Sat Feb 01 14:12:11.202626  2020-02-01
+20200201FC000047,Sat Feb 01 14:12:11.415818  2020-02-01
+20200201FC000044,Sat Feb 01 14:12:11.577448  2020-02-01
+10522C54AFCC0DA3F415C69A,Sat Feb 01 14:12:11.782115  2020-02-01'''
 
 	errors = []
 	for lineNo, line in enumerate(data.split('\n'), 1):
-		six.print_( parseTagTime(line, lineNo, errors) )
-	sys.exit()
+		print( parseTagTime(line, lineNo, errors) )
+	#sys.exit()
 	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
