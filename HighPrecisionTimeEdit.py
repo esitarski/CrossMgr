@@ -173,7 +173,6 @@ else:
 
 		def onDoubleClick(self, event):
 			self.SetSelection(-1,-1)
-			pass
 
 		def ValidateTimeFormat(self, time):
 			if not time and self.allow_none:
