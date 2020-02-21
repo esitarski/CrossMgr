@@ -14,7 +14,7 @@ To Restart a Mass Start race:
 1. In the [Actions][] screen, __Finish__ the current running race.
 1. Check the [Passings][] and the [Chart][] screens.  Decide which lap you want to restart the race from.  __Passings__ is a good screen as it shows the time-down per lap. This is useful if you want to restart riders on their time gaps.
 1. Select __Tools|Restart Race__
-1. Choose the Lap you previously decided to restart the race from.
+1. Choose the __After Lap__ you previously decided to restart the race from.
 1. Press __Restart__
 1. If you need to shorten the race (reduce laps, reduce race time), you can do so at any time in the [Categories][] screen.
 
