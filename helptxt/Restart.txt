@@ -1,42 +1,43 @@
 [TOC]
 
 # Restart
-Enables a Mass Start race to be restarted.  Laps before the interuption are preserved and combined with laps that happend after the interruption.
-The race can be shortened (by laps, or by time) if required by adjusting the race parameters in the [Categories][] screen.
+Enables a Mass Start race to be restarted (it is not possible to restart a time trial).
 
-Useful for restarting a race after a delay (crash, course obstruction, etc.).
+The scenario is as follows:
 
-It is not possible to restart a Time Trial.
+* a race is running
+* the race is stopped (crash, weather, course obstruction, etc.)-*
+* the stoppage is addressed
+* the race is restarted, possibly with time gaps between groups of riders.
+* the laps before the restart are combined with the laps after the restart
+* it may be necessary to shorten the race (reduce the laps, or reduce the race time) after the race is restarted
+* a race may be stopped and restarted more than once
+
+The CrossMgr Restart feature supports this scenario.
 
 # Procedure
 To Restart a Mass Start race:
 
-1. In the [Actions][] screen, __Finish__ the current running race.
-1. Check the [Passings][] and the [Chart][] screens.  Decide which lap you want to restart the race from.  __Passings__ is a good screen as it shows the time-down per lap. This is useful if you want to restart riders on their time gaps.
-1. Select __Tools|Restart Race__
-1. Choose the __After Lap__ you previously decided to restart the race from.
-1. Press __Restart__
-1. If you need to shorten the race (reduce laps, reduce race time), you can do so at any time in the [Categories][] screen.
+1. Switch to the [Passings][] or the [Chart][] screens.  Decide which lap you consider the __last lap__ before the restart.  __Passings__ is a good screen as it shows the time down per lap. This is useful if you choose to restart riders with time gaps.
+1. Select __Tools|Restart Race__.  If you have not already __Finished__ the current race, you will be prompted to do so.
+1. Choose the __Restart After Lap__ you previously decided to restart the race from.
+1. Adjust the __RFID Delay after Restart__ if you are using an RFID reader (see below).
+1. Press __Restart Now__ and confirm.
+1. If you need to shorten the race (reduce laps, reduce race time), you can do so in the [Categories][] screen.  This can be done before or after the Restart.
 
-## How it Works
+### RFID Delay after Restart
 
-Restart preserves all the entries of and before the restart lap.
-It then adjusts the race start time and shifts all existing times forward so they line up with the Restart time.
+At the restart, riders will likely be staged at the finish line near the RFID reader.  When the Restart is triggered, you do not want those riders to trigger RFID reads - you only want to recording reads at the end of the restart lap.
 
-In this way, the Race Time after the Restart remains consistent with elapsed time.
+During the __RFID Delay after Restart__, RFID reads will be ignored.  This allows the riders to get away from the finish line RFID reader so they do not create meaningless reads .
 
-THe restart is done on the basis that the race restarts at the same time as the restart lap ends.
+This value defaults to 75% of the average lap time up to a maximum of 5 minutes.
+You may need to adjust __RFID Delay after Restart__ depending on your start gaps.
 
-## Note for Restart with RFID
+## Can I Undo a Restart?
 
-When restarting with an RFID reader at the finish, it is best to restart the riders before restarting CrossMgr.
-This will give them the chance to get out of range of the RFID reader.  You don't want the RFID reader to read the tags at the beginning of the restart lap.
-
-## Can I Undo a Restart if I made a mistake?
-
-It is possible to Undo a Restart and revert to the previous race state.
+It is possible to Undo after a Restart.
 To do so, you first Finish the race from [Actions][], then hit Ctrl-Z.
+RFID reads during __RFID Delay after Restart__ will not be included.
 
-## Warning
-
-Be careful, especially with multi-category races.
+Be careful.

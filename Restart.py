@@ -6,9 +6,10 @@ import Utils
 import Undo
 import bisect
 from GetResults import GetEntries
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from roundbutton import RoundButton
 
-def RestartAfterLap( race, lap ):
+def RestartAfterLap( race, lap, rfidDelay ):
 	entries = [e for e in GetEntries(None) if e.lap <= lap and e.lap <= race.getCategoryNumLaps(e.num)]
 	
 	history = [ [] ]
@@ -38,9 +39,13 @@ def RestartAfterLap( race, lap ):
 			del times[bisect.bisect(times, tRestart):]
 	
 	# Restart the race.  Adjust the race start time to compensate for the restart.
-	race.restartTime = datetime.datetime.now()
-	race.startTime = race.restartTime - datetime.timedelta(seconds=tRestart)
+	restartTime = datetime.datetime.now()
+	race.startTime = restartTime - datetime.timedelta(seconds=tRestart)
 	race.finishTime = None
+	if race.enableJChipIntegration:
+		race.rfidRestartTime = restartTime + datetime.timedelta( seconds=(rfidDelay or 0.0) )
+	else:
+		race.rfidRestartTime = None
 	race.setChanged()
 
 class Restart( wx.Dialog ):
@@ -51,19 +56,27 @@ class Restart( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
+		lapLabel = wx.StaticText( self, label=_("Restart after Lap") )
+		self.lap = wx.Choice( self )
+		
+		hsLaps = wx.BoxSizer( wx.HORIZONTAL )
+		hsLaps.Add( lapLabel, flag=wx.ALIGN_CENTER_VERTICAL )
+		hsLaps.Add( self.lap, flag=wx.LEFT, border=4 )
+		
+		self.rfidDelayLabel = wx.StaticText( self, label=_("RFID Delay after Restart") )
+		self.rfidDelayLabel.SetToolTip( _('Time Delay after Restart to resume RFID reads') )
+		self.rfidDelay = HighPrecisionTimeEdit( self, display_seconds=True, display_milliseconds=False )
+		
+		hsRFID = wx.BoxSizer( wx.HORIZONTAL )
+		hsRFID.Add( self.rfidDelayLabel, flag=wx.ALIGN_CENTER_VERTICAL )
+		hsRFID.Add( self.rfidDelay, flag=wx.LEFT, border=4 )
+				
 		buttonSize = 220
 		self.button = RoundButton( self, size=(buttonSize, buttonSize) )
 		self.button.SetLabel( '\n'.join( _('Restart Now').split() ) )
 		self.button.SetFontToFitLabel()
 		self.button.SetForegroundColour( wx.Colour(0,128,0) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
-		
-		lapLabel = wx.StaticText( self, label=_("After Lap") )
-		self.lap = wx.Choice( self )
-		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( lapLabel, flag=wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( self.lap, flag=wx.LEFT, border=2 )
 		
 		self.cancelButton = wx.Button(self, wx.ID_CANCEL)
 		self.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
@@ -72,7 +85,8 @@ class Restart( wx.Dialog ):
 		buttonSizer.AddButton( self.cancelButton )
 		buttonSizer.Realize()
 		
-		vs.Add( hs, flag=wx.ALL, border=8)
+		vs.Add( hsLaps, flag=wx.ALL, border=8)
+		vs.Add( hsRFID, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=8)
 		vs.Add( self.button, flag=wx.ALL, border=16 )
 		vs.Add( buttonSizer, flag=wx.TOP|wx.BOTTOM|wx.EXPAND, border=8)
 		
@@ -80,26 +94,37 @@ class Restart( wx.Dialog ):
 		
 	def refresh( self ):
 		race = Model.race
+		self.rfidDelayLabel.Enable( race and race.enableJChipIntegration )
+		self.rfidDelay.Enable( race and race.enableJChipIntegration )
+		
 		if not race or not race.isFinished() or race.isTimeTrial:
 			self.lap.Set( [] )
 			return
+			
 		entries = GetEntries(None)
 		lapMax = max( e.lap for e in entries ) if entries else 0
 		choices = ['{}'.format(lap) for lap in range(max(0, lapMax-20), lapMax+1)]
 		self.lap.Set( choices )
 		self.lap.SetSelection( len(choices)-1 )
 		
+		# Get median lap time.
+		lapTimes = []
+		last = {}
+		for e in entries:
+			if e.num in lapTimes:
+				lapTimes.append( e.t - last[e.num] )
+			last[e.num] = e.t
+		lapTimes.sort()
+		lapTimeMedian = lapTimes[len(lapTimes)//2] if lapTimes else 60.0
+		self.rfidDelay.SetSeconds( min(5*60.0, lapTimeMedian * 0.75) )
+		
 	def onPress( self, event ):
 		race = Model.race
 		if not race or not race.isFinished() or race.isTimeTrial:
 			return
 		
-		i = self.lap.GetSelection()
-		if i == wx.NOT_FOUND:
-			return
-		
 		try:
-			lap = int( self.lap.GetString(i) )
+			lap = int( self.lap.GetStringSelection() )
 		except:
 			return
 			
@@ -107,7 +132,7 @@ class Restart( wx.Dialog ):
 			return
 		
 		Undo.undo.pushState()		
-		RestartAfterLap( race, lap )
+		RestartAfterLap( race, lap, self.rfidDelay.GetSeconds() )
 		
 		mainWin = Utils.getMainWin()
 		if mainWin:

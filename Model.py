@@ -1179,7 +1179,7 @@ class Race( object ):
 	useTableToPullRiders = False	# Used for Pulled screen.
 
 	#--------------------------------------
-	restartTime = None		# Restart time (used to ignore intervening tag reads)
+	rfidRestartTime = None		# Restart time (used to ignore intervening tag reads)
 	#--------------------------------------
 	
 	

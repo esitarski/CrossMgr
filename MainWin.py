@@ -84,6 +84,7 @@ from Playback			import Playback
 from Pulled				import Pulled
 from TeamResults		import TeamResults
 from BibEnter			import BibEnter
+from Restart			import Restart
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -737,6 +738,9 @@ class MainWin( wx.Frame ):
 		item = self.toolsMenu.Append( wx.ID_ANY, _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
 		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, item )
 		
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Restart Race..."), _("Restart a race after a delay.") )
+		self.Bind(wx.EVT_MENU, self.menuRestartRace, item )
+		
 		self.toolsMenu.AppendSeparator()
 
 		item = self.toolsMenu.Append( wx.ID_ANY, _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
@@ -1123,6 +1127,32 @@ class MainWin( wx.Frame ):
 		dlg.ShowModal()
 		dlg.Destroy()
 	
+	def menuRestartRace( self, event ):
+		race = Model.race
+		if not race:
+			return
+		if race.isTimeTrial:
+			Utils.MessageOK( self, _('Cannot restart a Time Trial'), _('Race Not Restarted') )
+			return			
+		if race.isUnstarted():
+			Utils.MessageOK( self, _('Cannot restart an Unstarted Race.'), _('Race Not Restarted') )
+			return
+		if race.isRunning():
+			if not Utils.MessageOKCancel(
+				self,
+				'{}\n\n\t{}'.format(
+					_('The Race must be Finished before it can a Restarted.'),
+					_('Finish the Race Now?'),),
+					_('Race Not Restarted')
+				):
+				return
+			self.actions.onFinishRace( event, False )
+			
+		dlg = Restart( self )
+		dlg.refresh()
+		dlg.ShowModal()
+		dlg.Destroy()
+		
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
 		self.config.WriteBool( 'playSounds', self.playSounds )
@@ -4001,7 +4031,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			dt = d[2]
 			
 			# Ignore unrecorded reads that happened before the restart time.
-			if race.restartTime and dt <= race.restartTime:
+			if race.rfidRestartTime and dt <= race.rfidRestartTime:
 				continue
 			
 			try:
