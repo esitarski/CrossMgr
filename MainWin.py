@@ -3104,9 +3104,9 @@ class MainWin( wx.Frame ):
 	def menuExit(self, event):
 		self.onCloseWindow( event )
 
-	def genTimes( self, regen = False ):
+	def genTimes( self, regen=False ):
 		if regen:
-			for k, v in six.iteritems(SimulateData()):
+			for k, v in SimulateData().items():
 				setattr( self, k, v )
 		else:
 			self.raceMinutes = SimulationLapTimes.raceMinutes
@@ -3177,7 +3177,7 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		
 		# Get the simulation times.
-		bigSimulation = False
+		bigSimulation = True
 		self.lapTimes = self.genTimes( bigSimulation )
 		tMin = self.lapTimes[0][0]
 		self.lapTimes.reverse()			# Reverse the times so we can pop them from the end later.
@@ -3999,6 +3999,11 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				continue
 			tag = d[1]
 			dt = d[2]
+			
+			# Ignore unrecorded reads that happened before the restart time.
+			if race.restartTime and dt <= race.restartTime:
+				continue
+			
 			try:
 				num = race.tagNums[tag]
 			except KeyError:
