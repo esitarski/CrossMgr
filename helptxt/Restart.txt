@@ -1,0 +1,42 @@
+[TOC]
+
+# Restart
+Enables a Mass Start race to be restarted.  Laps before the interuption are preserved and combined with laps that happend after the interruption.
+The race can be shortened (by laps, or by time) if required by adjusting the race parameters in the [Categories][] screen.
+
+Useful for restarting a race after a delay (crash, course obstruction, etc.).
+
+It is not possible to restart a Time Trial.
+
+# Procedure
+To Restart a Mass Start race:
+
+1. In the [Actions][] screen, __Finish__ the current running race.
+1. Check the [Passings][] and the [Chart][] screens.  Decide which lap you want to restart the race from.  __Passings__ is a good screen as it shows the time-down per lap. This is useful if you want to restart riders on their time gaps.
+1. Select __Tools|Restart Race__
+1. Choose the Lap you previously decided to restart the race from.
+1. Press __Restart__
+1. If you need to shorten the race (reduce laps, reduce race time), you can do so at any time in the [Categories][] screen.
+
+## How it Works
+
+Restart preserves all the entries of and before the restart lap.
+It then adjusts the race start time and shifts all existing times forward so they line up with the Restart time.
+
+In this way, the Race Time after the Restart remains consistent with elapsed time.
+
+THe restart is done on the basis that the race restarts at the same time as the restart lap ends.
+
+## Note for Restart with RFID
+
+When restarting with an RFID reader at the finish, it is best to restart the riders before restarting CrossMgr.
+This will give them the chance to get out of range of the RFID reader.  You don't want the RFID reader to read the tags at the beginning of the restart lap.
+
+## Can I Undo a Restart if I made a mistake?
+
+It is possible to Undo a Restart and revert to the previous race state.
+To do so, you first Finish the race from [Actions][], then hit Ctrl-Z.
+
+## Warning
+
+Be careful, especially with multi-category races.
