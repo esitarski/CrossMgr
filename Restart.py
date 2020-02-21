@@ -53,12 +53,12 @@ class Restart( wx.Dialog ):
 		
 		buttonSize = 220
 		self.button = RoundButton( self, size=(buttonSize, buttonSize) )
-		self.button.SetLabel( _('Restart') )
+		self.button.SetLabel( '\n'.join( _('Restart Now').split() ) )
 		self.button.SetFontToFitLabel()
 		self.button.SetForegroundColour( wx.Colour(0,128,0) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		lapLabel = wx.StaticText( self, label=_("Restart after Lap") )
+		lapLabel = wx.StaticText( self, label=_("After Lap") )
 		self.lap = wx.Choice( self )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -72,9 +72,9 @@ class Restart( wx.Dialog ):
 		buttonSizer.AddButton( self.cancelButton )
 		buttonSizer.Realize()
 		
-		vs.Add( hs, flag=wx.ALL, border=16 )
+		vs.Add( hs, flag=wx.ALL, border=8)
 		vs.Add( self.button, flag=wx.ALL, border=16 )
-		vs.Add( buttonSizer, flag=wx.ALL, border=16 )
+		vs.Add( buttonSizer, flag=wx.TOP|wx.BOTTOM|wx.EXPAND, border=8)
 		
 		self.SetSizerAndFit( vs )
 		
@@ -102,9 +102,18 @@ class Restart( wx.Dialog ):
 			lap = int( self.lap.GetString(i) )
 		except:
 			return
+			
+		if not Utils.MessageOKCancel(self, _('Restart Race Now?\n\n'), _('Restart Race')):
+			return
 		
-		Undo.undo.pushState()
+		Undo.undo.pushState()		
 		RestartAfterLap( race, lap )
+		
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			mainWin.refresh()
+			mainWin.refreshWindows()
+		
 		self.OnOK( event )
 	
 	def OnOK( self, event ):
