@@ -1140,13 +1140,16 @@ class MainWin( wx.Frame ):
 		if race.isRunning():
 			if not Utils.MessageOKCancel(
 				self,
-				'{}\n\n\t{}'.format(
-					_('The Race must be Finished before it can a Restarted.'),
-					_('Finish the Race Now?'),),
+				'{}\n\n\t{}\n\n\t{}'.format(
+						_('The Race must be Finished before it can a Restarted.'),
+						_('Finish the Race Now?'),
+						_('Careful - there is no Undo'),
+					),
 					_('Race Not Restarted')
 				):
 				return
 			self.actions.onFinishRace( event, False )
+			self.showPage( self.iHistoryPage )			
 			
 		dlg = Restart( self )
 		dlg.refresh()
@@ -3207,7 +3210,7 @@ class MainWin( wx.Frame ):
 		self.refresh()
 		
 		# Get the simulation times.
-		# bigSimulation = True
+		bigSimulation = False
 		self.lapTimes = self.genTimes( bigSimulation )
 		tMin = self.lapTimes[0][0]
 		self.lapTimes.reverse()			# Reverse the times so we can pop them from the end later.

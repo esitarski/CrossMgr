@@ -102,7 +102,7 @@ class Restart( wx.Dialog ):
 			return
 			
 		entries = GetEntries(None)
-		lapMax = max( e.lap for e in entries ) if entries else 0
+		lapMax = max( e.lap for e in entries if not e.interp) if entries else 0
 		choices = ['{}'.format(lap) for lap in range(max(0, lapMax-20), lapMax+1)]
 		self.lap.Set( choices )
 		self.lap.SetSelection( len(choices)-1 )
