@@ -350,6 +350,7 @@ def getCmd( sock ):
 
 #------------------------------------------------------------------------------	
 # Connect to the CrossMgr server.
+dBaseStart = None
 iMessage = 1
 while 1:
 	print( 'Attempting to connect to CrossMgr server...' )
@@ -387,9 +388,11 @@ while 1:
 		print( 'Unknown cmd [1]' )
 		continue
 
-	#------------------------------------------------------------------------------	
+	#------------------------------------------------------------------------------
 	dBase = datetime.datetime.now()
 	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
+	if not dBaseStart:
+		dBaseStart = dBase	# Record the first sent time to keep it as a basis for all transmitted times.
 
 	#------------------------------------------------------------------------------	
 	print( 'Send gettime data...' )
@@ -421,7 +424,8 @@ while 1:
 		
 		time.sleep( dt )
 		
-		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t - 0.5) )
+		# Send offsets relative to the transmit start time.
+		message = formatMessage( n, lap, dBaseStart + datetime.timedelta(seconds = t - 0.5) )
 		if iMessage & 15 == 0:
 			print( 'sending: {}: {}\n'.format(iMessage, message[:-1]) )
 		try:
