@@ -279,7 +279,7 @@ Spin Doctors
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i%len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
-# Write out as a .xlsx file with the number tag data.
+# Write out as a .xls file with the number tag data.
 #
 wb = xlwt.Workbook()
 ws = wb.add_sheet( "JChipTest" )
@@ -297,6 +297,7 @@ for r, (n, t) in enumerate(tag.items()):
 	rowCur += 1
 wb.save('JChipTest.xls')
 wb = None
+print( u'Created JChipTest.xls.' )
 
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
