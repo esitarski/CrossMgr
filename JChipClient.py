@@ -354,6 +354,7 @@ dBaseStart = None
 iMessage = 1
 while 1:
 	print( 'Attempting to connect to CrossMgr server...' )
+	sock = None		# Voodoo socket reset.
 	while 1:
 		try:
 			#------------------------------------------------------------------------------	
