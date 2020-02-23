@@ -1112,6 +1112,7 @@ class MainWin( wx.Frame ):
 			if race:
 				race.syncCategories = self.menuItemSyncCategories.IsChecked()
 				
+	@logCall
 	def menuChangeRaceStartTime( self, event ):
 		race = Model.race
 		if not race:
@@ -1127,6 +1128,7 @@ class MainWin( wx.Frame ):
 		dlg.ShowModal()
 		dlg.Destroy()
 	
+	@logCall
 	def menuRestartRace( self, event ):
 		race = Model.race
 		if not race:
