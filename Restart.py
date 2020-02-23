@@ -4,6 +4,8 @@ import datetime
 import Model
 import Utils
 import Undo
+import ChipReader
+import OutputStreamer
 import bisect
 from GetResults import GetEntries
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
@@ -47,6 +49,12 @@ def RestartAfterLap( race, lap, rfidDelay ):
 	else:
 		race.rfidRestartTime = None
 	race.setChanged()
+	
+	# Race restart procedure.
+	OutputStreamer.writeRaceStart( isRestart=True )
+	ChipReader.chipReaderCur.reset( race.chipReaderType )
+	if race.ftpUploadDuringRace:
+		realTimeFtpPublish.publishEntry( True )
 
 class Restart( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
