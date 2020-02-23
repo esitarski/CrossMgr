@@ -35,7 +35,7 @@ def RestartAfterLap( race, lap, rfidDelay ):
 	
 	# Also, remove any recorded times from unmatched tags.
 	if race.unmatchedTags:
-		for tag, times in race.unmatchedTags:
+		for tag, times in race.unmatchedTags.items():
 			del times[bisect.bisect(times, tRestart):]
 	
 	# Restart the race.  Adjust the race start time to compensate for the restart.
