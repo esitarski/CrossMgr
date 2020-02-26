@@ -1,7 +1,6 @@
 from distutils.core import setup
 import os
 import sys
-import six
 import glob
 import shutil
 import zipfile
@@ -115,11 +114,11 @@ def make_inno_version():
 		'VersionInfoVersion':	AppVerName.split()[1],
 	}
 	with open('inno_setup.txt', 'w') as f:
-		for k, v in six.iteritems(setup):
+		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrVideo.iss'
-six.print_( cmd )
+print( cmd )
 os.system( cmd )
 
 # Create versioned executable.
@@ -134,7 +133,7 @@ except:
 	pass
 	
 shutil.copy( 'install\\CrossMgrVideo_Setup.exe', 'install\\' + newExeName )
-six.print_( 'executable copied to: ' + newExeName )
+print( 'executable copied to: ' + newExeName )
 
 # Create comprssed executable.
 os.chdir( 'install' )
@@ -149,7 +148,7 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-six.print_( 'executable compressed.' )
+print( 'executable compressed.' )
 
 shutil.copy( newZipName, googleDrive )
 

@@ -32,7 +32,7 @@ import zipfile
 try:
     import poster
 except:
-    six.print_('Module poster missing: https://pypi.python.org/pypi/poster')
+    print('Module poster missing: https://pypi.python.org/pypi/poster')
     exit()
 
 try:
@@ -43,7 +43,7 @@ except:
         import simplejson
         jsonalias = simplejson
     except:
-        six.print_('Modules json and simplejson missing')
+        print('Modules json and simplejson missing')
         exit()
 
 VIRUSTOTAL_API2_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
@@ -165,17 +165,17 @@ def Main():
 
     if not options.file and len(args) == 0:
         oParser.print_help()
-        six.print_('')
-        six.print_('  Source code put in the public domain by Didier Stevens, no Copyright')
-        six.print_('  Use at your own risk')
-        six.print_('  https://DidierStevens.com')
+        print('')
+        print('  Source code put in the public domain by Didier Stevens, no Copyright')
+        print('  Use at your own risk')
+        print('  https://DidierStevens.com')
         return
     if os.getenv('VIRUSTOTAL_API2_KEY') != None:
         VIRUSTOTAL_API2_KEY = os.getenv('VIRUSTOTAL_API2_KEY')
     if options.key != '':
         VIRUSTOTAL_API2_KEY = options.key
     if VIRUSTOTAL_API2_KEY == '':
-        six.print_('You need to get a VirusTotal API key and set environment variable VIRUSTOTAL_API2_KEY, use option -k or add it to this program.\nTo get your API key, you need a VirusTotal account.')
+        print('You need to get a VirusTotal API key and set environment variable VIRUSTOTAL_API2_KEY, use option -k or add it to this program.\nTo get your API key, you need a VirusTotal account.')
     elif options.file:
         VirusTotalSubmit(File2Strings(options.file), options)
     else:

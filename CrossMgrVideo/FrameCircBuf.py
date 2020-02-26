@@ -1,4 +1,3 @@
-import six
 import types
 import datetime
 from bisect import bisect_left
@@ -28,16 +27,16 @@ class FrameCircBuf( object ):
 		t = datetime.datetime.now() - datetime.timedelta( seconds = bufSize )
 		dt = datetime.timedelta( seconds = 0.001 )
 		times = []
-		for i in six.moves.range(bufSize):
+		for i in range(bufSize):
 			times.append( t )
 			t += dt
 		self.iStart = 0
 		self.times = times
-		self.frames = [None for i in six.moves.range(bufSize)]
+		self.frames = [None for i in range(bufSize)]
 		self.bufSize = bufSize
 
 	def clear( self ):
-		self.frames = [None for i in six.moves.range(self.bufSize)]
+		self.frames = [None for i in range(self.bufSize)]
 		
 	def getT( self, i ):
 		return self.times[(i+self.iStart)%self.bufSize]
@@ -62,7 +61,7 @@ class FrameCircBuf( object ):
 			return [], []
 		times = []
 		frames = []
-		for j in six.moves.range(i, bufSize):
+		for j in range(i, bufSize):
 			k = (j+iStart)%bufSize
 			t = self.times[k]
 			if t > tEnd:
@@ -79,9 +78,9 @@ if __name__ == '__main__':
 	fcb.reset( 5*25 )
 	
 	tStart = datetime.datetime.now()
-	for i in six.moves.range(fcb.bufSize):
+	for i in range(fcb.bufSize):
 		fcb.append( tStart + datetime.timedelta(seconds=i*1.0/25.0), None )
 	
 	for t in fcb.times:
-		six.print_( (t-tStart).total_seconds() )
-	six.print_()
+		print( (t-tStart).total_seconds() )
+	print()

@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import time
 import subprocess
 from AddPhotoHeader import AddPhotoHeader

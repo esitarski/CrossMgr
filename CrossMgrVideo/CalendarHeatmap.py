@@ -64,7 +64,6 @@ Version 0.1
 """
 
 import wx
-import six
 import wx.lib.agw.artmanager as AM
 from math import sqrt
 import datetime
@@ -421,7 +420,7 @@ if __name__ == '__main__':
 	dates = [(d,random.randint(0,1000)) for d in daterange(datetime.date(year, 1, 1), datetime.date(year+1, 1, 1))]
 	chm = CalendarHeatmap( mainWin, dates=dates )
 	def onPress( event ):
-		six.print_( 'Pressed: ', event.GetDate() )
+		print( 'Pressed: ', event.GetDate() )
 	
 	chm.Bind( wx.EVT_BUTTON, onPress )
 	vs.Add( chm )

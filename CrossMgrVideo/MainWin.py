@@ -49,7 +49,7 @@ def getCloseFinishBitmaps( size=(16,16) ):
 		bitmap = wx.Bitmap( *size )
 		dc.SelectObject( bitmap )
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
-		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in six.moves.range(0,6,2)]) ) )
+		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in range(0,6,2)]) ) )
 		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
 		dc.SelectObject( wx.NullBitmap )
 		bm.append( bitmap )
@@ -163,7 +163,7 @@ class ConfigDialog( wx.Dialog ):
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera Device'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.cameraDevice = wx.Choice( self, choices=[six.text_type(i) for i in six.moves.range(8)] )
+		self.cameraDevice = wx.Choice( self, choices=['{}'.format(i) for i in range(8)] )
 		self.cameraDevice.SetSelection( cameraDeviceNum )
 		pfgs.Add( self.cameraDevice )
 		
@@ -328,7 +328,7 @@ class TriggerDialog( wx.Dialog ):
 		ef = db.getTriggerEditFields( self.triggerId )
 		ef = ef or ['' for f in Database.triggerEditFields]
 		for e, v in zip(self.editFields, ef):
-			e.SetValue( six.text_type(v) )
+			e.SetValue( '{}'.format(v) )
 	
 	def get( self ):
 		values = []
@@ -651,6 +651,18 @@ class MainWin( wx.Frame ):
 		self.updateAutoCaptureLabel()
 		self.SetSizerAndFit( mainSizer )
 		
+		# Add keyboard accellerators.
+		self.capturing = False
+
+		idStartAutoCapture = wx.NewId()
+		idToggleCapture = wx.NewId()
+		
+		entries = [wx.AcceleratorEntry()]
+		entries[0].Set(wx.ACCEL_CTRL, ord('A'), idStartAutoCapture)
+
+		self.Bind(wx.EVT_MENU, self.onStartAutoCaptureAccel, id=idStartAutoCapture)		
+		self.SetAcceleratorTable( wx.AcceleratorTable(entries) )
+
 		# Start the message reporting thread so we can see what is going on.
 		self.messageThread = threading.Thread( target=self.showMessages )
 		self.messageThread.daemon = True
@@ -797,9 +809,9 @@ class MainWin( wx.Frame ):
 				if k == 'bib':
 					v = u'{:>6}'.format(v)
 				elif k == 'frames':
-					v = six.text_type(v) if v else u''
+					v = '{}'.format(v) if v else u''
 				else:
-					v = six.text_type(v)
+					v = '{}'.format(v)
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
 				
 	def updateTriggerRowID( self, id, fields ):
@@ -885,7 +897,7 @@ class MainWin( wx.Frame ):
 					del counts[id]
 			self.db.updateTriggerPhotoCounts( counts )
 			
-		for i in six.moves.range(self.triggerList.GetColumnCount()):
+		for i in range(self.triggerList.GetColumnCount()):
 			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
 		if iTriggerRow is not None:
@@ -938,6 +950,10 @@ class MainWin( wx.Frame ):
 			b.SetForegroundColour( colour )
 			wx.CallAfter( b.Refresh )
 
+	def onStartAutoCaptureAccel( self, event ):
+		event.SetEventObject( self.autoCapture )
+		self.onStartAutoCapture( event )
+
 	def onStartAutoCapture( self, event ):
 		tNow = now()
 		
@@ -960,6 +976,15 @@ class MainWin( wx.Frame ):
 			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, autoCaptureEnableColour
 		)
 		
+	def onToggleCapture( self, event ):
+		self.capturing ^= True
+
+		event.SetEventObject( self.capture )
+		if self.capturing:
+			self.onStartCapture( event )
+		else:
+			self.onStopCapture( event )
+
 	def onStartCapture( self, event ):
 		tNow = self.tStartCapture = now()
 		
@@ -984,7 +1009,7 @@ class MainWin( wx.Frame ):
 		if iTriggerRow < 0:
 			return
 		self.triggerList.EnsureVisible( iTriggerRow )
-		for r in six.moves.range(self.triggerList.GetItemCount()-1):
+		for r in range(self.triggerList.GetItemCount()-1):
 			self.triggerList.Select(r, 0)
 		self.triggerList.Select( iTriggerRow )		
 	
@@ -1089,7 +1114,7 @@ class MainWin( wx.Frame ):
 		
 	def doTriggerDelete( self, confirm=True ):
 		triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
-		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], six.text_type(triggerInfo['bib']),
+		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], '{}'.format(triggerInfo['bib']),
 			triggerInfo['name'], triggerInfo['team'], triggerInfo['wave'], triggerInfo['race_name']) if f )
 		if not confirm or wx.MessageDialog( self, u'{}:\n\n{}'.format(u'Confirm Delete', message), u'Confirm Delete',
 				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
@@ -1120,7 +1145,7 @@ class MainWin( wx.Frame ):
 			message = self.messageQ.get()
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message
-			six.print_( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
+			print( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 	
 	def delayRefreshTriggers( self ):
@@ -1299,7 +1324,7 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 	
 	def setCameraDeviceNum( self, num ):
-		self.cameraDevice.SetLabel( six.text_type(num) )
+		self.cameraDevice.SetLabel( '{}'.format(num) )
 		
 	def setCameraResolution( self, width, height ):
 		self.cameraResolution.SetLabel( u'{}x{}'.format(width, height) )
