@@ -1,4 +1,5 @@
 import wx
+import wx.adv
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
 import sys
@@ -651,8 +652,13 @@ class MainWin( wx.Frame ):
 		self.updateAutoCaptureLabel()
 		self.SetSizerAndFit( mainSizer )
 		
-		# Add keyboard accellerators.
+		# Add joystick capture.  Trigger capture while button 1 on the joystick is pressed.
 		self.capturing = False
+		self.joystick = wx.adv.Joystick()
+		self.joystick.SetCapture( self )
+		self.Bind(wx.EVT_JOYSTICK_EVENTS, self.OnJoystick)
+		
+		# Add keyboard accellerators.
 
 		idStartAutoCapture = wx.NewId()
 		idToggleCapture = wx.NewId()
@@ -985,6 +991,18 @@ class MainWin( wx.Frame ):
 		else:
 			self.onStopCapture( event )
 
+	def OnJoystick( self, event ):
+		if self.joystick.GetButtonState(0):		# Check button zero.
+			if not self.capturing:
+				self.capturing = True
+				event.SetEventObject( self.capture )
+				self.onStartCapture( event )
+		else:
+			if self.capturing:
+				self.capturing = False
+				event.SetEventObject( self.capture )
+				self.onStopCapture( event )
+	
 	def onStartCapture( self, event ):
 		tNow = self.tStartCapture = now()
 		
