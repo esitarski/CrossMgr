@@ -656,7 +656,8 @@ class MainWin( wx.Frame ):
 		self.capturing = False
 		self.joystick = wx.adv.Joystick()
 		self.joystick.SetCapture( self )
-		self.Bind(wx.EVT_JOYSTICK_EVENTS, self.OnJoystick)
+		self.Bind(wx.EVT_JOY_BUTTON_DOWN, self.OnJoystickButton)
+		self.Bind(wx.EVT_JOY_BUTTON_UP, self.OnJoystickButton)
 		
 		# Add keyboard accellerators.
 
@@ -991,20 +992,26 @@ class MainWin( wx.Frame ):
 		else:
 			self.onStopCapture( event )
 
-	def OnJoystick( self, event ):
-		if self.joystick.GetButtonState(0):				# Button 0  on: start capture.
+	def OnJoystickButton( self, event ):
+		startCapture		= event.ButtonIsDown( wx.JOY_BUTTON1 )
+		startAutoCapture	= event.ButtonIsDown( wx.JOY_BUTTON2 )
+
+		if startCapture:
 			if not self.capturing:
 				self.capturing = True
 				event.SetEventObject( self.capture )
 				self.onStartCapture( event )
-		elif self.joystick.GetButtonState(1):			# Button 1  on: auto capture.
-				event.SetEventObject( self.autoCapture )
-				self.onStartAutoCapture( event )
-		elif not self.joystick.GetButtonState(0):		# Button 0 off: stop capture.
+			return
+			
+		if not startCapture:
 			if self.capturing:
 				self.capturing = False
 				event.SetEventObject( self.capture )
 				self.onStopCapture( event )
+
+		if startAutoCapture:
+			event.SetEventObject( self.autoCapture )
+			self.onStartAutoCapture( event )
 	
 	def onStartCapture( self, event ):
 		tNow = self.tStartCapture = now()
