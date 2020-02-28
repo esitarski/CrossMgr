@@ -993,23 +993,23 @@ class MainWin( wx.Frame ):
 			self.onStopCapture( event )
 
 	def OnJoystickButton( self, event ):
-		startCapture		= event.ButtonIsDown( wx.JOY_BUTTON1 )
-		startAutoCapture	= event.ButtonIsDown( wx.JOY_BUTTON2 )
+		startCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON1 )
+		autoCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON2 )
 
-		if startCapture:
+		if startCaptureBtn:
 			if not self.capturing:
 				self.capturing = True
 				event.SetEventObject( self.capture )
 				self.onStartCapture( event )
 			return
 			
-		if not startCapture:
+		if not startCaptureBtn:
 			if self.capturing:
 				self.capturing = False
 				event.SetEventObject( self.capture )
 				self.onStopCapture( event )
 
-		if startAutoCapture:
+		if autoCaptureBtn:
 			event.SetEventObject( self.autoCapture )
 			self.onStartAutoCapture( event )
 	
