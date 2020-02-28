@@ -992,12 +992,15 @@ class MainWin( wx.Frame ):
 			self.onStopCapture( event )
 
 	def OnJoystick( self, event ):
-		if self.joystick.GetButtonState(0):		# Check button zero.
+		if self.joystick.GetButtonState(0):				# Button 0  on: start capture.
 			if not self.capturing:
 				self.capturing = True
 				event.SetEventObject( self.capture )
 				self.onStartCapture( event )
-		else:
+		elif self.joystick.GetButtonState(1):			# Button 1  on: auto capture.
+				event.SetEventObject( self.autoCapture )
+				self.onStartAutoCapture( event )
+		elif not self.joystick.GetButtonState(0):		# Button 0 off: stop capture.
 			if self.capturing:
 				self.capturing = False
 				event.SetEventObject( self.capture )
