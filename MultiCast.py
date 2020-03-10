@@ -136,7 +136,7 @@ class MultiCastSender( threading.Thread ):
 					try:
 						sent = sock.sendto(ToJson([message[0], makeJSONCompatible(message[1])]).encode(), (multicast_group, multicast_port))
 					except Exception as e:
-						# six.print_( 'MultiCastSender:', e )
+						# print( 'MultiCastSender:', e )
 						pass
 				elif message[0] == 'terminate':
 					keepGoing = False
@@ -271,7 +271,7 @@ if __name__ == '__main__':
 		def printQ():
 			while 1:
 				info = triggerQ.get()
-				six.print_( info )
+				print( info )
 				triggerQ.task_done()
 				
 		triggerPrinter = threading.Thread( target=printQ )
@@ -284,9 +284,9 @@ if __name__ == '__main__':
 	else:
 		# Sender
 		def receiverCallback( receivers ):
-			six.print_( 'receivers:' )
+			print( 'receivers:' )
 			for r in receivers:
-				six.print_( r )
+				print( r )
 		
 		for i in range(200):
 			SendTrigger( ('trigger', {'bib':200+i, 'team':'MyTeam', 'ts':now()}) )
