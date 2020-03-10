@@ -191,6 +191,9 @@ class MultiCastReceiver( threading.Thread ):
 
 		# Create the socket
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		
+		# Disable timeout on reconnect.
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		# Bind to the server address
 		sock.bind(server_address)

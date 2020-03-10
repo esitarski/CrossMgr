@@ -26,6 +26,7 @@ now = datetime.now
 import Utils
 import CVUtil
 from SocketListener import SocketListener
+from MultiCast import multicast_group, multicast_port
 from Database import Database, DBWriter
 from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
@@ -1186,11 +1187,14 @@ class MainWin( wx.Frame ):
 		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
 		error = self.listenerThread.test()
 		if error:
-			wx.MessageBox('Socket Error:\n\n{}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(error),
+			wx.MessageBox('Socket Error:\n\n"{}" group={}, port={}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(
+					error,
+					multicast_group, multicast_port,
+				),
 				"Socket Error",
 				wx.OK | wx.ICON_ERROR
 			)
-			wx.Exit()
+			# wx.Exit()
 		
 		self.camInQ, self.camReader = CamServer.getCamServer( self.getCameraInfo() )
 		self.cameraThread = threading.Thread( target=self.processCamera )
