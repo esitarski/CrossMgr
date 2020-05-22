@@ -151,9 +151,11 @@ class MainWin( wx.Frame ):
 
 		# Add code to configure file history.
 		self.filehistory = wx.FileHistory(8)
+		dataDir = Utils.getHomeDir('SeriesMgr')
+		configFileName = os.path.join(dataDir, 'SeriesMgr.cfg')
 		self.config = wx.Config(appName="SeriesMgr",
-								vendorName="SmartCyclingSolutions",
-								#style=wx.CONFIG_USE_LOCAL_FILE
+								vendorName="Edward.Sitarski@gmail.com",
+								localFilename=configFileName
 		)
 		self.filehistory.Load(self.config)
 		

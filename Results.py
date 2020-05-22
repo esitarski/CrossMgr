@@ -608,7 +608,6 @@ class Results( wx.Panel ):
 			self.clearGrid()
 			return
 		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		for si in self.hbs.GetChildren():
 			if si.IsWindow():
@@ -711,7 +710,6 @@ class Results( wx.Panel ):
 				r.SetFont( self.boldFont )
 			else:
 				r.SetFont( wx.NullFont )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		
 		# Find the fastest lap time.

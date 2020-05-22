@@ -551,12 +551,12 @@ def ordinal( value ):
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
 	}.get( lang[:2], lambda v: u'{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
 
-def getHomeDir():
+def getHomeDir( appName='CrossMgr' ):
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
 	try:
-		if os.path.basename(homedir) == '.CrossMgr':
-			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
+		if os.path.basename(homedir) == '.{}'.format(appName):
+			homedir = os.path.join( os.path.dirname(homedir), '.{}App'.format(appName) )
 	except:
 		pass
 	if not os.path.exists(homedir):

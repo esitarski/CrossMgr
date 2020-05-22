@@ -29,7 +29,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 
 		self.hbs.Add( self.titleLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.AddStretchSpacer()
-		self.hbs.Add( self.excelButton, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT, border=4 )
+		self.hbs.Add( self.excelButton, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
 		bs = wx.BoxSizer(wx.VERTICAL)
 		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)

@@ -278,14 +278,14 @@ class SimulateDialog(wx.Dialog):
 		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_TIME_TRIAL) )
 		sboxsizer.Add(btn, flag=wx.ALL, border=4)
 				
-		btnsizer.Add(sboxsizer, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4)
+		btnsizer.Add(sboxsizer, flag=wx.ALL, border=4)
 		
 		#---------------------------------------------------------------
 		btn = wx.Button(self, wx.ID_CANCEL)
-		btnsizer.Add(btn, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4)
+		btnsizer.Add(btn, flag=wx.ALL, border=4)
 				
 		#---------------------------------------------------------------
-		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 8)
+		sizer.Add(btnsizer, 0, wx.ALL, 8)
 
 		self.SetSizer(sizer)
 		sizer.Fit(self)

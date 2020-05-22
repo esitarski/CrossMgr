@@ -142,7 +142,6 @@ class TeamResults( wx.Panel ):
 			self.grid.ClearGrid()
 			return
 		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		for si in self.hbs.GetChildren():
 			if si.IsWindow():

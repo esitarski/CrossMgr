@@ -69,7 +69,7 @@ def showHelp( url ):
 	
 class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
-		wx.Panel.__init__(self, parent, id, style=style, size=size )
+		super().__init__( parent, id, style=style, size=size )
 
 		self.searchLabel = wx.StaticText( self, label=_('Search Text:') )
 		self.search = wx.SearchCtrl( self, style=wx.TE_PROCESS_ENTER, value='main screen', size=(200,-1) )
@@ -147,12 +147,12 @@ class HelpSearchDialog( wx.Dialog ):
 			self, parent, ID = wx.ID_ANY, title='Help Search', size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
-		super( HelpSearchDialog, self ).__init__(parent, ID, title, pos, size, style)
+		super().__init__(parent, ID, title, pos, size, style)
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
 		self.search = HelpSearch( self, size=(600,400) )
-		sizer.Add(self.search, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
+		sizer.Add(self.search, 1, wx.ALL|wx.EXPAND, 5)
 		
 		self.SetSizer(sizer)
 		sizer.Fit(self)

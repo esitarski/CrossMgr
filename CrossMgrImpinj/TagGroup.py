@@ -188,7 +188,8 @@ class TagGroup( object ):
 	
 if __name__ == '__main__':
 
-	method = StrongestReadMethod
+	# method = StrongestReadMethod
+	method = QuadraticRegressionMethod
 
 	t = datetime.now()
 	tFirst = None

@@ -278,7 +278,7 @@ class NumKeypad( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.raceTime, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=100-40-8 )
-		verticalSubSizer.Add( hs, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTRE_VERTICAL | wx.ALL, border = 2 )
+		verticalSubSizer.Add( hs, flag=wx.ALIGN_LEFT | wx.ALL, border = 2 )
 		
 		#------------------------------------------------------------------------------
 		# Lap Management.
@@ -331,7 +331,7 @@ class NumKeypad( wx.Panel ):
 		
 		self.photoCount = wx.StaticText( panel, label = u"000004" )
 		self.photoCount.SetFont( font )
-		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT|wx.ALIGN_RIGHT, border = 6 )
+		self.hbClockPhoto.Add( self.photoCount, flag=wx.RIGHT, border = 6 )
 		
 		self.camera_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
 		self.camera_broken_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_broken.png'), wx.BITMAP_TYPE_PNG )

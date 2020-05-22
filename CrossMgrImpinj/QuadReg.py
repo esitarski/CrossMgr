@@ -107,6 +107,9 @@ def ResetStats():
 	inliersTotal, samplesTotal = 0, 0
 	
 def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
+	#
+	# data is a list of (time, db) pairs.
+	#
 	global inliersTotal, samplesTotal
 	
 	lenData = len(data)
