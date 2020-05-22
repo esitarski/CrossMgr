@@ -410,7 +410,7 @@ class MainWin( wx.Frame ):
 		self.antennas = []
 		for i in range(4):
 			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
-			gs.Add( self.antennaLabels[-1], flag=wx.ALIGN_CENTER|wx.EXPAND )
+			gs.Add( self.antennaLabels[-1], wx.EXPAND )
 		for i in range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:

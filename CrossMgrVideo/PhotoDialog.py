@@ -172,10 +172,10 @@ class PhotoDialog( wx.Dialog ):
 
 		btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
 		btn.SetToolTip( wx.ToolTip('Close') )
-		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_RIGHT, border=4)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		btn.Bind( wx.EVT_BUTTON, self.onClose )
 
-		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE, border=5 )
+		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
 
 		self.SetSizer(vs)
 		vs.Fit(self)

@@ -443,9 +443,9 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		szs = wx.BoxSizer( wx.HORIZONTAL )
-		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_CENTRE_VERTICAL )
 		szs.Add( self.stretchSlider, 1, flag=wx.EXPAND )
-		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Zoom'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Zoom'))), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		szs.Add( zs )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )

@@ -318,7 +318,7 @@ class TriggerDialog( wx.Dialog ):
 		self.cancel = wx.Button( self, wx.ID_CANCEL )
 		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
 		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
+		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
 		
 		sizer.Add( gs, flag=wx.ALL, border=4 )
 		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
@@ -370,7 +370,7 @@ class AutoCaptureDialog( wx.Dialog ):
 		self.cancel = wx.Button( self, wx.ID_CANCEL )
 		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
 		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
+		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
 		
 		sizer.Add( gs, flag=wx.ALL, border=4 )
 		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
