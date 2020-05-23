@@ -18,7 +18,7 @@ def RescaleImage( image, width, height ):
 	
 class ScaledImage( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,400) ):
-		super(ScaledImage, self).__init__( parent, id, size=size )
+		super().__init__( parent, id, size=size )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		self.image = None
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
@@ -47,7 +47,7 @@ class ScaledImage( wx.Panel ):
 
 class CameraTestDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, title=_("Camera Test"), size=(690, 590) ):
-		super(CameraTestDialog, self).__init__(
+		super().__init__(
 			parent, id, title=title, size=size,
 			style=wx.CAPTION
 		)

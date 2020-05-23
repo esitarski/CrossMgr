@@ -7,7 +7,7 @@ def normalize_text( text ):
 
 class PDF( fpdf.FPDF ):
 	def __init__( self, orientation='L', format='Letter' ):
-		super( PDF, self ).__init__( orientation=orientation, unit='pt', format=format )
+		super().__init__( orientation=orientation, unit='pt', format=format )
 	
 	def scale_text_in_rectangle( self, x, y, width, height, text ):
 		'''

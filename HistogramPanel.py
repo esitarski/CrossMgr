@@ -29,7 +29,7 @@ class GetCategoryName( object ):
 
 class HistogramPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
-		super(HistogramPanel, self).__init__( parent, id, size=size )
+		super().__init__( parent, id, size=size )
 		self.category = None
 		
 		self.hbs = wx.BoxSizer( wx.HORIZONTAL )

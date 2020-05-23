@@ -22,7 +22,7 @@ CR = u'\r'
 class JChipFake( threading.Thread ):
 
 	def __init__( self, q, host=DEFAULT_HOST, port=DEFAULT_PORT, connectionName='JChipFake', group=None, target=None, name=None ):
-		super( JChipFake, self ).__init__( group=group, target=target, name=name )
+		super().__init__( group=group, target=target, name=name )
 		self.daemon = True
 		
 		self.q = q

@@ -33,7 +33,7 @@ class MultiCastSender( threading.Thread ):
 		Also inventories receivers.
 	'''
 	def __init__( self, qIn=None, receiverCallback=None, name='MultiCastSender' ):
-		super( MultiCastSender, self ).__init__()
+		super().__init__()
 		
 		self.name = name
 		self.daemon = True
@@ -177,7 +177,7 @@ def HasReceivers():
 class MultiCastReceiver( threading.Thread ):
 	
 	def __init__( self, triggerCallback, messageQ = None, name='MultiCastReceiver' ):
-		super( MultiCastReceiver, self ).__init__()
+		super().__init__()
 		
 		self.triggerCallback = triggerCallback
 		self.messageQ = messageQ

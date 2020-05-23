@@ -43,7 +43,7 @@ class Announcer( wx.Panel ):
 	groupTextColours = [Utils.GetContrastTextColour(c) for c in groupColours]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(Announcer, self).__init__(parent, id)
+		super().__init__(parent, id)
 		
 		self.iCategory = 0
 		self.tExpected = []

@@ -424,7 +424,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			self.pdf.output( fname, 'F' )
 			self.lastFName = fname
 			self.pdf = None
-		return super(CrossMgrPrintoutPDF, self).OnEndPrinting()
+		return super().OnEndPrinting()
 
 	def OnPrintPage( self, page ):
 		exportGrid = self.prepareGrid( page )

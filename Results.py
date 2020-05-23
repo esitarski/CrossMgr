@@ -17,9 +17,6 @@ import Flags
 
 bitmapCache = {}
 class IOCCodeRenderer(wx.grid.GridCellRenderer):
-	def __init__(self):
-		super( IOCCodeRenderer, self ).__init__()
-
 	def getImgWidth( self, ioc, height ):
 		img = Flags.GetFlagImage( ioc )
 		if img:

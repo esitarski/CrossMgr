@@ -87,19 +87,19 @@ class CategoriesPrintout( wx.Printout ):
 		wx.Printout.__init__(self)
 
 	def OnBeginDocument(self, start, end):
-		return super(CategoriesPrintout, self).OnBeginDocument(start, end)
+		return super().OnBeginDocument(start, end)
 
 	def OnEndDocument(self):
-		super(CategoriesPrintout, self).OnEndDocument()
+		super().OnEndDocument()
 
 	def OnBeginPrinting(self):
-		super(CategoriesPrintout, self).OnBeginPrinting()
+		super().OnBeginPrinting()
 
 	def OnEndPrinting(self):
-		super(CategoriesPrintout, self).OnEndPrinting()
+		super().OnEndPrinting()
 
 	def OnPreparePrinting(self):
-		super(CategoriesPrintout, self).OnPreparePrinting()
+		super().OnPreparePrinting()
 
 	def HasPage(self, page):
 		return page == 1

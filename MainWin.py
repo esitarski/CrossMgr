@@ -230,7 +230,7 @@ class SimulateDialog(wx.Dialog):
 			style=wx.DEFAULT_DIALOG_STYLE, name='dialog'
 			):
 
-		super( SimulateDialog, self ).__init__(parent, id, title, pos, size, style, name)
+		super().__init__(parent, id, title, pos, size, style, name)
 
 		explain = u'\n'.join( [
 				_('Simulate Race'),
@@ -4058,7 +4058,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			class ProcessRfidRefresh( wx.Timer ):
 				def __init__( self, *args, **kwargs ):
 					self.mainWin = kwargs.pop('mainWin')
-					super(ProcessRfidRefresh, self).__init__(*args, **kwargs)
+					super().__init__(*args, **kwargs)
 				def Notify( self ):
 					self.mainWin.processRfidRefresh()
 			self.callLaterProcessRfidRefresh = ProcessRfidRefresh( mainWin=self )

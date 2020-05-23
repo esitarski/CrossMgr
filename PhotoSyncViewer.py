@@ -61,7 +61,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 			self, parent, ID = wx.ID_ANY, title=_('Photo Sync Previewer'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
-		super( PhotoSyncViewerDialog, self ).__init__(parent, ID, title, pos, size, style)
+		super().__init__(parent, ID, title, pos, size, style)
 
 		# This next step is the most important, it turns this Python
 		# object into the real wrapper of the dialog (instead of pre)

@@ -212,19 +212,19 @@ class FtpQRCodePrintout( wx.Printout ):
 		wx.Printout.__init__(self)
 
 	def OnBeginDocument(self, start, end):
-		return super(FtpQRCodePrintout, self).OnBeginDocument(start, end)
+		return super().OnBeginDocument(start, end)
 
 	def OnEndDocument(self):
-		super(FtpQRCodePrintout, self).OnEndDocument()
+		super().OnEndDocument()
 
 	def OnBeginPrinting(self):
-		super(FtpQRCodePrintout, self).OnBeginPrinting()
+		super().OnBeginPrinting()
 
 	def OnEndPrinting(self):
-		super(FtpQRCodePrintout, self).OnEndPrinting()
+		super().OnEndPrinting()
 
 	def OnPreparePrinting(self):
-		super(FtpQRCodePrintout, self).OnPreparePrinting()
+		super().OnPreparePrinting()
 
 	def HasPage(self, page):
 		return page == 1
@@ -308,10 +308,10 @@ def GetFtpPublish( isDialog=True ):
 
 		def __init__( self, parent, id=wx.ID_ANY, uploadNowButton=True ):
 			if isDialog:
-				super(FtpPublishObject, self).__init__( parent, id, _("Ftp Publish Results"),
+				super().__init__( parent, id, _("Ftp Publish Results"),
 								style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 			else:
-				super(FtpPublishObject, self).__init__( parent, id )
+				super().__init__( parent, id )
 							
 			fgs = wx.FlexGridSizer(vgap=4, hgap=4, rows=0, cols=2)
 			fgs.AddGrowableCol( 1, 1 )

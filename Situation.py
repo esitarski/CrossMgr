@@ -720,7 +720,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 
 class TopPanel( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(TopPanel, self).__init__( parent, id, style=wx.BORDER_SUNKEN )
+		super().__init__( parent, id, style=wx.BORDER_SUNKEN )
 		
 		self.categoryLabel = wx.StaticText( self, label = u'{}:'.format(_('Category')) )
 		self.categoryChoice = wx.Choice( self )
@@ -772,7 +772,7 @@ class TopPanel( wx.Panel ):
 
 class BottomPanel( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(BottomPanel, self).__init__( parent, id, style=wx.BORDER_SUNKEN )
+		super().__init__( parent, id, style=wx.BORDER_SUNKEN )
 
 		self.title = wx.StaticText( self )
 		
@@ -802,7 +802,7 @@ class BottomPanel( wx.Panel ):
 		
 class Situation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(Situation, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		self.refreshTimer = None
 		

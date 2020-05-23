@@ -25,7 +25,7 @@ contrastColours = [
 
 class ScaledBitmapVerticalLines( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, bitmap=None, numLines=2, colors=None ):
-		super(ScaledBitmapVerticalLines, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		self.bitmap = bitmap
 		self.verticalLines = [None for i in range(numLines)]

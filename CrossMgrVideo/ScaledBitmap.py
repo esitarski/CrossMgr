@@ -10,7 +10,7 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 
 class ScaledBitmap( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, bitmap=None, drawFinishLine=False, inset=False ):
-		super(ScaledBitmap, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		self.bitmap = bitmap
 		self.drawFinishLine = drawFinishLine

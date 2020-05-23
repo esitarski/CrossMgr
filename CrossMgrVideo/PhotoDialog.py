@@ -81,7 +81,7 @@ class PhotoDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
 			
-		super(PhotoDialog, self).__init__( parent, id, size=size, style=style, title=_('Photo: ***Left-click and Drag in the Photo to Zoom***') )
+		super().__init__( parent, id, size=size, style=style, title=_('Photo: ***Left-click and Drag in the Photo to Zoom***') )
 		
 		self.clear()
 		

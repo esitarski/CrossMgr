@@ -21,7 +21,7 @@ import Version
 
 class TeamResults( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
-		super(TeamResults, self).__init__( parent, id, size=size )
+		super().__init__( parent, id, size=size )
 		
 		self.state = RaceInputState()
 		

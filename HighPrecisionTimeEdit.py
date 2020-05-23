@@ -66,7 +66,7 @@ if platform.system() == 'Windows':
 			
 			self.defaultValue = self.mask.replace('#', '0')
 			self.emptyValue   = self.mask.replace('#', ' ')
-			super( HighPrecisionTimeEdit, self ).__init__(
+			super().__init__(
 				parent, id,
 				mask		 = self.mask,
 				defaultValue = value or self.defaultValue,
@@ -85,11 +85,11 @@ if platform.system() == 'Windows':
 			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
 			
 		def SetSeconds( self, secs ):
-			super( HighPrecisionTimeEdit, self ).SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
+			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
 			
 		def SetValue( self, v ):
 			if self.allow_none and v is None:
-				super( HighPrecisionTimeEdit, self ).SetValue( '' )
+				super().SetValue( '' )
 			else:
 				self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
 
@@ -122,7 +122,7 @@ else:
 			elif not display_milliseconds:
 				self.defaultValue = '00:00:00'
 			value = self.defaultValue if value is None else reNonTimeChars.sub( '', '{}'.format(value) )
-			super( HighPrecisionTimeEdit, self ).__init__(
+			super().__init__(
 				parent, id,
 				value		= value,
 				style		= style & ~(wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.TE_PASSWORD),
@@ -194,16 +194,16 @@ else:
 			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
 			
 		def SetSeconds( self, secs ):
-			super( HighPrecisionTimeEdit, self ).SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
+			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
 			
 		def SetValue( self, v ):
 			if self.allow_none and v is None:
-				super( HighPrecisionTimeEdit, self ).SetValue( '' )
+				super().SetValue( '' )
 			else:
 				self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
 		
 		def GetValue( self ):
-			v = super( HighPrecisionTimeEdit, self ).GetValue()
+			v = super().GetValue()
 			if v is None:
 				return None
 			v = reNonTimeChars.sub( '', v )

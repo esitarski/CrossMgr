@@ -7,7 +7,7 @@ DatePickerCtrl = wx.adv.DatePickerCtrl
 
 class ManageDatabase( wx.Dialog ):
 	def __init__( self, parent, dbSize, dbName, trigFirst, trigLast, id=wx.ID_ANY, title='', size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE ):
-		super(ManageDatabase, self).__init__( parent, id, title=title, size=size, style=style )
+		super().__init__( parent, id, title=title, size=size, style=style )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		

@@ -75,7 +75,7 @@ class MainWin( wx.Frame ):
 	StatusError, StatusSuccess, StatusAttempt = [0, 1, 2]
 
 	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 480) ):
-		super( MainWin, self ).__init__( parent, id, title = title, size = size )
+		super().__init__( parent, id, title = title, size = size )
 		
 		self.SetTitle( AppVerName )
 		
@@ -264,7 +264,7 @@ class MainWin( wx.Frame ):
 		vs1.Add( self.value, flag = wx.EXPAND|valueBorderOptions, border = border )
 		vs1.Add( self.writeSuccess, 0, flag = wx.EXPAND|wx.ALL, border = border )
 		vs1.AddStretchSpacer()
-		vs1.Add( self.writeButton, flag = wx.EXPAND|wx.ALL|wx.ALIGN_BOTTOM, border = border )
+		vs1.Add( self.writeButton, flag = wx.EXPAND|wx.ALL, border = border )
 		
 		vs2.Add( self.tags, 1, flag = wx.EXPAND|wx.ALL, border = border )
 		vs2.Add( self.readButton, flag = wx.EXPAND|wx.ALL, border = border )
@@ -275,7 +275,7 @@ class MainWin( wx.Frame ):
 		hsTitle = wx.BoxSizer( wx.HORIZONTAL )
 		hsTitle.Add( self.title )
 		hsTitle.AddStretchSpacer()
-		hsTitle.Add( self.url, flag = wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		hsTitle.Add( self.url, flag = wx.ALIGN_CENTRE_VERTICAL )
 		vsMain.Add( hsTitle, flag = wx.ALL|wx.EXPAND, border = border )
 		vsMain.Add( impinjConfigurationSizer, flag = wx.ALL|wx.EXPAND, border = border )
 		vsMain.Add( hs, 1, flag = wx.EXPAND )
