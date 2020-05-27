@@ -17,7 +17,8 @@ import Images
 
 from pyllrp import *
 from pyllrp.TagInventory import TagInventory
-from pyllrp.TagWriter import TagWriter
+from TagWriterCustom import TagWriterCustom
+from AdvancedDialog import AdvancedDialog
 
 from AutoDetect import AutoDetect
 
@@ -139,7 +140,7 @@ class MainWin( wx.Frame ):
 		
 		#-------------------------------------------------------------------------------------------------
 		# Impinj configuration.
-		#
+		#		
 		impinjConfiguration = wx.StaticBox( self, label = 'Impinj Configuration' )
 		impinjConfigurationSizer = wx.StaticBoxSizer( impinjConfiguration, wx.HORIZONTAL )
 		gbs = wx.GridBagSizer( 4, 4 )
@@ -153,18 +154,16 @@ class MainWin( wx.Frame ):
 		hb.Add( wx.StaticText(self, label = ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
 		if 'WXMAC' in wx.Platform:
 			self.impinjHostName = masked.TextCtrl( self,
-								wx.ID_ANY,
 								defaultValue = '00-00-00',
 								useFixedWidthFont = True,
-								size=(80, -1),
+								size=(100,-1),
 							)
 		else:
 			self.impinjHostName = masked.TextCtrl( self,
-								wx.ID_ANY,
 								mask         = 'NN-NN-NN',
 								defaultValue = '00-00-00',
 								useFixedWidthFont = True,
-								size=(80, -1),
+								size=(100,-1),
 							)
 		hb.Add( self.impinjHostName )
 		hb.Add( wx.StaticText(self, label = ImpinjHostNameSuffix), flag=wx.ALIGN_CENTER_VERTICAL )
@@ -172,10 +171,10 @@ class MainWin( wx.Frame ):
 		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_LEFT )
 		
 		iRow += 1
-		self.useStaticAddress = wx.RadioButton( self, wx.ID_ANY, 'IP:' )
+		self.useStaticAddress = wx.RadioButton( self, label='IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.impinjHost = IpAddrCtrl( self, style = wx.TE_PROCESS_TAB )
+		self.impinjHost = IpAddrCtrl( self, style = wx.TE_PROCESS_TAB, size=(120,-1) )
 		hb.Add( self.impinjHost )
 		hb.Add( wx.StaticText(self, label = ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
@@ -185,12 +184,31 @@ class MainWin( wx.Frame ):
 		gbs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), pos=(iRow,0), span=(1,2) )
 		iRow += 1
 		
-		self.autoDetectButton = wx.Button(self, wx.ID_ANY, 'Auto Detect Reader')
+		self.autoDetectButton = wx.Button(self, label='Auto Detect Reader')
 		self.autoDetectButton.Bind( wx.EVT_BUTTON, self.doAutoDetect )
 		gbs.Add( self.autoDetectButton, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_RIGHT )
 		iRow += 1
 
-		self.disconnectButton = wx.Button(self, wx.ID_ANY, 'Disconnect')
+		fgs = wx.FlexGridSizer( 2, 3, 2, 2 )
+		fgs.Add( wx.StaticText(self, label='Transmit Power:') )
+		self.transmitPower_dBm = wx.StaticText( self, label='Max', size=(40,-1), style=wx.ALIGN_RIGHT )
+		fgs.Add( self.transmitPower_dBm, flag=wx.LEFT, border=2 )
+		fgs.Add( wx.StaticText(self, label='dBm'), flag=wx.LEFT, border=2 )
+
+		fgs.Add( wx.StaticText(self, label='Receive Sensitivity:') )
+		self.receiveSensitivity_dB = wx.StaticText( self, label='Max', size=(40,-1), style=wx.ALIGN_RIGHT )
+		fgs.Add( self.receiveSensitivity_dB, flag=wx.LEFT, border=2 )
+		fgs.Add( wx.StaticText(self, label='dB'), flag=wx.LEFT, border=2 )		
+		
+		gbs.Add( fgs, pos=(iRow,0), span=(2,1) )
+
+		advancedButton = wx.Button( self, label="Advanced..." )
+		advancedButton.Bind( wx.EVT_BUTTON, self.doAdvancedButton )
+		gbs.Add( advancedButton, pos=(iRow, 1), span=(2,1) )
+
+		iRow += 2
+
+		self.disconnectButton = wx.Button(self, label='Disconnect')
 		self.disconnectButton.Bind( wx.EVT_BUTTON, self.doDisconnect )
 		gbs.Add( self.disconnectButton, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_RIGHT )
 		iRow += 1
@@ -379,6 +397,23 @@ class MainWin( wx.Frame ):
 				pass
 		self.tagWriter = None
 		self.DisableAccelerator()
+		
+	def doAdvancedButton( self, event = None ):
+		if not self.tagWriter:
+			with wx.MessageDialog(self, "You must be connected to an RFID reader.", "Error: not connected to Reader") as md:
+				md.ShowModal()
+			return
+			
+		with AdvancedDialog(
+				self,
+				receive_sensitivity_table=self.tagWriter.receive_sensitivity_table, receive_dB=self.receiveSensitivity_dB.GetLabel(),
+				transmit_power_table=self.tagWriter.transmit_power_table, transmit_dBm=self.transmitPower_dBm.GetLabel(),
+			) as advDlg:
+			if advDlg.ShowModal() == wx.ID_OK:
+				r, t = advDlg.get()
+				self.receiveSensitivity_dB.SetLabel(r)
+				self.transmitPower_dBm.SetLabel(t)
+				self.doReset()	
 
 	def doDisconnect(self, event = None ):
 		self.shutdown()
@@ -387,10 +422,10 @@ class MainWin( wx.Frame ):
 	def doReset( self, event = None ):
 		self.shutdown()
 		self.setStatus( self.StatusAttempt )
-		self.tagWriter = TagWriter( self.getHost() )
 		
+		self.tagWriter = TagWriterCustom( self.getHost() )
 		try:
-			self.tagWriter.Connect()
+			self.tagWriter.Connect( self.receiveSensitivity_dB.GetLabel(), self.transmitPower_dBm.GetLabel() )
 		except Exception as e:
 			self.DisableAccelerator()
 			self.setStatus( self.StatusError )
@@ -398,8 +433,9 @@ class MainWin( wx.Frame ):
 							'Reader Connection Fails' )
 			self.tagWriter = None
 			return
-			
+
 		self.setStatus( self.StatusSuccess )
+		self.writeOptions()
 		self.EnableAccelerator()
 	
 	def onTextChange( self, event ):
@@ -438,6 +474,9 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'ImpinjHostName', ImpinjHostNamePrefix + self.impinjHostName.GetValue() + ImpinjHostNameSuffix )
 		self.config.Write( 'ImpinjAddr', self.impinjHost.GetAddress() )
 		self.config.Write( 'ImpinjPort', '{}'.format(ImpinjInboundPort) )
+
+		self.config.Write( 'ReceiveSensitivity_dB', '{}'.format(self.receiveSensitivity_dB.GetLabel()) )
+		self.config.Write( 'TransmitPower_dBm', '{}'.format(self.transmitPower_dBm.GetLabel()) )
 	
 	def readOptions( self ):
 		self.template.SetValue( self.config.Read('Template', '#AA{}'.format(datetime.datetime.now().year % 100)) )
@@ -450,6 +489,9 @@ class MainWin( wx.Frame ):
 		self.impinjHostName.SetValue( self.config.Read('ImpinjHostName', ImpinjHostNamePrefix + '00-00-00' + ImpinjHostNameSuffix)[len(ImpinjHostNamePrefix):-len(ImpinjHostNameSuffix)] )
 		self.impinjHost.SetValue( self.config.Read('ImpinjAddr', '0.0.0.0') )
 		
+		self.receiveSensitivity_dB.SetLabel( self.config.Read('ReceiveSensitivity_dB', 'Max') )
+		self.transmitPower_dBm.SetLabel( self.config.Read('TransmitPower_dBm', 'Max') )
+	
 	def getWriteValue( self ):
 		f = self.getFormatStr().format( n = int(self.number.GetValue() or 0) ).lstrip('0')
 		if not f:
