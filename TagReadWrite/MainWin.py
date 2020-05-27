@@ -189,6 +189,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( self.autoDetectButton, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_RIGHT )
 		iRow += 1
 
+		hh = wx.BoxSizer( wx.HORIZONTAL )
 		fgs = wx.FlexGridSizer( 2, 3, 2, 2 )
 		fgs.Add( wx.StaticText(self, label='Transmit Power:') )
 		self.transmitPower_dBm = wx.StaticText( self, label='Max', size=(40,-1), style=wx.ALIGN_RIGHT )
@@ -200,13 +201,15 @@ class MainWin( wx.Frame ):
 		fgs.Add( self.receiveSensitivity_dB, flag=wx.LEFT, border=2 )
 		fgs.Add( wx.StaticText(self, label='dB'), flag=wx.LEFT, border=2 )		
 		
-		gbs.Add( fgs, pos=(iRow,0), span=(2,1) )
+		hh.Add( fgs )
 
 		advancedButton = wx.Button( self, label="Advanced..." )
 		advancedButton.Bind( wx.EVT_BUTTON, self.doAdvancedButton )
-		gbs.Add( advancedButton, pos=(iRow, 1), span=(2,1) )
+		hh.Add( advancedButton, flag=wx.LEFT, border=4 )
 
-		iRow += 2
+		gbs.Add( hh, pos=(iRow, 0), span=(1, 2) )
+
+		iRow += 1
 
 		self.disconnectButton = wx.Button(self, label='Disconnect')
 		self.disconnectButton.Bind( wx.EVT_BUTTON, self.doDisconnect )

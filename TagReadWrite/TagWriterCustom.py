@@ -26,9 +26,10 @@ def GetReceiveTransmitPower( connector):
 	]
 	return receive_sensitivity_table, transmit_power_table
 
-
 class TagWriterCustom( TagWriter ):
 	def Connect( self, receivedB, transmitdBm ):
+		# In order to validate the parameters, we need to do two connects.
+		# The first call gets the tables, the second call sets the receive sensitivity and transmit power based on the available options.
 		super().Connect()
 		self.receive_sensitivity_table, self.transmit_power_table = GetReceiveTransmitPower( self.connector )
 		super().Disconnect()
