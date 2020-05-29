@@ -59,7 +59,7 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	for rr in results:
 		if not rr.raceTimes or rr.status != Finisher:
 			continue
-		offset = (getattr(rr,'startTime',0.0) or 0.0) if race.isTimeTrial else 0.0
+		offset = (getattr(rr,'startTime',None) or 0.0) if race.isTimeTrial else 0.0
 		
 		i = bisect_left( rr.raceTimes, tCur - offset )
 		
@@ -743,7 +743,7 @@ if __name__ == '__main__':
 	fh = ForecastHistory(mainWin)
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	for i, rider in enumerate(six.itervalues(Model.getRace().riders)):
+	for i, rider in enumerate(Model.getRace().riders.values()):
 		rider.firstTime = i * 30.0
 	Model.getRace().isTimeTrial = True
 	fh.refresh()

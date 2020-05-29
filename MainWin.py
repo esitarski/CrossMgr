@@ -241,7 +241,7 @@ class SimulateDialog(wx.Dialog):
 				_('The simulation takes about 8 minutes.'),
 				_('In the Time Trial simulation, riders start on 15 second intervals.'),
 				u'',
-				u'{}: "{}".'.format(_('The race will be written to'), fName),
+				u'{}:\n    "{}"'.format(_('The race will be written to'), fName),
 				u'',
 				_('Continue?'),
 				] )
@@ -259,13 +259,13 @@ class SimulateDialog(wx.Dialog):
 		box = wx.StaticBox( self, label=_('Mass Start Race') )
 		sboxsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
-		self.rfidResetStartClockOnFirstTag = wx.CheckBox( self, label=_('Simulate RFID Reset Start Clock on First Read') )
-		sboxsizer.Add( self.rfidResetStartClockOnFirstTag, flag=wx.ALL, border=4 )
-		
 		btn = wx.Button(self, label=_('Start') )
 		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_MASS_START) )
 		btn.SetDefault()
 		sboxsizer.Add( btn, flag=wx.ALL, border=4 )
+		
+		self.rfidResetStartClockOnFirstTag = wx.CheckBox( self, label=_('Simulate RFID Reset Start Clock on First Read') )
+		sboxsizer.Add( self.rfidResetStartClockOnFirstTag, flag=wx.ALL, border=4 )
 		
 		btnsizer.Add(sboxsizer, flag=wx.ALL, border=4)
 		
@@ -281,12 +281,12 @@ class SimulateDialog(wx.Dialog):
 		btnsizer.Add(sboxsizer, flag=wx.ALL, border=4)
 		
 		#---------------------------------------------------------------
-		btn = wx.Button(self, wx.ID_CANCEL)
-		btnsizer.Add(btn, flag=wx.ALL, border=4)
-				
-		#---------------------------------------------------------------
 		sizer.Add(btnsizer, 0, wx.ALL, 8)
 
+		#---------------------------------------------------------------
+		btn = wx.Button(self, wx.ID_CANCEL)
+		sizer.Add(btn, flag=wx.ALIGN_RIGHT|wx.ALL, border=8)
+				
 		self.SetSizer(sizer)
 		sizer.Fit(self)
 
@@ -3253,7 +3253,7 @@ class MainWin( wx.Frame ):
 					numTimes[num].append( t )
 			
 			numRaceTimes = {}
-			for num, times in six.iteritems(numTimes):
+			for num, times in numTimes.items():
 				times.sort()
 				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 			
@@ -3262,7 +3262,7 @@ class MainWin( wx.Frame ):
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []
-			for num, raceTimes in six.iteritems(numRaceTimes):
+			for num, raceTimes in numRaceTimes.items():
 				startTime = numStartTime[num]
 				race.getRider( num ).firstTime = startTime
 				self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )

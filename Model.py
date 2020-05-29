@@ -567,7 +567,7 @@ class Entry(object):
 		self.num = -gc
 
 	def __repr__( self ):
-		return u'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
+		return 'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
 
 class Rider(object):
 	# Rider Status.
