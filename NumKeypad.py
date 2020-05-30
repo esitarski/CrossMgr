@@ -284,7 +284,7 @@ class NumKeypad( wx.Panel ):
 		gbs = wx.GridBagSizer(4, 12)
 		gbs.SetMinSize( 256, 200 )
 		
-		fontSize = 14
+		fontSize = 12
 		font = wx.Font(fontSize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		fontBold = wx.Font(fontSize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 
@@ -605,7 +605,10 @@ class NumKeypad( wx.Panel ):
 		onCourseCatLap = defaultdict( lambda: defaultdict(int) )
 		
 		results = GetResults( None )
-		if not race.isTimeTrial and race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
+		if race.isTimeTrial:
+			# Add riders who have started but not yet finished.
+			pass
+		elif race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
 			resultNums = set( rr.num for rr in results )
 			for a in race.riders.values():
