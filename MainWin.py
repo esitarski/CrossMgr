@@ -3339,6 +3339,7 @@ class MainWin( wx.Frame ):
 	def updateSimulation( self, num ):
 		if Model.race is None:
 			return
+		
 		'''
 		if self.nextNum is not None and self.nextNum not in self.simulateSeen:
 			self.forecastHistory.logNum( self.nextNum )

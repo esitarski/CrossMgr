@@ -18,7 +18,6 @@ from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, Del
 from FixCategories import SetCategory
 from FtpWriteFile import realTimeFtpPublish
 
-@Model.memoize
 def getExpectedRecorded( tCutoff=0.0 ):
 	race = Model.race
 	if not race:
@@ -154,7 +153,7 @@ class ForecastHistory( wx.Panel ):
 		self.redColour = wx.Colour(255, 51, 51)
 		self.groupColour = wx.Colour(220, 220, 220)
 
-		self.callLaterRefresh = None
+		self.callFutureRefresh = None
 		self.SetDoubleBuffered( True )
 		
 		# Main sizer.
@@ -511,8 +510,10 @@ class ForecastHistory( wx.Panel ):
 		if not tRace:
 			tRace = race.curRaceTime()
 		getT = self.getETATimeFunc()
-		self.expectedGrid.SetColumn( iExpectedTimeCol, [formatTime(getT(e) - tRace) if (e.lap or 0) > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001))))\
-										for e in self.quickExpected] )
+		self.expectedGrid.SetColumn(
+			iExpectedTimeCol,
+			[formatTime(getT(e) - tRace) if (e.lap or 0) > 0 else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.0000001)))) for e in self.quickExpected]
+		)
 	
 	def addGaps( self, recorded ):
 		if not (Model.race and Model.race.enableJChipIntegration):
@@ -530,6 +531,20 @@ class ForecastHistory( wx.Panel ):
 		if groupCount:
 			recordedWithGaps.append( Model.Entry(-groupCount, None, None, True) )
 		return recordedWithGaps
+
+	def updateFuture( self, milliSeconds ):
+		if self.callFutureRefresh is None:
+			def doUpdate():
+				self.refresh()
+				if Utils.mainWin:
+					Utils.mainWin.refreshTTStart()
+			class RefreshTimer( wx.Timer ):
+				def Notify( self ):
+					wx.CallAfter( doUpdate )
+			self.callFutureRefresh = RefreshTimer()
+		
+		if not self.callFutureRefresh.IsRunning():
+			self.callFutureRefresh.StartOnce( milliSeconds )
 
 	def refresh( self ):
 		race = Model.race
@@ -549,19 +564,16 @@ class ForecastHistory( wx.Panel ):
 		expected, recorded = getExpectedRecorded()
 		
 		isTimeTrial = race.isTimeTrial
-		if isTimeTrial and expected:
-			for e in expected:
-				if (e.lap or 0) == 0:
-					# Schedule a refresh later to update started riders.
-					milliSeconds = max( 1, int(((e.t or 0.0) - tRace)*1000.0 + 10.0) )
-					if self.callLaterRefresh is None:
-						def doRefresh():
-							self.refresh()
-							if Utils.mainWin:
-								Utils.mainWin.refreshTTStart()
-						self.callLaterRefresh = wx.CallLater( milliSeconds, doRefresh )
-					self.callLaterRefresh.Restart( milliSeconds )
-					break
+		if isTimeTrial:
+			try:
+				e = next( e for e in expected if (e.lap or 0) == 0 )
+			except StopIteration:
+				e = None
+			if e:
+				# Schedule a refresh update riders as they start.
+				milliSeconds = int(((e.t or 0.0) - tRace)*1000.0 + 10.0)
+				if milliSeconds > 0:
+					self.updateFuture( milliSeconds )
 
 		#------------------------------------------------------------------
 		# Highlight interpolated entries at race time.

@@ -339,7 +339,7 @@ class NumKeypad( wx.Panel ):
 		
 		self.hbClockPhoto = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.photoCount = wx.StaticText( panel, label = "000000" )
+		self.photoCount = wx.StaticText( panel, label = "000000", size=(64,-1) )
 		self.photoCount.SetFont( font )
 		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 6 )
 		
@@ -619,7 +619,7 @@ class NumKeypad( wx.Panel ):
 			category = getCategory( rr.num )
 			if category not in catLapsMax:
 				catLapsMax[category] = max( race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
-			if not IsRiderOnCourse(rr.num, t):
+			if not IsRiderOnCourse(rr.num, t, rr):
 				continue
 			
 			tSearch = t

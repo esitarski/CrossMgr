@@ -1080,7 +1080,7 @@ def IsRiderFinished( bib, t ):
 	rr = GetResultMap( category ).get( bib, None )
 	return rr and rr.status == Model.Rider.Finisher and rr.raceTimes and rr.raceTimes[-1] == t
 
-def IsRiderOnCourse( bib, tRace=None ):
+def IsRiderOnCourse( bib, tRace=None, rr=None ):
 	race = Model.race
 	if not race or not race.isRunning():
 		return False
@@ -1096,13 +1096,14 @@ def IsRiderOnCourse( bib, tRace=None ):
 	Finisher = Model.Rider.Finisher
 	
 	category = race.getCategory( bib )
-	if category is None:						# The rider must be in a category
+	if category is None:						# The rider must be in a category to be counted.
 		return False
 	results = GetResults( category )
 	if not results or results[0].status != Finisher:
 		return False							# There must be a category leader.
 		
-	rr = GetResultMap( category ).get( bib, None )
+	if rr is None:								# Get result if not provided.
+		rr = GetResultMap( category ).get( bib, None )
 	if rr is None or rr.status != Finisher:
 		return False							# If the rider doesn't have a result, or is DNF or DQ, skip.
 		
@@ -1110,7 +1111,6 @@ def IsRiderOnCourse( bib, tRace=None ):
 		return True
 			
 	return False
-
 
 def RidersOnCourseCount():
 	race = Model.race
