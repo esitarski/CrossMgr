@@ -10,7 +10,7 @@ import ReadSignOnSheet
 reIntPrefix = re.compile( '^[0-9]+' )
 class Search( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, style=0, size=wx.DefaultSize ):
-		super(Search, self).__init__(parent, id, style=style, size=size )
+		super().__init__(parent, id, style=style, size=size )
 
 		self.sortCol = 0
 		self.numSelect = None
@@ -241,7 +241,7 @@ class SearchDialog( wx.Dialog ):
 			self, parent, ID = wx.ID_ANY, title=_('Find Rider'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
-		super( SearchDialog, self).__init__(parent, ID, title, pos, size, style)
+		super().__init__(parent, ID, title, pos, size, style)
 
 		# Now continue with the normal construction of the dialog
 		# contents

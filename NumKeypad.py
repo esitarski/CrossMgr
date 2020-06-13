@@ -12,7 +12,7 @@ from collections import defaultdict
 
 import Utils
 from Utils import SetLabel
-from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult
+from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult, IsRiderOnCourse
 import Model
 from keybutton import KeyButton
 from RaceHUD import RaceHUD
@@ -247,7 +247,6 @@ class NumKeypad( wx.Panel ):
 		splitter.Bind( wx.EVT_PAINT, self.onPaint )
 		
 		panel = wx.Panel( splitter, style=wx.BORDER_SUNKEN )
-		panel.SetDoubleBuffered( True )
 		panel.SetSizer( horizontalMainSizer )
 		panel.SetBackgroundColour( wx.WHITE )
 		
@@ -267,71 +266,82 @@ class NumKeypad( wx.Panel ):
 		
 		#------------------------------------------------------------------------------
 		# Race time.
-		labelAlign = wx.ALIGN_CENTRE | wx.ALIGN_CENTRE_VERTICAL
-
-		self.raceTime = wx.StaticText( panel, label = u'0:00')
+		#
+		self.raceTime = wx.StaticText( panel, label = '00:00', size=(-1,64))
 		self.raceTime.SetFont( font )
-		self.raceTime.SetDoubleBuffered(True)
+		self.raceTime.SetDoubleBuffered( True )
 				
 		verticalSubSizer = wx.BoxSizer( wx.VERTICAL )
 		horizontalMainSizer.Add( verticalSubSizer )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.raceTime, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=100-40-8 )
-		verticalSubSizer.Add( hs, flag=wx.ALIGN_LEFT | wx.ALIGN_CENTRE_VERTICAL | wx.ALL, border = 2 )
+		hs.Add( self.raceTime, flag=wx.LEFT, border=100-40-8 )
+		verticalSubSizer.Add( hs, flag=wx.ALIGN_LEFT | wx.ALL, border = 2 )
 		
 		#------------------------------------------------------------------------------
 		# Lap Management.
+		#
 		gbs = wx.GridBagSizer(4, 12)
+		gbs.SetMinSize( 256, 200 )
 		
-		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		fontSize = 14
+		fontSize = 12
 		font = wx.Font(fontSize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		fontBold = wx.Font(fontSize, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 
 		rowCur = 0
 		colCur = 0
-		rowCur += 1
 		
-		label = wx.StaticText( panel, label = _("Manual Start"))
-		label.SetFont( font )
-		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
-		self.raceStartMessage = label
-		self.raceStartTime = wx.StaticText( panel )
-		self.raceStartTime.SetFont( font )
-		gbs.Add( self.raceStartTime, pos=(rowCur, colCur+1), span=(1, 1), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		panel.SetMinSize( (256, 60) )
 		
-		rowCur += 1
 		line = wx.StaticLine( panel, style=wx.LI_HORIZONTAL )
-		gbs.Add( line, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( line, pos=(rowCur, 0), span=(1,2), flag=wx.EXPAND )
+		rowCur += 1
 		
-		rowCur += 1
-		label = wx.StaticText( panel, label = u'{}:'.format(_("Est. Last Rider")) )
+		label = wx.StaticText( panel, label = _("Manual Start") )
 		label.SetFont( font )
-		gbs.Add( label, pos=(rowCur, colCur), span=(1,2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,1), flag=wx.EXPAND|wx.ALL, border=3 )
 		rowCur += 1
-		self.lastRiderOnCourseTime = wx.StaticText( panel )
+
+		self.raceStartMessage = label
+		self.raceStartTime = wx.StaticText( panel, label='00:00:00.000' )
+		self.raceStartTime.SetFont( font )
+		gbs.Add( self.raceStartTime, pos=(rowCur, colCur), span=(1, 1), flag=wx.EXPAND|wx.ALL, border=3 )
+		rowCur += 1
+		
+		line = wx.StaticLine( panel, style=wx.LI_HORIZONTAL )
+		gbs.Add( line, pos=(rowCur, 0), span=(1,2), flag=wx.EXPAND|wx.ALL, border=2 )
+		rowCur += 1
+		
+		label = wx.StaticText( panel, label = u'{}:'.format(_("Last Rider")) )
+		label.SetFont( font )
+		gbs.Add( label, pos=(rowCur, colCur), span=(1,2), flag=wx.EXPAND|wx.ALL, border=3 )
+		rowCur += 1
+		self.lastRiderOnCourseTime = wx.StaticText( panel, label='00:00:00' )
 		self.lastRiderOnCourseTime.SetFont( font )
-		gbs.Add( self.lastRiderOnCourseTime, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( self.lastRiderOnCourseTime, pos=(rowCur, colCur), span=(1, 2), flag=wx.EXPAND|wx.ALL, border=3 )
 		rowCur += 1
 		self.lastRiderOnCourseName = wx.StaticText( panel )
 		self.lastRiderOnCourseName.SetFont( fontBold )
-		gbs.Add( self.lastRiderOnCourseName, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( self.lastRiderOnCourseName, pos=(rowCur, colCur), span=(1, 2), flag=wx.EXPAND|wx.ALL, border=3 )
 		rowCur += 1
 		self.lastRiderOnCourseTeam = wx.StaticText( panel )
 		self.lastRiderOnCourseTeam.SetFont( font )
-		gbs.Add( self.lastRiderOnCourseTeam, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
+		gbs.Add( self.lastRiderOnCourseTeam, pos=(rowCur, colCur), span=(1, 2), flag=wx.EXPAND|wx.ALL, border=3 )
 		rowCur += 1
 		self.lastRiderOnCourseCategory = wx.StaticText( panel )
 		self.lastRiderOnCourseCategory.SetFont( font )
-		gbs.Add( self.lastRiderOnCourseCategory, pos=(rowCur, colCur), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT )
-		
+		gbs.Add( self.lastRiderOnCourseCategory, pos=(rowCur, colCur), span=(1, 2), flag=wx.EXPAND|wx.ALL, border=3 )
 		rowCur += 1
+		
+		line = wx.StaticLine( panel, style=wx.LI_HORIZONTAL )
+		gbs.Add( line, pos=(rowCur, 0), span=(1,2), flag=wx.EXPAND|wx.ALL, border=2 )
+		rowCur += 1
+		
 		self.hbClockPhoto = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.photoCount = wx.StaticText( panel, label = u"000004" )
+		self.photoCount = wx.StaticText( panel, label = "000000", size=(64,-1) )
 		self.photoCount.SetFont( font )
-		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT|wx.ALIGN_RIGHT, border = 6 )
+		self.hbClockPhoto.Add( self.photoCount, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 6 )
 		
 		self.camera_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
 		self.camera_broken_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_broken.png'), wx.BITMAP_TYPE_PNG )
@@ -342,32 +352,32 @@ class NumKeypad( wx.Panel ):
 		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
 		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
 		
-		gbs.Add( self.hbClockPhoto, pos=(rowCur, colCur), span=(1,1), flag=labelAlign )
+		gbs.Add( self.hbClockPhoto, pos=(rowCur, colCur), span=(1,1) )
 		rowCur += 1
 		
 		self.clock = ClockDigital( panel, size=(100,24), checkFunc=self.doClockUpdate )
 		self.clock.SetBackgroundColour( wx.WHITE )
-		gbs.Add( self.clock, pos=(rowCur, 0), span=(1, 2), flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT )
+		gbs.Add( self.clock, pos=(rowCur, 0), span=(1, 2), flag=wx.ALIGN_CENTRE )
 		rowCur += 1
 		
-		verticalSubSizer.Add( gbs, flag=wx.LEFT|wx.TOP, border = 8 )
+		verticalSubSizer.Add( gbs, 0, flag=wx.LEFT|wx.TOP|wx.EXPAND, border = 3 )
+		self.sizerLapInfo = gbs
+		self.sizerSubVertical = verticalSubSizer
 		
 		#------------------------------------------------------------------------------
 		# Rider Lap Count.
 		rcVertical = wx.BoxSizer( wx.VERTICAL )
 		rcVertical.AddSpacer( 32 )
-		title = wx.StaticText( panel, label = _('Riders on Course:') )
-		title.SetFont( wx.Font(fontSize, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		rcVertical.Add( title, flag=wx.ALL, border = 4 )
-		
+
 		self.lapCountList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
 		self.lapCountList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		self.lapCountList.InsertColumn( 0, _('Category'),	wx.LIST_FORMAT_LEFT,	140 )
-		self.lapCountList.InsertColumn( 1, _('Count'),		wx.LIST_FORMAT_RIGHT,	70 )
-		self.lapCountList.InsertColumn( 2, u'',				wx.LIST_FORMAT_LEFT,	90 )
+		self.lapCountList.AppendColumn( _('Category'),	wx.LIST_FORMAT_LEFT,	140 )
+		self.lapCountList.AppendColumn( _('On Course'),		wx.LIST_FORMAT_RIGHT, 90 )
+		self.lapCountList.AppendColumn( '',				wx.LIST_FORMAT_LEFT,	90 )
 		rcVertical.Add( self.lapCountList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
 		
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
+		self.horizontalMainSizer = horizontalMainSizer
 		
 		#----------------------------------------------------------------------------------------------
 		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN, lapInfoFunc=getLapInfo )
@@ -526,6 +536,13 @@ class NumKeypad( wx.Panel ):
 		self.raceHUD.SetData( raceTimes, leader, tCur if race.isRunning() else None )
 		if Utils.mainWin:
 			Utils.mainWin.updateLapCounter( lapCounter )
+		self.updateLayout()
+		
+	def updateLayout( self ):
+		self.sizerLapInfo.Layout()
+		self.sizerSubVertical.Layout()
+		self.horizontalMainSizer.Layout()
+		self.Layout()
 		
 	def refreshRaceTime( self ):
 		race = Model.race
@@ -585,45 +602,28 @@ class NumKeypad( wx.Panel ):
 		getCategory = race.getCategory
 		t = race.curRaceTime()
 		
+		onCourseCatLap = defaultdict( lambda: defaultdict(int) )
+		
 		results = GetResults( None )
 		if race.isTimeTrial:
-			# Add TT riders who have started but not recoreded a lap yet.
-			results = copy.deepcopy(list(results))
-			for rr in results:
-				a = race.riders[rr.num]
-				if rr.status == NP and a.firstTime is not None and a.firstTime <= t:
-					rr.status = Finisher
+			# Add riders who have started but not yet finished.
+			pass
 		elif race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
-			results = list(results)
 			resultNums = set( rr.num for rr in results )
 			for a in race.riders.values():
-				if a.status == Finisher and a.num not in resultNums and a.firstTime is not None:
+				if a.status == Finisher and a.firstTime is not None and a.num not in resultNums:
 					category = getCategory( a.num )
 					if category and t >= a.firstTime and t >= race.getStartOffset(a.num):
-						results.append(
-							#              num,   status,    lastTime, raceCat,           lapTimes,  raceTimes, interp
-							RiderResult( a.num, Finisher, a.firstTime, category.fullname,       [],      [],      []   )
-						)
-						
-		results = [rr for rr in results if rr.status == Finisher]
-		if not results:
-			return
+						onCourseCatLap[category][1] += 1
 		
-		catLapCount = defaultdict(int)
-		catCount = defaultdict(int)
-		catRaceCount = defaultdict(int)
-		catLapsMax = defaultdict(int)
-		
+		catLapsMax = {}
 		for rr in results:
 			category = getCategory( rr.num )
-			catLapsMax[category] = max( catLapsMax[category], race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
-		
-		for rr in results:
-			category = getCategory( rr.num )
-			catCount[getCategory(rr.num)] += 1
-			
-			numLaps = catLapsMax[category]
+			if category not in catLapsMax:
+				catLapsMax[category] = max( race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
+			if not IsRiderOnCourse(rr.num, t, rr):
+				continue
 			
 			tSearch = t
 			if race.isTimeTrial:
@@ -631,18 +631,18 @@ class NumKeypad( wx.Panel ):
 					tSearch -= race.riders[rr.num].firstTime
 				except:
 					pass
-			lap = max( 1, bisect.bisect_left(rr.raceTimes, tSearch) )
-			
-			if lap <= numLaps:
-				# Rider is still on course.
-				key = (category, lap)
-				catLapCount[key] += 1
-				catRaceCount[category] += 1
+			lap = min( catLapsMax[category], max( 1, bisect.bisect_left(rr.raceTimes, tSearch) ) )
+			onCourseCatLap[category][lap] += 1
 		
-		if not catLapCount:
+		if not onCourseCatLap:
 			return
 			
-		catLapList = [(category, lap, count) for (category, lap), count in catLapCount.items()]
+		onCourseCat = {}
+		catLapList = []
+		for category, lapCounts in onCourseCatLap.items():
+			onCourseCat[category] = sum( lapCounts.values() )
+			for lap, count in lapCounts.items():
+				catLapList.append( (category, lap, count) )			
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
@@ -662,21 +662,26 @@ class NumKeypad( wx.Panel ):
 			return r
 		
 		appendListRow( (
-							_('Total'),
-							u'{}/{}'.format(sum(count for count in catLapCount.values()),
-											sum(count for count in catCount.values()))
+							_('All'),
+							'{}'.format(sum(count for count in onCourseCat.values())),
+							'',
 						),
 						colour=wx.BLUE,
 						bold=True )
 
 		lastCategory = None
 		for category, lap, count in catLapList:
-			categoryLaps = catLapsMax[category]
 			if category != lastCategory:
-				appendListRow( (category.fullname, u'{}/{}'.format(catRaceCount[category], catCount[category]),
-									(u'({} {})'.format(categoryLaps if categoryLaps < 1000 else u'', _('laps') if categoryLaps > 1 else _('lap'))) ),
-								bold = True )
-			appendListRow( (u'', count, u'{} {}'.format( _('on lap'), lap ) ) )
+				categoryLaps = catLapsMax[category]
+				appendListRow(
+					(
+						category.fullname,
+						u'{}'.format(onCourseCat[category]),
+						(u'({} {})'.format(categoryLaps if categoryLaps < 1000 else u'', _('laps') if categoryLaps > 1 else _('lap'))),
+					),
+					bold = True,
+				)
+			appendListRow( ('', count, u'({} {})'.format( _('on lap'), lap ) ) )
 			lastCategory = category
 
 	def refreshLastRiderOnCourse( self ):
@@ -702,7 +707,7 @@ class NumKeypad( wx.Panel ):
 			
 			t = (lastRiderOnCourse._lastTimeOrig or 0.0) + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0)
 			tFinish = race.startTime + datetime.timedelta( seconds=t )
-			lastRiderOnCourseTime = u'{} {}'.format(_('Finishing at'), tFinish.strftime('%H:%M:%S') )
+			lastRiderOnCourseTime = u'{} {}'.format(_('Finishing'), tFinish.strftime('%H:%M:%S') )
 		else:
 			lastRiderOnCourseName = u''
 			lastRiderOnCourseTeam = u''
@@ -713,7 +718,7 @@ class NumKeypad( wx.Panel ):
 		changed |= SetLabel( self.lastRiderOnCourseCategory, lastRiderOnCourseCategory )
 		changed |= SetLabel( self.lastRiderOnCourseTime, lastRiderOnCourseTime )
 		if changed:
-			Utils.LayoutChildResize( self.raceStartTime )
+			self.updateLayout()
 	
 	def refreshAll( self ):
 		self.refreshRaceTime()

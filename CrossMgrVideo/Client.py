@@ -1,5 +1,4 @@
 import os
-import six
 import json
 import socket
 import random
@@ -27,9 +26,9 @@ def sendMessages( messages ):
 def PhotoGetRequest( kwargs, cmd ):
 	assert 'dirName' in kwargs, 'dirName is a required argument'
 	messageArgs = {k : v if k != 'time' else [v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond]
-			for k, v in six.iteritems(kwargs) if k in Fields }
+			for k, v in kwargs.items() if k in Fields }
 	
-	assert all( k in Fields for k in six.iterkeys(kwargs) ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in six.iterkeys(kwargs)]))
+	assert all( k in Fields for k in kwargs.keys() ), 'unrecognized field(s): {}'.format(', '.join([k not in Fields for k in kwargs.keys()]))
 	messageArgs['cmd'] = cmd
 	
 	return json.dumps( messageArgs, separators=(',',':') )
@@ -75,9 +74,9 @@ Trek Factory Racing'''.split( '\n' )
 		shutil.rmtree( dirName )
 	os.mkdir( dirName )
 	
-	for q in six.moves.range(1000):
+	for q in range(1000):
 		requests = []
-		for i in six.moves.range(random.randint(1, 2)):
+		for i in range(random.randint(1, 2)):
 			tNow = now()
 			requests.append( {
 					'dirName':		dirName,
@@ -89,7 +88,7 @@ Trek Factory Racing'''.split( '\n' )
 			)
 		success, error = PhotoSendRequests( requests, 'photo' )
 		if not success:
-			six.print_( error )
+			print( error )
 		time.sleep( random.random() * 2 )
 		for request in requests:
 			request.update( {
@@ -100,12 +99,12 @@ Trek Factory Racing'''.split( '\n' )
 			} )
 		success, error = PhotoSendRequests( requests, 'rename' )
 		if not success:
-			six.print_( error )
+			print( error )
 		time.sleep( random.random() * 2 )
 	
 	while 1:
 		requests = []
-		for i in six.moves.range(random.randint(0, 5)):
+		for i in range(random.randint(0, 5)):
 			tNow = now()
 			requests.append( {
 					'dirName':		dirName,
@@ -120,5 +119,5 @@ Trek Factory Racing'''.split( '\n' )
 			)
 		success, error = PhotoSendRequests( requests )
 		if not success:
-			six.print_( error )
+			print( error )
 		time.sleep( random.random() * 2 )

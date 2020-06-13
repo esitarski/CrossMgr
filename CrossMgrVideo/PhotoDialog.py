@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import time
 import subprocess
 from AddPhotoHeader import AddPhotoHeader
@@ -82,7 +81,7 @@ class PhotoDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
 			
-		super(PhotoDialog, self).__init__( parent, id, size=size, style=style, title=_('Photo: ***Left-click and Drag in the Photo to Zoom***') )
+		super().__init__( parent, id, size=size, style=style, title=_('Photo: ***Left-click and Drag in the Photo to Zoom***') )
 		
 		self.clear()
 		
@@ -173,10 +172,10 @@ class PhotoDialog( wx.Dialog ):
 
 		btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
 		btn.SetToolTip( wx.ToolTip('Close') )
-		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_RIGHT, border=4)
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		btn.Bind( wx.EVT_BUTTON, self.onClose )
 
-		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND|wx.ALIGN_CENTRE, border=5 )
+		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
 
 		self.SetSizer(vs)
 		vs.Fit(self)

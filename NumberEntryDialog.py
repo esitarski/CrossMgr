@@ -6,7 +6,7 @@ class NumberEntryDialog( wx.Dialog ):
 	def __init__( self, parent, message = "Please enter a number.", caption = "Number Entry",
 		prompt="Number:", value=None, min=None, max=None ):
 		
-		super( NumberEntryDialog, self ).__init__( parent, title=caption )
+		super().__init__( parent, title=caption )
 		kwargs = {
 			'parent': self,
 			'min': min,

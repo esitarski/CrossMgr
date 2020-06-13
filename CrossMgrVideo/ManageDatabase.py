@@ -1,14 +1,13 @@
 import wx
 import wx.adv
 import os
-import six
 import datetime
 
 DatePickerCtrl = wx.adv.DatePickerCtrl
 
 class ManageDatabase( wx.Dialog ):
 	def __init__( self, parent, dbSize, dbName, trigFirst, trigLast, id=wx.ID_ANY, title='', size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE ):
-		super(ManageDatabase, self).__init__( parent, id, title=title, size=size, style=style )
+		super().__init__( parent, id, title=title, size=size, style=style )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
@@ -111,8 +110,8 @@ if __name__ == '__main__':
 	mainWin.Show()
 	
 	dlg = ManageDatabase( mainWin, 1000000, 'TestDatabase', None, None )
-	six.print_( dlg.ShowModal() == wx.ID_OK )
-	six.print_(  dlg.GetValues() )
+	print( dlg.ShowModal() == wx.ID_OK )
+	print(  dlg.GetValues() )
 	dlg.Destroy()
 	
 	app.MainLoop()

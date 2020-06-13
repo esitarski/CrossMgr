@@ -284,7 +284,7 @@ Spin Doctors
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i&len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
-# Write out as a .xlsx file with the number tag data.
+# Write out as a .xlx file with the number tag data.
 #
 wb = xlwt.Workbook()
 ws = wb.add_sheet( "RaceResultTest" )
@@ -300,7 +300,7 @@ for r, (n, t) in enumerate(tag.items()):
 	for c, v in enumerate([n, lastName, firstName, Team, t]):
 		ws.write( rowCur, c, v )
 	rowCur += 1
-wb.save('RaceResultTest.xlsx')
+wb.save('RaceResultTest.xls')
 wb = None
 
 #------------------------------------------------------------------------------	

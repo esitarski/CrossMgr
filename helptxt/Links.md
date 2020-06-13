@@ -36,6 +36,7 @@
 [Primes]:			Primes.html
 [Histogram]:		Histogram.html
 [TeamResults]:		TeamResults.html
+[Restart]:			Restart.html
 [FAQ]:				FAQ.html
 
 [External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data

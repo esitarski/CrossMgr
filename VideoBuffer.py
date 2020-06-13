@@ -54,7 +54,7 @@ class FrameSaver( threading.Thread ):
 	
 class CallbackTimer( wx.Timer ):
 	def __init__( self, callback ):
-		super(CallbackTimer, self).__init__()
+		super().__init__()
 		self.callback = callback
 		
 	def Notify( self ):

@@ -17,9 +17,6 @@ import Flags
 
 bitmapCache = {}
 class IOCCodeRenderer(wx.grid.GridCellRenderer):
-	def __init__(self):
-		super( IOCCodeRenderer, self ).__init__()
-
 	def getImgWidth( self, ioc, height ):
 		img = Flags.GetFlagImage( ioc )
 		if img:
@@ -608,7 +605,6 @@ class Results( wx.Panel ):
 			self.clearGrid()
 			return
 		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		for si in self.hbs.GetChildren():
 			if si.IsWindow():
@@ -711,7 +707,6 @@ class Results( wx.Panel ):
 				r.SetFont( self.boldFont )
 			else:
 				r.SetFont( wx.NullFont )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		
 		# Find the fastest lap time.

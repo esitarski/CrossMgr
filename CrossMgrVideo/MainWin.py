@@ -1,4 +1,5 @@
 import wx
+import wx.adv
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
 import sys
@@ -25,6 +26,7 @@ now = datetime.now
 import Utils
 import CVUtil
 from SocketListener import SocketListener
+from MultiCast import multicast_group, multicast_port
 from Database import Database, DBWriter
 from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
@@ -49,7 +51,7 @@ def getCloseFinishBitmaps( size=(16,16) ):
 		bitmap = wx.Bitmap( *size )
 		dc.SelectObject( bitmap )
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
-		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in six.moves.range(0,6,2)]) ) )
+		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in range(0,6,2)]) ) )
 		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
 		dc.SelectObject( wx.NullBitmap )
 		bm.append( bitmap )
@@ -163,7 +165,7 @@ class ConfigDialog( wx.Dialog ):
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera Device'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.cameraDevice = wx.Choice( self, choices=[six.text_type(i) for i in six.moves.range(8)] )
+		self.cameraDevice = wx.Choice( self, choices=['{}'.format(i) for i in range(8)] )
 		self.cameraDevice.SetSelection( cameraDeviceNum )
 		pfgs.Add( self.cameraDevice )
 		
@@ -316,7 +318,7 @@ class TriggerDialog( wx.Dialog ):
 		self.cancel = wx.Button( self, wx.ID_CANCEL )
 		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
 		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
+		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
 		
 		sizer.Add( gs, flag=wx.ALL, border=4 )
 		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
@@ -328,7 +330,7 @@ class TriggerDialog( wx.Dialog ):
 		ef = db.getTriggerEditFields( self.triggerId )
 		ef = ef or ['' for f in Database.triggerEditFields]
 		for e, v in zip(self.editFields, ef):
-			e.SetValue( six.text_type(v) )
+			e.SetValue( '{}'.format(v) )
 	
 	def get( self ):
 		values = []
@@ -368,7 +370,7 @@ class AutoCaptureDialog( wx.Dialog ):
 		self.cancel = wx.Button( self, wx.ID_CANCEL )
 		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
 		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
+		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
 		
 		sizer.Add( gs, flag=wx.ALL, border=4 )
 		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
@@ -651,6 +653,24 @@ class MainWin( wx.Frame ):
 		self.updateAutoCaptureLabel()
 		self.SetSizerAndFit( mainSizer )
 		
+		# Add joystick capture.  Trigger capture while button 1 on the joystick is pressed.
+		self.capturing = False
+		self.joystick = wx.adv.Joystick()
+		self.joystick.SetCapture( self )
+		self.Bind(wx.EVT_JOY_BUTTON_DOWN, self.OnJoystickButton)
+		self.Bind(wx.EVT_JOY_BUTTON_UP, self.OnJoystickButton)
+		
+		# Add keyboard accellerators.
+
+		idStartAutoCapture = wx.NewId()
+		idToggleCapture = wx.NewId()
+		
+		entries = [wx.AcceleratorEntry()]
+		entries[0].Set(wx.ACCEL_CTRL, ord('A'), idStartAutoCapture)
+
+		self.Bind(wx.EVT_MENU, self.onStartAutoCaptureAccel, id=idStartAutoCapture)		
+		self.SetAcceleratorTable( wx.AcceleratorTable(entries) )
+
 		# Start the message reporting thread so we can see what is going on.
 		self.messageThread = threading.Thread( target=self.showMessages )
 		self.messageThread.daemon = True
@@ -797,9 +817,9 @@ class MainWin( wx.Frame ):
 				if k == 'bib':
 					v = u'{:>6}'.format(v)
 				elif k == 'frames':
-					v = six.text_type(v) if v else u''
+					v = '{}'.format(v) if v else u''
 				else:
-					v = six.text_type(v)
+					v = '{}'.format(v)
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
 				
 	def updateTriggerRowID( self, id, fields ):
@@ -885,7 +905,7 @@ class MainWin( wx.Frame ):
 					del counts[id]
 			self.db.updateTriggerPhotoCounts( counts )
 			
-		for i in six.moves.range(self.triggerList.GetColumnCount()):
+		for i in range(self.triggerList.GetColumnCount()):
 			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
 
 		if iTriggerRow is not None:
@@ -938,6 +958,10 @@ class MainWin( wx.Frame ):
 			b.SetForegroundColour( colour )
 			wx.CallAfter( b.Refresh )
 
+	def onStartAutoCaptureAccel( self, event ):
+		event.SetEventObject( self.autoCapture )
+		self.onStartAutoCapture( event )
+
 	def onStartAutoCapture( self, event ):
 		tNow = now()
 		
@@ -960,6 +984,36 @@ class MainWin( wx.Frame ):
 			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, autoCaptureEnableColour
 		)
 		
+	def onToggleCapture( self, event ):
+		self.capturing ^= True
+
+		event.SetEventObject( self.capture )
+		if self.capturing:
+			self.onStartCapture( event )
+		else:
+			self.onStopCapture( event )
+
+	def OnJoystickButton( self, event ):
+		startCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON1 )
+		autoCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON2 )
+
+		if startCaptureBtn:
+			if not self.capturing:
+				self.capturing = True
+				event.SetEventObject( self.capture )
+				self.onStartCapture( event )
+			return
+			
+		if not startCaptureBtn:
+			if self.capturing:
+				self.capturing = False
+				event.SetEventObject( self.capture )
+				self.onStopCapture( event )
+
+		if autoCaptureBtn:
+			event.SetEventObject( self.autoCapture )
+			self.onStartAutoCapture( event )
+	
 	def onStartCapture( self, event ):
 		tNow = self.tStartCapture = now()
 		
@@ -984,7 +1038,7 @@ class MainWin( wx.Frame ):
 		if iTriggerRow < 0:
 			return
 		self.triggerList.EnsureVisible( iTriggerRow )
-		for r in six.moves.range(self.triggerList.GetItemCount()-1):
+		for r in range(self.triggerList.GetItemCount()-1):
 			self.triggerList.Select(r, 0)
 		self.triggerList.Select( iTriggerRow )		
 	
@@ -1089,7 +1143,7 @@ class MainWin( wx.Frame ):
 		
 	def doTriggerDelete( self, confirm=True ):
 		triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
-		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], six.text_type(triggerInfo['bib']),
+		message = u', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], '{}'.format(triggerInfo['bib']),
 			triggerInfo['name'], triggerInfo['team'], triggerInfo['wave'], triggerInfo['race_name']) if f )
 		if not confirm or wx.MessageDialog( self, u'{}:\n\n{}'.format(u'Confirm Delete', message), u'Confirm Delete',
 				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
@@ -1120,7 +1174,7 @@ class MainWin( wx.Frame ):
 			message = self.messageQ.get()
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message
-			six.print_( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
+			print( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 	
 	def delayRefreshTriggers( self ):
@@ -1133,11 +1187,14 @@ class MainWin( wx.Frame ):
 		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
 		error = self.listenerThread.test()
 		if error:
-			wx.MessageBox('Socket Error:\n\n{}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(error),
+			wx.MessageBox('Socket Error:\n\n"{}" group={}, port={}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(
+					error,
+					multicast_group, multicast_port,
+				),
 				"Socket Error",
 				wx.OK | wx.ICON_ERROR
 			)
-			wx.Exit()
+			# wx.Exit()
 		
 		self.camInQ, self.camReader = CamServer.getCamServer( self.getCameraInfo() )
 		self.cameraThread = threading.Thread( target=self.processCamera )
@@ -1299,7 +1356,7 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 	
 	def setCameraDeviceNum( self, num ):
-		self.cameraDevice.SetLabel( six.text_type(num) )
+		self.cameraDevice.SetLabel( '{}'.format(num) )
 		
 	def setCameraResolution( self, width, height ):
 		self.cameraResolution.SetLabel( u'{}x{}'.format(width, height) )

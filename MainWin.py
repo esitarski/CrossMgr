@@ -85,6 +85,7 @@ from Pulled				import Pulled
 from TeamResults		import TeamResults
 from BibEnter			import BibEnter
 from BackgroundJobMgr	import BackgroundJobMgr
+from Restart			import Restart
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -230,7 +231,7 @@ class SimulateDialog(wx.Dialog):
 			style=wx.DEFAULT_DIALOG_STYLE, name='dialog'
 			):
 
-		super( SimulateDialog, self ).__init__(parent, id, title, pos, size, style, name)
+		super().__init__(parent, id, title, pos, size, style, name)
 
 		explain = u'\n'.join( [
 				_('Simulate Race'),
@@ -241,7 +242,7 @@ class SimulateDialog(wx.Dialog):
 				_('The simulation takes about 8 minutes.'),
 				_('In the Time Trial simulation, riders start on 15 second intervals.'),
 				u'',
-				u'{}: "{}".'.format(_('The race will be written to'), fName),
+				u'{}:\n    "{}"'.format(_('The race will be written to'), fName),
 				u'',
 				_('Continue?'),
 				] )
@@ -259,13 +260,13 @@ class SimulateDialog(wx.Dialog):
 		box = wx.StaticBox( self, label=_('Mass Start Race') )
 		sboxsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
-		self.rfidResetStartClockOnFirstTag = wx.CheckBox( self, label=_('Simulate RFID Reset Start Clock on First Read') )
-		sboxsizer.Add( self.rfidResetStartClockOnFirstTag, flag=wx.ALL, border=4 )
-		
 		btn = wx.Button(self, label=_('Start') )
 		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_MASS_START) )
 		btn.SetDefault()
 		sboxsizer.Add( btn, flag=wx.ALL, border=4 )
+		
+		self.rfidResetStartClockOnFirstTag = wx.CheckBox( self, label=_('Simulate RFID Reset Start Clock on First Read') )
+		sboxsizer.Add( self.rfidResetStartClockOnFirstTag, flag=wx.ALL, border=4 )
 		
 		btnsizer.Add(sboxsizer, flag=wx.ALL, border=4)
 		
@@ -278,15 +279,15 @@ class SimulateDialog(wx.Dialog):
 		btn.Bind( wx.EVT_BUTTON, lambda e: self.EndModal(self.ID_TIME_TRIAL) )
 		sboxsizer.Add(btn, flag=wx.ALL, border=4)
 				
-		btnsizer.Add(sboxsizer, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4)
+		btnsizer.Add(sboxsizer, flag=wx.ALL, border=4)
 		
 		#---------------------------------------------------------------
-		btn = wx.Button(self, wx.ID_CANCEL)
-		btnsizer.Add(btn, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border=4)
-				
-		#---------------------------------------------------------------
-		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 8)
+		sizer.Add(btnsizer, 0, wx.ALL, 8)
 
+		#---------------------------------------------------------------
+		btn = wx.Button(self, wx.ID_CANCEL)
+		sizer.Add(btn, flag=wx.ALIGN_RIGHT|wx.ALL, border=8)
+				
 		self.SetSizer(sizer)
 		sizer.Fit(self)
 
@@ -740,6 +741,9 @@ class MainWin( wx.Frame ):
 		item = self.toolsMenu.Append( wx.ID_ANY, _("&Change Race Start Time..."), _("Change the Start Time of the Race") )
 		self.Bind(wx.EVT_MENU, self.menuChangeRaceStartTime, item )
 		
+		item = self.toolsMenu.Append( wx.ID_ANY, _("&Restart Race..."), _("Restart a race after a delay.") )
+		self.Bind(wx.EVT_MENU, self.menuRestartRace, item )
+		
 		self.toolsMenu.AppendSeparator()
 
 		item = self.toolsMenu.Append( wx.ID_ANY, _("Copy Log File to &Clipboard..."), _("Copy Log File to Clipboard") )
@@ -1115,6 +1119,7 @@ class MainWin( wx.Frame ):
 			if race:
 				race.syncCategories = self.menuItemSyncCategories.IsChecked()
 				
+	@logCall
 	def menuChangeRaceStartTime( self, event ):
 		race = Model.race
 		if not race:
@@ -1130,6 +1135,36 @@ class MainWin( wx.Frame ):
 		dlg.ShowModal()
 		dlg.Destroy()
 	
+	@logCall
+	def menuRestartRace( self, event ):
+		race = Model.race
+		if not race:
+			return
+		if race.isTimeTrial:
+			Utils.MessageOK( self, _('Cannot restart a Time Trial'), _('Race Not Restarted') )
+			return			
+		if race.isUnstarted():
+			Utils.MessageOK( self, _('Cannot restart an Unstarted Race.'), _('Race Not Restarted') )
+			return
+		if race.isRunning():
+			if not Utils.MessageOKCancel(
+				self,
+				'{}\n\n\t{}\n\n\t{}'.format(
+						_('The Race must be Finished before it can a Restarted.'),
+						_('Finish the Race Now?'),
+						_('Careful - there is no Undo'),
+					),
+					_('Race Not Restarted')
+				):
+				return
+			self.actions.onFinishRace( event, False )
+			self.showPage( self.iHistoryPage )			
+			
+		dlg = Restart( self )
+		dlg.refresh()
+		dlg.ShowModal()
+		dlg.Destroy()
+		
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
 		self.config.WriteBool( 'playSounds', self.playSounds )
@@ -3114,9 +3149,9 @@ class MainWin( wx.Frame ):
 	def menuExit(self, event):
 		self.onCloseWindow( event )
 
-	def genTimes( self, regen = False ):
+	def genTimes( self, regen=False ):
 		if regen:
-			for k, v in six.iteritems(SimulateData()):
+			for k, v in SimulateData().items():
 				setattr( self, k, v )
 		else:
 			self.raceMinutes = SimulationLapTimes.raceMinutes
@@ -3228,7 +3263,7 @@ class MainWin( wx.Frame ):
 					numTimes[num].append( t )
 			
 			numRaceTimes = {}
-			for num, times in six.iteritems(numTimes):
+			for num, times in numTimes.items():
 				times.sort()
 				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 			
@@ -3237,7 +3272,7 @@ class MainWin( wx.Frame ):
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []
-			for num, raceTimes in six.iteritems(numRaceTimes):
+			for num, raceTimes in numRaceTimes.items():
 				startTime = numStartTime[num]
 				race.getRider( num ).firstTime = startTime
 				self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
@@ -3314,6 +3349,7 @@ class MainWin( wx.Frame ):
 	def updateSimulation( self, num ):
 		if Model.race is None:
 			return
+		
 		'''
 		if self.nextNum is not None and self.nextNum not in self.simulateSeen:
 			self.forecastHistory.logNum( self.nextNum )
@@ -4009,6 +4045,11 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				continue
 			tag = d[1]
 			dt = d[2]
+			
+			# Ignore unrecorded reads that happened before the restart time.
+			if race.rfidRestartTime and dt <= race.rfidRestartTime:
+				continue
+			
 			try:
 				num = race.tagNums[tag]
 			except KeyError:
@@ -4028,7 +4069,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			class ProcessRfidRefresh( wx.Timer ):
 				def __init__( self, *args, **kwargs ):
 					self.mainWin = kwargs.pop('mainWin')
-					super(ProcessRfidRefresh, self).__init__(*args, **kwargs)
+					super().__init__(*args, **kwargs)
 				def Notify( self ):
 					self.mainWin.processRfidRefresh()
 			self.callLaterProcessRfidRefresh = ProcessRfidRefresh( mainWin=self )

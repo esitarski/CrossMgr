@@ -1,5 +1,4 @@
 import wx
-import six
 import wx.adv as adv
 import datetime
 from ScaledBitmapVerticalLines import ScaledBitmapVerticalLines, EVT_VERTICAL_LINES
@@ -259,7 +258,6 @@ class ComputeSpeed( object ):
 		
 if __name__ == '__main__':
 	from Database import Database
-	import six
 	app = wx.App(False)
 
 	tsJpg = Database().getLastPhotos( 12 )
@@ -272,5 +270,5 @@ if __name__ == '__main__':
 	computeSpeed = ComputeSpeed(mainWin, size=size)
 	mainWin.Show()
 	mps, kmh, mph, pps = computeSpeed.Show( tsJpg, len(tsJpg)-2, len(tsJpg)-1, t2 )
-	six.print_( 'm/s={}, km/h={}, mph={} pps={}'.format(mps, kmh, mph, pps) )
+	print( 'm/s={}, km/h={}, mph={} pps={}'.format(mps, kmh, mph, pps) )
 	app.MainLoop()

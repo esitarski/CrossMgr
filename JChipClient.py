@@ -18,7 +18,7 @@ DEFAULT_HOST = '127.0.0.1'
 
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
-CR = u'\r'
+CR = '\r'
 
 NumberOfStarters = 50
 
@@ -31,12 +31,12 @@ nums = nums[:NumberOfStarters]
 
 #------------------------------------------------------------------------------	
 # Create a JChip-style hex tag for each number.
-tag = {n: u'41AA%03X' % n for n in nums }
-tag[random.choice(list(tag.keys()))] = u'E2001018860B01290700D0D8'
-tag[random.choice(list(tag.keys()))] = u'E2001018860B01530700D138'
-tag[random.choice(list(tag.keys()))] = u'E2001018860B01370700D0F8'
-tag[random.choice(list(tag.keys()))] = u'1'
-tag[random.choice(list(tag.keys()))] = u'2'
+tag = {n: '41AA%03X' % n for n in nums }
+tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
+tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
+tag[random.choice(list(tag.keys()))] = 'E2001018860B01370700D0F8'
+tag[random.choice(list(tag.keys()))] = '1'
+tag[random.choice(list(tag.keys()))] = '2'
 
 #------------------------------------------------------------------------
 def getRandomData( starters ):
@@ -279,11 +279,11 @@ Spin Doctors
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i%len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
-# Write out as a .xlsx file with the number tag data.
+# Write out as a .xls file with the number tag data.
 #
 wb = xlwt.Workbook()
 ws = wb.add_sheet( "JChipTest" )
-for col, label in enumerate(u'Bib#,LastName,FirstName,Team,Tag,StartTime'.split(',')):
+for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag,StartTime'.split(',')):
 	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
 rowCur = 1
@@ -297,12 +297,13 @@ for r, (n, t) in enumerate(tag.items()):
 	rowCur += 1
 wb.save('JChipTest.xls')
 wb = None
+print( 'Created JChipTest.xls.' )
 
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
 with open('JChipTest.csv', 'w') as f:
-	f.write( u'Bib#,Tag,dummy3,dummy4,dummy5\n' )
+	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '{},{}\n'.format(n, tag[n]) )
 
@@ -314,7 +315,7 @@ sendDate = True
 count = 0
 def formatMessage( n, lap, t ):
 	global count
-	message = u"DJ%s %s 10  %05X      C7%s%s" % (
+	message = "DJ%s %s 10  %05X      C7%s%s" % (
 				tag[n],								# Tag code
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.
@@ -338,66 +339,85 @@ for n in nums:
 		numLapTimes.append( (n, lap, lapTime*lap) )
 numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time.
 
-#------------------------------------------------------------------------------	
-# Create a socket (SOCK_STREAM means a TCP socket)
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def getCmd( sock ):
+	received = ''
+	while received[-1:] != CR:
+		try:
+			received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for JChip protocol).
+		except socket.timeout:
+			return received, True
+	return received[:-1], False
 
 #------------------------------------------------------------------------------	
 # Connect to the CrossMgr server.
+dBaseStart = None
 iMessage = 1
 while 1:
-	print( u'Trying to connect to server...' )
+	print( 'Attempting to connect to CrossMgr server...' )
+	sock = None		# Voodoo socket reset.
 	while 1:
 		try:
+			#------------------------------------------------------------------------------	
+			# Create a socket (SOCK_STREAM means a TCP socket)
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.connect((DEFAULT_HOST, DEFAULT_PORT))
 			break
-		except:
-			print( u'Connection failed.  Waiting 5 seconds...' )
+		except Exception as e:
+			print( 'Connection failed.  Waiting 5 seconds... ({})'.format(e) )
+			sock = None
 			time.sleep( 5 )
 
+	# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
+	sock.settimeout( 2.0 )
+			
 	#------------------------------------------------------------------------------	
-	print( u'Connection succeeded!' )
-	name = u'{}-{}'.format(socket.gethostname(), os.getpid())
-	print( u'Sending name...', name )
-	message = u"N0000{}{}".format(name, CR)
+	print( 'Connection succeeded!' )
+	name = '{}-{}'.format(socket.gethostname(), os.getpid())
+	print( 'Sending name...', name )
+	message = "N0000{}{}".format(name, CR)
 	sock.send( message.encode() )
 
 	#------------------------------------------------------------------------------	
-	print( u'Waiting for get time command...' )
-	while 1:
-		received = sock.recv(1).decode()
-		if received == u'G':
-			while received[-1] != CR:
-				received += sock.recv(1).decode()
-			print( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
-			break
+	print( 'Waiting for get time command...' )
+	received, timedOut = getCmd( sock )
+	if timedOut:
+		print( 'Timed out [1]' )
+		continue
+	
+	print('Received cmd: "{}" from CrossMgr'.format(received) )
+	if not received.startswith('GT'):
+		print( 'Unknown cmd [1]' )
+		continue
 
-	#------------------------------------------------------------------------------	
+	#------------------------------------------------------------------------------
 	dBase = datetime.datetime.now()
 	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
+	if not dBaseStart:
+		dBaseStart = dBase	# Record the first sent time to keep it as a basis for all transmitted times.
 
 	#------------------------------------------------------------------------------	
-	print( u'Send gettime data...' )
+	print( 'Send gettime data...' )
 	# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
-	message = u'GT0%02d%02d%02d%02d%s%s' % (
+	message = 'GT0{:02d}{:02d}{:02d}{:02d}{}{}'.format(
 		dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 100.0),
-		u' date={}'.format( dBase.strftime('%Y%m%d') ) if sendDate else u'',
+		' date={}'.format( dBase.strftime('%Y%m%d') ) if sendDate else '',
 		CR)
 	print( message[:-1] )
 	sock.send( message.encode() )
 
 	#------------------------------------------------------------------------------	
-	print( u'Waiting for send command from CrossMgr...' )
-	while 1:
-		received = sock.recv(1).decode()
-		if received == u'S':
-			while received[-1] != CR:
-				received += sock.recv(1).decode()
-			print( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
-			break
+	print( 'Waiting for send command from CrossMgr...' )
+	received, timedOut = getCmd( sock )
+	if timedOut:
+		print( 'Timed out [2]' )
+		continue
+	print('Received cmd: "{}" from CrossMgr'.format(received) )
+	if not received.startswith('S'):
+		print( 'Unknown cmd [2]' )
+		continue
 
 	#------------------------------------------------------------------------------	
-	print( u'Start sending data...' )
+	print( 'Sending data...' )
 
 	while iMessage < len(numLapTimes):
 		n, lap, t = numLapTimes[iMessage]
@@ -405,19 +425,19 @@ while 1:
 		
 		time.sleep( dt )
 		
-		message = formatMessage( n, lap, dBase + datetime.timedelta(seconds = t - 0.5) )
+		# Send offsets relative to the transmit start time.
+		message = formatMessage( n, lap, dBaseStart + datetime.timedelta(seconds = t - 0.5) )
 		if iMessage & 15 == 0:
-			print( u'sending: {}: {}\n'.format(iMessage, message[:-1]) )
+			print( 'sending: {}: {}\n'.format(iMessage, message[:-1]) )
 		try:
 			sock.send( message.encode() )
 			iMessage += 1
 		except:
-			print( u'Disconnected.  Attempting to reconnect...' )
+			print( 'Disconnected.  Attempting to reconnect...' )
 			break
 		
-		
 	if iMessage >= len(numLapTimes):
-		message = u'<<<GarbageTerminateMessage>>>' + CR
+		message = '<<<GarbageTerminateMessage>>>' + CR
 		sock.send( message.encode() )
 		break
 		

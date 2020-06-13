@@ -4,7 +4,6 @@ import math
 from math import radians, degrees, sin, cos, asin, sqrt, atan2, exp, modf, pi
 import bisect
 import sys
-import six
 import datetime
 import os
 import re
@@ -164,7 +163,7 @@ def ParseGpxFile( fname, useTimes = False, isPointToPoint = False ):
 def createAppendChild( doc, parent, name, textAttr={} ):
 	child = doc.createElement( name )
 	parent.appendChild( child )
-	for k, v in six.iteritems(textAttr):
+	for k, v in textAttr.items():
 		attr = doc.createElement( k )
 		if isinstance(v, float) and modf(v)[0] == 0.0:
 			v = int(v)
@@ -646,7 +645,7 @@ class GeoAnimation(wx.Control):
 			return
 		if tMax is None:
 			tMax = 0
-			for num, info in six.iteritems(self.data):
+			for num, info in self.data.items():
 				try:
 					tMax = max(tMax, info['raceTimes'][-1])
 				except IndexError:
@@ -722,7 +721,7 @@ class GeoAnimation(wx.Control):
 		"""
 		self.data = data if data else {}
 		self.categoryDetails = categoryDetails if categoryDetails else {}
-		for num, info in six.iteritems(self.data):
+		for num, info in self.data.items():
 			info['iLast'] = 1
 			if info['status'] == 'Finisher' and info['raceTimes']:
 				info['finishTime'] = info['raceTimes'][-1]
@@ -730,7 +729,7 @@ class GeoAnimation(wx.Control):
 				info['finishTime'] = info['lastTime']
 				
 		# Get the units.
-		for num, info in six.iteritems(self.data):
+		for num, info in self.data.items():
 			if info['status'] == 'Finisher':
 				try:
 					self.units = 'miles' if 'mph' in info['speed'] else 'km'
@@ -1001,7 +1000,7 @@ class GeoAnimation(wx.Control):
 		riderPosition = {}
 		if self.data:
 			riderXYPT = []
-			for num, d in six.iteritems(self.data):
+			for num, d in self.data.items():
 				xypt = list(self.getRiderXYPT(num))
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
@@ -1044,7 +1043,7 @@ class GeoAnimation(wx.Control):
 			
 		# Convert topFew from dict to list.
 		leaders = [0] * len(topFew)
-		for num, position in six.iteritems(topFew):
+		for num, position in topFew.items():
 			leaders[position] = num
 		
 		yTop = height - self.infoLines * tHeight
@@ -1139,7 +1138,7 @@ class GeoAnimation(wx.Control):
 		
 if __name__ == '__main__':
 	fname = r'C:\Projects\CrossMgr\bugs\Stuart\20160419-glenlyon\2016-04-19-WTNC Glenlyon 710-r2-Course.gpx'
-	six.print_( GpxHasTimes( fname ) )
+	print( GpxHasTimes( fname ) )
 	
 	data = {}
 	for num in range(100,200):
@@ -1161,7 +1160,7 @@ if __name__ == '__main__':
 	#geoTrack.read( 'Camp Arrowhead mtb GPS course.gpx' )
 	#geoTrack.read( 'Races/Midweek/Midweek_Learn_to_Race_and_Elite_Series_course.gpx' )
 	#geoTrack.reverse()
-	six.print_( 'Clockwise:', geoTrack.isClockwise() )
+	print( 'Clockwise:', geoTrack.isClockwise() )
 	
 	zf = zipfile.ZipFile( 'track.kmz', 'w', zipfile.ZIP_DEFLATED )
 	zf.writestr( 'track.kml', geoTrack.asKmlTour('Race Track') )

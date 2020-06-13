@@ -13,20 +13,24 @@ DEFAULT_HOST = None
 def GetDefaultHost():
 	global DEFAULT_HOST
 	DEFAULT_HOST = socket.gethostbyname(socket.gethostname())
-	if DEFAULT_HOST == '127.0.0.1':
+	if DEFAULT_HOST.startswith('127.0.'):
 		reSplit = re.compile('[: \t]+')
 		try:
 			co = subprocess.Popen(['ifconfig'], stdout = subprocess.PIPE)
-			ifconfig = co.stdout.read()
+			ifconfig = co.stdout.read().decode()
 			for line in ifconfig.split('\n'):
 				line = line.strip()
 				try:
-					if line.startswith('inet addr:'):
+					addr = None
+					if line.startswith('inet'):
+						fields = reSplit.split( line )
+						addr = fields[1]
+					elif line.startswith('inet addr:'):
 						fields = reSplit.split( line )
 						addr = fields[2]
-						if addr != '127.0.0.1':
-							DEFAULT_HOST = addr
-							break
+					if addr is not None and not addr.startswith('127.0.'):
+						DEFAULT_HOST = addr
+						break
 				except:
 					pass
 		except:

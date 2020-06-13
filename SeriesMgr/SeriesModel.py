@@ -87,10 +87,10 @@ class PointStructure( object ):
 		self.pointsForPlace = { 1:25, 2:20, 3:16, 4:13, 5:11, 6:10, 7:9, 8:8, 9:7, 10:6, 11:5, 12:4, 13:3, 14:2, 15:1 }
 	
 	def getStr( self ):
-		return ', '.join( str(points) for points in sorted(self.pointsForPlace.values(), reverse=True) )
+		return ', '.join( '{}'.format(points) for points in sorted(self.pointsForPlace.values(), reverse=True) )
 	
 	def getHtml( self ):
-		values = [(pos, points) for pos, points in six.iteritems(self.pointsForPlace)]
+		values = [(pos, points) for pos, points in self.pointsForPlace.items()]
 		values.sort()
 		
 		html = StringIO()

@@ -105,7 +105,7 @@ def gt( dt_str ):
 	us= int(us.rstrip("Z"), 10)
 	return dt + datetime.timedelta(microseconds=us)
 
-def writeRaceStart( t = None ):
+def writeRaceStart( t = None, isRestart = False ):
 	if t is None:
 		with Model.LockRace() as race:
 			if race and race.startTime:
@@ -115,7 +115,7 @@ def writeRaceStart( t = None ):
 	if not streamer:
 		StartStreamer()
 	if streamer:
-		q.put( 'start,{}\n'.format(t.isoformat()) )
+		q.put( '{},{}\n'.format('restart' if isRestart else 'start', t.isoformat()) )
 	ResetVersionRAM()
 	WsRefresh( updatePrevious = True )
 

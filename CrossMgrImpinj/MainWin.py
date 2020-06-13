@@ -410,7 +410,7 @@ class MainWin( wx.Frame ):
 		self.antennas = []
 		for i in range(4):
 			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
-			gs.Add( self.antennaLabels[-1], flag=wx.ALIGN_CENTER|wx.EXPAND )
+			gs.Add( self.antennaLabels[-1], wx.EXPAND )
 		for i in range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
@@ -434,7 +434,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( wx.StaticText(self, label=ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
-		if 'WXMAC' in wx.Platform:
+		if 'WXMAC' in wx.Platform or 'WXGTK' in wx.Platform:
 			self.impinjHostName = masked.TextCtrl( self,
 								defaultValue = '00-00-00',
 								useFixedWidthFont = True,

@@ -1,5 +1,4 @@
 import wx
-import io
 import os
 import six
 import math
@@ -16,22 +15,23 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 def DoChipImport(	fname, parseTagTime, startTime = None,
 					clearExistingData = True, timeAdjustment = None ):
 	
+	errors = []
+
 	race = Model.race
 	if race and race.isRunning():
 		Utils.MessageOK( Utils.getMainWin(), u'\n\n'.join( [_('Cannot Import into a Running Race.'), _('Wait until you have a complete data set, then import the full data into a New race.')] ),
 						title = _('Cannot Import into Running Race'), iconMask = wx.ICON_ERROR )
 		return
-	
+
 	# If startTime is None, the first time will be taken as the start time.
 	# All first time's for each rider will then be ignored.
 	
 	if timeAdjustment is None:
 		timeAdjustment = datetime.timedelta(seconds=0.0)
 	
-	errors = []
 	raceStart = None
 	
-	with io.open(fname, encoding='utf-8') as f, Model.LockRace() as race:
+	with open(fname) as f, Model.LockRace() as race:
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
 		JChip.reset( raceDate )
@@ -289,7 +289,7 @@ class ChipImportDialog( wx.Dialog ):
 		else:
 			if self.manualStartTime.IsChecked():
 				startSeconds = self.raceStartTime.GetSeconds()
-				seconds, fraction = math.modf( startSeconds )
+				fraction, seconds = math.modf( startSeconds )
 				seconds = int(seconds)
 				startTime = datetime.time( (seconds//(60*60))%24, (seconds//60)%60, seconds%60, int(fraction*1000000) )
 			else:

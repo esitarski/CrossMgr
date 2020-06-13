@@ -1,11 +1,10 @@
 import wx
 import io
-import six
 from Database import Database
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw
-StringIO = six.StringIO
 import io
+StringIO = io.StringIO
 
 def scaledBitmapfromJpg( jpg, scale ):
 	image = wx.Image( StringIO(jpg) if six.PY2 else io.BytesIO(jpg) )

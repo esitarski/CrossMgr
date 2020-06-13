@@ -45,7 +45,7 @@ def addToFGS( fgs, labelFieldBatchPublish ):
 
 class GeneralInfoProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(GeneralInfoProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		self.raceNameLabel = wx.StaticText( self, label=_('Event Name:') )
 		self.raceName = wx.TextCtrl( self )
@@ -187,7 +187,7 @@ class GeneralInfoProperties( wx.Panel ):
 
 class RaceOptionsProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(RaceOptionsProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		self.timeTrial = wx.CheckBox( self, label=_('Time Trial') )
 		self.timeTrial.Bind(wx.EVT_CHECKBOX, self.onChangeTimeTrial )
@@ -331,7 +331,7 @@ class RfidProperties( wx.Panel ):
 				_('Manual Start: Skip first tag read for all riders.') + u'  \n' + _('Required when start run-up passes the finish on the first lap.')]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(RfidProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Use RFID Reader') )
 
 		self.chipTimingOptions = wx.RadioBox(
@@ -402,7 +402,7 @@ class RfidProperties( wx.Panel ):
 class WebProperties( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(WebProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 
 		fgs = wx.FlexGridSizer( rows=0, cols=2, vgap=7, hgap=6 )
 		fgs.AddGrowableCol( 1 )
@@ -514,7 +514,7 @@ class WebProperties( wx.Panel ):
 class GPXProperties( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(GPXProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		fgs = wx.FlexGridSizer( rows=0, cols=4, vgap=7, hgap=6 )
 		fgs.AddGrowableCol( 1 )
@@ -648,7 +648,7 @@ class CameraProperties( wx.Panel ):
 	advanceMin, advanceMax = -2000, 2000
 	
 	def __init__( self, parent, id=wx.ID_ANY ):
-		super(CameraProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		choices = [
 			_("Do Not Use Camera for Photo Finish"),
@@ -793,7 +793,7 @@ class CameraProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 class AnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(AnimationProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		self.note = wx.StaticText( self, label=u'\n'.join ([
 				_('This only applies to the Track animation.'),
@@ -824,7 +824,7 @@ class AnimationProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 class TeamResultsProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(TeamResultsProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		self.teamRankOptionLabel = wx.StaticText( self, label=_('Team Rank Criteria') )
 		choices = [
@@ -893,7 +893,7 @@ class TeamResultsProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 class BatchPublishProperties( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, testCallback=None, ftpCallback=None ):
-		super(BatchPublishProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 
 		self.testCallback = testCallback
 		self.ftpCallback = ftpCallback
@@ -1082,7 +1082,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 		if not silent:
 			class FtpThread( threading.Thread ):
 				def __init__(self, ftpFiles, progressDialog):
-					super( FtpThread, self ).__init__()
+					super().__init__()
 					self.ftpFiles = ftpFiles
 					self.progressDialog = progressDialog
 					self.e = None
@@ -1130,7 +1130,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 
 class BatchPublishPropertiesDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
-		super(BatchPublishPropertiesDialog, self).__init__( parent, id, _("Batch Publish Results"),
+		super().__init__( parent, id, _("Batch Publish Results"),
 					style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 					
 		self.batchPublishProperties = BatchPublishProperties(self, testCallback=self.commit, ftpCallback=self.onToggleFtp)
@@ -1190,7 +1190,7 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class NotesProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(NotesProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
@@ -1243,7 +1243,7 @@ class NotesProperties( wx.Panel ):
 #------------------------------------------------------------------------------------------------
 class FilesProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(FilesProperties, self).__init__( parent, id )
+		super().__init__( parent, id )
 		
 		self.fileNameLabel = wx.StaticText( self, label=_('File Name') )
 		self.fileName = wx.StaticText( self )
@@ -1305,7 +1305,7 @@ class Properties( wx.Panel ):
 	dateFormat = '%Y-%m-%d'
 
 	def __init__( self, parent, id=wx.ID_ANY, addEditButton=True ):
-		super(Properties, self).__init__(parent, id)
+		super().__init__(parent, id)
 		
 		self.state = RaceInputState()
 		
@@ -1592,7 +1592,7 @@ class PropertiesDialog( wx.Dialog ):
 			updateProperties = False,
 		):
 
-		super( PropertiesDialog, self ).__init__( parent, ID, title=title, size=size, pos=pos, style=style )
+		super().__init__( parent, ID, title=title, size=size, pos=pos, style=style )
 		
 		self.properties = Properties( self, addEditButton=False )
 		

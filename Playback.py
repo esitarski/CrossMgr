@@ -8,7 +8,7 @@ now = datetime.datetime.now
 
 class Playback( threading.Thread ):
 	def __init__( self, bibTimes, updateFunc ):
-		super( Playback, self ).__init__( name='Playback' )
+		super().__init__( name='Playback' )
 		self.bibTimes = bibTimes
 		self.updateFunc = updateFunc
 		self.daemon = True

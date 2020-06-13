@@ -386,8 +386,10 @@ class Actions( wx.Panel ):
 		dlg.ShowModal()
 		dlg.Destroy()  
 	
-	def onFinishRace( self, event ):
-		if Model.race is None or not Utils.MessageOKCancel(self, _('Finish Race Now?'), _('Finish Race')):
+	def onFinishRace( self, event, confirm=True ):
+		if Model.race is None:
+			return
+		if confirm and not Utils.MessageOKCancel(self, _('Finish Race Now?'), _('Finish Race')):
 			return
 			
 		with Model.LockRace() as race:

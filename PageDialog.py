@@ -11,7 +11,7 @@ class PageDialog( wx.Dialog ):
 
 		if size == wx.DefaultSize:
 			size = tuple( int(v*0.5) for v in wx.GetDisplaySize() )
-		super( PageDialog, self ).__init__( parent, ID, title=title, size=size, pos=pos, style=style )
+		super().__init__( parent, ID, title=title, size=size, pos=pos, style=style )
 		
 		# Set the upper left icon.
 		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CrossMgr16x16.ico'), wx.BITMAP_TYPE_ICO )

@@ -551,12 +551,12 @@ def ordinal( value ):
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
 	}.get( lang[:2], lambda v: u'{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
 
-def getHomeDir():
+def getHomeDir( appName='CrossMgr' ):
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
 	try:
-		if os.path.basename(homedir) == '.CrossMgr':
-			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
+		if os.path.basename(homedir) == '.{}'.format(appName):
+			homedir = os.path.join( os.path.dirname(homedir), '.{}App'.format(appName) )
 	except:
 		pass
 	if not os.path.exists(homedir):
@@ -603,12 +603,8 @@ def writeLog( message ):
 		pass
 
 def disable_stdout_buffering():
-	fileno = sys.stdout.fileno()
-	temp_fd = os.dup(fileno)
-	sys.stdout.close()
-	os.dup2(temp_fd, fileno)
-	os.close(temp_fd)
-	sys.stdout = os.fdopen(fileno, "w")
+	# No longer necessary as if output goes to the terminal it will be flushed if it ends in newline.
+	''' sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) '''
 
 def logCall( f ):
 	def _getstr( x ):
@@ -710,7 +706,13 @@ def LayoutChildResize( child ):
 		if parent.IsTopLevel():
 			break
 		parent = parent.GetParent()
-		
+
+def LayoutChildren( sizer ):
+	for c in sizer.GetChildren():
+		if isinstance(c, wx.Sizer):
+			LayoutDescending( c )
+	sizer.Layout()
+
 def GetPngBitmap( fname ):
 	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )
 			
@@ -821,8 +823,28 @@ import json
 def ToJson( v, separators=(',',':') ):
 	''' Make sure we always return a unicode string. '''
 	return json.dumps( v, separators=separators )
+	
+def call_tracer( frame, event, arg ):
+	if event != 'call':
+		return
+	co = frame.f_code
+	func_name = co.co_name
+	if func_name == 'write':
+		# Ignore write() calls from print statements
+		return
+	func_line_no = frame.f_lineno
+	func_filename = co.co_filename
+	caller = frame.f_back
+	caller_line_no = caller.f_lineno
+	caller_filename = caller.f_code.co_filename
+	print( 'Call to {} on line {} of {} from line {} of {}'.format(
+			func_name, func_line_no, func_filename,
+			caller_line_no, caller_filename,
+		)
+	)
 
 if __name__ == '__main__':
+	sys.settrace( call_tracer )
 	initTranslation()
 	app = wx.App(False)
 	

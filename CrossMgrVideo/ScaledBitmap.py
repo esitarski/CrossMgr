@@ -1,5 +1,4 @@
 import wx
-import six
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -11,7 +10,7 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 
 class ScaledBitmap( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, bitmap=None, drawFinishLine=False, inset=False ):
-		super(ScaledBitmap, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		self.bitmap = bitmap
 		self.drawFinishLine = drawFinishLine
@@ -173,8 +172,8 @@ class ScaledBitmap( wx.Panel ):
 		
 		wTile = tile.GetWidth()
 		hTile = tile.GetHeight()
-		for y in six.moves.range( 0, height, hTile ):
-			for x in six.moves.range( 0, width, wTile ):
+		for y in range( 0, height, hTile ):
+			for x in range( 0, width, wTile ):
 				dc.DrawBitmap( tile, x, y )
 		self.Refresh()
 		

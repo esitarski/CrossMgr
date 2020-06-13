@@ -379,7 +379,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		
 	info = excelLink.read()
 	
-	for num, data in six.iteritems(info):
+	for num, data in info.items():
 		try:
 			startTime = data['StartTime']
 		except KeyError:
@@ -411,7 +411,7 @@ def DoImportTTStartTimes( race, excelLink ):
 	changeCount = 0
 	if startTimes:
 		undo.pushState()
-		for num, startTime in six.iteritems(startTimes):
+		for num, startTime in startTimes.items():
 			rider = race.getRider( num )
 			
 			# Compute the time change difference.
