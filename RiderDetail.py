@@ -1468,7 +1468,6 @@ class RiderDetail( wx.Panel ):
 		if self.firstCall:
 			self.firstCall = False
 			self.splitter.SetSashPosition( 300 )
-		self.hs.RecalcSizes()
 		self.hs.Layout()
 		self.grid.FitInside()
 		
@@ -1529,8 +1528,8 @@ class RiderDetailDialog( wx.Dialog ):
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.AddStretchSpacer()
-		hs.Add( self.commitBtn, flag=wx.ALIGN_RIGHT )
-		hs.Add( self.closeBtn, flag=wx.LEFT|wx.ALIGN_RIGHT, border=32 )
+		hs.Add( self.commitBtn )
+		hs.Add( self.closeBtn, flag=wx.LEFT, border=32 )
 		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizerAndFit(vs)

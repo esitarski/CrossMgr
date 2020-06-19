@@ -142,8 +142,8 @@ class Gantt( wx.Panel ):
 				(None, None, None, None),
 				(_('Show Lap Details') + u'...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None),
-				(_('RiderDetail'),				_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
-				(_('Results'), 					_('Switch to Results tab'),		self.OnPopupResults, allCases),
+				(_('RiderDetail') + u'...',			_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
+				(_('Results'), 						_('Switch to Results tab'),		self.OnPopupResults, allCases),
 			]
 			
 			self.splitMenuInfo = [
