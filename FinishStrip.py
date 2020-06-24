@@ -174,7 +174,7 @@ class FinishStrip( wx.Panel ):
 			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_HIGH )
 			bitmaps[t] = image.ConvertToBitmap()
 		
-		self.timeBitmaps = [(t, bm) for t, bm in six.iteritems(bitmaps)]
+		self.timeBitmaps = [(t, bm) for t, bm in bitmaps.items()]
 		self.timeBitmaps.sort( key=operator.itemgetter(0) )
 		
 	def OnErase( self, event ):
@@ -323,7 +323,7 @@ class FinishStrip( wx.Panel ):
 				bmLeftEdge.append( (bm, xLeft) )
 			bmLeftEdge.append( (None, widthWin) )
 			
-			for i in six.moves.range(0, len(bmLeftEdge)-1):
+			for i in range(0, len(bmLeftEdge)-1):
 				bm, xLeft = bmLeftEdge[i]
 				bmNext, xLeftNext = bmLeftEdge[i+1]
 				bmWidth = max( xLeftNext - xLeft, widthPhoto )
@@ -624,7 +624,7 @@ def ShowFinishStrip( parent, t=None ):
 	if t is not None:
 		fsd.SetT( t )
 	fsd.ShowModal()
-	for attr, value in six.iteritems(fsd.GetAttrs()):
+	for attr, value in fsd.GetAttrs().items():
 		setattr( race, attr, value )
 	fsd.Destroy()
 

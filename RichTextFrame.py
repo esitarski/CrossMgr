@@ -488,7 +488,7 @@ class RichTextFrame(wx.Frame):
 
 		
 	def OnFileSave(self, evt):
-		six.print_( self.GetValue() )
+		print( self.GetValue() )
 		'''
 		if not self.rtc.GetFilename():
 			self.OnFileSaveAs(evt)

@@ -1,4 +1,3 @@
-import six
 import json
 import Utils
 import Model
@@ -140,7 +139,7 @@ class Template( object ):
 			return
 		geoTrack = None
 		firstLapDistance = None
-		for attr, value in six.iteritems(self.template):
+		for attr, value in self.template.items():
 			if attr not in self.templateAttributes:
 				continue
 			if attr == 'course':

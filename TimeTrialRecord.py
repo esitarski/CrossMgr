@@ -2,7 +2,6 @@ import wx
 import wx.grid			as gridlib
 from wx.lib import masked
 import wx.lib.buttons
-import six
 import math
 import Model
 import Utils

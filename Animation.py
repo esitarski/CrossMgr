@@ -1,5 +1,4 @@
 import wx
-import six
 import random
 import math
 import bisect
@@ -154,7 +153,7 @@ class Animation(wx.Control):
 			return
 		if tMax is None:
 			tMax = 0
-			for num, info in six.iteritems(self.data):
+			for num, info in self.data.items():
 				try:
 					tMax = max(tMax, info['raceTimes'][-1])
 				except IndexError:
@@ -229,7 +228,7 @@ class Animation(wx.Control):
 		"""
 		self.data = data if data else {}
 		self.categoryDetails = categoryDetails if categoryDetails else {}
-		for num, info in six.iteritems(self.data):
+		for num, info in self.data.items():
 			info['iLast'] = 1
 			if info['status'] == 'Finisher' and info['raceTimes']:
 				info['finishTime'] = info['raceTimes'][-1]
@@ -237,7 +236,7 @@ class Animation(wx.Control):
 				info['finishTime'] = info['lastTime']
 				
 		# Get the units.
-		for num, info in six.iteritems(self.data):
+		for num, info in self.data.items():
 			if info['status'] == 'Finisher':
 				try:
 					self.units = 'miles' if 'mph' in info['speed'] else 'km'
@@ -460,7 +459,7 @@ class Animation(wx.Control):
 		riderPosition = {}
 		if self.data:
 			riderXYPT = []
-			for num, d in six.iteritems(self.data):
+			for num, d in self.data.items():
 				xypt = list(self.getRiderXYPT(num, num % self.laneMax))
 				xypt.insert( 0, num )
 				riderXYPT.append( xypt )
@@ -501,7 +500,7 @@ class Animation(wx.Control):
 			
 		# Convert topThree from dict to list.
 		leaders = [0] * len(topThree)
-		for num, position in six.iteritems(topThree):
+		for num, position in topThree.items():
 			leaders[position] = num
 			
 		# Draw the current lap

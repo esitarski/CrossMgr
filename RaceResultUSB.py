@@ -326,7 +326,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 				lines = ret.split( EOL )
 				count = int( lines[0].split(';')[1], 16 )
 			
-				for i in six.moves.range( count ):
+				for i in range( count ):
 					line = lines[i+1]
 					if not line:
 						continue
@@ -375,7 +375,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in six.moves.range(32):
+		for i in range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None

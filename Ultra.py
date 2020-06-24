@@ -272,7 +272,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in six.moves.range(32):
+		for i in range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None

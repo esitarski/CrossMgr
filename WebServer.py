@@ -212,7 +212,7 @@ class ContentBuffer( object ):
 	
 	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
-			six.iteritems(self.fileCache),
+			self.fileCache/items(),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
 		) if not (fname.endswith('_TTCountdown.html') or fname.endswith('_TTStartList.html'))]
 	
@@ -313,7 +313,7 @@ def getQRCodePage( urlPage ):
 	qr.add_data( urlPage )
 	qr.make()
 	qrcode = '["' + '",\n"'.join(
-		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in six.moves.range(qr.modules_count)]
+		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in range(qr.modules_count)]
 	) + '"]'
 	
 	result = StringIO()
@@ -666,7 +666,7 @@ def WsLapCounterRefresh():
 			
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )
-	six.print_( 'Started httpserver on port ' , PORT_NUMBER )
+	print( 'Started httpserver on port ' , PORT_NUMBER )
 	try:
 		time.sleep( 10000 )
 	except KeyboardInterrupt:

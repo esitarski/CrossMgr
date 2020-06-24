@@ -1,5 +1,4 @@
 import wx
-import six
 import random
 import math
 import sys
@@ -166,7 +165,7 @@ class GanttChartPanel(wx.Panel):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = [six.text_type(lab) for lab in labels]
+				self.labels = ['{}'.format(lab) for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):

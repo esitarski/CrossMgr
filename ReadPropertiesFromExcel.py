@@ -1,5 +1,4 @@
 import re
-import six
 import sys
 import Utils
 import Model
@@ -60,13 +59,13 @@ def ReadPropertiesFromExcel( reader ):
 					headerMap[v] = c
 			continue
 		
-		for h, c in six.iteritems(headerMap):
+		for h, c in headerMap.items():
 			a = AttributeFromHeader[h]
 			
 			v = row[c]
 			t = FieldType[a]
 			if t == 's':
-				v = six.text_type(v)
+				v = '{}'.format(v)
 			elif t == 'b':
 				v = bool(v)
 			elif t == 'n':

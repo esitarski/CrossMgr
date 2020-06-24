@@ -24,7 +24,7 @@ class ThreadPoolMixIn(ThreadingMixIn):
 
 	def start_workers(self, n):
 		"""Start n workers."""
-		for i in six.moves.range(n):
+		for i in range(n):
 			t = threading.Thread(target = self.worker)
 			t.daemon = True
 			t.start()

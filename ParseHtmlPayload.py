@@ -88,10 +88,10 @@ if __name__ == '__main__':
 	result = ParseHtmlPayload( htmlFile )
 	if result['success']:
 		payload = result['payload']
-		six.print_(  payload['raceScheduledStart'] )
+		print(  payload['raceScheduledStart'] )
 		catDetails = payload['catDetails']
 		catDetails.sort( key=lambda c: (c['startOffset'], c['name']) )
 		for c in catDetails:
 			if c['name'] != 'All':
-				six.print_(  c['name'], c['startOffset'] )
-		six.print_( payload['logoSrc'] )
+				print(  c['name'], c['startOffset'] )
+		print( payload['logoSrc'] )

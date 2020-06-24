@@ -2,7 +2,6 @@ import re
 import wx
 import wx.lib.intctrl
 import os
-import six
 import itertools
 import Utils
 from DNSManager import AutoWidthListCtrl
@@ -167,7 +166,7 @@ class CategoryPredicate( object ):
 							
 					except Exception as e:
 						# Ignore any parsing errors.
-						six.print_( e )
+						print( e )
 						
 				self.intervals.sort()
 

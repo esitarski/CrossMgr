@@ -1,5 +1,4 @@
 import os
-import six
 import json
 import socket
 import datetime
@@ -92,15 +91,15 @@ def SendRenameRequests( bibRaceSeconds ):
 	return
 	
 if __name__ == '__main__':
-	six.print_( getFtpInfo( None ) )
+	print( getFtpInfo( None ) )
 	
 	race = Model.newRace()
 	race._populate()
 
-	six.print_( getFtpInfo( race ) )
+	print( getFtpInfo( race ) )
 	
 	race.ftpHost = 'ftpHost'
 	race.ftpUser = 'ftpUser'
 	race.ftpPassword = 'ftpPassword'
 	race.ftpPhotoPath = 'ftpPhotoPath'
-	six.print_( getFtpInfo( race ) )
+	print( getFtpInfo( race ) )

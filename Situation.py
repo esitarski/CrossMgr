@@ -69,7 +69,7 @@ def GetLeaderGap( t, leaderPosition, leaderSpeed, leaderRaceTimes, riderPosition
 		return None, len(riderRaceTimes) - len(leaderRaceTimes)
 	
 	positionFraction = math.modf( 1000 + leaderPosition - riderPosition )[0]
-	# six.print_( 'leaderPosition:', leaderPosition, 'riderPosition:', riderPosition, 'positionFraction:', positionFraction, 'lapsDown:', int(leaderPosition - riderPosition) )
+	# print( 'leaderPosition:', leaderPosition, 'riderPosition:', riderPosition, 'positionFraction:', positionFraction, 'lapsDown:', int(leaderPosition - riderPosition) )
 	return positionFraction / leaderSpeed, int(riderPosition - leaderPosition)
 
 def GetSituationGaps( category=None, t=None ):
@@ -93,11 +93,11 @@ def GetSituationGaps( category=None, t=None ):
 	if not raceTimes:
 		return []
 	
-	t = min( t, max(rt[-1] for rt in six.itervalues(raceTimes)) )
+	t = min( t, max(rt[-1] for rt in raceTimes.values()) )
 	
 	psLeader = (-1, -1, None)
 	positionSpeeds = []
-	for bib, rt in six.iteritems(raceTimes):
+	for bib, rt in raceTimes.items():
 		position, speed = GetPositionSpeed(t, rt)
 		positionSpeeds.append( (position, speed, bib) )
 		if positionSpeeds[-1][0] > psLeader[0]:
@@ -118,7 +118,7 @@ def GetSituationGaps( category=None, t=None ):
 			bibStr = u'\u2198{}'.format(bib)
 		else:
 			lapsDownStr = u''
-			bibStr = six.text_type(bib)
+			bibStr = '{}'.format(bib)
 		return u''.join([bibStr, nameStr, lapsDownStr])
 	
 	gaps = []
@@ -669,7 +669,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 				return u', '.join( n for n in [info.get('LastName','').upper(), info.get('FirstName', '')] if n )
 			externalFields = [f if f != 'LastName' else 'Name' for f in externalFields if f != 'FirstName']
 			externalInfo = { num : externalInfo[num].copy() for num in nums }
-			for num, info in six.iteritems(externalInfo):
+			for num, info in externalInfo.items():
 				info['Name'] = GetName(info)
 		
 		# Add the laps down if necessary.
@@ -680,12 +680,12 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			except ValueError:
 				externalFields.append( LapsDown )
 			
-			for num, info in six.iteritems(externalInfo):
+			for num, info in externalInfo.items():
 				info[LapsDown] = lapsDown.get(num, u'')
 				
 		# Add the sequence number.
 		Sequence = 'Seq'
-		for num, info in six.iteritems(externalInfo):
+		for num, info in externalInfo.items():
 			info[Sequence] = sequence[num]
 		externalFields.insert( 0, Sequence )
 			
@@ -702,7 +702,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		for row, d in enumerate(data):
 			index = self.list.InsertItem(999999, u'{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
-				self.list.SetItem( index, i+1, six.text_type(v) )
+				self.list.SetItem( index, i+1, '{}'.format(v) )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
 		
 		# Set the sort fields and configure the sorter mixin.
@@ -918,7 +918,7 @@ if __name__ == '__main__':
 		race.resetAllCaches()
 		SyncExcelLink( race )
 	except Exception as e:
-		six.print_(  e )
+		print(  e )
 		Model.setRace( Model.Race() )
 		race = Model.getRace()
 		race._populate()
@@ -940,7 +940,7 @@ if __name__ == '__main__':
 		race.resetAllCaches()
 		SyncExcelLink( race )
 	except Exception as e:
-		six.print_( e )
+		print( e )
 		Model.setRace( Model.Race() )
 		race = Model.getRace()
 		race._populate()

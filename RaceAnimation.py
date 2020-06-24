@@ -1,5 +1,4 @@
 import wx
-import six
 import Utils
 import Model
 import string
@@ -91,7 +90,7 @@ class RaceAnimation( wx.Panel ):
 		hs.Add(self.playbackSpeed, 0, flag=wx.ALIGN_CENTER|wx.ALL, border=2 )
 		
 		self.speed = []
-		for i in six.moves.range(5):
+		for i in range(5):
 			b = wx.RadioButton( self, name='PlaybackSpeed' )
 			self.speed.append( b )
 			self.Bind( wx.EVT_RADIOBUTTON, self.onPlaybackSpeed, b )
@@ -240,7 +239,7 @@ class RaceAnimation( wx.Panel ):
 		if not animationData:
 			return 0
 		t = 999999
-		for info in six.itervalues(animationData):
+		for info in animationData.values():
 			try:
 				t = min( t, info['raceTimes'][0] )
 			except:

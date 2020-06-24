@@ -45,7 +45,6 @@
 
 import os
 import wx
-import six
 
 #---------------------------------------------------------------------------
 
@@ -621,7 +620,7 @@ class ImageDialog(wx.Dialog):
         if len(self.fl_list):
             self.tb.Set(self.fl_list)
 
-            for idir in six.moves.range(self.fl_ndirs):
+            for idir in range(self.fl_ndirs):
                 d = self.fl_list[idir]
                 # mark directories as 'True' with client data
                 self.tb.SetClientData(idir, True)
