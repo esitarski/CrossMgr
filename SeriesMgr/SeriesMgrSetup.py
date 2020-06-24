@@ -1,6 +1,5 @@
 from distutils.core import setup
 import os
-import six
 import shutil
 import zipfile
 import sys
@@ -115,11 +114,11 @@ def make_inno_version():
 		'VersionInfoVersion':	AppVerName.split()[1],
 	}
 	with open('inno_setup.txt', 'w') as f:
-		for k, v in six.iteritems(setup):
+		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
 make_inno_version()
 cmd = '"' + inno + '" ' + 'SeriesMgr.iss'
-six.print_( cmd )
+print( cmd )
 os.system( cmd )
 
 # Create versioned executable.
@@ -133,7 +132,7 @@ except:
 	pass
 	
 shutil.copy( os.path.join('install', 'SeriesMgr_Setup.exe'), os.path.join('install', newExeName) )
-six.print_( 'executable copied to: ' + newExeName )
+print( 'executable copied to: ' + newExeName )
 
 # Create compressed executable.
 os.chdir( 'install' )
@@ -148,13 +147,13 @@ except:
 z = zipfile.ZipFile(newZipName, "w")
 z.write( newExeName )
 z.close()
-six.print_( 'executable compressed.' )
+print( 'executable compressed.' )
 
 shutil.copy( newZipName, googleDrive  )
 
 from virus_total_apis import PublicApi as VirusTotalPublicApi
 API_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
 vt = VirusTotalPublicApi(API_KEY)
-six.print_( 'VirusTotal Scan' )
+print( 'VirusTotal Scan' )
 vt.scan_file( os.path.abspath(newExeName) )
 

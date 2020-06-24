@@ -895,13 +895,13 @@ class Results(wx.Panel):
 		self.setColNames( headerNames )
 		
 		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
-			self.grid.SetCellValue( row, 0, six.text_type(row+1) )
-			self.grid.SetCellValue( row, 1, six.text_type(name or u'') )
+			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
+			self.grid.SetCellValue( row, 1, '{}'.format(name or u'') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			self.grid.SetCellValue( row, 2, six.text_type(license or u'') )
-			self.grid.SetCellValue( row, 3, six.text_type(team or u'') )
-			self.grid.SetCellValue( row, 4, six.text_type(points) )
-			self.grid.SetCellValue( row, 5, six.text_type(gap) )
+			self.grid.SetCellValue( row, 2, '{}'.format(license or u'') )
+			self.grid.SetCellValue( row, 3, '{}'.format(team or u'') )
+			self.grid.SetCellValue( row, 4, '{}'.format(points) )
+			self.grid.SetCellValue( row, 5, '{}'.format(gap) )
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 6 + q,
 					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints

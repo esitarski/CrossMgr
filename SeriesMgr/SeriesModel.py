@@ -324,7 +324,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in six.iteritems(dNew):
+		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
 				if aliases:
@@ -333,7 +333,7 @@ class SeriesModel( object ):
 				changed = True
 				updated = True
 	
-		for name, aliases in six.iteritems(dExisting):
+		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
 				if aliases:
@@ -358,7 +358,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in six.iteritems(dNew):
+		for name, aliases in dNew,items():
 			if name not in dExisting:
 				changed = True
 				if aliases:
@@ -367,7 +367,7 @@ class SeriesModel( object ):
 				changed = True
 				updated = True
 	
-		for name, aliases in six.iteritems(dExisting):
+		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
 				if aliases:
@@ -393,7 +393,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in six.iteritems(dNew):
+		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
 				if aliases:
@@ -402,7 +402,7 @@ class SeriesModel( object ):
 				changed = True
 				updated = True
 	
-		for name, aliases in six.iteritems(dExisting):
+		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
 				if aliases:
@@ -439,7 +439,7 @@ class SeriesModel( object ):
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
 		if self.categorySequence or not isinstance(self.categories, dict):
-			self.categories = {name:Category(name, i, name not in self.categoryHide) for name, i in six.iteritems(categorySequence) }
+			self.categories = {name:Category(name, i, name not in self.categoryHide) for name, i in categorySequence.items() }
 			self.categorySequence = {}
 			self.categoryHide = {}
 	
