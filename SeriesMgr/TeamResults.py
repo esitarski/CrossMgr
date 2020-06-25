@@ -4,8 +4,7 @@ import wx.grid as gridlib
 import os
 import io
 import cgi
-import six
-from six.moves.urllib.parse import quote
+from urllib.parse import quote
 import sys
 import urllib
 import base64
@@ -112,7 +111,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
 	def write( s ):
-		html.write( six.text_type(s) )
+		html.write( '{}'.format(s) )
 	
 	with tag(html, 'html'):
 		with tag(html, 'head'):

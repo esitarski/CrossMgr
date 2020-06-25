@@ -3,12 +3,11 @@ import glob
 import os
 import re
 import io
-import six
 import base64
 import zipfile
 import shutil
 import datetime
-StringIO = six.moves.StringIO
+from io import StringIO
 from contextlib import contextmanager
 
 HtmlDocFolder = 'SeriesMgrHtmlDoc'
@@ -55,7 +54,7 @@ def CompileHelp( dir = '.' ):
 				doNothing = False
 				break
 		if doNothing:
-			six.print_( 'Nothing to do.' )
+			print( 'Nothing to do.' )
 			return
 	
 		md = markdown.Markdown(
@@ -79,7 +78,7 @@ def CompileHelp( dir = '.' ):
 			links = f.read()
 			
 		for fname in glob.glob("./*.txt"):
-			six.print_( fname, '...' )
+			print( fname, '...' )
 			with io.open(fname, 'r') as f:
 				input = StringIO()
 				input.write( links )

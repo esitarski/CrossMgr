@@ -1,4 +1,3 @@
-import six
 import types
 import datetime
 

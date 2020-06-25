@@ -1,10 +1,9 @@
-import six
-import socket
-import struct
 import sys
 import time
 import json
-from six.moves.queue import Queue, Empty
+import socket
+import struct
+from queue import Queue, Empty
 from collections import deque
 import threading
 from datetime import datetime, timedelta

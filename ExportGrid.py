@@ -1,7 +1,6 @@
 import wx
 import os
 import re
-import six
 import xlwt
 import xlsxwriter
 import uuid
@@ -13,7 +12,7 @@ from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import ReportFields
 from FitSheetWrapper import FitSheetWrapper, FitSheetWrapperXLSX
 import qrcode
-from six.moves.urllib.parse import quote
+from urllib.parse import quote
 import Flags
 import ImageIO
 

@@ -1,11 +1,10 @@
 import io
 import os
-import six
 import time
 import atexit
 import datetime
 import threading
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 
 import Utils
 import Model

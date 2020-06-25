@@ -1,9 +1,8 @@
 import wx
-import six
 import time
 import datetime
 import threading
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 import Utils
 import Model
 from PhotoFinish import SnapPhoto

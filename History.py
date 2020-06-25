@@ -1,7 +1,6 @@
 import wx
 import os
 import re
-import six
 import sys
 from string import Template
 import operator
@@ -448,7 +447,7 @@ class History( wx.Panel ):
 		
 		Finisher = Model.Rider.Finisher
 		results = GetResults( category )
-		lapsDown = { rr.num:rr.gap for rr in results if six.text_type(rr.gap).startswith('-') }
+		lapsDown = { rr.num:rr.gap for rr in results if '{}'.format(rr.gap).startswith('-') }
 		position = { rr.num:pos for pos, rr in enumerate(results, 1) if rr.status == Finisher }
 		winnerLaps = None
 		if results and results[0].status == Finisher:
@@ -484,7 +483,7 @@ class History( wx.Panel ):
 		
 		if isTimeTrial:
 			entries = [Model.Entry(e.num, e.lap, (race.riders[e.num].firstTime or 0.0) + e.t, e.interp) for e in entries]
-			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), (r.firstTime or 0.0) > tRace) for r in six.itervalues(race.riders)] )
+			entries.extend( [Model.Entry(r.num, 0, (race.riders[r.num].firstTime or 0.0), (r.firstTime or 0.0) > tRace) for r in race.riders.values()] )
 			entries.sort( key = operator.attrgetter('t', 'num') )
 		
 		# Collect the number and times for all entries so we can compute lap times.
@@ -608,7 +607,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	for i, rider in enumerate(six.itervalues(Model.getRace().riders)):
+	for i, rider in enumerate(Model.getRace().riders.values()):
 		rider.firstTime = i * 30.0
 	Model.getRace().isTimeTrial = True
 	history = History(mainWin)

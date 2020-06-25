@@ -1,5 +1,4 @@
 import sys
-import six
 import collections
 from netifaces import interfaces, ifaddresses, AF_INET
 
@@ -100,11 +99,12 @@ lang = (lang or 'en')[:2]
 # Setup translation.
 #
 import sys
+import builtins
 from Version import AppVerName
 import gettext
 initTranslationCalled = False
 translate = None
-six.moves.builtins.__dict__['_'] = translate = lambda s: s
+builtins.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
 	global translate
@@ -121,7 +121,7 @@ def initTranslation():
 		try:
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
-			six.moves.builtins.__dict__['_'] = translate = translation.ugettext
+			builtins.__dict__['_'] = translate = translation.ugettext
 		except:
 			pass
 		
@@ -135,10 +135,10 @@ initTranslation()
 class SuspendTranslation( object ):
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
-		self._Save = six.moves.builtins.__dict__['_']
-		six.moves.builtins.__dict__['_'] = lambda x: x
+		self._Save = builtins.__dict__['_']
+		builtins.__dict__['_'] = lambda x: x
 	def __exit__(self, type, value, traceback):
-		six.moves.builtins.__dict__['_'] = self._Save
+		builtins.__dict__['_'] = self._Save
 
 class UIBusy( object ):
 	def __enter__(self):

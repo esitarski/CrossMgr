@@ -3,10 +3,9 @@ import wx.lib.intctrl
 import io
 import os
 import sys
-import six
 import webbrowser
 import ftputil
-from six.moves.urllib.parse import quote
+from urllib.parse import quote
 import datetime
 import threading
 import Utils

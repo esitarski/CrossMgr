@@ -3,19 +3,18 @@ import wx
 import os
 import io
 import sys
-import six
 import time
 import threading
 import traceback
 import webbrowser
-StringIO = six.StringIO
-from six.moves.urllib.request import url2pathname
-from six.moves.urllib.parse import urlparse
+from io import StringIO
+from urllib.request import url2pathname
+from urllib.parse import urlparse
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
 import wx.html as html
 import wx.lib.wxpTag
-from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 PORT_NUMBER = 8761
 

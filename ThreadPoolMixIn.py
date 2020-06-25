@@ -1,7 +1,6 @@
-import six
-from six.moves.socketserver import ThreadingMixIn
+from socketserver import ThreadingMixIn
 import threading
-Queue = six.moves.queue
+from queue import Queue, Empty
 
 class ThreadPoolMixIn(ThreadingMixIn):
 	"""Mix-in class to handle requests in a thread pool.
@@ -13,7 +12,7 @@ class ThreadPoolMixIn(ThreadingMixIn):
 	def init_thread_pool(self, min_workers = 5,
 						 max_workers = 200, min_spare_workers = 20):
 		"""Initialize thread pool."""
-		self.q = Queue.Queue()
+		self.q = Queue()
 		self.min_workers = min_workers
 		self.max_workers = max_workers
 		self.min_spare_workers = min_spare_workers

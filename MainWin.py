@@ -1,18 +1,7 @@
-# -*- coding: utf-8 -*-
-import wx
-import wx.adv as adv
-from wx.lib.wordwrap import wordwrap
-import wx.lib.imagebrowser as imagebrowser
-import wx.lib.agw.flatnotebook as flatnotebook
-import six
 import os
 import re
 import io
 import sys
-if six.PY2:
-	from cgi import escape
-else:
-	from html import escape
 import time
 import copy
 import json
@@ -25,7 +14,14 @@ import webbrowser
 import platform
 import zipfile
 import hashlib
-from six.moves.urllib.parse import quote
+
+import wx
+import wx.adv as adv
+from wx.lib.wordwrap import wordwrap
+import wx.lib.imagebrowser as imagebrowser
+import wx.lib.agw.flatnotebook as flatnotebook
+from html import escape
+from urllib.parse import quote
 from collections import defaultdict
 
 import locale
@@ -36,7 +32,7 @@ except:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 
-import six.moves.cPickle as pickle
+import pickle
 from argparse import ArgumentParser
 import xlwt
 import xlsxwriter

@@ -1,4 +1,3 @@
-import six
 import unicodedata
 
 def remove_diacritic( s ):

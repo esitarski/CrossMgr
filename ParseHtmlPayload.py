@@ -1,7 +1,6 @@
 import io
 import os
 import re
-import six
 import json
 import datetime
 
@@ -17,8 +16,6 @@ def ParseHtmlPayload( fname=None, content=None ):
 		try:
 			with io.open(fname) as f:
 				content = f.read()
-			if six.PY2:
-				content = content.encode()
 		except Exception as e:
 			return {'success':False, 'error':e, 'payload':None}
 	

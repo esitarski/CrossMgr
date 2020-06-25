@@ -1,7 +1,6 @@
 import os
 import io
 import re
-import six
 import sys
 import math
 import time

@@ -1,7 +1,6 @@
 import wx
 import os
 import sys
-import six
 import time
 import Utils
 import Model
@@ -10,7 +9,7 @@ from FrameCircBuf import FrameCircBuf
 from datetime import datetime, timedelta
 import threading
 from Utils import logCall, logException
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 import wx.lib.newevent
 
 now = datetime.now

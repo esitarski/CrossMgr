@@ -2,14 +2,13 @@ import wx
 import os
 import re
 import sys
-import six
 import math
 import datetime
 import itertools
 from bisect import bisect_left
 import wx.lib.mixins.listctrl as listmix
 from copy import copy
-import six.moves.cPickle as pickle
+import pickle
 from operator import itemgetter, attrgetter
 from collections import defaultdict
 

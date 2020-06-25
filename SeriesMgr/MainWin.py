@@ -2,7 +2,6 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import wx.adv as adv
 import sys
-import six
 import os
 import re
 import datetime
@@ -29,9 +28,9 @@ except:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 	
-import six.moves.cPickle as pickle
+import pickle
 from argparse import ArgumentParser
-StringIO = six.moves.StringIO
+from io import StringIO
 
 import Dependencies
 

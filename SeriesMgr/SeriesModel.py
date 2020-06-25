@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import six
 import cgi
 import copy
 import operator
@@ -9,7 +8,7 @@ import functools
 import datetime
 import GetModelInfo
 from FileTrie import FileTrie
-StringIO = six.StringIO
+from io import StringIO
 import Utils
 
 #----------------------------------------------------------------------

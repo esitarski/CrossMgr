@@ -1,7 +1,4 @@
-from __future__ import print_function
-
 import socket
-import six
 import sys
 import time
 import datetime
@@ -15,7 +12,7 @@ import serial
 import Utils
 import Model
 from threading import Thread as Process
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 import JChip
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER

@@ -1,9 +1,7 @@
-
 import wx
-import six
 import wx.richtext as rt
 from wx.lib.embeddedimage import PyEmbeddedImage
-StringIO = six.StringIO
+from io import StringIO
 
 #----------------------------------------------------------------------
 _rt_alignleft = PyEmbeddedImage(

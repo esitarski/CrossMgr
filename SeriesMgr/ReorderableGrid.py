@@ -3,7 +3,6 @@ import os
 import wx.grid as gridlib
 import wx.lib.mixins.gridlabelrenderer as glr
 import wx.lib.mixins.grid as gae
-import six
 import Utils
 
 class GridCellMultiLineStringRenderer(gridlib.PyGridCellRenderer):   

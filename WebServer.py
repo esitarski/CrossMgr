@@ -1,36 +1,28 @@
 import os
 import io
 import re
-import six
 import sys
 import gzip
 import glob
 import time
 import json
 import base64
-urllib = six.moves.urllib
-from six.moves.urllib.parse import quote
-from six.moves.urllib.request import url2pathname
+import urllib
 import socket
 import datetime
 import traceback
 import threading
-from six.moves.queue import Queue, Empty
-try:
-    # Python 2.x
-    from SocketServer import ThreadingMixIn
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from BaseHTTPServer import HTTPServer
-except ImportError:
-    # Python 3.x
-    from socketserver import ThreadingMixIn
-    from http.server import SimpleHTTPRequestHandler, HTTPServer
+from urllib.parse import quote
+from urllib.request import url2pathname
+from queue import Queue, Empty
+from socketserver import ThreadingMixIn
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 from qrcode import QRCode
 from tornado.template import Template
 from ParseHtmlPayload import ParseHtmlPayload
-from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-StringIO = six.StringIO
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from io import StringIO
 import Utils
 import Model
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
@@ -70,16 +62,10 @@ with open(os.path.join(Utils.getHtmlFolder(), 'Index.html')) as f:
 PORT_NUMBER = 8765
 
 def gzipEncode( content ):
-	if six.PY2:
-		out = StringIO()
-		with gzip.GzipFile( fileobj=out, mode='w', compresslevel=5 ) as f:
-			f.write( content.encode(encoding='utf-8') )
-		return out.getvalue()
-	else:
-		out = io.BytesIO()
-		with gzip.GzipFile( fileobj=out, mode='wb', compresslevel=5 ) as f:
-			f.write( content.encode() if not isinstance(content, bytes) else content )
-		return out.getbuffer()
+	out = io.BytesIO()
+	with gzip.GzipFile( fileobj=out, mode='wb', compresslevel=5 ) as f:
+		f.write( content.encode() if not isinstance(content, bytes) else content )
+	return out.getbuffer()
 
 def validContent( content ):
 	return content.strip().endswith( '</html>' )
@@ -154,12 +140,8 @@ class ContentBuffer( object ):
 					cache['mtime'] = time.time()
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
-					if six.PY2:
-						cache['content'] = content
-						cache['gzip_content'] = gzipEncode( content )
-					else:
-						cache['content'] = content.encode() if not isinstance(content, bytes) else content
-						cache['gzip_content'] = gzipEncode( content )
+					cache['content'] = content.encode() if not isinstance(content, bytes) else content
+					cache['gzip_content'] = gzipEncode( content )
 					cache['status'] = self.Changed
 					self.fileCache[fname] = cache
 			
@@ -260,7 +242,7 @@ class ContentBuffer( object ):
 					categories = [
 							(
 								c['name'].encode(),
-								quote(six.text_type(c['name']).encode()),
+								quote('{}'.format(c['name']).encode()),
 								c.get( 'starters', 0 ),
 								c.get( 'finishers', 0 ),
 							)
