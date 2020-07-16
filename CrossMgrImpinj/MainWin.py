@@ -500,8 +500,8 @@ class MainWin( wx.Frame ):
 		cmcs.Add( self.strayTagsLabel, flag=wx.LEFT|wx.RIGHT, border=4 )
 		
 		self.strays = wx.ListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN, size=(-1,50) )
-		self.strays.InsertColumn( 0, 'Tag', wx.LIST_AUTOSIZE_USEHEADER )
-		self.strays.InsertColumn( 1, 'Time', wx.LIST_AUTOSIZE_USEHEADER )
+		self.strays.InsertColumn( 0, 'Tag', width=wx.LIST_AUTOSIZE_USEHEADER )
+		self.strays.InsertColumn( 1, 'Time', width=wx.LIST_AUTOSIZE_USEHEADER )
 	
 		cmcs.Add( self.strays, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
@@ -593,8 +593,7 @@ class MainWin( wx.Frame ):
 		
 		self.strays.DeleteAllItems()
 		for tag, discovered in strays:
-			i = self.strays.InsertItem( 1000000, tag )
-			self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
+			self.strays.Append( [tag, discovered.strftime('%H:%M:%S')] )
 		for c in range(self.strays.GetColumnCount()):
 			self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
 			

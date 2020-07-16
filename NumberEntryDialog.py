@@ -35,7 +35,7 @@ class NumberEntryDialog( wx.Dialog ):
 		btnsizer.AddButton(btn)
 		btnsizer.Realize()
 
-		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+		sizer.Add(btnsizer, 0, flag=wx.ALL, border=5)
 		
 		self.SetSizer( sizer )
 		self.SetSize( 200, 50*(2+int(bool(message))) )

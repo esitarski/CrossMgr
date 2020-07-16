@@ -244,7 +244,7 @@ class SearchDialog( wx.Dialog ):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
 		self.search = Search( self, wx.ID_ANY, size=(600,700) )
-		sizer.Add(self.search, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
+		sizer.Add(self.search, 1, flag=wx.ALL|wx.EXPAND, border=5)
 		
 		self.SetSizer(sizer)
 		sizer.Fit(self)
