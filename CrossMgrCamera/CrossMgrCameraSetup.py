@@ -1,8 +1,10 @@
 from distutils.core import setup
 import os
+import sys
 import shutil
 import zipfile
 import datetime
+import platform
 import subprocess
 
 if os.path.exists('build'):
@@ -25,6 +27,9 @@ copyFiles = [
 for f in copyFiles:
 	shutil.copy( os.path.join( '..', f), f )
 	
+if 'Linux' in platform.platform():
+	sys.exit()
+
 distDir = r'dist\CrossMgrCamera'
 distDirParent = os.path.dirname(distDir)
 if os.path.exists(distDirParent):
@@ -112,7 +117,7 @@ except:
 	pass
 	
 shutil.copy( 'install\\CrossMgrCamera_Setup.exe', 'install\\' + newExeName )
-print 'executable copied to: ' + newExeName
+print( 'executable copied to: ' + newExeName )
 
 # Create comprssed executable.
 os.chdir( 'install' )
@@ -134,7 +139,7 @@ shutil.copy( newZipName, googleDrive )
 from virus_total_apis import PublicApi as VirusTotalPublicApi
 API_KEY = '64b7960464d4dbeed26ffa51cb2d3d2588cb95b1ab52fafd82fb8a5820b44779'
 vt = VirusTotalPublicApi(API_KEY)
-six.print_( 'VirusTotal Scan' )
+print( 'VirusTotal Scan' )
 vt.scan_file( os.path.abspath(newExeName) )
 
 

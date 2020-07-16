@@ -5,27 +5,14 @@ import base64
 
 srcPrefix = "data:image/png;base64,"
 
-try:
-	# Python 2
-	import cStringIO as StringIO
-	def toBufFromImage( image ):
-		ss = StringIO.StringIO()
-		image.SaveFile( ss, wx.BITMAP_TYPE_PNG )
-		return srcPrefix + base64.b64encode(ss.getvalue())
-	
-	def toImageFromBuf( buf ):
-		return wx.Image( StringIO.StringIO(base64.b64decode(buf[len(srcPrefix):])), wx.BITMAP_TYPE_PNG )
+from io import BytesIO
+def toBufFromImage( image ):
+	ss = BytesIO()
+	image.SaveFile( ss, wx.BITMAP_TYPE_PNG )
+	return srcPrefix + base64.b64encode(ss.getbuffer()).decode()
 
-except:
-	# Python 3
-	from io import BytesIO
-	def toBufFromImage( image ):
-		ss = BytesIO()
-		image.SaveFile( ss, wx.BITMAP_TYPE_PNG )
-		return srcPrefix + base64.b64encode(ss.getbuffer()).decode()
-	
-	def toImageFromBuf( buf ):
-		return wx.Image( BytesIO(base64.b64decode(buf[len(srcPrefix):])), wx.BITMAP_TYPE_PNG )
+def toImageFromBuf( buf ):
+	return wx.Image( BytesIO(base64.b64decode(buf[len(srcPrefix):])), wx.BITMAP_TYPE_PNG )
 
 def toBufFromBitmap( bitmap ):
 	return toBufFromImage( wx.Image(bitmap) )

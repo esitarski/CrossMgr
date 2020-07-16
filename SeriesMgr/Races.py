@@ -3,7 +3,6 @@ import wx.grid as gridlib
 
 import os
 import sys
-import six
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils

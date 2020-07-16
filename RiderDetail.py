@@ -3,7 +3,6 @@ import wx.grid
 import wx.lib.intctrl as intctrl
 import wx.lib.masked as masked
 import re
-import six
 import bisect
 import random
 import Utils
@@ -60,7 +59,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		fgs.Add( wx.StaticText( self ) )
-		fgs.Add( wx.StaticText( self, label=((riderName + u': ') if riderName else u'') + six.text_type(rider.num) ), flag=wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=((riderName + u': ') if riderName else u'') + '{}'.format(rider.num) ), flag=wx.ALIGN_LEFT )
 			
 		fgs.Add( wx.StaticText( self, label=u'{}:'.format(_("Start"))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.startTime, flag=wx.ALIGN_LEFT  )
@@ -169,7 +168,7 @@ class ChangeOffsetDialog( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		fgs.Add( wx.StaticText( self ) )
-		fgs.Add( wx.StaticText( self, label=((riderName + u': ') if riderName else u'') + six.text_type(rider.num) ), flag=wx.ALIGN_LEFT )
+		fgs.Add( wx.StaticText( self, label=((riderName + u': ') if riderName else u'') + '{}'.format(rider.num) ), flag=wx.ALIGN_LEFT )
 			
 		fgs.Add( wx.StaticText( self, label=u'{}:'.format(_("Adjust for"))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.earlyLate, flag=wx.ALIGN_LEFT  )
@@ -1368,7 +1367,7 @@ class RiderDetail( wx.Panel ):
 			ignoredTimes = [t for t in unfilteredTimes if t not in entryTimes]
 			dataFields = []
 			for t in ignoredTimes:
-				fields = {c:u'\u2715' for c in six.iterkeys(self.nameCol)}
+				fields = {c:u'\u2715' for c in self.nameCol.keys()}
 				del fields['Lap']
 				fields.update( {
 					'Race': Utils.formatTime(t, highPrecisionTimes),
@@ -1451,7 +1450,7 @@ class RiderDetail( wx.Panel ):
 			dataFields.sort( key=lambda x: (Utils.StrToSeconds(x.get('Race', '0')), int(x.get('Lap', '999999'))) )
 			backgroundColour = {}
 			for r, fields in enumerate(dataFields):
-				for name, i in six.iteritems(self.nameCol):
+				for name, i in self.nameCol.items():
 					data[i].append( fields.get(name, u'') )
 				if fields.get('highlightColour',None):
 					highlightColour = fields.get('highlightColour',None)

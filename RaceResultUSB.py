@@ -1,7 +1,4 @@
-from __future__ import print_function
-
 import socket
-import six
 import sys
 import time
 import datetime
@@ -15,7 +12,7 @@ import serial
 import Utils
 import Model
 from threading import Thread as Process
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 import JChip
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER
@@ -326,7 +323,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 				lines = ret.split( EOL )
 				count = int( lines[0].split(';')[1], 16 )
 			
-				for i in six.moves.range( count ):
+				for i in range( count ):
 					line = lines[i+1]
 					if not line:
 						continue
@@ -375,7 +372,7 @@ def StopListener():
 	# Terminate the server process if it is running.
 	# Add a number of shutdown commands as we may check a number of times.
 	if listener:
-		for i in six.moves.range(32):
+		for i in range(32):
 			shutdownQ.put( 'shutdown' )
 		listener.join()
 	listener = None

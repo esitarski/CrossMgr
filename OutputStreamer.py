@@ -1,11 +1,10 @@
 import io
 import os
-import six
 import time
 import atexit
 import datetime
 import threading
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 
 import Utils
 import Model
@@ -197,8 +196,8 @@ def CleanupStreamer():
 if __name__ == '__main__':
 	StartStreamer()
 	count = 0
-	for i in six.moves.range(10):
-		for j in six.moves.range(5):
+	for i in range(10):
+		for j in range(5):
 			writeNumTime( i+j, i )
 		time.sleep( 1 )
 	StopStreamer()

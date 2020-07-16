@@ -5,11 +5,10 @@ import wx.lib.scrolledpanel as scrolled
 import os
 import re
 import sys
-import six
 import cgi
 import copy
 import string
-StringIO = six.StringIO
+from io import StringIO
 import Utils
 from Utils import tag
 import Model
@@ -537,14 +536,9 @@ class GetExcelLink( object ):
 JChipTagLength = 6
 OrionTagLength = 16
 
-if six.PY2:
-	trantab = string.maketrans( 'lOo', '100' ) # Translate lower-case l's to ones and Os to zeros. 
-	def GetCleanTag( tag ):
-		return '{}'.format(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
-else:
-	trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. Also, remove any extra spaces.
-	def GetCleanTag( tag ):
-		return '{}'.format(tag).translate(trantab)
+trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. Also, remove any extra spaces.
+def GetCleanTag( tag ):
+	return '{}'.format(tag).translate(trantab)
 
 def FixJChipTag( tag ):
 	return GetCleanTag(tag).zfill(JChipTagLength)

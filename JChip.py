@@ -11,7 +11,7 @@ import Utils
 import Model
 import select
 from threading import Thread as Process
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 
 ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
 

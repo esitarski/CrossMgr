@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import xlwt
 import Utils
 import Model
@@ -19,7 +18,7 @@ def tag( buf, name, attrs = {} ):
 	if not isinstance(attrs, dict) and attrs:
 		attrs = { 'class': attrs }
 	buf.write(
-		u'<{}>'.format(u' '.join( [name] + [u'{}="{}"'.format(attr, value) for attr, value in six.iteritems(attrs)] ) )
+		u'<{}>'.format(u' '.join( [name] + [u'{}="{}"'.format(attr, value) for attr, value in attrs.items()] ) )
 	)
 	yield
 	buf.write( u'</{}>\n'.format(name) )

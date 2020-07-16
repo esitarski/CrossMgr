@@ -1,35 +1,6 @@
 import sys
-import six
 import collections
 from netifaces import interfaces, ifaddresses, AF_INET
-
-#-----------------------------------------------------------------------
-# Fix named tuple pickle issue.
-#
-def _fix_issue_18015(collections):
-	try:
-		template = collections._class_template
-	except AttributeError:
-		# prior to 2.7.4 _class_template didn't exists
-		return
-	if not isinstance(template, six.string_types):
-		return  # strange
-	if "__dict__" in template or "__getstate__" in template:
-		return  # already patched
-	lines = template.splitlines()
-	indent = -1
-	for i,l in enumerate(lines):
-		if indent < 0:
-			indent = l.find('def _asdict')
-			continue
-		if l.startswith(' '*indent + 'def '):
-			lines.insert(i, ' '*indent + 'def __getstate__(self): pass')
-			lines.insert(i, ' '*indent + '__dict__ = _property(_asdict)')
-			break
-	collections._class_template = '''\n'''.join(lines)
-    
-if sys.version_info[:3] == (2,7,5):
-	_fix_issue_18015(collections)
 
 #-----------------------------------------------------------------------
 # Attempt to import windows libraries.
@@ -128,11 +99,12 @@ lang = (lang or 'en')[:2]
 # Setup translation.
 #
 import sys
+import builtins
 from Version import AppVerName
 import gettext
 initTranslationCalled = False
 translate = None
-six.moves.builtins.__dict__['_'] = translate = lambda s: s
+builtins.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
 	global translate
@@ -149,7 +121,7 @@ def initTranslation():
 		try:
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
-			six.moves.builtins.__dict__['_'] = translate = translation.ugettext
+			builtins.__dict__['_'] = translate = translation.ugettext
 		except:
 			pass
 		
@@ -163,10 +135,10 @@ initTranslation()
 class SuspendTranslation( object ):
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
-		self._Save = six.moves.builtins.__dict__['_']
-		six.moves.builtins.__dict__['_'] = lambda x: x
+		self._Save = builtins.__dict__['_']
+		builtins.__dict__['_'] = lambda x: x
 	def __exit__(self, type, value, traceback):
-		six.moves.builtins.__dict__['_'] = self._Save
+		builtins.__dict__['_'] = self._Save
 
 class UIBusy( object ):
 	def __enter__(self):
@@ -196,7 +168,7 @@ def tag( buf, name, attrs = None ):
 	if not isinstance(attrs, dict):
 		attrs = { 'class': attrs }
 	if attrs:
-		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in six.iteritems(attrs)])) )
+		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in attrs.items()])) )
 	else:
 		buf.write( u'<{}>'.format(name) )
 	yield
@@ -611,7 +583,7 @@ def logCall( f ):
 		return u'{}'.format(x) if not isinstance(x, wx.Object) else u'<<{}>>'.format(x.__class__.__name__)
 	
 	def new_f( *args, **kwargs ):
-		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in six.iteritems(kwargs) ]
+		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in kwargs.items() ]
 		writeLog( 'call: {}({})'.format(f.__name__, removeDiacritic(u', '.join(parameters))) )
 		return f( *args, **kwargs)
 	return new_f

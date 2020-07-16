@@ -1,15 +1,14 @@
-import xlrd
-import xml.etree.ElementTree
 import os
-import six
 import math
+import xlrd
 import unicodedata
+import xml.etree.ElementTree
 from mmap import mmap, ACCESS_READ
 
 def toAscii( s ):
 	if not s:
 		return ''
-	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if type(s) == six.text_type else str(s)
+	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if isinstance(s, str) else str(s)
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret
@@ -29,7 +28,7 @@ class ReadExcelXls( object ):
 		
 	def is_nonempty_row(self, sheet, i):
 		values = sheet.row_values(i)
-		if isinstance(values[0], six.string_types) and values[0].startswith('#'):
+		if isinstance(values[0], str) and values[0].startswith('#'):
 			return False # ignorable comment row
 		return any( bool(v) for v in values )
 	
@@ -46,7 +45,7 @@ class ReadExcelXls( object ):
 		#  BOOLEAN 4 int; 1 means TRUE, 0 means FALSE
 		#  ERROR 5
 		values = []
-		for type, value in six.moves.zip(sheet.row_types(row_index), sheet.row_values(row_index)):
+		for type, value in zip(sheet.row_types(row_index), sheet.row_values(row_index)):
 			if type == 2:
 				if value == int(value):
 					value = int(value)

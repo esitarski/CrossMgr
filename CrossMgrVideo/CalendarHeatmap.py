@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------- #
-# ROUNDBUTTON wxPython IMPLEMENTATION
+# CALENDARHEATMAP wxPython IMPLEMENTATION
 #
-# Edward Sitarski, @ 07 November 2011
+# Edward Sitarski, @ November 2018
 #
 #
 # TODO List
@@ -172,23 +172,11 @@ class CalendarHeatmap(wx.Control):
 		self.Refresh()
 		
 	def OnSize(self, event):
-		"""
-		Handles the ``wx.EVT_SIZE`` event for L{CalendarHeatmap}.
-
-		:param `event`: a `wx.SizeEvent` event to be processed.
-		"""
-		
 		event.Skip()
 		self.Refresh()
 
 		
 	def OnLeftDClick(self, event):
-		"""
-		Handles the ``wx.EVT_LEFT_UP`` event for L{CalendarHeatmap}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
-
 		if not self.IsEnabled():
 			return
 		
@@ -200,12 +188,6 @@ class CalendarHeatmap(wx.Control):
 
 
 	def OnLeftUp(self, event):
-		"""
-		Handles the ``wx.EVT_LEFT_UP`` event for L{CalendarHeatmap}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
-
 		if not self.IsEnabled():
 			return
 		
@@ -217,19 +199,10 @@ class CalendarHeatmap(wx.Control):
 
 
 	def OnMouseMotion(self, event):
-		"""
-		Handles the ``wx.EVT_ENTER_WINDOW`` event for L{CalendarHeatmap}.
-
-		:param `event`: a `wx.MouseEvent` event to be processed.
-		"""
 		self.date = self._dateFromXY( event.GetX(), event.GetY() )
 		self.Refresh()
 
 	def SetInitialSize(self, size=None):
-		"""
-		:param `size`: an instance of `wx.Size`.		
-		"""
-		
 		if size is None:
 			size = self.DoGetBestSize()
 		wx.Control.SetInitialSize(self, size)
@@ -244,11 +217,6 @@ class CalendarHeatmap(wx.Control):
 		return False
 	
 	def GetDefaultAttributes(self):
-		"""
-		Overridden base class virtual. By default we should use
-		the same font/colour attributes as the native `wx.Button`.
-		"""
-		
 		return wx.Button.GetClassDefaultAttributes()
 
 

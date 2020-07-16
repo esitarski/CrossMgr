@@ -1,4 +1,3 @@
-import six
 import types
 import datetime
 
@@ -13,12 +12,12 @@ class FrameCircBuf( object ):
 		t = datetime.datetime.now() - datetime.timedelta( seconds = bufSize )
 		dt = datetime.timedelta( seconds = 1 )
 		times = []
-		for i in six.moves.range(bufSize):
+		for i in range(bufSize):
 			times.append( t )
 			t += dt
 		self.iStart = 0
 		self.times = times
-		self.frames = [None for i in six.moves.range(bufSize)]
+		self.frames = [None for i in range(bufSize)]
 		self.bufSize = bufSize
 		
 		# Generate a search function for the buffer size.
@@ -29,12 +28,12 @@ class FrameCircBuf( object ):
 			' times = self.times',
 		]
 		self._genFind( stmts, 1, 0, self.bufSize )
-		six.print_( '\n'.join(stmts) + '\n' )
+		print( '\n'.join(stmts) + '\n' )
 		exec( '\n'.join(stmts) + '\n' )
 		self._find = types.MethodType(_find,self)
 
 	def clear( self ):
-		self.frames = [None for i in six.moves.range(self.bufSize)]
+		self.frames = [None for i in range(self.bufSize)]
 		
 	def getT( self, i ):
 		return self.times[(i+self.iStart)%self.bufSize]
@@ -77,7 +76,7 @@ class FrameCircBuf( object ):
 		retFrames = []
 		
 		if before and i != iStart:
-			for b in six.moves.range(1, before+1):
+			for b in range(1, before+1):
 				k = (i-b) % bufSize
 				if abs(times[k] - t).total_seconds() <= window:
 					retTimes.append( times[k] )
@@ -91,7 +90,7 @@ class FrameCircBuf( object ):
 			if abs(times[i] - t).total_seconds() <= window:
 				retTimes.append( times[i] )
 				retFrames.append( frames[i] )
-			for a in six.moves.range(1, after):
+			for a in range(1, after):
 				k = (i+a) % bufSize
 				if k == iStart:
 					break
@@ -123,50 +122,50 @@ if __name__ == '__main__':
 	fcb.reset( 5*25 )
 	
 	tStart = datetime.datetime.now()
-	for i in six.moves.range(fcb.bufSize):
+	for i in range(fcb.bufSize):
 		fcb.append( tStart + datetime.timedelta(seconds=i*1.0/25.0), None )
 	
 	for t in fcb.times:
-		six.print_( (t-tStart).total_seconds() )
-	six.print_()
+		print( (t-tStart).total_seconds() )
+	print()
 	
 	times, frames = fcb.findBeforeAfter( tStart + datetime.timedelta(seconds=2.01), 1, 1 )
-	six.print_( [(t-tStart).total_seconds() for t in times] )
+	print( [(t-tStart).total_seconds() for t in times] )
 	
 	tSearch = datetime.datetime.now() - datetime.timedelta(seconds = 4)
 	i = fcb._find( tSearch )
-	six.print_( i, tSearch.strftime( '%H:%M:%S.%f' ), fcb.times[i].strftime( '%H:%M:%S.%f' ) )
+	print( i, tSearch.strftime( '%H:%M:%S.%f' ), fcb.times[i].strftime( '%H:%M:%S.%f' ) )
 	
-	six.print_( 'getFrames' )
+	print( 'getFrames' )
 	times, frames = fcb.findBeforeAfter( tSearch, 1, 1 )
 	for t in times:
-		six.print_( t.strftime( '%H:%M:%S.%f' ) )
+		print( t.strftime( '%H:%M:%S.%f' ) )
 	
 	
-	six.print_( 'Validation' )
+	print( 'Validation' )
 	tSearch = datetime.datetime.now()
-	for i in six.moves.range(300000):
+	for i in range(300000):
 		tSearchCur = tSearch - datetime.timedelta(seconds = i%bufSize)
 		'''
-		print i
+		print( i )
 		f1 = fcb._find( tSearchCur )
 		f2 = fcb._loopFind( tSearchCur )
-		print f1, f2
-		print tSearchCur.strftime( '%H:%M:%S.%f' )
-		print
-		print fcb.times[0].strftime( '%H:%M:%S.%f' )
-		print fcb.times[1].strftime( '%H:%M:%S.%f' )
+		print( f1, f2 )
+		print( tSearchCur.strftime( '%H:%M:%S.%f' ) )
+		print()
+		print( fcb.times[0].strftime( '%H:%M:%S.%f' ) )
+		print( fcb.times[1].strftime( '%H:%M:%S.%f' ) )
 		'''
 		assert fcb._find( tSearchCur ) == fcb._loopFind( tSearchCur )
 	
-	six.print_( 'Performance' )
+	print( 'Performance' )
 	t = datetime.datetime.now()
-	for i in six.moves.range(300000):
+	for i in range(300000):
 		fcb._find( tSearch - datetime.timedelta(seconds = i%bufSize) )
-	six.print_( datetime.datetime.now() - t )
+	print( datetime.datetime.now() - t )
 	
 	t = datetime.datetime.now()
-	for i in six.moves.range(300000):
+	for i in range(300000):
 		fcb._loopFind( t - datetime.timedelta( seconds = i%bufSize ) )
-	six.print_( datetime.datetime.now() - t )
+	print( datetime.datetime.now() - t )
 	

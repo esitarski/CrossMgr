@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import math
 import Utils

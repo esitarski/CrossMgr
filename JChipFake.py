@@ -3,12 +3,11 @@
 # JChipFake.py: program for communicating with CrossMgr.
 #
 # Copyright (C) Edward Sitarski, 2017.
-import six
 import time
 import socket
 import datetime
 import threading
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port.
@@ -48,7 +47,7 @@ class JChipFake( threading.Thread ):
 		#------------------------------------------------------------------------------	
 		print( u'Waiting for get time command...' )
 		while 1:
-			received = self.sock.recv(1) if six.PY2 else self.sock.recv(1).decode()
+			received = self.sock.recv(1).decode()
 			if received == 'G':
 				while received[-1] != CR:
 					received += self.sock.recv(1).decode()
@@ -72,7 +71,7 @@ class JChipFake( threading.Thread ):
 		#------------------------------------------------------------------------------	
 		print( u'Waiting for send command from CrossMgr...' )
 		while 1:
-			received = self.sock.recv(1) if six.PY2 else self.sock.recv(1).decode()
+			received = self.sock.recv(1).decode()
 			if received == 'S':
 				while received[-1] != CR:
 					received += self.sock.recv(1).decode()

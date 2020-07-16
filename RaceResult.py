@@ -1,6 +1,5 @@
 import socket 
 import sys
-import six
 import time
 import datetime
 import atexit
@@ -12,7 +11,7 @@ import wx.lib.newevent
 import Utils
 import Model
 from threading import Thread as Process
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 import JChip
 from RaceResultImport import parseTagTime
 from Utils import logCall, logException

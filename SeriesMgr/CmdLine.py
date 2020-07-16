@@ -1,11 +1,10 @@
 import sys
-import six
 import argparse
 import os
 import Utils
 import SeriesModel
 import Results
-import six.moves.cPickle as pickle
+import pickle
 
 def CmdLine( args ):	
 	seriesFileName = None

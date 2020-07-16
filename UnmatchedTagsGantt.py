@@ -1,7 +1,6 @@
 import wx
 import os
 import sys
-import six
 import xlwt
 import webbrowser
 from FitSheetWrapper import FitSheetWrapper
@@ -92,7 +91,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 	def getResults( self ):
 		race = Model.race
 		return sorted(
-			((tag, times) for tag, times in six.iteritems(race.unmatchedTags)),
+			((tag, times) for tag, times in race.unmatchedTags.items()),
 			key = lambda tt: (-len(tt[1]), tt[1][-1]),
 		) if race and race.unmatchedTags else []
 

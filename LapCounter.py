@@ -1,7 +1,6 @@
 import wx
 import wx.lib.colourselect as  csel
 import wx.lib.intctrl as intctrl
-import six
 import math
 import datetime
 import Model

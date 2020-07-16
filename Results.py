@@ -1,7 +1,6 @@
 import wx
 import re
 import os
-import six
 import sys
 import Model
 import Utils
@@ -777,7 +776,7 @@ class Results( wx.Panel ):
 				elif colnames[sortCol] == _('Factor'):
 					getFunc = lambda x: float(x) if x else maxVal
 				elif colnames[sortCol] in [_('Pos'), _('Bib')]:
-					getFunc = lambda x: int(x) if x and six.text_type(x).isdigit() else maxVal
+					getFunc = lambda x: int(x) if x and '{}'.format(x).isdigit() else maxVal
 				else:
 					getFunc = lambda x: u'{}'.format(x)
 					maxVal = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'

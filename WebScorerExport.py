@@ -1,5 +1,4 @@
 import io
-import six
 import math
 import Utils
 import datetime
@@ -59,7 +58,7 @@ def WebScorerExport( fname ):
 	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
 	
 	# Filter the fields by what exists in the data.
-	webScorerFields = [WebScorerFields[i][0] for i in six.moves.range(len(hasField)) if hasField[i]]
+	webScorerFields = [WebScorerFields[i][0] for i in range(len(hasField)) if hasField[i]]
 	webScorerToCrossMgr = dict( (ws, cm) for ws, cm in WebScorerFields )
 	
 	hasDistance = False
@@ -78,7 +77,7 @@ def WebScorerExport( fname ):
 		
 	webScorerCategoryFields = [f for f in WebScorerCategoryFields if (hasDistance or f != 'Distance')]
 	
-	colNames = webScorerFields + webScorerCategoryFields + [u'{} {}'.format(_('Lap'), i+1) for i in six.moves.range(maxLaps)]
+	colNames = webScorerFields + webScorerCategoryFields + [u'{} {}'.format(_('Lap'), i+1) for i in range(maxLaps)]
 	
 	def toInt( n ):
 		try:
@@ -87,7 +86,7 @@ def WebScorerExport( fname ):
 			return n
 	
 	with io.open(fname, 'w', encoding = 'utf-16') as txtFile:
-		txtFile.write( u'{}\n'.format( u'\t'.join(six.text_type(c) for c in colNames) ) )
+		txtFile.write( u'{}\n'.format( u'\t'.join('{}'.format(c) for c in colNames) ) )
 		
 		for cat in publishCategories:
 			results = GetResults( cat )
@@ -133,13 +132,13 @@ def WebScorerExport( fname ):
 				dataRow.append( gender )
 					
 				# Lap Times.
-				for i in six.moves.range(maxLaps):
+				for i in range(maxLaps):
 					try:
 						lapTime = formatTimeGap(rr.lapTimes[i])
 					except IndexError:
 						lapTime = ''
 					dataRow.append( lapTime )
 				
-				txtFile.write( u'{}\n'.format( u'\t'.join(six.text_type(d).strip().replace(u'\t','    ') for d in dataRow) ) )
+				txtFile.write( u'{}\n'.format( u'\t'.join('{}'.format(d).strip().replace(u'\t','    ') for d in dataRow) ) )
 				
 	return True, _('Success')

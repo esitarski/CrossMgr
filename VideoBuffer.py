@@ -1,7 +1,6 @@
 import wx
 import os
 import sys
-import six
 import time
 import Utils
 import Model
@@ -10,7 +9,7 @@ from FrameCircBuf import FrameCircBuf
 from datetime import datetime, timedelta
 import threading
 from Utils import logCall, logException
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 import wx.lib.newevent
 
 now = datetime.now
@@ -271,32 +270,32 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None, title="CrossMan", size=(200,200))
 	mainWin.Show()
 	
-	six.print_( 'initializing photo folder' )
+	print( 'initializing photo folder' )
 	dirName = 'VideoBufferTest_Photos'
 	if os.path.isdir(dirName):
 		try:
 			shutil.rmtree( dirName, True )
 		except Exception as e:
-			six.print_( e )
+			print( e )
 	try:
 		os.mkdir( dirName )
 	except Exception as e:
-		six.print_( e )
+		print( e )
 	
-	six.print_( 'starting camera' )
+	print( 'starting camera' )
 	tRef = now()
 	camera = PhotoFinish.SetCameraState( True )
 	
-	six.print_( 'create video buffer' )
+	print( 'create video buffer' )
 	vb = VideoBuffer( camera, tRef, dirName )
 	
-	six.print_( 'start video buffer' )
+	print( 'start video buffer' )
 	vb.start()
 	
-	six.print_( 'taking photos at random intervals' )
+	print( 'taking photos at random intervals' )
 	timer = None
 	def TestPhoto():
-		six.print_( 'Snap! {:.3f} fps'.format(vb.getFrameRate()) )
+		print( 'Snap! {:.3f} fps'.format(vb.getFrameRate()) )
 		vb.takePhoto( 101, (now() - tRef).total_seconds() )
 		timer.Start( random.random() * 2000, oneShot = True )
 	

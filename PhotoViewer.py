@@ -10,7 +10,6 @@ import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
 import sys
-import six
 import math
 import types
 import threading
@@ -414,8 +413,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		if self.num is not None and t is not None:
 			# Select the photo specified by the bib and time.
-			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in six.moves.range(2)]
-			for i in six.moves.range(itemCount):
+			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in range(2)]
+			for i in range(itemCount):
 				fnameToMatch = self.thumbs.GetItem(i).GetFileName()
 				if any( f in fnameToMatch for f in fnames ):
 					break
@@ -423,7 +422,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		elif tClosest is not None:
 			tDeltaBest = 1000.0*24.0*60.0*60.0
 			iBest = None
-			for i in six.moves.range(itemCount):
+			for i in range(itemCount):
 				tDelta = abs( getFileKey(self.thumbs.GetItem(i).GetFileName()) - tClosest )
 				if tDelta < tDeltaBest:
 					iBest = i

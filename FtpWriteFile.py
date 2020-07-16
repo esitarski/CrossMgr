@@ -3,10 +3,9 @@ import wx.lib.intctrl
 import io
 import os
 import sys
-import six
 import webbrowser
 import ftputil
-from six.moves.urllib.parse import quote
+from urllib.parse import quote
 import datetime
 import threading
 import Utils
@@ -22,7 +21,7 @@ def lineno():
 
 def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', callback=None ):
 	
-	if isinstance(fname, six.string_types):
+	if isinstance(fname, str):
 		fname = [fname]
 	
 	# This stops the ftputils from going into an infinite loop.
@@ -34,7 +33,7 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 		import time
 		for i, f in enumerate(fname):
 			fSize = os.path.getsize(f)
-			for s in six.moves.range(0, fSize, 1024 ):
+			for s in range(0, fSize, 1024 ):
 				callback( ' '*1024, f, i )
 				time.sleep( 0.1 )
 			if s != fSize:

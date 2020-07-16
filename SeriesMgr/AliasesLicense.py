@@ -1,5 +1,4 @@
 import wx
-import six
 import os
 import sys
 import SeriesModel

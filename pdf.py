@@ -1,4 +1,3 @@
-import six
 import fpdf
 
 def normalize_text( text ):
@@ -147,4 +146,4 @@ class PDF( fpdf.FPDF ):
 		return widthMax, heightMax
 	
 	def to_bytes( self ):
-		return self.output( dest='S' ).encode('latin-1', 'replace') if six.PY3 else self.output( dest='S' )
+		return self.output( dest='S' ).encode('latin-1', 'replace')

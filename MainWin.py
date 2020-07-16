@@ -1,18 +1,7 @@
-# -*- coding: utf-8 -*-
-import wx
-import wx.adv as adv
-from wx.lib.wordwrap import wordwrap
-import wx.lib.imagebrowser as imagebrowser
-import wx.lib.agw.flatnotebook as flatnotebook
-import six
 import os
 import re
 import io
 import sys
-if six.PY2:
-	from cgi import escape
-else:
-	from html import escape
 import time
 import copy
 import json
@@ -25,7 +14,14 @@ import webbrowser
 import platform
 import zipfile
 import hashlib
-from six.moves.urllib.parse import quote
+
+import wx
+import wx.adv as adv
+from wx.lib.wordwrap import wordwrap
+import wx.lib.imagebrowser as imagebrowser
+import wx.lib.agw.flatnotebook as flatnotebook
+from html import escape
+from urllib.parse import quote
 from collections import defaultdict
 
 import locale
@@ -36,7 +32,7 @@ except:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 
-import six.moves.cPickle as pickle
+import pickle
 from argparse import ArgumentParser
 import xlwt
 import xlsxwriter
@@ -1928,9 +1924,9 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------
 		codes = []
 		if 'UCICode' in payload['infoFields']:
-			codes.extend( r['UCICode'] for r in six.itervalues(payload['data']) if r.get('UCICode',None) )
+			codes.extend( r['UCICode'] for r in payload['data'].values() if r.get('UCICode',None) )
 		if 'NatCode' in payload['infoFields']:
-			codes.extend( r['NatCode'] for r in six.itervalues(payload['data']) if r.get('NatCode',None) )
+			codes.extend( r['NatCode'] for r in payload['data'].values() if r.get('NatCode',None) )
 		payload['flags']				= Flags.GetFlagBase64ForUCI( codes )
 		if gpsPoints:
 			payload['gpsPoints']		= gpsPoints
@@ -2244,7 +2240,7 @@ class MainWin( wx.Frame ):
 		startList = []
 		nationCodes = set()
 		category = None
-		for bib, rider in six.iteritems(race.riders):
+		for bib, rider in race.riders.items():
 			if rider.status == Finisher:
 				try:
 					firstTime = int(rider.firstTime + 0.1)
@@ -2521,11 +2517,11 @@ class MainWin( wx.Frame ):
 					info['Name'] = Utils.CombineFirstLastName( info.get('FirstName', ''), info.get('LastName', '') )
 			
 			# Remove info that does not correspond to a rider in the race.
-			for num in [n for n in six.iterkeys(externalInfo) if n not in seen]:
+			for num in [n for n in externalInfo.keys() if n not in seen]:
 				del externalInfo[num]
 			
 			# Remove extra info fields.
-			for num, info in six.iteritems(externalInfo):
+			for num, info in externalInfo.items():
 				for f in ignoreFields:
 					try:
 						del info[f]
@@ -2661,7 +2657,7 @@ class MainWin( wx.Frame ):
 			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
 			distance = geoTrack.length if race.distanceUnit == race.UnitKm else geoTrack.length * 0.621371
 			if distance > 0.0:
-				for c in six.itervalues(race.categories):
+				for c in race.categories.values():
 					c.distance = distance
 			race.showOval = False
 		if excelLink:
@@ -2821,7 +2817,7 @@ class MainWin( wx.Frame ):
 			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
 			distance = geoTrack.lengthKm if race.distanceUnit == race.UnitKm else geoTrack.lengthMiles
 			if distance > 0.0:
-				for c in six.itervalues(race.categories):
+				for c in race.categories.values():
 					c.distance = distance
 			race.showOval = False
 		if excelLink:
@@ -3701,11 +3697,11 @@ class MainWin( wx.Frame ):
 			
 			url = 'http://www.{Destination}.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
 				Destination = destination.lower(),
-				RaceName	= quote(six.text_type(raceName)),
-				RaceDate	= quote(six.text_type(raceDate)),
+				RaceName	= quote('{}'.format(raceName)),
+				RaceDate	= quote('{}'.format(raceDate)),
 				MD5			= hashlib.md5( (race.title + raceDate).encode() ).hexdigest(),
-				Location	= quote(six.text_type(u', '.join([race.city, race.stateProv, race.country]))),
-				PresentedBy = quote(six.text_type(race.organizer)),
+				Location	= quote('{}'.format(u', '.join([race.city, race.stateProv, race.country]))),
+				PresentedBy = quote('{}'.format(race.organizer)),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
@@ -3769,7 +3765,7 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def openMenuWindow( self, windowAttr ):
-		for attr, name, menuItem, dialog in six.itervalues(self.menuIdToWindowInfo):
+		for attr, name, menuItem, dialog in self.menuIdToWindowInfo.values():
 			if windowAttr == attr:
 				dialog.Show( True )
 				wx.CallAfter( dialog.refresh )
@@ -3905,7 +3901,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 
 	def refreshWindows( self ):
 		try:
-			for d in (dialog for attr, name, menuItem, dialog in six.itervalues(self.menuIdToWindowInfo) if dialog.IsShown()):
+			for d in (dialog for attr, name, menuItem, dialog in self.menuIdToWindowInfo.values() if dialog.IsShown()):
 				try:
 					wx.CallAfter( d.refresh )
 				except AttributeError:

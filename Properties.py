@@ -1623,7 +1623,7 @@ class PropertiesDialog( wx.Dialog ):
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
 			fgs.Add( btn, flag=wx.ALIGN_CENTER_VERTICAL )
 			
-			vsizer.Add( fgs, flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, border=5)
+			vsizer.Add( fgs, flag=wx.EXPAND|wx.ALL, border=5)
 			
 			vsizer.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.EXPAND|wx.RIGHT|wx.TOP, border=5)
 		

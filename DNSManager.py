@@ -1,7 +1,6 @@
 import wx
 import wx.lib.mixins.listctrl as listmix
 import os
-import six
 import sys
 import itertools
 
@@ -28,13 +27,13 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		self.categoryChoice = wx.Choice( self )
 		self.Bind(wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice)
 		
-		self.selectAll = wx.Button( self, label = _('Select All'), style=wx.BU_EXACTFIT )
+		self.selectAll = wx.Button( self, label = _('Select All') )
 		self.Bind( wx.EVT_BUTTON, self.onSelectAll, self.selectAll )
 		
-		self.deSelectAll = wx.Button( self, label = _('Deselect All'), style=wx.BU_EXACTFIT )
+		self.deSelectAll = wx.Button( self, label = _('Deselect All') )
 		self.Bind( wx.EVT_BUTTON, self.onDeselectAll, self.deSelectAll )
 		
-		self.setDNS = wx.Button( self, label = _('DNS Selected'), style=wx.BU_EXACTFIT )
+		self.setDNS = wx.Button( self, label = _('DNS Selected') )
 		self.Bind( wx.EVT_BUTTON, self.onSetDNS, self.setDNS )
 		
 		self.il = wx.ImageList(16, 16)
@@ -129,7 +128,6 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			if not race:
 				return
 			self.category = FixCategories( self.categoryChoice, getattr(race, 'DNSManagerCategory', 0) )
-			self.hbs.RecalcSizes()
 			self.hbs.Layout()
 			for si in self.hbs.GetChildren():
 				if si.IsWindow():
@@ -142,7 +140,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 				self.clearGrid()
 				return
 		
-			for num, info in six.iteritems(externalInfo):
+			for num, info in externalInfo.items():
 				if num <= 0 or (self.category and not race.inCategory(num, self.category)):
 					continue
 				rider = race.riders.get( num, None )
@@ -162,14 +160,14 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			self.list.InsertColumn( c+1, GetTranslation(f), wx.LIST_FORMAT_RIGHT if f.startswith('Bib') else wx.LIST_FORMAT_LEFT )
 		
 		# Create the data.  Sort by Bib#
-		data = [tuple( num if i == 0 else info.get(f, '') for i, f in enumerate(externalFields)) for num, info in six.iteritems(potentialDNS)]
+		data = [tuple( num if i == 0 else info.get(f, '') for i, f in enumerate(externalFields)) for num, info in potentialDNS.items()]
 		data.sort()
 		
 		# Populate the list.
 		for row, d in enumerate(data):
-			index = self.list.InsertItem(888888, u'{}'.format(d[0]), self.sm_rt)
+			index = self.list.InsertItem(888888, '{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
-				self.list.SetItem( index, i+1, six.text_type(v) )
+				self.list.SetItem( index, i+1, '{}'.format(v) )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
 		
 		# Set the sort fields and configure the sorter mixin.

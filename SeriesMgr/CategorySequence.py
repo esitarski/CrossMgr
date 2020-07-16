@@ -3,7 +3,6 @@ import wx.grid as gridlib
 
 import os
 import sys
-import six
 import operator
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
@@ -90,7 +89,7 @@ class CategorySequence(wx.Panel):
 		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
 			self.grid.SetCellValue( row, self.PublishCol, u'01'[int(c.publish)] )
-			self.grid.SetCellValue( row, self.TeamNCol, six.text_type(c.teamN) )
+			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
 			self.grid.SetCellValue( row, self.UseNthScoreCol, u'01'[int(c.useNthScore)] )
 			self.grid.SetCellValue( row, self.TeamPublishCol, u'01'[int(c.teamPublish)] )
 		wx.CallAfter( self.gridAutoSize )

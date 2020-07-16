@@ -1,5 +1,4 @@
 import re
-import six
 from ReadSignOnSheet import BibInfo
 
 reVariable = re.compile( u'\{=[^}]+\}' )
@@ -25,4 +24,4 @@ if __name__ == '__main__':
 		u'StateProv':	u'Ontario',
 		u'Country':		u'Canada',
 	}
-	six.print_( TemplateSubstitute(s, keyValues) )
+	print( TemplateSubstitute(s, keyValues) )

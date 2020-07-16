@@ -1,6 +1,5 @@
 import wx
 import re
-import six
 
 import Utils
 import Model
@@ -81,7 +80,7 @@ class Search( wx.Panel ):
 		if row != self.lastRow:
 			self.lastRow = row
 			colour = wx.Colour( 255, 255, 128 )
-			self.grid.Set( backgroundColour	= dict(((row, c), colour) for c in six.moves.range(self.grid.GetNumberCols())))
+			self.grid.Set( backgroundColour	= dict(((row, c), colour) for c in range(self.grid.GetNumberCols())))
 			self.grid.Refresh()
 		
 	def doRightClick( self, event ):
@@ -145,10 +144,7 @@ class Search( wx.Panel ):
 			except AttributeError:
 				externalInfo = {}
 				
-			inRace = set()
-			for num in six.iterkeys(externalInfo):
-				if num in race:
-					inRace.add( num )
+			inRace = { num for num in externalInfo.keys() if num in race }
 
 		if not externalInfo:
 			self.clearGrid()
@@ -160,17 +156,17 @@ class Search( wx.Panel ):
 		searchText = Utils.removeDiacritic(self.search.GetValue().lower())
 		
 		fields = ReadSignOnSheet.Fields
-		info = next(six.itervalues(externalInfo))
+		info = next(externalInfo.values())
 		colnames = [_('StartTime')] if race.isTimeTrial else []
 		colnames.extend( f for f in fields if f in info )
 		colnames.append( _('In Race') )
 		data = [ [] for c in colnames ]
-		for num, info in six.iteritems(externalInfo):
+		for num, info in externalInfo.items():
 			if searchText:
 				matched = False
 				for f in colnames:
 					try:
-						if Utils.removeDiacritic(six.text_type(info[f]).lower()).find(searchText) >= 0:
+						if Utils.removeDiacritic('{}'.format(info[f]).lower()).find(searchText) >= 0:
 							matched = True
 							break
 					except KeyError:
@@ -181,12 +177,12 @@ class Search( wx.Panel ):
 			for c, f in enumerate(colnames):
 				if f.startswith('Tag'):
 					try:
-						data[c].append( six.text_type(info[f]).lstrip('0') )
+						data[c].append( '{}'.format(info[f]).lstrip('0') )
 					except:
 						data[c].append( '' )
 				else:
 					try:
-						data[c].append( six.text_type(info[f]) )
+						data[c].append( '{}'.format(info[f]) )
 						continue
 					except KeyError:
 						pass
@@ -229,7 +225,7 @@ class Search( wx.Panel ):
 		
 		colnames[self.sortCol] = u'<%s>' % colnames[self.sortCol]
 		self.grid.Set( data = data, colnames = colnames )
-		self.grid.SetLeftAlignCols( set(i for i in six.moves.range(1, len(colnames)) if 'Tag' not in colnames[i]) )
+		self.grid.SetLeftAlignCols( set(i for i in range(1, len(colnames)) if 'Tag' not in colnames[i]) )
 		self.grid.AutoSizeColumns( True )
 		self.grid.Reset()
 			
@@ -248,7 +244,7 @@ class SearchDialog( wx.Dialog ):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
 		self.search = Search( self, wx.ID_ANY, size=(600,700) )
-		sizer.Add(self.search, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
+		sizer.Add(self.search, 1, flag=wx.ALL|wx.EXPAND, border=5)
 		
 		self.SetSizer(sizer)
 		sizer.Fit(self)

@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import math
 import datetime
 import wx.lib.intctrl
@@ -91,7 +90,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			
 		race.startTime = raceStart
 		
-		for num, lapTimes in six.iteritems(riderRaceTimes):
+		for num, lapTimes in riderRaceTimes.items():
 			for t in lapTimes:
 				raceTime = (t - raceStart).total_seconds()
 				if not race.hasTime(num, raceTime):
@@ -102,9 +101,9 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			
 		# Figure out the race minutes from the recorded laps.
 		if riderRaceTimes:
-			lapNumMax = max( len(ts) for ts in six.itervalues(riderRaceTimes) )
+			lapNumMax = max( len(ts) for ts in riderRaceTimes.values() )
 			if lapNumMax > 0:
-				tElapsed = min( ts[-1] for ts in six.itervalues(riderRaceTimes) if len(ts) == lapNumMax )
+				tElapsed = min( ts[-1] for ts in riderRaceTimes.values() if len(ts) == lapNumMax )
 				raceMinutes = int((tElapsed - raceStart).total_seconds() / 60.0) + 1
 				race.minutes = raceMinutes
 		
