@@ -282,7 +282,7 @@ envSetup() {
 		echo "Already using $VIRTUAL_ENV"
 	fi
     if [ $OSNAME == "Windows" ];then
-		pip3 install win32com
+		pip3 install pywin32
 	pip3 install -r requirements.txt
     if [ $OSNAME == "Darwin" ];then
 		pip3 install dmgbuild

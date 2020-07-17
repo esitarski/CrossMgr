@@ -416,10 +416,10 @@ function EnvSetup($program)
 	{
 		Write-Host 'Already using', $env:VIRTUAL_ENV
 	}
-	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install win32com")
+	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install pywin32")
 	if ($? -eq $false)
 	{
-		Write-Host 'Pip win32com setup failed. Aborting...'
+		Write-Host 'Pip pywin32 setup failed. Aborting...'
 		exit 1
 	}
 	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install -r requirements.txt")
