@@ -13,7 +13,7 @@ whoosh
 qrcode
 tornado
 ftputil
-wxWidgets
+wxPython
 markdown
 bs4
 -e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
