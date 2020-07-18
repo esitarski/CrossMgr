@@ -416,6 +416,7 @@ function EnvSetup($program)
 	{
 		Write-Host 'Already using', $env:VIRTUAL_ENV
 	}
+	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install pywin32")
 	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install -r requirements.txt")
 	if ($? -eq $false)
 	{

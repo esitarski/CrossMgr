@@ -281,11 +281,16 @@ envSetup() {
 	else
 		echo "Already using $VIRTUAL_ENV"
 	fi
+	
 	pip3 install -r requirements.txt
     if [ $? -ne 0 ];then
         echo "Pip requirememnts install failed. Aborting..."
         exit 1
     fi
+    
+    if   [ $OSNAME == "Windows" ];then
+		pip3 install pywin32
+	fi
     if [ $OSNAME == "Darwin" ];then
 		pip3 install dmgbuild
 	else
