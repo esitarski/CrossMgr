@@ -253,7 +253,7 @@ function CopyAssets($program)
 			Remove-Item -Recurse -Force -Path "CrossMgrHelpIndex"
 		}
 		Write-Host 'Building Help for CrossMgr...'
-		Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
+		# Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
 		if ($? -eq $false)
 		{
@@ -261,7 +261,7 @@ function CopyAssets($program)
 			Set-Location -Path '..'
 			exit 1
 		}
-		Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
+		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
 	}
 	if ($program -eq "SeriesMgr")
@@ -272,7 +272,7 @@ function CopyAssets($program)
 			Remove-Item -Recurse -Force -Path "CrossMgrHelpIndex"
 		}
 		Write-Host 'Building Help for SeriesMgr...'
-		Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
+		# Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
 		if ($? -eq $false)
 		{
@@ -280,7 +280,7 @@ function CopyAssets($program)
 			Set-Location -Path '..'
 			exit 1
 		}
-		Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
+		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
 	}
 }
