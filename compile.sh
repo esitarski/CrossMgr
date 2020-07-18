@@ -197,14 +197,14 @@ copyAssets(){
 			rm -rf CrossMgrHelpIndex
 		fi
 		echo "Building Help for SeriesMgr ..."
-        rm -f HelpIndex.py
-        ln -s ../HelpIndex.py HelpIndex.py
+        #rm -f HelpIndex.py
+        #ln -s ../HelpIndex.py HelpIndex.py
 		python3 buildhelp.py
 		if [ $? -ne 0 ]; then
 			echo "Building help failed. Aborting..."
 			exit 1
 		fi
-		cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
+		#cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
         cd ..
 	fi
 
