@@ -194,7 +194,7 @@ class ContentBuffer( object ):
 	
 	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
-			self.fileCache/items(),
+			self.fileCache.items(),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
 		) if not (fname.endswith('_TTCountdown.html') or fname.endswith('_TTStartList.html'))]
 	
