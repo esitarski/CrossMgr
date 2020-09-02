@@ -5,9 +5,9 @@ import wx.lib.mixins.gridlabelrenderer as glr
 import wx.lib.mixins.grid as gae
 import Utils
 
-class GridCellMultiLineStringRenderer(gridlib.PyGridCellRenderer):   
+class GridCellMultiLineStringRenderer(gridlib.GridCellRenderer):   
 	def __init__(self):
-		gridlib.PyGridCellRenderer.__init__(self)
+		gridlib.GridCellRenderer.__init__(self)
 
 	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
 		text = grid.GetCellValue(row, col)
@@ -29,7 +29,7 @@ class GridCellMultiLineStringRenderer(gridlib.PyGridCellRenderer):
 	def GetBestSize(self, grid, attr, dc, row, col): 
 		text = grid.GetCellValue(row, col)
 		dc.SetFont(attr.GetFont())
-		w, h = dc.GetMultiLineTextExtent( text )                   
+		w, h, lineHeight = dc.GetMultiLineTextExtent(text)                   
 		return wx.Size(w, h)        
 
 	def Clone(self): 
@@ -77,11 +77,16 @@ class ReorderableGridRowMixin( object ):
 			
 		x,y = evt.GetX(), evt.GetY()
 		row, col = self.ReorderableGridRowXYToCell(x,y, colheight=0)
-		self.HideCellEditControl()
+		
+		self.SaveEditControlValue()
+		self.DisableCellEditControl()
+		self.SetFocus()
+		
 		self._lastRow = row
 		self.ClearSelection()
 		self.SelectRow(row, True)
 		self._potentialRearrange = True
+		evt.Skip()
 
 	def OnRearrangeEnd(self, evt):
 		"""We are not Rearranging anymore, so unset the potentialRearrange flag"""
@@ -91,7 +96,13 @@ class ReorderableGridRowMixin( object ):
 	def copyRow( self, fromRow, toRow ):
 		for c in range(self.GetNumberCols()):
 			self.SetCellValue( toRow, c, self.GetCellValue(fromRow, c) )
-		
+			self.SetCellBackgroundColour( toRow, c, self.GetCellBackgroundColour(fromRow, c) )
+	
+	def LocalDeselectRow( self, row ):
+		''' Local reimplementation of DeselectRow. '''
+		for col in range(self.GetNumberCols()):
+			self.DeselectCell( row, col )
+	
 	def OnReorderableGridMotion(self, evt):
 		"""We are moving so see whether this should be a Rearrange event or not"""
 		if not self._potentialRearrange:
@@ -107,15 +118,18 @@ class ReorderableGridRowMixin( object ):
 		row, col = self.ReorderableGridRowXYToCell(x,y, colheight=0)
 		if row == self._lastRow:
 			return
-			
-		self.DeselectRow( self._lastRow )
+		
+		# For reasons I don't understand, we have to override the default otherwise we get an internal wx assert.
+		self.LocalDeselectRow( self._lastRow )
 		
 		lastRowSave = [self.GetCellValue(self._lastRow, c) for c in range(self.GetNumberCols())]
+		lastRowBackgroundColourSave = [self.GetCellBackgroundColour(self._lastRow, c) for c in range(self.GetNumberCols())]
 		direction = 1 if row > self._lastRow else -1 if row < self._lastRow else 0
 		for r in range(self._lastRow, row, direction ):
 			self.copyRow( r + direction, r )
 		for c in range(self.GetNumberCols()):
 			self.SetCellValue( row, c, lastRowSave[c] )
+			self.SetCellBackgroundColour( row, c, lastRowBackgroundColourSave[c] )
 		
 		self.SelectRow( row, False )
 		self._lastRow = row
@@ -127,6 +141,7 @@ class ReorderableGridRowMixin( object ):
 		# returned are computed as if the window wasn't
 		# scrolled
 		# This function replaces XYToCell for Virtual Grids
+		row = col = 0
 
 		if rowwidth is None:
 			rowwidth = self.GetGridRowLabelWindow().GetRect().width
@@ -143,7 +158,6 @@ class ReorderableGridRowMixin( object ):
 		# incrementing by the current column and row sizes
 		# until the offset points lie within the computed
 		# bounding boxes.
-		row, col = 0, 0
 		x += xoff - rowwidth
 		xpos = 0
 		for col in range(self.GetNumberCols()):
@@ -211,13 +225,13 @@ class SaveEditWhenFocusChangesGridMixin( object ):
 		# Cell editor's grandparent, the grid GridWindow's parent, is the grid.
 		grid = event.GetEventObject().GetGrandParent()
 		grid.SaveEditControlValue()
-		grid.HideCellEditControl()
+		grid.DisableCellEditControl()
 		event.Skip()
 		
-########################################################################
+#-----------------------------------------------------------------------------
 class CornerReorderableGridLabelRenderer(glr.GridLabelRenderer):
 	def __init__(self):
-		self._bmp = bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'UpDown.png'), wx.BITMAP_TYPE_PNG )
+		self._bmp = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'UpDown.png'), wx.BITMAP_TYPE_PNG )
 		
 	def Draw(self, grid, dc, rect, rc):
 		if grid._enableReorderRows:

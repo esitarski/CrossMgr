@@ -282,7 +282,16 @@ envSetup() {
 		echo "Already using $VIRTUAL_ENV"
 	fi
 	
-	pip3 install -r requirements.txt
+	if   [ $OSNAME == "Linux" ];then
+        # On Linux, the wxPython module install attempts to rebuild the module from the C/C++ source.
+        # Unfortunately, this always fails in an virtualenv and/or there are other missing C/C++ libraries.
+        # The build also takes >40 minutes, which is an excessive amount of time.
+        # The solution is to grab the pre-built install for this Ubuntu version from wxPython extras.
+		UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
+		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -r /dev/stdin
+	else
+		pip3 install -r requirements.txt
+	fi
     if [ $? -ne 0 ];then
         echo "Pip requirememnts install failed. Aborting..."
         exit 1
