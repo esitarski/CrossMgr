@@ -550,7 +550,7 @@ class MainWin( wx.Frame ):
 		self.setWriteSuccess( True )
 		wx.CallLater( 50, self.onReadButton, None )
 		
-	def onReadButton( self, event ):
+	def onReadButton( self, event=None ):
 		if not self.tagWriter:
 			Utils.MessageOK( self,  u'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".',
 									u'Reader Not Connected' )
