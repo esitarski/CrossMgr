@@ -146,4 +146,4 @@ class PDF( fpdf.FPDF ):
 		return widthMax, heightMax
 	
 	def to_bytes( self ):
-		return self.output( dest='S' ).encode('latin-1', 'replace')
+		return self.output(dest='S')
