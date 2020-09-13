@@ -273,6 +273,10 @@ table.points tr.odd {
 	padding:3px 7px 2px 7px;
 }
 
+select {
+    font: inherit;
+}
+
 hr { clear: both; }
 
 @media print {
@@ -411,23 +415,19 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'span', {'style': 'font-size: 60%'}):
 								write( '&nbsp;' * 5 )
 								write( u' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
-			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
-				with tag(html, 'label', {'class':'green'} ):
-					with tag(html, 'input', {
-							'type':"radio",
-							'name':"categorySelect",
-							'checked':"true",
-							'onclick':"selectCategory(-1);"} ):
+
+			with tag(html, 'h3' ):
+				with tag(html, 'label', {'for':'categoryselect'} ):
+					write( 'Category' + ':' )
+				with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
+					with tag(html, 'option', {'value':-1} ):
 						with tag(html, 'span'):
 							write( u'All' )
-				for iTable, categoryName in enumerate(categoryNames):
-					with tag(html, 'label', {'class':'green'} ):
-						with tag(html, 'input', {
-								'type':"radio",
-								'name':"categorySelect",
-								'onclick':"selectCategory({});".format(iTable)} ):
+					for iTable, categoryName in enumerate(categoryNames):
+						with tag(html, 'option', {'value':iTable} ):
 							with tag(html, 'span'):
 								write( '{}'.format(cgi.escape(categoryName)) )
+			
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
