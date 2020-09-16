@@ -345,6 +345,8 @@ if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and 
   visibilityChange = "webkitvisibilitychange";
 }
 
+var showCustomCategories = true;
+
 var flagImages = null;
 function GetFlagImage( uci ) {
 	if( !flagImages ) {
@@ -460,6 +462,7 @@ var translations = {
 	'LapsDown':		['Laps Down',		'Rours de retard',			'Vueltas atrás'],
 	'CategorySummary':	['Category Summary',"Catégorie résumé",			"Resumen de la categoría"],
 	'ShowCategorySummary':['Show Category Summary',"Afficher le catégorie résumé",	"Mostrar el resumen de la categoría"],
+	'ShowCustomCategories':['Custom Categories',"Catégories personnalisées",	"Categorías personalizadas"],
 	'Sponsor':		['Sponsor',			"Promoteur",				"Patrocinador"],
 	'Cash':			['Cash',			"Argent",					"Dinero"],
 	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
@@ -1996,33 +1999,40 @@ function GeoAnimation()
 
 // ---------------------------------------------------------------------
 
-function _initAnimation()
-{
+function _initAnimation() {
 	tLast = (new Date).getTime();
 	suspendAnimation = false;
 }
 
-function NextFrame()
-{
+function NextFrame() {
 	tDelta = ((new Date).getTime() - tLast);
 	SetTime( t + (tDelta/1000.0) * speedup );
 	tLast += tDelta;
-	if( !suspendAnimation )
-	{
+	if( !suspendAnimation ) {
 		if( t < tMax )
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
-		else if( loopContinuously && !raceIsRunning )
-		{
+		else if( loopContinuously && !raceIsRunning ) {
 			t = 0;
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
 		}
 	}
 }
 
-function HasDisplayUnit( aData )
-{
-	for( var num in aData )
-	{
+function HasCustomCategories() {
+	var customFields = infoFields.filter( h => h.startsWith('CustomCategory') );
+	for( var num in data ) {
+		var info = data[num];
+		for( var f = customFields.length; f--; ) {
+			if( info[customFields[f]] ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function HasDisplayUnit( aData ) {
+	for( var num in aData ) {
 		var info = aData[num];
 		if( info['speed'] )
 			return true;
@@ -2030,13 +2040,10 @@ function HasDisplayUnit( aData )
 	return false;
 }
 
-function GetDistanceUnit( aData )
-{
-	for( var num in aData )
-	{
+function GetDistanceUnit( aData ) {
+	for( var num in aData ) {
 		var info = aData[num];
-		if( info['speed'] )
-		{
+		if( info['speed'] ) {
 			var speedUnit = info['speed'].split(' ')[1];
 			return (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
 		}
@@ -2383,7 +2390,7 @@ function ResetWebSocket() {
 
 		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 1) + '/';
 		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 1) + '/';
-		console.log( 'wsurl="' + wsurl + '"' );
+		//console.log( 'wsurl="' + wsurl + '"' );
 		websocket = new window.WebSocket( wsurl );
 
 		websocket.onmessage = function( evt ) {
@@ -2890,6 +2897,12 @@ function RefreshResultsTable()
 			curFields['FirstName'] = false;
 			curFields['LastName'] = false;
 			curFields['Name'] = true;
+		}
+		
+		if( !showCustomCategories ) {
+			for( var key in curFields )
+				if( key.startsWith('CustomCategory') )
+					curFields[key] = false;
 		}
 
 		// Find the fastest lap for this category.
@@ -5492,6 +5505,11 @@ function SetShowLaps()
 	RefreshResultsTable();
 }
 
+function ToggleCustomCategories() {
+	showCustomCategories = !showCustomerCategories;
+	RefreshResultsTable();
+}
+
 function FormatDistance( distance, inUnit, showUnits )
 {
 	if( (inUnit ? inUnit : 'km') != displayUnits )
@@ -6088,6 +6106,11 @@ function onLoad()
 	if( !travelMap )
 		document.getElementById('idTravelMap').className = 'hidden';
 	
+	if( !HasCustomCategories() ) {
+		document.getElementById('idShowCustomCategories').className = 'hidden';
+		document.getElementById('idShowCustomCategoriesLabel').className = 'hidden';
+	}
+	
 	canvasSupported = isCanvasSupported();
 	if( canvasSupported && !winAndOut )
 	{
@@ -6139,8 +6162,7 @@ function onLoad()
 	
 	SetRaceTime();
 	
-	if( HasDisplayUnit(data) )
-	{
+	if( HasDisplayUnit(data) ) {
 		displayUnits = GetDistanceUnit( data );
 		document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
 	}
@@ -6325,9 +6347,14 @@ Current versions of Chrome, FireFox and Opera work fine.
 	<option value="50" data-tr="Show Every 50 Laps">50</option>
 	<option value="100" data-tr="Show Every 100 Laps">100</option>
 </select>
+
 <span id="idTotalElevationGain"> </span>
 </p>
-<span class="noprint" id="idShowOptions"></span><br/>
+<span class="noprint" id="idShowOptions"></span>
+&nbsp;&nbsp;&nbsp;
+<input class="noprint" type="checkbox" id="idShowCustomCategories" checked onClick="ToggleCustomCategories()">
+<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>
+<br/>
 </div>
 
 <div id="idResultsDiv"></div>
