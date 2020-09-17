@@ -2140,10 +2140,9 @@ function SetData( aData, tCur )
 	for( var i = 0; i < options.length; ++i )
 	{
 		var o = options[i];
-		if( o.requiresMultipleLaps && !hasMultipleLaps )
+		if( (o.requiresMultipleLaps && !hasMultipleLaps) || (o.requiresLapSpeeds && !hasLapSpeeds) )
 			continue;
-		if( o.requiresLapSpeeds && !hasLapSpeeds )
-			continue;
+		
 		showHTML.push( '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"' );
 		if( firstOption ) {
 			showHTML.push( ' checked="true"' );
@@ -2153,8 +2152,8 @@ function SetData( aData, tCur )
 	}
 	if( HasCustomCategories() ) {
 		showHTML.push( '&nbsp;&nbsp;&nbsp;' );
-		showHTML.push( '<input class="noprint" type="checkbox" id="idShowCustomCategories" onClick="ToggleCustomCategories()"' + (showCustomCategories ? ' checked="true"' : '') + '/>' );
-		showHTML.push( '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>' );
+		showHTML.push( '<input type="checkbox" id="idShowCustomCategories" onClick="ToggleCustomCategories()"' + (showCustomCategories ? ' checked="true"' : '') + '/>' );
+		showHTML.push( '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" data-tr="ShowCustomCategories"></label>' );
 	}
 	showHTML.push( '</div></div>' );
 	showOptionsSpan.innerHTML = showHTML.join('');
