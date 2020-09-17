@@ -463,6 +463,7 @@ var translations = {
 	'CategorySummary':	['Category Summary',"Catégorie résumé",			"Resumen de la categoría"],
 	'ShowCategorySummary':['Show Category Summary',"Afficher le catégorie résumé",	"Mostrar el resumen de la categoría"],
 	'ShowCustomCategories':['Custom Categories',"Catégories personnalisées",	"Categorías personalizadas"],
+	'CC':			['CC',				"CP",						"CP"],
 	'Sponsor':		['Sponsor',			"Promoteur",				"Patrocinador"],
 	'Cash':			['Cash',			"Argent",					"Dinero"],
 	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
@@ -2019,12 +2020,14 @@ function NextFrame() {
 }
 
 function HasCustomCategories() {
-	var customFields = infoFields.filter( h => h.startsWith('CustomCategory') );
-	for( var num in data ) {
-		var info = data[num];
-		for( var f = customFields.length; f--; ) {
-			if( info[customFields[f]] ) {
-				return true;
+	if( data && infoFields ) {
+		var customFields = infoFields.filter( h => h.startsWith('CustomCategory') );
+		for( var num in data ) {
+			var info = data[num];
+			for( var f = customFields.length; f--; ) {
+				if( info[customFields[f]] ) {
+					return true;
+				}
 			}
 		}
 	}
@@ -2141,12 +2144,16 @@ function SetData( aData, tCur )
 		if( o.requiresLapSpeeds && !hasLapSpeeds )
 			continue;
 		showHTML += '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"';
-		if( firstOption )
-		{
+		if( firstOption ) {
 			showHTML += ' checked="true"';
 			firstOption = false;
 		}
 		showHTML += '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;';
+	}
+	if( HasCustomCategories() ) {
+		showHTML += '&nbsp;&nbsp;&nbsp';
+		showHTML += '<input class="noprint" type="checkbox" id="idShowCustomCategories"' + (showCustomCategories ? ' checked ' : ' ') + 'onClick="ToggleCustomCategories()">';
+		showHTML += '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>';
 	}
 	showHTML += '</div></div>';
 	showOptionsSpan.innerHTML = showHTML;
@@ -2967,7 +2974,7 @@ function RefreshResultsTable()
 		
 		for( var f = 0; f < infoFields.length; ++f ) {
 			if( curFields[infoFields[f]] ) {
-				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f]) );
+				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f].replace('CustomCategory','CC')) );
 				td.id = 'idNonNumeric';
 				++numHeaders;
 			}
@@ -6106,11 +6113,6 @@ function onLoad()
 	if( !travelMap )
 		document.getElementById('idTravelMap').className = 'hidden';
 	
-	if( !HasCustomCategories() ) {
-		document.getElementById('idShowCustomCategories').className = 'hidden';
-		document.getElementById('idShowCustomCategoriesLabel').className = 'hidden';
-	}
-	
 	canvasSupported = isCanvasSupported();
 	if( canvasSupported && !winAndOut )
 	{
@@ -6350,10 +6352,7 @@ Current versions of Chrome, FireFox and Opera work fine.
 
 <span id="idTotalElevationGain"> </span>
 </p>
-<span class="noprint" id="idShowOptions"></span>
-&nbsp;&nbsp;&nbsp;
-<input class="noprint" type="checkbox" id="idShowCustomCategories" checked onClick="ToggleCustomCategories()">
-<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>
+<div class="noprint" id="idShowOptions"></div>
 <br/>
 </div>
 
