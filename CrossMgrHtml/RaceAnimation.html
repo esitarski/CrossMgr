@@ -2031,7 +2031,6 @@ function HasCustomCategories() {
 			}
 		}
 	}
-	return true;
 	return false;
 }
 
@@ -2099,14 +2098,14 @@ function SetData( aData, tCur )
 	for( var i = 0; i < catDetails.length; ++i )
 		categories.push( catDetails[i].name );
 	
-	var catHTML = '';
+	var catHTML = [];
 	if( categories.length > 2 )
 	{
-		var catHTML = '<div id="buttongroup">';
+		catHTML.push( '<div id="buttongroup">' );
 		for( var i = 0; i < categories.length; ++i )
 		{
 			var cat = categories[i];
-			catHTML +=
+			catHTML.push(
 				'<label class="green">' +
 					'<input ' +
 							'type="radio" ' +
@@ -2114,16 +2113,17 @@ function SetData( aData, tCur )
 							'id="idCat' + i + '" ' +
 							'onClick="SelectCategory(\''+i+'\');" ' +
 							(cat == categoryCur ? 'checked="true"': '') +
-							'/>' +
+						'/>' +
 						'<span>' + cat.escapeHTML() + '</span>' +
 					'</input>' +
-				'</label>';
+				'</label>'
+			);
 		}
-		catHTML += '</div><hr class="invisible"/>';
+		catHTML.push( '</div><hr class="invisible"/>' );
 	}
 	else if( categories.length > 1 )
-		catHTML = '<h2>' + categories[1].escapeHTML() + '</h2>';
-	document.getElementById('idCategories').innerHTML = catHTML;
+		catHTML = ['<h2>' + categories[1].escapeHTML() + '</h2>'];
+	document.getElementById('idCategories').innerHTML = catHTML.join('');
 	
 	// Adjust the display options based on the data.
 	var options = [
@@ -2135,8 +2135,8 @@ function SetData( aData, tCur )
 	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
 	];
 	var showOptionsSpan = document.getElementById( 'idShowOptions' );
-	var showHTML = ['<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">'];
 	var firstOption = true;
+	var showHTML = ['<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">'];
 	for( var i = 0; i < options.length; ++i )
 	{
 		var o = options[i];
@@ -2156,7 +2156,7 @@ function SetData( aData, tCur )
 		showHTML.push( '<input class="noprint" type="checkbox" id="idShowCustomCategories" onClick="ToggleCustomCategories()"' + (showCustomCategories ? ' checked="true"' : '') + '/>' );
 		showHTML.push( '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>' );
 	}
-	showHTML += '</div></div>';
+	showHTML.push( '</div></div>' );
 	showOptionsSpan.innerHTML = showHTML.join('');
 	
 	if( animationObj != null )
