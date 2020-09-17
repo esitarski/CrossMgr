@@ -2031,6 +2031,7 @@ function HasCustomCategories() {
 			}
 		}
 	}
+	return true;
 	return false;
 }
 
@@ -2134,7 +2135,7 @@ function SetData( aData, tCur )
 	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
 	];
 	var showOptionsSpan = document.getElementById( 'idShowOptions' );
-	var showHTML = '<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">';
+	var showHTML = ['<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">'];
 	var firstOption = true;
 	for( var i = 0; i < options.length; ++i )
 	{
@@ -2143,20 +2144,20 @@ function SetData( aData, tCur )
 			continue;
 		if( o.requiresLapSpeeds && !hasLapSpeeds )
 			continue;
-		showHTML += '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"';
+		showHTML.push( '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"' );
 		if( firstOption ) {
-			showHTML += ' checked="true"';
+			showHTML.push( ' checked="true"' );
 			firstOption = false;
 		}
-		showHTML += '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;';
+		showHTML.push( '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;' );
 	}
 	if( HasCustomCategories() ) {
-		showHTML += '&nbsp;&nbsp;&nbsp';
-		showHTML += '<input class="noprint" type="checkbox" id="idShowCustomCategories"' + (showCustomCategories ? ' checked ' : ' ') + 'onClick="ToggleCustomCategories()">';
-		showHTML += '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>';
+		showHTML.push( '&nbsp;&nbsp;&nbsp;' );
+		showHTML.push( '<input class="noprint" type="checkbox" id="idShowCustomCategories" onClick="ToggleCustomCategories()"' + (showCustomCategories ? ' checked="true"' : '') + '/>' );
+		showHTML.push( '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" class="noprint" data-tr="ShowCustomCategories"></label>' );
 	}
 	showHTML += '</div></div>';
-	showOptionsSpan.innerHTML = showHTML;
+	showOptionsSpan.innerHTML = showHTML.join('');
 	
 	if( animationObj != null )
 		animationObj.Refresh();
