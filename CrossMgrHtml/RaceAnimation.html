@@ -2162,8 +2162,7 @@ function SetData( aData, tCur )
 		animationObj.Refresh();
 }
 
-function Animate( tRunning, aTMax, tCur )
-{
+function Animate( tRunning, aTMax, tCur ) {
 	StopAnimate();
 	_initAnimation();
 	
@@ -2173,8 +2172,7 @@ function Animate( tRunning, aTMax, tCur )
 	t = (tCur || 0);
 	if( !data )
 		return;
-	if( aTMax == undefined )
-	{
+	if( aTMax == undefined ) {
 		tMax = 0;
 		for( var num in data )
 			if( data[num]['raceTimes'].length > 0 )
@@ -2189,15 +2187,13 @@ function Animate( tRunning, aTMax, tCur )
 
 // ---------------------------------------------------------------------
 
-function createChild( parent, tag )
-{
+function createChild( parent, tag ) {
 	var child = document.createElement(tag);
 	parent.appendChild( child );
 	return child;
 }
 
-function createTextChild( parent, s )
-{
+function createTextChild( parent, s ) {
 	var child = document.createTextNode(s);
 	parent.appendChild( child );
 	return child;
@@ -2206,8 +2202,7 @@ function createTextChild( parent, s )
 // ---------------------------------------------------------------------
 
 var statusSortSeq = { 'Finisher':1, 'PUL':2, 'OTL':6, 'DNF':3, 'DQ':4, 'DNS':5, 'NP':7 };
-function CmpResultsData( x, y )
-{
+function CmpResultsData( x, y ) {
 	// [numLaps, raceTimeOfLastLap, num, raceTimes, status, lastTime]
 	//    0              1           2      3         4        5
 	
@@ -2235,8 +2230,7 @@ function CmpResultsData( x, y )
 	return x[2] - y[2];
 }
 
-function CmpCategoryResultsData( x, y )
-{
+function CmpCategoryResultsData( x, y ) {
 	var c = x[6] - y[6];
 	if( c )
 		return c;
