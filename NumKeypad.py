@@ -21,7 +21,7 @@ from TimeTrialRecord import TimeTrialRecord
 from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
 
-# codes to cause an enter.
+# key codes recognized as Enter.
 enterCodes = {
 	wx.WXK_RETURN,
 	wx.WXK_SPACE,
@@ -29,9 +29,15 @@ enterCodes = {
 	wx.WXK_NUMPAD_ENTER,
 	wx.WXK_NUMPAD_SPACE,
 	wx.WXK_NUMPAD_TAB,
+	
+	 9,     # \h vertical tab
+	10,		# \r linefeed
+	11,	    # \t horizontal tab
+	12,     # \r formfeed
+	13,		# \n newline
 }
-# backspace, delete, comma, return, digits
-validKeyCodes = set( [8, 127, 44, 13] + list(range(48, 48+10)) )
+# backspace, delete, comma, digits
+validKeyCodes = set( [8, 127, 44] + list(range(48, 48+10)) )
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
@@ -172,7 +178,10 @@ class Keypad( wx.Panel ):
 		elif keycode < 255:
 			if keycode in validKeyCodes:
 				event.Skip()
+			else:
+				Utils.writeLog( 'handleNumKeypress: ignoring keycode < 255: {}'.format(keycode) )
 		else:
+			Utils.writeLog( 'handleNumKeypress: ignoring keycode: >= 255 {}'.format(keycode) )
 			event.Skip()
 	
 	def onEnterPress( self, event = None ):
