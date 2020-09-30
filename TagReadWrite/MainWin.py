@@ -75,7 +75,7 @@ class MainWin( wx.Frame ):
 	
 	StatusError, StatusSuccess, StatusAttempt = [0, 1, 2]
 
-	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 480) ):
+	def __init__( self, parent, id = wx.ID_ANY, title = '', size = (550, 600) ):
 		super().__init__( parent, id, title = title, size = size )
 		
 		self.SetTitle( AppVerName )
@@ -548,7 +548,7 @@ class MainWin( wx.Frame ):
 							'Write Fails' )
 		
 		self.setWriteSuccess( True )
-		wx.CallLater( 50, self.onReadButton, None )
+		wx.CallLater( 100, self.onReadButton, None )
 		
 	def onReadButton( self, event=None ):
 		if not self.tagWriter:
@@ -576,7 +576,7 @@ class MainWin( wx.Frame ):
 		if event is None:
 			# This read follows a write.
 			# Check that the tag read matches the tag wrote.
-			if len(tagInventory) == 1 and self.getWriteValue() == tagInventory[0]:
+			if len(tagInventory) == 1 and self.getWriteValue() == tagInventory[0].split(',',2)[0]:
 				self.number.SetValue( self.number.GetValue() + self.increment.GetValue() )
 				self.getWriteValue()
 				
