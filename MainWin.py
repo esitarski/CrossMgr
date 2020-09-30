@@ -2577,7 +2577,7 @@ class MainWin( wx.Frame ):
 			with open(fname, 'w') as fp:
 				json.dump( payload, fp, separators=(',',':') )
 		except Exception as e:
-			Utils.writeLog( 'menuExportResultsJSON: error "{}"'.format(e) )			
+			Utils.writeLog( 'menuExportResultsJSON: error "{}"'.format(e) )
 	
 	#--------------------------------------------------------------------------------------------
 	def doCleanup( self ):
