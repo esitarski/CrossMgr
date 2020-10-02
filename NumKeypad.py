@@ -42,6 +42,8 @@ if sys.platform == 'darwin':
 # backspace, delete, comma, digits
 validKeyCodes = set( [8, 127, 44] + list(range(48, 48+10)) )
 
+clearCodes = { 0x2327, ord('c'), ord('C') }	# Codes to clear the entry.
+
 SplitterMinPos = 390
 SplitterMaxPos = 530
 
@@ -178,6 +180,8 @@ class Keypad( wx.Panel ):
 		keycode = event.GetKeyCode()
 		if keycode in enterCodes:
 			self.onEnterPress()
+		elif keycode in clearCodes:
+			self.numEdit.SetValue( '' )
 		elif keycode < 255:
 			if keycode in validKeyCodes:
 				event.Skip()
