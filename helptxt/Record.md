@@ -40,15 +40,17 @@ When you enter a number in this mode, the number is "timestamped" when you press
 When you hear the number caller, you type in the number on the keyboard and press __Enter__ (or __Tab__ or __Space__, whichever is most comvenient).
 After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on th number in the __Expcted__ list rather than typing it in again.
 
-Entering a number also triggers the [USB Webcam][].
+Entering a number also triggers the [USB Webcam][] if it has been enabled.
 
 You can enter data through the regular computer keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.  To enable touchscreen mode, press on the touchscreen button.  This will toggle an on-screen keypad.
 
-Experience has shown that using a touch-screen is a slower and less accurate method.  Additionally, touch screens tend not to work well in cold or hot weather.  Use the keyboard or external keypad whenever possible.
+Experience has shown that a touch-screen less accurate.  Additionally, touch screens can get sluggish in cold or hot weather.  This is frustrating in a race situation when you are trying to enter a number and the touchscreen doesn't respond.  Use a keyboard or external keypad for reliability.
 
-Enterine a number enters the number and timestamps it.  The most accurate way to enter numbers is to type in the number when you hear the number caller, then press an __Enter__ key just as the rider crosses the line.
+Pressing Esc, 'c' or 'C' will clear the input.  This can be a handy shortcut when you need to re-enter a number.
 
-You can also enter multiple numbers separated by commas on the same line.  When you press an __Enter__ key, all these numbers be entered with exactly the same time.  This is useful for starting a team in a team time trial all with exactly the same start time. 
+Tip: the most accurate way to enter numbers is to type in the number when you hear the number caller, then press an __Enter__ key just as the rider crosses the line.  This is primarily important in timetrials.  In bunch races, the objective is to get the passing order as the times are far less important.  When groups pass in bunch races, just enter the numbers as you hear them from the number caller.
+
+You can also enter multiple numbers separated by commas on the same line.  When you press an __Enter__ key, all the numbers be entered with exactly the same time.  This is useful for starting a team time trial, when youj want all riders on the team to get exactly the same start time.
 
 There are a number of additional buttons:
 
@@ -59,7 +61,7 @@ DNS|Enter the rider as a DNS.
 Pull|Enters the rider as PUL, and uses the current time as the PUL time.
 DQ|Enters the rider as DQ, and uses the current time as the DQ time.
 
-Remember: if you change any rider's status here, you can always change it again from the [RiderDetail][] screen.
+Remember: if you change any rider's status here, you can always change it back again from the [RiderDetail][] screen.
 
 ### Time Trial Entry Mode
 

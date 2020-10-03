@@ -36,8 +36,21 @@ enterCodes = {
 	12,     # \r formfeed
 	13,		# \n newline
 }
+if sys.platform == 'darwin':
+	enterCodes.add( 370 )		# Mac's numeric keypad enter code (exceeds 255, but whatever).
+
 # backspace, delete, comma, digits
 validKeyCodes = set( [8, 127, 44] + list(range(48, 48+10)) )
+
+# Codes to clear the entry.
+clearCodes = { 0x2327, 27, ord('c'), ord('C') }
+
+# Codes to do actions.
+# / - DNF
+# * - DNS
+# - - PUL
+# + - DQ
+actionCodes = { ord('/'), ord('*'), ord('-'), ord('+') }
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
@@ -175,6 +188,17 @@ class Keypad( wx.Panel ):
 		keycode = event.GetKeyCode()
 		if keycode in enterCodes:
 			self.onEnterPress()
+		elif keycode in clearCodes:
+			self.numEdit.SetValue( '' )
+		elif keycode in actionCodes:
+			if   keycode == ord('/'):	# DNF
+				pass	
+			elif keycode == ord('*'):	# DNS
+				pass
+			elif keycode == ord('-'):	# PUL
+				pass
+			elif keycode == ord('+'):	# DQ
+				pass
 		elif keycode < 255:
 			if keycode in validKeyCodes:
 				event.Skip()
