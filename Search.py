@@ -156,9 +156,8 @@ class Search( wx.Panel ):
 		searchText = Utils.removeDiacritic(self.search.GetValue().lower())
 		
 		fields = ReadSignOnSheet.Fields
-		info = next(externalInfo.values())
 		colnames = [_('StartTime')] if race.isTimeTrial else []
-		colnames.extend( f for f in fields if f in info )
+		colnames.extend( f for f in fields if f in next(iter(externalInfo.values())) )
 		colnames.append( _('In Race') )
 		data = [ [] for c in colnames ]
 		for num, info in externalInfo.items():

@@ -46,7 +46,7 @@ You can enter data through the regular computer keyboard or an external numeric 
 
 Experience has shown that a touch-screen less accurate.  Additionally, touch screens can get sluggish in cold or hot weather.  This is frustrating in a race situation when you are trying to enter a number and the touchscreen doesn't respond.  Use a keyboard or external keypad for reliability.
 
-Pressing the 'c' or 'C' key will clear the input.  This is a handy shortcut.
+Pressing Esc, 'c' or 'C' will clear the input.  This can be a handy shortcut when you need to re-enter a number.
 
 Tip: the most accurate way to enter numbers is to type in the number when you hear the number caller, then press an __Enter__ key just as the rider crosses the line.  This is primarily important in timetrials.  In bunch races, the objective is to get the passing order as the times are far less important.  When groups pass in bunch races, just enter the numbers as you hear them from the number caller.
 

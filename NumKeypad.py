@@ -43,7 +43,7 @@ if sys.platform == 'darwin':
 validKeyCodes = set( [8, 127, 44] + list(range(48, 48+10)) )
 
 # Codes to clear the entry.
-clearCodes = { 0x2327, ord('c'), ord('C') }
+clearCodes = { 0x2327, 27, ord('c'), ord('C') }
 
 # Codes to do actions.
 # / - DNF
