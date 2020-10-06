@@ -5,8 +5,7 @@ xlsxwriter
 pygments
 xlrd
 pytz
-fpdf
-natural-keys
+fpdf2
 xlwt
 netifaces
 whoosh
@@ -16,6 +15,7 @@ ftputil
 wxPython
 markdown
 bs4
+wheel
 -e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
 trueskill
 pyinstaller
