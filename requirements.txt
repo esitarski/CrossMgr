@@ -16,10 +16,10 @@ ftputil
 wxPython
 markdown
 bs4
--e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
 trueskill
 pyinstaller
 pybabel
 opencv-python
 piexif
 virustotal-api
+-e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
