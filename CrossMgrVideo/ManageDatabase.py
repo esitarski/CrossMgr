@@ -80,7 +80,7 @@ class ManageDatabase( wx.Dialog ):
 		btnsizer.AddButton(btn)
 		btnsizer.Realize()
 
-		vs.Add( btnsizer, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND, border=5 )
+		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
 
 		self.SetSizer(vs)
 		vs.Fit(self)

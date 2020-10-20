@@ -632,27 +632,27 @@ and remove them from other categories.'''),
 			
 		GetTranslation = _
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
-		self.grid.SetRowLabelValue( r, u'' )
-		self.grid.SetCellValue( r, self.iCol['active'], u'1' if active else u'0' )
+		self.grid.SetRowLabelValue( r, '' )
+		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
 		self.grid.SetCellValue( r, self.iCol['catType'], self.CategoryTypeChoices[catType] )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
 		self.grid.SetCellValue( r, self.iCol['gender'], GetTranslation(gender) )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
-		self.grid.SetCellValue( r, self.iCol['numLaps'], u'{}'.format(numLaps) if numLaps else u'' )
-		self.grid.SetCellValue( r, self.iCol['raceMinutes'], u'{}'.format(raceMinutes) if raceMinutes else u'' )
-		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], u'1' if lappedRidersMustContinue else u'0' )
-		self.grid.SetCellValue( r, self.iCol['rule80Time'], u'' )
-		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'' )
-		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else u'' )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['raceMinutes'], '{}'.format(raceMinutes) if raceMinutes else '' )
+		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
+		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
+		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
+		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3f}'.format(distance)) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
-		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
-		self.grid.SetCellValue( r, self.iCol['publishFlag'], u'1' if publishFlag else u'0' )
-		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
-		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
+		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3f}'.format(firstLapDistance)) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['publishFlag'], '1' if publishFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
 		
 		race = Model.race
-		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None) if race else None
+		category = race.categories.get('{} ({})'.format(name.strip(), gender), None) if race else None
 		if not category or category.catType != Model.Category.CatWave:
 			return
 			
@@ -666,7 +666,7 @@ and remove them from other categories.'''),
 		
 		laps = race.getNumLapsFromCategory( category ) if race else None
 		if laps:
-			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'{}'.format(laps) )
+			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 	
 	def fixRow( self, row, catType, active ):
 		activeColour = wx.WHITE if active else self.inactiveColour
@@ -706,7 +706,7 @@ and remove them from other categories.'''),
 	def doAutosize( self ):
 		self.grid.AutoSizeColumns( False )
 		colWidth = self.grid.GetColSize( self.iCol['catStr'] )
-		maxWidth = wx.GetDisplaySize().width / 3
+		maxWidth = wx.GetDisplaySize().width // 3
 		if colWidth > maxWidth:
 			self.grid.SetColSize( self.iCol['catStr'], maxWidth )
 			self.grid.ForceRefresh()
