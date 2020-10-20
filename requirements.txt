@@ -1,3 +1,4 @@
+wheel
 setuptools==v44.0.0
 requests
 waitress
@@ -15,7 +16,6 @@ ftputil
 wxPython
 markdown
 bs4
-wheel
 -e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
 trueskill
 pyinstaller
