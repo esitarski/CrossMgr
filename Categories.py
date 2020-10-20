@@ -646,7 +646,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
 		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3f}'.format(distance)) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
-		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3f}',format(firstLapDistance)) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3f}'.format(firstLapDistance)) if firstLapDistance else '' )
 		self.grid.SetCellValue( r, self.iCol['publishFlag'], '1' if publishFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
