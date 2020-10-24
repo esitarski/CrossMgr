@@ -11,6 +11,7 @@ from ReadSignOnSheet	import ExcelLink
 from GetResults			import GetResults
 from RaceInputState import RaceInputState
 from Categories import TimeEditor
+from GridCellFloatEditorSafe import GridCellFloatEditorSafe as GridCellFloatEditor
 
 def getWinnerInfo( bib ):
 	race = Model.race
@@ -77,11 +78,11 @@ class Primes( wx.Panel ):
 				attr.SetReadOnly( True )
 			elif dataType == 'i':
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
-				attr.SetEditor( wx.grid.GridCellFloatEditor(precision=0) )
+				attr.SetEditor( GridCellFloatEditor(precision=0) )
 				attr.SetRenderer( wx.grid.GridCellFloatRenderer(precision=0) )
 			elif dataType == 'f':
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
-				attr.SetEditor( wx.grid.GridCellFloatEditor(precision=2) )
+				attr.SetEditor( GridCellFloatEditor(precision=2) )
 				attr.SetRenderer( wx.grid.GridCellFloatRenderer(precision=2) )
 			elif dataType == 't':
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )

@@ -12,6 +12,7 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 from RaceInputState import RaceInputState
+from GridCellFloatEditorSafe import GridCellFloatEditorSafe as GridCellFloatEditor
 
 #--------------------------------------------------------------------------------
 
@@ -390,7 +391,7 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName in ['distance', 'firstLapDistance'] :
-				attr.SetEditor( gridlib.GridCellFloatEditor(7, 3) )
+				attr.SetEditor( GridCellFloatEditor(7, 3) )
 				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
@@ -536,10 +537,10 @@ class Categories( wx.Panel ):
 				
 			if not distance and not value:
 				return True
-			return u'{:.3f}'.format(distance or 0.0) == cellValue
+			return '{:.3f}'.format(distance or 0.0) == cellValue
 		
 		def numLapsMatches( numLaps, cellValue ):
-			v = u'{}'.format( numLaps if numLaps is not None else '' )
+			v = '{}'.format( numLaps if numLaps is not None else '' )
 			return v == cellValue
 		
 		return any(	(
@@ -778,7 +779,7 @@ and remove them from other categories.'''),
 			if self.grid.GetNumberRows() > 0:
 				self.grid.DeleteRows( 0, self.grid.GetNumberRows() )
 			self.grid.AppendRows( len(categories) )
-
+			
 			for r, cat in enumerate(categories):
 				self._setRow(	r=r,
 								active				= cat.active,
@@ -830,7 +831,7 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 200, 2)),'gender':'Men'},
+							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
 							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
 							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
 							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
@@ -838,5 +839,6 @@ if __name__ == '__main__':
 						] )
 	categories = Categories(mainWin)
 	categories.refresh()
+	categories.grid.SetCellValue( 0, categories.iCol['distance'], 'distance' )
 	mainWin.Show()
 	app.MainLoop()
