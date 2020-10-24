@@ -9,6 +9,7 @@ from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from PhotoFinish import TakePhoto
 from SendPhotoRequests import SendRenameRequests
+from GridCellNumberEditorSafe import GridCellNumberEditorSafe as GridCellNumberEditor
 import OutputStreamer
 
 def formatTime( secs ):
@@ -125,7 +126,7 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( HighPrecisionTimeEditor() )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
-				attr.SetEditor( gridlib.GridCellNumberEditor() )
+				attr.SetEditor( GridCellNumberEditor() )
 			self.grid.SetColAttr( col, attr )
 		
 		saveExplain = wx.StaticText( self, label=_('(or press "s")') )

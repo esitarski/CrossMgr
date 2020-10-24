@@ -13,6 +13,7 @@ from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 from RaceInputState import RaceInputState
 from GridCellFloatEditorSafe import GridCellFloatEditorSafe as GridCellFloatEditor
+from GridCellNumberEditorSafe import GridCellNumberEditorSafe as GridCellNumberEditor
 
 #--------------------------------------------------------------------------------
 
@@ -375,12 +376,12 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'numLaps':
-				attr.SetEditor( wx.grid.GridCellNumberEditor() )
+				attr.SetEditor( GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'raceMinutes':
-				attr.SetEditor( wx.grid.GridCellNumberEditor() )
+				attr.SetEditor( GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
@@ -840,5 +841,6 @@ if __name__ == '__main__':
 	categories = Categories(mainWin)
 	categories.refresh()
 	categories.grid.SetCellValue( 0, categories.iCol['distance'], 'distance' )
+	categories.grid.SetCellValue( 0, categories.iCol['numLaps'], 'numLaps' )
 	mainWin.Show()
 	app.MainLoop()
