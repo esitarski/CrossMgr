@@ -1,5 +1,6 @@
 import re
 import wx
+import wx.grid
 
 class GridCellFloatEditorSafe( wx.grid.GridCellFloatEditor ):
 	'''
