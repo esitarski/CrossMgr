@@ -29,11 +29,11 @@ def getExportGrid():
 	GetTranslation = _
 	allZeroStarters = True
 	with UnstartedRaceWrapper():
-		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
+		catMap = { c.fullname:c for c in race.getCategories( startWaveOnly=False ) }
 		catDetails = GetCategoryDetails( False, True )
-		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
+		catDetailsMap = { cd['name']:cd for cd in catDetails }
 		
-		title = u'\n'.join( [_('Categories'), race.title, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
+		title = '\n'.join( [_('Categories'), race.title, race.scheduledStart + ' ' + _('Start on') + ' ' + Utils.formatDate(race.date)] )
 		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
 		
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
@@ -54,7 +54,7 @@ def getExportGrid():
 			raceDistanceUnit = catInfo.get( 'distanceUnit', '')
 			
 			if raceDistance:
-				raceDistance = '%.2f' % raceDistance
+				raceDistance = '{:.2f}'.format(raceDistance)
 				
 			if c.catType == c.CatWave:
 				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
@@ -65,12 +65,12 @@ def getExportGrid():
 				
 			catData.append( [
 				catStart,
-				u' - ' + c.name if c.catType == c.CatComponent else c.name,
+				' - ' + c.name if c.catType == c.CatComponent else c.name,
 				GetTranslation(catInfo.get('gender', 'Open')),
 				c.catStr,
-				u'{}'.format(laps),
-				u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
-				u'{}'.format(starters)
+				'{}'.format(laps),
+				' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
+				'{}'.format(starters)
 			])
 	
 	if allZeroStarters:
@@ -134,7 +134,7 @@ def PrintCategories():
 
 	if not printer.Print(mainWin, printout, True):
 		if printer.GetLastError() == wx.PRINTER_ERROR:
-			Utils.MessageOK(mainWin, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(mainWin, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 	else:
 		mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -223,7 +223,7 @@ class CategoryIconRenderer(gridlib.GridCellRenderer):
 		
 #--------------------------------------------------------------------------------
 class Categories( wx.Panel ):
-	CategoryTypeChoices = [_('Start Wave'),u'    ' + _('Component'),_('Custom')]
+	CategoryTypeChoices = [_('Start Wave'),'    ' + _('Component'),_('Custom')]
 	DistanceTypeChoices = [_('Lap'),_('Race')]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -257,11 +257,11 @@ class Categories( wx.Panel ):
 
 		hs.AddSpacer( 6 )
 		
-		self.upCategoryButton = wx.Button(self, label=u'\u2191')
+		self.upCategoryButton = wx.Button(self, label='\u2191')
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
-		self.downCategoryButton = wx.Button(self, label=u'\u2193')
+		self.downCategoryButton = wx.Button(self, label='\u2193')
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
@@ -291,11 +291,11 @@ class Categories( wx.Panel ):
 
 		hs.AddStretchSpacer()
 		
-		self.printButton = wx.Button( self, label=u'{}...'.format(_('Print')) )
+		self.printButton = wx.Button( self, label='{}...'.format(_('Print')) )
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
 		hs.Add( self.printButton, 0, border = border, flag = flag )
 		
-		self.excelButton = wx.Button( self, label=u'{}...'.format(_('Excel')) )
+		self.excelButton = wx.Button( self, label='{}...'.format(_('Excel')) )
 		self.Bind( wx.EVT_BUTTON, self.onExcel, self.excelButton )
 		hs.Add( self.excelButton, 0, border = border, flag = flag )
 		
@@ -439,10 +439,10 @@ class Categories( wx.Panel ):
 			wb.close()
 			if Utils.getMainWin().launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}"\n\n{}\n{}'.format(
+						'{} "{}"\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,
 							_('Check if this spreadsheet is already open.'),
 							_('If so, close it, and try again.')
@@ -597,7 +597,7 @@ class Categories( wx.Panel ):
 			
 		dlg = wx.TextEntryDialog(
 			self,
-			u'{}: {}'.format(
+			'{}: {}'.format(
 				category.name,
 				_('''Add Bib Exceptions (comma separated).
 This will add the given list of Bibs to this category,
@@ -724,7 +724,7 @@ and remove them from other categories.'''),
 			return
 		if Utils.MessageOKCancel(
 					self,
-					u'{} "{} ({})"?'.format(
+					'{} "{} ({})"?'.format(
 						_('Delete Category'),
 						self.grid.GetCellValue(r, 3).strip(),
 						self.grid.GetCellValue(r, 4).strip(),
@@ -772,7 +772,7 @@ and remove them from other categories.'''),
 			
 			for c in range(self.grid.GetNumberCols()):
 				if self.grid.GetColLabelValue(c).startswith(_('Distance')):
-					self.grid.SetColLabelValue( c, u'{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
+					self.grid.SetColLabelValue( c, '{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
 					break
 			
 			categories = race.getAllCategories()

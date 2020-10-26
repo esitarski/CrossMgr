@@ -24,11 +24,11 @@ def getWinnerInfo( bib ):
 		return u''
 
 	fields = [
-		u' '.join( f for f in (riderInfo.get('FirstName',u''), riderInfo.get('LastName',u'')) if f ),
-		riderInfo.get('Team', u''),
+		' '.join( f for f in (riderInfo.get('FirstName',''), riderInfo.get('LastName','')) if f ),
+		riderInfo.get('Team', ''),
 	]
 	
-	return u', '.join( f for f in fields if f )
+	return ', '.join( f for f in fields if f )
 	
 # Do not change the number codes.
 with Utils.SuspendTranslation():
@@ -97,11 +97,11 @@ class Primes( wx.Panel ):
 		self.grid.AutoSizeRows( False )
 
 		#---------------------------------------------------------------
-		self.photosButton = wx.Button( self, label=u'{}...'.format(_('Photos')) )
+		self.photosButton = wx.Button( self, label='{}...'.format(_('Photos')) )
 		self.photosButton.Bind( wx.EVT_BUTTON, self.onPhotos )
-		self.finishStrip = wx.Button( self, label=u'{}...'.format(_('Finish Strip')) )
+		self.finishStrip = wx.Button( self, label='{}...'.format(_('Finish Strip')) )
 		self.finishStrip.Bind( wx.EVT_BUTTON, self.onFinishStrip )
-		self.history = wx.Button( self, label=u'{}...'.format(_('Passings')) )
+		self.history = wx.Button( self, label='{}...'.format(_('Passings')) )
 		self.history.Bind( wx.EVT_BUTTON, self.onHistory )
 		
 		self.newButton = wx.Button( self, id=wx.ID_NEW )
@@ -141,7 +141,7 @@ class Primes( wx.Panel ):
 				self.grid.SetCellValue( row, col-1, GetTranslation('Custom') )
 		elif colName == 'effortType':
 			if self.grid.GetCellValue(row, col) != 'Custom':
-				self.grid.SetCellValue( row, col+1, u'' )
+				self.grid.SetCellValue( row, col+1, '' )
 		elif colName == 'winnerBib':
 			bib = int( u''.join(c for c in self.grid.GetCellValue(row, col) if c.isdigit()) )
 			self.grid.SetCellValue( row, col+1, getWinnerInfo(bib) )
@@ -155,7 +155,7 @@ class Primes( wx.Panel ):
 		row = self.grid.GetGridCursorRow()
 		if row is None or row < 0:
 			return
-		lapsToGo = int( u''.join(c for c in self.grid.GetCellValue(row, self.lapsToGoCol) if c.isdigit()) )
+		lapsToGo = int( ''.join(c for c in self.grid.GetCellValue(row, self.lapsToGoCol) if c.isdigit()) )
 		tMax = 0.0
 		for rr in GetResults(None):
 			try:
@@ -253,7 +253,7 @@ class Primes( wx.Panel ):
 			return
 		self.commit()
 		race = Model.race
-		if race and Utils.MessageOKCancel( self, u'{}: {} ?'.format(_('Delete Prime'), rowDelete+1), _('Confirm Delete Primes') ):
+		if race and Utils.MessageOKCancel( self, '{}: {} ?'.format(_('Delete Prime'), rowDelete+1), _('Confirm Delete Primes') ):
 			race.primes = getattr(race, 'primes', [])
 			try:
 				del race.primes[rowDelete]
@@ -267,7 +267,7 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if not race:
 			return []
-		sponsors = [prime.get('sponsor', u'') for prime in getattr(race, 'primes', [])] + [race.organizer]
+		sponsors = [prime.get('sponsor', '') for prime in getattr(race, 'primes', [])] + [race.organizer]
 		sponsors = [s for s in sponsors if s]
 		return sponsors
 		
@@ -275,7 +275,7 @@ class Primes( wx.Panel ):
 		race = Model.race
 		if not race:
 			return []
-		merchandise = [prime.get('merchandise', u'') for prime in getattr(race, 'primes', [])]
+		merchandise = [prime.get('merchandise', '') for prime in getattr(race, 'primes', [])]
 		merchandise = [m for m in merchandise if m]
 		return merchandise
 	
@@ -289,23 +289,23 @@ class Primes( wx.Panel ):
 				v = GetTranslation(effortType)
 			elif attr == 'position':
 				position = prime.get('position', 1)
-				v = u'' if position == 0 else '{}'.format(position)
+				v = '' if position == 0 else '{}'.format(position)
 			elif attr == 'points':
 				points = prime.get('points', 0)
-				v = u'' if points == 0 else '{}'.format(points)
+				v = '' if points == 0 else '{}'.format(points)
 			elif attr == 'winnerBib':
 				winnerBib = prime.get('winnerBib', None)
-				v = u'' if not winnerBib else '{}'.format(winnerBib)
+				v = '' if not winnerBib else '{}'.format(winnerBib)
 			elif attr == 'winnerInfo':
 				v = getWinnerInfo(winnerBib)
 			elif dataType == 'f':
 				f = prime.get(attr, 0.0)
-				v = u'{:.2f}'.format(f) if f else u''
+				v = '{:.2f}'.format(f) if f else ''
 			elif dataType == 't':
 				t = prime.get(attr, 0.0)
 				v = Utils.formatTime(t, forceHours=True, twoDigitHours=True) if t != 0 else u''
 			else:
-				v = '{}'.format(prime.get(attr, u''))
+				v = '{}'.format(prime.get(attr, ''))
 			if updateGrid:
 				self.grid.SetCellValue( row, col, v )
 			data.append( v )
@@ -317,10 +317,10 @@ class Primes( wx.Panel ):
 		for col, (name, attr, dataType) in enumerate(self.colNameFields):
 			v = self.grid.GetCellValue( row, col ).strip()
 			if dataType == 'i':
-				v = u''.join( c for c in v if c.isdigit() )
+				v = ''.join( c for c in v if c.isdigit() )
 				v = int( v or 0 )
 			elif dataType == 'f':
-				v = u''.join( c for c in v if c.isdigit() or c == '.')
+				v = ''.join( c for c in v if c.isdigit() or c == '.')
 				v = float( v or 0.0 )
 			elif dataType == 't':
 				v = Utils.StrToSeconds( v )
@@ -382,10 +382,10 @@ def GetGrid():
 		externalFields = set()
 		externalInfo = {}
 	
-	title = u'\n'.join( [race.title, Utils.formatDate(race.date), u'Primes'] )
+	title = '\n'.join( [race.title, Utils.formatDate(race.date), u'Primes'] )
 	
 	rightJustifyCols = set([0, 1])
-	colnames = [u'Prime', _('Bib'),]
+	colnames = ['Prime', _('Bib'),]
 	hasName = ('FirstName' in externalFields or 'LastName' in externalFields)
 	if hasName:
 		colnames.append( _('Name') )
@@ -435,17 +435,17 @@ def GetGrid():
 		row.append( bib or u'' )
 		
 		if hasName:
-			row.append( u', '.join( f for f in [info.get('LastName', u''), info.get('FirstName', u'')] if f ) )
+			row.append( ', '.join( f for f in [info.get('LastName', ''), info.get('FirstName', '')] if f ) )
 		if hasTeam:
-			row.append( info.get('Team', u'') )
+			row.append( info.get('Team', '') )
 		row.append( prime['lapsToGo'] )
 		effortType = prime['effortType']
-		row.append( GetTranslation(effortType) if effortType != 'Custom' else prime.get('effortCustom',u'') )
+		row.append( GetTranslation(effortType) if effortType != 'Custom' else prime.get('effortCustom','') )
 
 		if hasCash:
-			row.append( u'{:.2f}'.format(prime.get('cash',0.0)) )
+			row.append( '{:.2f}'.format(prime.get('cash',0.0)) )
 		if hasMerchandise:
-			row.append( prime.get('merchandise',u'') )
+			row.append( prime.get('merchandise','') )
 		if hasPoints:
 			points = prime.get('points',0)
 			row.append( '{}'.format(points) if points else '' )
@@ -453,7 +453,7 @@ def GetGrid():
 			timeBonus = prime.get('timeBonus',0)
 			row.append( Utils.formatTime(timeBonus) if timeBonus else '' )
 		if hasSponsor:
-			row.append( prime.get('sponsor',u'') )
+			row.append( prime.get('sponsor','') )
 		
 		for c, v in enumerate(row):
 			data[c].append( '{}'.format(v) )
@@ -478,11 +478,11 @@ if __name__ == '__main__':
 	race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 	
 	race.primes = [
-		{'sponsor': u'11111111111111', 'cash': 100, 'merchandise': u'', 'winnerBib': 101, 'lapsToGo': 7 },
-		{'sponsor': u'22222222222222', 'cash': 200, 'merchandise': u'', 'winnerBib': 110, 'lapsToGo': 6 },
-		{'sponsor': u'33333333333333', 'cash': 0, 'merchandise': u'Water bottle', 'winnerBib': 115, 'lapsToGo': 5 },
-		{'sponsor': u'44444444444444', 'cash': 300, 'merchandise': u'', 'winnerBib': 199, 'lapsToGo': 4 },
-		{'sponsor': u'55555555555555', 'cash': 0.51, 'merchandise': u'New bike', 'winnerBib': 101, 'lapsToGo': 3 },
+		{'sponsor': u'11111111111111', 'cash': 100, 'merchandise': '', 'winnerBib': 101, 'lapsToGo': 7 },
+		{'sponsor': u'22222222222222', 'cash': 200, 'merchandise': '', 'winnerBib': 110, 'lapsToGo': 6 },
+		{'sponsor': u'33333333333333', 'cash': 0, 'merchandise': 'Water bottle', 'winnerBib': 115, 'lapsToGo': 5 },
+		{'sponsor': u'44444444444444', 'cash': 300, 'merchandise': '', 'winnerBib': 199, 'lapsToGo': 4 },
+		{'sponsor': u'55555555555555', 'cash': 0.51, 'merchandise': 'New bike', 'winnerBib': 101, 'lapsToGo': 3 },
 	]
 	
 	mainWin = wx.Frame(None, title="Primes", size=(800,700) )
