@@ -228,17 +228,17 @@ class SimulateDialog(wx.Dialog):
 
 		super().__init__(parent, id, title, pos, size, style, name)
 
-		explain = u'\n'.join( [
+		explain = '\n'.join( [
 				_('Simulate Race'),
-				u'',
+				'',
 				_('This will simulate a race using randomly generated data.'),
 				_("It is a good illustration of CrossMgr's functionality with real time data."),
-				u'',
+				'',
 				_('The simulation takes about 8 minutes.'),
 				_('In the Time Trial simulation, riders start on 15 second intervals.'),
-				u'',
-				u'{}:\n    "{}"'.format(_('The race will be written to'), fName),
-				u'',
+				'',
+				'{}:\n    "{}"'.format(_('The race will be written to'), fName),
+				'',
 				_('Continue?'),
 				] )
 		
@@ -287,10 +287,10 @@ class SimulateDialog(wx.Dialog):
 		sizer.Fit(self)
 
 def replaceJsonVar( s, varName, value ):
-	return s.replace( u'{} = null'.format(varName), u'{} = {}'.format(varName, Utils.ToJson(value, separators=(',',':'))), 1 )
+	return s.replace( '{} = null'.format(varName), '{} = {}'.format(varName, Utils.ToJson(value, separators=(',',':'))), 1 )
 
 # Code on web page required by Google Analytics.
-gaSnippet = u'''
+gaSnippet = '''
 <script>
 var gaNow = 1*new Date();
 setTimeout( function() {
@@ -690,7 +690,7 @@ class MainWin( wx.Frame ):
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
 			getattr( self, a ).SetDropTarget( self.fileDrop )
-			addPage( getattr(self, a), u'{}. {}'.format(i+1, n) )
+			addPage( getattr(self, a), '{}. {}'.format(i+1, n) )
 			setattr( self, 'i' + a[0].upper() + a[1:] + 'Page', i )
 		self.iChartPage = self.iGanttPage
 		
@@ -804,7 +804,7 @@ class MainWin( wx.Frame ):
 		for i, p in enumerate(self.pages):
 			name = self.notebook.GetPageText(i)
 			if i <= 11:
-				item = self.pageMenu.Append( wx.ID_ANY, u'{}\tF{}'.format(name, i+1), u"{} {}".format(_('Jump to'), name) )
+				item = self.pageMenu.Append( wx.ID_ANY, '{}\tF{}'.format(name, i+1), u"{} {}".format(_('Jump to'), name) )
 			else:
 				item = self.pageMenu.Append( wx.ID_ANY, name, u"{} {}".format(_('Jump to'), name) )
 			self.idPage[item.GetId()] = i
@@ -950,17 +950,17 @@ class MainWin( wx.Frame ):
 				return None
 				
 			if num in exclude:
-				Utils.MessageOK( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is choosen already.")), _("Not Available") )
+				Utils.MessageOK( self, '{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is choosen already.")), _("Not Available") )
 				continue
 			
 			if mustBeInRace:
 				if not num in race.riders:
-					Utils.MessageOK( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib Number is Not in the Race")), _("Not in Race") )
+					Utils.MessageOK( self, '{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib Number is Not in the Race")), _("Not in Race") )
 				else:
 					break
 			else:
 				if num in race.riders:
-					Utils.MessageOK( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is Already in the Race")), _("Already in Race") )
+					Utils.MessageOK( self, '{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is Already in the Race")), _("Already in Race") )
 				else:
 					break
 		
@@ -971,7 +971,7 @@ class MainWin( wx.Frame ):
 		if num is None:
 			return
 
-		if Utils.MessageOKCancel( self, u'{} {}:\n\n{}'.format(_('Bib'), num, _("Confirm Delete")), _("Delete Rider") ):
+		if Utils.MessageOKCancel( self, '{} {}:\n\n{}'.format(_('Bib'), num, _("Confirm Delete")), _("Delete Rider") ):
 			undo.pushState()
 			Model.race.deleteRider( num )
 			wx.CallAfter( self.refresh )
@@ -1038,7 +1038,7 @@ class MainWin( wx.Frame ):
 			return
 			
 		if Utils.MessageOKCancel( self,
-				u'{} {}:  {}: {}\n\n{}\n\n{}?'.format(
+				'{} {}:  {}: {}\n\n{}\n\n{}?'.format(
 					_('Bib'), num,
 					_('Times will be copied to new Bib'), newNum,
 					_('All times will be slightly earlier.'),
@@ -1178,7 +1178,7 @@ class MainWin( wx.Frame ):
 				
 		startTime, finishTime, numTimes = OutputStreamer.ReadStreamFile()
 		if not numTimes:
-			Utils.MessageOK( self, u'{}.\n\n{} "{}".'.format(
+			Utils.MessageOK( self, '{}.\n\n{} "{}".'.format(
 				_('No Data Found'),
 				_('Check file'),
 				OutputStreamer.getFileName()), _("No Data Found")
@@ -1231,12 +1231,12 @@ class MainWin( wx.Frame ):
 
 	def menuJChipImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = u'{}\n\n{}'.format(
+		explain = '{}\n\n{}'.format(
 			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
 			_('See documentation for details.')
 		)
 		if not correct:
-			Utils.MessageOK( self, u'{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -1247,12 +1247,12 @@ class MainWin( wx.Frame ):
 		
 	def menuAlienImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = u'{}\n\n{}'.format(
+		explain = '{}\n\n{}'.format(
 			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
 			_('See documentation for details.')
 		)
 		if not correct:
-			Utils.MessageOK( self, u'{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -1263,12 +1263,12 @@ class MainWin( wx.Frame ):
 		
 	def menuIpicoImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = u'{}\n\n{}'.format(
+		explain = '{}\n\n{}'.format(
 			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
 			_('See documentation for details.')
 		)
 		if not correct:
-			Utils.MessageOK( self, u'{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
@@ -1279,7 +1279,7 @@ class MainWin( wx.Frame ):
 		
 	def menuImpinjImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = u'{}\n\n{}'.format(
+		explain = '{}\n\n{}'.format(
 			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
 			_('See documentation for details.')
 		)
@@ -1295,7 +1295,7 @@ class MainWin( wx.Frame ):
 		
 	def menuOrionImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = u'{}\n\n{}'.format(
+		explain = '{}\n\n{}'.format(
 			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
 			_('See documentation for details.')
 		)
@@ -1311,7 +1311,7 @@ class MainWin( wx.Frame ):
 		
 	def menuRaceResultImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
-		explain = u'{}\n\n{}'.format(
+		explain = '{}\n\n{}'.format(
 			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
 			_('See documentation for details.')
 		)
@@ -1408,14 +1408,14 @@ class MainWin( wx.Frame ):
 		if wx.TheClipboard.Open():
 			wx.TheClipboard.SetData( dataObj )
 			wx.TheClipboard.Close()
-			Utils.MessageOK(self, u'\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
+			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
 	
 	def menuPlayback( self, event ):
 		if not Model.race or not Model.race.isFinished():
 			return
-		if not Utils.MessageOKCancel(self, u'{}\n\n{}?'.format(_('Playback this race in real-time.'), _('Continue')), _("Playback") ):
+		if not Utils.MessageOKCancel(self, '{}\n\n{}?'.format(_('Playback this race in real-time.'), _('Continue')), _("Playback") ):
 			return
 		self.writeRace()
 		bibTimes = Model.race.getBibTimes()
@@ -1554,7 +1554,7 @@ class MainWin( wx.Frame ):
 
 		if not printer.Print(self, printout, True) or printError:
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -1590,7 +1590,7 @@ class MainWin( wx.Frame ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -1641,7 +1641,7 @@ class MainWin( wx.Frame ):
 						fname = printout.lastFName
 				except Exception as e:
 					Utils.MessageOK(self,
-								u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+								'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
 								_('PDF File Error'), iconMask=wx.ICON_ERROR )
 					logException( e, sys.exc_info() )
 					success = False
@@ -1654,7 +1654,7 @@ class MainWin( wx.Frame ):
 			except Exception as e:
 				logException( e, sys.exc_info() )
 				Utils.MessageOK(self,
-							u'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
+							'{}:\n\n    {}.'.format(_('Error creating PDF files'), e),
 							_('PDF File Error'), iconMask=wx.ICON_ERROR )
 				success = False
 				
@@ -1664,7 +1664,7 @@ class MainWin( wx.Frame ):
 			if fname and self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( fname )
 			if fname:
-				Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('PDF file written to'), fname), _('PDF Publish') )
+				Utils.MessageOK( self, '{}:\n\n    {}'.format(_('PDF file written to'), fname), _('PDF Publish') )
 
 	@logCall
 	def menuPrintPNG( self, event=None, silent=False ):
@@ -1693,7 +1693,7 @@ class MainWin( wx.Frame ):
 				except Exception as e:
 					logException( e, sys.exc_info() )
 					Utils.MessageOK(self,
-								u'{}:\n\n    {}.'.format(_('Error creating Image files'), e),
+								'{}:\n\n    {}.'.format(_('Error creating Image files'), e),
 								_('Image File Error'), iconMask=wx.ICON_ERROR )
 					success = False
 					break
@@ -1703,7 +1703,7 @@ class MainWin( wx.Frame ):
 		if success and not silent:
 			if fname and self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( fname )
-			Utils.MessageOK( self, u'{}:\n\n    {}'.format(_('Results written as Image files to'), dir), _('Facebook Publish') )
+			Utils.MessageOK( self, '{}:\n\n    {}'.format(_('Results written as Image files to'), dir), _('Facebook Publish') )
 
 	@logCall
 	def menuPrintCategories( self, event ):
@@ -1787,11 +1787,11 @@ class MainWin( wx.Frame ):
 			wb.close()
 			if self.launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError as e:
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
-						u'{} "{}"\n\n{}\n{}'.format(
+						'{} "{}"\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,
 							_('Check if this spreadsheet is already open.'),
 							_('If so, close it, and try again.')
@@ -1823,7 +1823,7 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		
 		payload = {}
-		payload['raceName'] = os.path.basename(self.fileName or u'')[:-4]
+		payload['raceName'] = os.path.basename(self.fileName or '')[:-4]
 		iTeam = ReportFields.index('Team')
 		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
 		
@@ -1838,7 +1838,7 @@ class MainWin( wx.Frame ):
 		payload['raceDate']			= race.date
 		payload['raceScheduledStart']= race.date + ' ' + race.scheduledStart
 		payload['raceTimeZone']		= race.timezone
-		payload['raceAddress']      = u', '.join( n for n in [race.city, race.stateProv, race.country] if n )
+		payload['raceAddress']      = ', '.join( n for n in [race.city, race.stateProv, race.country] if n )
 		payload['raceIsRunning']	= race.isRunning()
 		payload['raceIsUnstarted']	= race.isUnstarted()
 		payload['raceIsFinished']	= race.isFinished()
@@ -1859,7 +1859,7 @@ class MainWin( wx.Frame ):
 			payload['raceNotes']	= notes
 		else:
 			notes = TemplateSubstitute( escape(notes), race.getTemplateValues() )
-			notes = self.reTagTrainingSpaces.sub( u'>', notes ).replace( '</table>', '</table><br/>' )
+			notes = self.reTagTrainingSpaces.sub( '>', notes ).replace( '</table>', '</table><br/>' )
 			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
 			payload['raceNotes']	= notes
 		if race.startTime:
@@ -1890,12 +1890,12 @@ class MainWin( wx.Frame ):
 		raceTime = datetime.datetime( year, month, day, hour, minute, second )
 		
 		#------------------------------------------------------------------------
-		title = u'{} - {} {} {}'.format( race.title, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
-		html = html.replace( u'CrossMgr Race Results by Edward Sitarski', escape(title) )
+		title = '{} - {} {} {}'.format( race.title, _('Starting'), raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+		html = html.replace( 'CrossMgr Race Results by Edward Sitarski', escape(title) )
 		if getattr(race, 'gaTrackingID', None):
-			html = html.replace( u'<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
+			html = html.replace( '<!-- Google Analytics -->', gaSnippet.replace('UA-XXXX-Y', race.gaTrackingID) )
 		if race.isRunning():
-			html = html.replace( u'<!-- Meta -->', u'''
+			html = html.replace( '<!-- Meta -->', '''
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>''' )
@@ -2024,7 +2024,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = u'{} {} {}'.format( race.title, _('Course for'), raceTime.strftime(localDateFormat) )
+			title = '{} {} {}'.format( race.title, _('Course for'), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', escape(title) )
 			
 			payload['raceName']			= escape(race.title)
@@ -2092,7 +2092,7 @@ class MainWin( wx.Frame ):
 		self.commit()
 		race = Model.race
 		if self.fileName is None or len(self.fileName) < 4:
-			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('No Race'), _('New/Open a Race and try again.')),
+			Utils.MessageOK(self, '{}\n\n{}.'.format(_('No Race'), _('New/Open a Race and try again.')),
 				_('No Race'), iconMask=wx.ICON_ERROR )
 			return
 		if race and not race.email:
@@ -2138,10 +2138,10 @@ class MainWin( wx.Frame ):
 				fp.write( html )
 			if not silent:
 				Utils.LaunchApplication( fname )
-				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
+				Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Html Race Animation written to'), fname), _('Html Write'))
 		except Exception as e:
 			logException( e, sys.exc_info() )
-			Utils.MessageOK(self, u'{}\n\t\t{}\n({}).'.format(_('Cannot write HTML file'), e, fname),
+			Utils.MessageOK(self, '{}\n\t\t{}\n({}).'.format(_('Cannot write HTML file'), e, fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2153,7 +2153,7 @@ class MainWin( wx.Frame ):
 			WebServer.WriteHtmlIndexPage()
 		except Exception as e:
 			logException( e, sys.exc_info() )
-			Utils.MessageOK(self, u'{}\n\n{}.'.format(_('HTML Index Failure'), e),
+			Utils.MessageOK(self, '{}\n\n{}.'.format(_('HTML Index Failure'), e),
 							_('Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2162,7 +2162,7 @@ class MainWin( wx.Frame ):
 		if not self.fileName or len(self.fileName) < 4:
 			Utils.MessageOK(
 				self,
-				u'{}.  {}:\n\n    {}'.format(
+				'{}.  {}:\n\n    {}'.format(
 					_('Ftp Upload Failed'), _('Error'), _('No race loaded.')
 				),
 				_('Ftp Upload Failed'),
@@ -2237,19 +2237,19 @@ class MainWin( wx.Frame ):
 				except:
 					continue
 				category = getComponentCategory( bib, category )
-				catName = category.fullname if category else u''
+				catName = category.fullname if category else ''
 				
 				info = externalInfo.get(bib, {})
 				
-				nation = info.get('NatCode', u'') or info.get('UCICode', u'')
+				nation = info.get('NatCode', '') or info.get('UCICode', '')
 				if nation:
 					nationCodes.add( nation )
 				
 				row = [
 					firstTime,
 					bib,
-					u' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
-					info.get('Team', u''),
+					' '.join(v for v in [info.get('FirstName',''), info.get('LastName')] if v),
+					info.get('Team', ''),
 					catName,
 					nation,
 				]
@@ -2282,7 +2282,7 @@ class MainWin( wx.Frame ):
 			
 		if not race.isRunning():
 			Utils.MessageOK( self,
-				u'\n'.join( [
+				'\n'.join( [
 					_('The Time Trial has not started.'),
 					_('The TTCountdown page will act as countdown clock for the scheduled start time.'),
 					_('You must publish this page again after you start the Time Trial.'),
@@ -2307,7 +2307,7 @@ class MainWin( wx.Frame ):
 				with io.open(fname, 'w') as fp:
 					fp.write( html )
 			except:
-				Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+				Utils.MessageOK(self, '{} ({}).'.format(_('Cannot write HTML file'), fname),
 								_('Html Write Error'), iconMask=wx.ICON_ERROR )
 				continue
 				
@@ -2363,7 +2363,7 @@ class MainWin( wx.Frame ):
 				return
 				
 			if not getattr(race, 'geoTrack', None):
-				Utils.MessageOK( self, u'{}\n\n{}'.format(_('No GPX Course Loaded.'), _('Nothing to export.')), _('No GPX Course Loaded') )
+				Utils.MessageOK( self, '{}\n\n{}'.format(_('No GPX Course Loaded.'), _('Nothing to export.')), _('No GPX Course Loaded') )
 				return
 				
 			geoTrack = race.geoTrack
@@ -2377,9 +2377,9 @@ class MainWin( wx.Frame ):
 		try:
 			with io.open(fname, 'w') as f:
 				f.write( xml )
-			Utils.MessageOK(self, u'{}\n\n    {}.'.format(_('Course written to GPX file'), fname), _('GPX Export'))
+			Utils.MessageOK(self, '{}\n\n    {}.'.format(_('Course written to GPX file'), fname), _('GPX Export'))
 		except Exception as e:
-			Utils.MessageOK(self, u'{}  {}\n\n    {}\n\n"{}"'.format(_('Write to GPX file Failed.'), _('Error'), e, fname), _('GPX Export'))
+			Utils.MessageOK(self, '{}  {}\n\n    {}\n\n"{}"'.format(_('Write to GPX file Failed.'), _('Error'), e, fname), _('GPX Export'))
 		
 	@logCall
 	def menuExportCourseAsKml( self, event=None ):
@@ -2388,7 +2388,7 @@ class MainWin( wx.Frame ):
 				return
 				
 			if not getattr(race, 'geoTrack', None):
-				Utils.MessageOK( self, u'{}.\n{}'.format(_('No GPX Course Loaded'), _('Nothing to export.')), _('No GPX Course Loaded') )
+				Utils.MessageOK( self, '{}.\n{}'.format(_('No GPX Course Loaded'), _('Nothing to export.')), _('No GPX Course Loaded') )
 				return
 				
 			geoTrack = race.geoTrack
@@ -2401,7 +2401,7 @@ class MainWin( wx.Frame ):
 			zf.close()
 			
 		Utils.LaunchApplication( fname )
-		Utils.MessageOK(self, u'{}:\n\n   {}\n\n{}'.format(_('Course Virtual Tour written to KMZ file'), fname, _('Google Earth Launched.')), _('KMZ Write'))
+		Utils.MessageOK(self, '{}:\n\n   {}\n\n{}'.format(_('Course Virtual Tour written to KMZ file'), fname, _('Google Earth Launched.')), _('KMZ Write'))
 	
 	@logCall
 	def menuExportCoursePreviewAsHtml( self, event=None ):
@@ -2410,7 +2410,7 @@ class MainWin( wx.Frame ):
 				return
 				
 			if not getattr(race, 'geoTrack', None):
-				Utils.MessageOK( self, u'{}\n\n{}'.format(_('No GPX Course Loaded.'), _('Nothing to export.')), _('No GPX Course Loaded') )
+				Utils.MessageOK( self, '{}\n\n{}'.format(_('No GPX Course Loaded.'), _('Nothing to export.')), _('No GPX Course Loaded') )
 				return
 				
 			geoTrack = race.geoTrack
@@ -2433,9 +2433,9 @@ class MainWin( wx.Frame ):
 			with io.open(fname, 'w') as fp:
 				fp.write( html )
 			Utils.LaunchApplication( fname )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
 		except:
-			Utils.MessageOK(self, u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+			Utils.MessageOK(self, '{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2448,7 +2448,7 @@ class MainWin( wx.Frame ):
 			startTime, endTime, rawData = race.getRawData()
 		
 		if not rawData:
-			Utils.MessageOK( self, u'{}\n\n    "{}".'.format(_('Raw race data file is empty/missing.'), OutputStreamer.getFileName()),
+			Utils.MessageOK( self, '{}\n\n    "{}".'.format(_('Raw race data file is empty/missing.'), OutputStreamer.getFileName()),
 					_('Missing Raw Race Data'), wx.ICON_ERROR )
 			return
 		
@@ -2527,7 +2527,7 @@ class MainWin( wx.Frame ):
 				timeComponents.append( 0 )
 			hour, minute, second = timeComponents
 			raceTime = datetime.datetime( year, month, day, hour, minute, second )
-			title = u'{} Raw Data for {} Start on {}'.format( race.title, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
+			title = '{} Raw Data for {} Start on {}'.format( race.title, raceTime.strftime(localTimeFormat), raceTime.strftime(localDateFormat) )
 			html = html.replace( 'CrossMgr Race Results by Edward Sitarski', escape(title) )
 			html = replaceJsonVar( html, 'organizer', getattr(race, 'organizer', '') )
 			
@@ -2536,7 +2536,7 @@ class MainWin( wx.Frame ):
 		graphicBase64 = self.getGraphicBase64()
 		if graphicBase64:
 			try:
-				iStart = html.index( u'var imageSrc =' )
+				iStart = html.index( 'var imageSrc =' )
 				iEnd = html.index( "';", iStart )
 				html = ''.join( [html[:iStart], u"var imageSrc = '{}';".format(graphicBase64), html[iEnd+2:]] )
 			except ValueError:
@@ -2548,10 +2548,10 @@ class MainWin( wx.Frame ):
 			with io.open(fname, 'w') as fp:
 				fp.write( html )
 			Utils.LaunchApplication( fname )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
 		except:
 			Utils.MessageOK(self,
-							u'{} ({}).'.format(_('Cannot write HTML file'), fname),
+							'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -2669,7 +2669,7 @@ class MainWin( wx.Frame ):
 		if os.path.exists(fileName) and \
 		   not Utils.MessageOKCancel(
 				self,
-				u'{}.\n\n    "{}"\n\n{}?'.format(
+				'{}.\n\n    "{}"\n\n{}?'.format(
 					_('File already exists'), fileName, _('Overwrite')
 				)
 			):
@@ -2681,7 +2681,7 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'w') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK( self, u'{}\n\n    "{}"'.format(_('Cannot Open File'),fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK( self, '{}\n\n    "{}"'.format(_('Cannot Open File'),fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			Model.race = raceSave
 			return
 
@@ -2710,8 +2710,8 @@ class MainWin( wx.Frame ):
 		# Create some defaults so the page is not blank.
 		if not importedCategories:
 			race.categoriesImportFile = ''
-			race.setCategories( [{'name':u'{} {}-{}'.format(_('Category'), max(1, i*100), (i+1)*100-1),
-								  'catStr':u'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in range(8)] )
+			race.setCategories( [{'name':'{} {}-{}'.format(_('Category'), max(1, i*100), (i+1)*100-1),
+								  'catStr':'{}-{}'.format(max(1, i*100), (i+1)*100-1)} for i in range(8)] )
 		else:
 			race.categoriesImportFile = categoriesFile
 			
@@ -2757,7 +2757,7 @@ class MainWin( wx.Frame ):
 
 		# Check for existing file.
 		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, u'{}\n\n    {}'.format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
+		   not Utils.MessageOKCancel(self, '{}\n\n    {}'.format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
 			return
 
 		# Try to open the file.
@@ -2765,10 +2765,10 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'w') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, u'{}\n\n    "{}".'.format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 		except Exception as e:
-			Utils.MessageOK(self, u'{}\n\n    "{}".\n\n{}: {}'.format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, '{}\n\n    "{}".\n\n{}: {}'.format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			return
 
 		# Create a new race and initialize it with the properties.
@@ -2890,7 +2890,7 @@ class MainWin( wx.Frame ):
 
 		if overwriteExisting and os.path.isfile(fileName):
 			if not Utils.MessageOKCancel( self,
-				u'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
+				'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
 				_('File Exists') ):
 				Model.race = raceSave
 				return
@@ -2900,7 +2900,7 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'w') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, u'{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 			Model.race = raceSave
 			return
 
@@ -2998,17 +2998,17 @@ class MainWin( wx.Frame ):
 			self.record.setTimeTrialInput( race.isTimeTrial )
 			self.showPage( self.iResultsPage if isFinished else self.iActionsPage )
 			self.refreshAll()
-			Utils.writeLog( u'{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
-			Utils.writeLog( u'call: openRace: "{}"'.format(fileName) )
+			Utils.writeLog( '{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
+			Utils.writeLog( 'call: openRace: "{}"'.format(fileName) )
 			
 			eventFileName = os.path.join( os.path.dirname(self.fileName), race.getFileName() )
 			if self.fileName != eventFileName:
 				if os.path.isfile(eventFileName):
 					exists = '\n\n{}: "{}"'.format(_('This will replace an Existing Race file'), os.path.basename(eventFileName))
 				else:
-					exists = u''
+					exists = ''
 				
-				if not Utils.MessageOKCancel( self, u'{}.\n\n{}:\n\n\t{}{}\n\n{}'.format(
+				if not Utils.MessageOKCancel( self, '{}.\n\n{}:\n\n\t{}{}\n\n{}'.format(
 						_("The FileName does not match the Event Name format"),
 						_("Going forward, this event will saved as"), eventFileName,
 						exists,
@@ -3023,7 +3023,7 @@ class MainWin( wx.Frame ):
 						self.refresh()
 					return
 				
-				Utils.writeLog( u'openRace: changed FileName to "{}".'.format(eventFileName) )
+				Utils.writeLog( 'openRace: changed FileName to "{}".'.format(eventFileName) )
 				self.fileName = eventFileName
 			
 			self.updateRecentFiles()
@@ -3034,14 +3034,14 @@ class MainWin( wx.Frame ):
 				return
 				
 			if os.path.isfile(excelLink.fileName):
-				Utils.writeLog( u'openRace: Excel file "{}"'.format(excelLink.fileName) )
+				Utils.writeLog( 'openRace: Excel file "{}"'.format(excelLink.fileName) )
 				return
 				
 			# Check if we have a missing spreadsheet but can find one in the same folder as the race.
-			Utils.writeLog( u'openRace: cannot open Excel file "{}"'.format(excelLink.fileName) )
+			Utils.writeLog( 'openRace: cannot open Excel file "{}"'.format(excelLink.fileName) )
 			newFileName = GetMatchingExcelFile(fileName, excelLink.fileName)
 			if newFileName and Utils.MessageOKCancel(self,
-				u'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
+				'{}:\n\n"{}"\n\n{}:\n\n"{}"\n\n{}'.format(
 					_('Could not find Excel file'), excelLink.fileName,
 					_('Found this Excel file in the race folder with matching name'), newFileName, _('Use this Excel file from now on?')
 				),
@@ -3051,11 +3051,11 @@ class MainWin( wx.Frame ):
 				ResetExcelLinkCache()
 				Model.resetCache()
 				self.refreshAll()
-				Utils.writeLog( u'openRace: changed Excel file to "{}"'.format(newFileName) )
+				Utils.writeLog( 'openRace: changed Excel file to "{}"'.format(newFileName) )
 				
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
-			Utils.MessageOK(self, u'{} "{}"\n\n{}.'.format(_('Cannot Open File'), fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, '{} "{}"\n\n{}.'.format(_('Cannot Open File'), fileName, e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 
 	@logCall
 	def menuOpen( self, event ):
@@ -3199,7 +3199,7 @@ class MainWin( wx.Frame ):
 			with open(fName, 'w') as fp:
 				pass
 		except IOError:
-			Utils.MessageOK(self, u'{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(self, '{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
 			return
 
 		self.showResultsPage()	# Switch to a read-only view and force a commit.
@@ -3460,7 +3460,7 @@ class MainWin( wx.Frame ):
 			colnames = ['Count'] + colnames
 			data = [['{}'.format(i) for i in range(1, rowMax+1)]] + data
 		with Model.LockRace() as race:
-			title = u'{}\n{}\n{}'.format( race.title, Utils.formatDate(race.date), _('Race Passings') )
+			title = '{}\n{}\n{}'.format( race.title, Utils.formatDate(race.date), _('Race Passings') )
 		export = ExportGrid( title, colnames, data )
 
 		wb = xlsxwriter.Workbook( xlFName )
@@ -3471,10 +3471,10 @@ class MainWin( wx.Frame ):
 		try:
 			wb.close()
 			Utils.LaunchApplication( xlFName )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}".\n\n{}\n{}'.format(
+						'{} "{}".\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,
 							_('Check if this spreadsheet is open.'),
 							_('If so, close it, and try again.')
@@ -3500,10 +3500,10 @@ class MainWin( wx.Frame ):
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					Utils.LaunchApplication( xlFName )
-				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+				Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+						'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -3525,10 +3525,10 @@ class MainWin( wx.Frame ):
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					webbrowser.open( xlFName, new = 2, autoraise = True )
-				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+				Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+						'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -3550,10 +3550,10 @@ class MainWin( wx.Frame ):
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					webbrowser.open( xlFName, new = 2, autoraise = True )
-				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+				Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+						'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -3576,7 +3576,7 @@ class MainWin( wx.Frame ):
 				UCIExcel( category, xlFName, True )
 			except IOError:
 				Utils.MessageOK(self,
-							u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+							'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 							_('Excel File Error'), iconMask=wx.ICON_ERROR )
 			
 			xlFName = next(xlFNames)
@@ -3584,7 +3584,7 @@ class MainWin( wx.Frame ):
 				UCIExcel( category, xlFName, False)
 			except IOError:
 				Utils.MessageOK(self,
-							u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+							'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 							_('Excel File Error'), iconMask=wx.ICON_ERROR )
 	
 	@logCall
@@ -3613,22 +3613,22 @@ class MainWin( wx.Frame ):
 			if not silent:
 				if self.launchExcelAfterPublishingResults:
 					Utils.LaunchApplication( xlFName )
-				Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+				Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
+						'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
 						_('Excel File Error'), iconMask=wx.ICON_ERROR )
 		'''
 	
 	def resultsCheck( self ):
 		return Utils.MessageOKCancel( self,
-				u'\n'.join([
+				'\n'.join([
 					_('CrossResults/Race-Result Publish'),
-					u'',
+					'',
 					_('Make sure you publish correct results.'),
 					_('Take a few minutes to check the following:'),
 					'',
-					'\n'.join( u'{}. {}'.format(i+1, s) for i, s in enumerate([
+					'\n'.join( '{}. {}'.format(i+1, s) for i, s in enumerate([
 							_('Is the Race Name spelled correctly?'),
 							_('Is the Race Organizer spelled correctly?'),
 							_('Are the City, State/Prov and Country fields correctly filled in?'),
@@ -3658,7 +3658,7 @@ class MainWin( wx.Frame ):
 
 		if not race.city or not race.stateProv or not race.country:
 			Utils.MessageOK(self,
-						_('Missing City, State/Prov or Country fields.') + u'\n\n' +
+						_('Missing City, State/Prov or Country fields.') + '\n\n' +
 							_('Please fill in these fields in Properties.'),
 						_('Missing Location Fields'), iconMask=wx.ICON_ERROR )
 			ChangeProperties( self )
@@ -3681,8 +3681,8 @@ class MainWin( wx.Frame ):
 			if not success:
 				if not silent:
 					Utils.MessageOK(self,
-								u'{} {}: "{}"'.format(destination, _('Error'), message),
-								u'{} {}'.format(destination,_('Error')), iconMask=wx.ICON_ERROR )
+								'{} {}: "{}"'.format(destination, _('Error'), message),
+								'{} {}'.format(destination,_('Error')), iconMask=wx.ICON_ERROR )
 				return
 			
 			url = 'http://www.{Destination}.com/?n=results&sn=upload&crossmgr={MD5}&name={RaceName}&date={RaceDate}&loc={Location}&presentedby={PresentedBy}'.format(
@@ -3690,15 +3690,15 @@ class MainWin( wx.Frame ):
 				RaceName	= quote('{}'.format(raceName)),
 				RaceDate	= quote('{}'.format(raceDate)),
 				MD5			= hashlib.md5( (race.title + raceDate).encode() ).hexdigest(),
-				Location	= quote('{}'.format(u', '.join([race.city, race.stateProv, race.country]))),
+				Location	= quote('{}'.format(', '.join([race.city, race.stateProv, race.country]))),
 				PresentedBy = quote('{}'.format(race.organizer)),
 			)
 			webbrowser.open( url, new = 2, autoraise = True )
 		except Exception as e:
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
-						u'{} "{}"\n\n{}'.format(_('Cannot write'), fname, e),
-						u'{} {}'.format(destination, _('File Error')), iconMask=wx.ICON_ERROR )
+						'{} "{}"\n\n{}'.format(_('Cannot write'), fname, e),
+						'{} {}'.format(destination, _('File Error')), iconMask=wx.ICON_ERROR )
 	
 	@logCall
 	def menuExportWebScorer( self, event=None, silent=False ):
@@ -3720,14 +3720,14 @@ class MainWin( wx.Frame ):
 			if not silent:
 				if not success:
 					Utils.MessageOK(self,
-								u'WebScorer {}: "{}".'.format(_('Error'), message),
-								u'WebScorer {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
+								'WebScorer {}: "{}".'.format(_('Error'), message),
+								'WebScorer {}'.format(_('Error')), iconMask=wx.ICON_ERROR )
 					return
-				Utils.MessageOK(self, _('WebScorer file written to:') + u'\n\n   {}'.format(fname), _('WebScorer Publish'))
+				Utils.MessageOK(self, _('WebScorer file written to:') + '\n\n   {}'.format(fname), _('WebScorer Publish'))
 		except Exception as e:
 			logException( e, sys.exc_info() )
 			Utils.MessageOK(self,
-						u'{} "{}"\n\n{}.'.format(_('Cannot write'), fname, e),
+						'{} "{}"\n\n{}.'.format(_('Cannot write'), fname, e),
 						_('WebScorer Publish Error'), iconMask=wx.ICON_ERROR )
 	
 	#--------------------------------------------------------------------------------------------------
@@ -3942,7 +3942,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.callPageCommit( event.GetOldSelection() )
 			self.callPageRefresh( event.GetSelection() )
 		try:
-			Utils.writeLog( u'page: {}\n'.format(notebook.GetPage(event.GetSelection()).__class__.__name__) )
+			Utils.writeLog( 'page: {}\n'.format(notebook.GetPage(event.GetSelection()).__class__.__name__) )
 		except IndexError:
 			pass
 		event.Skip()	# Required to properly repaint the screen.
@@ -4104,21 +4104,21 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			status = _('Finished')
 
 		if not race.isRunning():
-			self.SetTitle( u'{}-r{} - {} - {}{}'.format(
+			self.SetTitle( '{}-r{} - {} - {}{}'.format(
 							race.name, race.raceNum,
 							status,
 							Version.AppVerName,
-							u' <{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'') )
+							' <{}>'.format(_('TimeTrial')) if race.isTimeTrial else '') )
 			self.timer.Stop()
 			return
 
-		self.SetTitle( u'{} {}-r{} - {} - {}{}{}{}'.format(
+		self.SetTitle( '{} {}-r{} - {} - {}{}{}{}'.format(
 						Utils.formatTime(race.curRaceTime()),
 						race.name, race.raceNum,
 						status, Version.AppVerName,
-						u' <{}>'.format(_('RFID')) if ChipReader.chipReaderCur.IsListening() else u'',
-						u' <{}>'.format(_('TimeTrial')) if race.isTimeTrial else u'',
-						u' <{}>'.format(_('Photos')) if race.enableUSBCamera else u'',
+						' <{}>'.format(_('RFID')) if ChipReader.chipReaderCur.IsListening() else '',
+						' <{}>'.format(_('TimeTrial')) if race.isTimeTrial else '',
+						' <{}>'.format(_('Photos')) if race.enableUSBCamera else '',
 		) )
 
 		if not self.timer.IsRunning():

@@ -2173,17 +2173,17 @@ class Race( object ):
 			c.normalize()
 
 	def exportCategories( self, fp ):
-		fp.write( u'#################################################################\n' )
-		fp.write( u'# CrossMgr Categories File\n' )
-		fp.write( u'#\n' )
-		fp.write( u'# Created By: {}\n'.format(CurrentUser) )
-		fp.write( u'# Created On: {}\n'.format(datetime.datetime.now()) )
-		fp.write( u'#   Computer: {}\n'.format(CurrentComputer) )
-		fp.write( u'#  From Race: "{}-r{}"\n'.format(self.name, self.raceNum) )
-		fp.write( u'#    Version: {}\n'.format(Version.AppVerName) )
-		fp.write( u'#\n' )
-		fp.write( u'# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
-		fp.write( u'#################################################################\n' )
+		fp.write( '#################################################################\n' )
+		fp.write( '# CrossMgr Categories File\n' )
+		fp.write( '#\n' )
+		fp.write( '# Created By: {}\n'.format(CurrentUser) )
+		fp.write( '# Created On: {}\n'.format(datetime.datetime.now()) )
+		fp.write( '#   Computer: {}\n'.format(CurrentComputer) )
+		fp.write( '#  From Race: "{}-r{}"\n'.format(self.name, self.raceNum) )
+		fp.write( '#    Version: {}\n'.format(Version.AppVerName) )
+		fp.write( '#\n' )
+		fp.write( '# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
+		fp.write( '#################################################################\n' )
 		categoryTypeName = ['Wave', 'Component', 'Custom']
 		for c in sorted( self.categories.values(), key=Category.key ):
 			fp.write( u'{}\n'.format( u'|'.join( [
