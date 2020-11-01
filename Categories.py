@@ -1,7 +1,7 @@
-import wx
-import wx.grid as gridlib
 import re
 import os
+import wx
+import wx.grid as gridlib
 import xlsxwriter
 import Utils
 import Model
@@ -12,8 +12,7 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 from RaceInputState import RaceInputState
-from GridCellFloatEditorSafe import GridCellFloatEditorSafe as GridCellFloatEditor
-from GridCellNumberEditorSafe import GridCellNumberEditorSafe as GridCellNumberEditor
+from wx.grid import GridCellFloatEditor, GridCellNumberEditor
 
 #--------------------------------------------------------------------------------
 
@@ -54,7 +53,7 @@ def getExportGrid():
 			raceDistanceUnit = catInfo.get( 'distanceUnit', '')
 			
 			if raceDistance:
-				raceDistance = '{:.2f}'.format(raceDistance)
+				raceDistance = '{:.2n}'.format(raceDistance)
 				
 			if c.catType == c.CatWave:
 				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
@@ -538,7 +537,7 @@ class Categories( wx.Panel ):
 				
 			if not distance and not value:
 				return True
-			return '{:.3f}'.format(distance or 0.0) == cellValue
+			return '{:.3n}'.format(distance or 0.0) == cellValue
 		
 		def numLapsMatches( numLaps, cellValue ):
 			v = '{}'.format( numLaps if numLaps is not None else '' )
@@ -646,9 +645,9 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
-		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3f}'.format(distance)) if distance else '' )
+		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3n}'.format(distance)) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
-		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3f}'.format(firstLapDistance)) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3n}'.format(firstLapDistance)) if firstLapDistance else '' )
 		self.grid.SetCellValue( r, self.iCol['publishFlag'], '1' if publishFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
@@ -826,6 +825,12 @@ and remove them from other categories.'''),
 		wx.CallAfter( Utils.refreshForecastHistory )
 	
 if __name__ == '__main__':
+	'''
+	os.environ["CrossMgrLanguage"] = "fr"
+	import locale
+	locale.setlocale(locale.LC_ALL,'fr_FR.UTF-8')
+	'''
+	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
 	Model.setRace( Model.Race() )
@@ -840,7 +845,7 @@ if __name__ == '__main__':
 						] )
 	categories = Categories(mainWin)
 	categories.refresh()
-	categories.grid.SetCellValue( 0, categories.iCol['distance'], 'distance' )
-	categories.grid.SetCellValue( 0, categories.iCol['numLaps'], 'numLaps' )
+	categories.grid.SetCellValue( 0, categories.iCol['distance'], '10,2' )
+	categories.grid.SetCellValue( 0, categories.iCol['numLaps'], '9' )
 	mainWin.Show()
 	app.MainLoop()

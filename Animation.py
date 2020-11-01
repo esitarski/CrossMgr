@@ -513,7 +513,7 @@ class Animation(wx.Control):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				tLap = u'{:05.1f} {} {},{:05.1f} {}'.format(	self.iLapDistance + lapRatio,
+				tLap = u'{:05.1n} {} {},{:05.1n} {}'.format(	self.iLapDistance + lapRatio,
 																_('Laps of'), maxLaps,
 																maxLaps - self.iLapDistance - lapRatio, _('Laps to go') )
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
@@ -536,7 +536,7 @@ class Animation(wx.Control):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						tDistance = u'{:05.1f} {} {} {:.1f},{:05.2f} {} {}'.format(
+						tDistance = u'{:05.1n} {} {} {:.1n},{:05.2n} {} {}'.format(
 											distanceCur, self.units,
 											_('of'), distanceRace,
 											distanceRace - distanceCur, self.units, _('to go')

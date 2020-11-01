@@ -514,6 +514,19 @@ def getDocumentsDir():
 	return dd
 	
 #------------------------------------------------------------------------
+def floatLocale( v ):
+	if isinstance( v, float ):
+		return v
+	if isinstance( v, int ):
+		return float(v)
+	if isinstance( v, str ):
+		v = v.strip()
+		if '.' not in v:
+			v = v.replace(',', '.')			# Normalize decimal sep.
+		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
+	return float( v )
+#------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')
 def approximateMatch( s1, s2 ):

@@ -523,7 +523,7 @@ class Gantt( wx.Panel ):
 				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and i < len(r.raceTimes) and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
-				s = u'  {}: {}    {}: {} ({:.2f}%)    {}: {} ({:.2f}%)    {}: {} ({:.2f}%)    {}: {}'.format(
+				s = u'  {}: {}    {}: {} ({:.2n}%)    {}: {} ({:.2n}%)    {}: {} ({:.2n}%)    {}: {}'.format(
 						_('Total Entries'),	total,
 						_('Projected'),		projected,	projected * toPercent,
 						_('Edited'),		edited,		edited * toPercent,

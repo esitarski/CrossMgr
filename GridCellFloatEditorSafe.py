@@ -2,6 +2,12 @@ import re
 import wx
 import wx.grid
 
+def santitizeFloatStr( v ):
+	v = v.replace(',', '.')				# In case there is a comma decimal separator
+	v = re.sub( '[^0-9.]', '', v )		# In case there are non-digit thousands separators
+	v = '.'.join(v.split('.')[:2])		# Ensure there is only one decimal place.
+	return v
+
 class GridCellFloatEditorSafe( wx.grid.GridCellFloatEditor ):
 	'''
 		Ensure that the cell being passed to the GridCellFloatEditor
@@ -22,9 +28,8 @@ class GridCellFloatEditorSafe( wx.grid.GridCellFloatEditor ):
 		return clone
 		
 	def BeginEdit( self, row, col, grid ):
-		v = vOrig = '{}'.format(grid.GetCellValue(row, col))
-		v = re.sub( '[^0-9.]', '', v )
-		v = '.'.join(v.split('.')[:2])		# Ensure there is only one decimal place.
+		vOrig = '{}'.format(grid.GetCellValue(row, col))
+		v = santitizeFloatStr( vOrig )
 		try:
 			f = float( v )
 		except ValueError:

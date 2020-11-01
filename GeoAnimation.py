@@ -167,7 +167,7 @@ def createAppendChild( doc, parent, name, textAttr={} ):
 		attr = doc.createElement( k )
 		if isinstance(v, float) and modf(v)[0] == 0.0:
 			v = int(v)
-		attr.appendChild( doc.createTextNode( '{:.6f}'.format(v) if isinstance(v, float) else '{}'.format(v) ) )
+		attr.appendChild( doc.createTextNode( '{:.6n}'.format(v) if isinstance(v, float) else '{}'.format(v) ) )
 		child.appendChild( attr )
 	return child
 	
@@ -1069,8 +1069,8 @@ class GeoAnimation(wx.Control):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				text = [u'{:06.1f} {} {} '.format(self.iLapDistance + lapRatio, _('Laps of'), maxLaps),
-						u'{:06.1f}  {}'.format(maxLaps - self.iLapDistance - lapRatio, _('Laps to go'))]
+				text = ['{:06.1n} {} {} '.format(self.iLapDistance + lapRatio, _('Laps of'), maxLaps),
+						'{:06.1n}  {}'.format(maxLaps - self.iLapDistance - lapRatio, _('Laps to go'))]
 						
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
@@ -1093,8 +1093,8 @@ class GeoAnimation(wx.Control):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						text.extend( [	u'{:05.1f} {} {} {:.1f}'.format(distanceCur, self.units, _('of'), distanceRace),
-										u'{:05.1f} {} {}'.format(distanceRace - distanceCur, self.units, _('to go'))] )
+						text.extend( [	'{:05.1n} {} {} {:.1f}'.format(distanceCur, self.units, _('of'), distanceRace),
+										'{:05.1n} {} {}'.format(distanceRace - distanceCur, self.units, _('to go'))] )
 								
 				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
 				if 'N' in self.compassLocation:

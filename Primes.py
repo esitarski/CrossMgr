@@ -11,7 +11,7 @@ from ReadSignOnSheet	import ExcelLink
 from GetResults			import GetResults
 from RaceInputState import RaceInputState
 from Categories import TimeEditor
-from GridCellFloatEditorSafe import GridCellFloatEditorSafe as GridCellFloatEditor
+from wx.grid import GridCellFloatEditor, GridCellNumberEditor
 
 def getWinnerInfo( bib ):
 	race = Model.race

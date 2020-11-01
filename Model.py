@@ -294,9 +294,9 @@ class Category(object):
 			self.sequence = int(sequence)
 		except (ValueError, TypeError):
 			self.sequence = 0
-			
+		
 		try:
-			self.distance = float(distance) if distance else None
+			self.distance = Utils.floatLocale( distance )
 		except (ValueError, TypeError):
 			self.distance = None
 		if self.distance is not None and self.distance <= 0.0:
@@ -311,7 +311,7 @@ class Category(object):
 			self.distanceType = Category.DistanceByLap
 			
 		try:
-			self.firstLapDistance = float(firstLapDistance) if firstLapDistance else None
+			self.firstLapDistance = Utils.floatLocale( firstLapDistance )
 		except (ValueError, TypeError):
 			self.firstLapDistance = None
 		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
@@ -1259,30 +1259,30 @@ class Race( object ):
 		
 		path = Utils.getFileName() or ''
 		return {
-			u'EventName':	self.name,
-			u'EventTitle':	self.title,
-			u'RaceNum':		'{}'.format(self.raceNum),
-			u'City':		self.city,
-			u'StateProv':	self.stateProv,
-			u'Country':		self.country,
-			u'Commissaire':	self.commissaire,
-			u'Organizer':	self.organizer,
-			u'Memo':		self.memo,
-			u'Discipline':	self.discipline,
-			u'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
-			u'RaceDate':	self.date,
-			u'MinPossibleLapTime':self.minPossibleLapTime,
-			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
-			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
-			u'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
-			u'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
-			u'PhotoCount':	'{}'.format(self.photoCount),
-			u'ExcelLink':	excelLinkStr,
-			u'GPXFile':		os.path.basename(self.geoTrackFName or ''),
+			'EventName':	self.name,
+			'EventTitle':	self.title,
+			'RaceNum':		'{}'.format(self.raceNum),
+			'City':			self.city,
+			'StateProv':	self.stateProv,
+			'Country':		self.country,
+			'Commissaire':	self.commissaire,
+			'Organizer':	self.organizer,
+			'Memo':			self.memo,
+			'Discipline':	self.discipline,
+			'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
+			'RaceDate':		self.date,
+			'MinPossibleLapTime':self.minPossibleLapTime,
+			'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
+			'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
+			'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
+			'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
+			'PhotoCount':	'{}'.format(self.photoCount),
+			'ExcelLink':	excelLinkStr,
+			'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 
-			u'Path':		path,
-			u'DirName':		os.path.dirname(path),
-			u'FileName':	os.path.basename(path),
+			'Path':			path,
+			'DirName':		os.path.dirname(path),
+			'FileName':		os.path.basename(path),
 		}
 	
 	def getBibTimes( self ):
