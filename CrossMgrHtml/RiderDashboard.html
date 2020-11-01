@@ -31,10 +31,9 @@ select {
 
 </style>
 
-<script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization',
-       'version':'1','packages':['table', 'corechart', 'timeline',]}]}"></script>
-       
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
+google.charts.load('current', {'packages':['table','corechart','timeline']});
 google.setOnLoadCallback(onLoad);
 
 var payload = null;
