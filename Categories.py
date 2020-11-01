@@ -826,7 +826,6 @@ and remove them from other categories.'''),
 	
 if __name__ == '__main__':
 	'''
-	os.environ["CrossMgrLanguage"] = "fr"
 	import locale
 	locale.setlocale(locale.LC_ALL,'fr_FR.UTF-8')
 	'''

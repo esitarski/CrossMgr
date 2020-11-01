@@ -119,7 +119,7 @@ class CameraTestDialog( wx.Dialog ):
 			return
 		
 		race = Model.race
-		fname = Utils.RemoveDisallowedFilenameChars(u'{} {}.png'.format( tNow.strftime('%Y-%m-%d %H-%M-%S'), Utils.toAscii(race.name if race else 'CameraTest')) )
+		fname = Utils.RemoveDisallowedFilenameChars('{} {}.png'.format( tNow.strftime('%Y-%m-%d %H-%M-%S'), Utils.toAscii(race.name if race else 'CameraTest')) )
 		
 		fd = wx.FileDialog( self,
 			message=_("Save Photo as PNG File:"),
@@ -139,7 +139,7 @@ class CameraTestDialog( wx.Dialog ):
 		try:
 			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
 		except Exception as e:
-			Utils.MessageOK( self,  u'{}\n\n  {}\n\n{}'.format(_('Cannot save photo:'), fname, e),
+			Utils.MessageOK( self,  '{}\n\n  {}\n\n{}'.format(_('Cannot save photo:'), fname, e),
 				title = _("Save Error"), iconMask=wx.ICON_ERROR )
 		
 	def onClose( self, event ):

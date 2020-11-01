@@ -526,6 +526,21 @@ def floatLocale( v ):
 		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
 		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
 	return float( v )
+	
+def floatFormatLocale( v, width=-1, precision=6 ):
+	s = str(int( round(v * (10**precision)) ))
+	fract = s[-precision:]
+	if len(fract) < precision:
+		fract = '0' * (precision-len(fract)) + fract
+	whole = s[:len(s)-precision] if len(s) > precision else '0'
+	
+	ret = ''.join( [whole, locale.localeconv()['decimal_point'], fract] )
+	if width > 0 and len(ret) < width:
+		ret = ' ' * (width - len(s)) + ret
+	return ret
+	
+def fld( v, precision=3 ):
+	return floatFormatLocale( v, precision=precision )
 #------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')

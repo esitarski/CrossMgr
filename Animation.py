@@ -1,9 +1,12 @@
 import wx
-import random
 import math
 import bisect
+import locale
+import random
 import datetime
+
 import Utils
+from Utils import fld
 
 shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
@@ -384,6 +387,7 @@ class Animation(wx.Control):
 		return tuple( xypt )
 	
 	def Draw(self, dc):
+		decimal_point = locale.localeconv()['decimal_point']
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
@@ -513,9 +517,9 @@ class Animation(wx.Control):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				tLap = '{:05.1f} {} {},{:05.1f} {}'.format(	self.iLapDistance + lapRatio,
+				tLap = '{} {} {}\n{} {}'.format(	fld(self.iLapDistance + lapRatio,1),
 																_('Laps of'), maxLaps,
-																maxLaps - self.iLapDistance - lapRatio, _('Laps to go') )
+																fld(maxLaps - self.iLapDistance - lapRatio,1), _('Laps to go') )
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
 					distanceCur, distanceRace = None, None
@@ -536,17 +540,17 @@ class Animation(wx.Control):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						tDistance = '{:05.1f} {} {} {:.1f},{:05.2f} {} {}'.format(
-											distanceCur, self.units,
-											_('of'), distanceRace,
-											distanceRace - distanceCur, self.units, _('to go')
+						tDistance = '{} {} {} {}\n{} {} {}'.format(
+											fld(distanceCur, 1), self.units,
+											_('of'), fld(distanceRace,1),
+											fld(distanceRace - distanceCur), self.units, _('to go')
 										)
 			
 			tWidth, tHeight = dc.GetTextExtent( '999' )
 			xRight  = 3*r + r/7
 			table = []
 			if tLap:
-				table.append( tLap.split(',') )
+				table.append( tLap.split('\n') )
 			if tDistance:
 				table.append( tDistance.split(',') )
 			table = list(zip(*table))	# Transpose the table.  Nice!
@@ -557,7 +561,7 @@ class Animation(wx.Control):
 				for row in range(len(table)):
 					t = table[row][col]
 					tShow = t.lstrip('0')
-					if tShow.startswith('.'):
+					if tShow.startswith(decimal_point):
 						tShow = '0' + tShow
 					dc.DrawText( tShow, int(xRight + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0]), int(yCur) )
 					yCur += tHeight
@@ -637,6 +641,9 @@ class Animation(wx.Control):
 		pass
 		
 if __name__ == '__main__':
+	import locale
+	locale.setlocale(locale.LC_ALL,'fr_FR.UTF-8')
+
 	data = {}
 	for num in range(100,200):
 		mean = random.normalvariate(6.0, 0.3)

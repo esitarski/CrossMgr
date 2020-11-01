@@ -1,19 +1,21 @@
-import wx
-import random
-import math
-from math import radians, degrees, sin, cos, asin, sqrt, atan2, exp, modf, pi
-import bisect
-import sys
-import datetime
 import os
 import re
 import io
-import cgi
+import wx
+import html
+import sys
+import math
+from math import radians, degrees, sin, cos, asin, sqrt, atan2, exp, modf, pi
+import random
+import bisect
+import datetime
 import getpass
 import socket
 from Version import AppVerName
 from Animation import GetLapRatio
 import Utils
+from Utils import fld
+from Utils import floatFormatLocale as ff
 import xml.etree.ElementTree
 import xml.etree.cElementTree
 import xml.dom
@@ -167,7 +169,7 @@ def createAppendChild( doc, parent, name, textAttr={} ):
 		attr = doc.createElement( k )
 		if isinstance(v, float) and modf(v)[0] == 0.0:
 			v = int(v)
-		attr.appendChild( doc.createTextNode( '{:.6n}'.format(v) if isinstance(v, float) else '{}'.format(v) ) )
+		attr.appendChild( doc.createTextNode( '{:.6f}'.format(v) if isinstance(v, float) else '{}'.format(v) ) )
 		child.appendChild( attr )
 	return child
 	
@@ -190,13 +192,13 @@ def CreateGPX( courseName, gpsPoints ):
 		'',
 		'DO NOT EDIT!',
 		'',
-		u'This file was created automatically by {}.'.format(AppVerName),
+		'This file was created automatically by {}.'.format(AppVerName),
 		'',
 		'For more information, see http://sites.google.com/site/crossmgrsoftware',
 		'',
 		'Created:  {}'.format(datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )),
-		'User:     {}'.format(cgi.escape(getpass.getuser())),
-		'Computer: {}'.format(cgi.escape(socket.gethostname())),
+		'User:     {}'.format(html.escape(getpass.getuser())),
+		'Computer: {}'.format(html.escape(socket.gethostname())),
 		'', ] )
 	) )
 	
@@ -204,13 +206,17 @@ def CreateGPX( courseName, gpsPoints ):
 		'name': courseName,
 	} )
 	trkseg = createAppendChild( doc, trk, 'trkseg' )
+	
+	def fmt( v ):
+		return '{:.7f}'.format(v).rstrip('0').rstrip('.')
+	
 	for p in gpsPoints:
 		trkpt = createAppendChild( doc, trkseg, 'trkpt' )
-		trkpt.attributes['lat'] = '{}'.format(p.lat)
-		trkpt.attributes['lon'] = '{}'.format(p.lon)
+		trkpt.attributes['lat'] = fmt(p.lat)
+		trkpt.attributes['lon'] = fmt(p.lon)
 		if p.ele:
 			ele = createAppendChild( doc, trkpt, 'ele' )
-			createAppendTextChild( doc, ele, '{}'.format(p.ele) )
+			createAppendTextChild( doc, ele, fmt(p.ele) )
 	
 	return doc
 	
@@ -381,8 +387,8 @@ class GeoTrack( object ):
 			'For more information, see http://sites.google.com/site/crossmgrsoftware',
 			'',
 			'Created:  {}'.format(datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )),
-			'User:     {}'.format(cgi.escape(getpass.getuser())),
-			'Computer: {}'.format(cgi.escape(socket.gethostname())),
+			'User:     {}'.format(html.escape(getpass.getuser())),
+			'Computer: {}'.format(html.escape(socket.gethostname())),
 			'', ] )
 		) )
 		
@@ -543,7 +549,7 @@ shapes = [ [(cos(a), -sin(a)) \
 					for a in (q*(2.0*pi/i)+pi/2.0+(2.0*pi/(i*2.0) if i % 2 == 0 else 0)\
 						for q in range(i))] for i in range(3,9)]
 def DrawShape( dc, num, x, y, radius ):
-	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
+	dc.DrawPolygon( [ wx.Point(int(p*radius+x), int(q*radius+y)) for p,q in shapes[num % len(shapes)] ] )
 	
 class GeoAnimation(wx.Control):
 	topFewCount = 5
@@ -652,14 +658,14 @@ class GeoAnimation(wx.Control):
 					pass
 		self.speedup = float(tMax) / float(tRunning)
 		self.tMax = tMax
-		self.timer.Start( 1000.0/self.framesPerSecond, False )
+		self.timer.Start( int(1000.0/self.framesPerSecond), False )
 	
 	def StartAnimateRealtime( self ):
 		self.StopAnimate();
 		self._initGeoAnimation()
 		self.speedup = 1.0
 		self.tMax = 999999
-		self.timer.Start( 1000.0/self.framesPerSecond, False )
+		self.timer.Start( int(1000.0/self.framesPerSecond), False )
 	
 	def StopAnimate( self ):
 		if self.timer.IsRunning():
@@ -816,7 +822,7 @@ class GeoAnimation(wx.Control):
 		blue = wx.Colour(0, 0, 200)
 		dc.SetPen( wx.Pen(blue) )
 		dc.SetBrush( wx.Brush(blue, wx.SOLID) )
-		dc.DrawRectangle( 0, 0, width, tHeight*1.1 )
+		dc.DrawRectangle( 0, 0, int(width), int(tHeight*1.1) )
 		if not bannerItems:
 			return
 		
@@ -828,34 +834,34 @@ class GeoAnimation(wx.Control):
 				if x >= width:
 					break
 					
-				position, num, name = u'{}'.format(bi[1]), u'{}'.format(bi[0]), self.getShortName(bi[0])
+				position, num, name = '{}'.format(bi[1]), '{}'.format(bi[0]), self.getShortName(bi[0])
 				
 				if position == '1':
 					x += tHeight / 2
 					tWidth = self.checkeredFlag.Width
 					if x + tWidth > 0 and x < width:
-						dc.DrawBitmap( self.checkeredFlag, x, y, False )
+						dc.DrawBitmap( self.checkeredFlag, int(x), int(y), False )
 					x += tWidth + tHeight / 2
 				
 				dc.SetFont( self.positionFont )
 				tWidth = dc.GetTextExtent( position )[0]
 				if x + tWidth > 0 and x < width:
 					dc.SetTextForeground( wx.WHITE )
-					dc.DrawText( position, x, y )
+					dc.DrawText( position, int(x), int(y) )
 				x += tWidth + tHeight / 4
 
 				dc.SetFont( self.bibFont )
 				tWidth = dc.GetTextExtent(num)[0]
 				if x + tWidth > 0 and x < width:
 					dc.SetTextForeground( 'YELLOW' )
-					dc.DrawText(num, x, y )
+					dc.DrawText(num, int(x), int(y) )
 				x += tWidth + tHeight / 3
 				
 				dc.SetFont( self.nameFont )
 				tWidth = dc.GetTextExtent(name)[0]
 				if x + tWidth > 0 and x < width:
 					dc.SetTextForeground( wx.WHITE )
-					dc.DrawText(name, x, y )
+					dc.DrawText(name, int(x), int(y) )
 				x += tWidth + tHeight
 			if x < 0:
 				self.xBanner = x
@@ -891,13 +897,13 @@ class GeoAnimation(wx.Control):
 		# Get the fonts if needed.
 		if self.rLast != r:
 			tHeight = int(r / 8.0)
-			self.numberFont	= wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.numberFont	= wx.Font( (0,int(tHeight)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
-			self.highlightFont = wx.Font( (0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.highlightFont = wx.Font( (0,int(tHeight * 1.6)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			
-			self.positionFont = wx.Font( (0,tHeight*0.85*0.7), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-			self.bibFont = wx.Font( (0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
-			self.nameFont = wx.Font((0,tHeight*0.85), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
+			self.positionFont = wx.Font( (0,int(tHeight*0.85*0.7)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.bibFont = wx.Font( (0,int(tHeight*0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_BOLD )
+			self.nameFont = wx.Font((0,int(tHeight*0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
 			
 			self.rLast = r
 			
@@ -909,12 +915,13 @@ class GeoAnimation(wx.Control):
 		trackWidth = width - border * 2
 		topMargin = border + tHeight + textVSpace
 		trackHeight = height - topMargin - border
-		self.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight )
+		self.geoTrack.setDisplayRect( int(border), int(topMargin), int(trackWidth), int(trackHeight) )
 		
 		# Draw the course.
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		
 		drawPoints = self.geoTrack.getXYTrack()
+		drawPointsInt = [(int(p[0]), int(p[1])) for p in drawPoints]
 		if width != self.widthLast or height != self.heightLast:
 			self.widthLast, self.heightLast = width, height
 			locations = ['NE', 'SE', 'NW', 'SW', ]
@@ -933,24 +940,24 @@ class GeoAnimation(wx.Control):
 					if inCount == 0:
 						break
 		
-		dc.SetPen( wx.Pen(wx.Colour(128,128,128), laneWidth * 1.25 + 2, wx.SOLID) )
+		dc.SetPen( wx.Pen(wx.Colour(128,128,128), int(laneWidth * 1.25 + 2), wx.SOLID) )
 		if isPointToPoint:
-			dc.DrawLines( drawPoints )
+			dc.DrawLines( drawPointsInt )
 		else:
-			dc.DrawPolygon( drawPoints )
+			dc.DrawPolygon( drawPointsInt )
 		
-		dc.SetPen( wx.Pen(self.trackColour, laneWidth * 1.25, wx.SOLID) )
+		dc.SetPen( wx.Pen(self.trackColour, int(laneWidth * 1.25), wx.SOLID) )
 		if isPointToPoint:
-			dc.DrawLines( drawPoints )
+			dc.DrawLines( drawPointsInt )
 		else:
-			dc.DrawPolygon( drawPoints )
+			dc.DrawPolygon( drawPointsInt )
 		
 		# Draw a centerline to show all the curves in the course.
 		dc.SetPen( wx.Pen(wx.Colour(80,80,80), 1, wx.SOLID) )
 		if isPointToPoint:
-			dc.DrawLines( drawPoints )
+			dc.DrawLines( drawPointsInt )
 		else:
-			dc.DrawPolygon( drawPoints )
+			dc.DrawPolygon( drawPointsInt )
 		
 		# Draw a finish line.
 		finishLineLength = laneWidth * 2
@@ -958,15 +965,15 @@ class GeoAnimation(wx.Control):
 			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 2 )
 		else:
 			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 2 )
-		dc.SetPen( wx.Pen(wx.WHITE, laneWidth / 1.5, wx.SOLID) )
-		dc.DrawLine( x1, y1, x2, y2 )
-		dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 5, wx.SOLID) )
-		dc.DrawLine( x1, y1, x2, y2 )
+		dc.SetPen( wx.Pen(wx.WHITE, int(laneWidth / 1.5), wx.SOLID) )
+		dc.DrawLine( int(x1), int(y1), int(x2), int(y2) )
+		dc.SetPen( wx.Pen(wx.BLACK, int(laneWidth / 5), wx.SOLID) )
+		dc.DrawLine( int(x1), int(y1), int(x2), int(y2) )
 		if isPointToPoint:
 			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 4 )
 		else:
 			x1, y1, x2, y2 = LineNormal( drawPoints[0][0], drawPoints[0][1], drawPoints[1][0], drawPoints[1][1], laneWidth * 4 )
-		dc.DrawBitmap( self.checkeredFlag, x2 - self.checkeredFlag.Width/2, y2 - self.checkeredFlag.Height/2, False )
+		dc.DrawBitmap( self.checkeredFlag, int(x2 - self.checkeredFlag.Width/2), int(y2 - self.checkeredFlag.Height/2), False )
 
 		# Draw starting arrow showing direction.
 		if not self.data and not isPointToPoint and len(drawPoints) > avePoints:
@@ -975,8 +982,8 @@ class GeoAnimation(wx.Control):
 			a = atan2( y2-y1, x2-x1 )
 			x2 = int(x1 + cos(a) * laneWidth*4)
 			y2 = int(y1 + sin(a) * laneWidth*4)
-			dc.SetPen( wx.Pen(wx.BLACK, laneWidth / 4, wx.SOLID) )
-			dc.DrawLine( x1, y1, x2, y2 )
+			dc.SetPen( wx.Pen(wx.BLACK, int(laneWidth / 4), wx.SOLID) )
+			dc.DrawLine( int(x1), int(y1), int(x2), int(y2) )
 			a = atan2( y1-y2, x1-x2 )
 			x1, y1 = x2, y2
 			arrowLength = 1.25
@@ -996,7 +1003,7 @@ class GeoAnimation(wx.Control):
 		topFew = {}
 		riderRadius = laneWidth * 0.5
 		thickLine = r / 32
-		highlightPen = wx.Pen( wx.WHITE, thickLine * 1.0 )
+		highlightPen = wx.Pen( wx.WHITE, int(thickLine * 1.0) )
 		riderPosition = {}
 		if self.data:
 			riderXYPT = []
@@ -1023,7 +1030,7 @@ class GeoAnimation(wx.Control):
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
 				try:
 					i = topFew[num]
-					dc.SetPen( wx.Pen(self.topFewColours[i], thickLine) )
+					dc.SetPen( wx.Pen(self.topFewColours[i], int(thickLine)) )
 					if num in self.numsToWatch:
 						dc.SetFont( self.highlightFont )
 				except KeyError:
@@ -1036,7 +1043,7 @@ class GeoAnimation(wx.Control):
 				DrawShape( dc, num, x, y, riderRadius )
 				if i is not None:
 					if not self.numsToWatch or num in self.numsToWatch:
-						dc.DrawLabel('{}'.format(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+						dc.DrawLabel('{}'.format(num), wx.Rect(int(x+numSize), int(y-numSize), int(numSize*2), int(numSize*2)) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
 					dc.SetFont( self.numberFont )
@@ -1058,7 +1065,7 @@ class GeoAnimation(wx.Control):
 		else:
 			tStr = '%d:%02d:%02d ' % (secs // (60*60), (secs // 60)%60, secs % 60 )
 		tWidth = dc.GetTextExtent( tStr )[0]
-		dc.DrawText( tStr, width - tWidth, yCur )
+		dc.DrawText( tStr, int(width - tWidth), int(yCur) )
 		yCur += tHeight
 		
 		# Draw the current lap
@@ -1069,8 +1076,8 @@ class GeoAnimation(wx.Control):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				text = ['{:06.1n} {} {} '.format(self.iLapDistance + lapRatio, _('Laps of'), maxLaps),
-						'{:06.1n}  {}'.format(maxLaps - self.iLapDistance - lapRatio, _('Laps to go'))]
+				text = ['{} {} {} '.format(ff(self.iLapDistance + lapRatio,5,1), _('Laps of'), maxLaps),
+						'{} {}'.format(ff(maxLaps - self.iLapDistance - lapRatio,5,1), _('Laps to go'))]
 						
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
 				if cat:
@@ -1093,8 +1100,8 @@ class GeoAnimation(wx.Control):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						text.extend( [	'{:05.1n} {} {} {:.1f}'.format(distanceCur, self.units, _('of'), distanceRace),
-										'{:05.1n} {} {}'.format(distanceRace - distanceCur, self.units, _('to go'))] )
+						text.extend( [	'{} {} {} {}'.format(ff(distanceCur,5,1), self.units, _('of'), fld(distanceRace,1)),
+										'{} {} {}'.format(ff(distanceRace - distanceCur,5,1), self.units, _('to go'))] )
 								
 				widthMax = max( dc.GetTextExtent(t)[0] for t in text )
 				if 'N' in self.compassLocation:
@@ -1137,8 +1144,9 @@ class GeoAnimation(wx.Control):
 		pass
 		
 if __name__ == '__main__':
-	fname = r'C:\Projects\CrossMgr\bugs\Stuart\20160419-glenlyon\2016-04-19-WTNC Glenlyon 710-r2-Course.gpx'
-	print( GpxHasTimes( fname ) )
+	#fname = r'C:\Projects\CrossMgr\bugs\Stuart\20160419-glenlyon\2016-04-19-WTNC Glenlyon 710-r2-Course.gpx'
+	fname = 'GPX/circuit-violet-100-km.gpx'
+	print( GpxHasTimes(fname) )
 	
 	data = {}
 	for num in range(100,200):
