@@ -9,7 +9,7 @@ shapes = [ [(math.cos(a), -math.sin(a)) \
 					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
 						for q in range(i))] for i in range(3,9)]
 def DrawShape( dc, num, x, y, radius ):
-	dc.DrawPolygon( [ wx.Point(p*radius+x, q*radius+y) for p,q in shapes[num % len(shapes)] ] )
+	dc.DrawPolygon( [ wx.Point(int(p*radius+x), int(q*radius+y)) for p,q in shapes[num % len(shapes)] ] )
 
 def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
 	maxLaps = len(leaderRaceTimes) - 1
@@ -160,7 +160,7 @@ class Animation(wx.Control):
 					pass
 		self.speedup = float(tMax) / float(tRunning)
 		self.tMax = tMax
-		self.timer.Start( 1000.0/self.framesPerSecond, False )
+		self.timer.Start( int(1000.0/self.framesPerSecond), False )
 	
 	def StartAnimateRealtime( self ):
 		self.StopAnimate();
@@ -281,7 +281,7 @@ class Animation(wx.Control):
 		firstName = info.get('FirstName',u'')
 		if lastName:
 			if firstName:
-				return u'{}, {}.'.format(lastName, firstName[:1])
+				return '{}, {}.'.format(lastName, firstName[:1])
 			else:
 				return lastName
 		return firstName
@@ -405,10 +405,10 @@ class Animation(wx.Control):
 		# Get the fonts if needed.
 		if self.rLast != r:
 			tHeight = r / 8.0
-			self.numberFont = wx.Font( (0,tHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-			self.leaderFont = wx.Font( (0,tHeight * 0.9), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.numberFont = wx.Font( (0,int(tHeight)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.leaderFont = wx.Font( (0,int(tHeight * 0.9)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.timeFont = self.numberFont
-			self.highlightFont = wx.Font( (0,tHeight * 1.6), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+			self.highlightFont = wx.Font( (0,int(tHeight * 1.6)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 			self.rLast = r
 			
 		# Draw the track.
@@ -422,9 +422,9 @@ class Animation(wx.Control):
 		laneWidth = (r/2) / self.laneMax
 		dc.SetBrush( backBrush )
 		dc.SetPen( wx.Pen(backColour, 0, wx.SOLID) )
-		dc.DrawCircle( r, r, r/2 - laneWidth )
-		dc.DrawCircle( 3*r, r, r/2 - laneWidth )
-		dc.DrawRectangle( r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1 )
+		dc.DrawCircle( int(r), int(r), int(r/2 - laneWidth) )
+		dc.DrawCircle( int(3*r), int(r), int(r/2 - laneWidth) )
+		dc.DrawRectangle( int(r), int(r/2 + laneWidth), int(2*r), int(r - 2*laneWidth + 1) )
 		
 		# Draw the quarter lines.
 		for p in [0.0, 0.25, 0.50, 0.75]:
@@ -440,12 +440,12 @@ class Animation(wx.Control):
 				# Draw the Start/Finish line.
 				dc.SetBrush( wx.WHITE_BRUSH )
 				sfWidth = 8
-				dc.DrawRectangle( x1 - sfWidth / 2, min(y1, y2), sfWidth, r )
+				dc.DrawRectangle( int(x1 - sfWidth / 2), int(min(y1, y2)), int(sfWidth), int(r) )
 				dc.SetPen( wx.Pen(wx.Colour(0,0,0), 2, wx.SOLID) )
 			else:
 				# Else, draw a regular quarter line on the course.
 				dc.SetPen( wx.Pen(wx.Colour(64,64,64), 1, wx.SOLID) )
-			dc.DrawLine( x1, y1, x2, y2 )
+			dc.DrawLine( int(x1), int(y1), int(x2), int(y2) )
 		
 		# Draw the riders
 		dc.SetFont( self.numberFont )
@@ -454,8 +454,8 @@ class Animation(wx.Control):
 		self.lapCur = 0
 		topThree = {}
 		riderRadius = laneWidth * 0.75
-		thickLine = r / 32
-		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine * 1.0 )
+		thickLine = int(r / 32)
+		highlightPen = wx.Pen( wx.Colour(255,255,255), thickLine )
 		riderPosition = {}
 		if self.data:
 			riderXYPT = []
@@ -493,7 +493,7 @@ class Animation(wx.Control):
 					else:
 						i = None
 				DrawShape( dc, num, x, y, riderRadius )
-				dc.DrawLabel(u'{}'.format(num), wx.Rect(x+numSize, y-numSize, numSize*2, numSize*2) )
+				dc.DrawLabel('{}'.format(num), wx.Rect(int(x+numSize), int(y-numSize), int(numSize*2), int(numSize*2)) )
 				if i is not None:
 					dc.SetPen( wx.BLACK_PEN )
 					dc.SetFont( self.numberFont )
@@ -513,7 +513,7 @@ class Animation(wx.Control):
 				maxLaps = len(leaderRaceTimes) - 1
 				self.iLapDistance, lapRatio = GetLapRatio( leaderRaceTimes, self.t, self.iLapDistance )
 				lapRatio = int(lapRatio * 10.0) / 10.0		# Always round down, not to nearest decimal.
-				tLap = u'{:05.1n} {} {},{:05.1n} {}'.format(	self.iLapDistance + lapRatio,
+				tLap = '{:05.1f} {} {},{:05.1f} {}'.format(	self.iLapDistance + lapRatio,
 																_('Laps of'), maxLaps,
 																maxLaps - self.iLapDistance - lapRatio, _('Laps to go') )
 				cat = self.categoryDetails.get( self.data[leaders[0]].get('raceCat', None) )
@@ -536,7 +536,7 @@ class Animation(wx.Control):
 					if distanceCur is not None:
 						if distanceCur != distanceRace:
 							distanceCur = int( distanceCur * 10.0 ) / 10.0
-						tDistance = u'{:05.1n} {} {} {:.1n},{:05.2n} {} {}'.format(
+						tDistance = '{:05.1f} {} {} {:.1f},{:05.2f} {} {}'.format(
 											distanceCur, self.units,
 											_('of'), distanceRace,
 											distanceRace - distanceCur, self.units, _('to go')
@@ -559,12 +559,12 @@ class Animation(wx.Control):
 					tShow = t.lstrip('0')
 					if tShow.startswith('.'):
 						tShow = '0' + tShow
-					dc.DrawText( tShow, xRight + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0], yCur )
+					dc.DrawText( tShow, int(xRight + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0]), int(yCur) )
 					yCur += tHeight
 				xRight -= tHeight / 2.5
 
 		# Draw the leader board.
-		leaderHeader = u'{}:'.format(_('Leaders'))
+		leaderHeader = '{}:'.format(_('Leaders'))
 		xLeft = int(r * 0.85)
 		leaderWidth = 0
 		if leaders:
@@ -572,24 +572,24 @@ class Animation(wx.Control):
 			x = xLeft
 			y = r / 2 + laneWidth * 1.5
 			tWidth, tHeight = dc.GetTextExtent( leaderHeader )
-			dc.DrawText( leaderHeader, x, y )
+			dc.DrawText( leaderHeader, int(x), int(y) )
 			leaderWidth = dc.GetTextExtent(leaderHeader)[0]
 			y += tHeight
-			thickLine = tHeight / 5
-			riderRadius = tHeight / 3.5
+			thickLine = tHeight // 5
+			riderRadius = int(tHeight / 3.5)
 			for i, num in enumerate(leaders):
 				dc.SetPen( wx.Pen(backColour, 0) )
 				dc.SetBrush( wx.Brush(self.trackColour, wx.SOLID) )
-				dc.DrawRectangle( x - thickLine/4, y - thickLine/4, tHeight + thickLine/2, tHeight  + thickLine/2)
+				dc.DrawRectangle( int(x - thickLine/4), int(y - thickLine/4), int(tHeight + thickLine/2), int(tHeight  + thickLine/2) )
 				
 				dc.SetPen( wx.Pen(self.topThreeColours[i], thickLine) )
 				dc.SetBrush( wx.Brush(self.colours[num % len(self.colours)], wx.SOLID) )
-				DrawShape( dc, num, x + tHeight / 2, y + tHeight / 2, riderRadius )
+				DrawShape( dc, num, int(x + tHeight / 2), int(y + tHeight / 2), riderRadius )
 				
-				s = u'{} {}'.format(num, self.getShortName(num))
+				s = '{} {}'.format(num, self.getShortName(num))
 				tWidth, tHeight = dc.GetTextExtent( s )
 				leaderWidth = max(tWidth, leaderWidth)
-				dc.DrawText( s, x + tHeight * 1.2, y)
+				dc.DrawText( s, int(x + tHeight * 1.2), int(y))
 				y += tHeight
 
 		# Draw the positions of the highlighted ridrs
@@ -611,7 +611,7 @@ class Animation(wx.Control):
 			for i, (pos, num) in enumerate(rp):
 				if i >= 4:
 					break
-				s = u'({}) {} {}'.format(Utils.ordinal(pos), num, self.getShortName(num) )
+				s = '({}) {} {}'.format(Utils.ordinal(pos), num, self.getShortName(num) )
 				dc.DrawText( s, x + tHeight * 1.2, y)
 				y += tHeight
 				if y > r * 1.5 - tHeight * 1.5:
