@@ -93,7 +93,7 @@ Creates a WebScorer.com compatible file.  Only Categories flagged as __Upload__ 
 Follow the instructions on the WebScorer.com site to upload this file.
 
 ### USAC
-Export the results for race categories in a format acceptable to USA Cycling.  Only Categories flagged as __Upload__ will be considered.
+Export the results for race categories in a format acceptable to [USACycling][].  Only Categories flagged as __Upload__ will be considered.
 Follow the USAC instructions to upload this file.
 
 Columns in the exported spreadsheet are as follows:
