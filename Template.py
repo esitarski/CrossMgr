@@ -4,7 +4,7 @@ import Model
 from GeoAnimation import GpsPoint, GeoTrack
 from BatchPublishAttrs import batchPublishRaceAttr
 
-class Template( object ):
+class Template:
 	templateAttributes = set.union( {
 			'distanceUnit',	
 			'rule80MinLapCount',

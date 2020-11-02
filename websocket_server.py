@@ -8,23 +8,19 @@ import time
 import struct
 from base64 import b64encode
 from hashlib import sha1
-
-if sys.version_info[0] < 3:
-    from SocketServer import ThreadingMixIn, TCPServer, StreamRequestHandler
-else:
-    from socketserver import ThreadingMixIn, TCPServer, StreamRequestHandler
+from socketserver import ThreadingMixIn, TCPServer, StreamRequestHandler
 
 #import logging
 #logger = logging.getLogger(__name__)
 #logging.basicConfig()
 import Utils
-class logging( object ):
+class logging:
 	NONE = 0
 	ERROR = 1
 	WARNING = 2
 	INFO = 3
 	
-class Logger( object ):
+class Logger:
 	def __init__( self ):
 		self.level = 0
 

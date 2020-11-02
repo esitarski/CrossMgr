@@ -4,7 +4,7 @@ import threading
 import traceback
 import Utils
 
-class Synchronizer( object ):
+class Synchronizer:
 	def __init__( self, func, *args, **kwargs ):
 		super().__init__()
 		

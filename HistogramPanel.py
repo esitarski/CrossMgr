@@ -10,7 +10,7 @@ from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults
 from Histogram import Histogram
 
-class GetCategoryName( object ):
+class GetCategoryName:
 	def __init__( self, categories ):
 		self.categories = categories
 		self.lastCategory = categories[0]

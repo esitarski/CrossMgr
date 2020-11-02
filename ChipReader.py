@@ -3,7 +3,7 @@ import JChip
 import RaceResult
 import Ultra
 
-class ChipReader( object ):
+class ChipReader:
 	JChip = 0
 	RaceResult = 1
 	Ultra = 2

@@ -4,7 +4,7 @@ from Utils import logCall
 import pickle
 import pickletools
 
-class Undo( object ):
+class Undo:
 	def __init__( self ):
 		self.clear()
 

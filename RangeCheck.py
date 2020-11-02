@@ -2,7 +2,7 @@ import re
 
 #------------------------------------------------------------------------
 
-class RangeCheck( object ):
+class RangeCheck:
 	def __init__( self, s = '' ):
 		self.include = set()
 		self.exclude = set()

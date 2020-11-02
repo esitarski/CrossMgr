@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 now = datetime.now
 
-class NonBusyCall( object ):
+class NonBusyCall:
 	def __init__( self, callable, args=(), kwargs={}, min_millis=1000, max_millis=3000  ):
 		self.min_millis = min_millis
 		self.max_millis = max_millis

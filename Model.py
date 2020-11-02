@@ -33,7 +33,7 @@ maxInterpolateTime = 7.0*60.0*60.0	# 7 hours.
 lock = threading.RLock()
 
 #----------------------------------------------------------------------
-class memoize(object):
+class memoize:
 	"""
 	Decorator that caches a function's return value each time it is called.
 	If called later with the same arguments, the cached value is returned, and
@@ -133,7 +133,7 @@ def IntervalsToSet( intervals ):
 	return set.union( *[set(range(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
 
 #----------------------------------------------------------------------
-class Category(object):
+class Category:
 
 	DistanceByLap = 0
 	DistanceByRace = 1
@@ -506,7 +506,7 @@ class Category(object):
 
 #------------------------------------------------------------------------------------------------------------------
 
-class Entry(object):
+class Entry:
 	__slots__ = ('num', 'lap', 't', 'interp')		# Suppress the default dictionary to save space.
 
 	def __init__( self, num, lap, t, interp ):
@@ -980,7 +980,7 @@ class Rider(object):
 			
 		return None
 
-class NumTimeInfo(object):
+class NumTimeInfo:
 
 	Original	= 0
 	Add			= 1
@@ -1074,7 +1074,7 @@ class NumTimeInfo(object):
 	def getNumInfo( self, num ):
 		return self.info.get( num, {} )
 		
-class Race( object ):
+class Race:
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
 	

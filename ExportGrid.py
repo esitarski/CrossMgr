@@ -85,7 +85,7 @@ def drawQRCode( url, dc, x, y, size ):
 	dc.SetBrush( wx.NullBrush )
 	dc.SetPen( wx.NullPen )
 
-class ExportGrid( object ):
+class ExportGrid:
 	PDFLineFactor = 1.10
 
 	def __init__( self, title='', colnames=[], data=[], footer='', leftJustifyCols=None, infoColumns=None ):

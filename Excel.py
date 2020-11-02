@@ -15,7 +15,7 @@ def toAscii( s ):
 
 #----------------------------------------------------------------------------
 
-class ReadExcelXls( object ):
+class ReadExcelXls:
 	def __init__(self, filename):
 		if not os.path.isfile(filename):
 			raise ValueError( "{} is not a valid filename".format(filename) )

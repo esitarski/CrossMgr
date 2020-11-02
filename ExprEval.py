@@ -28,7 +28,7 @@ whitelist_references = {
 	'False':False, 'True':True, 'None':None,
 }
 
-class ExprEval( object ):
+class ExprEval:
 	def __init__( self ):
 		self.bytecode = None
 		

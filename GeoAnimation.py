@@ -220,7 +220,7 @@ def CreateGPX( courseName, gpsPoints ):
 	
 	return doc
 	
-class GeoTrack( object ):
+class GeoTrack:
 	def __init__( self ):
 		self.gpsPoints = []
 		self.distanceTotal = 0.0

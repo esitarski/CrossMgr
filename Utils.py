@@ -115,7 +115,7 @@ def initTranslation():
 		
 initTranslation()
 
-class SuspendTranslation( object ):
+class SuspendTranslation:
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
 		self._Save = builtins.__dict__['_']
@@ -123,7 +123,7 @@ class SuspendTranslation( object ):
 	def __exit__(self, type, value, traceback):
 		builtins.__dict__['_'] = self._Save
 
-class UIBusy( object ):
+class UIBusy:
 	def __enter__(self):
 		wx.BeginBusyCursor()
 	

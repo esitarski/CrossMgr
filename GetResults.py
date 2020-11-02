@@ -48,7 +48,7 @@ def toInt( n ):
 	except:
 		return 99999
 	
-class RiderResult( object ):
+class RiderResult:
 	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes, interp ):
 		self.num		= num
 		self.status		= status
@@ -840,7 +840,7 @@ def UnstartedRaceDataEpilog( tempNums ):
 			race.deleteRider( num )
 		race.resetAllCaches()
 
-class UnstartedRaceWrapper( object ):
+class UnstartedRaceWrapper:
 	count = 0	# Ensure that we can nest calls without problems.
 	
 	def __init__(self,  getExternalData = True):

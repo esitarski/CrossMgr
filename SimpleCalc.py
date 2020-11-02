@@ -36,7 +36,7 @@ class TimeEvalDivideByZeroError( TimeEvalError ):
 	def __init__( self, line, col, i ):
 		TimeEvalError.__init__( self, 'divide by zero error', line, col, i )
 
-class TimeEval( object ):
+class TimeEval:
 	def  __init__( self, str = None ):
 		self.clear()
 
