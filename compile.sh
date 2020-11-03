@@ -167,10 +167,6 @@ copyAssets(){
 		echo "Copying Html to $RESOURCEDIR"
 		cp -rv "${BUILDDIR}/${PROGRAM}Html" $RESOURCEDIR
 	fi
-	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
-		echo "Copying HtmlDoc to $RESOURCEDIR"
-		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
-	fi
 	if [ -d "${BUILDDIR}/${PROGRAM}Locale" ]; then
 		buildLocale $PROGRAM
 		echo "Copying Locale to $RESOURCEDIR"
@@ -207,7 +203,11 @@ copyAssets(){
 		#cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
         cd ..
 	fi
-
+	# Copy help files last to ensure they are built by now.
+	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
+		echo "Copying HtmlDoc to $RESOURCEDIR"
+		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
+	fi
 }
 
 package() {
@@ -301,8 +301,7 @@ envSetup() {
 		pip3 install pywin32
 	fi
     if [ $OSNAME == "Darwin" ];then
-		pip3 install biplist
-		pip3 install dmgbuild
+		pip3 install biplist dmgbuild
 	else
 		downloadAppImage
 	fi

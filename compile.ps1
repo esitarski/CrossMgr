@@ -218,11 +218,6 @@ function CopyAssets($program)
 		Write-Host "Copying Html to $resourcedir"
 		Copy-Item -Recurse -Force -Path "$builddir/${program}Html" -Destination "$resourcedir"
 	}
-	if (Test-Path "$builddir/${program}HtmlDoc")
-	{
-		Write-Host "Copying HtmlDoc to $resourcedir"
-		Copy-Item -Recurse -Force -Path "$builddir/${program}HtmlDoc" -Destination "$resourcedir"
-	}
 	if (Test-Path "$builddir/${program}Locale")
 	{
 		BuildLocale($program)
@@ -282,6 +277,12 @@ function CopyAssets($program)
 		}
 		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
+	}
+	# Copy help files last to ensure they are built by now.
+	if (Test-Path "$builddir/${program}HtmlDoc")
+	{
+		Write-Host "Copying HtmlDoc to $resourcedir"
+		Copy-Item -Recurse -Force -Path "$builddir/${program}HtmlDoc" -Destination "$resourcedir"
 	}
 }
 

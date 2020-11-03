@@ -21,9 +21,8 @@
 		}
 	</style>
 	<title>CrossMgr Travel Map</title>
-	<script src="https://maps.googleapis.com/maps/api/js?key={{api_key}}&v=3.exp&libraries=visualization"></script>
-	<script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization',
-	   'version':'1','packages':['table', 'corechart']}]}"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key={{api_key}}&libraries=visualization"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 	<script>
 var payload = null;
 var raceName = null;
@@ -339,7 +338,9 @@ function updateLocationRegionCountPieChart() {
 	container.chart.draw(data, options);
 }
 
+google.charts.load('current', {'packages':['table','corechart','timeline']});
 google.maps.event.addDomListener(window, 'load', initialize);
+
     </script>
   </head>
   <body>

@@ -1,7 +1,9 @@
 import wx
 import wx.grid			as gridlib
 from wx.lib import masked
+from wx.grid import GridCellNumberEditor
 import wx.lib.buttons
+
 import math
 import Model
 import Utils
@@ -125,7 +127,7 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( HighPrecisionTimeEditor() )
 			elif col == 1:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
-				attr.SetEditor( gridlib.GridCellNumberEditor() )
+				attr.SetEditor( GridCellNumberEditor() )
 			self.grid.SetColAttr( col, attr )
 		
 		saveExplain = wx.StaticText( self, label=_('(or press "s")') )

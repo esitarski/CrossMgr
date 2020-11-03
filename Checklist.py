@@ -25,7 +25,7 @@ _processRequirementLookup = {
 	u'Camera'.lower(): 		lambda race, v: race.enableUSBCamera ==_toBool(v),
 }
 
-class Task( object ):
+class Task:
 	NotDone = 0
 	Partial = 1
 	Done = 2

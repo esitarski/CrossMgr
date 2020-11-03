@@ -28,7 +28,7 @@ def IntervalsToSet( intervals ):
 		ret.update( range(i[0], i[1]+1) )
 	return ret
 
-class CategoryPredicate( object ):
+class CategoryPredicate:
 	def __init__( self ):
 		# None == ignore
 		self.numberSet = None

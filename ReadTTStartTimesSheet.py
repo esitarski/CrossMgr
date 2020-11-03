@@ -227,7 +227,7 @@ class SummaryPage(adv.WizardPageSimple):
 		self.riderNumber.SetLabel( u'{}'.format(infoLen) )
 		self.statusName.SetLabel( _('Success!') if infoLen else _('Failure') )
 	
-class GetExcelTTStartTimeLink( object ):
+class GetExcelTTStartTimeLink:
 	def __init__( self, parent, excelLink = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
@@ -317,7 +317,7 @@ class GetExcelTTStartTimeLink( object ):
 		isForward = evt.GetDirection()
 		
 #----------------------------------------------------------------------------------
-class ExcelLink( object ):
+class ExcelLink:
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None

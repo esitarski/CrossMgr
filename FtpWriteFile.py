@@ -124,7 +124,7 @@ def FtpWriteRaceHTML():
 	FtpUploadFile( files )
 	return None
 
-class RealTimeFtpPublish( object ):
+class RealTimeFtpPublish:
 	latencyTimeMin = 3
 	latencyTimeMax = 32
 

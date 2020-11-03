@@ -281,25 +281,25 @@ class SituationPanel(wx.Panel):
 				continue
 			groupSize = len(group)
 			if len(group) > 10:
-				group[:] = group[:5] + [[group[5][0], u'...']] + group[-5:]
+				group[:] = group[:5] + [[group[5][0], '...']] + group[-5:]
 			if i == 0:
-				group.insert( 0, [group[0][0], u'Lead  \u200B  {}'.format(groupSize)] )
+				group.insert( 0, [group[0][0], 'Lead  \u200B  {}'.format(groupSize)] )
 			else:
-				group.insert( 0, [group[0][0], u'Chase\u00A0{}  {}gap  {}'.format(i, shortFormatTimeGap(group[0][0]), groupSize)] )
+				group.insert( 0, [group[0][0], 'Chase\u00A0{}  {}gap  {}'.format(i, shortFormatTimeGap(group[0][0]), groupSize)] )
 		
 		fontHeight = height / 40
 		if fontHeight == 0:
 			return
 
-		font = wx.Font( (0,fontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+		font = wx.Font( (0,int(fontHeight)), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( font )
-		spaceWidth, fontHeight = dc.GetTextExtent( u'0 0' )
+		spaceWidth, fontHeight = dc.GetTextExtent( '0 0' )
 		spaceWidth = fontHeight / 2
 		
 		smallFontHeight = fontHeight * 0.75
-		smallFont = wx.Font( (0,smallFontHeight), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
+		smallFont = wx.Font( (0,int(smallFontHeight)), wx.DEFAULT, wx.NORMAL, wx.NORMAL )
 		dc.SetFont( smallFont )
-		smallFontHeight = dc.GetTextExtent( u'0 0' )[1]
+		smallFontHeight = dc.GetTextExtent( '0 0' )[1]
 
 		#---------------------------------------------------------------------
 		dc.SetFont( font )
@@ -338,14 +338,14 @@ class SituationPanel(wx.Panel):
 				return
 			flTop = yTop - border / 2
 			flBottom = flTop + border
-			outlinePen = wx.Pen( wx.Colour(220,220,220), max(width / 800, 1) )
+			outlinePen = wx.Pen( wx.Colour(220,220,220), int(max(width / 800, 1)) )
 			dc.SetPen( outlinePen )
 			dc.SetBrush( wx.WHITE_BRUSH )
-			dc.DrawRectangle( x - flWidth / 2, flTop, flWidth, flBottom - flTop )
-			outlinePen.SetWidth( flWidth / 4 )
+			dc.DrawRectangle( int(x - flWidth / 2), int(flTop), int(flWidth), int(flBottom - flTop) )
+			outlinePen.SetWidth( int(flWidth / 4) )
 			outlinePen.SetCap( wx.CAP_BUTT )
 			dc.SetPen( outlinePen )
-			dc.DrawLine( x, flTop, x, flBottom )
+			dc.DrawLine( int(x), int(flTop), int(x), int(flBottom) )
 			dc.SetPen( wx.TRANSPARENT_PEN )
 			dc.SetBrush( wx.WHITE_BRUSH )
 			dc.DrawRectangle( width-border, 0, width, height )
@@ -355,10 +355,10 @@ class SituationPanel(wx.Panel):
 		# Draw a direction line.
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
 		dc.SetBrush( wx.Brush(wx.Colour(0,0,0), wx.SOLID) )
-		dc.DrawLine( xLeft - border, yTop, width-border, yTop )
+		dc.DrawLine( int(xLeft - border), int(yTop), int(width-border), int(yTop) )
 		arrowLength = border * 0.8
-		points = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
-		dc.DrawPolygon( points, border/2, yTop )
+		points = [wx.Point(0,0), wx.Point(int(arrowLength), int(arrowLength/4)), wx.Point(int(arrowLength), int(-arrowLength/4))]
+		dc.DrawPolygon( points, int(border/2), int(yTop) )
 		
 		dc.SetPen( greyPen )
 		
@@ -384,15 +384,15 @@ class SituationPanel(wx.Panel):
 			
 			dc.SetPen( wx.TRANSPARENT_PEN )
 			dc.SetBrush( groupBrush )
-			dc.DrawRectangle( xBegin - groupHeight/2, yTop - groupHeight/2, xEnd - xBegin + groupHeight, groupHeight )
+			dc.DrawRectangle( int(xBegin - groupHeight/2), int(yTop - groupHeight/2), int(xEnd - xBegin + groupHeight), int(groupHeight) )
 			dc.SetPen( groupPen2 )
-			dc.DrawLine( xBegin, yTop, xEnd, yTop )
+			dc.DrawLine( int(xBegin), int(yTop), int(xEnd), int(yTop) )
 			
 			# Find a non-overlapping area to draw the group text.
 			xText = xBegin
 			yText = yTop + groupHeight/2 + fontHeight
 			gWidth, gHeight = GetGroupTextExtent( group )
-			gRect = wx.Rect( xText, yText, gWidth + spaceWidth*2, gHeight + fontHeight / 2 )
+			gRect = wx.Rect( int(xText), int(yText), int(gWidth + spaceWidth*2), int(gHeight + fontHeight / 2) )
 			
 			conflict = True
 			while conflict:
@@ -417,13 +417,13 @@ class SituationPanel(wx.Panel):
 		# Connect the text to the group with a line.
 		dc.SetPen( greyPen )
 		for group, gRect in groupRectList:
-			dc.DrawLine( gRect.GetLeft(), yTop, gRect.GetLeft(), gRect.GetTop() )
+			dc.DrawLine( int(gRect.GetLeft()), int(yTop), int(gRect.GetLeft()), int(gRect.GetTop()) )
 			
 		for group, gRect in groupRectList:
 			# Draw the group outline.
 			dc.SetPen( greyPen )
 			dc.SetBrush( greyBrush if group[0][0] != groupTimeMaxSize else wx.Brush( wx.Colour(200,255,200), wx.SOLID ) )
-			dc.DrawRoundedRectangle( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 )
+			dc.DrawRoundedRectangle( int(gRect.GetLeft()), int(gRect.GetTop()), int(gRect.GetWidth()-1), int(gRect.GetHeight()-fontHeight/2), int(fontHeight/3) )
 			
 			xText = gRect.GetLeft()
 
@@ -452,11 +452,11 @@ class SituationPanel(wx.Panel):
 					for iField in range(1, len(fieldWidths)):
 						tWidth = fieldWidths[iField] - fieldWidths[iField-1]
 						dc.SetBrush( groupTitleBrushes[iBrush] )
-						dc.DrawRectangle( xLast, yText, tWidth, fontHeight*1.08 )
+						dc.DrawRectangle( int(xLast), int(yText), int(tWidth), int(fontHeight*1.08) )
 						iBrush += 1
 						xLast += tWidth
 					
-				dc.DrawText( g[1], xText + spaceWidth, yText )
+				dc.DrawText( g[1], int(xText + spaceWidth), int(yText) )
 				yText += fontHeight
 				
 		self.groupRectList = groupRectList
@@ -471,7 +471,7 @@ class SituationPanel(wx.Panel):
 		yUp += smallFontHeight/4
 		
 		arrowLength = smallFontHeight * 0.75
-		leftArrow = [wx.Point(0,0), wx.Point(arrowLength, arrowLength/4), wx.Point(arrowLength, -arrowLength/4)]
+		leftArrow = [wx.Point(0,0), wx.Point(int(arrowLength), int(arrowLength/4)), wx.Point(int(arrowLength), int(-arrowLength/4))]
 		rightArrow = [wx.Point(-p.x, p.y) for p in leftArrow]
 
 		for iGroup in range(1, len(groups)):
@@ -483,16 +483,16 @@ class SituationPanel(wx.Panel):
 			if xNext - xPrev < tWidth * 1.25:
 				continue
 			
-			dc.DrawLine( xPrev, yTop, xPrev, yUp )
-			dc.DrawLine( xNext, yTop, xNext, yUp )
+			dc.DrawLine( int(xPrev), int(yTop), int(xPrev), int(yUp) )
+			dc.DrawLine( int(xNext), int(yTop), int(xNext), int(yUp) )
 			
 			if xNext - xPrev > tWidth + arrowLength * 4:
-				dc.DrawLine( xPrev, yTextCenter, xPrev + (xNext - xPrev - tWidth) / 2 - 2, yTextCenter )
-				dc.DrawLine( xNext - (xNext - xPrev - tWidth) / 2 + 2, yTextCenter, xNext, yTextCenter )
-				dc.DrawPolygon( leftArrow, xPrev, yTextCenter )
-				dc.DrawPolygon( rightArrow, xNext, yTextCenter )
+				dc.DrawLine( int(xPrev), int(yTextCenter), int(xPrev + (xNext - xPrev - tWidth) / 2 - 2), int(yTextCenter) )
+				dc.DrawLine( int(xNext - (xNext - xPrev - tWidth) / 2 + 2), int(yTextCenter), int(xNext), int(yTextCenter) )
+				dc.DrawPolygon( leftArrow, int(xPrev), int(yTextCenter) )
+				dc.DrawPolygon( rightArrow, int(xNext), int(yTextCenter) )
 			
-			dc.DrawText( sepStr, xPrev + (xNext - xPrev - tWidth) / 2, yText )
+			dc.DrawText( sepStr, int(xPrev + (xNext - xPrev - tWidth) / 2), int(yText) )
 			
 #------------------------------------------------------------------------------------------------------
 

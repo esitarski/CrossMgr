@@ -3,7 +3,7 @@ import datetime
 import Utils
 import math
 
-class FitSheetWrapper(object):
+class FitSheetWrapper:
 	"""Try to fit columns to max size of any entry.
 	To use, wrap this around a worksheet returned from the 
 	workbook's add_sheet method, like follows:
@@ -50,7 +50,7 @@ class FitSheetWrapper(object):
 		return getattr(self.sheet, attr)
 		
 StandardCharWidth = arial10.charwidths['0'] * 0.95
-class FitSheetWrapperXLSX(object):
+class FitSheetWrapperXLSX:
 	"""Try to fit columns to max size of any entry.
 	To use, wrap this around a worksheet returned from the 
 	workbook's add_sheet method, like follows:

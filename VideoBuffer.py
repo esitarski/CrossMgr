@@ -59,7 +59,7 @@ class CallbackTimer( wx.Timer ):
 	def Notify( self ):
 		self.callback()
 
-class VideoBuffer( object ):
+class VideoBuffer:
 	
 	def __init__( self, camera, refTime=None, dirName='.', fps=25, bufferSeconds=4.0, owner=None, burstMode=True ):
 		self.camera = camera

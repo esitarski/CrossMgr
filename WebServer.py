@@ -95,11 +95,11 @@ def getAnnouncerHtml():
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
 
-class Generic( object ):
+class Generic:
 	def __init__( self, **kwargs ):
 		self.__dict__.update( kwargs )
 
-class ContentBuffer( object ):
+class ContentBuffer:
 	Unchanged = 0
 	Changed = 1
 	ReadError = 2
@@ -172,7 +172,7 @@ class ContentBuffer( object ):
 		cache['mtime'] = mtime
 		result = ParseHtmlPayload( content=content )
 		cache['payload'] = result['payload'] if result['success'] else {}
-		cache['content'] = content.encode('utf-8')
+		cache['content'] = content.encode() if not isinstance(content, bytes) else content
 		cache['gzip_content'] = gzipEncode( cache['content'] )
 		self.fileCache[fname] = cache
 		return cache
@@ -352,14 +352,14 @@ def getIndexPage( share=True ):
 def WriteHtmlIndexPage():
 	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
 	try:
-		with open(fname, 'rb') as f:	# Read as bytes as the index pages is already utf-8 encoded.
+		with open(fname, 'rb') as f:	# Read as bytes as the index page is already utf-8 encoded.
 			previousContent = f.read()
 	except Exception as e:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
 	if content != previousContent:
-		with open(fname, 'wb') as f:	# Write as bytes as the index pages is already utf-8 encoded.
+		with open(fname, 'wb') as f:	# Write as bytes as the index page is already utf-8 encoded.
 			f.write( getIndexPage(share=False) )
 	return fname
 

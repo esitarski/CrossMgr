@@ -33,7 +33,7 @@ maxInterpolateTime = 7.0*60.0*60.0	# 7 hours.
 lock = threading.RLock()
 
 #----------------------------------------------------------------------
-class memoize(object):
+class memoize:
 	"""
 	Decorator that caches a function's return value each time it is called.
 	If called later with the same arguments, the cached value is returned, and
@@ -133,7 +133,7 @@ def IntervalsToSet( intervals ):
 	return set.union( *[set(range(i[0], i[1]+1)) for i in intervals] ) if intervals else set()
 
 #----------------------------------------------------------------------
-class Category(object):
+class Category:
 
 	DistanceByLap = 0
 	DistanceByRace = 1
@@ -294,9 +294,9 @@ class Category(object):
 			self.sequence = int(sequence)
 		except (ValueError, TypeError):
 			self.sequence = 0
-			
+		
 		try:
-			self.distance = float(distance) if distance else None
+			self.distance = Utils.floatLocale( distance )
 		except (ValueError, TypeError):
 			self.distance = None
 		if self.distance is not None and self.distance <= 0.0:
@@ -311,7 +311,7 @@ class Category(object):
 			self.distanceType = Category.DistanceByLap
 			
 		try:
-			self.firstLapDistance = float(firstLapDistance) if firstLapDistance else None
+			self.firstLapDistance = Utils.floatLocale( firstLapDistance )
 		except (ValueError, TypeError):
 			self.firstLapDistance = None
 		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
@@ -506,7 +506,7 @@ class Category(object):
 
 #------------------------------------------------------------------------------------------------------------------
 
-class Entry(object):
+class Entry:
 	__slots__ = ('num', 'lap', 't', 'interp')		# Suppress the default dictionary to save space.
 
 	def __init__( self, num, lap, t, interp ):
@@ -980,7 +980,7 @@ class Rider(object):
 			
 		return None
 
-class NumTimeInfo(object):
+class NumTimeInfo:
 
 	Original	= 0
 	Add			= 1
@@ -1074,7 +1074,7 @@ class NumTimeInfo(object):
 	def getNumInfo( self, num ):
 		return self.info.get( num, {} )
 		
-class Race( object ):
+class Race:
 	finisherStatusList = [Rider.Finisher, Rider.Pulled]
 	finisherStatusSet = set( finisherStatusList )
 	
@@ -1259,30 +1259,30 @@ class Race( object ):
 		
 		path = Utils.getFileName() or ''
 		return {
-			u'EventName':	self.name,
-			u'EventTitle':	self.title,
-			u'RaceNum':		'{}'.format(self.raceNum),
-			u'City':		self.city,
-			u'StateProv':	self.stateProv,
-			u'Country':		self.country,
-			u'Commissaire':	self.commissaire,
-			u'Organizer':	self.organizer,
-			u'Memo':		self.memo,
-			u'Discipline':	self.discipline,
-			u'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
-			u'RaceDate':	self.date,
-			u'MinPossibleLapTime':self.minPossibleLapTime,
-			u'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
-			u'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
-			u'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
-			u'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
-			u'PhotoCount':	'{}'.format(self.photoCount),
-			u'ExcelLink':	excelLinkStr,
-			u'GPXFile':		os.path.basename(self.geoTrackFName or ''),
+			'EventName':	self.name,
+			'EventTitle':	self.title,
+			'RaceNum':		'{}'.format(self.raceNum),
+			'City':			self.city,
+			'StateProv':	self.stateProv,
+			'Country':		self.country,
+			'Commissaire':	self.commissaire,
+			'Organizer':	self.organizer,
+			'Memo':			self.memo,
+			'Discipline':	self.discipline,
+			'RaceType':	_('Time Trial') if self.isTimeTrial else _('Mass Start'),
+			'RaceDate':		self.date,
+			'MinPossibleLapTime':self.minPossibleLapTime,
+			'InputMethod':	_('RFID') if self.enableJChipIntegration else _('Manual'),
+			'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
+			'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
+			'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
+			'PhotoCount':	'{}'.format(self.photoCount),
+			'ExcelLink':	excelLinkStr,
+			'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 
-			u'Path':		path,
-			u'DirName':		os.path.dirname(path),
-			u'FileName':	os.path.basename(path),
+			'Path':			path,
+			'DirName':		os.path.dirname(path),
+			'FileName':		os.path.basename(path),
 		}
 	
 	def getBibTimes( self ):
@@ -2173,17 +2173,17 @@ class Race( object ):
 			c.normalize()
 
 	def exportCategories( self, fp ):
-		fp.write( u'#################################################################\n' )
-		fp.write( u'# CrossMgr Categories File\n' )
-		fp.write( u'#\n' )
-		fp.write( u'# Created By: {}\n'.format(CurrentUser) )
-		fp.write( u'# Created On: {}\n'.format(datetime.datetime.now()) )
-		fp.write( u'#   Computer: {}\n'.format(CurrentComputer) )
-		fp.write( u'#  From Race: "{}-r{}"\n'.format(self.name, self.raceNum) )
-		fp.write( u'#    Version: {}\n'.format(Version.AppVerName) )
-		fp.write( u'#\n' )
-		fp.write( u'# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
-		fp.write( u'#################################################################\n' )
+		fp.write( '#################################################################\n' )
+		fp.write( '# CrossMgr Categories File\n' )
+		fp.write( '#\n' )
+		fp.write( '# Created By: {}\n'.format(CurrentUser) )
+		fp.write( '# Created On: {}\n'.format(datetime.datetime.now()) )
+		fp.write( '#   Computer: {}\n'.format(CurrentComputer) )
+		fp.write( '#  From Race: "{}-r{}"\n'.format(self.name, self.raceNum) )
+		fp.write( '#    Version: {}\n'.format(Version.AppVerName) )
+		fp.write( '#\n' )
+		fp.write( '# for details see http://sites.google.com/site/crossmgrsoftware/\n' )
+		fp.write( '#################################################################\n' )
 		categoryTypeName = ['Wave', 'Component', 'Custom']
 		for c in sorted( self.categories.values(), key=Category.key ):
 			fp.write( u'{}\n'.format( u'|'.join( [

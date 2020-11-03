@@ -1,7 +1,7 @@
 import types
 import datetime
 
-class FrameCircBuf( object ):
+class FrameCircBuf:
 	def __init__( self, bufSize = 75 ):
 		self.bufSize = bufSize
 		self.reset( bufSize )

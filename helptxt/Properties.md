@@ -1,7 +1,7 @@
 [TOC]
 
 # Properties
-Allows you to configure properties of the race itself.
+Allows you to configure properties of the race.
 
 Properties include many race options, camera options, web options and the race course in GPX format.
 
@@ -96,7 +96,7 @@ For example:
     </p>
     </html>
 
-Notes get more powerful with html and variables.  For example:
+Notes get even more powerful with html and variables.  For example:
 
     <html>
     <h2>{=EventName}</h2>
@@ -122,7 +122,7 @@ Take notice of the "{=BibList 113, 117, 164}" variable.
 
 Variables can be conveniently inserted from the "Insert Variable..." button.  This is also helpful if you forget a variable name.
 
-Variables are case sensitive, so be careful.  The supported variables are:
+Variable names are case sensitive, so be careful.  The supported variables are:
 
 Variable|Value
 :-------|:----
@@ -146,8 +146,8 @@ Variable|Value
 {=ExcelLink}|The file and sheet name of the Excel sheet linked to this race.
 {=GPXFile}|The file name of the course in GPX format.
 {=Bib NNN}|Expand the bib number NNN to show rider information including "Bib: Last Name, First Name, License, UCIID, Team".
-{=BibList AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCIID, Team" in each line.
-{=BibTable AAA, BBB, CCC, DDD, ...}|Expand the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCIID, Team" in each row.
+{=BibList AAA, BBB, CCC, DDD, ...}|Expands the comma-separator bib numbers into a list showing "Bib: Last Name, First Name, License, UCIID, Team" in each line.
+{=BibTable AAA, BBB, CCC, DDD, ...}|Expands the comma-separator bib numbers into a table showing "Bib: Last Name, First Name, License, UCIID, Team" in each row.
 {=Path}|Full path name of the race file.
 {=DirName}|Directory of the race file (no file name).
 {=FileName}|File name of the race file (no directory name).

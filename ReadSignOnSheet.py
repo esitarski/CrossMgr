@@ -412,7 +412,7 @@ class SummaryPage(adv.WizardPageSimple):
 			mainWin = Utils.getMainWin()
 			wx.CallAfter( mainWin.showPage, mainWin.iPropertiesPage )
 	
-class GetExcelLink( object ):
+class GetExcelLink:
 	def __init__( self, parent, excelLink = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
@@ -639,7 +639,7 @@ def ResetExcelLinkCache():
 	infoCache = None
 	errorCache = None
 
-class ExcelLink( object ):
+class ExcelLink:
 	OpenCode = 0
 	MenCode = 1
 	WomenCode = 2
@@ -973,7 +973,7 @@ def SyncExcelLink( race ):
 #-----------------------------------------------------------------------------------------------------
 
 reSeparators = re.compile( r'[,;:.]+' )
-class BibInfo( object ):
+class BibInfo:
 	AllFields = (
 		'Name',
 		'License',
