@@ -278,7 +278,7 @@ function CopyAssets($program)
 		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
 	}
-	# Copy help files last to ensure they are built first.
+	# Copy help files last to ensure they are built by now.
 	if (Test-Path "$builddir/${program}HtmlDoc")
 	{
 		Write-Host "Copying HtmlDoc to $resourcedir"

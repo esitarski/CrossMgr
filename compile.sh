@@ -203,7 +203,7 @@ copyAssets(){
 		#cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
         cd ..
 	fi
-	# Copy help files last to ensure they are built first.
+	# Copy help files last to ensure they are built by now.
 	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
 		echo "Copying HtmlDoc to $RESOURCEDIR"
 		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
