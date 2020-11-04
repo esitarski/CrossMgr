@@ -119,18 +119,7 @@ from ModuleUnpickler import ModuleUnpickler
 now = datetime.datetime.now
 
 import traceback
-'''
-# Monkey patch threading so we can see where each thread gets started.
-import traceback
-import types
-threading_start = threading.Thread.start
-def loggingThreadStart( self, *args, **kwargs ):
-	threading_start( self, *args, **kwargs )
-	print self
-	traceback.print_stack()
-	print '----------------------------------'
-threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Thread)
-'''
+
 #----------------------------------------------------------------------------------
 
 def ShowSplashScreen():
