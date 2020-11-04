@@ -116,7 +116,8 @@ function doPyInstaller($program)
 		$buildpath = "..\build"
 	}
 	Set-Location -Path $builddir
-	Write-Host "pyinstaller.exe $program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
+	#Write-Host "pyinstaller.exe $program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
+	Write-Host "pyinstaller.exe $program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --debug --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
 	Start-Process -Wait -NoNewWindow -FilePath "pyinstaller.exe" -ArgumentList "$program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
 	$result = $?
 	if ($program -ne "CrossMgr")
