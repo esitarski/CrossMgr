@@ -1,7 +1,6 @@
 import wx
 import os
 import sys
-import six
 import xlwt
 import webbrowser
 from FitSheetWrapper import FitSheetWrapper
@@ -29,7 +28,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 
 		self.hbs.Add( self.titleLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.AddStretchSpacer()
-		self.hbs.Add( self.excelButton, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_RIGHT, border=4 )
+		self.hbs.Add( self.excelButton, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 
 		bs = wx.BoxSizer(wx.VERTICAL)
 		bs.Add(self.hbs, flag=wx.GROW|wx.HORIZONTAL)
@@ -92,7 +91,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 	def getResults( self ):
 		race = Model.race
 		return sorted(
-			((tag, times) for tag, times in six.iteritems(race.unmatchedTags)),
+			((tag, times) for tag, times in race.unmatchedTags.items()),
 			key = lambda tt: (-len(tt[1]), tt[1][-1]),
 		) if race and race.unmatchedTags else []
 

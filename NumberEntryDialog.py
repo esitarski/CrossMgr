@@ -1,12 +1,11 @@
 import wx
-import six
 from wx.lib.intctrl import IntCtrl
 
 class NumberEntryDialog( wx.Dialog ):
 	def __init__( self, parent, message = "Please enter a number.", caption = "Number Entry",
 		prompt="Number:", value=None, min=None, max=None ):
 		
-		super( NumberEntryDialog, self ).__init__( parent, title=caption )
+		super().__init__( parent, title=caption )
 		kwargs = {
 			'parent': self,
 			'min': min,
@@ -15,7 +14,7 @@ class NumberEntryDialog( wx.Dialog ):
 			'limited': True,
 			'allow_none': False,
 		}
-		self.intctrl = IntCtrl( **{k:v for k,v in six.iteritems(kwargs) if v is not None} )
+		self.intctrl = IntCtrl( **{k:v for k,v in kwargs.items() if v is not None} )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		if message:
@@ -36,7 +35,7 @@ class NumberEntryDialog( wx.Dialog ):
 		btnsizer.AddButton(btn)
 		btnsizer.Realize()
 
-		sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+		sizer.Add(btnsizer, 0, flag=wx.ALL, border=5)
 		
 		self.SetSizer( sizer )
 		self.SetSize( 200, 50*(2+int(bool(message))) )

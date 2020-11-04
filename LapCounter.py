@@ -1,7 +1,6 @@
 import wx
 import wx.lib.colourselect as  csel
 import wx.lib.intctrl as intctrl
-import six
 import math
 import datetime
 import Model
@@ -32,10 +31,10 @@ def getLapCounterOptions( isDialog ):
 	class LapCounterOptionsClass( parentClass ):
 		def __init__( self, parent, id=wx.ID_ANY ):
 			if isDialog:
-				super( LapCounterOptionsClass, self ).__init__( parent, id, _("Lap Counter Options"),
+				super().__init__( parent, id, _("Lap Counter Options"),
 							style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 			else:
-				super( LapCounterOptionsClass, self ).__init__( parent, id )
+				super().__init__( parent, id )
 			
 			vs = wx.BoxSizer( wx.VERTICAL )
 			
@@ -148,7 +147,7 @@ class LapCounter( wx.Panel ):
 	lapElapsedClock = True
 	
 	def __init__( self, parent, labels=None, id=wx.ID_ANY, size=(640,480), style=0 ):
-		super(LapCounter, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		self.labels = labels or []
 		self.Bind( wx.EVT_PAINT, self.OnPaint )

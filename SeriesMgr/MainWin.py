@@ -2,7 +2,6 @@ import wx
 from wx.lib.wordwrap import wordwrap
 import wx.adv as adv
 import sys
-import six
 import os
 import re
 import datetime
@@ -29,9 +28,9 @@ except:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 	
-import six.moves.cPickle as pickle
+import pickle
 from argparse import ArgumentParser
-StringIO = six.moves.StringIO
+from io import StringIO
 
 import Dependencies
 
@@ -151,9 +150,11 @@ class MainWin( wx.Frame ):
 
 		# Add code to configure file history.
 		self.filehistory = wx.FileHistory(8)
+		dataDir = Utils.getHomeDir('SeriesMgr')
+		configFileName = os.path.join(dataDir, 'SeriesMgr.cfg')
 		self.config = wx.Config(appName="SeriesMgr",
-								vendorName="SmartCyclingSolutions",
-								#style=wx.CONFIG_USE_LOCAL_FILE
+								vendorName="Edward.Sitarski@gmail.com",
+								localFilename=configFileName
 		)
 		self.filehistory.Load(self.config)
 		

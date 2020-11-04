@@ -1,6 +1,5 @@
 import wx
 import sys
-import six
 import math
 import bisect
 import random

@@ -1,7 +1,6 @@
 import wx
 import io
 import re
-import six
 import math
 import Utils
 import Model
@@ -36,7 +35,7 @@ if __name__ == '__main__':
 	errors = []
 	with io.open(r"C:\Users\edwar\Downloads\Alien-2017-05-10-18-37-51.txt",'r',encoding='utf-8') as f:
 		for lineno, line in enumerate(f,1):
-			six.print_( parseTagTime( line, lineno, errors ) )
+			print( parseTagTime( line, lineno, errors ) )
 	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))

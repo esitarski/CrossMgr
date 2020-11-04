@@ -1,10 +1,9 @@
-import six
-import socket
-import struct
 import sys
 import time
 import json
-from six.moves.queue import Queue, Empty
+import socket
+import struct
+from queue import Queue, Empty
 from collections import deque
 import threading
 from datetime import datetime, timedelta
@@ -33,7 +32,7 @@ class MultiCastSender( threading.Thread ):
 		Also inventories receivers.
 	'''
 	def __init__( self, qIn=None, receiverCallback=None, name='MultiCastSender' ):
-		super( MultiCastSender, self ).__init__()
+		super().__init__()
 		
 		self.name = name
 		self.daemon = True
@@ -136,7 +135,7 @@ class MultiCastSender( threading.Thread ):
 					try:
 						sent = sock.sendto(ToJson([message[0], makeJSONCompatible(message[1])]).encode(), (multicast_group, multicast_port))
 					except Exception as e:
-						# six.print_( 'MultiCastSender:', e )
+						# print( 'MultiCastSender:', e )
 						pass
 				elif message[0] == 'terminate':
 					keepGoing = False
@@ -177,7 +176,7 @@ def HasReceivers():
 class MultiCastReceiver( threading.Thread ):
 	
 	def __init__( self, triggerCallback, messageQ = None, name='MultiCastReceiver' ):
-		super( MultiCastReceiver, self ).__init__()
+		super().__init__()
 		
 		self.triggerCallback = triggerCallback
 		self.messageQ = messageQ
@@ -191,6 +190,9 @@ class MultiCastReceiver( threading.Thread ):
 
 		# Create the socket
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		
+		# Disable timeout on reconnect.
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		# Bind to the server address
 		sock.bind(server_address)
@@ -268,7 +270,7 @@ if __name__ == '__main__':
 		def printQ():
 			while 1:
 				info = triggerQ.get()
-				six.print_( info )
+				print( info )
 				triggerQ.task_done()
 				
 		triggerPrinter = threading.Thread( target=printQ )
@@ -281,9 +283,9 @@ if __name__ == '__main__':
 	else:
 		# Sender
 		def receiverCallback( receivers ):
-			six.print_( 'receivers:' )
+			print( 'receivers:' )
 			for r in receivers:
-				six.print_( r )
+				print( r )
 		
 		for i in range(200):
 			SendTrigger( ('trigger', {'bib':200+i, 'team':'MyTeam', 'ts':now()}) )

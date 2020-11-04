@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import datetime
 import Model
@@ -61,7 +60,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 			self, parent, ID = wx.ID_ANY, title=_('Photo Sync Previewer'), size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
-		super( PhotoSyncViewerDialog, self ).__init__(parent, ID, title, pos, size, style)
+		super().__init__(parent, ID, title, pos, size, style)
 
 		# This next step is the most important, it turns this Python
 		# object into the real wrapper of the dialog (instead of pre)
@@ -93,11 +92,11 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 									self.scrolledWindow,
 									label=self.bitmap, size=(self.photoWidth+4,self.photoHeight+4),
 									style=wx.BU_AUTODRAW)
-								for i in six.moves.range(self.numPhotos)] for s in six.moves.range(self.numPhotoSeries)]
-		self.photoLabels = [[wx.StaticText(self.scrolledWindow, style=wx.ALIGN_CENTRE) for i in six.moves.range(self.numPhotos)]
-								for s in six.moves.range(self.numPhotoSeries)]
+								for i in range(self.numPhotos)] for s in range(self.numPhotoSeries)]
+		self.photoLabels = [[wx.StaticText(self.scrolledWindow, style=wx.ALIGN_CENTRE) for i in range(self.numPhotos)]
+								for s in range(self.numPhotoSeries)]
 		self.titles = [''] * self.numPhotoSeries
-		for s in six.moves.range(self.numPhotoSeries):
+		for s in range(self.numPhotoSeries):
 			for i, p in enumerate(self.photoLabels[s]):
 				p.SetLabel( str(i) )
 			for i, w in enumerate(self.photoBitmaps[s]):
@@ -166,7 +165,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 	def clear( self ):
 		self.timeFrames = []
 		self.titles = [''] * self.numPhotoSeries
-		for s in six.moves.range(self.numPhotoSeries):
+		for s in range(self.numPhotoSeries):
 			for w in self.photoBitmaps[s]:
 				w.SetBitmapLabel( self.bitmap )
 			for w in self.photoLabels[s]:
@@ -174,8 +173,8 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		
 	def refresh( self, videoBuffer, t, num = None ):
 		if not videoBuffer:
-			for s in six.moves.range(len(self.photoLabels)):
-				for i in six.moves.range(len(self.photoLabels[s])):
+			for s in range(len(self.photoLabels)):
+				for i in range(len(self.photoLabels[s])):
 					self.photoBitmaps[s][i].SetBitmapLabel( self.bitmap )
 					self.photoLabels[s][i].SetLabel( '' )
 			return
@@ -277,7 +276,7 @@ if __name__ == '__main__':
 	photoSyncDialog.Show()
 	photoSyncDialog.reset()
 	bib = 100
-	for d in six.moves.range(0, 1000*60, 1000):
+	for d in range(0, 1000*60, 1000):
 		wx.CallLater( max(1,d), doRefresh, bib )
 		bib += 1
 	app.MainLoop()

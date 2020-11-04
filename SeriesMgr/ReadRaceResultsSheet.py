@@ -4,7 +4,6 @@ import wx.lib.scrolledpanel as scrolled
 import wx.adv
 import os
 import sys
-import six
 import copy
 import Utils
 import traceback
@@ -131,7 +130,7 @@ class HeaderNamesPage(wx.adv.WizardPageSimple):
 		for r, row in enumerate(reader.iter_list(sheetName)):
 			cols = sum( 1 for d in row if d )
 			if cols > 4:
-				self.headers = [six.text_type(h or '').strip() for h in row]
+				self.headers = ['{}'.format(h or '').strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
@@ -139,7 +138,7 @@ class HeaderNamesPage(wx.adv.WizardPageSimple):
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if d )
 				if cols > 0:
-					self.headers = [six.text_type(h or '').strip() for h in row]
+					self.headers = ['{}'.format(h or '').strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
@@ -372,7 +371,7 @@ class ExcelLink( object ):
 					pass
 				
 			data = {}
-			for field, col in six.iteritems(self.fieldCol):
+			for field, col in self.fieldCol.items():
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
@@ -381,7 +380,7 @@ class ExcelLink( object ):
 					pass
 					
 				try:
-					data[field] = six.text_type(data[field])
+					data[field] = '{}'.format(data[field])
 				except:
 					data[field] = ''
 			

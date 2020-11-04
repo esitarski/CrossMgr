@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import math
 import bisect
@@ -11,7 +10,7 @@ from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults
 from Histogram import Histogram
 
-class GetCategoryName( object ):
+class GetCategoryName:
 	def __init__( self, categories ):
 		self.categories = categories
 		self.lastCategory = categories[0]
@@ -29,7 +28,7 @@ class GetCategoryName( object ):
 
 class HistogramPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
-		super(HistogramPanel, self).__init__( parent, id, size=size )
+		super().__init__( parent, id, size=size )
 		self.category = None
 		
 		self.hbs = wx.BoxSizer( wx.HORIZONTAL )
@@ -120,7 +119,7 @@ class HistogramPanel( wx.Panel ):
 				else:
 					maxLaps = len(rr.raceTimes) - 1
 				if self.lapOption.GetCount() != maxLaps + 1:
-					self.lapOption.SetItems( [_('Last')] + [six.text_type(i) for i in six.moves.range(1,maxLaps+1)] )
+					self.lapOption.SetItems( [_('Last')] + ['{}'.format(i) for i in range(1,maxLaps+1)] )
 					if self.lap >= self.lapOption.GetCount():
 						self.lap = 0
 					self.lapOption.SetSelection( self.lap )

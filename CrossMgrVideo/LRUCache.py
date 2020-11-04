@@ -1,4 +1,3 @@
-import six
 import collections
 
 class LRUCache( object ):
@@ -33,11 +32,11 @@ class LRUCache( object ):
 
 if __name__ == '__main__':
 	lru = LRUCache( 20 )
-	for i in six.moves.range(30):
+	for i in range(30):
 		lru[i] = i
 	assert len(lru) == 20
-	assert sorted( lru.values() ) == list( v for v in six.moves.range(10,30))
+	assert sorted( lru.values() ) == list( v for v in range(10,30))
 	keys = list( lru.keys() )
-	six.print_( keys )
+	print( keys )
 	values = list( lru.values() )
-	six.print_( values )
+	print( values )

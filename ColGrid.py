@@ -1,6 +1,5 @@
 import wx
-import six
-import wx.grid as  Grid
+import wx.grid as Grid
 import copy
 
 #---------------------------------------------------------------------------
@@ -10,6 +9,8 @@ class ColTable( Grid.GridTableBase ):
 	A custom wx.Grid Table using user supplied data
 	"""
 	def __init__( self ):
+		super().__init__()
+		
 		"""
 		data is a list, indexed by col, containing a list of row values
 		"""
@@ -17,9 +18,6 @@ class ColTable( Grid.GridTableBase ):
 		self.rightAlign = False
 		self.leftAlignCols = set()
 		self.colRenderer = {}
-		
-		# The base class must be initialized *first*
-		Grid.GridTableBase.__init__(self)
 		
 		# Column-oriented data.
 		# textColour and backgroundColour are store as a dict indexed by (row, col).
@@ -29,9 +27,6 @@ class ColTable( Grid.GridTableBase ):
 		self.textColour = {}
 		self.backgroundColour = {}
 
-	def __del__( self ):
-		pass
-		
 	def SetRightAlign( self, ra = True ):
 		self.rightAlign = ra
 		self.attrs = {}
@@ -84,7 +79,8 @@ class ColTable( Grid.GridTableBase ):
 	
 	def SetColumn( self, grid, iCol, colData ):
 		self.data[iCol] = copy.copy(colData)
-		self.UpdateValues( grid )
+		rect = grid.BlockToDeviceRect((0, iCol), (len(self.data[iCol])-1, iCol))
+		grid.GetGridWindow().RefreshRect( rect )
 	
 	def SortByColumn( self, iCol, descending = False ):
 		if not self.data:
@@ -141,7 +137,7 @@ class ColTable( Grid.GridTableBase ):
 			return ''
 
 	def GetRowLabelValue(self, row):
-		return six.text_type(row+1)
+		return str(row+1)
 
 	def IsEmptyCell( self, row, col ):
 		try:
@@ -154,7 +150,7 @@ class ColTable( Grid.GridTableBase ):
 		return '' if self.IsEmptyCell(row, col) else self.data[col][row]
 
 	def GetValue(self, row, col):
-		return six.text_type(self.GetRawValue(row, col))
+		return str(self.GetRawValue(row, col))
 
 	def SetValue(self, row, col, value):
 		# Nothing to do - everthing is read-only.
@@ -168,10 +164,10 @@ class ColTable( Grid.GridTableBase ):
 			del self.colnames[pos:pos+numCols]
 		posMax = pos + numCols
 		for a in ['textColour', 'backgroundColour']:
-			if not getattr(self, a, None):
+			if not hasattr(self, a):
 				continue
 			colD = {}
-			for (r, c), colour in six.iteritems(getattr(self, a)):
+			for (r, c), colour in getattr(self, a).items():
 				if c < pos:
 					colD[(r, c)] = colour
 				elif posMax <= c:
@@ -231,11 +227,11 @@ class ColTable( Grid.GridTableBase ):
 		grid.AdjustScrollbars()
 		grid.ForceRefresh()
 
-	def UpdateValues(self, grid):
+	def UpdateValues( self, grid ):
 		"""Update all displayed values"""
-		# This sends an event to the grid table to update all of the values
-		msg = Grid.GridTableMessage(self, Grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
-		grid.ProcessTableMessage(msg)
+		if self.data:
+			rect = grid.BlockToDeviceRect((0, 0), (len(self.data[0])-1, len(self.data)-1))
+			grid.GetGridWindow().RefreshRect( rect )
 
 # --------------------------------------------------------------------
 # Sample Grid

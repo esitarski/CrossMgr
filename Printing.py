@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import math
 import getpass
@@ -168,7 +167,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		race = Model.race
 			
 		self.podiumPositionsLabel = wx.StaticText( self, label=_('Podium Positions to Print:') )
-		self.podiumPositions = wx.Choice( self, choices=[six.text_type(i+1) for i in range(10)] )
+		self.podiumPositions = wx.Choice( self, choices=['{}'.format(i+1) for i in range(10)] )
 		self.podiumPositions.SetSelection( 2 )
 		
 		self.includePrimesInPrintoutCheckBox = wx.CheckBox( self, label = _('Include Primes in Printout') )
@@ -419,12 +418,12 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			if self.dir and not os.path.isdir( self.dir ):
 				os.mkdir( self.dir )
 			fname = u'{fileBase}.pdf'.format( fileBase=self.fileBase )
-			self.pdf.set_title( six.text_type(os.path.splitext(fname)[0].replace('-', ' ')) )
+			self.pdf.set_title( '{}'.format(os.path.splitext(fname)[0].replace('-', ' ')) )
 			fname = os.path.join( self.dir, fname )
 			self.pdf.output( fname, 'F' )
 			self.lastFName = fname
 			self.pdf = None
-		return super(CrossMgrPrintoutPDF, self).OnEndPrinting()
+		return super().OnEndPrinting()
 
 	def OnPrintPage( self, page ):
 		exportGrid = self.prepareGrid( page )
@@ -522,6 +521,6 @@ if __name__ == '__main__':
 	mainWin.Show()
 	cpcd.ShowModal()
 	for c in cpcd.categories:
-		six.print_( c )
+		print( c )
 	app.MainLoop()
 

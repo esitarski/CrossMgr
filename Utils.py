@@ -1,54 +1,8 @@
 import sys
-import six
 import collections
 from netifaces import interfaces, ifaddresses, AF_INET
 
-#-----------------------------------------------------------------------
-# Fix named tuple pickle issue.
-#
-def _fix_issue_18015(collections):
-	try:
-		template = collections._class_template
-	except AttributeError:
-		# prior to 2.7.4 _class_template didn't exists
-		return
-	if not isinstance(template, six.string_types):
-		return  # strange
-	if "__dict__" in template or "__getstate__" in template:
-		return  # already patched
-	lines = template.splitlines()
-	indent = -1
-	for i,l in enumerate(lines):
-		if indent < 0:
-			indent = l.find('def _asdict')
-			continue
-		if l.startswith(' '*indent + 'def '):
-			lines.insert(i, ' '*indent + 'def __getstate__(self): pass')
-			lines.insert(i, ' '*indent + '__dict__ = _property(_asdict)')
-			break
-	collections._class_template = '''\n'''.join(lines)
-    
-if sys.version_info[:3] == (2,7,5):
-	_fix_issue_18015(collections)
-
-#-----------------------------------------------------------------------
-# Attempt to import windows libraries.
-#
-try:
-	from win32com.shell import shell, shellcon
-except ImportError:
-	pass
-	
-try:
-	import win32api,win32process,win32con
-except:
-	pass
-
-try:
-	sys.getwindowsversion()
-	isWindows = True
-except:
-	isWindows = False
+isWindows = sys.platform.startswith('win')
 
 #------------------------------------------------------------------------
 # Get resource directories.
@@ -128,11 +82,12 @@ lang = (lang or 'en')[:2]
 # Setup translation.
 #
 import sys
+import builtins
 from Version import AppVerName
 import gettext
 initTranslationCalled = False
 translate = None
-six.moves.builtins.__dict__['_'] = translate = lambda s: s
+builtins.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
 	global translate
@@ -149,7 +104,7 @@ def initTranslation():
 		try:
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
-			six.moves.builtins.__dict__['_'] = translate = translation.ugettext
+			builtins.__dict__['_'] = translate = translation.ugettext
 		except:
 			pass
 		
@@ -160,15 +115,15 @@ def initTranslation():
 		
 initTranslation()
 
-class SuspendTranslation( object ):
+class SuspendTranslation:
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
-		self._Save = six.moves.builtins.__dict__['_']
-		six.moves.builtins.__dict__['_'] = lambda x: x
+		self._Save = builtins.__dict__['_']
+		builtins.__dict__['_'] = lambda x: x
 	def __exit__(self, type, value, traceback):
-		six.moves.builtins.__dict__['_'] = self._Save
+		builtins.__dict__['_'] = self._Save
 
-class UIBusy( object ):
+class UIBusy:
 	def __enter__(self):
 		wx.BeginBusyCursor()
 	
@@ -196,7 +151,7 @@ def tag( buf, name, attrs = None ):
 	if not isinstance(attrs, dict):
 		attrs = { 'class': attrs }
 	if attrs:
-		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in six.iteritems(attrs)])) )
+		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in attrs.items()])) )
 	else:
 		buf.write( u'<{}>'.format(name) )
 	yield
@@ -234,18 +189,6 @@ if 'WXMAC' in wx.Platform:
 	wx.WXK_NUMPAD_ADD = 43
 	wx.WXK_NUMPAD_SUBTRACT = 45
 	
-def HighPriority():
-	""" Set the priority of the process to the highest level."""
-	if isWindows:
-		# Based on:
-		#   "Recipe 496767: Set Process Priority In Windows" on ActiveState
-		#   http://code.activestate.com/recipes/496767/
-		pid = win32api.GetCurrentProcessId()
-		handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
-		win32process.SetPriorityClass(handle, win32process.REALTIME_PRIORITY_CLASS)
-	else:
-		os.nice( -os.nice(0) )
-
 def stripLeadingZeros( s ):
 	return s.lstrip('0')
 	
@@ -551,12 +494,12 @@ def ordinal( value ):
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
 	}.get( lang[:2], lambda v: u'{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
 
-def getHomeDir():
+def getHomeDir( appName='CrossMgr' ):
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
 	try:
-		if os.path.basename(homedir) == '.CrossMgr':
-			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
+		if os.path.basename(homedir) == '.{}'.format(appName):
+			homedir = os.path.join( os.path.dirname(homedir), '.{}App'.format(appName) )
 	except:
 		pass
 	if not os.path.exists(homedir):
@@ -570,6 +513,34 @@ def getDocumentsDir():
 		os.makedirs( dd )
 	return dd
 	
+#------------------------------------------------------------------------
+def floatLocale( v ):
+	if isinstance( v, float ):
+		return v
+	if isinstance( v, int ):
+		return float(v)
+	if isinstance( v, str ):
+		v = v.strip()
+		if '.' not in v:
+			v = v.replace(',', '.')			# Normalize decimal sep.
+		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
+	return float( v )
+	
+def floatFormatLocale( v, width=-1, precision=6 ):
+	s = str(int( round(v * (10**precision)) ))
+	fract = s[-precision:]
+	if len(fract) < precision:
+		fract = '0' * (precision-len(fract)) + fract
+	whole = s[:len(s)-precision] if len(s) > precision else '0'
+	
+	ret = ''.join( [whole, locale.localeconv()['decimal_point'], fract] )
+	if width > 0 and len(ret) < width:
+		ret = ' ' * (width - len(s)) + ret
+	return ret
+	
+def fld( v, precision=3 ):
+	return floatFormatLocale( v, precision=precision )
 #------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')
@@ -603,19 +574,15 @@ def writeLog( message ):
 		pass
 
 def disable_stdout_buffering():
-	fileno = sys.stdout.fileno()
-	temp_fd = os.dup(fileno)
-	sys.stdout.close()
-	os.dup2(temp_fd, fileno)
-	os.close(temp_fd)
-	sys.stdout = os.fdopen(fileno, "w")
+	# No longer necessary as if output goes to the terminal it will be flushed if it ends in newline.
+	''' sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) '''
 
 def logCall( f ):
 	def _getstr( x ):
 		return u'{}'.format(x) if not isinstance(x, wx.Object) else u'<<{}>>'.format(x.__class__.__name__)
 	
 	def new_f( *args, **kwargs ):
-		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in six.iteritems(kwargs) ]
+		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in kwargs.items() ]
 		writeLog( 'call: {}({})'.format(f.__name__, removeDiacritic(u', '.join(parameters))) )
 		return f( *args, **kwargs)
 	return new_f
@@ -710,7 +677,13 @@ def LayoutChildResize( child ):
 		if parent.IsTopLevel():
 			break
 		parent = parent.GetParent()
-		
+
+def LayoutChildren( sizer ):
+	for c in sizer.GetChildren():
+		if isinstance(c, wx.Sizer):
+			LayoutDescending( c )
+	sizer.Layout()
+
 def GetPngBitmap( fname ):
 	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )
 			
@@ -821,8 +794,28 @@ import json
 def ToJson( v, separators=(',',':') ):
 	''' Make sure we always return a unicode string. '''
 	return json.dumps( v, separators=separators )
+	
+def call_tracer( frame, event, arg ):
+	if event != 'call':
+		return
+	co = frame.f_code
+	func_name = co.co_name
+	if func_name == 'write':
+		# Ignore write() calls from print statements
+		return
+	func_line_no = frame.f_lineno
+	func_filename = co.co_filename
+	caller = frame.f_back
+	caller_line_no = caller.f_lineno
+	caller_filename = caller.f_code.co_filename
+	print( 'Call to {} on line {} of {} from line {} of {}'.format(
+			func_name, func_line_no, func_filename,
+			caller_line_no, caller_filename,
+		)
+	)
 
 if __name__ == '__main__':
+	sys.settrace( call_tracer )
 	initTranslation()
 	app = wx.App(False)
 	

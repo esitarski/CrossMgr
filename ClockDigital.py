@@ -23,7 +23,7 @@ class ClockDigital(wx.Control):
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="ClockDigital", refTime=None, countDown=False, checkFunc=None ):
 
-		super( ClockDigital, self ).__init__(parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer )
@@ -47,11 +47,11 @@ class ClockDigital(wx.Control):
 		return wx.Size(100, 20) if self.initialSize is wx.DefaultSize else self.initialSize
 
 	def SetForegroundColour(self, colour):
-		super(ClockDigital, self).SetForegroundColour(colour)
+		super().SetForegroundColour(colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		super(ClockDigital, self).SetBackgroundColour(colour)
+		super().SetBackgroundColour(colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):

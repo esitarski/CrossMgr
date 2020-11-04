@@ -4,8 +4,7 @@ import wx.grid as gridlib
 import os
 import io
 import cgi
-import six
-from six.moves.urllib.parse import quote
+from urllib.parse import quote
 import sys
 import base64
 import datetime
@@ -99,7 +98,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
 	def write( s ):
-		html.write( six.text_type(s) )
+		html.write( '{}'.format(s) )
 	
 	with tag(html, 'html'):
 		with tag(html, 'head'):
@@ -274,6 +273,10 @@ table.points tr.odd {
 	padding:3px 7px 2px 7px;
 }
 
+select {
+    font: inherit;
+}
+
 hr { clear: both; }
 
 @media print {
@@ -412,23 +415,19 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'span', {'style': 'font-size: 60%'}):
 								write( '&nbsp;' * 5 )
 								write( u' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
-			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
-				with tag(html, 'label', {'class':'green'} ):
-					with tag(html, 'input', {
-							'type':"radio",
-							'name':"categorySelect",
-							'checked':"true",
-							'onclick':"selectCategory(-1);"} ):
+
+			with tag(html, 'h3' ):
+				with tag(html, 'label', {'for':'categoryselect'} ):
+					write( 'Category' + ':' )
+				with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
+					with tag(html, 'option', {'value':-1} ):
 						with tag(html, 'span'):
 							write( u'All' )
-				for iTable, categoryName in enumerate(categoryNames):
-					with tag(html, 'label', {'class':'green'} ):
-						with tag(html, 'input', {
-								'type':"radio",
-								'name':"categorySelect",
-								'onclick':"selectCategory({});".format(iTable)} ):
+					for iTable, categoryName in enumerate(categoryNames):
+						with tag(html, 'option', {'value':iTable} ):
 							with tag(html, 'span'):
-								write( six.text_type(cgi.escape(categoryName)) )
+								write( '{}'.format(cgi.escape(categoryName)) )
+			
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
@@ -456,7 +455,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( six.text_type(cgi.escape(col).replace('\n', '<br/>\n')) )
+										write( '{}'.format(cgi.escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -468,13 +467,13 @@ function sortTableId( iTable, iCol ) {
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( six.text_type(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+												write( '{}'.format(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
-											write( six.text_type(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											write( '{}'.format(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
-												write( six.text_type(r[0].strftime('%b %d, %Y')) )
+												write( '{}'.format(r[0].strftime('%b %d, %Y')) )
 										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
@@ -483,21 +482,21 @@ function sortTableId( iTable, iCol ) {
 							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( six.text_type(pos+1) )
+										write( '{}'.format(pos+1) )
 									with tag(html, 'td'):
-										write( six.text_type(name or u'') )
+										write( '{}'.format(name or u'') )
 									with tag(html, 'td', {'class':'noprint'}):
 										if licenseLinkTemplate and license:
 											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
-												write( six.text_type(license or u'') )
+												write( '{}'.format(license or u'') )
 										else:
-											write( six.text_type(license or u'') )
+											write( '{}'.format(license or u'') )
 									with tag(html, 'td'):
-										write( six.text_type(team or '') )
+										write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
-										write( six.text_type(points or '') )
+										write( '{}'.format(points or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
-										write( six.text_type(gap or '') )
+										write( '{}'.format(gap or '') )
 									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
 										if rPoints:
 											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
@@ -633,7 +632,7 @@ function sortTableId( iTable, iCol ) {
 								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
 								isFirst = False
 						if model.numPlacesTieBreaker != 0:
-							finishOrdinals = [Utils.ordinal(p+1) for p in six.moves.range(model.numPlacesTieBreaker)]
+							finishOrdinals = [Utils.ordinal(p+1) for p in range(model.numPlacesTieBreaker)]
 							if model.numPlacesTieBreaker == 1:
 								finishStr = finishOrdinals[0]
 							else:
@@ -655,7 +654,7 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'h2'):
 							write( u"Upgrades Progression" )
 						with tag(html, 'ol'):
-							for i in six.moves.range(len(model.upgradePaths)):
+							for i in range(len(model.upgradePaths)):
 								with tag(html, 'li'):
 									write( u"{}: {:.2f} points in pre-upgrade category carried forward".format(model.upgradePaths[i], model.upgradeFactors[i]) )
 			#-----------------------------------------------------------------------------
@@ -895,13 +894,13 @@ class Results(wx.Panel):
 		self.setColNames( headerNames )
 		
 		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
-			self.grid.SetCellValue( row, 0, six.text_type(row+1) )
-			self.grid.SetCellValue( row, 1, six.text_type(name or u'') )
+			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
+			self.grid.SetCellValue( row, 1, '{}'.format(name or u'') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			self.grid.SetCellValue( row, 2, six.text_type(license or u'') )
-			self.grid.SetCellValue( row, 3, six.text_type(team or u'') )
-			self.grid.SetCellValue( row, 4, six.text_type(points) )
-			self.grid.SetCellValue( row, 5, six.text_type(gap) )
+			self.grid.SetCellValue( row, 2, '{}'.format(license or u'') )
+			self.grid.SetCellValue( row, 3, '{}'.format(team or u'') )
+			self.grid.SetCellValue( row, 4, '{}'.format(points) )
+			self.grid.SetCellValue( row, 5, '{}'.format(gap) )
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 6 + q,
 					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
@@ -927,7 +926,7 @@ class Results(wx.Panel):
 				
 			data = []
 			for r in range(self.grid.GetNumberRows()):
-				rowOrig = [self.grid.GetCellValue(r, c) for c in six.moves.range(0, self.grid.GetNumberCols())]
+				rowOrig = [self.grid.GetCellValue(r, c) for c in range(0, self.grid.GetNumberCols())]
 				rowCmp = rowOrig[:]
 				rowCmp[0] = int(rowCmp[0])
 				rowCmp[4] = Utils.StrToSeconds(rowCmp[4])

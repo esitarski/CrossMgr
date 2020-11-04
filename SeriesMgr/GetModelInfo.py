@@ -1,7 +1,6 @@
 import os
-import six
 import math
-import six.moves.cPickle as pickle
+import pickle
 import datetime
 import operator
 import itertools
@@ -61,13 +60,13 @@ def formatTimeGap( secs, highPrecision = False ):
 	minutes = int( (secs // 60) % 60 )
 	secs = secs % 60
 	if highPrecision:
-		decimal = '.%02d' % int( f * 100 )
+		decimal = '.{:02d}'.format( int( f * 100 ) )
 	else:
 		decimal = ''
 	if hours > 0:
-		return "%s%dh%d'%02d%s\"" % (sign, hours, minutes, secs, decimal)
+		return "{}{}h{}'{:02d}{}\"".format(sign, hours, minutes, secs, decimal)
 	else:
-		return "%s%d'%02d%s\"" % (sign, minutes, secs, decimal)
+		return "{}{}'{:02d}{}\"".format(sign, minutes, secs, decimal)
 
 def safe_upper( f ):
 	try:
@@ -80,19 +79,19 @@ class RaceResult( object ):
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1 ):
-		self.firstName = six.text_type(firstName or u'')
-		self.lastName = six.text_type(lastName or u'')
+		self.firstName = str(firstName or u'')
+		self.lastName = str(lastName or u'')
 		
 		self.license = (license or u'')
 		if isinstance(self.license, float) and int(self.license) == self.license:
 			self.license = int(self.license)
-		self.license = six.text_type(self.license)
+		self.license = str(self.license)
 		
-		self.team = six.text_type(team or u'')
+		self.team = str(team or u'')
 		
-		self.categoryName = six.text_type(categoryName or u'')
+		self.categoryName = str(categoryName or u'')
 		
-		self.raceName = six.text_type(raceName)
+		self.raceName = str(raceName)
 		self.raceDate = raceDate
 		self.raceOrganizer = raceOrganizer
 		self.raceFileName = raceFileName
@@ -179,31 +178,31 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
 					'tFinish':		f('time',0.0),
-					'firstName':	six.text_type(f('first_name',u'')).strip(),
-					'lastName'	:	six.text_type(f('last_name',u'')).strip(),
-					'license':		six.text_type(f('license_code',u'')).strip(),
-					'team':			six.text_type(f('team',u'')).strip(),
+					'firstName':	str(f('first_name',u'')).strip(),
+					'lastName'	:	str(f('last_name',u'')).strip(),
+					'license':		str(f('license_code',u'')).strip(),
+					'team':			str(f('team',u'')).strip(),
 					'categoryName': f('category_code',None),
 					'laps':			f('laps',1),
 				}
 				
-				info['rank'] = six.text_type(info['rank']).strip()
+				info['rank'] = str(info['rank']).strip()
 				if not info['rank']:	# If missing rank, assume end of input.
 					break
 				
 				isUSAC = False
 				if info['categoryName'] is None:
 					# Hack for USAC cycling input spreadsheet.
-					cn = six.text_type(f('category_name',u'')).strip()
+					cn = str(f('category_name',u'')).strip()
 					if cn and categoryNameSheet.startswith(u'Sheet'):
 						isUSAC = True
-						g = six.text_type(f('gender', u'')).strip()
+						g = str(f('gender', u'')).strip()
 						if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
 							cn += u' ({})'.format( u'Women' if g.upper() in u'FW' else u'Men' )
 						info['categoryName'] = cn
 					else:
 						info['categoryName'] = categoryNameSheet
-				info['categoryName'] = six.text_type(info['categoryName']).strip()
+				info['categoryName'] = str(info['categoryName']).strip()
 				
 				try:
 					info['rank'] = toInt(info['rank'])
@@ -213,14 +212,14 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				if info['rank'] == 'DNF':
 					info['rank'] = RaceResult.rankDNF
 				
-				if not isinstance(info['rank'], six.integer_types):
+				if not isinstance(info['rank'], int):
 					continue
 
 				if isUSAC and info['rank'] >= 999:
 					info['rank'] = RaceResult.rankDNF
 					
 				# Check for comma-separated name.
-				name = six.text_type(f('name', u'')).strip()
+				name = str(f('name', u'')).strip()
 				if name and not info['firstName'] and not info['lastName']:
 					try:
 						info['lastName'], info['firstName'] = name.split(',',1)
@@ -236,12 +235,12 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				# If there is a bib it must be numeric.
 				try:
-					info['bib'] = int(six.text_type(info['bib']).strip())
+					info['bib'] = int(str(info['bib']).strip())
 				except ValueError:
 					continue
 					
 				info['tFinish'] = (info['tFinish'] or 0.0)
-				if isinstance(info['tFinish'], six.string_types) and ':' in info['tFinish']:
+				if isinstance(info['tFinish'], str) and ':' in info['tFinish']:
 					info['tFinish'] = Utils.StrToSeconds( info['tFinish'].strip() )
 				else:
 					try:
@@ -251,7 +250,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				
 				raceResults.append( RaceResult(**info) )
 				
-			elif any( six.text_type(r).strip().lower() in posHeader for r in row ):
+			elif any( str(r).strip().lower() in posHeader for r in row ):
 				fm = standard_field_map()
 				fm.set_headers( row )
 				
@@ -391,12 +390,12 @@ def AdjustForUpgrades( raceResults ):
 	for rr in raceResults:
 		competitionCategories[rr.key()][rr.categoryName].append( rr )
 	
-	for key, categories in six.iteritems(competitionCategories):
+	for key, categories in competitionCategories.items():
 		if len(categories) == 1:
 			continue
 		
 		for i, path in enumerate(upgradePaths):
-			upgradeCategories = { cName: rrs for cName, rrs in six.iteritems(categories) if cName in path }
+			upgradeCategories = { cName: rrs for cName, rrs in categories.items() if cName in path }
 			if len(upgradeCategories) <= 1:
 				continue
 			
@@ -407,13 +406,13 @@ def AdjustForUpgrades( raceResults ):
 			
 			categoryPosition = {}
 			highestCategoryPosition, highestCategoryName = -1, None
-			for cName in six.iterkeys(upgradeCategories):
+			for cName in upgradeCategories.keys():
 				pos = path.index( cName )
 				categoryPosition[cName] = pos
 				if pos > highestCategoryPosition:
 					highestCategoryPosition, highestCategoryName = pos, cName
 			
-			for cName, rrs in six.iteritems(upgradeCategories):
+			for cName, rrs in upgradeCategories.items():
 				for rr in rrs:
 					if rr.categoryName != highestCategoryName:
 						rr.categoryName = highestCategoryName
@@ -427,7 +426,7 @@ def GetPotentialDuplicateFullNames( riderNameLicense ):
 	for (full_name, license) in riderNameLicense.values():
 		nameLicense[full_name].append( license )
 	
-	return {full_name for full_name, licenses in six.iteritems(nameLicense) if len(licenses) > 1}
+	return {full_name for full_name, licenses in nameLicense.items() if len(licenses) > 1}
 			
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByTime = SeriesModel.model.scoreByTime
@@ -465,12 +464,12 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	def asInt( v ):
 		return int(v) if int(v) == v else v
 	
-	ignoreFormat = u'[{}**]'
-	upgradeFormat = u'{} pre-upg'
+	ignoreFormat = '[{}**]'
+	upgradeFormat = '{} pre-upg'
 	
 	def FixUpgradeFormat( riderUpgrades, riderResults ):
 		# Format upgrades so they are visible in the results.
-		for rider, upgrades in six.iteritems(riderUpgrades):
+		for rider, upgrades in riderUpgrades.items():
 			for i, u in enumerate(upgrades):
 				if u:
 					v = riderResults[rider][i]
@@ -513,7 +512,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 
 		# Adjust for the best times.
 		if bestResultsToConsider > 0:
-			for rider, finishes in six.iteritems(riderFinishes):
+			for rider, finishes in riderFinishes.items():
 				iTimes = [(i, t) for i, t in enumerate(finishes) if t is not None]
 				if len(iTimes) > bestResultsToConsider:
 					iTimes.sort( key=operator.itemgetter(1, 0) )
@@ -524,7 +523,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					riderEventsCompleted[rider] = bestResultsToConsider
 
 		# Filter out minimal events completed.
-		riderOrder = [rider for rider, results in six.iteritems(riderResults) if riderEventsCompleted[rider] >= mustHaveCompleted]
+		riderOrder = [rider for rider, results in riderResults.items() if riderEventsCompleted[rider] >= mustHaveCompleted]
 		
 		# Sort by decreasing events completed, then increasing rider time.
 		riderOrder.sort( key = lambda r: (-riderEventsCompleted[r], riderTFinish[r]) )
@@ -536,7 +535,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leaderTFinish = riderTFinish[leader]
 			leaderEventsCompleted = riderEventsCompleted[leader]
 			riderGap = { r : riderTFinish[r] - leaderTFinish if riderEventsCompleted[r] == leaderEventsCompleted else None for r in riderOrder }
-			riderGap = { r : formatTimeGap(gap) if gap else u'' for r, gap in six.iteritems(riderGap) }
+			riderGap = { r : formatTimeGap(gap) if gap else u'' for r, gap in riderGap.items() }
 		
 		# List of:
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
@@ -547,7 +546,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# Get the individual results for each rider as a percentage of the winner's time.  Ignore DNF riders.
 		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
 
-		percentFormat = u'{:.2f}'
+		percentFormat = '{:.2f}'
 		riderPercentTotal = defaultdict( float )
 		
 		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
@@ -567,11 +566,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				continue
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
-			if rr.team and rr.team != u'0':
+			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 ) * (rr.upgradeFactor if rr.upgradeResult else 1)
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (
-				u'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, 0, 0
+				'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, 0, 0
 			)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
@@ -581,7 +580,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 
 		# Adjust for the best percents.
 		if bestResultsToConsider > 0:
-			for rider, finishes in six.iteritems(riderFinishes):
+			for rider, finishes in riderFinishes.items():
 				iPercents = [(i, p) for i, p in enumerate(finishes) if p is not None]
 				if len(iPercents) > bestResultsToConsider:
 					iPercents.sort( key=lambda x: (-x[1], x[0]) )
@@ -591,7 +590,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 						riderResults[rider][i] = tuple([ignoreFormat.format(v[0])] + list(v[1:]))
 
 		# Filter out minimal events completed.
-		riderOrder = [rider for rider, results in six.iteritems(riderResults) if riderEventsCompleted[rider] >= mustHaveCompleted]
+		riderOrder = [rider for rider, results in riderResults.items() if riderEventsCompleted[rider] >= mustHaveCompleted]
 		
 		# Sort by decreasing percent total.
 		riderOrder.sort( key = lambda r: -riderPercentTotal[r] )
@@ -602,7 +601,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPercentTotal = riderPercentTotal[leader]
 			riderGap = { r : leaderPercentTotal - riderPercentTotal[r] for r in riderOrder }
-			riderGap = { r : percentFormat.format(gap) if gap else u'' for r, gap in six.iteritems(riderGap) }
+			riderGap = { r : percentFormat.format(gap) if gap else u'' for r, gap in riderGap.items() }
 					
 		# List of:
 		# lastName, firstName, license, team, totalPercent, [list of (percent, position) for each race in series]
@@ -635,11 +634,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				riderFinishes[rider][raceSequence[rr.raceInSeries]] = rr.rank
 				riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)]
 
-		riderRating = { rider:tsEnv.Rating() for rider in six.iterkeys(riderResults) }
-		for iRace in six.moves.range(len(races)):
+		riderRating = { rider:tsEnv.Rating() for rider in riderResults.keys() }
+		for iRace in range(len(races)):
 			# Get the riders that participated in this race.
 			riderRank = sorted(
-				((rider, finishes[iRace]) for rider, finishes in six.iteritems(riderFinishes) if finishes[iRace] is not None),
+				((rider, finishes[iRace]) for rider, finishes in riderFinishes.items() if finishes[iRace] is not None),
 				key=operator.itemgetter(1)
 			)
 			
@@ -657,7 +656,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				riderResults[rider][iRace] = (formatRating(rating), rank, 0, 0)
 
 		# Assign rider points based on mu-3*sigma.
-		riderPoints = { rider:rating.mu-sigmaMultiple*rating.sigma for rider, rating in six.iteritems(riderRating) }
+		riderPoints = { rider:rating.mu-sigmaMultiple*rating.sigma for rider, rating in riderRating.items() }
 		
 		# Sort by rider points - greatest number of points first.
 		riderOrder = sorted( riderPoints.keys(), key=lambda r: riderPoints[r], reverse=True )
@@ -668,14 +667,14 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPoints = riderPoints[leader]
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
-			riderGap = { r : u'{:0.2f}'.format(gap) if gap else u'' for r, gap in six.iteritems(riderGap) }
+			riderGap = { r : u'{:0.2f}'.format(gap) if gap else u'' for r, gap in riderGap.items() }
 		
-		riderPoints = { rider:formatRating(riderRating[rider]) for rider, points in six.iteritems(riderPoints) }
+		riderPoints = { rider:formatRating(riderRating[rider]) for rider, points in riderPoints.items() }
 		
 		# Reverse the race order if required.
 		if showLastToFirst:
 			races.reverse()
-			for results in six.itervalues(riderResults):
+			for results in riderResults.values():
 				results.reverse()
 		
 		# List of:
@@ -704,7 +703,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 
 		# Adjust for the best scores.
 		if bestResultsToConsider > 0:
-			for rider, finishes in six.iteritems(riderFinishes):
+			for rider, finishes in riderFinishes.items():
 				iPoints = [(i, p) for i, p in enumerate(finishes) if p is not None]
 				if len(iPoints) > bestResultsToConsider:
 					iPoints.sort( key=lambda x: (-x[1], x[0]) )
@@ -716,7 +715,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		FixUpgradeFormat( riderUpgrades, riderResults )
 
 		# Filter out minimal events completed.
-		riderOrder = [rider for rider, results in six.iteritems(riderResults) if riderEventsCompleted[rider] >= mustHaveCompleted]
+		riderOrder = [rider for rider, results in riderResults.items() if riderEventsCompleted[rider] >= mustHaveCompleted]
 		
 		# Sort by rider points - greatest number of points first.  Break ties with place count, then
 		# most recent result.
@@ -734,12 +733,12 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPoints = riderPoints[leader]
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
-			riderGap = { r : six.text_type(gap) if gap else u'' for r, gap in six.iteritems(riderGap) }
+			riderGap = { r : str(gap) if gap else u'' for r, gap in riderGap.items() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
 			races.reverse()
-			for results in six.itervalues(riderResults):
+			for results in riderResults.values():
 				results.reverse()
 		
 		# List of:
@@ -801,8 +800,8 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 		# Score by points.
 		# Get the individual results for each rider, and the total points.
 		teamPoints = defaultdict( int )
-		for raceInSeries, teamParticipants in six.iteritems(resultsByTeam):
-			for team, rrs in six.iteritems(teamParticipants):
+		for raceInSeries, teamParticipants in resultsByTeam.items():
+			for team, rrs in teamParticipants.items():
 				for rr in rrs:
 					rider = rr.key()
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
@@ -858,7 +857,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 			leader = teamOrder[0]
 			leaderPoints = teamPoints[leader]
 			teamGap = { t : leaderPoints - teamPoints[t] for t in teamOrder }
-			teamGap = { t : six.text_type(gap) if gap else u'' for t, gap in six.iteritems(teamGap) }
+			teamGap = { t : str(gap) if gap else u'' for t, gap in teamGap.items() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
@@ -878,8 +877,8 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 		# Score by time.
 		# Get the individual results for each rider, and the total time.
 		teamTime = defaultdict( int )
-		for raceInSeries, teamParticipants in six.iteritems(resultsByTeam):
-			for team, rrs in six.iteritems(teamParticipants):
+		for raceInSeries, teamParticipants in resultsByTeam.items():
+			for team, rrs in teamParticipants.items():
 				for rr in rrs:
 					if rr.rank == RaceResult.rankDNF:
 						continue
@@ -905,7 +904,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 
 		# Sort by team time - least time first
 		rankDNF = RaceResult.rankDNF
-		teamOrder = list( tn for tn in six.iterkeys(teamName) if teamTime.get(tn,None) )
+		teamOrder = list( tn for tn in teamName.keys() if teamTime.get(tn,None) )
 		def getBestResults( t ):
 			results = []
 			for r in reversed(races):
@@ -934,8 +933,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 			teamGap = { t : teamTime[t] - leaderTime if teamEventsCompleted[t] == leaderEventsCompleted
 					else teamEventsCompleted[t] - leaderEventsCompleted
 				for t in teamOrder }
-			teamGap = { t : Utils.formatTime(gap) if gap > 0.0 else formatEventCount(gap)
-				for t, gap in six.iteritems(teamGap) }
+			teamGap = { t : Utils.formatTime(gap) if gap > 0.0 else formatEventCount(gap) for t, gap in teamGap.items() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
@@ -969,7 +967,7 @@ if __name__ == '__main__':
 	categories = sorted( categories )
 		
 	pointsForRank = defaultdict( int )
-	for i in six.moves.range(250):
+	for i in range(250):
 		pointsForRank[i+1] = 250 - i
 		
 	pointsForRank = { files[0]: pointsForRank }

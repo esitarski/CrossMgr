@@ -1,5 +1,4 @@
 import ast
-import six
 import math
 import re
 
@@ -29,7 +28,7 @@ whitelist_references = {
 	'False':False, 'True':True, 'None':None,
 }
 
-class ExprEval( object ):
+class ExprEval:
 	def __init__( self ):
 		self.bytecode = None
 		
@@ -56,4 +55,4 @@ class ExprEval( object ):
 if __name__ == '__main__':
 	exprEval = ExprEval()
 	exprEval.compile( '5 <= 3 <= 8 or True == False or 2**2 == 5 or (0 if True else 1) or s.startswith("a") and "a" in {"k","J","L"} and {"q":1}[0] and x+math.modf(2.3)[1] and not "a" in "ababa"[2:-3] or 0 < 1' )
-	six.print_( exprEval.eval( {'s':'astring', 'x': 10 } ) )
+	print( exprEval.eval( {'s':'astring', 'x': 10 } ) )

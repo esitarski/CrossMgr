@@ -5,7 +5,7 @@ import ReadSignOnSheet
 from FtpWriteFile import ftpFields
 from BatchPublishAttrs import batchPublishRaceAttr
 
-class RaceInputState( object ):
+class RaceInputState:
 	def __init__( self ):
 		self.reset()
 	

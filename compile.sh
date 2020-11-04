@@ -167,10 +167,6 @@ copyAssets(){
 		echo "Copying Html to $RESOURCEDIR"
 		cp -rv "${BUILDDIR}/${PROGRAM}Html" $RESOURCEDIR
 	fi
-	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
-		echo "Copying HtmlDoc to $RESOURCEDIR"
-		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
-	fi
 	if [ -d "${BUILDDIR}/${PROGRAM}Locale" ]; then
 		buildLocale $PROGRAM
 		echo "Copying Locale to $RESOURCEDIR"
@@ -197,17 +193,21 @@ copyAssets(){
 			rm -rf CrossMgrHelpIndex
 		fi
 		echo "Building Help for SeriesMgr ..."
-        rm -f HelpIndex.py
-        ln -s ../HelpIndex.py HelpIndex.py
+        #rm -f HelpIndex.py
+        #ln -s ../HelpIndex.py HelpIndex.py
 		python3 buildhelp.py
 		if [ $? -ne 0 ]; then
 			echo "Building help failed. Aborting..."
 			exit 1
 		fi
-		cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
+		#cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
         cd ..
 	fi
-
+	# Copy help files last to ensure they are built by now.
+	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
+		echo "Copying HtmlDoc to $RESOURCEDIR"
+		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
+	fi
 }
 
 package() {
@@ -281,13 +281,27 @@ envSetup() {
 	else
 		echo "Already using $VIRTUAL_ENV"
 	fi
-	pip3 install -r requirements.txt
+	
+	if   [ $OSNAME == "Linux" ];then
+        # On Linux, the wxPython module install attempts to rebuild the module from the C/C++ source.
+        # Unfortunately, this always fails in an virtualenv and/or there are other missing C/C++ libraries.
+        # The build also takes >40 minutes, which is an excessive amount of time.
+        # The solution is to grab the pre-built install for this Ubuntu version from wxPython extras.
+		UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
+		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -r /dev/stdin
+	else
+		pip3 install -r requirements.txt
+	fi
     if [ $? -ne 0 ];then
         echo "Pip requirememnts install failed. Aborting..."
         exit 1
     fi
+    
+    if   [ $OSNAME == "Windows" ];then
+		pip3 install pywin32
+	fi
     if [ $OSNAME == "Darwin" ];then
-		pip3 install dmgbuild
+		pip3 install biplist dmgbuild
 	else
 		downloadAppImage
 	fi

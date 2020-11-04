@@ -5,7 +5,6 @@ import time
 import threading
 import datetime
 from six.moves.queue import Empty
-from Utils import readDelimitedData, timeoutSecs
 
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
@@ -60,7 +59,7 @@ class Impinj2JChip( object ):
 		received = ''
 		while self.keepGoing and received[-1:] != CR:
 			try:
-				received += sock.recv(4096).decode()	# decoce() here only works if there are no multi-byte utf characters (which is true).
+				received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for JChip protocol).
 			except socket.timeout:
 				return received, True
 		return received[:-1], False

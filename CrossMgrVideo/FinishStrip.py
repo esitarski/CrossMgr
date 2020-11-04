@@ -39,7 +39,7 @@ class FinishStrip( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0,
 			fps=25,
 			leftToRight=False, mouseWheelCallback=None, scrollCallback=None ):
-		super(FinishStrip, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
 		self.SetMinSize( (wx.GetDisplaySize()[0]//4, wx.GetDisplaySize()[1]//4) )
@@ -397,7 +397,7 @@ class FinishStrip( wx.Panel ):
 
 class FinishStripPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
-		super(FinishStripPanel, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		
 		self.fps = fps
 		self.info = {}
@@ -443,9 +443,9 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		szs = wx.BoxSizer( wx.HORIZONTAL )
-		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_CENTRE_VERTICAL )
 		szs.Add( self.stretchSlider, 1, flag=wx.EXPAND )
-		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Zoom'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Zoom'))), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		szs.Add( zs )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -598,7 +598,7 @@ class FinishStripDialog( wx.Dialog ):
 			height = 780
 			size = wx.Size( width, height )
 
-		super(FinishStripDialog, self).__init__( parent, id, size=size, style=style, title=_('Finish Strip') )
+		super().__init__( parent, id, size=size, style=style, title=_('Finish Strip') )
 		
 		self.panel = FinishStripPanel( self, fps=fps )
 		

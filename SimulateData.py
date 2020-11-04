@@ -1,4 +1,3 @@
-import six
 import random
 import bisect
 from Names import GetNameTeam
@@ -7,8 +6,20 @@ def SimulateData( riders=200 ):
 	# Generate random rider events.
 	random.seed( 10101021 )
 
+	riders = 24
+	
 	raceMinutes = 8
 	mean = 8*60.0 / 8	# Average lap time.
+	juniorLaps = 5
+	seniorLaps = 4
+
+	'''
+	raceMinutes = 1000
+	mean = 30.0	# Average lap time.
+	juniorLaps = int(raceMinutes*60 / mean)
+	seniorLaps = juniorLaps - 5
+	'''
+
 	var = mean/20.0		# Variance between riders.
 	lapsTotal = int(raceMinutes * 60 / mean + 3)
 	raceTime = mean * lapsTotal
@@ -22,7 +33,7 @@ def SimulateData( riders=200 ):
 
 	lapTimes = []
 	riderInfo = []
-	for num in six.moves.range(numStart,numStart+riders+1):
+	for num in range(numStart,numStart+riders+1):
 		t = 0
 		if num < numStart + riders // 2:
 			mu = random.normalvariate( mean, mean/20.0 )			# Rider's random average lap time.
@@ -31,7 +42,7 @@ def SimulateData( riders=200 ):
 			mu = random.normalvariate( mean * 1.15, mean/20.0 )		# These riders are slower, on average.
 			riderInfo.append( [num] + list(GetNameTeam(False)) )
 			t += startOffset										# Account for offset start.
-		for laps in six.moves.range(lapsTotal):
+		for laps in (lapsTotal):
 			t += random.normalvariate( mu, var/2.0 )	# Rider's lap time.
 			if random.random() > errorPercent:		# Respect error rate.
 				lapTimes.append( (t, num) )
@@ -71,8 +82,8 @@ def SimulateData( riders=200 ):
 			
 	lapTimes.extend( lastLapFinishers )
 	categories = [
-		{'name':'Junior', 'catStr':'{}-{}'.format(nMid-riders//2,nMid-1), 'startOffset':'00:00', 'distance':0.5, 'gender':'Men', 'numLaps':5},
-		{'name':'Senior', 'catStr':'{}-{}'.format(nMid,nMid+riders//2), 'startOffset':'00:{:02d}'.format(startOffset), 'distance':0.5, 'gender':'Women', 'numLaps':4}
+		{'name':'Junior', 'catStr':'{}-{}'.format(nMid-riders//2,nMid-1), 'startOffset':'00:00', 'distance':0.5, 'gender':'Men', 'numLaps':juniorLaps},
+		{'name':'Senior', 'catStr':'{}-{}'.format(nMid,nMid+riders//2), 'startOffset':'00:{:02d}'.format(startOffset), 'distance':0.5, 'gender':'Women', 'numLaps':seniorLaps}
 	]
 	
 	return {
@@ -83,5 +94,5 @@ def SimulateData( riders=200 ):
 	}
 
 if __name__ == '__main__':
-	six.print_( SimulateData()['riderInfo'] )
+	print( SimulateData()['riderInfo'] )
 

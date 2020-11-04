@@ -1,26 +1,26 @@
-import Utils
 import wx
 import os
-import io
 import sys
-import six
 import time
 import threading
 import traceback
 import webbrowser
-StringIO = six.StringIO
-from six.moves.urllib.request import url2pathname
-from six.moves.urllib.parse import urlparse
+from io import StringIO
+
+from urllib.request import url2pathname
+from urllib.parse import urlparse
 from whoosh.index import open_dir
 from whoosh.qparser import QueryParser
 import wx.html as html
 import wx.lib.wxpTag
-from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+import Utils
 
 PORT_NUMBER = 8761
 
 try:
-	with io.open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
+	with open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 		favicon = f.read()
 except:
 	favicon = None
@@ -37,7 +37,7 @@ class HelpHandler( BaseHTTPRequestHandler ):
 			else:
 				file = url2pathname(os.path.basename(up.path.split('#')[0]))
 				fname = os.path.join( Utils.getHelpFolder(), file )
-				with io.open(fname, 'r', encoding='utf-8') as fp:
+				with open(fname, 'r') as fp:
 					content = fp.read()
 				content_type = self.html_content
 		except Exception as e:
@@ -51,7 +51,7 @@ class HelpHandler( BaseHTTPRequestHandler ):
 			self.send_header( 'Pragma', 'no-cache' )
 			self.send_header( 'Expires', '0' )
 		self.end_headers()
-		self.wfile.write( content.encode() )
+		self.wfile.write( content if isinstance(content,bytes) else content.encode('utf-8', 'replace') )
 	
 	def log_message(self, format, *args):
 		return
@@ -69,7 +69,7 @@ def showHelp( url ):
 	
 class HelpSearch( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0, size=(-1-1) ):
-		wx.Panel.__init__(self, parent, id, style=style, size=size )
+		super().__init__( parent, id, style=style, size=size )
 
 		self.searchLabel = wx.StaticText( self, label=_('Search Text:') )
 		self.search = wx.SearchCtrl( self, style=wx.TE_PROCESS_ENTER, value='main screen', size=(200,-1) )
@@ -108,7 +108,7 @@ class HelpSearch( wx.Panel ):
 			Utils.logException( e, sys.exc_info() )
 			ix = None
 			
-		f.write( u'<html>\n' )
+		f.write( '<html>\n' )
 		
 		if ix is not None:
 			with ix.searcher() as searcher:
@@ -120,25 +120,25 @@ class HelpSearch( wx.Panel ):
 				# Show more context before and after
 				results.formatter.surround = 50
 				
-				f.write( u'<table>\n' )
+				f.write( '<table>\n' )
 				for i, hit in enumerate(results):
 					file = os.path.splitext(hit['path'].split('#')[0])[0]
 					url = getHelpURL( os.path.basename(hit['path']) )
 					if not file.startswith('Menu'):
-						section = u'{}: {}'.format(file, hit['section'])
+						section = '{}: {}'.format(file, hit['section'])
 					else:
-						section = u'Menu: {}'.format( hit['section'] )
-					f.write( u'''<tr>
+						section = 'Menu: {}'.format( hit['section'] )
+					f.write( '''<tr>
 							<td valign="top">
 								<font size=+1><a href="{url}">{section}</a></font><br></br>
 								{content}
 								<font size=+1><br></br></font>
 							</td>
 						</tr>\n'''.format(url=url, section=section, content=hit.highlights('content') ) )
-				f.write( u'</table>\n' )
+				f.write( '</table>\n' )
 			ix.close()
 		
-		f.write( u'</html>\n' )
+		f.write( '</html>\n' )
 		
 		self.html.SetPage( f.getvalue() )
 	
@@ -147,12 +147,12 @@ class HelpSearchDialog( wx.Dialog ):
 			self, parent, ID = wx.ID_ANY, title='Help Search', size=wx.DefaultSize, pos=wx.DefaultPosition, 
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER ):
 
-		super( HelpSearchDialog, self ).__init__(parent, ID, title, pos, size, style)
+		super().__init__(parent, ID, title, pos, size, style)
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 
 		self.search = HelpSearch( self, size=(600,400) )
-		sizer.Add(self.search, 1, wx.ALIGN_CENTRE|wx.ALL|wx.EXPAND, 5)
+		sizer.Add(self.search, 1, wx.ALL|wx.EXPAND, 5)
 		
 		self.SetSizer(sizer)
 		sizer.Fit(self)

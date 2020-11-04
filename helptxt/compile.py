@@ -1,14 +1,12 @@
-import markdown
-import glob
+import io
 import os
 import re
-import six
+import glob
 import base64
-import zipfile
 import shutil
-import codecs
+import zipfile
 import datetime
-StringIO = six.StringIO
+import markdown
 from contextlib import contextmanager
 
 HtmlDocFolder = 'CrossMgrHtmlDoc'
@@ -35,7 +33,7 @@ def InlineImages( html ):
 		if not match:
 			break
 		fname = match.group(1)
-		with codecs.open(os.path.join('images',fname), 'rb') as f:
+		with open(os.path.join('images',fname), 'rb') as f:
 			b64 = base64.b64encode( f.read() )
 		sReplace = 'src="data:image/{};base64,{}'.format(
 			os.path.splitext(fname)[1][1:],
@@ -43,12 +41,18 @@ def InlineImages( html ):
 		)
 		html = html.replace( match.group(0), sReplace )
 	return html
-		
+
+def getHelpFiles( dir='.' ):
+	for fname in glob.glob( dir + '/*.md' ):
+		if 'Links.md' in fname:
+			continue
+		yield fname
+
 def CompileHelp( dir = '.' ):
 	with working_directory( dir ):
 		# Check if any of the help files need rebuilding.
 		doNothing = True
-		for fname in glob.glob("./*.txt"):
+		for fname in getHelpFiles():
 			fbase = os.path.splitext(os.path.basename(fname))[0]
 			fhtml = os.path.join( '..', HtmlDocFolder, fbase + '.html' )
 			if not fileOlderThan(fhtml, fname):
@@ -63,24 +67,24 @@ def CompileHelp( dir = '.' ):
 				output_format='html5'
 		)
 
-		with codecs.open('markdown.css', 'r', encoding='utf-8') as f:
+		with open('markdown.css', 'r') as f:
 			style = f.read()
-		with codecs.open('prolog.html', 'r', encoding='utf-8') as f:
+		with open('prolog.html', 'r') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
-		with codecs.open('epilog.html', 'r', encoding='utf-8') as f:
+		with open('epilog.html', 'r') as f:
 			epilog = f.read().replace('YYYY','{}'.format(datetime.datetime.now().year))
 
 		contentDiv = '<div class="content">'
 		
-		with codecs.open('Links.md', 'r', encoding='utf-8') as f:
+		with open('Links.md', 'r') as f:
 			links = f.read()
 			
-		for fname in glob.glob("./*.txt"):
-			six.print_( fname, '...' )
-			with codecs.open(fname, 'r', encoding='utf-8') as f:
-				input = StringIO()
+		for fname in getHelpFiles():
+			print( fname, '...' )
+			with open(fname, 'r') as f:
+				input = io.StringIO()
 				input.write( links )
 				input.write( f.read() )
 				
@@ -92,7 +96,7 @@ def CompileHelp( dir = '.' ):
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
 				html = InlineImages( html )
-			with codecs.open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf-8' ) as f:
+			with open( os.path.splitext(fname)[0] + '.html', 'w' ) as f:
 				f.write( prolog )
 				f.write( html )
 				f.write( epilog )

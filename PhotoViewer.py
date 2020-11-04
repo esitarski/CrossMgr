@@ -10,7 +10,6 @@ import wx
 import wx.lib.agw.thumbnailctrl as TC
 import os
 import sys
-import six
 import math
 import types
 import threading
@@ -88,19 +87,19 @@ class PhotoPrintout(wx.Printout):
 		self.fname = fname
 
 	def OnBeginDocument(self, start, end):
-		return super(PhotoPrintout, self).OnBeginDocument(start, end)
+		return super().OnBeginDocument(start, end)
 
 	def OnEndDocument(self):
-		super(PhotoPrintout, self).OnEndDocument()
+		super().OnEndDocument()
 
 	def OnBeginPrinting(self):
-		super(PhotoPrintout, self).OnBeginPrinting()
+		super().OnBeginPrinting()
 
 	def OnEndPrinting(self):
-		super(PhotoPrintout, self).OnEndPrinting()
+		super().OnEndPrinting()
 
 	def OnPreparePrinting(self):
-		super(PhotoPrintout, self).OnPreparePrinting()
+		super().OnPreparePrinting()
 
 	def HasPage(self, page):
 		return page == 1
@@ -136,7 +135,7 @@ class PhotoViewerDialog( wx.Dialog ):
 
 	def __init__( self, parent, ID = wx.ID_ANY, title='Photo Viewer', size=wx.DefaultSize, pos=wx.DefaultPosition, 
 					style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX ):
-		super(PhotoViewerDialog, self).__init__( parent, ID, title=title, pos=pos, size=size, style=style )
+		super().__init__( parent, ID, title=title, pos=pos, size=size, style=style )
 
 		self.num = 0
 		self.thumbSelected = -1
@@ -414,8 +413,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		if self.num is not None and t is not None:
 			# Select the photo specified by the bib and time.
-			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in six.moves.range(2)]
-			for i in six.moves.range(itemCount):
+			fnames = [os.path.basename(GetPhotoFName(dir, num, t, i)) for i in range(2)]
+			for i in range(itemCount):
 				fnameToMatch = self.thumbs.GetItem(i).GetFileName()
 				if any( f in fnameToMatch for f in fnames ):
 					break
@@ -423,7 +422,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		elif tClosest is not None:
 			tDeltaBest = 1000.0*24.0*60.0*60.0
 			iBest = None
-			for i in six.moves.range(itemCount):
+			for i in range(itemCount):
 				tDelta = abs( getFileKey(self.thumbs.GetItem(i).GetFileName()) - tClosest )
 				if tDelta < tDeltaBest:
 					iBest = i

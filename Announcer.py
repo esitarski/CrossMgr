@@ -1,13 +1,13 @@
-import Utils
-import Model
 import wx
 import re
-from GetResults import GetResults
 from math import modf
-from ForecastHistory import getExpectedRecorded
-from GanttChartPanel import lighterColour
 from bisect import bisect_left, bisect_right
 from collections import defaultdict
+import Utils
+import Model
+from GetResults import GetResults
+from ForecastHistory import getExpectedRecorded
+from GanttChartPanel import lighterColour
 
 green = wx.Colour( 0, 200, 0 )
 blue = wx.Colour( 0, 0, 200 )
@@ -18,7 +18,7 @@ orange = wx.Colour( 255, 165, 0 )
 
 recordedColour = wx.WHITE
 unrecordedColour = wx.Colour(220, 220, 220)
-recordedChar = u"\u2192"
+recordedChar = "\u2192"
 
 reGender = re.compile( r'\(([^)]+)\)$' )
 
@@ -37,13 +37,13 @@ def find_ge( a, x ):
     return bisect_left(a, x)
 		
 class Announcer( wx.Panel ):
-	cols = (u'Pos', u'Name', u'Team', u'Bib', u'Gap', u'Group', u'ETA' )
+	cols = ('Pos', 'Name', 'Team', 'Bib', 'Gap', 'Group', 'ETA' )
 	iCol = {c:i for i, c in enumerate(cols)}
 	groupColours = [wx.Colour(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)) for c in '#66c2a5,#fc8d62,#8da0cb,#e78ac3,#a6d854,#ffd92f,#e5c494,#b3b3b3'.split(',')]
 	groupTextColours = [Utils.GetContrastTextColour(c) for c in groupColours]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
-		super(Announcer, self).__init__(parent, id)
+		super().__init__(parent, id)
 		
 		self.iCategory = 0
 		self.tExpected = []
@@ -71,7 +71,7 @@ class Announcer( wx.Panel ):
 		
 		for i, c in enumerate(self.cols):
 			a = wx.grid.GridCellAttr()
-			a.SetAlignment( wx.ALIGN_RIGHT if c not in (u'Name', u'Team') else wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
+			a.SetAlignment( wx.ALIGN_RIGHT if c not in ('Name', 'Team') else wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
 			a.SetReadOnly( True )
 			self.grid.SetColAttr( i, a )
 			self.grid.SetColLabelValue( i, c )
@@ -129,7 +129,7 @@ class Announcer( wx.Panel ):
 			return categories
 			
 		for b, c in zip(self.categoryButtons, categories):
-			b.SetLabel( u' ' + c.fullname )
+			b.SetLabel( ' ' + c.fullname )
 		for b in self.categoryButtons[len(categories):]:
 			b.Show( False )
 			
@@ -148,7 +148,7 @@ class Announcer( wx.Panel ):
 			self.tExpected = [None] * len(self.tExpected)
 		
 		backgroundColour = wx.WHITE
-		iCol = self.iCol[u'ETA']
+		iCol = self.iCol['ETA']
 		for row, et in enumerate(self.tExpected):
 			if row >= self.grid.GetNumberRows():
 				break
@@ -169,7 +169,7 @@ class Announcer( wx.Panel ):
 				eta = e.t - tRace
 				etaColour = self.colourMap.get(int(eta), None)
 				colour = etaColour or colour
-			b.SetLabel( u'{} {}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
+			b.SetLabel( '{} {}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
 			b.SetBackgroundColour( colour )
 	
 	def refresh( self ):
@@ -214,11 +214,11 @@ class Announcer( wx.Panel ):
 			lapsToGo = None
 		if lapsToGo is not None:
 			if lapsToGo == 0:
-				v += u': {}'.format( _('Finish') )
+				v += ': {}'.format( _('Finish') )
 			else:
-				v += u': {} {}'.format( lapsToGo, _('laps to go') )
+				v += ': {} {}'.format( lapsToGo, _('laps to go') )
 		if leader and hasattr(leader, 'speed'):
-			v += u' {}'.format( leader.speed )
+			v += ' {}'.format( leader.speed )
 		
 		self.title.SetLabel( v )
 		
@@ -239,13 +239,13 @@ class Announcer( wx.Panel ):
 		groupCount = defaultdict( int )
 		group = []
 		for row, rr in enumerate(results):
-			self.grid.SetCellValue( row, self.iCol[u'Pos'], u'{}'.format(rr.pos) )
-			self.grid.SetCellValue( row, self.iCol[u'Bib'], u'{}'.format(rr.num) )
-			self.grid.SetCellValue( row, self.iCol[u'Name'],
-				u'{} {}'.format(getattr(rr,'FirstName',u''), getattr(rr,'LastName',u'')).strip()
+			self.grid.SetCellValue( row, self.iCol['Pos'], '{}'.format(rr.pos) )
+			self.grid.SetCellValue( row, self.iCol['Bib'], '{}'.format(rr.num) )
+			self.grid.SetCellValue( row, self.iCol['Name'],
+				'{} {}'.format(getattr(rr,'FirstName',u''), getattr(rr,'LastName','')).strip()
 			)
-			self.grid.SetCellValue( row, self.iCol[u'Team'], getattr(rr,'Team',u'') )
-			self.grid.SetCellValue( row, self.iCol[u'Gap'], rr.gap )
+			self.grid.SetCellValue( row, self.iCol['Team'], getattr(rr,'Team','') )
+			self.grid.SetCellValue( row, self.iCol['Gap'], rr.gap )
 			e = self.bibExpected.get(rr.num, None) if rr.status == Finisher else None
 			iGroup += 1
 			if e: 
@@ -262,13 +262,13 @@ class Announcer( wx.Panel ):
 			self.tExpected.append( e.t if e else None )
 			group.append( iGroup+1 )
 			groupCount[iGroup+1] += 1
-			self.grid.SetCellValue( row, self.iCol[u'ETA'], Utils.formatTime(eta) if e else u'' )
+			self.grid.SetCellValue( row, self.iCol['ETA'], Utils.formatTime(eta) if e else u'' )
 			
 			e = bibRecorded.get( rr.num, None )
 			if not isRunning or (leaderLap == 1 or (e and tLeader is not None and e.t >= tLeader)):
 				self.isRecorded.append( True )
 			else:
-				self.grid.SetCellValue( row, self.iCol[u'Pos'], u'{}{}'.format(self.grid.GetCellValue(row, self.iCol[u'Pos']), recordedChar) )
+				self.grid.SetCellValue( row, self.iCol['Pos'], '{}{}'.format(self.grid.GetCellValue(row, self.iCol['Pos']), recordedChar) )
 				self.isRecorded.append( False )
 			
 			rowColour = recordedColour if self.isRecorded[-1] else unrecordedColour
@@ -279,9 +279,9 @@ class Announcer( wx.Panel ):
 		gLast = None
 		gColIndex = 0
 		groupColour = None
-		iCol = self.iCol[u'Group']
+		iCol = self.iCol['Group']
 		for row, g in enumerate(group):
-			self.grid.SetCellValue( row, iCol, u'' )
+			self.grid.SetCellValue( row, iCol, '' )
 			if groupCount[g] == 1:
 				continue
 			if g == gLast:
@@ -293,7 +293,7 @@ class Announcer( wx.Panel ):
 			groupTextColour = self.groupTextColours[gColIndex%len(self.groupTextColours)]
 			gColIndex += 1
 			gCur += 1
-			self.grid.SetCellValue( row, iCol, u'{} [{}]'.format(gCur, groupCount[g],) )
+			self.grid.SetCellValue( row, iCol, '{} [{}]'.format(gCur, groupCount[g],) )
 			self.grid.SetCellBackgroundColour( row, iCol, groupColour )
 			self.grid.SetCellTextColour( row, iCol, groupTextColour )
 		

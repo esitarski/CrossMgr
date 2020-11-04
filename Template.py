@@ -1,11 +1,10 @@
-import six
 import json
 import Utils
 import Model
 from GeoAnimation import GpsPoint, GeoTrack
 from BatchPublishAttrs import batchPublishRaceAttr
 
-class Template( object ):
+class Template:
 	templateAttributes = set.union( {
 			'distanceUnit',	
 			'rule80MinLapCount',
@@ -140,7 +139,7 @@ class Template( object ):
 			return
 		geoTrack = None
 		firstLapDistance = None
-		for attr, value in six.iteritems(self.template):
+		for attr, value in self.template.items():
 			if attr not in self.templateAttributes:
 				continue
 			if attr == 'course':

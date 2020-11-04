@@ -1,5 +1,4 @@
 import wx
-import six
 import wx.grid as gridlib
 import wx.lib.intctrl
 
@@ -25,7 +24,7 @@ class PointsEditor(gridlib.GridCellEditor):
 			self._tc.PushEventHandler( evtHandler )
 	
 	def SetSize( self, rect ):
-		self._tc.SetDimensions(rect.x, rect.y, rect.width+2, rect.height+2, wx.SIZE_ALLOW_MINUS_ONE )
+		self._tc.SetSize(rect.x, rect.y, rect.width+2, rect.height+2, sizeFlags=wx.SIZE_ALLOW_MINUS_ONE )
 	
 	def BeginEdit( self, row, col, grid ):
 		self.startValue = grid.GetTable().GetValue(row, col)
@@ -190,7 +189,7 @@ class Points(wx.Panel):
 	
 	def updateDepth( self, row ):
 		v = self.grid.GetCellValue(row, self.PointsCol).strip()
-		depth = six.text_type(len(v.split())) if v else u''
+		depth = '{}'.format(len(v.split())) if v else u''
 		self.grid.SetCellValue( row, self.DepthCol, depth )
 	
 	def onGridChange( self, event ):
@@ -214,8 +213,8 @@ class Points(wx.Panel):
 			self.grid.SetCellValue( row, self.NameCol, ps.name )
 			self.grid.SetCellValue( row, self.OldNameCol, ps.name )
 			self.grid.SetCellValue( row, self.PointsCol, ps.getStr() )
-			self.grid.SetCellValue( row, self.ParticipationCol, six.text_type(ps.participationPoints) )
-			self.grid.SetCellValue( row, self.DNFCol, six.text_type(ps.dnfPoints) )
+			self.grid.SetCellValue( row, self.ParticipationCol, '{}'.format(ps.participationPoints) )
+			self.grid.SetCellValue( row, self.DNFCol, '{}'.format(ps.dnfPoints) )
 			self.updateDepth( row )
 			
 		wx.CallAfter( self.gridAutoSize )
@@ -264,7 +263,7 @@ class Points(wx.Panel):
 			'scoreByTrueSkill': self.scoreByTrueSkill.GetValue(),
 		}
 		
-		for attr, value in six.iteritems(modelUpdate):
+		for attr, value in modelUpdate.items():
 			if getattr(model, attr) != value:
 				setattr( model, attr, value )
 				model.setChanged()

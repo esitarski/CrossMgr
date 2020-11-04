@@ -1,4 +1,3 @@
-import six
 import random
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 
@@ -27,15 +26,12 @@ def encode( s ):
 	enc = [ random.randint(0,255) for i in range(SpiceLen) ]
 	totCur = sum( enc )
 	for i, c in enumerate(s):
-		j = ord(c) if six.PY2 else c
+		j = c
 		v = (j + enc[i%SpiceLen]*(i+1) + totCur + i*7) % 256
 		totCur += j
 		enc.append( v )
-	ret = urlsafe_b64encode(bytes(''.join(chr(e) for e in partial_reverse(pair_swap(enc))))) if six.PY2 else urlsafe_b64encode(bytes(partial_reverse(pair_swap(enc))))
-	if six.PY3:
-		return ret.decode('ascii')
-	else:
-		return ret
+	ret = urlsafe_b64encode(bytes(partial_reverse(pair_swap(enc))))
+	return ret.decode('ascii')
 
 def decode( s ):
 	if not s:
@@ -44,7 +40,7 @@ def decode( s ):
 	if not isinstance(s, bytes):
 		s = s.encode()
 	b = urlsafe_b64decode( s )
-	enc = pair_swap(partial_reverse( [ord(c) for c in b] )) if six.PY2 else pair_swap(partial_reverse( b )) 
+	enc = pair_swap(partial_reverse( b )) 
 	totCur = sum( enc[:SpiceLen] )
 	dec = []
 	for i, v in enumerate(enc[SpiceLen:]):
@@ -57,4 +53,4 @@ if __name__ == '__main__':
 	s = "this_is_a_test"
 	for i in range(10):
 		c = encode( s )
-		six.print_( s, c, decode(c) )
+		print( s, c, decode(c) )

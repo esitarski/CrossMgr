@@ -1,7 +1,7 @@
-import wx
-import wx.grid as gridlib
 import re
 import os
+import wx
+import wx.grid as gridlib
 import xlsxwriter
 import Utils
 import Model
@@ -12,6 +12,7 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 from RaceInputState import RaceInputState
+from wx.grid import GridCellFloatEditor, GridCellNumberEditor
 
 #--------------------------------------------------------------------------------
 
@@ -27,11 +28,11 @@ def getExportGrid():
 	GetTranslation = _
 	allZeroStarters = True
 	with UnstartedRaceWrapper():
-		catMap = dict( (c.fullname, c) for c in race.getCategories( startWaveOnly=False ) )
+		catMap = { c.fullname:c for c in race.getCategories( startWaveOnly=False ) }
 		catDetails = GetCategoryDetails( False, True )
-		catDetailsMap = dict( (cd['name'], cd) for cd in catDetails )
+		catDetailsMap = { cd['name']:cd for cd in catDetails }
 		
-		title = u'\n'.join( [_('Categories'), race.title, race.scheduledStart + u' ' + _('Start on') + u' ' + Utils.formatDate(race.date)] )
+		title = '\n'.join( [_('Categories'), race.title, race.scheduledStart + ' ' + _('Start on') + ' ' + Utils.formatDate(race.date)] )
 		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
 		
 		raceStart = Utils.StrToSeconds( race.scheduledStart + ':00' )
@@ -52,7 +53,7 @@ def getExportGrid():
 			raceDistanceUnit = catInfo.get( 'distanceUnit', '')
 			
 			if raceDistance:
-				raceDistance = '%.2f' % raceDistance
+				raceDistance = '{:.2n}'.format(raceDistance)
 				
 			if c.catType == c.CatWave:
 				catStart = Utils.SecondsToStr( raceStart + c.getStartOffsetSecs() )
@@ -63,12 +64,12 @@ def getExportGrid():
 				
 			catData.append( [
 				catStart,
-				u' - ' + c.name if c.catType == c.CatComponent else c.name,
+				' - ' + c.name if c.catType == c.CatComponent else c.name,
 				GetTranslation(catInfo.get('gender', 'Open')),
 				c.catStr,
-				u'{}'.format(laps),
-				u' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
-				u'{}'.format(starters)
+				'{}'.format(laps),
+				' '.join([raceDistance, raceDistanceUnit]) if raceDistance else '',
+				'{}'.format(starters)
 			])
 	
 	if allZeroStarters:
@@ -87,19 +88,19 @@ class CategoriesPrintout( wx.Printout ):
 		wx.Printout.__init__(self)
 
 	def OnBeginDocument(self, start, end):
-		return super(CategoriesPrintout, self).OnBeginDocument(start, end)
+		return super().OnBeginDocument(start, end)
 
 	def OnEndDocument(self):
-		super(CategoriesPrintout, self).OnEndDocument()
+		super().OnEndDocument()
 
 	def OnBeginPrinting(self):
-		super(CategoriesPrintout, self).OnBeginPrinting()
+		super().OnBeginPrinting()
 
 	def OnEndPrinting(self):
-		super(CategoriesPrintout, self).OnEndPrinting()
+		super().OnEndPrinting()
 
 	def OnPreparePrinting(self):
-		super(CategoriesPrintout, self).OnPreparePrinting()
+		super().OnPreparePrinting()
 
 	def HasPage(self, page):
 		return page == 1
@@ -132,7 +133,7 @@ def PrintCategories():
 
 	if not printer.Print(mainWin, printout, True):
 		if printer.GetLastError() == wx.PRINTER_ERROR:
-			Utils.MessageOK(mainWin, u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+			Utils.MessageOK(mainWin, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 	else:
 		mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -221,7 +222,7 @@ class CategoryIconRenderer(gridlib.GridCellRenderer):
 		
 #--------------------------------------------------------------------------------
 class Categories( wx.Panel ):
-	CategoryTypeChoices = [_('Start Wave'),u'    ' + _('Component'),_('Custom')]
+	CategoryTypeChoices = [_('Start Wave'),'    ' + _('Component'),_('Custom')]
 	DistanceTypeChoices = [_('Lap'),_('Race')]
 	
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -239,61 +240,61 @@ class Categories( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.activateAllButton = wx.Button(self, label=_('Activate All'), style=wx.BU_EXACTFIT)
+		self.activateAllButton = wx.Button(self, label=_('Activate All'))
 		self.Bind( wx.EVT_BUTTON, self.onActivateAll, self.activateAllButton )
 		hs.Add( self.activateAllButton, 0, border = border, flag = flag )
 
 		hs.AddSpacer( 6 )
 		
-		self.newCategoryButton = wx.Button(self, label=_('New'), style=wx.BU_EXACTFIT)
+		self.newCategoryButton = wx.Button(self, label=_('New'))
 		self.Bind( wx.EVT_BUTTON, self.onNewCategory, self.newCategoryButton )
 		hs.Add( self.newCategoryButton, 0, border = border, flag = flag )
 		
-		self.delCategoryButton = wx.Button(self, label=_('Delete'), style=wx.BU_EXACTFIT)
+		self.delCategoryButton = wx.Button(self, label=_('Delete'))
 		self.Bind( wx.EVT_BUTTON, self.onDelCategory, self.delCategoryButton )
 		hs.Add( self.delCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 6 )
 		
-		self.upCategoryButton = wx.Button(self, label=u'\u2191', style=wx.BU_EXACTFIT)
+		self.upCategoryButton = wx.Button(self, label='\u2191')
 		self.Bind( wx.EVT_BUTTON, self.onUpCategory, self.upCategoryButton )
 		hs.Add( self.upCategoryButton, 0, border = border, flag = flag )
 
-		self.downCategoryButton = wx.Button(self, label=u'\u2193', style=wx.BU_EXACTFIT)
+		self.downCategoryButton = wx.Button(self, label='\u2193')
 		self.Bind( wx.EVT_BUTTON, self.onDownCategory, self.downCategoryButton )
 		hs.Add( self.downCategoryButton, 0, border = border, flag = (flag & ~wx.LEFT) )
 
 		hs.AddSpacer( 6 )
 		
-		self.setGpxDistanceButton = wx.Button(self, label=_('Set Gpx Distance'), style=wx.BU_EXACTFIT)
+		self.setGpxDistanceButton = wx.Button(self, label=_('Set Gpx Distance') )
 		self.Bind( wx.EVT_BUTTON, self.onSetGpxDistance, self.setGpxDistanceButton )
 		hs.Add( self.setGpxDistanceButton, 0, border = border, flag = flag )
 		
 		hs.AddSpacer( 6 )
 		
-		self.addExceptionsButton = wx.Button(self, label=_('Bib Exceptions'), style=wx.BU_EXACTFIT)
+		self.addExceptionsButton = wx.Button(self, label=_('Bib Exceptions'))
 		self.Bind( wx.EVT_BUTTON, self.onAddExceptions, self.addExceptionsButton )
 		hs.Add( self.addExceptionsButton, 0, border = border, flag = flag )
 
 		hs.AddSpacer( 6 )
 		
 		'''
-		self.updateStartWaveNumbersButton = wx.Button(self, label=_('Update Start Wave Bibs'), style=wx.BU_EXACTFIT)
+		self.updateStartWaveNumbersButton = wx.Button(self, label=_('Update Start Wave Bibs'))
 		self.Bind( wx.EVT_BUTTON, self.onUpdateStartWaveNumbers, self.updateStartWaveNumbersButton )
 		hs.Add( self.updateStartWaveNumbersButton, 0, border = border, flag = flag )
 		'''
 
-		self.normalizeButton = wx.Button(self, label=_('Normalize'), style=wx.BU_EXACTFIT)
+		self.normalizeButton = wx.Button(self, label=_('Normalize'))
 		self.Bind( wx.EVT_BUTTON, self.onNormalize, self.normalizeButton )
 		hs.Add( self.normalizeButton, 0, border = border, flag = flag )
 
 		hs.AddStretchSpacer()
 		
-		self.printButton = wx.Button( self, label=u'{}...'.format(_('Print')), style=wx.BU_EXACTFIT )
+		self.printButton = wx.Button( self, label='{}...'.format(_('Print')) )
 		self.Bind( wx.EVT_BUTTON, self.onPrint, self.printButton )
 		hs.Add( self.printButton, 0, border = border, flag = flag )
 		
-		self.excelButton = wx.Button( self, label=u'{}...'.format(_('Excel')), style=wx.BU_EXACTFIT )
+		self.excelButton = wx.Button( self, label='{}...'.format(_('Excel')) )
 		self.Bind( wx.EVT_BUTTON, self.onExcel, self.excelButton )
 		hs.Add( self.excelButton, 0, border = border, flag = flag )
 		
@@ -374,12 +375,12 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'numLaps':
-				attr.SetEditor( wx.grid.GridCellNumberEditor() )
+				attr.SetEditor( GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'raceMinutes':
-				attr.SetEditor( wx.grid.GridCellNumberEditor() )
+				attr.SetEditor( GridCellNumberEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
@@ -390,7 +391,7 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName in ['distance', 'firstLapDistance'] :
-				attr.SetEditor( gridlib.GridCellFloatEditor(7, 3) )
+				attr.SetEditor( GridCellFloatEditor(7, 3) )
 				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
@@ -437,10 +438,10 @@ class Categories( wx.Panel ):
 			wb.close()
 			if Utils.getMainWin().launchExcelAfterPublishingResults:
 				Utils.LaunchApplication( xlFName )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}"\n\n{}\n{}'.format(
+						'{} "{}"\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,
 							_('Check if this spreadsheet is already open.'),
 							_('If so, close it, and try again.')
@@ -536,10 +537,10 @@ class Categories( wx.Panel ):
 				
 			if not distance and not value:
 				return True
-			return u'{:.3f}'.format(distance or 0.0) == cellValue
+			return '{:.3n}'.format(distance or 0.0) == cellValue
 		
 		def numLapsMatches( numLaps, cellValue ):
-			v = u'{}'.format( numLaps if numLaps is not None else '' )
+			v = '{}'.format( numLaps if numLaps is not None else '' )
 			return v == cellValue
 		
 		return any(	(
@@ -595,7 +596,7 @@ class Categories( wx.Panel ):
 			
 		dlg = wx.TextEntryDialog(
 			self,
-			u'{}: {}'.format(
+			'{}: {}'.format(
 				category.name,
 				_('''Add Bib Exceptions (comma separated).
 This will add the given list of Bibs to this category,
@@ -632,27 +633,27 @@ and remove them from other categories.'''),
 			
 		GetTranslation = _
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
-		self.grid.SetRowLabelValue( r, u'' )
-		self.grid.SetCellValue( r, self.iCol['active'], u'1' if active else u'0' )
+		self.grid.SetRowLabelValue( r, '' )
+		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
 		self.grid.SetCellValue( r, self.iCol['catType'], self.CategoryTypeChoices[catType] )
 		self.grid.SetCellValue( r, self.iCol['name'], name )
 		self.grid.SetCellValue( r, self.iCol['gender'], GetTranslation(gender) )
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
-		self.grid.SetCellValue( r, self.iCol['numLaps'], u'{}'.format(numLaps) if numLaps else u'' )
-		self.grid.SetCellValue( r, self.iCol['raceMinutes'], u'{}'.format(raceMinutes) if raceMinutes else u'' )
-		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], u'1' if lappedRidersMustContinue else u'0' )
-		self.grid.SetCellValue( r, self.iCol['rule80Time'], u'' )
-		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'' )
-		self.grid.SetCellValue( r, self.iCol['distance'], ('%.3f' % distance) if distance else u'' )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['raceMinutes'], '{}'.format(raceMinutes) if raceMinutes else '' )
+		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
+		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
+		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
+		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3n}'.format(distance)) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
-		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('%.3f' % firstLapDistance) if firstLapDistance else '' )
-		self.grid.SetCellValue( r, self.iCol['publishFlag'], u'1' if publishFlag else u'0' )
-		self.grid.SetCellValue( r, self.iCol['uploadFlag'], u'1' if uploadFlag else u'0' )
-		self.grid.SetCellValue( r, self.iCol['seriesFlag'], u'1' if seriesFlag else u'0' )
+		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3n}'.format(firstLapDistance)) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['publishFlag'], '1' if publishFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
 		
 		race = Model.race
-		category = race.categories.get(u'{} ({})'.format(name.strip(), gender), None) if race else None
+		category = race.categories.get('{} ({})'.format(name.strip(), gender), None) if race else None
 		if not category or category.catType != Model.Category.CatWave:
 			return
 			
@@ -666,7 +667,7 @@ and remove them from other categories.'''),
 		
 		laps = race.getNumLapsFromCategory( category ) if race else None
 		if laps:
-			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], u'{}'.format(laps) )
+			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 	
 	def fixRow( self, row, catType, active ):
 		activeColour = wx.WHITE if active else self.inactiveColour
@@ -706,7 +707,7 @@ and remove them from other categories.'''),
 	def doAutosize( self ):
 		self.grid.AutoSizeColumns( False )
 		colWidth = self.grid.GetColSize( self.iCol['catStr'] )
-		maxWidth = wx.GetDisplaySize().width / 3
+		maxWidth = wx.GetDisplaySize().width // 3
 		if colWidth > maxWidth:
 			self.grid.SetColSize( self.iCol['catStr'], maxWidth )
 			self.grid.ForceRefresh()
@@ -722,7 +723,7 @@ and remove them from other categories.'''),
 			return
 		if Utils.MessageOKCancel(
 					self,
-					u'{} "{} ({})"?'.format(
+					'{} "{} ({})"?'.format(
 						_('Delete Category'),
 						self.grid.GetCellValue(r, 3).strip(),
 						self.grid.GetCellValue(r, 4).strip(),
@@ -770,7 +771,7 @@ and remove them from other categories.'''),
 			
 			for c in range(self.grid.GetNumberCols()):
 				if self.grid.GetColLabelValue(c).startswith(_('Distance')):
-					self.grid.SetColLabelValue( c, u'{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
+					self.grid.SetColLabelValue( c, '{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
 					break
 			
 			categories = race.getAllCategories()
@@ -778,7 +779,7 @@ and remove them from other categories.'''),
 			if self.grid.GetNumberRows() > 0:
 				self.grid.DeleteRows( 0, self.grid.GetNumberRows() )
 			self.grid.AppendRows( len(categories) )
-
+			
 			for r, cat in enumerate(categories):
 				self._setRow(	r=r,
 								active				= cat.active,
@@ -824,13 +825,18 @@ and remove them from other categories.'''),
 		wx.CallAfter( Utils.refreshForecastHistory )
 	
 if __name__ == '__main__':
+	'''
+	import locale
+	locale.setlocale(locale.LC_ALL,'fr_FR.UTF-8')
+	'''
+	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 200, 2)),'gender':'Men'},
+							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
 							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
 							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
 							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
@@ -838,5 +844,7 @@ if __name__ == '__main__':
 						] )
 	categories = Categories(mainWin)
 	categories.refresh()
+	categories.grid.SetCellValue( 0, categories.iCol['distance'], '10,2' )
+	categories.grid.SetCellValue( 0, categories.iCol['numLaps'], '9' )
 	mainWin.Show()
 	app.MainLoop()

@@ -410,7 +410,7 @@ class MainWin( wx.Frame ):
 		self.antennas = []
 		for i in range(4):
 			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
-			gs.Add( self.antennaLabels[-1], flag=wx.ALIGN_CENTER|wx.EXPAND )
+			gs.Add( self.antennaLabels[-1], wx.EXPAND )
 		for i in range(4):
 			cb = wx.CheckBox( self, wx.ID_ANY, '')
 			if i < 2:
@@ -434,7 +434,7 @@ class MainWin( wx.Frame ):
 		gbs.Add( self.useHostName, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( wx.StaticText(self, label=ImpinjHostNamePrefix), flag=wx.ALIGN_CENTER_VERTICAL )
-		if 'WXMAC' in wx.Platform:
+		if 'WXMAC' in wx.Platform or 'WXGTK' in wx.Platform:
 			self.impinjHostName = masked.TextCtrl( self,
 								defaultValue = '00-00-00',
 								useFixedWidthFont = True,
@@ -500,8 +500,8 @@ class MainWin( wx.Frame ):
 		cmcs.Add( self.strayTagsLabel, flag=wx.LEFT|wx.RIGHT, border=4 )
 		
 		self.strays = wx.ListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN, size=(-1,50) )
-		self.strays.InsertColumn( 0, 'Tag', wx.LIST_AUTOSIZE_USEHEADER )
-		self.strays.InsertColumn( 1, 'Time', wx.LIST_AUTOSIZE_USEHEADER )
+		self.strays.InsertColumn( 0, 'Tag', width=wx.LIST_AUTOSIZE_USEHEADER )
+		self.strays.InsertColumn( 1, 'Time', width=wx.LIST_AUTOSIZE_USEHEADER )
 	
 		cmcs.Add( self.strays, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
@@ -593,8 +593,7 @@ class MainWin( wx.Frame ):
 		
 		self.strays.DeleteAllItems()
 		for tag, discovered in strays:
-			i = self.strays.InsertItem( 1000000, tag )
-			self.strays.SetItem( i, 1, discovered.strftime('%H:%M:%S') )
+			self.strays.Append( [tag, discovered.strftime('%H:%M:%S')] )
 		for c in range(self.strays.GetColumnCount()):
 			self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
 			

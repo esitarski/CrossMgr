@@ -35,7 +35,7 @@ class GridCellMultiLineStringRenderer(gridlib.GridCellRenderer):
 	def Clone(self): 
 		return GridCellMultiLineStringRenderer()
 
-class ReorderableGridRowMixin( object ):
+class ReorderableGridRowMixin:
 	"""This mixin allows the use of grid rows as Rearrange sources, you can Rearrange
 	rows off of a grid to a text target.  Only row labels are Rearrangegable, internal
 	cell contents are not.
@@ -97,7 +97,12 @@ class ReorderableGridRowMixin( object ):
 		for c in range(self.GetNumberCols()):
 			self.SetCellValue( toRow, c, self.GetCellValue(fromRow, c) )
 			self.SetCellBackgroundColour( toRow, c, self.GetCellBackgroundColour(fromRow, c) )
-		
+	
+	def LocalDeselectRow( self, row ):
+		''' Local reimplementation of DeselectRow. '''
+		for col in range(self.GetNumberCols()):
+			self.DeselectCell( row, col )
+	
 	def OnReorderableGridMotion(self, evt):
 		"""We are moving so see whether this should be a Rearrange event or not"""
 		if not self._potentialRearrange:
@@ -113,8 +118,9 @@ class ReorderableGridRowMixin( object ):
 		row, col = self.ReorderableGridRowXYToCell(x,y, colheight=0)
 		if row == self._lastRow:
 			return
-			
-		self.DeselectRow( self._lastRow )
+		
+		# For reasons I don't understand, we have to override the default otherwise we get an internal wx assert.
+		self.LocalDeselectRow( self._lastRow )
 		
 		lastRowSave = [self.GetCellValue(self._lastRow, c) for c in range(self.GetNumberCols())]
 		lastRowBackgroundColourSave = [self.GetCellBackgroundColour(self._lastRow, c) for c in range(self.GetNumberCols())]
@@ -170,7 +176,7 @@ class ReorderableGridRowMixin( object ):
 
 		return row, col
 
-class KeyboardNavigationGridMixin( object ):
+class KeyboardNavigationGridMixin:
 	def __init__( self ):
 		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onCellEdit )
 		
@@ -204,7 +210,7 @@ class KeyboardNavigationGridMixin( object ):
 			pass
 		event.Skip()
 
-class SaveEditWhenFocusChangesGridMixin( object ):
+class SaveEditWhenFocusChangesGridMixin:
 	def __init__(self):
 		self.Bind(gridlib.EVT_GRID_EDITOR_CREATED, self.OnGridEditorCreated)
 

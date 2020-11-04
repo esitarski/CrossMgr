@@ -1,4 +1,3 @@
-import six
 import Utils
 import Model
 
@@ -15,7 +14,7 @@ def SetNoDataDNS():
 	Finisher = Model.Rider.Finisher
 	DNS = Model.Rider.DNS
 	
-	for num in six.iterkeys(externalInfo):
+	for num in externalInfo.keys():
 		rider = race.getRider( num )
 		if rider.status == Finisher and not rider.times:
 			rider.status = DNS

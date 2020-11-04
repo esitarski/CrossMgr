@@ -1,7 +1,6 @@
 import Utils
 from Utils				import logCall
 import wx
-import six
 import wx.lib.intctrl
 import Model
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
@@ -509,15 +508,15 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 		externalInfo = excelLink.read()
 		for f in ['LastName', 'FirstName', 'Team']:
 			try:
-				externalData.append( six.text_type(externalInfo[num][f] ) )
+				externalData.append( '{}'.format(externalInfo[num][f] ) )
 				if f == 'Team':
-					externalData[-1] = u'({})'.format(externalData[-1])
+					externalData[-1] = '({})'.format(externalData[-1])
 			except KeyError:
 				pass
 		if len(externalData) == 3:	# Format the team name slightly differently.
-			externalData = u'{}: {}'.format( six.text_type(num), u', '.join(externalData[:-1]) ) + u' ' + externalData[-1]
+			externalData = '{}: {}'.format( '{}'.format(num), u', '.join(externalData[:-1]) ) + u' ' + externalData[-1]
 		else:
-			externalData = u'{}: {}'.format( six.text_type(num), u', '.join(externalData) ) if externalData else None
+			externalData = '{}: {}'.format( '{}'.format(num), u', '.join(externalData) ) if externalData else None
 	except:
 		externalData = None
 	

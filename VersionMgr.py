@@ -1,7 +1,7 @@
 import wx
 import re
 import os
-import six
+import urllib
 import time
 import socket
 import Utils
@@ -65,7 +65,7 @@ def updateVersionCache( fname = None ):
 		reZipFile = re.compile( "CrossMgr[^'.]*\.zip" )
 		zips = set()
 
-		p = six.moves.urllib.request.urlopen(urlRoot + '/file-cabinet').read()
+		p = urllib.request.urlopen(urlRoot + '/file-cabinet').read()
 		for line in p.split('\n'):
 			for m in reZipFile.findall(line):
 				zips.add( m )

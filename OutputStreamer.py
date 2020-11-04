@@ -1,11 +1,10 @@
 import io
 import os
-import six
 import time
 import atexit
 import datetime
 import threading
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 
 import Utils
 import Model
@@ -105,7 +104,7 @@ def gt( dt_str ):
 	us= int(us.rstrip("Z"), 10)
 	return dt + datetime.timedelta(microseconds=us)
 
-def writeRaceStart( t = None ):
+def writeRaceStart( t = None, isRestart = False ):
 	if t is None:
 		with Model.LockRace() as race:
 			if race and race.startTime:
@@ -115,7 +114,7 @@ def writeRaceStart( t = None ):
 	if not streamer:
 		StartStreamer()
 	if streamer:
-		q.put( 'start,{}\n'.format(t.isoformat()) )
+		q.put( '{},{}\n'.format('restart' if isRestart else 'start', t.isoformat()) )
 	ResetVersionRAM()
 	WsRefresh( updatePrevious = True )
 
@@ -197,8 +196,8 @@ def CleanupStreamer():
 if __name__ == '__main__':
 	StartStreamer()
 	count = 0
-	for i in six.moves.range(10):
-		for j in six.moves.range(5):
+	for i in range(10):
+		for j in range(5):
 			writeNumTime( i+j, i )
 		time.sleep( 1 )
 	StopStreamer()

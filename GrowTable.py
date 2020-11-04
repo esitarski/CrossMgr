@@ -1,7 +1,7 @@
 import wx
 import Utils
 
-class GrowTable( object ):
+class GrowTable:
 	bold, alignLeft, alignCentre, alignRight, alignTop, alignMiddle, alignBottom = [1<<i for i in range(7)]
 	alignCenter = alignCentre
 	attrDefault = alignRight|alignTop

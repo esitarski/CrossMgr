@@ -1,7 +1,6 @@
 import wx
 import re
 import os
-import six
 import sys
 import Model
 import Utils
@@ -17,9 +16,6 @@ import Flags
 
 bitmapCache = {}
 class IOCCodeRenderer(wx.grid.GridCellRenderer):
-	def __init__(self):
-		super( IOCCodeRenderer, self ).__init__()
-
 	def getImgWidth( self, ioc, height ):
 		img = Flags.GetFlagImage( ioc )
 		if img:
@@ -608,7 +604,6 @@ class Results( wx.Panel ):
 			self.clearGrid()
 			return
 		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		for si in self.hbs.GetChildren():
 			if si.IsWindow():
@@ -711,7 +706,6 @@ class Results( wx.Panel ):
 				r.SetFont( self.boldFont )
 			else:
 				r.SetFont( wx.NullFont )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		
 		# Find the fastest lap time.
@@ -782,7 +776,7 @@ class Results( wx.Panel ):
 				elif colnames[sortCol] == _('Factor'):
 					getFunc = lambda x: float(x) if x else maxVal
 				elif colnames[sortCol] in [_('Pos'), _('Bib')]:
-					getFunc = lambda x: int(x) if x and six.text_type(x).isdigit() else maxVal
+					getFunc = lambda x: int(x) if x and '{}'.format(x).isdigit() else maxVal
 				else:
 					getFunc = lambda x: u'{}'.format(x)
 					maxVal = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'

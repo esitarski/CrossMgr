@@ -21,7 +21,7 @@ import Version
 
 class TeamResults( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
-		super(TeamResults, self).__init__( parent, id, size=size )
+		super().__init__( parent, id, size=size )
 		
 		self.state = RaceInputState()
 		
@@ -142,7 +142,6 @@ class TeamResults( wx.Panel ):
 			self.grid.ClearGrid()
 			return
 		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
-		self.hbs.RecalcSizes()
 		self.hbs.Layout()
 		for si in self.hbs.GetChildren():
 			if si.IsWindow():

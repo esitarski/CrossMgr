@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import math
 import Utils
@@ -12,7 +11,7 @@ class Prizes( wx.Panel ):
 	rowsMax = 20
 	
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
-		super(Prizes, self).__init__( parent, id, size=size )
+		super().__init__( parent, id, size=size )
 		
 		vsOverall = wx.BoxSizer( wx.VERTICAL )
 		

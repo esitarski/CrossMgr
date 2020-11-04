@@ -5,7 +5,7 @@ import Utils
 
 class FtpUploadProgress( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, fileTotal=0, bytesTotal=0 ):
-		super( FtpUploadProgress, self ).__init__( parent, id, title=_('Ftp Update Progress'), style=wx.CAPTION )
+		super().__init__( parent, id, title=_('Ftp Update Progress'), style=wx.CAPTION )
 		self.fileTotal = fileTotal
 		self.bytesCur = 0
 		self.bytesTotal = bytesTotal

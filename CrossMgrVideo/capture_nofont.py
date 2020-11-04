@@ -16,7 +16,6 @@ from __future__ import absolute_import
 
 import datetime
 import re
-import six
 import time
 import logging
 from ctypes import windll, byref, cast, create_string_buffer, c_long
@@ -57,7 +56,7 @@ class Device(object):
 		class_enum = dev_enum.CreateClassEnumerator(CLSID_VideoInputDeviceCategory, 0)
 		#del dev_enum
 
-		for iCount in six.moves.range(self.devnum):
+		for iCount in range(self.devnum):
 			try:
 				(moniker, fetched) = class_enum.RemoteNext(1)
 			except ValueError:

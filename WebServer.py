@@ -1,36 +1,28 @@
 import os
 import io
 import re
-import six
 import sys
 import gzip
 import glob
 import time
 import json
 import base64
-urllib = six.moves.urllib
-from six.moves.urllib.parse import quote
-from six.moves.urllib.request import url2pathname
+import urllib
 import socket
 import datetime
 import traceback
 import threading
-from six.moves.queue import Queue, Empty
-try:
-    # Python 2.x
-    from SocketServer import ThreadingMixIn
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from BaseHTTPServer import HTTPServer
-except ImportError:
-    # Python 3.x
-    from socketserver import ThreadingMixIn
-    from http.server import SimpleHTTPRequestHandler, HTTPServer
+from urllib.parse import quote
+from urllib.request import url2pathname
+from queue import Queue, Empty
+from socketserver import ThreadingMixIn
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 from qrcode import QRCode
 from tornado.template import Template
 from ParseHtmlPayload import ParseHtmlPayload
-from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-StringIO = six.StringIO
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from io import StringIO
 import Utils
 import Model
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
@@ -70,16 +62,10 @@ with open(os.path.join(Utils.getHtmlFolder(), 'Index.html')) as f:
 PORT_NUMBER = 8765
 
 def gzipEncode( content ):
-	if six.PY2:
-		out = StringIO()
-		with gzip.GzipFile( fileobj=out, mode='w', compresslevel=5 ) as f:
-			f.write( content.encode(encoding='utf-8') )
-		return out.getvalue()
-	else:
-		out = io.BytesIO()
-		with gzip.GzipFile( fileobj=out, mode='wb', compresslevel=5 ) as f:
-			f.write( content.encode() if not isinstance(content, bytes) else content )
-		return out.getbuffer()
+	out = io.BytesIO()
+	with gzip.GzipFile( fileobj=out, mode='wb', compresslevel=5 ) as f:
+		f.write( content.encode() if not isinstance(content, bytes) else content )
+	return out.getbuffer()
 
 def validContent( content ):
 	return content.strip().endswith( '</html>' )
@@ -109,11 +95,11 @@ def getAnnouncerHtml():
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
 
-class Generic( object ):
+class Generic:
 	def __init__( self, **kwargs ):
 		self.__dict__.update( kwargs )
 
-class ContentBuffer( object ):
+class ContentBuffer:
 	Unchanged = 0
 	Changed = 1
 	ReadError = 2
@@ -154,12 +140,8 @@ class ContentBuffer( object ):
 					cache['mtime'] = time.time()
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
-					if six.PY2:
-						cache['content'] = content
-						cache['gzip_content'] = gzipEncode( content )
-					else:
-						cache['content'] = content.encode() if not isinstance(content, bytes) else content
-						cache['gzip_content'] = gzipEncode( content )
+					cache['content'] = content.encode() if not isinstance(content, bytes) else content
+					cache['gzip_content'] = gzipEncode( content )
 					cache['status'] = self.Changed
 					self.fileCache[fname] = cache
 			
@@ -190,7 +172,7 @@ class ContentBuffer( object ):
 		cache['mtime'] = mtime
 		result = ParseHtmlPayload( content=content )
 		cache['payload'] = result['payload'] if result['success'] else {}
-		cache['content'] = content.encode('utf-8')
+		cache['content'] = content.encode() if not isinstance(content, bytes) else content
 		cache['gzip_content'] = gzipEncode( cache['content'] )
 		self.fileCache[fname] = cache
 		return cache
@@ -212,7 +194,7 @@ class ContentBuffer( object ):
 	
 	def _getFiles( self ):
 		return [fname for fname, cache in sorted(
-			six.iteritems(self.fileCache),
+			self.fileCache.items(),
 			key=lambda x: (x[1]['payload'].get('raceScheduledStart',futureDate), x[0])
 		) if not (fname.endswith('_TTCountdown.html') or fname.endswith('_TTStartList.html'))]
 	
@@ -260,7 +242,7 @@ class ContentBuffer( object ):
 					categories = [
 							(
 								c['name'].encode(),
-								quote(six.text_type(c['name']).encode()),
+								quote('{}'.format(c['name']).encode()),
 								c.get( 'starters', 0 ),
 								c.get( 'finishers', 0 ),
 							)
@@ -313,7 +295,7 @@ def getQRCodePage( urlPage ):
 	qr.add_data( urlPage )
 	qr.make()
 	qrcode = '["' + '",\n"'.join(
-		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in six.moves.range(qr.modules_count)]
+		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in range(qr.modules_count)]
 	) + '"]'
 	
 	result = StringIO()
@@ -370,14 +352,14 @@ def getIndexPage( share=True ):
 def WriteHtmlIndexPage():
 	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
 	try:
-		with open(fname, 'rb') as f:	# Read as bytes as the index pages is already utf-8 encoded.
+		with open(fname, 'rb') as f:	# Read as bytes as the index page is already utf-8 encoded.
 			previousContent = f.read()
 	except Exception as e:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
 	if content != previousContent:
-		with open(fname, 'wb') as f:	# Write as bytes as the index pages is already utf-8 encoded.
+		with open(fname, 'wb') as f:	# Write as bytes as the index page is already utf-8 encoded.
 			f.write( getIndexPage(share=False) )
 	return fname
 
@@ -666,7 +648,7 @@ def WsLapCounterRefresh():
 			
 if __name__ == '__main__':
 	SetFileName( os.path.join('Gemma', '2015-11-10-A Men-r4-.html') )
-	six.print_( 'Started httpserver on port ' , PORT_NUMBER )
+	print( 'Started httpserver on port ' , PORT_NUMBER )
 	try:
 		time.sleep( 10000 )
 	except KeyboardInterrupt:

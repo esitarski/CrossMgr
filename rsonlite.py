@@ -56,7 +56,6 @@ with rsonlite are:
 '''
 
 import re
-import six
 
 version = __version__ = '0.1.0'
 
@@ -306,7 +305,7 @@ if __name__ == '__main__':
 '''
 	test2 = '\n'.join(x[6:] for x in teststr.splitlines()[2:])
 	loads(teststr) == [('My key', [test2])]
-	six.print_( test2 )
+	print( test2 )
 	
 	
 	with io.open( 'Checklist.rson', 'r', encoding = 'UTF-8' ) as fp:

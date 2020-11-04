@@ -1,5 +1,4 @@
 import re
-import six
 import datetime
 import xml.sax
 
@@ -47,4 +46,4 @@ def GpxParse( fname ):
 
 if __name__ == '__main__':
 	points = GpxParse( 'Seymour_Smith_Cyclocross_Course.gpx' )
-	six.print_( points )
+	print( points )

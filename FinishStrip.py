@@ -1,6 +1,5 @@
 import wx
 import os
-import six
 import sys
 import glob
 import math
@@ -24,7 +23,7 @@ DefaultPhotoFolder = 'PhotoExample2'
 class PhotoExists( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0,
 			tMin= 0, tMax=600.0, pixelsPerSec = 1.0, tPhotos = [] ):
-		super(PhotoExists, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		self.tMin = tMin
 		self.tMax = tMax
@@ -83,7 +82,7 @@ class FinishStrip( wx.Panel ):
 			fps=25,
 			photoFolder=DefaultPhotoFolder,
 			leftToRight=False ):
-		super(FinishStrip, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
 		self.fps = float(fps)
@@ -174,7 +173,7 @@ class FinishStrip( wx.Panel ):
 			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_HIGH )
 			bitmaps[t] = image.ConvertToBitmap()
 		
-		self.timeBitmaps = [(t, bm) for t, bm in six.iteritems(bitmaps)]
+		self.timeBitmaps = [(t, bm) for t, bm in bitmaps.items()]
 		self.timeBitmaps.sort( key=operator.itemgetter(0) )
 		
 	def OnErase( self, event ):
@@ -323,7 +322,7 @@ class FinishStrip( wx.Panel ):
 				bmLeftEdge.append( (bm, xLeft) )
 			bmLeftEdge.append( (None, widthWin) )
 			
-			for i in six.moves.range(0, len(bmLeftEdge)-1):
+			for i in range(0, len(bmLeftEdge)-1):
 				bm, xLeft = bmLeftEdge[i]
 				bmNext, xLeftNext = bmLeftEdge[i+1]
 				bmWidth = max( xLeftNext - xLeft, widthPhoto )
@@ -385,7 +384,7 @@ class FinishStrip( wx.Panel ):
 class FinishStripPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0,
 			fps=25.0, photoFolder=DefaultPhotoFolder ):
-		super(FinishStripPanel, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		
 		self.fps = fps
 		
@@ -585,7 +584,7 @@ class FinishStripDialog( wx.Dialog ):
 			height = 780
 			size = wx.Size( width, height )
 
-		super(FinishStripDialog, self).__init__( parent, id, size=size, style=style, title=_('Finish Strip') )
+		super().__init__( parent, id, size=size, style=style, title=_('Finish Strip') )
 		
 		self.panel = FinishStripPanel( self, fps=fps, photoFolder=photoFolder )
 		
@@ -624,7 +623,7 @@ def ShowFinishStrip( parent, t=None ):
 	if t is not None:
 		fsd.SetT( t )
 	fsd.ShowModal()
-	for attr, value in six.iteritems(fsd.GetAttrs()):
+	for attr, value in fsd.GetAttrs().items():
 		setattr( race, attr, value )
 	fsd.Destroy()
 

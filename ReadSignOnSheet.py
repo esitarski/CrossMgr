@@ -5,11 +5,10 @@ import wx.lib.scrolledpanel as scrolled
 import os
 import re
 import sys
-import six
 import cgi
 import copy
 import string
-StringIO = six.StringIO
+from io import StringIO
 import Utils
 from Utils import tag
 import Model
@@ -413,7 +412,7 @@ class SummaryPage(adv.WizardPageSimple):
 			mainWin = Utils.getMainWin()
 			wx.CallAfter( mainWin.showPage, mainWin.iPropertiesPage )
 	
-class GetExcelLink( object ):
+class GetExcelLink:
 	def __init__( self, parent, excelLink = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
@@ -537,14 +536,9 @@ class GetExcelLink( object ):
 JChipTagLength = 6
 OrionTagLength = 16
 
-if six.PY2:
-	trantab = string.maketrans( 'lOo', '100' ) # Translate lower-case l's to ones and Os to zeros. 
-	def GetCleanTag( tag ):
-		return '{}'.format(tag).translate(trantab, ' \t\n\r')	# Also, remove any extra spaces.
-else:
-	trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. Also, remove any extra spaces.
-	def GetCleanTag( tag ):
-		return '{}'.format(tag).translate(trantab)
+trantab = str.maketrans( 'lOo', '100', ' \t\n\r' ) # Translate lower-case l's to ones and Os to zeros. Also, remove any extra spaces.
+def GetCleanTag( tag ):
+	return '{}'.format(tag).translate(trantab)
 
 def FixJChipTag( tag ):
 	return GetCleanTag(tag).zfill(JChipTagLength)
@@ -645,7 +639,7 @@ def ResetExcelLinkCache():
 	infoCache = None
 	errorCache = None
 
-class ExcelLink( object ):
+class ExcelLink:
 	OpenCode = 0
 	MenCode = 1
 	WomenCode = 2
@@ -979,7 +973,7 @@ def SyncExcelLink( race ):
 #-----------------------------------------------------------------------------------------------------
 
 reSeparators = re.compile( r'[,;:.]+' )
-class BibInfo( object ):
+class BibInfo:
 	AllFields = (
 		'Name',
 		'License',

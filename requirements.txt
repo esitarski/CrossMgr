@@ -1,3 +1,4 @@
+wheel
 setuptools==v44.0.0
 requests
 waitress
@@ -5,21 +6,20 @@ xlsxwriter
 pygments
 xlrd
 pytz
-fpdf
-natural-keys
+fpdf2
 xlwt
 netifaces
 whoosh
 qrcode
 tornado
 ftputil
-wxWidgets
+wxPython
 markdown
 bs4
--e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
 trueskill
 pyinstaller
 pybabel
 opencv-python
 piexif
 virustotal-api
+-e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp

@@ -345,6 +345,8 @@ if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and 
   visibilityChange = "webkitvisibilitychange";
 }
 
+var showCustomCategories = true;
+
 var flagImages = null;
 function GetFlagImage( uci ) {
 	if( !flagImages ) {
@@ -460,6 +462,8 @@ var translations = {
 	'LapsDown':		['Laps Down',		'Rours de retard',			'Vueltas atrás'],
 	'CategorySummary':	['Category Summary',"Catégorie résumé",			"Resumen de la categoría"],
 	'ShowCategorySummary':['Show Category Summary',"Afficher le catégorie résumé",	"Mostrar el resumen de la categoría"],
+	'ShowCustomCategories':['Custom Categories',"Catégories personnalisées",	"Categorías personalizadas"],
+	'CC':			['CC',				"CP",						"CP"],
 	'Sponsor':		['Sponsor',			"Promoteur",				"Patrocinador"],
 	'Cash':			['Cash',			"Argent",					"Dinero"],
 	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
@@ -1996,33 +2000,42 @@ function GeoAnimation()
 
 // ---------------------------------------------------------------------
 
-function _initAnimation()
-{
+function _initAnimation() {
 	tLast = (new Date).getTime();
 	suspendAnimation = false;
 }
 
-function NextFrame()
-{
+function NextFrame() {
 	tDelta = ((new Date).getTime() - tLast);
 	SetTime( t + (tDelta/1000.0) * speedup );
 	tLast += tDelta;
-	if( !suspendAnimation )
-	{
+	if( !suspendAnimation ) {
 		if( t < tMax )
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
-		else if( loopContinuously && !raceIsRunning )
-		{
+		else if( loopContinuously && !raceIsRunning ) {
 			t = 0;
 			setTimeout( NextFrame, 1000.0 / framesPerSecond );
 		}
 	}
 }
 
-function HasDisplayUnit( aData )
-{
-	for( var num in aData )
-	{
+function HasCustomCategories() {
+	if( data && infoFields ) {
+		var customFields = infoFields.filter( h => h.startsWith('CustomCategory') );
+		for( var num in data ) {
+			var info = data[num];
+			for( var f = customFields.length; f--; ) {
+				if( info[customFields[f]] ) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+function HasDisplayUnit( aData ) {
+	for( var num in aData ) {
 		var info = aData[num];
 		if( info['speed'] )
 			return true;
@@ -2030,13 +2043,10 @@ function HasDisplayUnit( aData )
 	return false;
 }
 
-function GetDistanceUnit( aData )
-{
-	for( var num in aData )
-	{
+function GetDistanceUnit( aData ) {
+	for( var num in aData ) {
 		var info = aData[num];
-		if( info['speed'] )
-		{
+		if( info['speed'] ) {
 			var speedUnit = info['speed'].split(' ')[1];
 			return (speedUnit.substring(0, 1) == 'k' ? 'km' : 'miles');
 		}
@@ -2088,14 +2098,14 @@ function SetData( aData, tCur )
 	for( var i = 0; i < catDetails.length; ++i )
 		categories.push( catDetails[i].name );
 	
-	var catHTML = '';
+	var catHTML = [];
 	if( categories.length > 2 )
 	{
-		var catHTML = '<div id="buttongroup">';
+		catHTML.push( '<div id="buttongroup">' );
 		for( var i = 0; i < categories.length; ++i )
 		{
 			var cat = categories[i];
-			catHTML +=
+			catHTML.push(
 				'<label class="green">' +
 					'<input ' +
 							'type="radio" ' +
@@ -2103,16 +2113,17 @@ function SetData( aData, tCur )
 							'id="idCat' + i + '" ' +
 							'onClick="SelectCategory(\''+i+'\');" ' +
 							(cat == categoryCur ? 'checked="true"': '') +
-							'/>' +
+						'/>' +
 						'<span>' + cat.escapeHTML() + '</span>' +
 					'</input>' +
-				'</label>';
+				'</label>'
+			);
 		}
-		catHTML += '</div><hr class="invisible"/>';
+		catHTML.push( '</div><hr class="invisible"/>' );
 	}
 	else if( categories.length > 1 )
-		catHTML = '<h2>' + categories[1].escapeHTML() + '</h2>';
-	document.getElementById('idCategories').innerHTML = catHTML;
+		catHTML = ['<h2>' + categories[1].escapeHTML() + '</h2>'];
+	document.getElementById('idCategories').innerHTML = catHTML.join('');
 	
 	// Adjust the display options based on the data.
 	var options = [
@@ -2124,32 +2135,34 @@ function SetData( aData, tCur )
 	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
 	];
 	var showOptionsSpan = document.getElementById( 'idShowOptions' );
-	var showHTML = '<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">';
 	var firstOption = true;
+	var showHTML = ['<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">'];
 	for( var i = 0; i < options.length; ++i )
 	{
 		var o = options[i];
-		if( o.requiresMultipleLaps && !hasMultipleLaps )
+		if( (o.requiresMultipleLaps && !hasMultipleLaps) || (o.requiresLapSpeeds && !hasLapSpeeds) )
 			continue;
-		if( o.requiresLapSpeeds && !hasLapSpeeds )
-			continue;
-		showHTML += '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"';
-		if( firstOption )
-		{
-			showHTML += ' checked="true"';
+		
+		showHTML.push( '<input type="radio" name="showOptions" id="idShowOption' + i + '" onClick="SetLapDataOption('+o.i+');"' );
+		if( firstOption ) {
+			showHTML.push( ' checked="true"' );
 			firstOption = false;
 		}
-		showHTML += '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;';
+		showHTML.push( '/><label for="idShowOption' + i + '" data-tr="' + o.name +'"></label>&nbsp;' );
 	}
-	showHTML += '</div></div>';
-	showOptionsSpan.innerHTML = showHTML;
+	if( HasCustomCategories() ) {
+		showHTML.push( '&nbsp;&nbsp;&nbsp;' );
+		showHTML.push( '<input type="checkbox" id="idShowCustomCategories" onClick="ToggleCustomCategories()"' + (showCustomCategories ? ' checked="true"' : '') + '/>' );
+		showHTML.push( '<label for="idShowCustomCategories" id="idShowCustomCategoriesLabel" data-tr="ShowCustomCategories"></label>' );
+	}
+	showHTML.push( '</div></div>' );
+	showOptionsSpan.innerHTML = showHTML.join('');
 	
 	if( animationObj != null )
 		animationObj.Refresh();
 }
 
-function Animate( tRunning, aTMax, tCur )
-{
+function Animate( tRunning, aTMax, tCur ) {
 	StopAnimate();
 	_initAnimation();
 	
@@ -2159,8 +2172,7 @@ function Animate( tRunning, aTMax, tCur )
 	t = (tCur || 0);
 	if( !data )
 		return;
-	if( aTMax == undefined )
-	{
+	if( aTMax == undefined ) {
 		tMax = 0;
 		for( var num in data )
 			if( data[num]['raceTimes'].length > 0 )
@@ -2175,15 +2187,13 @@ function Animate( tRunning, aTMax, tCur )
 
 // ---------------------------------------------------------------------
 
-function createChild( parent, tag )
-{
+function createChild( parent, tag ) {
 	var child = document.createElement(tag);
 	parent.appendChild( child );
 	return child;
 }
 
-function createTextChild( parent, s )
-{
+function createTextChild( parent, s ) {
 	var child = document.createTextNode(s);
 	parent.appendChild( child );
 	return child;
@@ -2192,8 +2202,7 @@ function createTextChild( parent, s )
 // ---------------------------------------------------------------------
 
 var statusSortSeq = { 'Finisher':1, 'PUL':2, 'OTL':6, 'DNF':3, 'DQ':4, 'DNS':5, 'NP':7 };
-function CmpResultsData( x, y )
-{
+function CmpResultsData( x, y ) {
 	// [numLaps, raceTimeOfLastLap, num, raceTimes, status, lastTime]
 	//    0              1           2      3         4        5
 	
@@ -2221,8 +2230,7 @@ function CmpResultsData( x, y )
 	return x[2] - y[2];
 }
 
-function CmpCategoryResultsData( x, y )
-{
+function CmpCategoryResultsData( x, y ) {
 	var c = x[6] - y[6];
 	if( c )
 		return c;
@@ -2383,7 +2391,7 @@ function ResetWebSocket() {
 
 		var wsurl = 'ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 1) + '/';
 		//var wsurl = 'ws://' + 'localhost' + ':' + (parseInt(window.location.port) + 1) + '/';
-		console.log( 'wsurl="' + wsurl + '"' );
+		//console.log( 'wsurl="' + wsurl + '"' );
 		websocket = new window.WebSocket( wsurl );
 
 		websocket.onmessage = function( evt ) {
@@ -2891,6 +2899,12 @@ function RefreshResultsTable()
 			curFields['LastName'] = false;
 			curFields['Name'] = true;
 		}
+		
+		if( !showCustomCategories ) {
+			for( var key in curFields )
+				if( key.startsWith('CustomCategory') )
+					curFields[key] = false;
+		}
 
 		// Find the fastest lap for this category.
 		var tLapMin = 100000 * 60.0 * 60.0;
@@ -2954,7 +2968,7 @@ function RefreshResultsTable()
 		
 		for( var f = 0; f < infoFields.length; ++f ) {
 			if( curFields[infoFields[f]] ) {
-				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f]) );
+				createTextChild( td = createChild(tr, 'TH'), _(infoFields[f].replace('CustomCategory','CC')) );
 				td.id = 'idNonNumeric';
 				++numHeaders;
 			}
@@ -5492,6 +5506,11 @@ function SetShowLaps()
 	RefreshResultsTable();
 }
 
+function ToggleCustomCategories() {
+	showCustomCategories = !showCustomCategories;
+	RefreshResultsTable();
+}
+
 function FormatDistance( distance, inUnit, showUnits )
 {
 	if( (inUnit ? inUnit : 'km') != displayUnits )
@@ -6139,8 +6158,7 @@ function onLoad()
 	
 	SetRaceTime();
 	
-	if( HasDisplayUnit(data) )
-	{
+	if( HasDisplayUnit(data) ) {
 		displayUnits = GetDistanceUnit( data );
 		document.getElementById('idDisplayUnits').selectedIndex = (displayUnits == 'km' ? 0 : 1);
 	}
@@ -6325,9 +6343,11 @@ Current versions of Chrome, FireFox and Opera work fine.
 	<option value="50" data-tr="Show Every 50 Laps">50</option>
 	<option value="100" data-tr="Show Every 100 Laps">100</option>
 </select>
+
 <span id="idTotalElevationGain"> </span>
 </p>
-<span class="noprint" id="idShowOptions"></span><br/>
+<div class="noprint" id="idShowOptions"></div>
+<br/>
 </div>
 
 <div id="idResultsDiv"></div>

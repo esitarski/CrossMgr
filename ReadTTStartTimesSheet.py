@@ -1,9 +1,6 @@
-from __future__ import print_function
-
 import wx
 import os
 import sys
-import six
 import copy
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
@@ -133,7 +130,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		for r, row in enumerate(reader.iter_list(sheetName)):
 			cols = sum( 1 for d in row if d )
 			if cols > 4:
-				self.headers = [six.text_type(h or '').strip() for h in row]
+				self.headers = ['{}'.format(h or '').strip() for h in row]
 				break
 
 		# If we haven't found a header row yet, assume the first non-empty row is the header.
@@ -141,7 +138,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			for r, row in enumerate(reader.iter_list(sheetName)):
 				cols = sum( 1 for d in row if d )
 				if cols > 0:
-					self.headers = [six.text_type(h or '').strip() for h in row]
+					self.headers = ['{}'.format(h or '').strip() for h in row]
 					break
 		
 		# Ignore empty columns on the end.
@@ -230,7 +227,7 @@ class SummaryPage(adv.WizardPageSimple):
 		self.riderNumber.SetLabel( u'{}'.format(infoLen) )
 		self.statusName.SetLabel( _('Success!') if infoLen else _('Failure') )
 	
-class GetExcelTTStartTimeLink( object ):
+class GetExcelTTStartTimeLink:
 	def __init__( self, parent, excelLink = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), '20100718-Excel_icon.png' )
 		img = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap
@@ -320,7 +317,7 @@ class GetExcelTTStartTimeLink( object ):
 		isForward = evt.GetDirection()
 		
 #----------------------------------------------------------------------------------
-class ExcelLink( object ):
+class ExcelLink:
 	def __init__( self ):
 		self.fileName = None
 		self.sheetName = None
@@ -355,7 +352,7 @@ class ExcelLink( object ):
 		info = {}
 		for r, row in enumerate(reader.iter_list(self.sheetName)):
 			data = {}
-			for field, col in six.iteritems(self.fieldCol):
+			for field, col in self.fieldCol.items():
 				if col < 0:					# Skip unmapped columns.
 					continue
 				try:
@@ -379,7 +376,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		
 	info = excelLink.read()
 	
-	for num, data in six.iteritems(info):
+	for num, data in info.items():
 		try:
 			startTime = data['StartTime']
 		except KeyError:
@@ -389,7 +386,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		# Try to make sense of the StartTime (Stopwatch time, not clock time).
 		if isinstance(startTime, float):
 			t = startTime * 24.0*60.0*60.0	# Excel decimal days.
-		elif isinstance(startTime, six.string_types):
+		elif isinstance(startTime, str):
 			# Otherwise, string of format hh:mm:ss.ddd or mm:ss.ddd.
 			fields = startTime.split( ':' )
 			try:
@@ -411,7 +408,7 @@ def DoImportTTStartTimes( race, excelLink ):
 	changeCount = 0
 	if startTimes:
 		undo.pushState()
-		for num, startTime in six.iteritems(startTimes):
+		for num, startTime in startTimes.items():
 			rider = race.getRider( num )
 			
 			# Compute the time change difference.

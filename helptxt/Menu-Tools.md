@@ -3,12 +3,6 @@
 
 # Tools
 
-## Simulate Race...
-
-Runs a demo of CrossMgr based on automatically generated data.
-
-Useful for exploring the capabilties of CrossMgr.  See [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet) for a detailed explanation about how to handle multiple categories, missed entries and disputes in the demo data.
-
 ## Change Race Start Time...
 Allows you to change the Start Time of the race.  This is very useful if you start the race after the actual start time.  You can change the race start time before you enter times, while you are entering times, after you have entered all the times, or after you have finished the race.  Any times you have entered will be automatically adjusted based on the new race start time.
 
@@ -18,12 +12,22 @@ This is also convenient if you are busy starting a race and are away from CrossM
 
 You cannot change the start time of a Time Trial race.
 
+## Restart Race...
+
+See [Restart][].
+
 ## Copy Log File to Clipboard
 Copies the last 1,000 lines of the CrossMgr log file to the clipboard.
 The log can then be pasted into an email.
 
 When reporting problems with CrossMgr, please include the log.
 It contains important diagnostics to find the problem.
+
+## Simulate Race...
+
+Runs a demo of CrossMgr based on automatically generated data.
+
+Useful for exploring the capabilties of CrossMgr.  See [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet) for a detailed explanation about how to handle multiple categories, missed entries and disputes in the demo data.
 
 ## Reload Checklist
 
@@ -34,3 +38,7 @@ Reloads the checklist file.  CrossMgr looks in three places for a "CrossMgrCheck
 1. The CrossMgrImages folder in the install folder
 
 See the "CrossMgrChecklist.txt" file for instructions on how to customize the checklist file.
+
+## Playback
+
+Playback a race in read-time.

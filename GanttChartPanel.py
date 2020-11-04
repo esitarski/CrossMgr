@@ -1,5 +1,4 @@
 import wx
-import six
 import random
 import math
 import sys
@@ -38,7 +37,18 @@ def numFromLabel( s ):
 		return int(s[:firstSpace])
 	except Exception as e:
 		return None
-	
+
+class KeyWrapper:
+	def __init__( self, items, key ):
+		self._items = items
+		self._key = key
+
+	def __len__(self):
+		return len(self._items)
+
+	def __getitem__(self, i):
+		return self._key(self._items[i])
+		
 class GanttChartPanel(wx.Panel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
@@ -155,7 +165,7 @@ class GanttChartPanel(wx.Panel):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = [six.text_type(lab) for lab in labels]
+				self.labels = ['{}'.format(lab) for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
@@ -431,10 +441,10 @@ class GanttChartPanel(wx.Panel):
 				elif t % (60*60) == 0:
 					return u'{}d{:02d}h'.format( t//(24*60*60), (t%(24*60*60))//(60*60) )
 				else:
-					return u'{}d{:02d}:{02d}'.format( t//(24*60*60), (t%(24*60*60))//(60*60), (t // 60)%60 )
+					return u'{}d{:02d}:{:02d}'.format( t//(24*60*60), (t%(24*60*60))//(60*60), (t // 60)%60 )
 			
 		def getXT( d ):
-			for t in six.moves.range(int(tAdjust) - int(tAdjust)%d, int(self.dataMax), d):
+			for t in range(int(tAdjust) - int(tAdjust)%d, int(self.dataMax), d):
 				x = xLeft + (t-tAdjust) * dFactor
 				if x < xLeft:
 					continue
@@ -498,6 +508,10 @@ class GanttChartPanel(wx.Panel):
 		
 		tLeaderLast = None
 		dy = 0
+		
+		def tToX( t ):
+			return int(labelsWidthLeft + (t-tAdjust) * xFactor)
+		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
 			if tLeaderLast is None:
@@ -514,10 +528,14 @@ class GanttChartPanel(wx.Panel):
 			xLast = labelsWidthLeft
 			xCur = xLast
 			tTooShort = 9.0	# If a lap is shorter than 9 seconds, consider it a duplicate entry.
-			for j, t in enumerate(s):
+			
+			# Quickly find the first visible gantt chart rectangle.
+			jStart = max( 0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1 )
+			for j in range(jStart, len(s)):
 				if xLast >= xRight:
 					break
-				xCur = xOriginal = int(labelsWidthLeft + (t-tAdjust) * xFactor)
+				t = s[j]
+				xCur = xOriginal = tToX( t )
 				if xCur < labelsWidthLeft:
 					continue
 					
@@ -732,22 +750,23 @@ if __name__ == '__main__':
 	def GetData():
 		data = []
 		interp = []
-		for i in range(40):
-			data.append( [t + i*10.0 for t in six.moves.range(0, 60*60 * 3, 7*60)] )
+		for i in range(100):
+			data.append( [t + i*10.0 for t in range(0, 60*60 * 24 * 2, 7*60)] )
 			if i % 5 == 1:
 				data[-1].insert( (i//3) + 1, data[-1][i//3] + 0.05 )
-			interp.append( [((t + i*10)%100)//10 for t in six.moves.range(0, 60*60 * 3, 7*60)] )
+			interp.append( [((t + i*10)%100)//10 for t in range(0, 60*60 * 3, 7*60)] )
 		return data, interp
 
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="GanttChartPanel", size=(600,400))
-	gantt = GanttChartPanel(mainWin)
+	gantt = GanttChartPanel( mainWin )
+	gantt.SetDoubleBuffered( True )
 
 	random.seed( 10 )
 	t = 55*60
 	tVar = t * 0.15
 	data, interp = GetData()
-	gantt.SetData( data, ['{}'.format(i) for i in six.moves.range(100, 100+len(data))],
+	gantt.SetData( data, ['{}'.format(i) for i in range(100, 100+len(data))],
 		interp = interp,
 		status = [['','PUL ', 'DNF ', 'DQ ', 'NP '][i%5] for i in range(len(data))],
 	)

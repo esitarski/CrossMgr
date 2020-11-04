@@ -36,9 +36,11 @@
 [Primes]:			Primes.html
 [Histogram]:		Histogram.html
 [TeamResults]:		TeamResults.html
+[Restart]:			Restart.html
 [FAQ]:				FAQ.html
 
 [External Excel]:	Menu-DataMgmt.html#link-to-external-excel-data
 [USAC Export]:		Menu-DataMgmt.html#export-Results-in-usac-excel-format
+[USACycling]:		https://usacycling.org/
 [Chart Right-Click]: Chart.html#right-click
 [USB Webcam]:		Properties.html#use-usb-camera-photo-finish

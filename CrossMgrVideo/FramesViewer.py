@@ -1,13 +1,12 @@
 import wx
-import six
 from ScaledBitmap import ScaledBitmap
 
 class FramesViewer( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, rows=5, cols=12, size=(640,480), style=0 ):
-		super(FramesViewer, self).__init__( parent, id, size=size, style=style )
+		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
-		self.scaledBitmaps = [ScaledBitmap(self, size=(64,48)) for i in six.moves.range(rows*cols)]
+		self.scaledBitmaps = [ScaledBitmap(self, size=(64,48)) for i in range(rows*cols)]
 		for si in self.scaledBitmaps:
 			si.SetTestBitmap()
 			

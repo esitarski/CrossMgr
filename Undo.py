@@ -1,10 +1,10 @@
 import Model
 from Utils import updateUndoStatus
 from Utils import logCall
-import six.moves.cPickle as pickle
+import pickle
 import pickletools
 
-class Undo( object ):
+class Undo:
 	def __init__( self ):
 		self.clear()
 

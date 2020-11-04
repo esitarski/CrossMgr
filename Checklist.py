@@ -1,5 +1,4 @@
 import wx
-import six
 import wx.dataview
 import io
 import os
@@ -26,7 +25,7 @@ _processRequirementLookup = {
 	u'Camera'.lower(): 		lambda race, v: race.enableUSBCamera ==_toBool(v),
 }
 
-class Task( object ):
+class Task:
 	NotDone = 0
 	Partial = 1
 	Done = 2
@@ -73,29 +72,29 @@ class Task( object ):
 		return True
 		
 	def pprint( self, indent = u'  ', indent_level = 0 ):
-		six.print_( '{}task'.format( indent*indent_level ) )
-		six.print_( '{}title = {}'.format( indent*(indent_level+1), self.title ) )
+		print( '{}task'.format( indent*indent_level ) )
+		print( '{}title = {}'.format( indent*(indent_level+1), self.title ) )
 		if self.note:
-			six.print_( '{}note = {}'.format( indent*(indent_level+1), self.note ) )
-		six.print_( '{}status = {}'.format( indent*(indent_level+1), ['NotDone', 'Partial', 'Done'][self.status] ) )
+			print( '{}note = {}'.format( indent*(indent_level+1), self.note ) )
+		print( '{}status = {}'.format( indent*(indent_level+1), ['NotDone', 'Partial', 'Done'][self.status] ) )
 		if self.requires:
-			six.print_( '{}requires'.format( indent*(indent_level+1) ) )
+			print( '{}requires'.format( indent*(indent_level+1) ) )
 		for req, val in self.requires:
-			six.print_( '{}{} = {}'.format( indent*(indent_level+2), req, val ) )
+			print( '{}{} = {}'.format( indent*(indent_level+2), req, val ) )
 		if self.subtasks:
-			six.print_( '{}subtasks'.format( indent*(indent_level+1) ) )
+			print( '{}subtasks'.format( indent*(indent_level+1) ) )
 			for task in self.subtasks:
 				task.pprint( indent, indent_level + 2 )
 
 def _setTitle( task, val ):
-	task.title = six.text_type(val[0])
+	task.title = '{}'.format(val[0])
 
 def _setNote( task, val ):
-	task.note = six.text_type(val[0])
+	task.note = '{}'.format(val[0])
 
 def _setRequires( task, requires ):
 	for r in requires:
-		task.appendRequires( six.text_type(r[0]), six.text_type(r[1][0]))
+		task.appendRequires( '{}'.format(r[0]), '{}'.format(r[1][0]))
 
 def _setSubtasks( task, subtasks ):
 	for s in subtasks:

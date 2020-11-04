@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-import six
 import random
 import unicodedata
 
@@ -1820,5 +1818,5 @@ def GetNameTeam( isMale=True):
 	return lastname, firstname, random.choice(teams)
 	
 if __name__ == '__main__':
-	for i in six.moves.range(20):
-		six.print_( [unicodedata.normalize('NFKD', f).encode('ASCII', 'ignore').decode() for f in GetNameTeam( i%2 )] )
+	for i in range(20):
+		print( [unicodedata.normalize('NFKD', f).encode('ASCII', 'ignore').decode() for f in GetNameTeam( i%2 )] )

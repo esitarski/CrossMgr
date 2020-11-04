@@ -190,7 +190,7 @@ class SummaryPage(adv.WizardPageSimple):
 		self.totalElevationGain.ChangeValue( u'{:.0f} m, {:.0f} ft'.format(self.totalElevationGainM, self.totalElevationGainFt) )
 		self.courseType.ChangeValue( _('Point to Point') if isPointToPoint else _('Loop') )
 		
-class GetGeoTrack( object ):
+class GetGeoTrack:
 	def __init__( self, parent, geoTrack = None, geoTrackFName = None ):
 		img_filename = os.path.join( Utils.getImageFolder(), 'gps.png' )
 		bitmap = wx.Bitmap(img_filename) if img_filename and os.path.exists(img_filename) else wx.NullBitmap

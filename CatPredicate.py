@@ -2,7 +2,6 @@ import re
 import wx
 import wx.lib.intctrl
 import os
-import six
 import itertools
 import Utils
 from DNSManager import AutoWidthListCtrl
@@ -29,7 +28,7 @@ def IntervalsToSet( intervals ):
 		ret.update( range(i[0], i[1]+1) )
 	return ret
 
-class CategoryPredicate( object ):
+class CategoryPredicate:
 	def __init__( self ):
 		# None == ignore
 		self.numberSet = None
@@ -167,7 +166,7 @@ class CategoryPredicate( object ):
 							
 					except Exception as e:
 						# Ignore any parsing errors.
-						six.print_( e )
+						print( e )
 						
 				self.intervals.sort()
 

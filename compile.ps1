@@ -116,7 +116,8 @@ function doPyInstaller($program)
 		$buildpath = "..\build"
 	}
 	Set-Location -Path $builddir
-	Write-Host "pyinstaller.exe $program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
+	#Write-Host "pyinstaller.exe $program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
+	Write-Host "pyinstaller.exe $program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --debug --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
 	Start-Process -Wait -NoNewWindow -FilePath "pyinstaller.exe" -ArgumentList "$program.pyw --icon=$iconpath\$program.ico --distpath=$distpath --workpath=$buildpath --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter"
 	$result = $?
 	if ($program -ne "CrossMgr")
@@ -218,11 +219,6 @@ function CopyAssets($program)
 		Write-Host "Copying Html to $resourcedir"
 		Copy-Item -Recurse -Force -Path "$builddir/${program}Html" -Destination "$resourcedir"
 	}
-	if (Test-Path "$builddir/${program}HtmlDoc")
-	{
-		Write-Host "Copying HtmlDoc to $resourcedir"
-		Copy-Item -Recurse -Force -Path "$builddir/${program}HtmlDoc" -Destination "$resourcedir"
-	}
 	if (Test-Path "$builddir/${program}Locale")
 	{
 		BuildLocale($program)
@@ -253,7 +249,7 @@ function CopyAssets($program)
 			Remove-Item -Recurse -Force -Path "CrossMgrHelpIndex"
 		}
 		Write-Host 'Building Help for CrossMgr...'
-		Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
+		# Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
 		if ($? -eq $false)
 		{
@@ -261,7 +257,7 @@ function CopyAssets($program)
 			Set-Location -Path '..'
 			exit 1
 		}
-		Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
+		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
 	}
 	if ($program -eq "SeriesMgr")
@@ -272,7 +268,7 @@ function CopyAssets($program)
 			Remove-Item -Recurse -Force -Path "CrossMgrHelpIndex"
 		}
 		Write-Host 'Building Help for SeriesMgr...'
-		Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
+		# Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
 		if ($? -eq $false)
 		{
@@ -280,8 +276,14 @@ function CopyAssets($program)
 			Set-Location -Path '..'
 			exit 1
 		}
-		Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
+		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
+	}
+	# Copy help files last to ensure they are built by now.
+	if (Test-Path "$builddir/${program}HtmlDoc")
+	{
+		Write-Host "Copying HtmlDoc to $resourcedir"
+		Copy-Item -Recurse -Force -Path "$builddir/${program}HtmlDoc" -Destination "$resourcedir"
 	}
 }
 
@@ -416,6 +418,7 @@ function EnvSetup($program)
 	{
 		Write-Host 'Already using', $env:VIRTUAL_ENV
 	}
+	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install pywin32")
 	$result = (Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mpip install -r requirements.txt")
 	if ($? -eq $false)
 	{
