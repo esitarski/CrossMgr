@@ -71,23 +71,21 @@ def FtpUploadFile( fname=None, callback=None ):
 		if not race or not Utils.getFileName():
 			return None
 	
-	try:
-		# Fix cut and paste issues
-		hostname = getattr( race, 'ftpHost', '' ).strip().strip('\t')
-		FtpWriteFile(
-			host		= hostname,
-			user		= getattr( race, 'ftpUser', '' ),
-			passwd		= getattr( race, 'ftpPassword', '' ),
-			serverPath	= getattr( race, 'ftpPath', '' ),
-			fname		= fname or [],
-			callback	= callback,
-		)
-	except ftputil.error.FTPOSError as e:
-		Utils.writeLog( 'FtpUploadFile:{}: {}'.format(e.__class__.__name__, e) )
-		return e
+	params = {
+		'hostname': 	getattr(race, 'ftpHost', '').strip().strip('\t'),	# Fix cut and paste issues.
+		'user':			getattr(race, 'ftpUser', ''),
+		'passwd':		getattr(race, 'ftpPassword', ''),
+		'serverPath':	getattr(race, 'ftpPath', ''),
+		'fname':		fname or [],
+		'callback':		callback,
+	}
+	
+	try:		
+		FtpWriteFile( **params )
+	
 	except Exception as e:
-		# Utils.logException( e, sys.exc_info() )
 		Utils.writeLog( 'FtpUploadFile: {}: {}'.format(e.__class__.__name__, e) )
+		Utils.writeLog( 'FtpUploadFile: call FtpWriteFile({})'.format(', '.join('{}="{}"'.format(k,v) for k,v in params.items())) )
 		return e
 		
 	return None
