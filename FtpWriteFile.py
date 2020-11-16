@@ -72,7 +72,7 @@ def FtpUploadFile( fname=None, callback=None ):
 			return None
 	
 	params = {
-		'hostname': 	getattr(race, 'ftpHost', '').strip().strip('\t'),	# Fix cut and paste issues.
+		'host': 		getattr(race, 'ftpHost', '').strip().strip('\t'),	# Fix cut and paste issues.
 		'user':			getattr(race, 'ftpUser', ''),
 		'passwd':		getattr(race, 'ftpPassword', ''),
 		'serverPath':	getattr(race, 'ftpPath', ''),
