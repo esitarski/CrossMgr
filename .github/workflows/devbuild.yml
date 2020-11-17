@@ -29,16 +29,16 @@ jobs:
               run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
-#            - name: Dev Release
-#              env:
-#                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-#              uses: "marvinpinto/action-automatic-releases@latest"
-#              with:
-#                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#                 automatic_release_tag: "latest"
-#                 prerelease: true
-#                 title: "Development Build"
-#                 files: release/*
+            - name: Dev Release
+              env:
+                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+              uses: "marvinpinto/action-automatic-releases@latest"
+              with:
+                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
+                 automatic_release_tag: "latest"
+                 prerelease: true
+                 title: "Development Build"
+                 files: release/*
     buildlinux:
         name: Linux
         needs: buildmac
