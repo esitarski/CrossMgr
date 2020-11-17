@@ -9,65 +9,6 @@ on:
 
 name: ReleaseBuild
 jobs:
-    buildmac:
-        name: MacOSX
-        runs-on: macos-latest
-        steps:
-            - name: Show Environment
-              run: set | grep GIT
-            - name: Setup Python environment
-              uses: actions/setup-python@v1.1.1
-              with:
-                python-version: 3.7.*
-            - name: Checkout code
-              uses: actions/checkout@master
-            - name: Setup Environment
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -S
-            - name: Build project
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -a -A
-            - name: Production Release
-              env:
-                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-              uses: "marvinpinto/action-automatic-releases@latest"
-              with:
-                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
-                 prerelease: False
-                 files: release/*
-    buildlinux:
-        name: Linux
-        needs: buildmac
-        runs-on: ubuntu-18.04
-        steps:
-            - name: Setup Python Environment
-              uses: actions/setup-python@v1.1.1
-              with:
-                python-version: 3.7.*
-            - name: Checkout code
-              uses: actions/checkout@master
-            - name: Linux Lib Install
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash linuxdeps.sh
-            - name: Setup Environment
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -S
-            - name: Build project
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -a -A
-            - name: Production Release
-              uses: svenstaro/upload-release-action@v1-release
-              with:
-                repo_token: ${{ secrets.GITHUB_TOKEN }}
-                file: release/*
-                tag: ${{ github.ref }}
-                overwrite: true
-                file_glob: true
     buildwindows:
         name: Windows
         needs: buildmac
@@ -103,3 +44,62 @@ jobs:
                 tag: ${{ github.ref }}
                 overwrite: true
                 file_glob: true
+    buildlinux:
+        name: Linux
+        needs: buildmac
+        runs-on: ubuntu-18.04
+        steps:
+            - name: Setup Python Environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Linux Lib Install
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash linuxdeps.sh
+            - name: Setup Environment
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -S
+            - name: Build project
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -a -A
+            - name: Production Release
+              uses: svenstaro/upload-release-action@v1-release
+              with:
+                repo_token: ${{ secrets.GITHUB_TOKEN }}
+                file: release/*
+                tag: ${{ github.ref }}
+                overwrite: true
+                file_glob: true
+#    buildmac:
+#        name: MacOSX
+#        runs-on: macos-latest
+#        steps:
+#            - name: Show Environment
+#              run: set | grep GIT
+#            - name: Setup Python environment
+#              uses: actions/setup-python@v1.1.1
+#              with:
+#                python-version: 3.7.*
+#            - name: Checkout code
+#              uses: actions/checkout@master
+#            - name: Setup Environment
+#              run: |
+#                cd $GITHUB_WORKSPACE
+#                bash compile.sh -S
+#            - name: Build project
+#              run: |
+#                cd $GITHUB_WORKSPACE
+#                bash compile.sh -a -A
+#            - name: Production Release
+#              env:
+#                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+#              uses: "marvinpinto/action-automatic-releases@latest"
+#              with:
+#                 repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#                 prerelease: False
+#                 files: release/*
