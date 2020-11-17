@@ -11,8 +11,8 @@ name: ReleaseBuild
 jobs:
     buildmac:
         name: MacOSX
-        env:
-           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        # env:
+        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         runs-on: macos-latest
         steps:
             - name: Show Environment
@@ -40,8 +40,8 @@ jobs:
                  files: release/*
     buildwindows:
         name: Windows
-        env:
-           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        # env:
+        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         needs: buildmac
         runs-on: windows-latest
         steps:
@@ -79,10 +79,10 @@ jobs:
                 file_glob: true
     buildlinux:
         name: Linux
+        # env:
+        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         needs: buildmac
-        env:
-           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-        runs-on: ubuntu-18.04
+        runs-on: ubuntu-latest
         steps:
             - name: Setup Python Environment
               # uses: actions/setup-python@v1.1.1
