@@ -26,10 +26,12 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -S
             - name: Build project
-              run: |
+             run: |
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Production Release
+              env:
+                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
               uses: "marvinpinto/action-automatic-releases@latest"
               with:
                  repo_token: "${{ secrets.GITHUB_TOKEN }}"
