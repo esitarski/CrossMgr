@@ -12,23 +12,23 @@ jobs:
     buildmac:
         name: MacOSX
         runs-on: macos-latest
-#        steps:
-#            - name: Show Environment
-#              run: set | grep GIT
-#            - name: Setup Python environment
-#              uses: actions/setup-python@v1.1.1
-#              with:
-#                python-version: 3.7.*
-#            - name: Checkout code
-#              uses: actions/checkout@master
-#            - name: Setup Environment
-#              run: |
-#                cd $GITHUB_WORKSPACE
-#                bash compile.sh -S
-#            - name: Build project
-#              run: |
-#                cd $GITHUB_WORKSPACE
-#                bash compile.sh -a -A
+        steps:
+            - name: Show Environment
+              run: set | grep GIT
+            - name: Setup Python environment
+              uses: actions/setup-python@v1.1.1
+              with:
+                python-version: 3.7.*
+            - name: Checkout code
+              uses: actions/checkout@master
+            - name: Setup Environment
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -S
+            - name: Build project
+              run: |
+                cd $GITHUB_WORKSPACE
+                bash compile.sh -a -A
 #            - name: Production Release
 #              env:
 #                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
