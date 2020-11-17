@@ -4,7 +4,6 @@ OSNAME=$(uname -s)
 PYTHONVER=python3.7
 ENVDIR=env
 LINUXDEPLOY=linuxdeploy-plugin-appimage-x86_64.AppImage
-ACTIONS_ALLOW_UNSECURE_COMMANDS=true
 
 if [ "$OSNAME" == "Darwin" ]; then
 	PYTHONVER="python3.7"

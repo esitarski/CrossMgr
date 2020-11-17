@@ -44,7 +44,6 @@ param (
 # Globals
 $environ = "env"
 $script:pythongood = $false
-$ACTIONS_ALLOW_UNSECURE_COMMANDS = "true"
 
 # Check the python version. Current only 3.7.x is supported because pyinstaller doesn't work on 3.8
 function CheckPythonVersion
