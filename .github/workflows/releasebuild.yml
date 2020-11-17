@@ -11,6 +11,8 @@ name: ReleaseBuild
 jobs:
     buildmac:
         name: MacOSX
+        env:
+           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         runs-on: macos-latest
         steps:
             - name: Show Environment
@@ -30,8 +32,6 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Production Release
-              env:
-                 ACTIONS_ALLOW_UNSECURE_COMMANDS: true
               uses: "marvinpinto/action-automatic-releases@latest"
               with:
                  repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -39,6 +39,8 @@ jobs:
                  files: release/*
     buildwindows:
         name: Windows
+        env:
+           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         needs: buildmac
         runs-on: windows-latest
         steps:
@@ -75,6 +77,8 @@ jobs:
     buildlinux:
         name: Linux
         needs: buildmac
+        env:
+           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         runs-on: ubuntu-18.04
         steps:
             - name: Setup Python Environment
