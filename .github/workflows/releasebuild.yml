@@ -18,7 +18,8 @@ jobs:
             - name: Show Environment
               run: set | grep GIT
             - name: Setup Python environment
-              uses: actions/setup-python@v1.1.1
+              # uses: actions/setup-python@v1.1.1
+              uses: actions/setup-python@v2
               with:
                 python-version: 3.7.*
             - name: Checkout code
@@ -45,7 +46,8 @@ jobs:
         runs-on: windows-latest
         steps:
             - name: Setup Python environment
-              uses: actions/setup-python@v1.1.1
+              # uses: actions/setup-python@v1.1.1
+              uses: actions/setup-python@v2
               with:
                 python-version: 3.7.*
             - name: Checkout code
@@ -67,7 +69,8 @@ jobs:
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -virus
             - name: Production Release
-              uses: svenstaro/upload-release-action@v1-release
+              # uses: svenstaro/upload-release-action@v1-release
+              uses: svenstaro/upload-release-action@v2
               with:
                 repo_token: ${{ secrets.GITHUB_TOKEN }}
                 file: release/*
@@ -82,7 +85,8 @@ jobs:
         runs-on: ubuntu-18.04
         steps:
             - name: Setup Python Environment
-              uses: actions/setup-python@v1.1.1
+              # uses: actions/setup-python@v1.1.1
+              uses: actions/setup-python@v2
               with:
                 python-version: 3.7.*
             - name: Checkout code
@@ -100,7 +104,8 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Production Release
-              uses: svenstaro/upload-release-action@v1-release
+              # uses: svenstaro/upload-release-action@v1-release
+              uses: svenstaro/upload-release-action@v2
               with:
                 repo_token: ${{ secrets.GITHUB_TOKEN }}
                 file: release/*
