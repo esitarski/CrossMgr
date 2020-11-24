@@ -1119,7 +1119,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 		else:
 			cmd = ' '.join( [postPublishCmd, files] )
 
-		Utils.writeLog( '{}:\n'.format( _('Post Publish Cmd'), cmd )
+		Utils.writeLog( '{}:\n'.format( _('Post Publish Cmd'), cmd ) )
 		
 		try:
 			subprocess.check_call( cmd, shell=True )
