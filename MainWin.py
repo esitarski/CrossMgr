@@ -4011,9 +4011,11 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			if Model.race and Model.race.ftpUploadDuringRace:
 				realTimeFtpPublish.publishEntry()		
 	
-	def processJChipListener( self ):
+	def processJChipListener( self, refreshNow=False ):
 		race = Model.race
-		
+		if not race:
+			return
+			
 		if not race or not race.enableJChipIntegration:
 			if ChipReader.chipReaderCur.IsListening():
 				ChipReader.chipReaderCur.StopListener()
@@ -4023,7 +4025,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
 			ChipReader.chipReaderCur.StartListener( race.startTime )
 			GetTagNums( True )
-		
+	
 		data = ChipReader.chipReaderCur.GetData()
 		
 		if not getattr(race, 'tagNums', None):
@@ -4034,8 +4036,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		for d in data:
 			if d[0] != 'data':
 				continue
-			tag = d[1]
-			dt = d[2]
+			tag, dt = d[1], d[2]
 			
 			# Ignore unrecorded reads that happened before the restart time.
 			if race.rfidRestartTime and dt <= race.rfidRestartTime:
@@ -4071,7 +4072,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			# Start the timer for the first interval.
 			self.clprIndex = 0
 			self.clprTime = now() + datetime.timedelta( seconds=delayIntervals[0] )
-			if not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
+			if refreshNow or not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
 				self.processRfidRefresh()
 		elif (		(self.clprTime - now()).total_seconds() > delayIntervals[self.clprIndex] * 0.75 and
 					self.clprIndex < len(delayIntervals)-1 ):
@@ -4080,7 +4081,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.clprIndex += 1
 			self.clprTime += datetime.timedelta( seconds = delayIntervals[self.clprIndex] - delayIntervals[self.clprIndex-1] )
 			delayToGo = max( 10, int((self.clprTime - now()).total_seconds() * 1000.0) )
-			if not self.callLaterProcessRfidRefresh.Start( delayToGo, True ):
+			if refreshNow or not self.callLaterProcessRfidRefresh.Start( delayToGo, True ):
 				self.processRfidRefresh()
 		return False	# Never signal for an update.
 

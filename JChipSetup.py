@@ -109,7 +109,7 @@ class JChipSetupDialog( wx.Dialog ):
 		row = 0
 		rowColSizer.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra')] )
+		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra'),  _('WebReader')] )
 		self.chipReaderType.SetSelection( 0 )
 		self.chipReaderType.Bind( wx.EVT_CHOICE, self.changechipReaderType )
 		rowColSizer.Add( self.chipReaderType,
@@ -224,6 +224,17 @@ class JChipSetupDialog( wx.Dialog ):
 					self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( True )
 		
+		elif selection == 3:	# WebReader
+			self.port.SetValue( 8765 )
+			self.port.SetEditable( False )
+			self.ipaddr.SetEditable( False )
+			rfidReaderHost = ''
+			try:
+				self.ipaddr.SetValue( rfidReaderHost )
+			except Exception as e:
+				self.ipaddr.SetValue( Utils.GetDefaultHost() )
+			self.autoDetect.Show( False )
+		
 		self.Layout()
 		self.Refresh()
 	
@@ -285,17 +296,17 @@ class JChipSetupDialog( wx.Dialog ):
 
 		if self.testJChip.GetValue():
 			correct, reason = CheckExcelLink()
-			explain = 	_('CrossMgr will not be able to associate chip Tags with Bib numbers.') + u'\n' + \
-						_('You may proceed with the test, but you need to fix the Excel sheet.') + u'\n\n' + \
+			explain = 	_('CrossMgr will not be able to associate chip Tags with Bib numbers.') + '\n' + \
+						_('You may proceed with the test, but you need to fix the Excel sheet.') + '\n\n' + \
 						_('See documentation for details.')
 			if not correct:
-				if not Utils.MessageOKCancel( self, (_('Problems with Excel sheet.') + u'\n\n    ' + _('Reason:') + u' {}\n\n{}').format(reason, explain),
+				if not Utils.MessageOKCancel( self, (_('Problems with Excel sheet.') + u'\n\n    ' + _('Reason:') + ' {}\n\n{}').format(reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_WARNING ):
 					self.testJChip.SetValue( False )
 					return
 			tagNums = GetTagNums( True )
 			if correct and not tagNums:
-				if not Utils.MessageOKCancel( self, (_('All Tag entries in the Excel sheet are blank.') + u'\n\n{}').format(explain),
+				if not Utils.MessageOKCancel( self, (_('All Tag entries in the Excel sheet are blank.') + '\n\n{}').format(explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_WARNING ):
 					self.testJChip.SetValue( False )
 					return
@@ -379,6 +390,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
+	import WebServer
 	print( GetAllIps() )
 	#sys.exit()
 	app = wx.App(False)
