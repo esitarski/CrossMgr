@@ -200,7 +200,7 @@ class LapCounter( wx.Panel ):
 		
 		try:
 			categoryLaps = Utils.getMainWin().record.raceHUD.GetLaps()
-		except:
+		except Exception:
 			return
 		
 		for (x, y, w, h), laps, category in zip(self.tessellate(len(self.labels)), categoryLaps, race.getCategories(startWaveOnly=True)):

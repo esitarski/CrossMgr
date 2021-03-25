@@ -604,19 +604,19 @@ def Launch( doRedirect = False ):
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
 				pf.write( '{}: {} Started.\n'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
-		except:
+		except Exception:
 			pass
 	
 	mainWin = MainWin( None )

@@ -24,7 +24,7 @@ def parseTagTime( line, lineNo, errors ):
 		mss += '0' * max(0, 6-len(mss))
 		t = datetime.datetime( int(year), int(mon), int(day), int(hh), int(mm), int(ss), int(mss) )
 		return tag, t
-	except:
+	except Exception:
 		errors.append( u'{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
 		return None, None
 

@@ -132,7 +132,7 @@ class Recommendations( wx.Panel ):
 			try:
 				externalInfo = race.excelLink.read( True )
 				excelErrors = race.excelLink.getErrors()
-			except:
+			except Exception:
 				externalInfo = {}
 				excelErrors = []
 				

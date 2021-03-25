@@ -24,7 +24,7 @@ for lang in languages:
 dir = 'locale_src'
 try:
 	shutil.rmtree( dir )
-except:
+except Exception:
 	pass
 
 os.makedirs( dir )

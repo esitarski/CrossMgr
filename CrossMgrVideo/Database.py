@@ -49,7 +49,7 @@ class Database( object ):
 		'''
 		try:
 			print( 'database bytes: {}'.format( os.stat(self.fname).st_size ) )
-		except:
+		except Exception:
 			pass
 		'''
 		
@@ -125,7 +125,7 @@ class Database( object ):
 	def getsize( self ):
 		try:
 			return os.path.getsize( self.fname )
-		except:
+		except Exception:
 			return None
 	
 	def purgeTriggerWriteDuplicates( self, tsTriggers ):
@@ -484,7 +484,7 @@ if __name__ == '__main__':
 	if False:
 		try:
 			os.remove( os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
-		except:
+		except Exception:
 			pass
 
 	d = Database()

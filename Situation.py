@@ -37,7 +37,7 @@ def GetRaceTMax( category ):
 	results = GetResults( category )
 	try:
 		return max(rr.raceTimes[-1] for rr in results if rr.raceTimes and len(rr.raceTimes) >= 2)
-	except:
+	except Exception:
 		return None
 	
 def GetLapLE( t, raceTimes ):
@@ -106,7 +106,7 @@ def GetSituationGaps( category=None, t=None ):
 	
 	try:
 		externalInfo = race.excelLink.read()
-	except:
+	except Exception:
 		externalInfo = {}
 	
 	def getInfo( bib, lapsDown ):
@@ -272,7 +272,7 @@ class SituationPanel(wx.Panel):
 		groupMax = max( len(group) for group in groups ) if groups else 0
 		try:
 			groupTimeMaxSize = next(group[0][0] for group in groups if len(group) == groupMax)
-		except:
+		except Exception:
 			groupTimeMaxSize = 0
 		
 		# Add the gap information to each group.
@@ -639,7 +639,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			try:
 				externalFields = race.excelLink.getFields()[:]
 				externalInfo = race.excelLink.read()
-			except:
+			except Exception:
 				externalFields = ['Bib#']
 				externalInfo = None
 		

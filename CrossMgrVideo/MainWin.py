@@ -339,7 +339,7 @@ class TriggerDialog( wx.Dialog ):
 			if f == 'bib':
 				try:
 					v = int(v)
-				except:
+				except Exception:
 					v = 99999
 			values.append( v )
 		return values
@@ -384,7 +384,7 @@ class AutoCaptureDialog( wx.Dialog ):
 		def fixValue( v ):
 			try:
 				return abs(float(v))
-			except:
+			except Exception:
 				return None
 		return [fixValue(e.GetValue()) for e in self.editFields]
 		
@@ -767,7 +767,7 @@ class MainWin( wx.Frame ):
 						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 						try:
 							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
-						except:
+						except Exception:
 							args['raceSeconds'] = None
 						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 						fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
@@ -781,7 +781,7 @@ class MainWin( wx.Frame ):
 						try:
 							with open(os.path.join(dirname, fname), 'wb') as f:
 								f.write( AddExifToJpeg(jpg, info['ts'], comment) )
-						except:
+						except Exception:
 							pass
 				
 				# Start a thread so we don't slow down the main capture loop.
@@ -1311,7 +1311,7 @@ class MainWin( wx.Frame ):
 				self.dbWriterThread.join()
 			try:
 				self.db = Database( dbName )
-			except:
+			except Exception:
 				self.db = Database()
 			
 			self.dbWriterQ = Queue()
@@ -1370,7 +1370,7 @@ class MainWin( wx.Frame ):
 	def getCameraResolution( self ):
 		try:
 			return pixelsFromRes( self.cameraResolution.GetLabel() )
-		except:
+		except Exception:
 			return 640, 480
 		
 	def onCloseWindow( self, event ):
@@ -1395,11 +1395,11 @@ class MainWin( wx.Frame ):
 		s_after = self.config.Read('SecondsAfter', u'2.0')
 		try:
 			self.tdCaptureBefore = timedelta(seconds=abs(float(s_before)))
-		except:
+		except Exception:
 			pass
 		try:
 			self.tdCaptureAfter = timedelta(seconds=abs(float(s_after)))
-		except:
+		except Exception:
 			pass
 		
 	def getCameraInfo( self ):
@@ -1441,19 +1441,19 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 			
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
 				pf.write( '{}: {} Started.\n'.format(now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
-		except:
+		except Exception:
 			pass
 	
 	mainWin.Show()
@@ -1462,7 +1462,7 @@ def MainLoop():
 	try:
 		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CrossMgrVideo.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
-	except:
+	except Exception:
 		pass
 
 	# Start processing events.

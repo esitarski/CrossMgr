@@ -247,7 +247,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						if iSecondField >= 0:
 							try:
 								day = int(line[iSecondField+1:iSecondField+2])
-							except:
+							except Exception:
 								day = 0
 						
 						try:

@@ -94,7 +94,7 @@ class ColTable( Grid.GridTableBase ):
 		for e in self.data[iCol]:
 			try:
 				i = float(e)
-			except:
+			except Exception:
 				allNumeric = False
 				break
 		

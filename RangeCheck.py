@@ -37,7 +37,7 @@ class RangeCheck:
 					if lo < hi:
 						self.exclude.update( range(lo, hi+1) )
 				
-			except:
+			except Exception:
 				pass
 		
 		self.exclude = self.exclude & self.include

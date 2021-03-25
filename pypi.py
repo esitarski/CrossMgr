@@ -50,10 +50,10 @@ BuildHelpIndex()
 print( 'Clearing previous contents...' )
 try:
 	subprocess.call( ['rm', '-rf', pypiDir] )
-except:
+except Exception:
 	try:
 		shutil.rmtree( pypiDir, ignore_errors=True )
-	except:
+	except Exception:
 		pass
 	
 os.mkdir( pypiDir )
@@ -234,7 +234,7 @@ subprocess.call( ['python', 'setup.py', 'sdist'] )
 os.chdir( 'dist' )
 try:
 	shutil.move( 'CrossMgr-{}.zip'.format(version), 'PIP-Install-CrossMgr-{}.zip'.format(version) )
-except:
+except Exception:
 	pipName = 'PIP-Install-CrossMgr-{}.tar.gz'.format(version)
 	installDir = os.path.join( os.path.expanduser("~"), 'Google Drive', 'Downloads', 'Mac', 'CrossMgr')
     

@@ -25,7 +25,7 @@ reGender = re.compile( r'\(([^)]+)\)$' )
 def toOrdinal( pos ):
 	try:
 		return Utils.ordinal( int(pos) )
-	except:
+	except Exception:
 		return pos
 		
 def find_le( a, x ):
@@ -204,7 +204,7 @@ class Announcer( wx.Panel ):
 			if leader.interp[leaderLap]:
 				leaderLap -= 1
 			tLeader = leader.raceTimes[leaderLap]
-		except:
+		except Exception:
 			leader = leaderLap = tLeader = None
 			
 		v = category.fullname
@@ -256,7 +256,7 @@ class Announcer( wx.Panel ):
 						numPrev = results[row-1].num
 						if abs(abs(eta - bibETA[results[row-1].num]) < 1.0):
 							iGroup -= 1
-					except:
+					except Exception:
 						pass
 			
 			self.tExpected.append( e.t if e else None )

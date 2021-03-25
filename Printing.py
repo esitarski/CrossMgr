@@ -263,7 +263,7 @@ class CrossMgrPrintout( wx.Printout ):
 		self.pageInfo = {}
 		try:
 			numCategories = len(self.categories)
-		except:
+		except Exception:
 			numCategories = 0
 		if numCategories == 0:
 			return (1,1,1,1)
@@ -336,7 +336,7 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		}
 		try:
 			fileSuffix[wx.BITMAP_TYPE_TIFF] = 'tiff'
-		except:
+		except Exception:
 			pass
 		
 		fileFormat = wx.BITMAP_TYPE_BMP

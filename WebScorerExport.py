@@ -82,7 +82,7 @@ def WebScorerExport( fname ):
 	def toInt( n ):
 		try:
 			return int(n.split()[0])
-		except:
+		except Exception:
 			return n
 	
 	with io.open(fname, 'w', encoding = 'utf-16') as txtFile:

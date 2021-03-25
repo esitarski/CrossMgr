@@ -265,7 +265,7 @@ def UCIExcel( category, fname, startList=False ):
 		results = GetResults( category )
 		try:
 			rrWinner = results[0]
-		except:
+		except Exception:
 			pass
 	
 	if startList:
@@ -357,19 +357,19 @@ def UCIExcel( category, fname, startList=False ):
 	def toInt( n ):
 		try:
 			return int(n.split()[0])
-		except:
+		except Exception:
 			return n
 
 	def getFinishTime( rr ):
 		if rr.status != Finisher:
-			return u''
+			return ''
 		if rrWinner and rrWinner.laps != rr.laps:
 			return rr.laps - rrWinner.laps
 		try:
 			finishTime = rr.lastTime - rr.raceTimes[0]
 			return Utils.formatTime(finishTime, forceHours=True, twoDigitHours=True)
-		except:
-			return u''
+		except Exception:
+			return ''
 			
 	def getIRM( rr ):
 		if 'REL' in '{}'.format(rr.pos):

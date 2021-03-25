@@ -45,7 +45,7 @@ def RidersCanSwap( riderResults, num, numAdjacent ):
 def toInt( n ):
 	try:
 		return int(n.split()[0])
-	except:
+	except Exception:
 		return 99999
 	
 class RiderResult:
@@ -164,7 +164,7 @@ def getPulledCmpTuple( rr, rider, winnerLaps, decreasingLapsToGo=True ):
 	else:
 		try:
 			lapsToGo = winnerLaps - (len(rr.lapTimes) + int(rider.tStatus - rr.raceLaps[-1] > 20.0))
-		except:
+		except Exception:
 			lapsToGo = winnerLaps
 	return (lapsToGo*f, rider.pulledSequence or 9999999, rr.raceTimes[-1] if rr.raceTimes else 24.0*60*60*300, rr.num, rr)
 	
@@ -571,12 +571,12 @@ def GetNonWaveCategoryResults( category ):
 		rr = riderResults[-1]
 		try:
 			startOffset = rr.raceTimes[0]
-		except:
+		except Exception:
 			startOffset = 0.0
 			
 		try:
 			rr.lastTime = max( 0.0, rr.lastTime - startOffset )
-		except:
+		except Exception:
 			pass
 			
 		rr.raceTimes = [t - startOffset for t in rr.raceTimes]
@@ -647,7 +647,7 @@ def GetResultsWithData( category ):
 		externalInfo = excelLink.read()
 		ignoreFields = set(IgnoreFields)
 		externalFields = [f for f in excelLink.getFields() if f not in ignoreFields]
-	except:
+	except Exception:
 		excelLink = None
 		externalFields = []
 		externalInfo = {}
@@ -685,12 +685,12 @@ def GetResultsWithData( category ):
 			
 			try:
 				startOffset = rr.raceTimes[0]
-			except:
+			except Exception:
 				startOffset = 0.0
 				
 			try:
 				ttPenalty = rr.ttPenalty
-			except:
+			except Exception:
 				ttPenalty = 0.0
 			
 			# Adjust the true ride time by the factor (subtract the start offset and any penalties, add them back later).
@@ -757,7 +757,7 @@ def GetLastFinisherTime():
 	finisher = Model.Rider.Finisher
 	try:
 		return max( r.lastTime for r in results if r.status == finisher )
-	except:
+	except Exception:
 		return 0.0
 	
 def GetLeaderFinishTime():
@@ -817,7 +817,7 @@ def UnstartedRaceDataProlog( getExternalData = True ):
 		if race and getExternalData and race.isUnstarted():
 			try:
 				externalInfo = race.excelLink.read()
-			except:
+			except Exception:
 				externalInfo = {}
 		
 		# Add all numbers from the spreadsheet if they are not already in the race.

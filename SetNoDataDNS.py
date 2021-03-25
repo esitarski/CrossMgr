@@ -8,7 +8,7 @@ def SetNoDataDNS():
 		
 	try:
 		externalInfo = race.excelLink.read()
-	except:
+	except Exception:
 		return
 	
 	Finisher = Model.Rider.Finisher

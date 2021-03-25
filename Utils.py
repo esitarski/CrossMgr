@@ -16,7 +16,7 @@ import wx.lib.agw.genericmessagedialog
 if 'WXMAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
-	except:
+	except Exception:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
 	if os.path.isdir( os.path.join(topdirName, 'CrossMgrImages') ):
 		dirName = topdirName
@@ -33,7 +33,7 @@ if 'WXMAC' in wx.Platform:
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
+	except Exception:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 	
 	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
@@ -72,7 +72,7 @@ if not lang:
 		import ctypes
 		windll = ctypes.windll.kernel32
 		lang = locale.windows_locale[ windll.GetUserDefaultUILanguage() ]
-	except:
+	except Exception:
 		lang = locale.getdefaultlocale()[0]
 
 # Finally, if that doesn't work, default to English.
@@ -97,7 +97,7 @@ def initTranslation():
 		
 		try:
 			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
-		except:
+		except Exception:
 			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'))
 		
 		# Try to use a translation matching the user's language.
@@ -105,7 +105,7 @@ def initTranslation():
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
 			builtins.__dict__['_'] = translate = translation.ugettext
-		except:
+		except Exception:
 			pass
 		
 		extra_fields = {
@@ -195,10 +195,10 @@ def stripLeadingZeros( s ):
 def plat_ind_basename( s ):
 	try:
 		return s[s.rindex('/')+1:]
-	except:
+	except Exception:
 		try:
 			return s[s.rindex('\\')+1:]
-		except:
+		except Exception:
 			return s
 	
 def toAscii( s ):
@@ -239,7 +239,7 @@ def removeDiacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 	
 def GetFileName( rDate, rName, rNum, rMemo ):
@@ -253,13 +253,13 @@ def Play( soundFile ):
 	if sys.platform.startswith('linux'):
 		try:
 			subprocess.Popen(['aplay', '-q', soundFile])
-		except:
+		except Exception:
 			pass
 		return True
 		
 	try:
 		return soundCache[soundFile].Play()
-	except:
+	except Exception:
 		soundCache[soundFile] = wx.adv.Sound( soundFile )
 		return soundCache[soundFile].Play()
 		
@@ -500,7 +500,7 @@ def getHomeDir( appName='CrossMgr' ):
 	try:
 		if os.path.basename(homedir) == '.{}'.format(appName):
 			homedir = os.path.join( os.path.dirname(homedir), '.{}App'.format(appName) )
-	except:
+	except Exception:
 		pass
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
@@ -624,25 +624,25 @@ def writeRace():
 def writeConfig( key, value ):
 	try:
 		return mainWin.config.Write( key, value )
-	except:
+	except Exception:
 		pass
 
 def readConfig( key, defaultVal ):
 	try:
 		return mainWin.config.Read( key, defaultVal )
-	except:
+	except Exception:
 		return None
 	
 def getFileName():
 	try:
 		return mainWin.fileName
-	except:
+	except Exception:
 		return None
 	
 def getFileDir():
 	try:
 		return os.path.dirname(os.path.abspath(mainWin.fileName))
-	except:
+	except Exception:
 		return os.path.expanduser('~')
 	
 def isMainWin():
@@ -705,7 +705,7 @@ def ParsePhotoFName( fname ):
 	
 	try:
 		raceTime = float(hour)*(60.0*60.0) + float(minute)*60.0 + float(second) + float(decimal)/(10**len(decimal))
-	except:
+	except Exception:
 		writeLog( 'ParsePhotoFName: raceTime fname="{}"'.format(fname) )
 		logException( e, sys.exc_info() )
 		raise
@@ -740,7 +740,7 @@ def GetDefaultHost():
 						DEFAULT_HOST = currentaddress
 						done = True
 						break
-	except:
+	except Exception:
 		DEFAULT_HOST = '0.0.0.0'
 
 	return DEFAULT_HOST

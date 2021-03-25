@@ -140,7 +140,7 @@ def remove_accents( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 	
 def colwidth(n):

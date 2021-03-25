@@ -280,18 +280,18 @@ def GetPreviousFileName():
 	file = None
 	try:
 		fnameCur = os.path.splitext(Model.race.getFileName())[0] + '.html'
-	except:
+	except Exception:
 		fnameCur = None
 	
 	files = contentBuffer._getFiles()
 	try:
 		file = files[files.index(fnameCur)-1]
-	except:
+	except Exception:
 		pass
 	if file is None:
 		try:
 			file = files[-1]
-		except:
+		except Exception:
 			pass
 	return file
 	
@@ -383,7 +383,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				success = True
 				try:
 					rfid_data = json.loads( post_body )
-				except:
+				except Exception:
 					success = False
 				if success:
 					data = []
@@ -391,7 +391,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 						assert( len(d) == 2 and all(f in d for f in ('t','tag')) )
 						try:
 							data.append( ('data', d['tag'], datetime.datetime.fromisoformat( d['t'] )) )
-						except:
+						except Exception:
 							pass
 					WebReader.SetData( data )
 					
@@ -433,7 +433,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				# Used by Christian's algorithm to estimate the round-trip time and get a better time correction between the two computers.
 				try:
 					clientTime = float( urllib.parse.parse_qs(up.query).get('clientTime', None)[0] )
-				except:
+				except Exception:
 					clientTime = 0.0
 				content = json.dumps( {
 						'serverTime':epochTime(),
@@ -456,7 +456,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				if up.path == '/CurrentResults.html':
 					try:
 						file = os.path.splitext(Model.race.getFileName())[0] + '.html'
-					except:
+					except Exception:
 						pass
 				
 				elif up.path == '/PreviousResults.html':
@@ -499,7 +499,7 @@ def GetCrossMgrHomePage( ip=None ):
 		hostname = socket.gethostname()
 		try:
 			socket.gethostbyname( hostname )
-		except:
+		except Exception:
 			hostname = DEFAULT_HOST
 	return 'http://{}:{}'.format(hostname, PORT_NUMBER)
 
@@ -629,7 +629,7 @@ def WsRefresh( updatePrevious=False ):
 def GetLapCounterRefresh():
 	try:
 		return Utils.mainWin.lapCounter.GetState()
-	except:
+	except Exception:
 		return {
 			'cmd': 'refresh',
 			'labels': [],

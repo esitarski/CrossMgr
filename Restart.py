@@ -133,7 +133,7 @@ class Restart( wx.Dialog ):
 		
 		try:
 			lap = int( self.lap.GetStringSelection() )
-		except:
+		except Exception:
 			return
 			
 		if not Utils.MessageOKCancel(self, _('Restart Race Now?\n\n'), _('Restart Race')):

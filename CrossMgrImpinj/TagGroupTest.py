@@ -24,7 +24,7 @@ def Test():
 					tagID = fields[1]
 					t     = float(fields[2])
 					db    = int(fields[4])
-				except:
+				except Exception:
 					continue
 				
 				if tFirst is None: tFirst = t

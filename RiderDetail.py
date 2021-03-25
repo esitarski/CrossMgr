@@ -97,7 +97,7 @@ class AdjustTimeDialog( wx.Dialog ):
 		ft = ft if ft else None
 		try:
 			self.rideTime.SetLabel( Utils.formatTime(ft - st, True) )
-		except:
+		except Exception:
 			self.rideTime.SetLabel( '' )
 
 	def onOK( self, event ):
@@ -476,7 +476,7 @@ class RiderDetail( wx.Panel ):
 		lapValue = self.grid.GetCellValue(row, self.nameCol['Lap']).strip()
 		try:
 			return int(lapValue)
-		except:
+		except Exception:
 			return None
 		
 	def getEntryFromClick( self, event ):
@@ -487,7 +487,7 @@ class RiderDetail( wx.Panel ):
 		
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return False
 			
 		self.iLap = self.getLapClicked( event )
@@ -502,7 +502,7 @@ class RiderDetail( wx.Panel ):
 		
 		try:
 			self.entry = entries[self.iLap]
-		except:
+		except Exception:
 			return False
 			
 		return True
@@ -575,13 +575,13 @@ class RiderDetail( wx.Panel ):
 		
 		try:
 			self.visibleRow = min( rows )
-		except:
+		except Exception:
 			self.visibleRow = None
 			
 		if len(rows) > 1:
 			try:
 				num = int(self.num.GetValue())
-			except:
+			except Exception:
 				return
 			if not Model.race or num not in Model.race:
 				return
@@ -614,7 +614,7 @@ class RiderDetail( wx.Panel ):
 	def OnPopupAddMissingLastLap( self, event ):
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return
 			
 		race = Model.race
@@ -655,7 +655,7 @@ class RiderDetail( wx.Panel ):
 		self.grid.SelectRow( self.eventRow )
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return
 			
 		if not Model.race or num not in Model.race:
@@ -695,7 +695,7 @@ class RiderDetail( wx.Panel ):
 			
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return
 			
 		with Model.LockRace() as race:
@@ -719,7 +719,7 @@ class RiderDetail( wx.Panel ):
 			
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return
 			
 		with Model.LockRace() as race:
@@ -766,7 +766,7 @@ class RiderDetail( wx.Panel ):
 			
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return
 			
 		with Model.LockRace() as race:
@@ -813,7 +813,7 @@ class RiderDetail( wx.Panel ):
 			
 		try:
 			num = int(self.num.GetValue())
-		except:
+		except Exception:
 			return
 			
 		with Model.LockRace() as race:
@@ -956,7 +956,7 @@ class RiderDetail( wx.Panel ):
 		num = self.num.GetValue()
 		try:
 			num = int(num)
-		except:
+		except Exception:
 			return None, None, None
 			
 		with Model.LockRace() as race:
@@ -965,7 +965,7 @@ class RiderDetail( wx.Panel ):
 
 		try:
 			times = self.ganttChart.data[0]
-		except:
+		except Exception:
 			return None, None, None
 		return num, lapCur, times
 	
@@ -998,7 +998,7 @@ class RiderDetail( wx.Panel ):
 		
 			try:
 				riderInfo = race.excelLink.read()[num]
-			except:
+			except Exception:
 				riderInfo = {}
 				
 			try:
@@ -1115,7 +1115,7 @@ class RiderDetail( wx.Panel ):
 			with Model.LockRace() as race:
 				race.getRider(self.entry.num).setStatus( Model.Rider.Pulled, self.entry.t + 1 )
 				race.setChanged()
-		except:
+		except Exception:
 			pass
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
@@ -1132,7 +1132,7 @@ class RiderDetail( wx.Panel ):
 			with Model.LockRace() as race:
 				race.getRider(self.entry.num).setStatus( Model.Rider.DNF, self.entry.t + 1 )
 				race.setChanged()
-		except:
+		except Exception:
 			pass
 		wx.CallAfter( self.refresh )
 		wx.CallAfter( Utils.refreshForecastHistory )
@@ -1351,7 +1351,7 @@ class RiderDetail( wx.Panel ):
 			try:
 				catInfo = categoryDetails[category.fullname]
 				maxLap = catInfo['laps']
-			except:
+			except Exception:
 				maxLap = race.getMaxLap()
 				
 			maxLap = (maxLap or 0)		# Ensure that maxLap is not None
@@ -1390,7 +1390,7 @@ class RiderDetail( wx.Panel ):
 
 			try:
 				missingCount = sum( 1 for b in appearedInLap if not b ) if rider.status == Model.Rider.Finisher else 0
-			except:
+			except Exception:
 				missingCount = 0
 			if missingCount:
 				notInLapStr = u'{}: {}'.format(_('Lapped by Leader'), u', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))

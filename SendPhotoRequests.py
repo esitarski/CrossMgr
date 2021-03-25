@@ -71,7 +71,7 @@ def SendPhotoRequests( bibRaceSeconds, includeFTP=True ):
 		
 	try:
 		externalInfo = race.excelLink.read( True )
-	except:
+	except Exception:
 		externalInfo = {}
 	
 	dirName = getPhotoDirName( Utils.getFileName() )

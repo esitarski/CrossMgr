@@ -226,13 +226,13 @@ class Results( wx.Panel ):
 		
 		try:
 			num = int(self.labelGrid.GetCellValue(row, 1))
-		except:
+		except Exception:
 			return
 
 		if num in self.closeFinishBibs:
 			try:
 				pos = int(self.labelGrid.GetCellValue(row, 0))
-			except:
+			except Exception:
 				return
 			event.GetEventObject().SetToolTip(u'{} {}, {} {}: {} {}'.format(
 					_('Pos'), pos,
@@ -476,7 +476,7 @@ class Results( wx.Panel ):
 		for r in range(self.lapGrid.GetNumberRows()):		
 			try:
 				cellNum = int(self.labelGrid.GetCellValue(r,1))
-			except:
+			except Exception:
 				continue
 			
 			if cellNum == numSelectSearch:
@@ -537,7 +537,7 @@ class Results( wx.Panel ):
 			try:
 				colName = self.lapGrid.GetColLabelValue( col )
 				self.iLap = int( reLapMatch.match(colName).group(1) )
-			except:
+			except Exception:
 				pass
 		
 		value = self.labelGrid.GetCellValue( row, 1 )
@@ -616,13 +616,13 @@ class Results( wx.Panel ):
 			def getSortTime( rr ):
 				try:
 					return rr.firstTime + rr._lastTimeOrig
-				except:
+				except Exception:
 					return 0
 		else:
 			def getSortTime( rr ):
 				try:
 					return rr._lastTimeOrig
-				except:
+				except Exception:
 					return 0
 					
 		results = sorted(
@@ -806,7 +806,7 @@ class Results( wx.Panel ):
 					if int(name.split()[1]) == sortLap:
 						name = u'<{}>\n{}'.format(name,
 												[_('by Lap Time'), _('by Race Time'), _('by Lap Speed'), _('by Race Speed')][self.selectDisplay])
-				except:
+				except Exception:
 					pass
 				colnames.append( name )
 		elif sortLabel:
@@ -856,7 +856,7 @@ class Results( wx.Panel ):
 			for r in range(self.lapGrid.GetNumberRows()):
 				try:
 					rider = riders[int(self.labelGrid.GetCellValue(r, 1))]
-				except:
+				except Exception:
 					continue
 					
 				try:

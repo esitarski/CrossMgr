@@ -169,7 +169,7 @@ class Keypad( wx.Panel ):
 		self.GetParent().GetParent().GetParent().SetSashPosition( SplitterMaxPos if self.showTouchScreen else SplitterMinPos )
 		try:
 			self.GetParent().GetSizer().Layout()
-		except:
+		except Exception:
 			pass
 	
 	def onNumPress( self, event, value ):
@@ -252,7 +252,7 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 		bib = int(leader.split()[-1])
 		category = race.getCategory( bib )
 		lapDistance = category.getLapDistance( lap )
-	except:
+	except Exception:
 		pass
 	if lapDistance is not None:
 		sLap = (lapDistance / tLap) * 60.0*60.0
@@ -535,7 +535,7 @@ class NumKeypad( wx.Panel ):
 				# Make sure it is a recorded time, not a projected time.
 				try:
 					tLapStart = rr.raceTimes[-2] if rr.interp[-1] else rr.raceTimes[-1]
-				except:
+				except Exception:
 					tLapStart = None
 				
 				setLapCounter(
@@ -611,7 +611,7 @@ class NumKeypad( wx.Panel ):
 		if mainWin is not None:
 			try:
 				mainWin.refreshRaceAnimation()
-			except:
+			except Exception:
 				pass
 	
 	def onPhotoButton( self, event ):
@@ -662,7 +662,7 @@ class NumKeypad( wx.Panel ):
 			if race.isTimeTrial:
 				try:
 					tSearch -= race.riders[rr.num].firstTime
-				except:
+				except Exception:
 					pass
 			lap = min( catLapsMax[category], max( 1, bisect.bisect_left(rr.raceTimes, tSearch) ) )
 			onCourseCatLap[category][lap] += 1

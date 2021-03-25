@@ -40,7 +40,7 @@ def GetAllIps():
 	for a in addrInfo:
 		try:
 			ip = a[4][0]
-		except:
+		except Exception:
 			continue
 		if reIP.search(ip):
 			ips.add( ip )

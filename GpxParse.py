@@ -30,7 +30,7 @@ class GpxContentHandler( xml.sax.ContentHandler ):
 		elif self.fieldCur == 'time':
 			try:
 				self.fields['time'] = datetime.datetime( *[int(f) for f in reGpxTime.split(content.strip()) if f] )
-			except:
+			except Exception:
 				pass
 			self.fieldCur = None
 	

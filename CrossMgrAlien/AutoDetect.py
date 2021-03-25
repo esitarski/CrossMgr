@@ -19,9 +19,9 @@ def GetDefaultHost():
 						if addr != '127.0.0.1':
 							DEFAULT_HOST = addr
 							break
-				except:
+				except Exception:
 					pass
-		except:
+		except Exception:
 			pass
 	return DEFAULT_HOST
 
@@ -67,23 +67,23 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 		if not (0 <= ipTest[-1] < 256):
 			continue
 			
-		alienHost = u'.'.join( u'{}'.format(v) for v in ipTest )
+		alienHost = '.'.join( '{}'.format(v) for v in ipTest )
 		
 		cmdSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 		cmdSocket.settimeout( 0.5 )
 		try:
 			cmdSocket.connect( (alienHost, alienPort) )
-		except:
+		except Exception:
 			continue
 		
 		for i, cmd in enumerate(initCmds):
 			try:
-				cmdSocket.sendall( u'{}{}{}'.format('' if i < 2 else CmdPrefix, cmd, CmdDelim).encode() )
-			except:
+				cmdSocket.sendall( '{}{}{}'.format('' if i < 2 else CmdPrefix, cmd, CmdDelim).encode() )
+			except Exception:
 				continue
 			try:
 				response = getResponse( cmdSocket )
-			except:
+			except Exception:
 				continue
 			
 			# Check if we could successfully get the ReaderName from the #2 command.  If so, the login was successful.
@@ -94,7 +94,7 @@ def findAlienHost( alienPort = DefaultAlienCmdPort ):
 			
 		try:
 			cmdSocket.close()
-		except:
+		except Exception:
 			pass
 			
 		if success:

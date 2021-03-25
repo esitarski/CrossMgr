@@ -241,7 +241,7 @@ def SendData():
 				sock.send( message.encode() )
 				sock.send( message.encode() )
 				iMessage += 1
-			except:
+			except Exception:
 				print ( 'Send failed.  Attempting to reconnect...' )
 				sock.close()
 				break

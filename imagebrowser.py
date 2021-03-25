@@ -629,7 +629,7 @@ class ImageDialog(wx.Dialog):
             try:
                 self.tb.SetSelection(0)
                 self.SetListValue(0)
-            except:
+            except Exception:
                 self.image_view.SetValue(None)
         else:
             self.image_view.SetValue(None)
@@ -686,7 +686,7 @@ class FindFiles:
 
                 if pattern.match(value) != None:
                     filelist.append(i)
-        except:
+        except Exception:
             pass
 
         self.files = filelist

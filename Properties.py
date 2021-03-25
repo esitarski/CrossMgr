@@ -599,7 +599,7 @@ class GPXProperties( wx.Panel ):
 	def onReverse( self, event ):
 		try:
 			Model.race.geoTrack.reverse()
-		except:
+		except Exception:
 			pass
 		self.refresh()
 	
@@ -1774,7 +1774,7 @@ def ApplyDefaultTemplate( race ):
 	template = Template.Template()
 	try:
 		template.read( fname )
-	except:
+	except Exception:
 		return
 	template.toRace( race )
 

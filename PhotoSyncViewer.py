@@ -23,7 +23,7 @@ def getTitle( num, t ):
 		
 	try:
 		externalInfo = Model.race.excelLink.read()
-	except:
+	except Exception:
 		name = str(num)
 	else:
 		info = externalInfo.get(num, {})

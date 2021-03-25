@@ -406,7 +406,7 @@ def getter( self, cmd, inType, outType ):
 		ieq = response.index( '=' )
 		retcmd, retValue = response[:ieq], response[ieq+1:]
 		ret = outType.fromStr( retValue.strip() )
-	except:
+	except Exception:
 		ret = outType.fromStr( response )
 	if self.testMode:
 		print('{}:'.format(cmd), ret)
@@ -521,7 +521,7 @@ class AlienReader( object ):
 			ieq = response.index( '=' )
 			retName, retValue = response[:ieq], response[ieq+1:]
 			ret = outType.fromStr( retValue.strip() )
-		except:
+		except Exception:
 			ret = outType.fromStr( response )
 		if self.testMode:
 			print ( '{}:'.format(name), ret )

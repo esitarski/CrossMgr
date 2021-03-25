@@ -100,7 +100,7 @@ def removeDiacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 	
 class Alien( object ):
@@ -265,7 +265,7 @@ class Alien( object ):
 					self.messageQ.put( ('Alien', 'Heartbeat Syntax error:', e) )
 					self.messageQ.put( ('Alien', data) )
 					continue
-				except:
+				except Exception:
 					self.messageQ.put( ('Alien', 'Heartbeat Syntax error') )
 					self.messageQ.put( ('Alien', data) )
 					continue
@@ -374,7 +374,7 @@ class Alien( object ):
 					# Open the log file.
 					try:
 						pf = open( self.fname, 'a' )
-					except:
+					except Exception:
 						pf = None
 
 					# Process each tag message.

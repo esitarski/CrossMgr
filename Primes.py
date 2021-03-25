@@ -220,7 +220,7 @@ class Primes( wx.Panel ):
 		
 		try:
 			nextPrime['position'] += 1
-		except:
+		except Exception:
 			pass
 		nextPrime['winnerBib'] = None
 		race.primes = race.primes[:rowNext+1] + [nextPrime] + race.primes[rowNext+1:]
@@ -377,7 +377,7 @@ def GetGrid():
 		excelLink = race.excelLink
 		externalFields = set(excelLink.getFields())
 		externalInfo = excelLink.read()
-	except:
+	except Exception:
 		excelLink = None
 		externalFields = set()
 		externalInfo = {}

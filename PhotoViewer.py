@@ -64,14 +64,14 @@ def getRiderNameFromFName( fname ):
 	# Get the rider name based on the picture fname
 	try:
 		num, raceTime, count, photoTime = Utils.ParsePhotoFName(fname)
-	except:
+	except Exception:
 		return ''
 		
 	name = ''
 	if num:
 		try:
 			externalInfo = Model.race.excelLink.read()
-		except:
+		except Exception:
 			externalInfo = {}
 		info = externalInfo.get(num, {})
 		name = getRiderName( info )
@@ -111,7 +111,7 @@ class PhotoPrintout(wx.Printout):
 		dc = self.GetDC()
 		try:
 			bitmap = wx.Bitmap( self.fname, wx.BITMAP_TYPE_JPEG )
-		except:
+		except Exception:
 			return False
 			
 		image = bitmap.ConvertToImage()
@@ -214,7 +214,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.thumbSelected = self.thumbs.GetSelection()
 		try:
 			self.thumbFileName = self.thumbs.GetSelectedItem(0).GetFullFileName()
-		except:
+		except Exception:
 			self.thumbFileName = ''
 		self.drawMainPhoto()
 		if event:
@@ -229,7 +229,7 @@ class PhotoViewerDialog( wx.Dialog ):
 	def OnCopyToClipboard( self, event ):
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
-		except:
+		except Exception:
 			return
 		
 		if not wx.TheClipboard.Open(): 
@@ -257,7 +257,7 @@ class PhotoViewerDialog( wx.Dialog ):
 	def OnPrint( self, event ):
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
-		except:
+		except Exception:
 			Utils.MessageOK( self, _('No Photo Available.'), _('Print Failed'), iconMask = wx.ICON_ERROR )
 			return
 		
@@ -307,7 +307,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		# Update the title based on the picture shown.
 		try:
 			num = int(os.path.basename(self.thumbFileName).split('-')[1])
-		except:
+		except Exception:
 			num = None
 			
 		if num:
@@ -318,7 +318,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
-		except:
+		except Exception:
 			self.mainPhoto.SetBitmap( wx.NullBitmap )
 			self.mainPhoto.Refresh()
 			return

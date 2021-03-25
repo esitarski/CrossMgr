@@ -56,7 +56,7 @@ def getHeaderBitmap():
 			try:
 				bitmap = ImageIO.toBitmapFromBuf( Model.race.headerImage )
 				return bitmap
-			except:
+			except Exception:
 				pass
 		graphicFName = Utils.getMainWin().getGraphicFName()
 		extension = os.path.splitext( graphicFName )[1].lower()
@@ -724,7 +724,7 @@ class ExportGrid:
 		catDetails = { cd['name']:cd for cd in GetCategoryDetails() }
 		try:
 			cd = catDetails[category.fullname]
-		except:
+		except Exception:
 			cd = None
 			
 		if category:

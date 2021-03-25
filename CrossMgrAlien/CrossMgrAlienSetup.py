@@ -45,11 +45,11 @@ subprocess.call( [
 wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'
 try:
 	shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
-except:
+except Exception:
 	pass
 try:
 	shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
-except:
+except Exception:
 	pass
 
 # Add images to the distribution folder.
@@ -102,7 +102,7 @@ newExeName = 'CrossMgrAlien_Setup_v' + vNum + '.exe'
 
 try:
 	os.remove( os.path.join('install', newExeName) )
-except:
+except Exception:
 	pass
 	
 shutil.copy( os.path.join('install','CrossMgrAlien_Setup.exe'), os.path.join('install',newExeName) )
@@ -115,7 +115,7 @@ newZipName = newExeName.replace( '.exe', '.zip' )
 
 try:
 	os.remove( newZipName )
-except:
+except Exception:
 	pass
 
 z = zipfile.ZipFile(newZipName, "w")

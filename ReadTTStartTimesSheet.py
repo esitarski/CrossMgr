@@ -391,11 +391,11 @@ def DoImportTTStartTimes( race, excelLink ):
 			fields = startTime.split( ':' )
 			try:
 				hh, mm, ss = [float(f.strip()) for f in fields[:3]]
-			except:
+			except Exception:
 				try:
 					hh = 0.0
 					mm, ss = [float(f.strip()) for f in fields[:2]]
-				except:
+				except Exception:
 					errors.append( u'{} {}:  {}: "{}"'.format(_('Bib'), num, _('cannot read time format'), startTime) )
 					continue
 			t = hh * 60.0*60.0 + mm * 60.0 + ss

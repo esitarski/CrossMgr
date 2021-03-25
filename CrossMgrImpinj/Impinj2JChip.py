@@ -183,7 +183,7 @@ class Impinj2JChip( object ):
 					sock.send( message.encode() )
 					self.tagCount += 1
 					self.messageQ.put( ('Impinj2JChip', u'Forwarded {}: {}'.format(self.tagCount, message[:-1])) )
-				except:
+				except Exception:
 					self.dataQ.put( d )	# Put the data back on the queue for resend.
 					self.messageQ.put( ('Impinj2JChip', u'Lost CrossMgr Connection.  Attempting to reconnect...') )
 					break
