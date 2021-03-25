@@ -34,7 +34,7 @@ def GetFlagBase64( ioc ):
 	try:
 		with open(fname, 'rb') as f:
 			flagBase64Cache[ioc] = 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
-	except:
+	except Exception:
 		flagBase64Cache[ioc] = None
 		
 	return flagBase64Cache[ioc]

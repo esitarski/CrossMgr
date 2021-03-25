@@ -154,6 +154,7 @@ function Cleanup($program)
 		'TagReadWrite/__pycache__',
 		'CrossMgrAlien/__pycache__',
 		'SeriesMgr/__pycache__',
+		'PointsRaceMgr/__pycache__',
 		'dist',
 		'build',
 		'release',
@@ -606,8 +607,9 @@ function doHelp
 	-trw         - Build TagReadWrite
 	-smgr        - Build SeriesMgr
 	-cmgra       - Build CrossMgrAlien
-	-video       - BUild CrossMgrVideo
-	-cam         - BUild CrossMgrCamera (NOT COMPLETE)
+	-video       - Build CrossMgrVideo
+	-cam         - Build CrossMgrCamera (NOT COMPLETE)
+	-pts         - Build PointsRaceMgr
 	-all         - Build all programs
 	
 	-checkver     - check python version
@@ -667,6 +669,7 @@ if ((($clean -eq $false) -and ($setupenv -eq $false) -and ($fix -eq $false)) -an
 		($cmgra -eq $false) -and
 		($video -eq $false) -and
 		($cam -eq $false) -and
+		($pts -eq $false) -and
 		($all -eq $false))
 {
 	Write-Host "You must specify a program to build or -all"
@@ -706,6 +709,10 @@ if ($cam -eq $true)
 	exit 1
 	#$programs += 'CrossMgrCamera'
 }
+if ($pts -eq $true)
+{
+	$programs += 'PointsRaceMgr'
+}
 if ($all -eq $true)
 {
 	$programs = @(
@@ -714,7 +721,8 @@ if ($all -eq $true)
 		'TagReadWrite',
 		'SeriesMgr',
 		'CrossMgrAlien',
-		'CrossMgrVideo'
+		'CrossMgrVideo',
+		'PointsRaceMgr'
 		)
 }
 if ($setupenv -eq $true)

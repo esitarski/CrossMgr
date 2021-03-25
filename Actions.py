@@ -348,7 +348,7 @@ class Actions( wx.Panel ):
 			try:
 				externalFields = race.excelLink.getFields()
 				externalInfo = race.excelLink.read()
-			except:
+			except Exception:
 				externalFields = []
 				externalInfo = {}
 			if not externalInfo:
@@ -409,7 +409,7 @@ class Actions( wx.Panel ):
 		OutputStreamer.StopStreamer()
 		try:
 			ChipReader.chipReaderCur.StopListener()
-		except:
+		except Exception:
 			pass
 
 		if getattr(Model.race, 'ftpUploadDuringRace', False):

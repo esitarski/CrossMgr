@@ -14,7 +14,7 @@ body_number	racer_code	family_name	first_name	team	uci_id	gender	birth_date	entr
 def toInt( n ):
 	try:
 		return int(n.split()[0])
-	except:
+	except Exception:
 		return n
 
 def getStatusName( s ):

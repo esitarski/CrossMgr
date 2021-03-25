@@ -27,7 +27,7 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480 ):
 	try:
 		if platform.system() == 'Linux':	# HACK HACK HACK
 			cap.set(cv2.CAP_PROP_MODE, cv2.CAP_MODE_YUYV)
-	except:
+	except Exception:
 		pass
 	
 	return cap

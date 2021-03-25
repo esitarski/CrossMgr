@@ -18,7 +18,7 @@ def resetVersionCache( fname = None ):
 		
 	try:
 		os.remove( fname )
-	except:
+	except Exception:
 		pass
 
 def isUpgradeRecommended( fname = None ):
@@ -37,7 +37,7 @@ def isUpgradeRecommended( fname = None ):
 			
 			if verCur < verMax:
 				return True
-	except:
+	except Exception:
 		pass
 	return False
 	
@@ -54,7 +54,7 @@ def updateVersionCache( fname = None ):
 	try:
 		if time.time() < os.path.getmtime(fname) + (3 * 24 * 60 * 60):
 			return
-	except:
+	except Exception:
 		pass
 		
 	timeoutSave = socket.getdefaulttimeout()
@@ -77,7 +77,7 @@ def updateVersionCache( fname = None ):
 			try:
 				ver = reVersion.search(zip).group(1)
 				vers.append( tuple(int(n) for n in ver.split('_')) )
-			except:
+			except Exception:
 				pass
 		
 		# Get the max version number.
@@ -88,7 +88,7 @@ def updateVersionCache( fname = None ):
 			f.write( '.'.join( str(n) for n in verMax ) )
 			f.write( '\n' )
 		
-	except:
+	except Exception:
 		pass
 		
 	socket.setdefaulttimeout( timeoutSave )

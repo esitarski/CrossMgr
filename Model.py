@@ -267,7 +267,7 @@ class Category:
 					self.catType = self.CatComponent
 				elif catType.startswith(u'custom'):
 					self.catType = self.CatCustom
-			except:
+			except Exception:
 				pass
 		
 		def toBool( v ):
@@ -324,7 +324,7 @@ class Category:
 				self.gender = 'Men'
 			elif genderFirstChar in 'wfld':
 				self.gender = 'Women'
-		except:
+		except Exception:
 			pass
 			
 		self.lappedRidersMustContinue = False
@@ -673,7 +673,7 @@ class Rider(object):
 			# If we only have one lap, make sure we consider the start offset.
 			try:
 				startOffset = race.getStartOffset( self.num ) if not race.isTimeTrial else 0.0
-			except:
+			except Exception:
 				startOffset = 0.0
 			return self.times[0] - startOffset, 1
 		else:
@@ -1365,7 +1365,7 @@ class Race:
 		
 		try:
 			num = int(num, 10)
-		except:
+		except Exception:
 			num = int(num)
 		
 		try:
@@ -1590,7 +1590,7 @@ class Race:
 	def getLastRecordedTime( self ):
 		try:
 			return max( e.t for e in self.interpolate() if not e.interp )
-		except:
+		except Exception:
 			return None
 		
 	@memoize
@@ -1662,7 +1662,7 @@ class Race:
 	def getRule80CountdownTime( self, category = None ):
 		try:
 			return self.getRule80LapTime(category) * 0.8
-		except:
+		except Exception:
 			return None
 
 	@memoize
@@ -1709,7 +1709,7 @@ class Race:
 				maxRaceLaps = max( self.getNumLapsFromCategory(category) for category in self.categories.values() if category.active )
 				leaderTimes = leaderTimes[:maxRaceLaps + 1]
 				leaderNums = leaderNums[:maxRaceLaps + 1]
-		except:
+		except Exception:
 			return None, None
 		
 		if leaderTimesLen == 1:
@@ -1766,26 +1766,26 @@ class Race:
 		try:
 			if raceTime < self.minutes*60.0 + self.getAverageLapTime()/2.0:
 				return tLeaderLastLap, tLeaderLastLap + self.getRule80CountdownTime()
-		except:
+		except Exception:
 			pass
 		return None, None
 		
 	def getLeader( self ):
 		try:
 			return self.getLeaderTimeLap()[0]
-		except:
+		except Exception:
 			return None
 
 	def getLeaderLapTime( self ):
 		try:
 			return self.riders[self.getLeader()].getExpectedLapTime()
-		except:
+		except Exception:
 			return None
 
 	def getLeaderTime( self ):
 		try:
 			return self.getLeaderTimeLap()[1]
-		except:
+		except Exception:
 			return None
 
 	@memoize
@@ -2457,7 +2457,7 @@ class Race:
 		for cat, catEntries in catEntriesDict.items():
 			try:
 				catTimes, catNums = catTimesNums[cat]
-			except:
+			except Exception:
 				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
 			for r in range(2):
@@ -2490,7 +2490,7 @@ class Race:
 		for cat, catEntries in catEntriesDict.items():
 			try:
 				catTimes, catNums = catTimesNums[cat]
-			except:
+			except Exception:
 				continue
 			iLap = bisect.bisect_right( catTimes, tRace )
 			for r in range(2):

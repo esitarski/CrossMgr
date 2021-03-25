@@ -28,7 +28,7 @@ import locale
 try:
 	localDateFormat = locale.nl_langinfo( locale.D_FMT )
 	localTimeFormat = locale.nl_langinfo( locale.T_FMT )
-except:
+except Exception:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 
@@ -166,7 +166,7 @@ class MyTipProvider( adv.TipProvider ):
 						self.tips.append( line )
 			if tipNo is None:
 				tipNo = (int(round(time.time() * 1000)) * 13) % (len(self.tips) - 1)
-		except:
+		except Exception:
 			pass
 		if tipNo is None:
 			tipNo = 0
@@ -220,7 +220,7 @@ def ShowTipAtStartup():
 		showTipAtStartup = wx.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
-	except:
+	except Exception:
 		pass
 
 class SimulateDialog(wx.Dialog):
@@ -1076,7 +1076,7 @@ class MainWin( wx.Frame ):
 			return
 		try:
 			excelLink = Model.race.excelLink
-		except:
+		except Exception:
 			Utils.MessageOK(self, _("Missing Excel Link."), _("Missing Excel Link"), iconMask=wx.ICON_ERROR)
 			return
 		
@@ -1446,7 +1446,7 @@ class MainWin( wx.Frame ):
 	def menuReloadChecklist( self, event ):
 		try:
 			Model.race.checklist = None
-		except:
+		except Exception:
 			pass
 		self.refresh()
 	
@@ -1464,7 +1464,7 @@ class MainWin( wx.Frame ):
 	def getGraphicBase64( self ):
 		try:
 			return Model.race.headerImage
-		except:
+		except Exception:
 			pass
 		
 		graphicFName = self.getGraphicFName()
@@ -1564,7 +1564,7 @@ class MainWin( wx.Frame ):
 				printout = CrossMgrPrintout( categories )
 				printError = False
 				break
-			except:
+			except Exception:
 				printError = True
 
 		if not printer.Print(self, printout, True) or printError:
@@ -1955,7 +1955,7 @@ class MainWin( wx.Frame ):
 				with io.open(templateFile, 'r') as fp:
 					template = fp.read()
 				payload['courseViewerTemplate'] = sanitize( template )
-			except:
+			except Exception:
 				pass
 	
 		# Add the rider dashboard.
@@ -1964,7 +1964,7 @@ class MainWin( wx.Frame ):
 			with io.open(templateFile, 'r') as fp:
 				template = fp.read()
 			payload['riderDashboard'] = sanitize( template )
-		except:
+		except Exception:
 			pass
 	
 		# Add the travel map if the riders have locations.
@@ -1976,7 +1976,7 @@ class MainWin( wx.Frame ):
 					with io.open(templateFile, 'r') as fp:
 						template = fp.read()
 					payload['travelMap'] = sanitize( template )
-				except:
+				except Exception:
 					pass
 		except Exception as e:
 			pass
@@ -2079,7 +2079,7 @@ class MainWin( wx.Frame ):
 				template = self.reBlankLines.sub( '\n', template )
 				template = template.replace( '<', '{-{' ).replace( '>', '}-}' )
 				payload['virtualRideTemplate'] = template
-			except:
+			except Exception:
 				pass
 
 		if totalElevationGain:
@@ -2139,7 +2139,7 @@ class MainWin( wx.Frame ):
 		try:
 			with io.open(htmlFile, 'r') as fp:
 				html = fp.read()
-		except:
+		except Exception:
 			Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
 							_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
 			return
@@ -2224,7 +2224,7 @@ class MainWin( wx.Frame ):
 				
 		try:
 			externalInfo = race.excelLink.read()
-		except:
+		except Exception:
 			externalInfo = {}
 		
 		componentCategories = {}
@@ -2249,7 +2249,7 @@ class MainWin( wx.Frame ):
 			if rider.status == Finisher:
 				try:
 					firstTime = int(rider.firstTime + 0.1)
-				except:
+				except Exception:
 					continue
 				category = getComponentCategory( bib, category )
 				catName = category.fullname if category else ''
@@ -2309,7 +2309,7 @@ class MainWin( wx.Frame ):
 			try:
 				with io.open(htmlFile, 'r') as fp:
 					html = fp.read()
-			except:
+			except Exception:
 				Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
 								_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
 				return
@@ -2321,7 +2321,7 @@ class MainWin( wx.Frame ):
 			try:
 				with io.open(fname, 'w') as fp:
 					fp.write( html )
-			except:
+			except Exception:
 				Utils.MessageOK(self, '{} ({}).'.format(_('Cannot write HTML file'), fname),
 								_('Html Write Error'), iconMask=wx.ICON_ERROR )
 				continue
@@ -2435,7 +2435,7 @@ class MainWin( wx.Frame ):
 			try:
 				with io.open(htmlFile, 'r') as fp:
 					html = fp.read()
-			except:
+			except Exception:
 				Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
 								_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
 				return
@@ -2449,7 +2449,7 @@ class MainWin( wx.Frame ):
 				fp.write( html )
 			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
-		except:
+		except Exception:
 			Utils.MessageOK(self, '{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
 	
@@ -2473,7 +2473,7 @@ class MainWin( wx.Frame ):
 		try:
 			with io.open(htmlFile, 'r') as fp:
 				html = fp.read()
-		except:
+		except Exception:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
 							_('Html Template Read Error'), iconMask=wx.ICON_ERROR )
 			return
@@ -2487,7 +2487,7 @@ class MainWin( wx.Frame ):
 			try:
 				externalFields = race.excelLink.getFields()
 				externalInfo = race.excelLink.read()
-			except:
+			except Exception:
 				externalFields = []
 				externalInfo = {}
 
@@ -2564,7 +2564,7 @@ class MainWin( wx.Frame ):
 				fp.write( html )
 			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
-		except:
+		except Exception:
 			Utils.MessageOK(self,
 							'{} ({}).'.format(_('Cannot write HTML file'), fname),
 							_('Html Write Error'), iconMask=wx.ICON_ERROR )
@@ -2992,7 +2992,7 @@ class MainWin( wx.Frame ):
 			with open(fileName, 'rb') as fp, Model.LockRace() as race:
 				try:
 					race = pickle.load( fp, encoding='latin1', errors='replace' )
-				except:
+				except Exception:
 					fp.seek( 0 )
 					race = ModuleUnpickler( fp, module='CrossMgr', encoding='latin1', errors='replace' ).load()
 				race.sortLap = None			# Remove results lap sorting to avoid confusion.
@@ -3200,13 +3200,13 @@ class MainWin( wx.Frame ):
 		# Delete any pre-existing Simulation directory.
 		try:
 			shutil.rmtree( simulationDir, ignore_errors=True )
-		except:
+		except Exception:
 			pass
 		
 		# Create the simulation directory.
 		try:
 			os.makedirs( simulationDir )
-		except:
+		except Exception:
 			pass
 		
 		# Test if we can write something there.
@@ -4021,9 +4021,11 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			if Model.race and Model.race.ftpUploadDuringRace:
 				realTimeFtpPublish.publishEntry()		
 	
-	def processJChipListener( self ):
+	def processJChipListener( self, refreshNow=False ):
 		race = Model.race
-		
+		if not race:
+			return
+			
 		if not race or not race.enableJChipIntegration:
 			if ChipReader.chipReaderCur.IsListening():
 				ChipReader.chipReaderCur.StopListener()
@@ -4033,7 +4035,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			ChipReader.chipReaderCur.reset( race.chipReaderType )
 			ChipReader.chipReaderCur.StartListener( race.startTime )
 			GetTagNums( True )
-		
+	
 		data = ChipReader.chipReaderCur.GetData()
 		
 		if not getattr(race, 'tagNums', None):
@@ -4044,8 +4046,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		for d in data:
 			if d[0] != 'data':
 				continue
-			tag = d[1]
-			dt = d[2]
+			tag, dt = d[1], d[2]
 			
 			# Ignore unrecorded reads that happened before the restart time.
 			if race.rfidRestartTime and dt <= race.rfidRestartTime:
@@ -4081,7 +4082,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			# Start the timer for the first interval.
 			self.clprIndex = 0
 			self.clprTime = now() + datetime.timedelta( seconds=delayIntervals[0] )
-			if not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
+			if refreshNow or not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
 				self.processRfidRefresh()
 		elif (		(self.clprTime - now()).total_seconds() > delayIntervals[self.clprIndex] * 0.75 and
 					self.clprIndex < len(delayIntervals)-1 ):
@@ -4090,7 +4091,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.clprIndex += 1
 			self.clprTime += datetime.timedelta( seconds = delayIntervals[self.clprIndex] - delayIntervals[self.clprIndex-1] )
 			delayToGo = max( 10, int((self.clprTime - now()).total_seconds() * 1000.0) )
-			if not self.callLaterProcessRfidRefresh.Start( delayToGo, True ):
+			if refreshNow or not self.callLaterProcessRfidRefresh.Start( delayToGo, True ):
 				self.processRfidRefresh()
 		return False	# Never signal for an update.
 
@@ -4190,12 +4191,12 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 	Utils.writeLog( 'start: {}'.format(Version.AppVerName) )

@@ -187,7 +187,7 @@ class Checklist( wx.Panel ):
 	def setChanged( self ):
 		try:
 			Model.race.setChanged()
-		except:
+		except Exception:
 			pass
 		
 	def onSize( self, event ):

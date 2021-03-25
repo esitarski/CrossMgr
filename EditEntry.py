@@ -517,7 +517,7 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 			externalData = '{}: {}'.format( '{}'.format(num), u', '.join(externalData[:-1]) ) + u' ' + externalData[-1]
 		else:
 			externalData = '{}: {}'.format( '{}'.format(num), u', '.join(externalData) ) if externalData else None
-	except:
+	except Exception:
 		externalData = None
 	
 	d = StatusChangeDialog(parent, message=message.format(num), title=title, externalData=externalData, t=lapTime)

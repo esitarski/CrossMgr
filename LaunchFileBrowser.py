@@ -6,7 +6,7 @@ def LaunchFileBrowser( path ):
 	try:
 		os.startfile( path )
 		return
-	except:
+	except Exception:
 		pass
 
 	# Keep trying a command until something works.
@@ -14,7 +14,7 @@ def LaunchFileBrowser( path ):
 		try:
 			subprocess.Popen( '{} "{}"'.format(cmd, path) )
 			break
-		except:
+		except Exception:
 			pass
 			
 if __name__ == '__main__':

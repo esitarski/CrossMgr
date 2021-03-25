@@ -136,7 +136,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 			try:
 				externalFields = race.excelLink.getFields()
 				externalInfo = race.excelLink.read()
-			except:
+			except Exception:
 				self.clearGrid()
 				return
 		

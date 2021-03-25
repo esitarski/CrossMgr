@@ -73,7 +73,7 @@ def DeleteStreamerFile( fname = None ):
 		fname = getFileName()
 	try:
 		os.remove( fname )
-	except:
+	except Exception:
 		pass
 
 def StartStreamer( fname = None ):

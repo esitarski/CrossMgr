@@ -22,7 +22,7 @@ def getExportGrid():
 	race = Model.race
 	try:
 		externalInfo = race.excelLink.read()
-	except:
+	except Exception:
 		externalInfo = {}
 	
 	GetTranslation = _
@@ -519,11 +519,11 @@ class Categories( wx.Panel ):
 		for cat in categories:
 			try:
 				cat.distance = float(cat.distance)
-			except:
+			except Exception:
 				cat.distance = None
 			try:
 				cat.firstLapDistance = float(cat.firstLapDistance)
-			except:
+			except Exception:
 				cat.firstLapDistance = None
 		
 		if self.grid.GetNumberRows() != len(categories):

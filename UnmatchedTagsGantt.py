@@ -106,7 +106,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 		data	= [times for tag, times in results]
 		try:
 			nowTime = race.lastRaceTime()
-		except:
+		except Exception:
 			nowTime = None
 		self.ganttChart.SetData( data, labels, nowTime )
 	

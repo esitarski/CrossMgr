@@ -599,7 +599,7 @@ class GPXProperties( wx.Panel ):
 	def onReverse( self, event ):
 		try:
 			Model.race.geoTrack.reverse()
-		except:
+		except Exception:
 			pass
 		self.refresh()
 	
@@ -1072,7 +1072,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 	if ftpFiles:
 		if not FtpIsConfigured() and Utils.MessageOKCancel(
 					mainWin,
-					u'{}\n\n{}'.format( _('Ftp is Not Configured'), _('Configure it now?')), 
+					'{}\n\n{}'.format( _('Ftp is Not Configured'), _('Configure it now?')), 
 					('Ftp is Not Configured')
 				):
 			dlg = FtpPublishDialog( mainWin )
@@ -1101,9 +1101,12 @@ def doBatchPublish( silent=False, iAttr=None ):
 		else:
 			e = FtpUploadFile( ftpFiles )
 		
-		if e and not silent:
-			Utils.MessageOK( mainWin, u'{}\n\n{}'.format( _('Ftp Upload Error'), e), _('Ftp Upload Error'), wx.ICON_ERROR )
-	
+		if e:
+			message = '{}\n\n{}'.format( _('Ftp Upload Error'), e)
+			if not silent:
+				Utils.MessageOK( mainWin, message, _('Ftp Upload Error'), wx.ICON_ERROR )
+			Utils.writeLog( message )
+
 	postPublishCmd = getattr(race, 'postPublishCmd', None)
 	if postPublishCmd and allFiles:
 		postPublishCmd = TemplateSubstitute( postPublishCmd, race.getTemplateValues() )
@@ -1115,15 +1118,21 @@ def doBatchPublish( silent=False, iAttr=None ):
 			cmd = postPublishCmd.replace('%*', files)
 		else:
 			cmd = ' '.join( [postPublishCmd, files] )
+
+		Utils.writeLog( '{}:\n'.format( _('Post Publish Cmd'), cmd ) )
 		
 		try:
 			subprocess.check_call( cmd, shell=True )
 		except subprocess.CalledProcessError as e:
+			message = '{}\n\n    {}\n{}: {}'.format(_('Post Publish Cmd Error'), e, _('return code'), e.returncode)
 			if not silent:
-				Utils.MessageOK( mainWin, u'{}\n\n    {}\n{}: {}'.format(_('Post Publish Cmd Error'), e, _('return code'), e.returncode), _('Post Publish Cmd Error')  )
+				Utils.MessageOK( mainWin, message, _('Post Publish Cmd Error')  )
+			Utils.writeLog( message )
 		except Exception as e:
+			message = '{}\n\n    {}'.format(_('Post Publish Cmd Error'), e)
 			if not silent:
-				Utils.MessageOK( mainWin, u'{}\n\n    {}'.format(_('Post Publish Cmd Error'), e), _('Post Publish Cmd Error')  )
+				Utils.MessageOK( mainWin, message, _('Post Publish Cmd Error')  )
+			Utils.writeLog( message )
 	
 	if not silent and iAttr is not None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
@@ -1765,7 +1774,7 @@ def ApplyDefaultTemplate( race ):
 	template = Template.Template()
 	try:
 		template.read( fname )
-	except:
+	except Exception:
 		return
 	template.toRace( race )
 

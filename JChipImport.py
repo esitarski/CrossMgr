@@ -14,7 +14,7 @@ def parseTagTime( line, lineNo, errors ):
 	
 	try:
 		day = int(fields[2][1:2])
-	except:
+	except Exception:
 		day = 0
 	
 	try:

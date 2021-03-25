@@ -43,7 +43,7 @@ def parseTagTime( line, lineNo, errors ):
 		second = int(second)
 		return tag, datetime.datetime( year, month, day, hour, minute, second, microsecond )
 	
-	except:
+	except Exception:
 	
 		# Get the date (if present).
 		tDate = JChip.dateToday

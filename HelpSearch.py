@@ -22,7 +22,7 @@ PORT_NUMBER = 8761
 try:
 	with open( os.path.join(Utils.getImageFolder(), 'CrossMgr.ico'), 'rb' ) as f:
 		favicon = f.read()
-except:
+except Exception:
 	favicon = None
 
 class HelpHandler( BaseHTTPRequestHandler ):

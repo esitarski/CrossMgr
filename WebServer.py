@@ -13,25 +13,30 @@ import datetime
 import traceback
 import threading
 from urllib.parse import quote
+
 from urllib.request import url2pathname
 from queue import Queue, Empty
 from socketserver import ThreadingMixIn
-from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 from qrcode import QRCode
 from tornado.template import Template
 from ParseHtmlPayload import ParseHtmlPayload
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, HTTPStatus
 from io import StringIO
 import Utils
 import Model
+import Version
+import WebReader
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
 from Synchronizer import syncfunc
 
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
-    pass
-
+	pass
+    
+def epochTime():
+	return (datetime.datetime.now() - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)).total_seconds()
+    
 now = datetime.datetime.now
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
 futureDate = datetime.datetime( now().year+20, 1, 1 )
@@ -137,7 +142,7 @@ class ContentBuffer:
 					content = getCurrentHtml()
 				
 				if content:
-					cache['mtime'] = time.time()
+					cache['mtime'] = epochTime()
 					result = ParseHtmlPayload( content=content )
 					cache['payload'] = result['payload'] if result['success'] else {}
 					cache['content'] = content.encode() if not isinstance(content, bytes) else content
@@ -275,18 +280,18 @@ def GetPreviousFileName():
 	file = None
 	try:
 		fnameCur = os.path.splitext(Model.race.getFileName())[0] + '.html'
-	except:
+	except Exception:
 		fnameCur = None
 	
 	files = contentBuffer._getFiles()
 	try:
 		file = files[files.index(fnameCur)-1]
-	except:
+	except Exception:
 		pass
 	if file is None:
 		try:
 			file = files[-1]
-		except:
+		except Exception:
 			pass
 	return file
 	
@@ -368,8 +373,38 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 	json_content = 'application/json'
 	reLapCounterHtml = re.compile( r'^\/LapCounter[0-9A-Z-]*\.html$' )
 	
+	def do_POST( self ):
+		up = urllib.parse.urlparse( self.path )
+		try:
+			if up.path == '/rfid.js':
+				# Accept RFID input as json.  Assume all time corrections have been done by the client.
+				content_len = int(self.headers.get('Content-Length'))
+				post_body = self.rfile.read(content_len)
+				success = True
+				try:
+					rfid_data = json.loads( post_body )
+				except Exception:
+					success = False
+				if success:
+					data = []
+					for d in rfid_data['data']:
+						assert( len(d) == 2 and all(f in d for f in ('t','tag')) )
+						try:
+							data.append( ('data', d['tag'], datetime.datetime.fromisoformat( d['t'] )) )
+						except Exception:
+							pass
+					WebReader.SetData( data )
+					
+				self.send_response( HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST )
+				self.end_headers()
+			else:
+				assert( 'Unrecognized POST' )
+		except Exception as e:
+			self.send_error(501,'Error: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
+			return
+	
 	def do_GET(self):
-		up = urllib.parse.urlparse( self.path )		
+		up = urllib.parse.urlparse( self.path )
 		content, gzip_content = None,  None
 		try:
 			if up.path=='/':
@@ -393,21 +428,35 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content = getQRCodePage( urlPage )
 				content_type = self.html_content
 				assert isinstance( content, bytes )
-			elif up.path=='/servertimestamp.html':
-				content = Utils.ToJson( {
-						'servertime':time.time()*1000.0,
-						'requesttimestamp':float(up.query),
+			elif up.path=='/servertimestamp.js':
+				# Return the clientTime and the serverTime so the client can computer the round-trip time.
+				# Used by Christian's algorithm to estimate the round-trip time and get a better time correction between the two computers.
+				try:
+					clientTime = float( urllib.parse.parse_qs(up.query).get('clientTime', None)[0] )
+				except Exception:
+					clientTime = 0.0
+				content = json.dumps( {
+						'serverTime':epochTime(),
+						'clientTime':clientTime,
 					}
 				).encode()
-				content_type = self.json_content;
-				assert isinstance( content, bytes )
+				content_type = self.json_content
+			elif up.path=='/identity.js':
+				# Return the identify of this CrossMgr instance.
+				content = json.dumps( {
+						'serverTime':epochTime(),
+						'version':Version.AppVerName,
+						'host':socket.gethostname(),
+					}
+				).encode()
+				content_type = self.json_content
 			else:
 				file = None
 				
 				if up.path == '/CurrentResults.html':
 					try:
 						file = os.path.splitext(Model.race.getFileName())[0] + '.html'
-					except:
+					except Exception:
 						pass
 				
 				elif up.path == '/PreviousResults.html':
@@ -419,7 +468,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				content_type = self.html_content
 				assert isinstance( content, bytes )
 		except Exception as e:
-			self.send_error(404,'File Not Found: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
+			self.send_error(404,'Error: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
 			return
 		
 		self.send_response( 200 )
@@ -450,7 +499,7 @@ def GetCrossMgrHomePage( ip=None ):
 		hostname = socket.gethostname()
 		try:
 			socket.gethostbyname( hostname )
-		except:
+		except Exception:
 			hostname = DEFAULT_HOST
 	return 'http://{}:{}'.format(hostname, PORT_NUMBER)
 
@@ -580,7 +629,7 @@ def WsRefresh( updatePrevious=False ):
 def GetLapCounterRefresh():
 	try:
 		return Utils.mainWin.lapCounter.GetState()
-	except:
+	except Exception:
 		return {
 			'cmd': 'refresh',
 			'labels': [],

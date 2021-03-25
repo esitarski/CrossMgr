@@ -31,9 +31,9 @@ def GetDefaultHost():
 					if addr is not None and not addr.startswith('127.0.'):
 						DEFAULT_HOST = addr
 						break
-				except:
+				except Exception:
 					pass
-		except:
+		except Exception:
 			pass
 	return DEFAULT_HOST
 	
@@ -189,7 +189,7 @@ def getHomeDir():
 	try:
 		if os.path.basename(homedir) == '.CrossMgr':
 			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
-	except:
+	except Exception:
 		pass
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
@@ -203,7 +203,7 @@ def getDocumentsDir():
 if 'WXMAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
-	except:
+	except Exception:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
 	if os.path.isdir( os.path.join(topdirName, 'TagReadWriteImages') ):
 		dirName = topdirName
@@ -216,7 +216,7 @@ if 'WXMAC' in wx.Platform:
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
+	except Exception:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 	if os.path.basename(dirName) == 'library.zip':
@@ -272,7 +272,7 @@ def GetAllIps():
 	for a in addrInfo:
 		try:
 			ip = a[4][0]
-		except:
+		except Exception:
 			continue
 		if reIP.search(ip):
 			ips.append( ip )

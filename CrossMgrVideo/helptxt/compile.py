@@ -25,7 +25,7 @@ def working_directory(directory):
 def fileOlderThan( srcFile, transFile ):
 	try:
 		return os.path.getmtime(srcFile) <= os.path.getmtime(transFile)
-	except:
+	except Exception:
 		return False
 
 reImage = re.compile( r'src="\.\/images\/([^"]+)"' )

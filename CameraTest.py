@@ -31,7 +31,7 @@ class ScaledImage( wx.Panel ):
 		try:
 			image = self.image.Copy()
 			image = RescaleImage( image, width, height )
-		except:
+		except Exception:
 			return
 		
 		bitmap = image.ConvertToBitmap()
@@ -100,7 +100,7 @@ class CameraTestDialog( wx.Dialog ):
 			photo = AddPhotoHeader( 9999, (tNow - self.tStart).total_seconds(), cameraImage )
 			self.status.SetLabel( self.resolutionFormat.format(photo.GetWidth(), photo.GetHeight(), self.fps) )
 			self.photo.SetImage( photo )
-		except:
+		except Exception:
 			pass
 			
 		self.frameCount += 1
@@ -114,7 +114,7 @@ class CameraTestDialog( wx.Dialog ):
 		try:
 			tNow = now()
 			image = self.photo.GetImage()
-		except:
+		except Exception:
 			Utils.MessageOK( self, _('Cannot access photo image.'), title = _("Camera Error"), iconMask=wx.ICON_ERROR )
 			return
 		

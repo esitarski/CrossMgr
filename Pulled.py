@@ -64,7 +64,7 @@ class TimeEditor(gridlib.GridCellEditor):
 			s *= 60.0
 			try:
 				s += float( f )
-			except:
+			except Exception:
 				pass
 		val = Utils.formatTime( s, highPrecision=True ) if s else u''
 		if val != self.startValue:

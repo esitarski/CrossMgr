@@ -404,7 +404,7 @@ class Impinj( object ):
 				return
 			try:
 				pf = open( self.fname, 'a' )
-			except:
+			except Exception:
 				continue
 			
 			pf.write( msg[1] if msg[1].endswith('\n') else msg[1] + '\n' )
@@ -541,7 +541,7 @@ class Impinj( object ):
 					if ImpinjDebug and lastDiscoveryTime is not None:
 						print( '{}            \r'.format( (discoveryTime - lastDiscoveryTime).total_seconds() ) )
 					lastDiscoveryTime = discoveryTime
-				except:
+				except Exception:
 					pass
 				
 				for tag in response.getTagData():

@@ -292,7 +292,7 @@ class Gantt( wx.Panel ):
 					return
 				race.getRider(self.entry.num).setStatus( Model.Rider.DNF, self.entry.t + 1 )
 				race.setChanged()
-		except:
+		except Exception:
 			pass
 		wx.CallAfter( self.refresh )
 		
@@ -310,7 +310,7 @@ class Gantt( wx.Panel ):
 					return
 				race.getRider(self.entry.num).setAutoCorrect( False )
 				race.setChanged()
-		except:
+		except Exception:
 			pass
 		wx.CallAfter( self.refresh )
 	
@@ -441,13 +441,13 @@ class Gantt( wx.Panel ):
 				leaderEntries = race.getRider(leaderNum).interpolate()
 				leaderEntryStart = leaderEntries[self.entryStart.lap]
 				leaderEntryEnd = leaderEntries[self.entryEnd.lap]
-			except:
+			except Exception:
 				leaderEntryStart = None
 				leaderEntryEnd = None
 		
 			try:
 				riderInfo = race.excelLink.read()[self.entryEnd.num]
-			except:
+			except Exception:
 				riderInfo = {}
 			
 			try:
@@ -604,7 +604,7 @@ class Gantt( wx.Panel ):
 		interp	= [r.interp for r in results]
 		try:
 			nowTime = min( resultBest[1], Model.race.lastRaceTime() )
-		except:
+		except Exception:
 			nowTime = None
 			
 		self.ganttChart.SetData(data, labels, nowTime, interp,

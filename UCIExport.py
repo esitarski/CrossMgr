@@ -47,7 +47,7 @@ def UCIExport( sheet, cat ):
 	def toInt( n ):
 		try:
 			return int(n.split()[0])
-		except:
+		except Exception:
 			return n
 			
 	row = 0

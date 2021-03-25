@@ -71,7 +71,7 @@ class ReadExcelXls:
 					try:
 						datetuple = xlrd.xldate_as_tuple(value, self.book.datemode)
 						validDate = True
-					except:
+					except Exception:
 						value = 'UnreadableDate'
 						validDate = False
 					if validDate:

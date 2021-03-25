@@ -59,7 +59,7 @@ def CrossResultsExport( fname ):
 	def toInt( n ):
 		try:
 			return int(n.split()[0])
-		except:
+		except Exception:
 			return n
 	
 	maxLaps = 1

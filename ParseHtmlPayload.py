@@ -56,7 +56,7 @@ def ParseHtmlPayload( fname=None, content=None ):
 	if not raceScheduledStart:
 		try:
 			raceScheduledStart = datetime.datetime( *[int(f) for f in re.split('[^0-9]+', payload['raceDate'] )] )
-		except:
+		except Exception:
 			raceScheduledStart = datetime.datetime.fromtimestamp(os.path.getmtime(fname))
 	
 	payload['raceScheduledStart'] = raceScheduledStart

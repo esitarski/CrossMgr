@@ -556,7 +556,7 @@ class History( wx.Panel ):
 		
 		try:
 			info = race.excelLink.read()
-		except:
+		except Exception:
 			info = {}
 			
 		def getName( num ):

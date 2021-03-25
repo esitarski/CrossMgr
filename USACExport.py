@@ -31,7 +31,7 @@ def formatTimeGap( secs ):
 def toInt( n ):
 	try:
 		return int(n.split()[0])
-	except:
+	except Exception:
 		return n
 
 	

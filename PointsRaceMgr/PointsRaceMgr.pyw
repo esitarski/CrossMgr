@@ -1,0 +1,2 @@
+import MainWin
+MainWin.MainLoop()

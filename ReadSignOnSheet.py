@@ -582,12 +582,12 @@ def GetTagNums( forceUpdate = False ):
 	# Get the linked external data.
 	try:
 		excelLink = race.excelLink
-	except:
+	except Exception:
 		race.tagNums = {}
 	else:
 		try:
 			externalInfo = excelLink.read()
-		except:
+		except Exception:
 			race.tagNums = {}
 		else:
 			if excelLink.readFromFile or not getattr(race, 'tagNums', None) or forceUpdate:
@@ -705,7 +705,7 @@ class ExcelLink:
 				state = (self.fileName, self.sheetName, self.fieldCol)
 				if state == stateCache[-3:]:
 					return infoCache
-			except:
+			except Exception:
 				pass
 		return None
 	
@@ -719,7 +719,7 @@ class ExcelLink:
 		try:
 			state = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 			return state == stateCache
-		except:
+		except Exception:
 			return False
 	
 	reVersionField = re.compile( '^(.+) \(([0-9]+)\)\.(?:xls|xlsx|xlsm)$', re.IGNORECASE )
@@ -759,7 +759,7 @@ class ExcelLink:
 				state = (os.path.getmtime(self.fileName), self.fileName, self.sheetName, self.fieldCol)
 				if state == stateCache:
 					return infoCache
-			except:
+			except Exception:
 				pass
 	
 		# Read the sheet and return the rider data.
@@ -796,7 +796,7 @@ class ExcelLink:
 					if field == 'LastName':
 						try:
 							data[field] = '{}'.format(data[field] or '').upper()
-						except:
+						except Exception:
 							data[field] = _('Unknown')
 					elif field.startswith('Tag'):
 						try:
@@ -806,7 +806,7 @@ class ExcelLink:
 						try:
 							data[field] = '{}'.format(data[field] or '').upper()
 							hasTags = True
-						except:
+						except Exception:
 							pass
 					elif field == 'Gender':
 						# Normalize and encode the gender information.
@@ -818,7 +818,7 @@ class ExcelLink:
 								data[field] = 'Women'
 							else:
 								data[field] = 'Open'		# Otherwise Open
-						except:
+						except Exception:
 							data[field] = 'Open'
 							pass
 					else:
@@ -944,7 +944,7 @@ class ExcelLink:
 			
 		try:
 			Model.race.resetAllCaches()
-		except:
+		except Exception:
 			pass
 		
 		return infoCache
@@ -952,7 +952,7 @@ class ExcelLink:
 def IsValidRaceDBExcel( fileName ):
 	try:
 		reader = GetExcelReader( fileName )
-	except:
+	except Exception:
 		return False
 	for sheetName in ['Registration', PropertySheetName, CategorySheetName]:
 		if sheetName not in reader.sheet_names():
@@ -994,7 +994,7 @@ class BibInfo:
 	def getData( self, bib ):
 		try:
 			bib = int(bib)
-		except:
+		except Exception:
 			return {}
 		
 		try:

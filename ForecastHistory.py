@@ -304,7 +304,7 @@ class ForecastHistory( wx.Panel ):
 		try:
 			num = self.entryCur.num
 			NumKeypad.DoDNF( self, num )
-		except:
+		except Exception:
 			pass
 	
 	def SelectNumShowPage( self, num, iPageAttr ):
@@ -412,21 +412,21 @@ class ForecastHistory( wx.Panel ):
 		try:
 			num = self.entryCur.num
 			self.logNum( num )
-		except:
+		except Exception:
 			pass
 		
 	def OnPopupExpectedDNF( self, event ):
 		try:
 			num = self.entryCur.num
 			NumKeypad.DoDNF( self, num )
-		except:
+		except Exception:
 			pass
 		
 	def OnPopupExpectedPull( self, event ):
 		try:
 			num = self.entryCur.num
 			NumKeypad.DoPull( self, num )
-		except:
+		except Exception:
 			pass
 
 	def OnPopupExpectedRiderDetail( self, event ):
@@ -464,7 +464,7 @@ class ForecastHistory( wx.Panel ):
 		for num in nums:
 			try:
 				num = int(num)
-			except:
+			except Exception:
 				continue
 			race.addTime( num, t, False )
 			numTimes.append( (num, t) )
@@ -477,7 +477,7 @@ class ForecastHistory( wx.Panel ):
 			for num in nums:
 				try:
 					num = int(num)
-				except:
+				except Exception:
 					continue
 				
 				race.photoCount += TakePhoto(num, t) if okTakePhoto(num, t) else 0
@@ -554,7 +554,7 @@ class ForecastHistory( wx.Panel ):
 			
 		try:
 			externalInfo = race.excelLink.read( True )
-		except:
+		except Exception:
 			externalInfo = {}
 					
 		tRace = race.curRaceTime()
@@ -671,7 +671,7 @@ class ForecastHistory( wx.Panel ):
 		def getWave( e ):
 			try:
 				return race.getCategory(e.num).fullname
-			except:
+			except Exception:
 				return u' '
 		data[iExpectedWaveCol] = [getWave(e) for e in expected]
 		

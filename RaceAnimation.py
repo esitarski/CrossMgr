@@ -32,7 +32,7 @@ class NumListValidator(wx.Validator):
 			if key <= wx.WXK_SPACE or key == wx.WXK_DELETE or chr(key) == ',' or key > 255 or chr(key) in string.digits:
 				event.Skip()
 				return
-		except:
+		except Exception:
 			event.Skip()
 			return
 
@@ -211,7 +211,7 @@ class RaceAnimation( wx.Panel ):
 		value = re.sub( ',+', ',', value )
 		try:
 			numsToWatch = set( int(n) for n in value.split(',') )
-		except:
+		except Exception:
 			numsToWatch = set()
 
 		self.animation.SetNumsToWatch( numsToWatch )
@@ -242,7 +242,7 @@ class RaceAnimation( wx.Panel ):
 		for info in animationData.values():
 			try:
 				t = min( t, info['raceTimes'][0] )
-			except:
+			except Exception:
 				pass
 		return t
 	

@@ -249,7 +249,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 		# Report on system info.
 		try:
 			querySystemInfo( s )
-		except:
+		except Exception:
 			continue
 		
 		#-----------------------------------------------------------------------------------------------------
@@ -352,7 +352,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 	# Final cleanup.
 	try:
 		s.close()
-	except:
+	except Exception:
 		pass
 
 def GetData():

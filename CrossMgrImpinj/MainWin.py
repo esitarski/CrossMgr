@@ -773,7 +773,7 @@ class MainWin( wx.Frame ):
 			with open(redirectFileName, 'r') as fp:
 				for line in fp:
 					cc.append( line )
-		except:
+		except Exception:
 			pass
 		
 		if wx.TheClipboard.Open():
@@ -937,19 +937,19 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 			
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
 				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
-		except:
+		except Exception:
 			pass
 	
 	mainWin.Show()
@@ -958,7 +958,7 @@ def MainLoop():
 	try:
 		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CrossMgrImpinj.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
-	except:
+	except Exception:
 		pass
 
 	# Start processing events.

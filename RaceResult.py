@@ -354,7 +354,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		buffer = socketReadDelimited( s )
 		s.shutdown( socket.SHUT_RDWR )
 		s.close()
-	except:
+	except Exception:
 		pass
 
 def GetData():

@@ -44,13 +44,10 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 		return
 	'''
 	
-	with ftputil.FTPHost( host, user, passwd ) as host:
-		try:
-			host.makedirs( serverPath )
-		except Exception as e:
-			pass
+	with ftputil.FTPHost( host, user, passwd ) as ftp_host:
+		ftp_host.makedirs( serverPath, exist_ok=True )
 		for i, f in enumerate(fname):
-			host.upload_if_newer(
+			ftp_host.upload_if_newer(
 				f,
 				serverPath + '/' + os.path.basename(f),
 				(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
@@ -61,8 +58,8 @@ def FtpIsConfigured():
 		if not race or not Utils.getFileName():
 			return False
 			
-		host		= getattr( race, 'ftpHost', None )
-		user		= getattr( race, 'ftpUser', None )
+		host = getattr( race, 'ftpHost', None )
+		user = getattr( race, 'ftpUser', None )
 		
 	return host and user
 	
@@ -71,23 +68,21 @@ def FtpUploadFile( fname=None, callback=None ):
 		if not race or not Utils.getFileName():
 			return None
 	
-	try:
-		# Fix cut and paste issues
-		hostname = getattr( race, 'ftpHost', '' ).strip().strip('\t')
-		FtpWriteFile(
-			host		= hostname,
-			user		= getattr( race, 'ftpUser', '' ),
-			passwd		= getattr( race, 'ftpPassword', '' ),
-			serverPath	= getattr( race, 'ftpPath', '' ),
-			fname		= fname or [],
-			callback	= callback,
-		)
-	except ftputil.error.FTPOSError as e:
-		Utils.writeLog( 'FtpUploadFile:{}: {}'.format(e.__class__.__name__, e) )
-		return e
+	params = {
+		'host': 		getattr(race, 'ftpHost', '').strip().strip('\t'),	# Fix cut and paste problems.
+		'user':			getattr(race, 'ftpUser', ''),
+		'passwd':		getattr(race, 'ftpPassword', ''),
+		'serverPath':	getattr(race, 'ftpPath', ''),
+		'fname':		fname or [],
+		'callback':		callback,
+	}
+	
+	try:		
+		FtpWriteFile( **params )
+	
 	except Exception as e:
-		# Utils.logException( e, sys.exc_info() )
 		Utils.writeLog( 'FtpUploadFile: {}: {}'.format(e.__class__.__name__, e) )
+		Utils.writeLog( 'FtpUploadFile: call FtpWriteFile({})'.format(', '.join('{}="{}"'.format(k,v) for k,v in params.items())) )
 		return e
 		
 	return None

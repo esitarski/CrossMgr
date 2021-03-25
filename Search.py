@@ -177,7 +177,7 @@ class Search( wx.Panel ):
 				if f.startswith('Tag'):
 					try:
 						data[c].append( '{}'.format(info[f]).lstrip('0') )
-					except:
+					except Exception:
 						data[c].append( '' )
 				else:
 					try:
