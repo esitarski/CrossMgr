@@ -1,15 +1,15 @@
 #!/bin/bash
 
 OSNAME=$(uname -s)
-PYTHONVER=python3.8
+PYTHONVER=python3.9
 ENVDIR=env
 LINUXDEPLOY=linuxdeploy-plugin-appimage-x86_64.AppImage
 
 if [ "$OSNAME" == "Darwin" ]; then
-	PYTHONVER="python3.8"
+	PYTHONVER="python3.9"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.8"
+	PYTHONVER="python3.9"
 fi
 
 getBuildDir() {
