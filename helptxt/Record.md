@@ -44,7 +44,20 @@ Entering a number also triggers the [USB Webcam][] if it has been enabled.
 
 You can enter data through the regular computer keyboard or an external numeric keypad.  If you have a touchscreen, you can also enter data by pressing the on-screen buttons.  To enable touchscreen mode, press on the touchscreen button.  This will toggle an on-screen keypad.
 
-Experience has shown that a touch-screen less accurate.  Additionally, touch screens can get sluggish in cold or hot weather.  This is frustrating in a race situation when you are trying to enter a number and the touchscreen doesn't respond.  Use a keyboard or external keypad for reliability.
+CrossMgr understands common leading digits and does not require that the full number of digits be entered if the leading digits are all the same.  For example, say you have one number range 100-199.  You can enter the following:
+
+* 0 --> 100
+* 1 --> 101
+* 10 --> 110
+* 150 --> 150 (three digits are always OK).
+
+That is, common leading digits will automatically be added, and you don't need to type them.
+
+CrossMgr only checks for leading digits, and it is not all-knowing.  For example, if you have ranges 100-120 and 250-270, CrossMgr is not smart enough to know that the last two digits are always unique.  In this case, all three digits will be required.
+
+And of course, if there aren't common leading digits in all categories across the entire race, you will need to enter the entire digits.
+
+Experience has shown that a touch-screen is less accurate.  Additionally, touch screens can get sluggish in cold or hot weather.  This is frustrating in a race situation when you are trying to enter a number and the touchscreen doesn't respond.  Use a keyboard or external keypad for reliability.
 
 Pressing Esc, 'c' or 'C' will clear the input.  This can be a handy shortcut when you need to re-enter a number.
 
