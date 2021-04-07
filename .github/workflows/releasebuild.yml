@@ -20,7 +20,7 @@ jobs:
             - name: Setup Python environment
               uses: actions/setup-python@v2
               with:
-                python-version: 3.9.*
+                python-version: 3.7.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Setup Environment
@@ -41,7 +41,7 @@ jobs:
         name: Windows
         # env:
         #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-        needs: buildmac
+        #needs: buildmac
         runs-on: windows-latest
         steps:
             - name: Setup Python environment
@@ -78,7 +78,7 @@ jobs:
         name: Linux
         # env:
         #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-        needs: buildmac
+        #needs: buildmac
         runs-on: ubuntu-latest
         steps:
             - name: Setup Python Environment
