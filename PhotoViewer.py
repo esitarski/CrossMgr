@@ -195,7 +195,10 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.vbs.Add( self.splitter, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border = 4 )
 		
 		self.Bind( wx.EVT_SIZE, self.OnResize )
-		self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
+		try:
+			self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
+		except AttributeError:
+			pass
 		
 		self.SetSizer(self.vbs)
 		self.vbs.SetSizeHints(self)

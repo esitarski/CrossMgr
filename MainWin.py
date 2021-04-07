@@ -650,14 +650,24 @@ class MainWin( wx.Frame ):
 		self.forecastHistory = ForecastHistory( self.splitter, style=sty )
 
 		# Other data shown in right pane.
-		bookStyle = (
-			  flatnotebook.FNB_NO_X_BUTTON
-			| flatnotebook.FNB_FF2
-			| flatnotebook.FNB_NODRAG
-			| flatnotebook.FNB_DROPDOWN_TABS_LIST
-			| flatnotebook.FNB_NO_NAV_BUTTONS
-		)
-		self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
+		if wx.Platform == '__WXMAC__':
+			# Don't use awg notebook on MAC as it is unstable.
+			bookStyle = (
+				  flatnotebook.FNB_NO_X_BUTTON
+				| flatnotebook.FNB_NODRAG
+				| flatnotebook.FNB_DROPDOWN_TABS_LIST
+				| flatnotebook.FNB_NO_NAV_BUTTONS
+			)
+			self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
+		else:
+			bookStyle = (
+				  flatnotebook.FNB_NO_X_BUTTON
+				| flatnotebook.FNB_FF2
+				| flatnotebook.FNB_NODRAG
+				| flatnotebook.FNB_DROPDOWN_TABS_LIST
+				| flatnotebook.FNB_NO_NAV_BUTTONS
+			)
+			self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
 		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
