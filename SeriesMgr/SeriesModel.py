@@ -357,7 +357,7 @@ class SeriesModel( object ):
 		changed = (len(dNew) != len(dExisting))
 		updated = False
 		
-		for name, aliases in dNew,items():
+		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
 				if aliases:
