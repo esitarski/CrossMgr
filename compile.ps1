@@ -489,7 +489,7 @@ function BuildAll($programs)
 	{
 		if (($program -eq "SeriesMgr") -or ($program -eq "CrossMgrVideo"))
 		{
-			FixSeriesMgrFiles($program)
+			FixDependencies($program)
 		}
 		CompileCode($program)
 		doPyInstaller($program)
@@ -498,18 +498,16 @@ function BuildAll($programs)
 	}
 }
 
-function FixSeriesMgrFiles($program)
+function FixDependencies($program)
 {
 	Write-Host "Fixing dependencies for $program"
 	$dependsfile = Get-Content "$program\Dependencies.py"
 	Set-Location -Path "$program"
-	foreach ($line in $dependsfile)
+	Start-Process -Wait -NoNewWindow -FilePath "python.exe" "UpdateDependencies.py"
+	if ($? -eq $false)
 	{
-		$file = $line.Split(' ')[1]
-		Write-Host "Linking ..\${file}.py to ${file}.py"
-		# We could do a symlink, but that requires developer mode. Ug
-		#New-Item -Path "..\${file}.py" -ItemType SymbolicLink -Value "${file}.py"
-		Copy-Item -Path "..\${file}.py" -Destination "${file}.py"
+		Write-Host "Compile failed. Aborting..."
+		exit 1
 	}
 	Set-Location -Path '..'
 }
@@ -733,9 +731,9 @@ if ($setupenv -eq $true)
 
 if ($fixsmgr -eq $true)
 {
-	FixSeriesMgrFiles("SeriesMgr")
-	FixSeriesMgrFiles("CrossMgrVideo")
-#	FixSeriesMgrFiles("CrossMgrCamera")
+	FixDependencies("SeriesMgr")
+	FixDependencies("CrossMgrVideo")
+#	FixDependencies("CrossMgrCamera")
 }
 
 if ($clean -eq $true)

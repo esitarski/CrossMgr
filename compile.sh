@@ -366,7 +366,7 @@ buildall() {
 			for program in $PROGRAMS
 			do
                 if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo" ]; then
-                    fixSeriesMgrFiles $program
+                    fixDependencies $program
                 fi
 				getVersion $program
 				compileCode $program
@@ -390,16 +390,15 @@ listFiles() {
     done
 }
 
-fixSeriesMgrFiles() {
+fixDependencies() {
 	PROGRAM=$1
 	echo "Fixing: $PROGRAM"
     cd $PROGRAM
-    cat Dependencies.py | while read import file
-    do
-        echo "Linking; $file"
-        rm -f ${file}.py
-        ln -s "../${file}.py" "${file}.py"
-    done
+	python3 UpdateDependencies.py
+	if [ $? -ne 0 ];then
+		echo "Fix Dependencies Failed...."
+		exit 1
+	fi
     cd ..
 }
 
@@ -606,8 +605,8 @@ do
 		;;
 		r) dorelease
 		;;
-		f) fixSeriesMgrFiles 'SeriesMgr'
-		   fixSeriesMgrFiles 'CrossMgrVideo'
+		f) fixDependencies 'SeriesMgr'
+		   fixDependencies 'CrossMgrVideo'
 		;;
 		*) doHelp
 		;;
