@@ -22,6 +22,7 @@ param (
 	[switch]$smgr = $false,
 	[switch]$cmgra = $false,
 	[switch]$video = $false,
+	[switch]$pts = $false,
 	[switch]$camera = $false,
 	[switch]$all = $false,
 	[switch]$versioncmd = $false,
@@ -479,7 +480,7 @@ function BuildAll($programs)
 	CheckEnvActive
 	if ($programs.Length -eq 0)
 	{
-		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, or -all required"
+		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts or -all required"
 		exit 1
 	}
 	Cleanup
