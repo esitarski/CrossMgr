@@ -20,7 +20,7 @@ jobs:
             - name: Setup Python environment
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Setup Environment
@@ -80,7 +80,7 @@ jobs:
             - name: Setup Python Environment
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Linux Lib Install
