@@ -106,7 +106,7 @@ downloadAppImage() {
 			chmod 755 $LINUXDEPLOY
 		fi
 	else
-		echo "AppImage builder not requried for $OSNAME"
+		echo "AppImage builder not required for $OSNAME"
 	fi
 }
 
@@ -294,7 +294,7 @@ envSetup() {
 		pip3 install -r requirements.txt
 	fi
     if [ $? -ne 0 ];then
-        echo "Pip requirememnts install failed. Aborting..."
+        echo "Pip requirements install failed. Aborting..."
         exit 1
     fi
     
