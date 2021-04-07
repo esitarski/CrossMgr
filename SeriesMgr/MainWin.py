@@ -9,10 +9,7 @@ import random
 import time
 import json
 import webbrowser
-try:
-    from urllib import pathname2url         # Python 2.x
-except:
-    from urllib.request import pathname2url # Python 3.x
+from urllib.request import pathname2url
 import locale
 import traceback
 import xlwt
@@ -47,12 +44,12 @@ from AliasesLicense		import AliasesLicense
 from AliasesTeam		import AliasesTeam
 from Options			import Options
 from Errors				import Errors
-import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
 from SetGraphic			import SetGraphicDialog
 from ModuleUnpickler	import ModuleUnpickler
 import CmdLine
+import Version
 
 #----------------------------------------------------------------------------------
 
@@ -249,14 +246,8 @@ class MainWin( wx.Frame ):
 		# Configure the field of the display.
 
 		sty = wx.BORDER_SUNKEN
-		if 'MAC' in wx.Platform:
-			self.notebook = wx.Notebook( self )
-			self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
-		else:
-			self.notebook = fnb.FlatNotebook(self, wx.ID_ANY, agwStyle=fnb.FNB_VC8|fnb.FNB_NO_X_BUTTON)
-			self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
-		font = wx.Font( (0,(FontSize*4)//5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.notebook.SetFont( font )
+		self.notebook = wx.Notebook( self )
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
 		self.pages = []
