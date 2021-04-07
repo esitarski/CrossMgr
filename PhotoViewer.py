@@ -8,6 +8,8 @@ from LaunchFileBrowser import LaunchFileBrowser
 
 import wx
 import wx.lib.agw.thumbnailctrl as TC
+import wx.lib.agw.scrolledthumbnail as SC
+
 import os
 import sys
 import math
@@ -198,7 +200,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		try:
 			self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
 		except AttributeError:
-			pass
+			# Required for MAC.
+			self.thumbs.Bind(SC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
 		
 		self.SetSizer(self.vbs)
 		self.vbs.SetSizeHints(self)
