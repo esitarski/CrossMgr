@@ -1,7 +1,6 @@
 import wx
 import wx.adv
 from wx.lib.wordwrap import wordwrap
-import wx.lib.agw.flatnotebook as fnb
 
 import sys
 import cgi
@@ -76,14 +75,8 @@ class MainWin( wx.Frame ):
 		#---------------------------------------------------------------
 		# Configure the notebook.
 		#
-		sty = wx.BORDER_SUNKEN
-		if isMac:
-			# Flat notebook generate Segmentation Fault on Mac.
-			self.notebook = wx.Notebook(mainPanel)
-			self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGING, self.onPageChanging )
-		else:
-			self.notebook = fnb.FlatNotebook(mainPanel, wx.ID_ANY, agwStyle=fnb.FNB_VC8|fnb.FNB_NO_X_BUTTON)
-			self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
+		self.notebook = wx.Notebook(mainPanel)
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGING, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
 		self.pages = []

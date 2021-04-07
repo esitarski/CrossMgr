@@ -243,9 +243,8 @@ class MainWin( wx.Frame ):
 
 		#-----------------------------------------------------------------------
 
-		# Configure the field of the display.
+		# Configure the main field of the display.
 
-		sty = wx.BORDER_SUNKEN
 		self.notebook = wx.Notebook( self )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
