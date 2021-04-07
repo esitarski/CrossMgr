@@ -251,11 +251,12 @@ class MainWin( wx.Frame ):
 		sty = wx.BORDER_SUNKEN
 		if 'MAC' in wx.Platform:
 			self.notebook = wx.Notebook( self )
+			self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		else:
 			self.notebook = fnb.FlatNotebook(self, wx.ID_ANY, agwStyle=fnb.FNB_VC8|fnb.FNB_NO_X_BUTTON)
+			self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		font = wx.Font( (0,(FontSize*4)//5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.notebook.SetFont( font )
-		self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
 		self.pages = []
