@@ -14,7 +14,6 @@ import locale
 import traceback
 import xlwt
 import base64
-import wx.lib.agw.flatnotebook as fnb
 
 FontSize = 20
 
