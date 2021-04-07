@@ -651,7 +651,6 @@ class MainWin( wx.Frame ):
 
 		# Other data shown in right pane.
 		if wx.Platform == '__WXMAC__':
-			# Don't use awg notebook on MAC as it is unstable.
 			bookStyle = (
 				  flatnotebook.FNB_NO_X_BUTTON
 				| flatnotebook.FNB_NODRAG
