@@ -9,7 +9,7 @@ if [ "$OSNAME" == "Darwin" ]; then
 	PYTHONVER="python3.7"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.7"
+	PYTHONVER="python3.9"
 fi
 
 getBuildDir() {
@@ -289,9 +289,9 @@ envSetup() {
         # The build also takes >40 minutes, which is an excessive amount of time to wait for a failed build.
         # The solution is to grab the pre-built install for this Ubuntu version from wxPython extras.
 		UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
-		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -r /dev/stdin
+		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -v -r /dev/stdin
 	else
-		pip3 install -r requirements.txt
+		pip3 install -v -r requirements.txt
 	fi
     if [ $? -ne 0 ];then
         echo "Pip requirements install failed. Aborting..."
@@ -302,7 +302,7 @@ envSetup() {
 		pip3 install pywin32
 	fi
     if [ $OSNAME == "Darwin" ];then
-		pip3 install biplist dmgbuild
+		pip3 install biplist "dmgbuild>=1.4.2"
 	else
 		downloadAppImage
 	fi

@@ -41,15 +41,13 @@ jobs:
                  files: release/*
     buildwindows:
         name: Windows
-        # env:
-        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-        needs: buildmac
+        # needs: buildmac
         runs-on: windows-latest
         steps:
             - name: Setup Python environment
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Setup Environment
@@ -72,15 +70,13 @@ jobs:
                 file_glob: true
     buildlinux:
         name: Linux
-        # env:
-        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-        needs: buildmac
+        # needs: buildmac
         runs-on: ubuntu-latest
         steps:
             - name: Setup Python Environment
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Linux Lib Install

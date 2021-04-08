@@ -9,15 +9,11 @@ import random
 import time
 import json
 import webbrowser
-try:
-    from urllib import pathname2url         # Python 2.x
-except:
-    from urllib.request import pathname2url # Python 3.x
+from urllib.request import pathname2url
 import locale
 import traceback
 import xlwt
 import base64
-import wx.lib.agw.flatnotebook as fnb
 
 FontSize = 20
 
@@ -47,12 +43,12 @@ from AliasesLicense		import AliasesLicense
 from AliasesTeam		import AliasesTeam
 from Options			import Options
 from Errors				import Errors
-import Version
 from Printing			import SeriesMgrPrintout
 from ExportGrid			import ExportGrid, tag
 from SetGraphic			import SetGraphicDialog
 from ModuleUnpickler	import ModuleUnpickler
 import CmdLine
+import Version
 
 #----------------------------------------------------------------------------------
 
@@ -143,7 +139,7 @@ def ShowTipAtStartup():
 #----------------------------------------------------------------------------------
 		
 class MainWin( wx.Frame ):
-	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
+	def __init__( self, parent, id=wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
 
 		Utils.setMainWin( self )
@@ -246,13 +242,10 @@ class MainWin( wx.Frame ):
 
 		#-----------------------------------------------------------------------
 
-		# Configure the field of the display.
+		# Configure the main field of the display.
 
-		sty = wx.BORDER_SUNKEN
-		self.notebook = fnb.FlatNotebook(self, wx.ID_ANY, agwStyle=fnb.FNB_VC8|fnb.FNB_NO_X_BUTTON)
-		font = wx.Font( (0,(FontSize*4)//5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.notebook.SetFont( font )
-		self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
+		self.notebook = wx.Notebook( self )
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
 		self.pages = []
@@ -991,7 +984,7 @@ def MainLoop():
 	
 	# Configure the main window.
 	sWidth, sHeight = wx.GetDisplaySize()
-	mainWin = MainWin( None, title=Version.AppVerName, size=(sWidth*0.9,sHeight*0.9) )
+	mainWin = MainWin( None, title=Version.AppVerName, size=(int(sWidth*0.9),int(sHeight*0.9)) )
 	if args.fullScreen:
 		mainWin.Maximize( True )
 		

@@ -50,13 +50,13 @@ jobs:
                  files: release/*
     buildlinux:
         name: Linux
-        needs: buildmac
-        runs-on: ubuntu-16.04
+        # needs: buildmac
+        runs-on: ubuntu-20.04
         steps:
             - name: Setup Python environment
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Linux Lib Install
@@ -89,13 +89,13 @@ jobs:
                  files: release/*
     buildwindows:
         name: Windows
-        needs: buildmac
+        # needs: buildmac
         runs-on: windows-latest
         steps:
             - name: Setup Python environment
               uses: actions/setup-python@v2
              with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Setup Environment
