@@ -12,9 +12,9 @@ def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
 		try:
-			gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
+			gettext.install(AppVerName.split()[0], './locale', unicode=True)
 		except:
-			gettext.install(AppVerName.split(None, 1), './locale')
+			gettext.install(AppVerName.split()[0], './locale')
 		initTranslationCalled = True
 		
 initTranslation()

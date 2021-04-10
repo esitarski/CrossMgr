@@ -1,6 +1,7 @@
 import wx
 import wx.adv as adv
 from wx.lib.wordwrap import wordwrap
+import wx.lib.dialogs
 
 import sys
 import cgi
@@ -719,12 +720,12 @@ hr { clear: both; }
 			"DNS : means DNS\n"
 			"DSQ,DQ : means DSQ\n"
 			"\n"
-			"Upper/Lower case is not important.  For example, '10 11 13+' is the shortcut for '+ Lap'.  '14 15 18-' is shorcut for '- Lap'.\n"
+			"Upper/Lower case is unimportant.  For example, '10 11 13+' is the shortcut for '+ Lap'.  '14 15 18-' is shorcut for '- Lap'.\n"
 			"'19 20 21dnf' is short cut for pressing 'DNF'\n"
-			"\n",
-			"Ties are entered with an equals sign (=) between bib numbers (eg. 10=20, 30 40) means 10, 20 tied for first, 30 in 3rd, 40 in 4th\n",
 			"\n"
-			"Edit events by clicking on them.",
+			"Ties are entered with an equals sign (=) between bib numbers (eg. 10=20, 30 40) means 10, 20 tied for first, 30 in 3rd, 40 in 4th\n"
+			"\n"
+			"Edit events by clicking on them."
 			"Delete unwanted events by right-clicking on the Event column in the list.\n"
 			"Rearrange the sequence of Events by dragging-and-dropping rows from Column 1.\n"
 			"\n"
@@ -739,7 +740,7 @@ hr { clear: both; }
 			"in the dialog.\n"
 			"\n"
 			"Up-to-date results are always shown on the Details and Summary screens.\n"
-			"Double-click the Sp column header to edit the results for that sprint.\n",
+			"Double-click the Sp column header to edit the results for that sprint.\n"
 			"Click on the Sp column header to see the Event corresponding\nto that sprint.\n"
 			"\n"
 			"Use the 'Start List' screen to enter rider information (you can also import it from Excel).\n"
@@ -756,12 +757,12 @@ hr { clear: both; }
 			"  2.  If a tie, by Most Points\n"
 			"  3.  If still a tie, by Most Sprint Wins\n"
 			"  4.  If still a tie, by Finish Order\n\n"
-			"If ranking by 'Laps Completed, Points, then Finish Order', riders are ranked by:\n"
+			"If ranking by 'Laps Completed, Points, then Finish Order', riders are ranßked by:\n"
 			"  1.  Most Laps Completed (as specified by +/- Laps)\n"
 			"  2.  If a tie, by Most Points\n"
 			"  3.  If still a tie, by Finish Order\n\n"
 			"")
-		dlg = wx.MessageDialog(self, message, "PointsRaceMgr Help", wx.OK | wx.ICON_INFORMATION)
+		dlg = wx.lib.dialogs.ScrolledMessageDialog(self, message, "PointsRaceMgr Help" )
 		dlg.ShowModal()
 		dlg.Destroy()
 

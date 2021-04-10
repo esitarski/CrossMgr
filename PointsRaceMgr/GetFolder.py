@@ -48,6 +48,7 @@ def GetFolders():
 				'htmlFolder':os.path.join( dirName, '{}Html'.format(AppName) ),
 				'helpFolder':os.path.join( dirName, '{}HtmlDoc'.format(AppName) ),
 				'helpIndexFolder':os.path.join( dirName, '{}HelpIndex'.format(AppName) ),
+				'localeFolder':os.path.join( dirName, '{}Locale'.format(AppName) ),
 			}
 		)
 	
