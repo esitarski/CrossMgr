@@ -56,6 +56,6 @@ def GetFolders():
 
 def GetFolder( folderName ):
 	try:
-		return dirNames[folderNmae]
+		return dirNames[folderName]
 	except KeyError:
 		return GetFolders()[folderName]
