@@ -50,7 +50,7 @@ jobs:
                  files: release/*
     buildlinux:
         name: Linux
-        # needs: buildmac
+        needs: buildmac
         runs-on: ubuntu-20.04
         steps:
             - name: Setup Python environment
@@ -89,7 +89,7 @@ jobs:
                  files: release/*
     buildwindows:
         name: Windows
-        # needs: buildmac
+        needs: buildmac
         runs-on: windows-latest
         steps:
             - name: Setup Python environment
