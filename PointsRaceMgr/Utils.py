@@ -2,6 +2,7 @@
 # Set translation locale.
 #
 import wx
+import wx.lib.agw.genericmessagedialog
 locale = wx.Locale()
 
 from Version import AppVerName
@@ -205,13 +206,41 @@ def tag( buf, name, attrs = {} ):
 		buf.write( '</{}>\n'.format(name) )
 
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'MAC' in wx.Platform:
+	try:
+		topdirName = os.environ['RESOURCEPATH']
+	except Exception:
+		topdirName = os.path.dirname(os.path.realpath(__file__))
+	if os.path.isdir( os.path.join(topdirName, 'PointsRaceMgrImages') ):
+		dirName = topdirName
+	else:
+		dirName = os.path.normpath(topdirName + '/../Resources/')
+	if not os.path.isdir(dirName):
+		dirName = os.path.normpath(topdirName + '/../../Resources/')
+	if not os.path.isdir(dirName):
+		raise Exception("Resource Directory does not exist:" + dirName)
+		
+	# Make message not have the standard python icon on Mac.
+	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
+		
+else:
+	try:
+		dirName = os.path.dirname(os.path.abspath(__file__))
+	except Exception:
+		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'PointsRaceMgr.exe']:
+		dirName = os.path.dirname(dirName)
+	if 'PointsRaceMgr?' in os.path.basename(dirName):
+		dirName = os.path.dirname(dirName)
+	if not os.path.isdir( os.path.join(dirName, 'PointsRaceMgrImages') ):
+		dirName = os.path.dirname(dirName)
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
+	if os.path.isdir( os.path.join(dirName, 'PointsRaceMgrImages') ):
+		pass
+	elif os.path.isdir( '/usr/local/PointsRaceMgrImages' ):
+		dirName = '/usr/local'
+
 imageFolder = os.path.join(dirName, 'PointsRaceMgrImages')
 htmlFolder = os.path.join(dirName, 'PointsRaceMgrHtml')
 

@@ -493,7 +493,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfywVZUr" option
+while getopts "hcitaviCdPBASkomzlTfyqwVZUr" option
 do
 	gotarg=1
 	case ${option} in
