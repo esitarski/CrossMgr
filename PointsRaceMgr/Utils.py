@@ -207,46 +207,14 @@ def tag( buf, name, attrs = {} ):
 
 #------------------------------------------------------------------------
 if 'MAC' in wx.Platform:
-	try:
-		topdirName = os.environ['RESOURCEPATH']
-	except Exception:
-		topdirName = os.path.dirname(os.path.realpath(__file__))
-	if os.path.isdir( os.path.join(topdirName, 'PointsRaceMgrImages') ):
-		dirName = topdirName
-	else:
-		dirName = os.path.normpath(topdirName + '/../Resources/')
-	if not os.path.isdir(dirName):
-		dirName = os.path.normpath(topdirName + '/../../Resources/')
-	if not os.path.isdir(dirName):
-		raise Exception("Resource Directory does not exist:" + dirName)
-		
 	# Make message not have the standard python icon on Mac.
 	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
-		
-else:
-	try:
-		dirName = os.path.dirname(os.path.abspath(__file__))
-	except Exception:
-		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-	
-	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'PointsRaceMgr.exe']:
-		dirName = os.path.dirname(dirName)
-	if 'PointsRaceMgr?' in os.path.basename(dirName):
-		dirName = os.path.dirname(dirName)
-	if not os.path.isdir( os.path.join(dirName, 'PointsRaceMgrImages') ):
-		dirName = os.path.dirname(dirName)
 
-	if os.path.isdir( os.path.join(dirName, 'PointsRaceMgrImages') ):
-		pass
-	elif os.path.isdir( '/usr/local/PointsRaceMgrImages' ):
-		dirName = '/usr/local'
-
-imageFolder = os.path.join(dirName, 'PointsRaceMgrImages')
-htmlFolder = os.path.join(dirName, 'PointsRaceMgrHtml')
-
-def getDirName():		return dirName
-def getImageFolder():	return imageFolder
-def getHtmlFolder():	return htmlFolder
+# Add access functions to all resource folders.
+from GetFolder import GetFolders
+globals().update( {'get' + folder[0].upper() + folder[1:]:lambda v=location: v for folder, location in GetFolders().items()} )
+def getImageFile( fname ):
+	return os.path.join( getImageFolder(), fname )
 
 def AlignHorizontalScroll( gFrom, gTo ):
 	xFrom, yFrom = gFrom.GetViewStart()
