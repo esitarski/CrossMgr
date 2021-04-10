@@ -210,7 +210,7 @@ if 'MAC' in wx.Platform:
 	# Make message not have the standard python icon on Mac.
 	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
 
-# Add access functions to all resource folders.
+# Add access functions for all resource folders.
 from GetFolder import GetFolders
 globals().update( {'get' + folder[0].upper() + folder[1:]:lambda v=location: v for folder, location in GetFolders().items()} )
 def getImageFile( fname, folder=getImageFolder() ):
