@@ -1,6 +1,8 @@
 import os
 import math
 import xlrd
+import openpyxl
+import datetime
 import unicodedata
 import xml.etree.ElementTree
 from mmap import mmap, ACCESS_READ
@@ -47,8 +49,11 @@ class ReadExcelXls:
 		values = []
 		for type, value in zip(sheet.row_types(row_index), sheet.row_values(row_index)):
 			if type == 2:
-				if value == int(value):
-					value = int(value)
+				try:
+					if value == int(value):
+						value = int(value)
+				except TypeError:
+					pass
 			elif type == 3:
 				if isinstance(value, float) and value < 1.0:
 					t = value * (24.0*60.0*60.0)
@@ -80,12 +85,12 @@ class ReadExcelXls:
 						else:
 							# time only - no date component
 							if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
-								value = "%02d:%02d:%02d" % datetuple[3:]
+								value = "{:02d}:{02d}:{02d}".format(datetuple[3:])
 							# date only, no time
 							elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
-								value = "%04d/%02d/%02d" % datetuple[:3]
+								value = "{:%04d}/{:02d}/{:02d}".format( *datetuple[:3] )
 							else: # full date
-								value = "%04d/%02d/%02d %02d:%02d:%02d" % datetuple
+								value = "{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}".format( *datetuple )
 			elif type == 5:
 				value = xlrd.error_text_from_code[value]
 			values.append(value)
@@ -98,7 +103,53 @@ class ReadExcelXls:
 
 #----------------------------------------------------------------------------
 
-ReadExcelXlsx = ReadExcelXls
+class ReadExcelXlsx:
+	def __init__(self, filename):
+		if not os.path.isfile(filename):
+			raise ValueError( "{} is not a valid filename".format(filename) )
+		with open(filename,'rb') as f:
+			self.book = openpyxl.load_workbook( filename, data_only=True )
+		
+	def is_nonempty_row(self, sheet, i):
+		values = sheet.row_values(i)
+		if isinstance(values[0], str) and values[0].startswith('#'):
+			return False # ignorable comment row
+		return any( bool(v) for v in values )
+	
+	def sheet_names( self ):
+		return self.book.sheetnames
+		
+	def _parse_row(self, row, date_as_tuple):
+		""" Sanitize incoming excel data """
+		values = []
+		for cell in row:
+			value = cell.value
+			if cell.data_type == 'n':
+				try:
+					if value == int(value):
+						value = int(value)
+				except TypeError:
+					pass
+			elif cell.data_type == 'd':
+				if date_as_tuple:
+					value = value.timetuple()
+				else:
+					if isinstance(value, datetime.time):
+						value = value.strftime( '%H:%M:%S.%f' )
+					elif isinstance(value, datetime.date):
+						value = value.strftime( '%Y/%m/%d' )
+					elif isinstance(value, datetime.datetime):
+						value = value.strftime( '%Y/%m/%d %H:%M:%S.%f' )
+					if isinstance(value, str) and value.endswith( '.000000' ):
+						value = value[:-7]
+				
+			values.append( value )
+		return values
+		
+	def iter_list(self, sname, date_as_tuple=False):
+		sheet = self.book[sname]
+		for i, row in enumerate(sheet.iter_rows()):
+			yield self._parse_row(row, date_as_tuple)
 
 #----------------------------------------------------------------------------
 
@@ -111,4 +162,10 @@ def GetExcelReader( filename ):
 		raise ValueError( '{} is not a recognized Excel format'.format(filename) )
 
 #----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+	#r = GetExcelReader( 'RaceResultTest.xlsx' )
+	r = GetExcelReader( 'test2.xlsx' )
+	for r, row in enumerate(r.iter_list(r.sheet_names()[0])):
+		print( r, row )
 

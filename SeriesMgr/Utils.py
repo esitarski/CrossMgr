@@ -13,7 +13,7 @@ import io
 
 import wx.lib.agw.genericmessagedialog
 
-if 'WXMAC' in wx.Platform:
+if 'MAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
 	except Exception:

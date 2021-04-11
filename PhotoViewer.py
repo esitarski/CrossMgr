@@ -7,8 +7,12 @@ from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
 
 import wx
+import wx.lib.agw
 import wx.lib.agw.thumbnailctrl as TC
-import wx.lib.agw.scrolledthumbnail as SC
+try:
+	import wx.lib.agw.scrolledthumbnail as SC
+except:
+	SC = None
 
 import os
 import sys

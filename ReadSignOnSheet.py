@@ -130,14 +130,14 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 		headers.pop()
 		
 	if not headers:
-		raise ValueError( u'{} {}::{}.'.format(_('Could not find a Header Row'), fileName, sheetName) )
+		raise ValueError( '{} {}::{}.'.format(_('Could not find a Header Row'), fileName, sheetName) )
 	
 	# Rename empty columns so as not to confuse the user.
-	headers = [h if h else u'<{} {:03d}>'.format(_('Blank Header Column'), (c+1)) for c, h in enumerate(headers)]
-	headers = [h if len(h) < 32 else h[:29].strip() + u'...' for h in headers]
+	headers = [h if h else '<{} {:03d}>'.format(_('Blank Header Column'), (c+1)) for c, h in enumerate(headers)]
+	headers = [h if len(h) < 32 else h[:29].strip() + '...' for h in headers]
 	
 	# Set a blank final entry.
-	headers.append( u'' )
+	headers.append( '' )
 		
 	# Create a map for the field names we are looking for
 	# and the headers we found in the Excel sheet.
@@ -211,15 +211,17 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		boldFont = None
 		
 		GetTranslation = _
-		gs = wx.GridSizer( 2, len(Fields), 4, 4 )
+		gs = wx.GridSizer( 2, len(Fields), 2, 4 )
 		gs.SetHGap( 3 )
 		for c, f in enumerate(Fields):
 			label = wx.StaticText(sp, label=GetTranslation(f))
+			'''
 			if boldFont is None:
 				font = label.GetFont()
-				boldFont = wx.Font( int(font.GetPointSize()*1.2), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+				boldFont = wx.Font( int(font.GetPointSize()), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
 			label.SetFont( boldFont )
-			gs.Add( label )
+			'''
+			gs.Add( label, flag=wx.EXPAND )
 		
 		self.headers = []
 		self.choices = []
@@ -470,7 +472,7 @@ class GetExcelLink:
 					if fileName == '':
 						message = _('Please specify an Excel file.')
 					else:
-						message = u'{}\n\n   "{}".\n\n{}'.format(
+						message = '{}\n\n   "{}".\n\n{}'.format(
 							_('Cannot open file'),
 							fileName,
 							_('Please check the file name and/or its read permissions.'),
@@ -482,13 +484,13 @@ class GetExcelLink:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
 					Utils.MessageOK(
-						self.wizard, u'\n'.join( [_('Cannot find at least 5 header names in the Excel sheet.'), _('Check the format.')] ),
+						self.wizard, '\n'.join( [_('Cannot find at least 5 header names in the Excel sheet.'), _('Check the format.')] ),
 						title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
 				if Model.race and Model.race.enableJChipIntegration and not self.headerNamesPage.hasTagField():
 					if Utils.MessageOKCancel(
-							self.wizard, u'{}\n\n{}'.format(_('No RFID Tag Columns Specified.'),_('Fix it now?')),
+							self.wizard, '{}\n\n{}'.format(_('No RFID Tag Columns Specified.'),_('Fix it now?')),
 							title=_('No RFID Tag Columns'), iconMask=wx.ICON_ERROR):
 						evt.Veto()
 						return
@@ -499,7 +501,7 @@ class GetExcelLink:
 				excelLink.initCategoriesFromExcel = self.headerNamesPage.initCategoriesFromExcel.GetValue()
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
+					Utils.MessageOK( self.wizard, '{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
@@ -520,7 +522,7 @@ class GetExcelLink:
 							excelLink.initCategoriesFromExcel,
 						)
 					except ValueError as e:
-						Utils.MessageOK(self.wizard, u'{}\n{}\n\n"{}"'.format(
+						Utils.MessageOK(self.wizard, '{}\n{}\n\n"{}"'.format(
 												_('Problem extracting rider info.'),
 												_('Check the Excel format.'),
 												e,
@@ -770,7 +772,7 @@ class ExcelLink:
 				infoCache = {}
 				errorCache = []
 				return {}
-		except (IOError, ValueError):
+		except Exception:
 			infoCache = {}
 			errorCache = []
 			return {}
@@ -791,7 +793,7 @@ class ExcelLink:
 						data[field] = row[col]
 					
 					if data[field] == None:
-						data[field] = u''
+						data[field] = ''
 						
 					if field == 'LastName':
 						try:
@@ -954,10 +956,10 @@ def IsValidRaceDBExcel( fileName ):
 		reader = GetExcelReader( fileName )
 	except Exception:
 		return False
-	for sheetName in ['Registration', PropertySheetName, CategorySheetName]:
-		if sheetName not in reader.sheet_names():
-			return False
-	return True
+	sheet_names = set( reader.sheet_names() )
+	return all( sheetName in sheet_names
+		for sheetName in ('Registration', PropertySheetName, CategorySheetName)
+	)
 
 def HasExcelLink( race ):
 	try:
