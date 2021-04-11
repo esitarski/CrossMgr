@@ -24,11 +24,11 @@ import datetime
 TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 
 def getRiderName( info ):
-	lastName = info.get('LastName',u'')
-	firstName = info.get('FirstName',u'')
+	lastName = info.get('LastName','')
+	firstName = info.get('FirstName','')
 	if lastName:
 		if firstName:
-			return u'{}, {}'.format(lastName, firstName)
+			return '{}, {}'.format(lastName, firstName)
 		else:
 			return lastName
 	return firstName
