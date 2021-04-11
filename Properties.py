@@ -84,7 +84,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.Bind(wx.adv.EVT_DATE_CHANGED, self.onChanged, self.date)
 		
 		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline') )
-		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross', size=(160,-1) )
+		self.raceDiscipline = wx.TextCtrl( self, value='Cyclo-cross', size=(160,-1) )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		
 		self.dateDisciplineSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -1323,13 +1323,14 @@ class Properties( wx.Panel ):
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( mainSizer )
 		
-		if 'MAC' in wx.Platform:
+		if False and 'MAC' in wx.Platform:
 			self.notebook = wx.Notebook( self )
 		else:
 			bookStyle = (
 				  flatnotebook.FNB_NO_NAV_BUTTONS
 				| flatnotebook.FNB_NO_X_BUTTON
-				| flatnotebook.FNB_VC8
+				#| flatnotebook.FNB_VC8
+				| flatnotebook.FNB_DROPDOWN_TABS_LIST
 				| flatnotebook.FNB_NODRAG
 			)
 			self.notebook = flatnotebook.FlatNotebook( self, agwStyle=bookStyle )
