@@ -1323,18 +1323,14 @@ class Properties( wx.Panel ):
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( mainSizer )
 		
-		if False and 'MAC' in wx.Platform:
-			self.notebook = wx.Notebook( self )
-		else:
-			bookStyle = (
-				  flatnotebook.FNB_NO_NAV_BUTTONS
-				| flatnotebook.FNB_NO_X_BUTTON
-				#| flatnotebook.FNB_VC8
-				| flatnotebook.FNB_DROPDOWN_TABS_LIST
-				| flatnotebook.FNB_NODRAG
-			)
-			self.notebook = flatnotebook.FlatNotebook( self, agwStyle=bookStyle )
-			self.notebook.SetTabAreaColour( wx.WHITE )
+		bookStyle = (
+			  flatnotebook.FNB_NO_NAV_BUTTONS
+			| flatnotebook.FNB_NO_X_BUTTON
+			| flatnotebook.FNB_DROPDOWN_TABS_LIST
+			| flatnotebook.FNB_NODRAG
+		)
+		self.notebook = flatnotebook.FlatNotebook( self, agwStyle=bookStyle )
+		self.notebook.SetTabAreaColour( wx.WHITE )
 		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 
