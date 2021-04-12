@@ -236,7 +236,7 @@ class Configure( wx.Panel ):
 	def onChange( self, event ):
 		self.commit()
 		if Utils.getMainWin():
-			Utils.getMainWin().refresh( False )
+			Utils.getMainWin().refresh( False )	# False means don't include the Configure page.  This avoids an infinite loop.
 	
 	#--------------------------------------------------------------------------------------
 
