@@ -79,7 +79,7 @@ def MessageOKCancel( parent, message, title = '', iconMask = 0):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK | wx.CANCEL | iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
-	return True if response == wx.ID_OK else False
+	return response == wx.ID_OK
 	
 def MessageYesNoCancel( parent, message, title = '', iconMask = 0 ):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES_NO | wx.CANCEL | iconMask )
