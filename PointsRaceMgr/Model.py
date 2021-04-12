@@ -64,9 +64,9 @@ class Rider:
 		
 		if place == 1:
 			self.numWins += 1
-	
-	def addFinishOrder( self, finishOrder, tie ):
-		self.finishOrder = (finishOrder, tie)
+
+		if sprint == race.getNumSprints():
+			self.finishOrder = place
 	
 	def addUpDown( self, updown ):
 		assert updown == -1 or updown == 1
@@ -321,7 +321,7 @@ class Race:
 			return self.riders[bib]
 			
 	def getSprintPoints( self, sprint, place, bibs=None ):
-		# Find the correct place if a tie.
+		# Adjust the place if there is a tie.
 		while place > 1:
 			try:
 				bib = bibs[place-1]
@@ -379,9 +379,8 @@ class Race:
 				else:
 					bibs = e.bibs
 				for place, b in enumerate(bibs, 1):
-					r = self.getRider(b)
-					r.addSprintResult(self.sprintCount, place, bibs)
-					r.addFinishOrder(place)
+					# addSprintResult also updates the finishOrder.
+					self.getRider(b).addSprintResult(self.sprintCount, place, bibs)
 			elif e.eventType == RaceEvent.DNF:
 				for b in e.bibs:
 					self.getRider(b).status = Rider.DNF
