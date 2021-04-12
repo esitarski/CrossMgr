@@ -28,9 +28,14 @@ class GridCellMultiLineStringRenderer(gridlib.GridCellRenderer):
 
 	def GetBestSize(self, grid, attr, dc, row, col): 
 		text = grid.GetCellValue(row, col)
+		if text.endswith('\n'):	# Ignore trailing newlines.
+			text = text[:-1]
 		dc.SetFont(attr.GetFont())
-		w, h, lineHeight = dc.GetMultiLineTextExtent(text)                   
-		return wx.Size(w, h)        
+		lines = text.split('\n')
+		return wx.Size(
+			max( (dc.GetTextExtent(line)[0] for line in lines), default=0 ),
+			dc.GetTextExtent('Wj')[1] * (len(lines) + 1)
+		)
 
 	def Clone(self): 
 		return GridCellMultiLineStringRenderer()
