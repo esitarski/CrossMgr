@@ -4,12 +4,12 @@ from wx.lib.wordwrap import wordwrap
 import wx.lib.dialogs
 
 import sys
-import cgi
+from html import escape
 import os
 import io
 import re
 import datetime
-import xlwt
+import xlsxwriter
 import webbrowser
 import pickle
 import subprocess
@@ -454,11 +454,11 @@ hr { clear: both; }
 ''')
 					with tag(html, 'body'):
 						with tag(html, 'h1'):
-							write( '{}: {}'.format(cgi.escape(race.name), race.date.strftime('%Y-%m-%d')) )
+							write( '{}: {}'.format(escape(race.name), race.date.strftime('%Y-%m-%d')) )
 							if race.communique:
-								write( ': Communiqu\u00E9 {}'.format(cgi.escape(race.communique)) )
+								write( ': Communiqu\u00E9 {}'.format(escape(race.communique)) )
 						with tag(html, 'h2'):
-							write( 'Category: {}'.format(cgi.escape(race.category)) )
+							write( 'Category: {}'.format(escape(race.category)) )
 						
 						d = race.courseLength*race.laps
 						if d == int(d):
@@ -506,22 +506,30 @@ hr { clear: both; }
 			if not self.menuSaveAs( event ):
 				return
 
-		xlFName = os.path.splitext(self.fileName)[0] + '.xls'
+		xlFName = os.path.splitext(self.fileName)[0] + '.xlsx'
 		
-		wb = xlwt.Workbook()
+		if (
+				os.path.exists( xlFName ) and not
+				Utils.MessageOKCancel(
+					self,
+					'Export file exists:\n\n\t{}\n\nReplace?'.format(xlFName),
+					'Excel Export', iconMask=wx.ICON_INFORMATION
+				)
+			):
+			return
+		
+		wb = xlsxwriter.Workbook( xlFName )
 		ToExcel( wb )
 
 		try:
-			wb.save( xlFName )
-			try:
-				webbrowser.open( xlFName )
-			except:
-				pass
-			#Utils.MessageOK(self, 'Excel file written to:\n\n   {}'.format(xlFName), 'Excel Write', iconMask=wx.ICON_INFORMATION)
+			wb.close()
+			Utils.MessageOK(self,
+						'Exported to:\n\n\t{}.'.format(xlFName),
+						'Excel Export', iconMask=wx.ICON_INFORMATION )
 		except Exception as e:
 			traceback.print_exc()
 			Utils.MessageOK(self,
-						'Cannot write "{}"\n\n{}\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlFName,e),
+						'Cannot write\n\n\t{}\n\n{}\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlFName,e),
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 
 	#-------------------------------------------------------------------
