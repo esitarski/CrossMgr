@@ -157,6 +157,7 @@ function Cleanup($program)
 		'CrossMgrAlien/__pycache__',
 		'SeriesMgr/__pycache__',
 		'PointsRaceMgr/__pycache__',
+		'SprintMgr/__pycache__',
 		'dist',
 		'build',
 		'release',
@@ -728,7 +729,7 @@ if ($all -eq $true)
 		'SeriesMgr',
 		'CrossMgrAlien',
 		'CrossMgrVideo',
-		'PointsRaceMgr'
+		'PointsRaceMgr',
 		'SprintMgr'
 		)
 }
