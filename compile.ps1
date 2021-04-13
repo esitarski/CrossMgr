@@ -293,7 +293,7 @@ function Package($program)
 {
 	$builddir = GetBuildDir($program)
 	$version = GetVersion($program)
-	$newinstallname = "${program}_Setup_x64_v${version}".Replace('.', '_')
+	$newinstallname = "${program}-${version}".Replace('.', '_')
 	$yeartoday = (Get-Date).Year
 	$curdir = (Get-Item -Path ".\").FullName
 	$sourcepath = "$curdir\dist\$program"
