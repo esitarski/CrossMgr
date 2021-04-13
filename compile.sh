@@ -464,6 +464,7 @@ $0 [ -hcCtaep: ]
  -w        - Build CrossMgrAlien
  -V        - Build CrossMgrVideo
  -q        - Build PointsRaceMgr
+ -s        - Build SprintMgr
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -493,14 +494,14 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfyqwVZUr" option
+while getopts "hcitaviCdPBASkomzlTfyqswVZUr" option
 do
 	gotarg=1
 	case ${option} in
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr CrossMgr"
+ 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
@@ -514,6 +515,8 @@ do
 		;;
 		q) PROGRAMS="$PROGRAMS PointsRaceMgr"
 		;;
+		s) PROGRAMS="$PROGRAMS SprintMgr"
+		;;
 		V) PROGRAMS="$PROGRAMS CrossMgrVideo"
 		;;
 		v) 	getVersion "CrossMgr"
@@ -523,6 +526,7 @@ do
 			getVersion "CrossMgrAlien"
 			getVersion "CrossMgrVideo"
 			getVersion "PointsRaceMgr"
+			getVersion "SprintMgr"
 		;;
 		C) 	cleanup
 		;;

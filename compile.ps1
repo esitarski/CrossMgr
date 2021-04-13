@@ -23,6 +23,7 @@ param (
 	[switch]$cmgra = $false,
 	[switch]$video = $false,
 	[switch]$pts = $false,
+	[switch]$spr = $false,
 	[switch]$camera = $false,
 	[switch]$all = $false,
 	[switch]$versioncmd = $false,
@@ -293,7 +294,7 @@ function Package($program)
 {
 	$builddir = GetBuildDir($program)
 	$version = GetVersion($program)
-	$newinstallname = "${program}-${version}".Replace('.', '_')
+	$newinstallname = "${program}_${version}".Replace('.', '_')
 	$yeartoday = (Get-Date).Year
 	$curdir = (Get-Item -Path ".\").FullName
 	$sourcepath = "$curdir\dist\$program"
@@ -480,7 +481,7 @@ function BuildAll($programs)
 	CheckEnvActive
 	if ($programs.Length -eq 0)
 	{
-		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts or -all required"
+		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts, -spr or -all required"
 		exit 1
 	}
 	Cleanup
@@ -609,6 +610,7 @@ function doHelp
 	-video       - Build CrossMgrVideo
 	-cam         - Build CrossMgrCamera (NOT COMPLETE)
 	-pts         - Build PointsRaceMgr
+	-spr         - Build SprintMgr
 	-all         - Build all programs
 	
 	-checkver     - check python version
@@ -669,6 +671,7 @@ if ((($clean -eq $false) -and ($setupenv -eq $false) -and ($fix -eq $false)) -an
 		($video -eq $false) -and
 		($cam -eq $false) -and
 		($pts -eq $false) -and
+		($spr -eq $false) -and
 		($all -eq $false))
 {
 	Write-Host "You must specify a program to build or -all"
@@ -712,6 +715,10 @@ if ($pts -eq $true)
 {
 	$programs += 'PointsRaceMgr'
 }
+if ($spr -eq $true)
+{
+	$programs += 'SprintMgr'
+}
 if ($all -eq $true)
 {
 	$programs = @(
@@ -722,6 +729,7 @@ if ($all -eq $true)
 		'CrossMgrAlien',
 		'CrossMgrVideo',
 		'PointsRaceMgr'
+		'SprintMgr'
 		)
 }
 if ($setupenv -eq $true)
