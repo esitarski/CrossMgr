@@ -42,7 +42,7 @@ InactiveBackgroundColour = wx.Colour( 200, 200, 200 )
 CacheDNSs = set()	# Cashe for DNSs set in the Event Start screen, but not yet committed in the Finish screen.
 
 def MakeRoundButton( parent, label, bType = 0 ):
-	btn = RoundButton( parent, wx.ID_ANY, label, size=(RoundButtonSize, RoundButtonSize) )
+	btn = RoundButton( parent, label=label, size=(RoundButtonSize, RoundButtonSize) )
 	btn.SetBackgroundColour( wx.WHITE )
 	btn.SetForegroundColour( buttonColors[bType] )
 	btn.SetFontToFitLabel()
