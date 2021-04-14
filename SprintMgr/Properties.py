@@ -15,6 +15,7 @@ class Properties(wx.Panel):
 
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
+		self.SetBackgroundColour( wx.WHITE )
 		
 		model = Model.model
 		
