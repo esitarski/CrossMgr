@@ -2,6 +2,7 @@
 # Set translation locale.
 #
 import wx
+import wx.lib.agw.genericmessagedialog
 locale = wx.Locale()
 
 from Version import AppVerName
