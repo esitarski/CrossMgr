@@ -5,9 +5,20 @@
 
 Welcome to Cross Manager. Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
 
+The software consists of a set of executables.  For Cyclocross, MTB CX, TimeTrial, Road and Criterium races, you will need:
+
+* CrossMgr
+* CrossMgrImpinj or CrossMgrAlien if you plan to use an RFID reader.
+* SeriesMgr if you plan to score a series of races.
+
+If you are scoring Track races you will need:
+
+* PointsRaceMgr - for scoring races with intermediate sprints and Laps gained/lost.
+* SprintMgr - for Track sprint races as well as MTB (4x, eliminator, etc.)
+
 ## System Requirements
 
-CrossMgr is a cross platform application written in Python and compiled into machine code. Builds are made available for Windows, MacOSX, and Linux. In order to publish results, an internet connect is required.
+All applications are written in Python and compiled into machine code. Builds are made available for Windows, MacOSX, and Linux. In order to publish results, an internet connect is required.
 
 The minimum system requires are as follows:
 
@@ -25,27 +36,29 @@ The minimum system requires are as follows:
 
 ### Linux
 
-- Ubuntu 16.04 LTS or newer (other linux distributions may work but are not offically supported)
+- Ubuntu 20.04 LTS or newer (other linux distributions may work but are not offically supported)
 - 4G RAM
 - 10G HD space
 
 ## User Installation
 
-As a user, you can install CrossManager on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. CrossMgr has gone through many iterations. Previous versions require Mac and Linux users to install Python, the source code, and fight with it to get it working. This is no longer the case. As with the Windows version, the MacOSX and Linux versions are available as binary releases. The MacOSX and Linux versions are built on github as a release automatically when the code changes. See the Releases tab in the github repo for binaries.
+As a user, you can install the CrossManager applications on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. The Windows, MacOSX and Linux versions are available as binary releases. See the Releases tab in the github repo for binaries.
 
 ### Windows Installation
 
-From the Releases tab, download the CrossMgr-Setup_x64_VERSION.exe file. Run the file and follow the on screen instructions. By default, the program will be installed in C:\Program Files\CrossMgr. You can find Crossmgr from the start menu in the CrossMgr program group.
+From the Releases tab, download the CrossMgr_x64_VERSION.exe file. Run the file and follow the on screen instructions.
 
-When running the installer, Windows will complain that it is a unknown publish. Click the MORE INFORMATION link in that dialog, and then click the RUN ANYWAYS button. The install will proceed.
+When running the installer, Windows will likely complain that it is a unknown publish. Click the MORE INFORMATION link in that dialog, and then click the RUN ANYWAYS button. The install will proceed.
 
-CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process. They will all install into the CrossMgr program group.
+CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process. They will all install into the CrossMgr program group.
 
 ### Mac OSX Installation
 
-From the Releases tab, download the CrossMgr-VERSION.dmg file. From the finder, double click the DMG file to open it. Once the window comes up, you simply drag and drop the CrossMgr.app folder to your Applications directory. From the Applications folder, you can now run CrossMgr like any other Mac app. Most recent Mac OSX versions will require you to press CTRL before clicking on the app for the first time, and then clicking open. The app is a non-signed program that MacOSX will not open otherwise. This is only require the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
+From the Releases tab, download the CrossMgr-VERSION.dmg file. From the finder, double click the DMG file to open it. Once the window comes up, you simply drag and drop the CrossMgr.app folder to your Applications directory. From the Applications folder, you can now run CrossMgr like any other Mac app
 
-CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process.
+Most recent Mac OSX versions will require you to press CTRL before clicking on the app for the first time, and then clicking open. The app is a non-signed program that MacOSX will not open otherwise. This is only require the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
+
+CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process.
 
 #### Debugging the Mac Apps
 
@@ -74,11 +87,11 @@ Next, just run the AppImage with:
 
 ...from the command prompt.
 
-CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, and SeriesMgr follow the same install process.
+CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process.
 
 Alternative, setup a desktop icon to call it directly.
 
-## Building Cross Manager
+## Building Cross Manager (for developers)
 
 There are two scripts to build CrossMgr and the associated tools. One for Linux/Mac and one for Windows. Each platform has a build script to install the dependancies, build the binaries for the application, and package the programs.
 
