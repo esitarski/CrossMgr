@@ -264,7 +264,7 @@ class Graph( wx.Control ):
 		def drawSCurve( x1, y1, x2, y2 ):
 			cx1, cy1 = x2 - (x2 - x1)*controlRatio, y1
 			cx2, cy2 = x1 + (x2 - x1)*controlRatio, y2
-			dc.DrawSpline( [wx.Point(x1,y1), wx.Point(cx1,cy1), wx.Point(cx2,cy2), wx.Point(x2,y2)] )
+			dc.DrawSpline( [wx.Point(int(x1),int(y1)), wx.Point(int(cx1),int(cy1)), wx.Point(int(cx2),int(cy2)), wx.Point(int(x2),int(y2))] )
 		
 		# Draw the connections.
 		for c, col in enumerate(grid):
@@ -273,14 +273,14 @@ class Graph( wx.Control ):
 					continue
 				rider = v['rider']
 				x1 = colX[c] + dc.GetFullTextExtent(getFullName(rider, v))[0]
-				y1 = yTop + r * rowHeight + rowHeight / 2
+				y1 = yTop + r * rowHeight + rowHeight // 2
 				
 				cTo, rTo = getToCR(c, rider)
 				if cTo is None:
 					continue
 				
 				x2 = colX[cTo]
-				y2 = yTop + rTo * rowHeight + rowHeight / 2
+				y2 = yTop + rTo * rowHeight + rowHeight // 2
 				
 				if 'winner' in v:
 					if rider == self.selectedRider:
@@ -328,9 +328,9 @@ class Graph( wx.Control ):
 			dc.SetPen( greenPenThick if rider == self.selectedRider else greenPen )
 				
 			x1 = colX[cFrom] + dc.GetFullTextExtent(getFullName(rider,v))[0]
-			y1 = yTop + rFrom * rowHeight + rowHeight / 2
+			y1 = yTop + rFrom * rowHeight + rowHeight // 2
 			x2 = colX[cTo]
-			y2 = yTop + rTo * rowHeight + rowHeight / 2
+			y2 = yTop + rTo * rowHeight + rowHeight // 2
 			
 			if competition.starters == 18 or not getIsBlocked(cFrom, rFrom, cTo, rTo):
 				drawSCurve( x1, y1, x2, y2 )
@@ -355,13 +355,13 @@ class Graph( wx.Control ):
 			if pos > 0:
 				name = '{:02d}. {}'.format( pos, name )
 			dc.SetFont( whiteFont )
-			xborder = fontSize / 2
-			yborder = fontSize / 10
+			xborder = fontSize // 2
+			yborder = fontSize // 10
 			width, height = dc.GetFullTextExtent(name)[:2]
 			if selected:
 				dc.SetBrush( blackBrush )
 				dc.SetPen( blackPen )
-				dc.DrawRoundedRectangle( x-xborder, y-yborder, width + xborder*2, height + yborder*2, (height + yborder*2) / 4 )
+				dc.DrawRoundedRectangle( x-xborder, y-yborder, width + xborder*2, height + yborder*2, (height + yborder*2) // 4 )
 				dc.SetTextForeground( wx.WHITE )
 				if pos > 0 and name.startswith('0'):
 					name = name[1:]
@@ -375,8 +375,8 @@ class Graph( wx.Control ):
 					x += dc.GetFullTextExtent('0')[0]
 				dc.SetBrush( wx.WHITE_BRUSH )
 				dc.SetPen( wx.TRANSPARENT_PEN )
-				dc.DrawRoundedRectangle( x-xborder, y-yborder, width + xborder*2, height + yborder*2, (height + yborder*2) / 4 )
-				dc.DrawText( name, x, y )
+				dc.DrawRoundedRectangle( int(x-xborder), int(y-yborder), int(width + xborder*2), int(height + yborder*2), int((height + yborder*2) / 4) )
+				dc.DrawText( name, int(x), int(y) )
 			return name
 		
 		# Draw the node names.
@@ -388,7 +388,7 @@ class Graph( wx.Control ):
 				y = yTop + r * rowHeight
 				if 'title' in v:
 					dc.SetFont( boldFont )
-					dc.DrawText( v['title'], x, y )
+					dc.DrawText( v['title'], int(x), int(y) )
 					dc.SetFont( font )
 				elif 'name' in v:
 					try:
@@ -410,7 +410,7 @@ class Graph( wx.Control ):
 							else:
 								name = u'{}  {}'.format(pos, name)
 						drawName( name, x, y, rider == self.selectedRider )
-						colRects.append( (wx.Rect(x, y, dc.GetFullTextExtent(name)[0], rowHeight), rider) )
+						colRects.append( (wx.Rect(int(x), int(y), dc.GetFullTextExtent(name)[0], int(rowHeight)), rider) )
 			self.rectRiders.append( colRects )
 		self.colX = colX
 		
@@ -426,11 +426,11 @@ class Graph( wx.Control ):
 		mdc.SelectObject( wx.NullBitmap )
 		return image
 
-class GraphDraw( wx.PyPanel ):
+class GraphDraw( wx.Panel ):
 	phase = 'Competition Summary'
 
 	def __init__(self, parent):
-		wx.Panel.__init__(self, parent, wx.ID_ANY)
+		super().__init__( parent )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		

@@ -1,7 +1,7 @@
 import wx
-
 import os
 import sys
+import copy
 import Utils
 import Model
 from FieldDef import FieldDef
@@ -14,13 +14,14 @@ from Clock import Clock
 class Properties(wx.Panel):
 
 	def __init__(self, parent):
-		wx.Panel.__init__(self, parent)
+		super().__init__(parent)
 		self.SetBackgroundColour( wx.WHITE )
 		
 		model = Model.model
 		
 		self.competitionFormat = 0
-		competitionChoices = [u'{}. {} ({} Starters)'.format(i+1, c.name, c.starters) for i, c in enumerate(getCompetitions())]
+		competitionChoices = ['{}. {} ({} Starters)'.format(i+1, c.name, c.starters) for i, c in enumerate(getCompetitions())]
+		modifierChoices = [' - ', '1/4 Finals are Best of 1', '1/4 & 1/2 Finals are Best of 1', 'All Finals are Best of 1']
 		
 		font = GetFont()
 		
@@ -29,6 +30,7 @@ class Properties(wx.Panel):
 			for a in ('competition_name', 'date', 'track', 'organizer', 'category', 'chief_official')
 		]
 		self.competitionField = FieldDef(attr = 'competitionFormat', choices = competitionChoices)
+		self.modifierField = FieldDef(attr = 'competitionModifier', choices = modifierChoices)
  
 		self.sampleLabel = wx.StaticText( self, label=_('Sample Competition:') )
 		self.sampleLabel.SetFont( GetBoldFont() )
@@ -52,6 +54,14 @@ class Properties(wx.Panel):
 		self.competitionFormatCtrl = ctrl
 		self.competitionFormatCtrl.Bind( wx.EVT_CHOICE, self.updateGraph )
 		
+		label, ctrl = self.modifierField.makeCtrls( self )
+		label.SetFont( font )
+		ctrl.SetFont( font )
+		fs.Add( label, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL )
+		fs.Add( ctrl, flag=wx.EXPAND )
+		self.modifierFormatCtrl = ctrl
+		self.modifierFormatCtrl.Bind( wx.EVT_CHOICE, self.updateGraph )
+		
 		fs.AddGrowableCol( 1, 1 )
 		
 		self.clock = Clock( self, size=(200,200) )
@@ -70,13 +80,13 @@ class Properties(wx.Panel):
 		self.SetSizer( borderSizer )
 	
 	def getGrid( self ):
-		headerNames = [u'', u'']
+		headerNames = ['', '']
 		
 		grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		grid.DisableDragRowSize()
 		grid.SetRowLabelSize( 0 )
 		grid.EnableReorderRows( False )
-		grid.CreateGrid( len(self.modelFields) + 1, len(headerNames) )
+		grid.CreateGrid( len(self.modelFields) + 2, len(headerNames) )
 		for col, h in enumerate(headerNames):
 			grid.SetColLabelValue( col, h )
 		grid.Show( False )
@@ -89,7 +99,12 @@ class Properties(wx.Panel):
 		row = len(self.modelFields)
 		grid.SetCellValue( row, 0, _('Competition Format') )
 		grid.SetCellAlignment( row, 0, wx.ALIGN_RIGHT, wx.ALIGN_BOTTOM )
-		grid.SetCellValue( row, 1, self.competitionFormatCtrl.GetStringSelection().split( u'.', 1 )[1].strip() )
+		grid.SetCellValue( row, 1, self.competitionFormatCtrl.GetStringSelection().split( '.', 1 )[1].strip() )
+
+		row += 1
+		grid.SetCellValue( row, 0, _('Modifiers') )
+		grid.SetCellAlignment( row, 0, wx.ALIGN_RIGHT, wx.ALIGN_BOTTOM )
+		grid.SetCellValue( row, 1, self.modifierFormatCtrl.GetStringSelection() )
 
 		return grid
 		
@@ -117,6 +132,7 @@ class Properties(wx.Panel):
 			if c.name == model.competition.name:
 				self.competitionFormatCtrl.SetSelection( i )
 				break
+		model.modifier = self.modifierCtrl.GetSelection()
 		self.updateGraph()
 
 	def commit( self ):
@@ -129,7 +145,7 @@ class Properties(wx.Panel):
 		if competition.name != model.competition.name:
 			# Check that changing the competition will screw anything up.
 			if model.canReassignStarters():
-				model.competition = competition
+				model.setCompetition( competition, self.modifierCtrl.GetSelection() )
 				model.setQualifyingTimes()
 				Utils.getMainWin().resetEvents()
 				model.setChanged( True )

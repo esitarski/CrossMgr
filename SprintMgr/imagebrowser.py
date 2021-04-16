@@ -306,7 +306,7 @@ class ImagePanel(wx.Panel):
     def __init__(self, parent, id=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, 
                  style=wx.NO_BORDER
                  ):
-        wx.Panel.__init__(self, parent, id, pos, size, style=style)
+        super().__init__(parent, id, pos, size, style=style)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(vbox)

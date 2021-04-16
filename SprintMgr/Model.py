@@ -846,7 +846,6 @@ class System:
 			return sum( event.competitionTime for event in self.events )	
 		except TypeError:
 			return None
-	
 
 class Model:
 	communique_start = 100
@@ -900,6 +899,17 @@ class Model:
 		
 	def setChanged( self, changed = True ):
 		self.changed = changed
+		
+	def setCompetition( self, competition, modifier ):
+		self.competition = copy.deepcopy( competition )
+		if modifier:
+			for tournament, system, event in self.comptition.allEvents():
+				if modifier >= 1 and '1/4' in system.name:	# 1/4 finals are best of 1.
+					e.heatsMax = 1
+				if modifier >= 2 and '1/2' in system.name:
+					e.heatsMax = 1
+				if modifier >= 3:
+					e.heatsMax = 1
 
 model = Model()
 

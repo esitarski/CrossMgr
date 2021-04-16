@@ -18,7 +18,7 @@ class Seeding(wx.Panel):
 	phase = 'Seeding'
 
 	def __init__(self, parent):
-		wx.Panel.__init__(self, parent)
+		super().__init__(parent)
  
 		font = wx.Font( (0,FontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		

@@ -15,7 +15,7 @@ from HighPrecisionTimeEditor import HighPrecisionTimeEditor
 class Qualifiers(wx.Panel):
 
 	def __init__(self, parent):
-		wx.Panel.__init__(self, parent)
+		super().__init__(parent)
  
 		font = GetFont()
 		self.title = wx.StaticText(self, label="Enter each rider's qualifying time in hh:mm:ss.ddd format.  Use a colon ':' a space, or a dash '-' to separate hour, minute and seconds.")

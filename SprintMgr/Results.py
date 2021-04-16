@@ -17,7 +17,7 @@ class Results(wx.Panel):
 	#----------------------------------------------------------------------
 	def __init__(self, parent):
 		"""Constructor"""
-		wx.Panel.__init__(self, parent)
+		super().__init__(parent)
  
 		self.font = wx.Font( (0,FontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		

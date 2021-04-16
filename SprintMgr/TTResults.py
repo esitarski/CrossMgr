@@ -12,7 +12,7 @@ from Events import GetFont
 class TTResults(wx.Panel):
 	#----------------------------------------------------------------------
 	def __init__(self, parent):
-		wx.Panel.__init__(self, parent)
+		super().__init__(parent)
  
 		self.headerNames = ['Pos', 'Bib', 'Name', 'Team', 'Time']
 		
