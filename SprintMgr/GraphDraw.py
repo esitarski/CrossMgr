@@ -398,7 +398,7 @@ class Graph( wx.Control ):
 					rider = v.get('rider', None)
 					if rider:
 						name = drawName( getFullName(rider, v), x, y, rider == self.selectedRider, pos )
-						colRects.append( (wx.Rect(x, y, dc.GetFullTextExtent(name)[0], rowHeight), rider) )
+						colRects.append( (wx.Rect(int(x), int(y), dc.GetFullTextExtent(name)[0], int(rowHeight)), rider) )
 				elif 'rider' in v:
 					rider = v['rider']
 					if rider:
