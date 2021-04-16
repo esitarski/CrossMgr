@@ -571,12 +571,12 @@ def getCompetitions():
 		fcX = copy.deepcopy( competitions[-1] )
 		fcX.tournaments[0].systems.pop( 0 )
 		fcX.starters //= 2
-		fcX.name = 'MTB: Four Cross %d' % fcX.starters
+		fcX.name = 'MTB: Four Cross {}'.format(fcX.starters)
 		for event in fcX.tournaments[0].systems[0].events:
-			event.composition = ['N%s' % c[:-1] for c in event.composition]
+			event.composition = ['N{}'.format(c[:-1]) for c in event.composition]
 		for system in fcX.tournaments[0].systems:
 			if system.name.startswith( 'Round' ):
-				system.name = 'Round %d' % (int(system.name.split()[1]) - 1)
+				system.name = 'Round {}'.format(int(system.name.split()[1]) - 1)
 		competitions.append( fcX )
 	
 	#-----------------------------------------------------------------------------------------
