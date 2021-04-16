@@ -131,7 +131,7 @@ class Properties(wx.Panel):
 			if c.name == model.competition.name:
 				self.competitionFormatCtrl.SetSelection( i )
 				break
-		model.modifier = self.modifierCtrl.GetSelection()
+		self.modifierCtrl.SetSelection( model.modifier )
 		self.updateGraph()
 
 	def commit( self ):

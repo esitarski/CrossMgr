@@ -833,11 +833,14 @@ table.results tr td.fastest{
 							wildcard = 'SprintMgr files (*.smr)|*.smr',
 							style=wx.FD_SAVE | wx.FD_CHANGE_DIR )
 		response = dlg.ShowModal()
-		if response == wx.ID_OK:
-			fileName = dlg.GetPath()
+		fileName = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
 		dlg.Destroy()
-		if response != wx.ID_OK:
+		
+		if not fileName:
 			return
+			
+		if not fileName.endswith('.smr'):
+			fileName += '.smr'
 		
 		try:
 			with open(fileName, 'rb') as fp:

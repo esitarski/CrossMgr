@@ -850,6 +850,7 @@ class System:
 
 class Model:
 	communique_start = 100
+	modifier = 0
 
 	def __init__( self ):
 		self.competition_name = 'My Competition'
@@ -903,6 +904,7 @@ class Model:
 		
 	def setCompetition( self, competition, modifier ):
 		self.competition = copy.deepcopy( competition )
+		self.modifier = modifier
 		if modifier:
 			for tournament, system, event in self.competition.allEvents():
 				if modifier == 3:
