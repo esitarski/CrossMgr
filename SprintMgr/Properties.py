@@ -1,7 +1,6 @@
 import wx
 import os
 import sys
-import copy
 import Utils
 import Model
 from FieldDef import FieldDef
@@ -59,8 +58,8 @@ class Properties(wx.Panel):
 		ctrl.SetFont( font )
 		fs.Add( label, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL )
 		fs.Add( ctrl, flag=wx.EXPAND )
-		self.modifierFormatCtrl = ctrl
-		self.modifierFormatCtrl.Bind( wx.EVT_CHOICE, self.updateGraph )
+		self.modifierCtrl = ctrl
+		self.modifierCtrl.Bind( wx.EVT_CHOICE, self.updateGraph )
 		
 		fs.AddGrowableCol( 1, 1 )
 		
@@ -104,7 +103,7 @@ class Properties(wx.Panel):
 		row += 1
 		grid.SetCellValue( row, 0, _('Modifiers') )
 		grid.SetCellAlignment( row, 0, wx.ALIGN_RIGHT, wx.ALIGN_BOTTOM )
-		grid.SetCellValue( row, 1, self.modifierFormatCtrl.GetStringSelection() )
+		grid.SetCellValue( row, 1, self.modifierCtrl.GetStringSelection() )
 
 		return grid
 		
@@ -151,6 +150,9 @@ class Properties(wx.Panel):
 				model.setChanged( True )
 			else:
 				Utils.MessageOK( self, 'Cannot Change Competition Format after Event has Started', 'Cannot Change Competion Format' )
+		else:
+			model.setCompetition( competition, self.modifierCtrl.GetSelection() )
+
 		
 ########################################################################
 
