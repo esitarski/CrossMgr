@@ -294,15 +294,18 @@ class Start:
 #------------------------------------------------------------------------------------------------
 
 class Event:
-	def __init__( self, rule, heatsMax ):
-		self.rule = rule
+	def __init__( self, rule, heatsMax=1 ):
+		self.rule = rule.upper()
+		rule = rule.replace( '->', ' -> ').replace('-',' ')
 		
 		fields = rule.split()
-		iSep = fields.index( '->' )
+		iSep = fields.index( '>' )
 		self.composition = fields[:iSep]
 		self.winner = fields[iSep+1]
 		self.others = fields[iSep+2:]
-		
+		while len(self.others) < len(self.composition)-1:
+			self.others.append( 'TT' )
+			
 		self.heatsMax = heatsMax
 		self.starts = []
 		
@@ -538,16 +541,31 @@ class Competition:
 		self.isSprint = not self.isMTB
 		self.isKeirin = 'Kerin' in name
 		
+		byeEvents = set()
+		byeOutcomeMap = {}
+		
+		# print( '**** - {}'.format(self.name) )
+		
+		ttCount = 0
 		for t, s, e in self.allEvents():
 			e.competition = self
 			e.system = s
 			e.tournament = t
 			s.tournament = t
+			
+			# Assign unique TT outcomes across the Competion.
+			for i, other in enumerate(e.others):
+				if other == 'TT':
+					ttCount += 1
+					e.others[i] = '{}TT'.format(ttCount)			
+			
+			# print( 'Event:', ' - '.join(e.composition), ' -> ', e.winner, e.others )
+		
 			for c in e.composition:
-				assert c not in inLabels, '{}-{}-{} c: {}, outLabels={}'.format(e.competition.name, e.tournament.name, e.system.name, c, ','.join( sorted(outLabels) ))
+				assert c not in inLabels, '{}-{}-{} c={}, outLabels={}'.format(e.competition.name, e.tournament.name, e.system.name, c, ','.join( sorted(outLabels) ))
 				inLabels.add( c )
 				if c.startswith('N'):
-					self.starters += 1
+					self.starters += 1			
 						
 			assert e.winner not in outLabels, '{}-{}-{} winner: {}, outLabels={}'.format(
 				e.competition.name, e.tournament.name, e.system.name, e.winner, ','.join( sorted(outLabels) ))
@@ -558,14 +576,26 @@ class Competition:
 				outLabels.add( c )
 			assert len(outLabels) <= len(inLabels), '{}-{}-{} len(outLabels)={} exceeds len(inLabels)={}\n    {}\n    {}'.format(
 					e.competition.name, e.tournament.name, e.system.name, len(outLabels), len(inLabels), ','.join(inLabels), ','.join(outLabels) )
-				
+					
+			# Check if this is a bye Event.
+			# We handle this by deleting the event and substituting the output value as the input in subsequent events.
+			if not e.others:
+				byeEvents.add( e )
+				byeOutcomeMap[e.winner] = e.composition[0]
+		
+		assert self.starters != 0, '{}-{}-{} No starters.  Check for missing N values'.format(
+					e.competition.name, e.tournament.name, e.system.name )
+
+		# Process Bye events (substitute outcome into composition of subsequent events, delete bye event).
 		# Assign indexes to each component for sorting purposes.
 		for i, tournament in enumerate(self.tournaments):
 			tournament.i = i
 			for j, system in enumerate(tournament.systems):
 				system.i = j
+				system.events = [e for e in system.events if e not in byeEvents]
 				for k, event in enumerate(system.events):
 					event.i = k
+					event.composition = [byeOutcomeMap.get(c,c) for c in event.composition]
 	
 	def getRelegationsWarnings( self, bib, eventCur, before=False ):
 		relegations = 0
@@ -591,14 +621,14 @@ class Competition:
 		relegations, warnings = self.getRelegationsWarnings(bib, eventCur, before)
 		s = []
 		if warnings:
-			s.append( u'{} {}'.format(warnings, u'Warn') )
+			s.append( '{} {}'.format(warnings, 'Warn') )
 		if relegations:
-			s.append( u'{} {}'.format(relegations, u'Rel') )
-		return u','.join( s )
+			s.append( '{} {}'.format(relegations, 'Rel') )
+		return ','.join( s )
 	
 	def canReassignStarters( self ):
 		return self.state.canReassignStarters()
-		
+	
 	def allEvents( self ):
 		for tournament in self.tournaments:
 			for system in tournament.systems:
