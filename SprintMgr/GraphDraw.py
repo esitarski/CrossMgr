@@ -273,14 +273,14 @@ class Graph( wx.Control ):
 					continue
 				rider = v['rider']
 				x1 = colX[c] + dc.GetFullTextExtent(getFullName(rider, v))[0]
-				y1 = yTop + r * rowHeight + rowHeight // 2
+				y1 = yTop + r * rowHeight + rowHeight / 2
 				
 				cTo, rTo = getToCR(c, rider)
 				if cTo is None:
 					continue
 				
 				x2 = colX[cTo]
-				y2 = yTop + rTo * rowHeight + rowHeight // 2
+				y2 = yTop + rTo * rowHeight + rowHeight / 2
 				
 				if 'winner' in v:
 					if rider == self.selectedRider:
@@ -328,9 +328,9 @@ class Graph( wx.Control ):
 			dc.SetPen( greenPenThick if rider == self.selectedRider else greenPen )
 				
 			x1 = colX[cFrom] + dc.GetFullTextExtent(getFullName(rider,v))[0]
-			y1 = yTop + rFrom * rowHeight + rowHeight // 2
+			y1 = yTop + rFrom * rowHeight + rowHeight / 2
 			x2 = colX[cTo]
-			y2 = yTop + rTo * rowHeight + rowHeight // 2
+			y2 = yTop + rTo * rowHeight + rowHeight / 2
 			
 			if competition.starters == 18 or not getIsBlocked(cFrom, rFrom, cTo, rTo):
 				drawSCurve( x1, y1, x2, y2 )
@@ -355,18 +355,18 @@ class Graph( wx.Control ):
 			if pos > 0:
 				name = '{:02d}. {}'.format( pos, name )
 			dc.SetFont( whiteFont )
-			xborder = fontSize // 2
-			yborder = fontSize // 10
+			xborder = fontSize / 2
+			yborder = fontSize / 10
 			width, height = dc.GetFullTextExtent(name)[:2]
 			if selected:
 				dc.SetBrush( blackBrush )
 				dc.SetPen( blackPen )
-				dc.DrawRoundedRectangle( x-xborder, y-yborder, width + xborder*2, height + yborder*2, (height + yborder*2) // 4 )
+				dc.DrawRoundedRectangle( int(x-xborder), int(y-yborder), int(width + xborder*2), int(height + yborder*2), int((height + yborder*2) / 4) )
 				dc.SetTextForeground( wx.WHITE )
 				if pos > 0 and name.startswith('0'):
 					name = name[1:]
 					x += dc.GetFullTextExtent('0')[0]
-				dc.DrawText( name, x, y )
+				dc.DrawText( name, int(x), int(y) )
 				dc.SetTextForeground( wx.BLACK )
 				dc.SetFont( font )
 			else:
