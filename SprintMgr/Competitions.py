@@ -120,7 +120,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint 1/2 World Championships', [
+		Competition( 'Track: Sprint Half WC', [
 			Tournament( '', [
 				System( '1/8 Finals', [
 					Event( 'N1 - N16 -> 1B' ),
@@ -149,7 +149,26 @@ def getCompetitions():
 			])
 		]),
 		
-		Competition( 'Track: Sprint 1/2 Finals + 2', [
+		Competition( 'Track: Sprint Quarter WC', [
+			Tournament( '', [
+				System( '1/4 Finals', [
+					Event( 'N1 - N8 -> 1C', 3 ),
+					Event( 'N2 - N7 -> 2C', 3 ),
+					Event( 'N3 - N6 -> 3C', 3 ),
+					Event( 'N4 - N5 -> 4C', 3 ),
+				]),
+				System( '1/2 Finals', [
+					Event( '1C - 4C -> 1D1 - 1D2', 3 ),
+					Event( '2C - 3C -> 2D1 - 2D2', 3 ),
+				]),
+				System( 'Finals', [
+					Event( '1D2 - 2D2 -> 3R - 4R', 3 ),
+					Event( '1D1 - 2D1 -> 1R - 2R', 3 ),
+				]),
+			])
+		]),
+		
+		Competition( 'Track: Sprint Eighth WC + 2', [
 			Tournament( '', [
 				System( '5-6 Final', [
 					Event( 'N5 - N6 -> 5R - 6R' ),
@@ -165,7 +184,7 @@ def getCompetitions():
 			])
 		]),
 		
-		Competition( 'Track: Sprint 1/2 Finals', [
+		Competition( 'Track: Sprint Sixteenth WC', [
 			Tournament( '', [
 				System( '1/2 Finals', [
 					Event( 'N1 - N4 -> 1C1 - 1C2', 3 ),
@@ -178,7 +197,7 @@ def getCompetitions():
 			])
 		]),
 		
-		Competition( 'Track: Sprint Direct Finals', [
+		Competition( 'Track: Sprint Direct Final', [
 			Tournament( '', [
 				System( 'Finals', [
 					Event( 'N1 - N2 -> 1R - 2R', 3 ),
