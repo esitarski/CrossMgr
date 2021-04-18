@@ -119,7 +119,12 @@ class Graph( wx.Control ):
 					grid.append( [] )
 					
 				grid[col].extend( [{}] * (rowStart - len(grid[col])) )
-				grid[col].extend( [{'title':system.name}, {}] )
+				
+				systemTitle = system.name
+				heatsMax = max( (e.heatsMax for e in system.events), default=1 )
+				if heatsMax > 1:
+					systemTitle += ' (best of {}))'.format( heatsMax )
+				grid[col].extend( [{'title':systemTitle}, {}] )
 				for event in system.events:
 					if 'Repechages' in system.name and event.i == 0:
 						grid[col].extend( [{}] * (len(grid[col-1]) - len(grid[col])) )

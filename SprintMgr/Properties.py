@@ -50,6 +50,7 @@ class Properties(wx.Panel):
 		ctrl.SetFont( font )
 		fs.Add( label, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL )
 		fs.Add( ctrl, flag=wx.EXPAND )
+		ctrl.SetBackgroundColour( wx.WHITE )
 		self.competitionFormatCtrl = ctrl
 		self.competitionFormatCtrl.Bind( wx.EVT_CHOICE, self.updateGraph )
 		
@@ -58,6 +59,7 @@ class Properties(wx.Panel):
 		ctrl.SetFont( font )
 		fs.Add( label, flag=wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL )
 		fs.Add( ctrl, flag=wx.EXPAND )
+		ctrl.SetBackgroundColour( wx.WHITE )
 		self.modifierCtrl = ctrl
 		self.modifierCtrl.Bind( wx.EVT_CHOICE, self.updateGraph )
 		
@@ -109,7 +111,8 @@ class Properties(wx.Panel):
 		
 	def updateGraph( self, event = None ):
 		competition = getCompetitions()[self.competitionFormatCtrl.GetSelection()]
-		self.graph.model = model = SetDefaultData( competition.name, random=True )
+		modifier = self.modifierCtrl.GetSelection()
+		self.graph.model = model = SetDefaultData( competition.name, modifier=modifier, random=True )
 		for f in self.modelFields:
 			f.commit( model )
 		
