@@ -703,7 +703,7 @@ class EventFinishOrder(EnablePanel):
 		
 		# Propose finish order by qualifying time.
 		state = self.event.competition.state
-		finishPositions = sorted( self.event.starts[-1].startPositions, key = lambda r: state.labels[r].qualifyingTime )
+		finishPositions = sorted( self.event.starts[-1].startPositions, key = lambda r: state.labels[r].qualifying_time )
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(finishPositions) )
 		
 		state = self.event.competition.state

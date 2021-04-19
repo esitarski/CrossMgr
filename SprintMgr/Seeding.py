@@ -1,6 +1,7 @@
 import os
 import sys
 import random
+from operator import attrgetter
 
 import wx
 import wx.grid as gridlib
@@ -11,6 +12,7 @@ import Model
 import Utils
 from Events import FontSize
 from ReadStartList import ImportStartList
+from Competitions import getCompetitions
 
 class Seeding(wx.Panel):
 	#----------------------------------------------------------------------
@@ -34,11 +36,18 @@ class Seeding(wx.Panel):
 		self.randomizeButton.Bind( wx.EVT_BUTTON, self.doRandomize )
 		self.randomizeButton.SetFont( font )
  
+		self.sortByUCIPointsButton = wx.Button( self, label='Sort by UCI Points...' )
+		self.sortByUCIPointsButton.Bind( wx.EVT_BUTTON, self.doSortByUCIPoints )
+		self.sortByUCIPointsButton.SetFont( font )
+ 
 		self.importButton = wx.Button( self, label='Import From Excel' )
 		self.importButton.Bind( wx.EVT_BUTTON, self.doImportFromExcel )
 		self.importButton.SetFont( font )
  
-		self.headerNames = ['Bib', 'First Name', 'Last Name', 'Team', 'Team Code', 'UCIID']
+		self.headerNames = ['Bib', 'First Name', 'Last Name', 'Team', 'Team Code', 'UCIID', 'UCI Points']
+		self.headerNameMap = Model.Rider.GetHeaderNameMap( self.headerNames )
+		
+		self.iUCIPoints = self.headerNameMap['uci_points']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -54,6 +63,9 @@ class Seeding(wx.Panel):
 			if col == 0:
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
 				attr.SetEditor( gridlib.GridCellNumberEditor() )
+			elif col == self.iUCIPoints:
+				attr.SetRenderer( gridlib.GridCellFloatRenderer(precision=2) )
+				attr.SetEditor( gridlib.GridCellFloatEditor(precision=2) )
 			self.grid.SetColAttr( col, attr )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
@@ -61,6 +73,7 @@ class Seeding(wx.Panel):
 		hs.Add( self.communiqueLabel, 0, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=4 )
 		hs.Add( self.communiqueNumber, 0, flag=wx.ALL|wx.EXPAND, border=4 )
 		hs.AddStretchSpacer()
+		hs.Add( self.sortByUCIPointsButton, 0, flag=wx.ALL, border=4 )
 		hs.Add( self.randomizeButton, 0, flag=wx.ALL, border=4 )
 		hs.Add( self.importButton, 0, flag=wx.ALL, border=4 )
 		
@@ -79,12 +92,18 @@ class Seeding(wx.Panel):
 		
 		testData = TestData.getTestData()
 		for row, data in enumerate(testData):
-			for col, d in enumerate(data):
-				self.grid.SetCellValue( row, col,' {}'.format(d) )
+			for k, v in data.items():
+				if k in self.headerNameMap:
+					if k == 'uci_points':
+						v = '{:.2f}'.format(v)
+					self.grid.SetCellValue( row, self.headerNameMap[k],'{}'.format(v) )
 		
 		# Fix up the column and row sizes.
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
+		
+		Model.model.setCompetition( getCompetitions()[0], 0 )
+		self.commit()
 		
 	def getGrid( self ):
 		return self.grid
@@ -95,7 +114,7 @@ class Seeding(wx.Panel):
 		
 		selectedRows = self.grid.GetSelectedRows()
 		if len(selectedRows) < 2:
-			Utils.MessageOK( self, 'Please select some Rows to Randomize.', u'Insufficient Selected Rows' )
+			Utils.MessageOK( self, 'Please select some Rows to Randomize.', 'Insufficient Selected Rows' )
 			return
 			
 		rMin = min( selectedRows )
@@ -114,6 +133,31 @@ class Seeding(wx.Panel):
 		model.riders[rMin:rMax] = toRandomize
 		self.refresh()
 	
+	def doSortByUCIPoints( self, event ):
+		self.commit()
+		self.refresh()
+		
+		selectedRows = self.grid.GetSelectedRows()
+		if len(selectedRows) < 2:
+			Utils.MessageOK( self, 'Please select some Rows to Sort.', 'Insufficient Selected Rows' )
+			return
+			
+		rMin = min( selectedRows )
+		rMax = max( selectedRows ) + 1
+		
+		model = Model.model
+		if len(model.riders) <= rMin:
+			return
+		rMax = min( rMax, len(model.riders) )
+		
+		if not Utils.MessageOKCancel( self, 'Sort Rows {}-{} ?'.format(rMin+1, rMax), 'Confirm Sort' ):
+			return
+		
+		toSort = model.riders[rMin:rMax]
+		toSort.sort( key=attrgetter('uci_points'), reverse=True )
+		model.riders[rMin:rMax] = toSort
+		self.refresh()
+	
 	def doImportFromExcel( self, event ):
 		ImportStartList( self )
 		
@@ -126,8 +170,11 @@ class Seeding(wx.Panel):
 	def refresh( self ):
 		riders = Model.model.riders
 		for row, r in enumerate(riders):
-			for col, value in enumerate(('{}'.format(r.bib), r.first_name, r.last_name, r.team, r.team_code, r.uci_id)):
-				self.grid.SetCellValue( row, col, value )
+			for attr, col in self.headerNameMap.items():
+				value = getattr( r, attr )
+				if attr == 'uci_points':
+					value = '' if not value else '{:.2f}'.format(value)
+				self.grid.SetCellValue( row, col, '{}'.format(value) )
 				
 		for row in range(len(riders), self.grid.GetNumberRows()):
 			for col in range(self.grid.GetNumberCols()):
@@ -138,7 +185,7 @@ class Seeding(wx.Panel):
 		self.grid.AutoSizeRows( False )
 		
 		# Sync the communique value.
-		self.communiqueNumber.SetValue( Model.model.communique_number.get(self.phase, u'') )
+		self.communiqueNumber.SetValue( Model.model.communique_number.get(self.phase, '') )
 		
 		self.Layout()
 		self.Refresh()
@@ -149,16 +196,19 @@ class Seeding(wx.Panel):
 		riders = []
 		for row in range(self.grid.GetNumberRows()):
 			fields = {}
-			for col, attr in enumerate(('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id')):
+			for attr, col in self.headerNameMap.items():
 				fields[attr] = self.grid.GetCellValue(row, col).strip()
 				
 			try:
-				bib = int(fields['bib'])
+				fields['bib'] = int(fields['bib'])
+			except ValueError:
+				continue
+			try:
+				fields['uci_points'] = float(fields['uci_points'])
 			except ValueError:
 				continue
 				
-			if bib:
-				fields['bib'] = bib
+			if fields['bib']:
 				riders.append( Model.Rider(**fields) )
 		
 		model = Model.model
@@ -189,7 +239,9 @@ class Seeding(wx.Panel):
 					oldRiders[r.bib] = r
 			model.riders = [oldRiders[r.bib] for r in riders]
 			model.setQualifyingTimes()
-			Utils.getMainWin().resetEvents()
+			mainWin = Utils.getMainWin()
+			if mainWin:
+				Utils.getMainWin().resetEvents()
 			return
 		
 		if len(riders) != len(model.riders):
@@ -217,7 +269,7 @@ class Seeding(wx.Panel):
 class SeedingFrame(wx.Frame):
 	def __init__(self):
 		"""Constructor"""
-		wx.Frame.__init__(self, None, title="Reorder Grid Test", size=(800,600) )
+		super().__init__(parent=None, title="Seeding Test", size=(800,600) )
 		panel = Seeding(self)
 		panel.setTestData()
 		self.Show()

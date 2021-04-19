@@ -660,7 +660,7 @@ def SetDefaultData( name = None, random = False ):
 	
 	testData = getRandomTestData( competition.starters ) if random else getTestData()
 	for bib, first_name, last_name, team, qt in testData:
-		rider = Model.Rider( bib, first_name, last_name, team, qualifyingTime = qt )
+		rider = Model.Rider( bib, first_name, last_name, team, qualifying_time = qt )
 		model.riders.append( rider )
 		
 	model.setQualifyingTimes()
@@ -678,8 +678,8 @@ def DoRandomSimulation( model = None ):
 		e = tse[0][2]
 		start = e.getStart()
 		places = [c for c in e.composition if competition.state.inContention(c)]
-		v = (sum(state.labels[p].qualifyingTime for p in places) / float(len(places))) / 20.0
-		places.sort( key = lambda p: random.gauss(state.labels[p].qualifyingTime, v) )
+		v = (sum(state.labels[p].qualifying_time for p in places) / float(len(places))) / 20.0
+		places.sort( key = lambda p: random.gauss(state.labels[p].qualifying_time, v) )
 		start.setPlaces( [(state.labels[p].bib, '', '0', '0') for p in places] )
 		e.propagate()
 		competition.propagate()

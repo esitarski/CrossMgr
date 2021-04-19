@@ -78,10 +78,10 @@ class Qualifiers(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(testData) )
 			
 		for row, data in enumerate(testData):
-			bib = data[0]
-			name = data[1] + ' ' + data[2]
-			team = data[3]
-			time = data[-1]
+			bib = data['bib']
+			name = data['first_name'] + ' ' + data['last_name']
+			team = data['team']
+			time = data['qualifyingTime']
 			for col, d in enumerate([bib, name, team, time]):
 				self.grid.SetCellValue( row, col,' {}'.format(d) )
 		

@@ -141,7 +141,7 @@ class Graph( wx.Control ):
 					# If the event has happend, sequence by results.
 					# If the event has not happened, sequence by qualifying time.
 					if not event.finishRiderRank:
-						eventComposition = sorted( event.composition, key = lambda c: state.labels.get(c,state.OpenRider).qualifyingTime )
+						eventComposition = sorted( event.composition, key = lambda c: state.labels.get(c,state.OpenRider).qualifying_time )
 					else:
 						eventComposition = sorted( event.composition, key = lambda c: event.finishRiderRank.get(state.labels.get(c,state.OpenRider),999) )
 					for p, c in enumerate(eventComposition):

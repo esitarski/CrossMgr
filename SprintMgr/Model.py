@@ -16,10 +16,13 @@ KeirinCompetitionTime = 5*60.0
 
 class Rider:
 	status = ''
+	uci_points = 0
 	
+	fields = { 'bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'status' }
 	def __init__( self, bib,
 			first_name = '', last_name = '', team = '', team_code = '', uci_id = '',
-			qualifyingTime = QualifyingTimeDefault,
+			qualifying_time = QualifyingTimeDefault,
+			uci_points = 0,
 			status = ''
 		):
 		self.bib = int(bib)
@@ -28,10 +31,42 @@ class Rider:
 		self.team = team
 		self.team_code = team_code
 		self.uci_id = uci_id
-		self.qualifyingTime = float(qualifyingTime)
+		self.qualifying_time = float(qualifying_time)
 		self.iSeeding = 0
+		self.uci_points = float(uci_points or 0)
 		self.status = status
+	
+	aliases = {
+		'bib#':'bib',
+		'bib_#':'bib',
+		'#':'bib',
+		'num':'bib',
+		'bibnum':'bib',
+		'bib_num':'bib',
 		
+		'first':'first_name',
+		'fname':'first_name',
+		
+		'last':'last_name',
+		'lname':'last_name',
+		
+		'uciid':'uci_id',
+		'ucipoints':'uci_points',
+		'points':'uci_points',
+		
+		'qualifying':'qualifying_time',
+	}
+	
+	@staticmethod	
+	def GetHeaderNameMap( headers ):
+		header_map = {}
+		for col, h in enumerate(headers):
+			h = h.strip().lower().replace(' ', '_')
+			h = Rider.aliases.get( h, h )
+			if h in Rider.fields:
+				header_map[h]  = col
+		return header_map
+
 	def isOpen( self ):
 		return self.last_name == 'OPEN'
 		
@@ -42,17 +77,20 @@ class Rider:
 		return self
 		
 	def key( self ):
-		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifyingTime') )
+		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points') )
 	
 	def keyQualifying( self ):
-		return (self.status, self.qualifyingTime, self.iSeeding)
+		return (self.status, self.qualifying_time, self.iSeeding)
+	
+	def keyPoints( self ):
+		return (self.status, -self.uci_points, self.iSeeding)
 	
 	def keyDataFields( self ):
 		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id') )
 		
 	@property
-	def qualifyingTimeText( self ):
-		return Utils.SecondsToStr(self.qualifyingTime) if self.qualifyingTime < QualifyingTimeDefault else ''
+	def qualifying_timeText( self ):
+		return Utils.SecondsToStr(self.qualifying_time) if self.qualifying_time < QualifyingTimeDefault else ''
 		
 	@property
 	def full_name( self ):
@@ -60,12 +98,12 @@ class Rider:
 	
 	@property
 	def bib_full_name( self ):
-		return u'({}) {}'.format( self.bib, self.full_name ) if self.bib else self.full_name
+		return '({}) {}'.format( self.bib, self.full_name ) if self.bib else self.full_name
 	
 	@property
 	def short_name( self ):
 		if self.last_name and self.first_name:
-			return u'{}, {}.'.format(self.last_name.upper(), self.first_name[:1])
+			return '{}, {}.'.format(self.last_name.upper(), self.first_name[:1])
 		return self.last_name.upper() if self.last_name else self.first_name
 	
 	@property
@@ -87,7 +125,7 @@ class State:
 		self.labels = {}
 		self.noncontinue = {}
 		self.OpenRider = Rider( 0, '', 'OPEN' )
-		self.OpenRider.qualifyingTime = QualifyingTimeDefault + 1.0
+		self.OpenRider.qualifying_time = QualifyingTimeDefault + 1.0
 		
 	def setQualifyingTimes( self, qtIn, competition ):
 		''' Expect qtIn to be of the form [(rider1, t1), (rider2, t2), ...]'''
@@ -98,14 +136,14 @@ class State:
 		# Set extra open spaces to make sure we have enough starters.
 		for i in range(len(qtIn), 128):
 			self.labels['N{}'.format(i+1)] = self.OpenRider
-		self.OpenRider.qualifyingTime =  QualifyingTimeDefault + 1.0
+		self.OpenRider.qualifying_time =  QualifyingTimeDefault + 1.0
 
 	def inContention( self, id ):
 		return self.labels.get(id, None) != self.OpenRider and id not in self.noncontinue
 		
 	def getQualifyingTimes( self ):
 		riders = [rider for label, rider in self.labels.items() if label.startswith('N') and rider != self.OpenRider]
-		return sorted( ((rider.qualifyingTime, rider) for rider in riders), key = lambda qr: qr[1].keyQualifying() )
+		return sorted( ((rider.qualifying_time, rider) for rider in riders), key = lambda qr: qr[1].keyQualifying() )
 		
 	def canReassignStarters( self ):
 		''' Check if not competitions have started and we can reasign starters. '''
@@ -296,18 +334,23 @@ class Start:
 
 class Event:
 	def __init__( self, rule, heatsMax=1 ):
+		assert '->' in rule, 'Rule must contain ->'
+		
 		self.rule = rule.upper()
 		rule = rule.replace( '->', ' -> ').replace('-',' ')
 		
 		fields = rule.split()
 		iSep = fields.index( '>' )
 		self.composition = fields[:iSep]
-		self.winner = fields[iSep+1]
-		self.others = fields[iSep+2:]
-		while len(self.others) < len(self.composition)-1:
-			self.others.append( 'TT' )
+		self.winner = fields[iSep+1]	# Winner of competition.
+		self.others = fields[iSep+2:]	# Other non-winners.
+		
+		# If "others" are incomplete, assume classification by TT time.
+		self.others.extend( ['TT'] * (len(self.composition)-1 - len(self.others)) )
+		
+		assert len(self.composition) == len(self.others) + 1, 'Rule outputs cannot exceed inputs.'
 			
-		self.heatsMax = heatsMax
+		self.heatsMax = heatsMax	# Number of heats to decide the outcome.
 		self.starts = []
 		
 		self.finishRiders, self.finishRiderPlace, self.finishRiderRank = [], {}, {}
@@ -451,12 +494,12 @@ class Event:
 		infoSort = []
 		for place, id in enumerate(places):
 			rider = state.labels.get(id, OpenRider)
-			infoSort.append( (finishCode.get(noncontinue.get(id,''),0), place, rider.qualifyingTime, rider, noncontinue.get(id,'')) )
+			infoSort.append( (finishCode.get(noncontinue.get(id,''),0), place, rider.qualifying_time, rider, noncontinue.get(id,'')) )
 		infoSort.sort()
 		
-		self.finishRiders = [rider for state, place, qualifyingTime, rider, nc in infoSort]
-		self.finishRiderRank = { rider: p+1 for p, (state, place, qualifyingTime, rider, nc) in enumerate(infoSort) }
-		self.finishRiderPlace = { rider: nc if nc else p+1 for p, (state, place, qualifyingTime, rider, nc) in enumerate(infoSort) }
+		self.finishRiders = [rider for state, place, qualifying_time, rider, nc in infoSort]
+		self.finishRiderRank = { rider: p+1 for p, (state, place, qualifying_time, rider, nc) in enumerate(infoSort) }
+		self.finishRiderPlace = { rider: nc if nc else p+1 for p, (state, place, qualifying_time, rider, nc) in enumerate(infoSort) }
 	
 	def getCompositionRiders( self, places ):
 		state = self.competition.state
@@ -705,7 +748,7 @@ class Competition:
 			# Rank the remaining riders based on qualifying time (TT).
 			iTT = self.starters
 			tts = [rider for label, rider in self.state.labels.items() if label.endswith('TT')]
-			tts.sort( key = lambda r: r.qualifyingTime, reverse = True )	# Sort these in reverse as we assign them in from most to least.
+			tts.sort( key = lambda r: r.qualifying_time, reverse = True )	# Sort these in reverse as we assign them in from most to least.
 			for rider in tts:
 				iTT -= 1
 				results[iTT] = rider
@@ -720,7 +763,7 @@ class Competition:
 			
 			# Add the unclassifiable riders.
 			for classification, s in (('DNF',DNFs), ('DNS',DNSs), ('DQ', DQs)):
-				for r in sorted(s,  key = lambda r: r.qualifyingTime):
+				for r in sorted(s,  key = lambda r: r.qualifying_time):
 					results.append( (classification, r) )
 					
 			# Purge empty results, except at the top.
@@ -785,7 +828,7 @@ class Competition:
 								
 								status = riderStatus.get(rider,1)
 								statTxt = statusText[Finisher] if status != DQ and round > 1 else statusText[status]
-								compResults.append( (-round, status, rank, rider.qualifyingTime if rider else sys.float_info.max, statusText[status], rider) )
+								compResults.append( (-round, status, rank, rider.qualifying_time if rider else sys.float_info.max, statusText[status], rider) )
 			
 			compResults.sort()
 			results = [rr[-2:] for rr in compResults]
@@ -821,8 +864,8 @@ class Competition:
 			DNSs = set()
 		
 		return (	results,
-					sorted(DNFs, key = lambda r: r.qualifyingTime),
-					sorted(DQs,  key = lambda r: r.qualifyingTime) )
+					sorted(DNFs, key = lambda r: r.qualifying_time),
+					sorted(DQs,  key = lambda r: r.qualifying_time) )
 		
 class Tournament:
 	def __init__( self, name, systems ):
@@ -893,7 +936,7 @@ class Model:
 	
 	def setQualifyingTimes( self ):
 		self.updateSeeding()
-		qt = [(r, r.qualifyingTime) for r in self.riders]
+		qt = [(r, r.qualifying_time) for r in self.riders]
 		self.competition.state.setQualifyingTimes( qt, self.competition )
 		
 	def canReassignStarters( self ):
@@ -902,7 +945,7 @@ class Model:
 	def setChanged( self, changed = True ):
 		self.changed = changed
 		
-	def setCompetition( self, competition, modifier ):
+	def setCompetition( self, competition, modifier=0 ):
 		self.competition = copy.deepcopy( competition )
 		self.modifier = modifier
 		if modifier:

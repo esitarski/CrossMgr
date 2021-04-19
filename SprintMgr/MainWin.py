@@ -240,7 +240,7 @@ class MainWin( wx.Frame ):
 			[ 'properties',		Properties,			'Properties' ],
 			[ 'seeding',		Seeding,			'Seeding' ],
 			[ 'qualifiers',		Qualifiers,			'Qualifiers' ],
-			[ 'results',		Results,			'Start List \uFF06 Times' ],
+			[ 'results',		Results,			'Tournament Start List' ],
 			[ 'events',			Events,				'Events' ],
 			[ 'graphDraw',		GraphDraw,			'Summary' ],
 			[ 'chart',			Chart,				'Full Table' ],

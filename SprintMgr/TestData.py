@@ -33,7 +33,7 @@ def getTestData():
 
 	testData = []
 	
-	for line in results.split( '\n' ):
+	for n, line in enumerate(results.split('\n')):
 		fields = line.split()
 		if len(fields) < 2:
 			continue
@@ -59,7 +59,13 @@ def getTestData():
 			first_name = fields[i] + (' ' if first_name else '') + first_name
 			i -= 1
 			
-		testData.append( (bib, first_name, last_name, team, qt) )
+		testData.append( {
+			'bib':bib,
+			'first_name':first_name, 'last_name':last_name,
+			'team':team,
+			'qualifying_time':qt,
+			'uci_points':1000-n,
+		} )
 
 	testData.reverse()
 	return testData
