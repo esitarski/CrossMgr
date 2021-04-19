@@ -10,6 +10,7 @@ from Competitions import SetDefaultData
 from ReorderableGrid import ReorderableGrid
 from Events import GetFont
 from HighPrecisionTimeEditor import HighPrecisionTimeEditor
+from Competitions import getCompetitions
 
 #--------------------------------------------------------------------------------
 class Qualifiers(wx.Panel):
@@ -18,7 +19,7 @@ class Qualifiers(wx.Panel):
 		super().__init__(parent)
  
 		font = GetFont()
-		self.title = wx.StaticText(self, label="Enter each rider's qualifying time in hh:mm:ss.ddd format.  Use a colon ':' a space, or a dash '-' to separate hour, minute and seconds.")
+		self.title = wx.StaticText(self, label="Enter each rider's qualifying time in hh:mm:ss.ddd format.")
 		self.title.SetFont( font )
 		
 		self.renumberButton = wx.Button( self, label='Renumber Bibs by Time' )
@@ -30,9 +31,10 @@ class Qualifiers(wx.Panel):
 		hs.AddStretchSpacer()
 		hs.Add( self.renumberButton, 0, flag=wx.ALL, border = 6 )
  
-		self.headerNames = ['Bib', 'Name', 'Team', 'Time', 'Status']
-		self.iTime = next( i for i, n in enumerate(self.headerNames) if n.startswith( 'Time' ) )
-		self.iStatus = next( i for i, n in enumerate(self.headerNames) if n.startswith( 'Status' ) )
+		self.headerNames = ['Bib', 'Name', 'Team', 'Time', 'UCI Points', 'Status']
+		self.headerNameMap = Model.Rider.GetHeaderNameMap( self.headerNames )
+		self.iQualifyingTime = self.headerNameMap['qualifying_time']
+		self.iStatus = self.headerNameMap['status']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -46,7 +48,7 @@ class Qualifiers(wx.Panel):
 		for col in range(self.grid.GetNumberCols()):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( font )
-			if col == self.iTime:
+			if col == self.iQualifyingTime:
 				attr.SetEditor( HighPrecisionTimeEditor() )
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 			elif col == self.iStatus:
@@ -78,16 +80,17 @@ class Qualifiers(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(testData) )
 			
 		for row, data in enumerate(testData):
-			bib = data['bib']
-			name = data['first_name'] + ' ' + data['last_name']
-			team = data['team']
-			time = data['qualifyingTime']
-			for col, d in enumerate([bib, name, team, time]):
-				self.grid.SetCellValue( row, col,' {}'.format(d) )
+			data['full_name'] = data['first_name'] + ' ' + data['last_name'].upper()
+			for k,v in data.items():
+				if k in self.headerNameMap:
+					self.grid.SetCellValue( row, self.headerNameMap[k], '{}'.format(v) )
 		
 		# Fix up the column and row sizes.
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
+		
+		Model.model.setCompetition( getCompetitions()[0], 0 )
+		self.commit()
 		
 	def refresh( self ):
 		model = Model.model
@@ -97,7 +100,7 @@ class Qualifiers(wx.Panel):
 		
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(riders) )
 		for row, r in enumerate(riders):
-			for col, value in enumerate(['{}'.format(r.bib), r.full_name, r.team, r.qualifyingTimeText]):
+			for col, value in enumerate(['{}'.format(r.bib), r.full_name, r.team, r.qualifying_time_text]):
 				self.grid.SetCellValue( row, col, value )
 				
 		# Fix up the column and row sizes.
@@ -117,7 +120,7 @@ class Qualifiers(wx.Panel):
 		self.grid.SaveEditControlValue()
 
 		for row in range(self.grid.GetNumberRows()):
-			v = self.grid.GetCellValue( row, self.iTime ).strip()
+			v = self.grid.GetCellValue( row, self.iQualifyingTime ).strip()
 			if v:
 				qt = Utils.StrToSeconds( v )
 			else:
@@ -143,13 +146,15 @@ class Qualifiers(wx.Panel):
 			Utils.getMainWin().resetEvents()
 			
 	def doRenumber( self, event ):
-		if not Utils.MessageOKCancel( self, 'Sequence Bib numbers in Increasing Order by Qualifying Time.\n\nContinue?', 'Renumber Riders' ):
+		model = Model.model
+		message = 'Sequence Bib numbers by Decreasing UCI Points.\n\nContinue?' if model.isKeirin else 'Sequence Bib numbers by Increasing Qualifying Time.\n\nContinue?'
+		if not Utils.MessageOKCancel( self, message, 'Renumber Riders' ):
 			return
 	
 		self.setQT()
 		
-		model = Model.model
-		riders = sorted( model.riders, key = lambda x: x.keyQualifying() )
+		key = (lambda x: x.keyPoints()) if model.isKeirin else (lambda x: x.keyQualifying())
+		riders = sorted( model.riders, key = key )
 		for r, rider in enumerate(riders, 1):
 			rider.bib = r
 		

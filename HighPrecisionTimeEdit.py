@@ -4,7 +4,7 @@ import platform
 import datetime
 import Utils
 
-reNonTimeChars = re.compile(u'[^0-9:.]')
+reNonTimeChars = re.compile('[^0-9:.]')
 
 def secsToValue( secs, allow_none, display_seconds, display_milliseconds ):
 	if secs is None and allow_none:

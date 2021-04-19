@@ -660,8 +660,8 @@ def SetDefaultData( name = None, modifier = 0, random = False ):
 	
 	model.setCompetition( model.competition, modifier )
 	testData = getRandomTestData( competition.starters ) if random else getTestData()
-	for bib, first_name, last_name, team, qt in testData:
-		rider = Model.Rider( bib, first_name, last_name, team, qualifying_time = qt )
+	for attrs in testData:
+		rider = Model.Rider( **attrs )
 		model.riders.append( rider )
 		
 	model.setQualifyingTimes()

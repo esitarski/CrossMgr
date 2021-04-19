@@ -1,1 +1,1 @@
-AppVerName="SprintMgr 3.0.2-private"
+AppVerName="SprintMgr 3.0.3-private"

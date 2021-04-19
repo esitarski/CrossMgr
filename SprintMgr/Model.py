@@ -44,6 +44,8 @@ class Rider:
 		'bibnum':'bib',
 		'bib_num':'bib',
 		
+		'name':'full_name',
+		
 		'first':'first_name',
 		'fname':'first_name',
 		
@@ -55,6 +57,7 @@ class Rider:
 		'points':'uci_points',
 		
 		'qualifying':'qualifying_time',
+		'time':'qualifying_time',
 	}
 	
 	@staticmethod	
@@ -89,12 +92,16 @@ class Rider:
 		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id') )
 		
 	@property
-	def qualifying_timeText( self ):
+	def qualifying_time_text( self ):
 		return Utils.SecondsToStr(self.qualifying_time) if self.qualifying_time < QualifyingTimeDefault else ''
 		
 	@property
+	def uci_points_text( self ):
+		return '{:.2f}'.format(self.uci_points) if self.uci_points else ''
+		
+	@property
 	def full_name( self ):
-		return u', '.join( n for n in [self.last_name.upper(), self.first_name] if n )
+		return ', '.join( n for n in [self.last_name.upper(), self.first_name] if n )
 	
 	@property
 	def bib_full_name( self ):
@@ -918,6 +925,10 @@ class Model:
 	@property
 	def qualifyingCompetitionTime( self ):
 		return None if self.competition.isMTB else len(self.riders) * Sprint200mQualificationCompetitionTime
+	
+	@property
+	def isKeirin( self ):
+		return self.competition and 'Keirin' in self.competition.name
 	
 	def getProperties( self ):
 		return { a : getattr(self, a) for a in ['competition_name', 'date', 'category', 'track', 'organizer', 'chief_official'] }

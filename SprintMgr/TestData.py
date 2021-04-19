@@ -310,9 +310,17 @@ Spin Doctors
 	testData = []
 	for i, bib in enumerate(bibs):
 		qt = random.gauss( 12.0, 0.5 )
-		testData.append( (bib, firstNames[i%len(firstNames)], lastNames[i%len(lastNames)], teams[i%len(teams)], qt) )
+		testData.append( {
+				'bib':bib,
+				'first_name':		firstNames[i%len(firstNames)],
+				'last_name':		lastNames[i%len(lastNames)],
+				'team':				teams[i%len(teams)],
+				'qualifying_time':	qt,
+				'uci_points':		i+20,
+			}
+		)
 
-	testData.sort( key = operator.itemgetter(-1), reverse=True )
+	testData.sort( key = lambda v: v['qualifying_time'], reverse=True )
 	return testData
 
 if __name__ == "__main__":
