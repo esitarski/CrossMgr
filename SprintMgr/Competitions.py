@@ -645,7 +645,7 @@ def getCompetitions():
 	'''
 	return competitions
 
-def SetDefaultData( name = None, random = False ):
+def SetDefaultData( name = None, modifier = 0, random = False ):
 	if not name:
 		name = 'World Championships'
 		
@@ -658,6 +658,7 @@ def SetDefaultData( name = None, random = False ):
 			model.competition = competition
 			break
 	
+	model.setCompetition( model.competition, modifier )
 	testData = getRandomTestData( competition.starters ) if random else getTestData()
 	for bib, first_name, last_name, team, qt in testData:
 		rider = Model.Rider( bib, first_name, last_name, team, qualifying_time = qt )
