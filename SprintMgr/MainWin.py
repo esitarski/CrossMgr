@@ -1,6 +1,7 @@
 import wx
 import wx.adv
 from wx.lib.wordwrap import wordwrap
+import wx.lib.agw.flatnotebook as flatnotebook
 import os
 import re
 import sys
@@ -225,8 +226,8 @@ class MainWin( wx.Frame ):
 
 		# Configure the field of the display.
 
-		sty = wx.BORDER_SUNKEN
-		self.notebook = wx.Notebook( self )
+		# self.notebook = wx.Notebook( self )
+		self.notebook = flatnotebook.FlatNotebook( self, agwStyle=flatnotebook.FNB_NO_X_BUTTON | flatnotebook.FNB_NO_NAV_BUTTONS)
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
@@ -236,21 +237,22 @@ class MainWin( wx.Frame ):
 			self.notebook.AddPage( page, name )
 			self.pages.append( page )
 			
-		self.attrClassName = [
+		self.attrClassName = (
 			[ 'properties',		Properties,			'Properties' ],
 			[ 'seeding',		Seeding,			'Seeding' ],
 			[ 'qualifiers',		Qualifiers,			'Qualifiers' ],
-			[ 'results',		Results,			'Tournament Start List' ],
 			[ 'events',			Events,				'Events' ],
+			[ 'results',		Results,			'Tournament' ],
 			[ 'graphDraw',		GraphDraw,			'Summary' ],
 			[ 'chart',			Chart,				'Full Table' ],
-		]
+		)
+		self.iQualifiersPage = next( i for i, (attr, cls, title) in enumerate(self.attrClassName) if attr == 'qualifiers' )
+		self.iSeedingPage = next( i for i, (attr, cls, title) in enumerate(self.attrClassName) if attr == 'seeding' )			
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
 			addPage( getattr(self, a), n )
 			
-		#self.notebook.ChangeSelection( 0 )
 		self.notebook.SetSelection( 0 )
 		
 		#-----------------------------------------------------------------------
@@ -826,6 +828,9 @@ table.results tr td.fastest{
 		else:
 			title = '{}: {}'.format( model.category, Version.AppVerName )
 		self.SetTitle( title )
+		isKeirin = (model.competition and model.competition.isKeirin)
+		self.notebook.EnableTab( self.iQualifiersPage, not isKeirin )
+		self.notebook.SetPageText( self.iQualifiersPage, ' ' if isKeirin else self.attrClassName[self.iQualifiersPage][2] )
 			
 	def menuSaveAs( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
@@ -1039,6 +1044,10 @@ table.results tr td.fastest{
 		except IndexError:
 			pass
 		event.Skip()	# Required to properly repaint the screen.
+		
+		if event.GetSelection() == self.iQualifiersPage and (Model.model and Model.model.competition and Model.model.competition.isKeirin):
+			wx.CallAfter( self.callPageRefresh, self.iSeedingPage )
+			wx.CallAfter( notebook.SetSelection, self.iSeedingPage )
 
 	def refreshAll( self ):
 		self.refresh()

@@ -3,6 +3,7 @@ import copy
 import random
 import datetime
 import traceback
+from operator import attrgetter
 
 from collections import defaultdict
 import Utils
@@ -16,13 +17,15 @@ KeirinCompetitionTime = 5*60.0
 
 class Rider:
 	status = ''
+	seeding_rank = 0
 	uci_points = 0
 	
-	fields = { 'bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'status' }
+	fields = { 'bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'seeding_rank', 'status' }
 	def __init__( self, bib,
 			first_name = '', last_name = '', team = '', team_code = '', uci_id = '',
 			qualifying_time = QualifyingTimeDefault,
 			uci_points = 0,
+			seeding_rank = 0,
 			status = ''
 		):
 		self.bib = int(bib)
@@ -32,8 +35,9 @@ class Rider:
 		self.team_code = team_code
 		self.uci_id = uci_id
 		self.qualifying_time = float(qualifying_time)
-		self.iSeeding = 0
+		self.iSeeding = 0								# Actual value in the seeding list.
 		self.uci_points = float(uci_points or 0)
+		self.seeding_rank = int(seeding_rank or 0)
 		self.status = status
 	
 	aliases = {
@@ -45,20 +49,37 @@ class Rider:
 		'bib_num':'bib',
 		
 		'name':'full_name',
+		'rider_name':'full_name',
 		
 		'first':'first_name',
 		'fname':'first_name',
+		'firstname':'first_name',
+		'rider_first':'first_name',
 		
 		'last':'last_name',
 		'lname':'last_name',
+		'lastname':'last_name',
+		'rider_last':'last_name',
 		
 		'uciid':'uci_id',
+		'rider_uciid':'uci_id',
+		
 		'ucipoints':'uci_points',
 		'points':'uci_points',
+		'rider_ucipoints':'uci_points',
 		
 		'qualifying':'qualifying_time',
 		'time':'qualifying_time',
+		'rider_time':'qualifying_time',
+		
+		'rank':'seeding_rank',
+		
+		'rider_team':'team',
+		'teamcode':'team_code',
+		
+		'rider_status':'status',
 	}
+	aliases.update( {v:v for v in aliases.values()} )
 	
 	@staticmethod	
 	def GetHeaderNameMap( headers ):
@@ -74,23 +95,24 @@ class Rider:
 		return self.last_name == 'OPEN'
 		
 	def copyDataFields( self, r ):
-		if r != self:
-			for attr in ('first_name', 'last_name', 'team', 'uci_id'):
-				setattr( self, attr, getattr(r, attr, '') )
+		if r == self:
+			return
+			
+		fields = ('first_name', 'last_name', 'team', 'team_code', 'uci_id', 'uci_points', 'seeding_rank')
+		for attr in fields:
+			setattr( self, attr, getattr(r, attr) )
 		return self
 		
 	def key( self ):
-		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points') )
+		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'seeding_rank', ) )
 	
-	def keyQualifying( self ):
-		return (self.status, self.qualifying_time, self.iSeeding)
+	@staticmethod
+	def getKeyQualifying( isKeirin ):
+		if isKeirin:
+			return attrgetter('status', 'iSeeding')
+		else:
+			return attrgetter('status', 'qualifying_time', 'iSeeding')
 	
-	def keyPoints( self ):
-		return (self.status, -self.uci_points, self.iSeeding)
-	
-	def keyDataFields( self ):
-		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id') )
-		
 	@property
 	def qualifying_time_text( self ):
 		return Utils.SecondsToStr(self.qualifying_time) if self.qualifying_time < QualifyingTimeDefault else ''
@@ -129,31 +151,27 @@ class Rider:
 
 class State:
 	def __init__( self ):
-		self.labels = {}
+		self.labels = {}		# Riders bound to competition labels.
 		self.noncontinue = {}
-		self.OpenRider = Rider( 0, '', 'OPEN' )
-		self.OpenRider.qualifying_time = QualifyingTimeDefault + 1.0
+		self.OpenRider = Rider( bib=0, last_name='OPEN', qualifying_time=QualifyingTimeDefault + 1.0 )
 		
-	def setQualifyingTimes( self, qtIn, competition ):
-		''' Expect qtIn to be of the form [(rider1, t1), (rider2, t2), ...]'''
-		self.labels = {}
-		qt = sorted( (t, rider.iSeeding, rider) for rider, t in qtIn if rider.status != 'DNQ' )[:competition.starters]
-		for i, (t, iSeeding, rider) in enumerate(qt):
-			self.labels['N{}'.format(i+1)] = rider
-		# Set extra open spaces to make sure we have enough starters.
-		for i in range(len(qtIn), 128):
-			self.labels['N{}'.format(i+1)] = self.OpenRider
+	def setQualifyingInfo( self, riders, competition ):
+		riders = sorted(
+			(r for r in riders if r.status != 'DNQ'),
+			key = Rider.getKeyQualifying(competition.isKeirin),
+		)[:competition.starters]
+		
+		self.labels = { 'N{}'.format(i):rider for i, rider in enumerate(riders,1) }
+		
+		# Initialize extra open spaces to make sure we have enough starters.
+		self.labels.update( {'N{}'.format(i):self.OpenRider for i in range(len(riders)+1, 128)} )
 		self.OpenRider.qualifying_time =  QualifyingTimeDefault + 1.0
 
-	def inContention( self, id ):
-		return self.labels.get(id, None) != self.OpenRider and id not in self.noncontinue
-		
-	def getQualifyingTimes( self ):
-		riders = [rider for label, rider in self.labels.items() if label.startswith('N') and rider != self.OpenRider]
-		return sorted( ((rider.qualifying_time, rider) for rider in riders), key = lambda qr: qr[1].keyQualifying() )
+	def inContention( self, label ):
+		return self.labels.get(label, None) != self.OpenRider and label not in self.noncontinue
 		
 	def canReassignStarters( self ):
-		''' Check if not competitions have started and we can reasign starters. '''
+		''' Check if no competitions have started and we can reasign starters. '''
 		return all( label.startswith('N') for label in self.labels.keys() )
 
 #------------------------------------------------------------------------------------------------
@@ -447,25 +465,25 @@ class Event:
 	def multi_line_bibs( self ):
 		state = self.competition.state
 		remainingComposition = [c for c in self.composition if state.inContention(c)]
-		return u'\n'.join((str(state.labels[c].bib)) for c in remainingComposition)
+		return '\n'.join((str(state.labels[c].bib)) for c in remainingComposition)
 		
 	@property
 	def multi_line_rider_names( self ):
 		state = self.competition.state
 		remainingComposition = [c for c in self.composition if state.inContention(c)]
-		return u'\n'.join(state.labels[c].full_name for c in remainingComposition)
+		return '\n'.join(state.labels[c].full_name for c in remainingComposition)
 		
 	@property
 	def multi_line_rider_teams( self ):
 		state = self.competition.state
 		remainingComposition = [c for c in self.composition if state.inContention(c)]
-		return u'\n'.join(state.labels[c].team for c in remainingComposition)
+		return '\n'.join(state.labels[c].team for c in remainingComposition)
 		
 	@property
 	def multi_line_inlabels( self ):
 		state = self.competition.state
 		remainingComposition = [c for c in self.composition if state.inContention(c)]
-		return u'\n'.join( remainingComposition )
+		return '\n'.join( remainingComposition )
 	
 	@property
 	def multi_line_outlabels( self ):
@@ -473,7 +491,7 @@ class Event:
 		remainingComposition = [c for c in self.composition if state.inContention(c)]
 		outlabels = [self.winner]
 		outlabels.extend( self.others[0:len(remainingComposition)-1] )
-		return u'\n'.join( outlabels )
+		return '\n'.join( outlabels )
 	
 	def getRepr( self ):
 		return self.__repr__()
@@ -515,7 +533,7 @@ class Event:
 	
 	def propagate( self ):
 		if not self.canStart():
-			#print ', '.join(self.composition), 'Cannot start or already finished - nothing to propagate'
+			#print( ', '.join(self.composition), 'Cannot start or already finished - nothing to propagate' )
 			return False
 		
 		state = self.competition.state
@@ -590,7 +608,7 @@ class Competition:
 		self.starters = 0
 		self.isMTB = ('XCE' in name or any( ('RR' in '|'.join(e.others)) for t, s, e in self.allEvents() ))
 		self.isSprint = not self.isMTB
-		self.isKeirin = 'Kerin' in name
+		self.isKeirin = 'Keirin' in name
 		
 		byeEvents = set()
 		byeOutcomeMap = {}
@@ -870,10 +888,12 @@ class Competition:
 			DNFs = set()
 			DNSs = set()
 		
-		return (	results,
-					sorted(DNFs, key = lambda r: r.qualifying_time),
-					sorted(DQs,  key = lambda r: r.qualifying_time) )
-		
+		return (
+			results,
+			sorted(DNFs, key = lambda r: (r.qualifying_time, -r.uci_points, r.iSeeding)),
+			sorted(DQs,  key = lambda r: (r.qualifying_time, -r.uci_points, r.iSeeding))
+		)
+
 class Tournament:
 	def __init__( self, name, systems ):
 		self.name = name
@@ -928,7 +948,7 @@ class Model:
 	
 	@property
 	def isKeirin( self ):
-		return self.competition and 'Keirin' in self.competition.name
+		return self.competition and self.competition.isKeirin
 	
 	def getProperties( self ):
 		return { a : getattr(self, a) for a in ['competition_name', 'date', 'category', 'track', 'organizer', 'chief_official'] }
@@ -938,17 +958,16 @@ class Model:
 			setattr(self, a, v)
 		
 	def updateSeeding( self ):
-		for iSeeding, rider in enumerate(self.riders):
-			rider.iSeeding = iSeeding + 1
+		for iSeeding, rider in enumerate(self.riders, 1):
+			rider.iSeeding = iSeeding
 			
 	def getDNQs( self ):
 		riders = sorted( self.riders, key = lambda r: r.keyQualifying() )
 		return riders[self.competition.starters:]
 	
-	def setQualifyingTimes( self ):
+	def setQualifyingInfo( self ):
 		self.updateSeeding()
-		qt = [(r, r.qualifying_time) for r in self.riders]
-		self.competition.state.setQualifyingTimes( qt, self.competition )
+		self.competition.state.setQualifyingInfo( self.riders, self.competition )
 		
 	def canReassignStarters( self ):
 		return self.competition.state.canReassignStarters()

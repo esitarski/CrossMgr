@@ -45,5 +45,5 @@ def GpxParse( fname ):
 	return gpxCH.points
 
 if __name__ == '__main__':
-	points = GpxParse( 'Seymour_Smith_Cyclocross_Course.gpx' )
+	points = GpxParse( 'GPX/circuit-violet-100-km.gpx' )
 	print( points )

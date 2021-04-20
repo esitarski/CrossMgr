@@ -148,7 +148,7 @@ class Properties(wx.Panel):
 			# Check that changing the competition will screw anything up.
 			if model.canReassignStarters():
 				model.setCompetition( competition, self.modifierCtrl.GetSelection() )
-				model.setQualifyingTimes()
+				model.setQualifyingInfo()
 				Utils.getMainWin().resetEvents()
 				model.setChanged( True )
 			else:

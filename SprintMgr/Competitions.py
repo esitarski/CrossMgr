@@ -664,7 +664,7 @@ def SetDefaultData( name = None, modifier = 0, random = False ):
 		rider = Model.Rider( **attrs )
 		model.riders.append( rider )
 		
-	model.setQualifyingTimes()
+	model.setQualifyingInfo()
 	return model
 	
 def DoRandomSimulation( model = None ):

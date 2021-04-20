@@ -31,7 +31,7 @@ class Qualifiers(wx.Panel):
 		hs.AddStretchSpacer()
 		hs.Add( self.renumberButton, 0, flag=wx.ALL, border = 6 )
  
-		self.headerNames = ['Bib', 'Name', 'Team', 'Time', 'UCI Points', 'Status']
+		self.headerNames = ['Bib', 'Name', 'Team', 'Time', 'Status']
 		self.headerNameMap = Model.Rider.GetHeaderNameMap( self.headerNames )
 		self.iQualifyingTime = self.headerNameMap['qualifying_time']
 		self.iStatus = self.headerNameMap['status']
@@ -55,9 +55,8 @@ class Qualifiers(wx.Panel):
 				attr.SetEditor( gridlib.GridCellChoiceEditor(choices = ['', 'DNQ']) )
 				attr.SetReadOnly( False )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
-			else:
-				if col == 0:
-					attr.SetRenderer( gridlib.GridCellNumberRenderer() )
+			elif col == 0:
+				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
 				attr.SetReadOnly( True )
 			self.grid.SetColAttr( col, attr )
 		
@@ -80,7 +79,7 @@ class Qualifiers(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(testData) )
 			
 		for row, data in enumerate(testData):
-			data['full_name'] = data['first_name'] + ' ' + data['last_name'].upper()
+			data['full_name'] = data['last_name'].upper() + ' ' + data['first_name']
 			for k,v in data.items():
 				if k in self.headerNameMap:
 					self.grid.SetCellValue( row, self.headerNameMap[k], '{}'.format(v) )
@@ -89,7 +88,7 @@ class Qualifiers(wx.Panel):
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 		
-		Model.model.setCompetition( getCompetitions()[0], 0 )
+		Model.model.setCompetition( next(c for c in getCompetitions() if 'Keirin' in c.name), 0 )
 		self.commit()
 		
 	def refresh( self ):
@@ -100,18 +99,22 @@ class Qualifiers(wx.Panel):
 		
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(riders) )
 		for row, r in enumerate(riders):
-			for col, value in enumerate(['{}'.format(r.bib), r.full_name, r.team, r.qualifying_time_text]):
-				self.grid.SetCellValue( row, col, value )
+			for attr,col in self.headerNameMap.items():
+				if attr == 'qualifying_time':
+					value = getattr( r, attr + '_text' )
+				else:
+					value = getattr( r, attr )
+				self.grid.SetCellValue( row, col, '{}'.format(value) )
 				
 		# Fix up the column and row sizes.
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
-		self.grid.SetColSize( self.grid.GetNumberCols()-1, 96 )
+		self.grid.SetColSize( self.grid.GetNumberCols()-2, 96 )
 		
 		self.Layout()
 		self.Refresh()
 		
-	def setQT( self ):
+	def setQualifyingInfo( self ):
 		# The qualifying times can be changed at any time, however, if the competition is under way, the events cannot
 		# be adjusted.
 		model = Model.model
@@ -127,11 +130,12 @@ class Qualifiers(wx.Panel):
 				qt = Model.QualifyingTimeDefault
 				
 			qt = min( qt, Model.QualifyingTimeDefault )
+
 			status = self.grid.GetCellValue( row, self.iStatus ).strip()
 			
 			rider = riders[row]
-			if rider.qualifyingTime != qt or rider.status != status:
-				rider.qualifyingTime = qt
+			if rider.qualifying_time != qt or rider.status != status:
+				rider.qualifying_time = qt
 				rider.status = status
 				model.setChanged( True )
 		
@@ -140,9 +144,9 @@ class Qualifiers(wx.Panel):
 		# be adusted.
 		model = Model.model
 		riders = model.riders
-		self.setQT()
+		self.setQualifyingInfo()
 		if model.canReassignStarters():
-			model.setQualifyingTimes()
+			model.setQualifyingInfo()
 			Utils.getMainWin().resetEvents()
 			
 	def doRenumber( self, event ):
@@ -151,7 +155,7 @@ class Qualifiers(wx.Panel):
 		if not Utils.MessageOKCancel( self, message, 'Renumber Riders' ):
 			return
 	
-		self.setQT()
+		self.setQualifyingInfo()
 		
 		key = (lambda x: x.keyPoints()) if model.isKeirin else (lambda x: x.keyQualifying())
 		riders = sorted( model.riders, key = key )

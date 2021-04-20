@@ -16,16 +16,9 @@ import Model
 from Excel import GetExcelReader, toAscii
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'FirstName', 'LastName', 'Team', 'TeamCode', 'UCIID']
+Fields = ['Bib#', 'FirstName', 'LastName', 'Team', 'TeamCode', 'UCIID', 'UCI Points']
 
-FieldToAttr = {
-	'Bib#':			'bib',
-	'FirstName':	'first_name',
-	'LastName':		'last_name',
-	'Team':			'team',
-	'TeamCode':		'team_code',
-	'UCIID':		'uci_id',
-}
+FieldToAttr = {f:Model.Rider.aliases[f.strip().lower().replace(' ', '_')] for f in Fields}
 
 class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
