@@ -226,8 +226,7 @@ class MainWin( wx.Frame ):
 
 		# Configure the field of the display.
 
-		# self.notebook = wx.Notebook( self )
-		self.notebook = flatnotebook.FlatNotebook( self, agwStyle=flatnotebook.FNB_NO_X_BUTTON | flatnotebook.FNB_NO_NAV_BUTTONS)
+		self.notebook = flatnotebook.FlatNotebook( self, agwStyle=flatnotebook.FNB_NO_X_BUTTON | flatnotebook.FNB_NO_NAV_BUTTONS )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
@@ -238,13 +237,13 @@ class MainWin( wx.Frame ):
 			self.pages.append( page )
 			
 		self.attrClassName = (
-			[ 'properties',		Properties,			'Properties' ],
-			[ 'seeding',		Seeding,			'Seeding' ],
-			[ 'qualifiers',		Qualifiers,			'Qualifiers' ],
-			[ 'events',			Events,				'Events' ],
-			[ 'results',		Results,			'Tournament' ],
-			[ 'graphDraw',		GraphDraw,			'Summary' ],
-			[ 'chart',			Chart,				'Full Table' ],
+			( 'properties',		Properties,			'Properties' ),
+			( 'seeding',		Seeding,			'Seeding' ),
+			( 'qualifiers',		Qualifiers,			'Qualifiers' ),
+			( 'events',			Events,				'Events' ),
+			( 'results',		Results,			'Tournament' ),
+			( 'graphDraw',		GraphDraw,			'Summary' ),
+			( 'chart',			Chart,				'Full Table' ),
 		)
 		self.iQualifiersPage = next( i for i, (attr, cls, title) in enumerate(self.attrClassName) if attr == 'qualifiers' )
 		self.iSeedingPage = next( i for i, (attr, cls, title) in enumerate(self.attrClassName) if attr == 'seeding' )			

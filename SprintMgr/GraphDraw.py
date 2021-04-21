@@ -1,7 +1,7 @@
 import wx
 import Utils
 import Model
-from Competitions import SetDefaultData, DoRandomSimulation
+from Competitions import getCompetitions, SetDefaultData, DoRandomSimulation
 from Utils import WriteCell
 from Events import GetFont, GetBoldFont
 import bisect
@@ -91,8 +91,8 @@ class Graph( wx.Control ):
 			except KeyError:
 				return ''
 		
-		# Set the list of qualifiers.  Double-space the rows.
-		grid = [[{'title':'Qualifiers'}, {}]]
+		# Set the list of qualifiers/seeding.  Double-space the rows.
+		grid = [[{'title':'Seeding' if competition.isKeirin else 'Qualifiers'}, {}]]
 		for i in range(competition.starters):
 			grid[0].append( {'rider':state.labels.get('N{}'.format(i+1),None)} )
 			grid[0].append( {} )
@@ -123,7 +123,7 @@ class Graph( wx.Control ):
 				systemTitle = system.name
 				heatsMax = max( (e.heatsMax for e in system.events), default=1 )
 				if heatsMax > 1:
-					systemTitle += ' (best of {}))'.format( heatsMax )
+					systemTitle += ' (best of {})'.format( heatsMax )
 				grid[col].extend( [{'title':systemTitle}, {}] )
 				for event in system.events:
 					if 'Repechages' in system.name and event.i == 0:
@@ -409,11 +409,11 @@ class Graph( wx.Control ):
 					if rider:
 						name = getFullName( rider, v )
 						if 'classification' in v:
-							pos = u'{}'.format(v['classification'])
+							pos = '{}'.format(v['classification'])
 							if pos.isdigit():
-								name = u'{}.  {}'.format(pos, name)
+								name = '{}.  {}'.format(pos, name)
 							else:
-								name = u'{}  {}'.format(pos, name)
+								name = '{}  {}'.format(pos, name)
 						drawName( name, x, y, rider == self.selectedRider )
 						colRects.append( (wx.Rect(int(x), int(y), dc.GetFullTextExtent(name)[0], int(rowHeight)), rider) )
 			self.rectRiders.append( colRects )
@@ -454,7 +454,7 @@ class GraphDraw( wx.Panel ):
 		
 		vs.Add( hs, 0, flag=wx.ALL, border = 6 )
 		
-		vs.Add( wx.StaticText(self, label='Click on a name below to show the progress through the competition.'), flag=wx.LEFT, border = 8 )
+		vs.Add( wx.StaticText(self, label='Click on a name to show the progress through the competition.'), flag=wx.LEFT, border = 8 )
 		
 		self.graph = Graph( self )
 		vs.Add( self.graph, 1, flag=wx.ALL|wx.EXPAND, border = 6 )
@@ -469,7 +469,7 @@ class GraphDraw( wx.Panel ):
 								model.date.strftime('%Y-%m-%d'),
 								model.competition.name,
 							) )
-		self.communiqueNumber.SetValue( model.communique_number.get(self.phase, u'') )
+		self.communiqueNumber.SetValue( model.communique_number.get(self.phase, '') )
 		self.GetSizer().Layout()
 		self.Refresh()
 		
@@ -485,7 +485,7 @@ class GraphDraw( wx.Panel ):
 	def commit( self ):
 		model = Model.model
 		cn = self.communiqueNumber.GetValue()
-		if cn != model.communique_number.get(self.phase, u''):
+		if cn != model.communique_number.get(self.phase, ''):
 			model.communique_number[self.phase] = self.communiqueNumber.GetValue()
 			model.setChanged()
 		
@@ -498,31 +498,30 @@ class GraphDrawFrame(wx.Frame):
 		self.panel.refresh()
 		self.Show()
  
+	def refresh( self ):
+		self.panel.refresh()
+ 
 	def getImage( self ):
 		return self.panel.getImage()
 		
 #----------------------------------------------------------------------
 if __name__ == "__main__":
 	app = wx.App(False)
-	#Model.model = SetDefaultData()
-	#with open(r'Races\TestFinished.smr', 'rb') as fp:
-	#	Model.model = pickle.load( fp )
-	#Model.model = SetDefaultData('XCE 32')
-	Model.model = SetDefaultData('World Cup')
-	#Model.model = SetDefaultData('XCE Fewer than 18')
-	#Model.model = SetDefaultData('XCE 36')
-	#Model.model = SetDefaultData('Four Cross 64')
-	#Model.model = SetDefaultData('Four Cross 32')
-	#Model.model = SetDefaultData('Four Cross 16')
-	#Model.model = SetDefaultData('XCE Fewer than 24')
-	#Model.model = SetDefaultData('Keirin 21')
-	#Model.model = SetDefaultData('Keirin 22-28')
-	#Model.model = SetDefaultData('Keirin 29-42')
-	#Model.model = SetDefaultData('Keirin 12-14')
-	for i, r in enumerate(Model.model.riders):
-		r.status = 'DNQ'
-		if i > 12:
-			break
+
+	Model.model = SetDefaultData(0)
 	DoRandomSimulation()
 	frame = GraphDrawFrame()
+	
+	pauseMs = 5000
+	def nextCompetition():
+		competitions = getCompetitions()
+		for i, comp in enumerate(competitions[:-1]):
+			if Model.model.competition.name == comp.name:
+				Model.model = SetDefaultData( i+1 )
+				DoRandomSimulation()
+				wx.CallAfter( frame.refresh )
+				wx.CallLater( pauseMs, nextCompetition )
+				break
+				
+	wx.CallLater( pauseMs, nextCompetition )
 	app.MainLoop()

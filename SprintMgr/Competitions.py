@@ -646,17 +646,21 @@ def getCompetitions():
 	return competitions
 
 def SetDefaultData( name = None, modifier = 0, random = False ):
-	if not name:
-		name = 'World Championships'
+	if name is None:
+		name = 0
 		
 	model = Model.Model()
-	for i, competition in enumerate(getCompetitions()):
-		if i == 0:
-			model.competition = competition
-			
-		if name in competition.name:
-			model.competition = competition
-			break
+
+	if isinstance(name, int):
+		model.competition = getCompetitions()[name]
+	else:
+		for i, competition in enumerate(getCompetitions()):
+			if i == 0:
+				model.competition = competition
+				
+			if name in competition.name:
+				model.competition = competition
+				break
 	
 	model.setCompetition( model.competition, modifier )
 	testData = getRandomTestData( competition.starters ) if random else getTestData()

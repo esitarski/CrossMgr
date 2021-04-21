@@ -853,9 +853,22 @@ class Competition:
 								
 								status = riderStatus.get(rider,1)
 								statTxt = statusText[Finisher] if status != DQ and round > 1 else statusText[status]
-								compResults.append( (-round, status, rank, rider.qualifying_time if rider else sys.float_info.max, statusText[status], rider) )
+								compResults.append( (
+									-round, status, rank,
+									rider.qualifying_time if rider else sys.float_info.max,
+									rider.seeding_rank if rider else 9999999,
+									rider.bib if rider else 999999,
+									random.random(),		# Some insurance so that the sort does not fail.
+									statusText[status],
+									rider
+								) )
 			
-			compResults.sort()
+			try:
+				compResults.sort()
+			except Exception as e:
+				print( '****', self.name )
+				raise e
+				
 			results = [rr[-2:] for rr in compResults]
 			
 			# Adjust the available finisher positions for the abnormal finishes.
