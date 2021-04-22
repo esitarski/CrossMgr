@@ -255,7 +255,7 @@ class Graph( wx.Control ):
 		
 		topSpace = 0
 		if toPrinter:
-			titleFontSize = border / 4
+			titleFontSize = int(border / 4)
 			titleFont = wx.Font((0,titleFontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 			dc.SetFont( titleFont )
 			model = Model.model
@@ -351,7 +351,7 @@ class Graph( wx.Control ):
 						break
 				xb = colX[min(cNext+1, len(grid)-1)] - colSpace
 				yb = ya
-				dc.DrawLine( xa, ya, xb, yb )
+				dc.DrawLine( int(xa), int(ya), int(xb), int(yb) )
 				drawSCurve( xb, yb, x2, y2 )
 		
 		def drawName( name, x, y, selected, pos = -1 ):

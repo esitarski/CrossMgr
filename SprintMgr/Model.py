@@ -806,6 +806,7 @@ class Competition:
 			DNSs = set()
 		
 		else:
+			# Rank the rest of the riders based on their results also considering the result of their last round.
 			abnormalFinishers = set()
 			compResults = []
 			for tournament in self.tournaments:
