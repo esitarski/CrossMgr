@@ -1,12 +1,13 @@
 import wx
+import bisect
+import pickle
+from collections import defaultdict
+
 import Utils
 import Model
 from Competitions import getCompetitions, SetDefaultData, DoRandomSimulation
 from Utils import WriteCell
 from Events import GetFont, GetBoldFont
-import bisect
-import pickle
-from collections import defaultdict
 
 class Graph( wx.Control ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -98,68 +99,59 @@ class Graph( wx.Control ):
 			grid[0].append( {} )
 		
 		# Add the event results.
-		for tournamentCount, tournament in enumerate(competition.tournaments):
-			if tournamentCount == 0:
-				rowStart = 0
-				col = 1
-			else:
-				rowStart = len(grid[1])
-				col = 2
+		rowStart = 0
+		col = 1
 				
+		while len(grid) <= col:
+			grid.append( [] )
+		
+		for s, system in enumerate(competition.systems):
+		
 			while len(grid) <= col:
 				grid.append( [] )
-			
-			if tournament.name:
-				grid[col].extend( [{}] * (rowStart - len(grid[col])) )
-				grid[col].extend( [{'title': 'Tournament "{}"'.format(tournament.name)}, {}] )
-				rowStart += 2
-			for s, system in enumerate(tournament.systems):
-			
-				while len(grid) <= col:
-					grid.append( [] )
-					
-				grid[col].extend( [{}] * (rowStart - len(grid[col])) )
 				
-				systemTitle = system.name
-				heatsMax = max( (e.heatsMax for e in system.events), default=1 )
-				if heatsMax > 1:
-					systemTitle += ' (best of {})'.format( heatsMax )
-				grid[col].extend( [{'title':systemTitle}, {}] )
-				for event in system.events:
-					if 'Repechages' in system.name and event.i == 0:
-						grid[col].extend( [{}] * (len(grid[col-1]) - len(grid[col])) )
-					elif system.name.startswith('Small'):
-						grid[col].extend( [{}] * (13 if 'XCE' in competition.name or 'Keirin' in competition.name else 8) )
-					elif '5-8' in system.name:
-						grid[col].extend( [{}] * 12 )
-					elif 'XCE' not in competition.name and len(event.composition) == 4: # Offset the 4-ways to another column (if not XCE)
-						rowLast = len(grid[col])
-						if 'Repechages' in system.name:
-							rowLast -= (4+1)
-						col += 1
-						while len(grid) <= col:
-							grid.append( [] )
-						grid[col].extend( [{}] * (rowLast - len(grid[col])) )
-					elif '5-6 Final' in system.name:
-						grid[col].extend( [{}] * 7 )
-					
-					# If the event has happend, sequence by results.
-					# If the event has not happened, sequence by qualifying time.
-					if not event.finishRiderRank:
-						eventComposition = sorted( event.composition, key = lambda c: state.labels.get(c,state.OpenRider).qualifying_time )
-					else:
-						eventComposition = sorted( event.composition, key = lambda c: event.finishRiderRank.get(state.labels.get(c,state.OpenRider),999) )
-					for p, c in enumerate(eventComposition):
-						rider = state.labels.get(c,state.OpenRider)
-						values = {'rider':rider}
-						if rider in event.finishRiderPlace:
-							values['rank'] = event.finishRiderPlace[rider]
-						if len(event.composition) != 4 and values.get('rank',None) == 1:
-							values['winner'] = True
-							
-						grid[col].append( values )
-					grid[col].append( {} )
-				col += 1
+			grid[col].extend( [{}] * (rowStart - len(grid[col])) )
+			
+			systemTitle = system.name.replace( '/', '\u2044' )
+			heatsMax = max( (e.heatsMax for e in system.events), default=1 )
+			if heatsMax > 1:
+				systemTitle += ' (best of {})'.format( heatsMax )
+			grid[col].extend( [{'title':systemTitle}, {}] )
+			for event in system.events:
+				if 'Repechages' in system.name and event.i == 0:
+					grid[col].extend( [{}] * (len(grid[col-1]) - len(grid[col])) )
+				elif system.name.startswith('Small'):
+					grid[col].extend( [{}] * (13 if 'XCE' in competition.name or 'Keirin' in competition.name else 8) )
+				elif '5-8' in system.name:
+					grid[col].extend( [{}] * 12 )
+				elif 'XCE' not in competition.name and len(event.composition) == 4: # Offset the 4-ways to another column (if not XCE)
+					rowLast = len(grid[col])
+					if 'Repechages' in system.name:
+						rowLast -= (4+1)
+					col += 1
+					while len(grid) <= col:
+						grid.append( [] )
+					grid[col].extend( [{}] * (rowLast - len(grid[col])) )
+				elif '5-6 Final' in system.name:
+					grid[col].extend( [{}] * 7 )
+				
+				# If the event has happend, sequence by results.
+				# If the event has not happened, sequence by qualifying time.
+				if not event.finishRiderRank:
+					eventComposition = sorted( event.composition, key = lambda c: state.labels.get(c,state.OpenRider).qualifying_time )
+				else:
+					eventComposition = sorted( event.composition, key = lambda c: event.finishRiderRank.get(state.labels.get(c,state.OpenRider),999) )
+				for p, c in enumerate(eventComposition):
+					rider = state.labels.get(c,state.OpenRider)
+					values = {'rider':rider}
+					if rider in event.finishRiderPlace:
+						values['rank'] = event.finishRiderPlace[rider]
+					if len(event.composition) != 4 and values.get('rank',None) == 1:
+						values['winner'] = True
+						
+					grid[col].append( values )
+				grid[col].append( {} )
+			col += 1
 	
 		results, dnfs, dqs = model.competition.getResults()
 		grid.append( [{'title':'Final Classification'}, {}] )
@@ -205,7 +197,7 @@ class Graph( wx.Control ):
 			font = wx.Font((0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 			boldFont = wx.Font((0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 			dc.SetFont( font )
-			textHeight = dc.GetTextExtent( 'My What a Nice String!' )[1]
+			textHeight = dc.GetTextExtent( 'MWyg!' )[1]
 			rowHeight = textHeight * 1.15
 			
 			colWidths = [0] * len(grid)
@@ -495,7 +487,8 @@ class GraphDrawFrame(wx.Frame):
 	def __init__(self):
 		wx.Frame.__init__(self, None, title="Graph Test", size=(1000,800) )
 		self.panel = GraphDraw( self )
-		self.panel.refresh()
+		if Model.model.competition:
+			self.panel.refresh()
 		self.Show()
  
 	def refresh( self ):
@@ -508,20 +501,15 @@ class GraphDrawFrame(wx.Frame):
 if __name__ == "__main__":
 	app = wx.App(False)
 
-	Model.model = SetDefaultData(0)
-	DoRandomSimulation()
 	frame = GraphDrawFrame()
 	
-	pauseMs = 5000
+	pauseMs = 4000
 	def nextCompetition():
-		competitions = getCompetitions()
-		for i, comp in enumerate(competitions[:-1]):
-			if Model.model.competition.name == comp.name:
-				Model.model = SetDefaultData( i+1 )
-				DoRandomSimulation()
-				wx.CallAfter( frame.refresh )
-				wx.CallLater( pauseMs, nextCompetition )
-				break
+		i = Model.model.competition.i + 1 if Model.model.competition else 0
+		Model.model = SetDefaultData( i if i < len(getCompetitions()) else 0 )
+		DoRandomSimulation()
+		wx.CallAfter( frame.refresh )
+		wx.CallLater( pauseMs, nextCompetition )
 				
-	wx.CallLater( pauseMs, nextCompetition )
+	wx.CallAfter( nextCompetition )
 	app.MainLoop()

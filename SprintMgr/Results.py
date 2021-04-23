@@ -96,11 +96,7 @@ class Results(wx.Panel):
 	def getResultChoices( self ):
 		model = Model.model
 		competition = model.competition
-		choices = ['Qualifiers']
-		for tournament in competition.tournaments:
-			for system in tournament.systems:
-				name = ('%s: ' % tournament.name if tournament.name else '') + system.name
-				choices.append( name )
+		choices = ['Seeding' if self.isKeirin else 'Qualifiers'] + [system.name for system in self.systems]
 		choices.append( 'Final Classification' )
 		return choices
 	
@@ -219,15 +215,10 @@ class Results(wx.Panel):
 							writeCell(' {}'.format(value) )
 			self.competitionTime.SetLabel( '' ) 
 		else:
-			# Find the Tournament and System selected.
-			keepGoing = True
-			for tournament in competition.tournaments:
-				for system in tournament.systems:
-					name = ('%s: ' % tournament.name if tournament.name else '') + system.name
-					if name == resultName:
-						keepGoing = False
-						break
-				if not keepGoing:
+			# Find the System selected.
+			for system in competition.systems:
+				name = system.name
+				if name == resultName:
 					break
 			
 			heatsMax = max( event.heatsMax for event in system.events )
@@ -278,7 +269,7 @@ class Results(wx.Panel):
 					writeCell( '\n'.join([rider.team if rider else '' for rider in riders]) )
 				if event.winner in state.labels:
 					try:
-						value = '%.3f' % event.starts[-1].times[1]
+						value = '{:.3f}'.format(event.starts[-1].times[1])
 					except (KeyError, IndexError, ValueError):
 						value = ''
 					writeCell( value )

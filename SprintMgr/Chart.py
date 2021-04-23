@@ -88,7 +88,7 @@ class Chart(wx.Panel):
 		self.headerNames = ['', 'System', 'Event', 'Heats', 'In', 'Bib', 'Name', 'Team', 'H1', 'H2', 'H3', 'Out', 'Bib', 'Name', 'Team']
 		hideCols = self.getHideCols( self.headerNames )
 		self.headerNames = [h for c, h in enumerate(self.headerNames) if c not in hideCols]
-		Utils.AdjustGridSize( self.grid, rowsRequired = sum(1 for t,s,e in competition.allEvents()), colsRequired = len(self.headerNames) )
+		Utils.AdjustGridSize( self.grid, rowsRequired = sum(1 for s,e in competition.allEvents()), colsRequired = len(self.headerNames) )
 		self.grid.ClearGrid()
 		self.setColNames()
 		
@@ -105,40 +105,39 @@ class Chart(wx.Panel):
 			self.grid.SetColAttr( col, attr )
 		
 		row = 0
-		for tournament in competition.tournaments:
-			self.grid.SetCellValue( row, 0, tournament.name )
-			for system in tournament.systems:
-				self.grid.SetCellValue( row, 1, system.name )
-				for i, event in enumerate(system.events):
-					writeCell = WriteCell( self.grid, row, 2 )
-					
-					writeCell( '{}'.format(i+1) )
-					writeCell( ' {}'.format(event.heatsMax) )
-					writeCell( '\n'.join(event.composition).replace('\n',u' ({})\n'.format(len(event.composition)),1) )
-					
-					riders = [state.labels.get(c, None) for c in event.composition]
-					writeCell( '\n'.join(['{}'.format(rider.bib if rider.bib else '') if rider else '' for rider in riders]) )
-					if getattr(model, 'chartShowNames', True):
-						writeCell( '\n'.join([rider.full_name if rider else u'' for rider in riders]) )
-					if getattr(model, 'chartShowTeams', True):
-						writeCell( '\n'.join([rider.team if rider else u'' for rider in riders]) )
-					
-					for heat in range(3):
-						if event.heatsMax > 1:
-							writeCell( '\n'.join(event.getHeatPlaces(heat+1)) )
-						else:
-							writeCell( '' )
-					
-					out = [event.winner] + event.others
-					writeCell( '\n'.join(out).replace('\n',' ({})\n'.format(len(out)),1) )
-					riders = [state.labels.get(c, None) for c in out]
-					writeCell( '\n'.join(['{}'.format(rider.bib if rider.bib else '') if rider else '' for rider in riders]) )
-					if getattr(model, 'chartShowNames', True):
-						writeCell( '\n'.join([rider.full_name if rider else '' for rider in riders]) )
-					if getattr(model, 'chartShowTeams', True):
-						writeCell( '\n'.join([rider.team if rider else '' for rider in riders]) )
-					row += 1
-					
+		self.grid.SetCellValue( row, 0, '' )
+		for system in competition.systems:
+			self.grid.SetCellValue( row, 1, system.name )
+			for i, event in enumerate(system.events):
+				writeCell = WriteCell( self.grid, row, 2 )
+				
+				writeCell( '{}'.format(i+1) )
+				writeCell( ' {}'.format(event.heatsMax) )
+				writeCell( '\n'.join(event.composition).replace('\n',' ({})\n'.format(len(event.composition)),1) )
+				
+				riders = [state.labels.get(c, None) for c in event.composition]
+				writeCell( '\n'.join(['{}'.format(rider.bib if rider.bib else '') if rider else '' for rider in riders]) )
+				if getattr(model, 'chartShowNames', True):
+					writeCell( '\n'.join([rider.full_name if rider else '' for rider in riders]) )
+				if getattr(model, 'chartShowTeams', True):
+					writeCell( '\n'.join([rider.team if rider else '' for rider in riders]) )
+				
+				for heat in range(3):
+					if event.heatsMax > 1:
+						writeCell( '\n'.join(event.getHeatPlaces(heat+1)) )
+					else:
+						writeCell( '' )
+				
+				out = [event.winner] + event.others
+				writeCell( '\n'.join(out).replace('\n',' ({})\n'.format(len(out)),1) )
+				riders = [state.labels.get(c, None) for c in out]
+				writeCell( '\n'.join(['{}'.format(rider.bib if rider.bib else '') if rider else '' for rider in riders]) )
+				if getattr(model, 'chartShowNames', True):
+					writeCell( '\n'.join([rider.full_name if rider else '' for rider in riders]) )
+				if getattr(model, 'chartShowTeams', True):
+					writeCell( '\n'.join([rider.team if rider else '' for rider in riders]) )
+				row += 1
+				
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 		

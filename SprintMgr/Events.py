@@ -273,7 +273,7 @@ class EventSelect(EnablePanel):
 			return
 			
 		self.events = [e for t, s, e in model.competition.getCanStart()]
-		self.events.sort( key = lambda e: (0 if e == self.event else 1, e.tournament.i, e.system.i, e.getHeat(), e.i) )
+		self.events.sort( key = lambda e: (0 if e == self.event else 1, e.system.i, e.getHeat(), e.i) )
 			
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(self.events) )
 		for row, e in enumerate(self.events):

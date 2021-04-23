@@ -45,7 +45,7 @@ class FieldDef:
 		self.changeCallback = changeCallback
 		
 	def __repr__( self ):
-		return 'Field: %s, %s' % (self.name, self.type)
+		return 'Field: {}, {}'.format(self.name, self.type)
 		
 	@staticmethod
 	def getType( v ):
@@ -96,7 +96,7 @@ class FieldDef:
 			self.editCtrl.SetValue( xdt )
 		elif self.type == FieldDef.TimeType:
 			tm = getattr( obj, self.attr )
-			s = '%02d:%02d' % (tm.hour, tm.minute)
+			s = '{:02d}:{:02d}'.format(tm.hour, tm.minute)
 			self.editCtrl.SetValue( s )
 		elif self.type == FieldDef.ChoiceType:
 			self.editCtrl.SetSelection( getattr(obj, self.attr) )

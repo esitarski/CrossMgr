@@ -241,7 +241,7 @@ class MainWin( wx.Frame ):
 			( 'seeding',		Seeding,			'Seeding' ),
 			( 'qualifiers',		Qualifiers,			'Qualifiers' ),
 			( 'events',			Events,				'Events' ),
-			( 'results',		Results,			'Tournament' ),
+			( 'results',		Results,			'Results' ),
 			( 'graphDraw',		GraphDraw,			'Summary' ),
 			( 'chart',			Chart,				'Full Table' ),
 		)
