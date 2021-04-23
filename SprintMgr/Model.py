@@ -605,12 +605,10 @@ class Competition:
 		self.starters = 0
 		self.isMTB = 'MTB' in name
 		self.isSprint = not self.isMTB
-		self.isKeirin = 'Keirin' in name
+		self.isKeirin = self.isSprint and 'Keirin' in name
 		
 		byeEvents = set()
 		byeOutcomeMap = {}
-		
-		# print( '**** - {}'.format(self.name) )
 		
 		ttCount = 0
 		for iSystem, system in enumerate(self.systems):
@@ -619,15 +617,15 @@ class Competition:
 				e.competition = self
 				e.system = system
 				
-				# Assign unique outcomes across the Competion.
+				# Assign unique outcomes for eliminated riders.
 				if not self.isMTB:
-					# If Track, configure the spec so the non-winners are ranked based on the qualifying times.
+					# If Track, non-winners in each round are ranked based on qualifying time only.
 					for i, other in enumerate(e.others):
 						if other == 'TT':
 							ttCount += 1
 							e.others[i] = '{}TT'.format(ttCount)			
 				else:
-					# If MTB, configure the spec so the non-winners are given credit for the round and finish position.
+					# If MTB, the non-winners get credit for the round and finish position.
 					for i, other in enumerate(e.others):
 						if other == 'TT':
 							rrCount += 1
