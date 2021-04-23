@@ -464,7 +464,6 @@ def getCompetitions():
 	)
 
 	#-----------------------------------------------------------------------------------------
-	# Code the round and rank of the eliminated riders in the RR codes as the last values.
 	competitions.append(
 		Competition( 'MTB: XCE 16', [
 			System( '1/4 Finals', [
