@@ -1,6 +1,6 @@
 import wx
 import os
-import cgi
+import html
 import math
 import datetime
 import Utils
@@ -290,9 +290,9 @@ class GrowTable:
 							with tag( html, 'td', attrs ):
 								if (attr & self.bold) and value:
 									with tag( html, 'strong' ):
-										html.write( cgi.escape(value) )
+										html.write( html.escape(value) )
 								else:
-									html.write( cgi.escape(value) )
+									html.write( html.escape(value) )
 
 def getTitleGrowTable( includeApprovedBy = True ):
 	race = Model.race
@@ -378,8 +378,9 @@ def ToHtml( html ):
 	# Utils.getMainWin().commentary.toHtml(html)
 	
 def ToExcel( wb ):
+	formats = ExportGrid.getExcelFormatsXLSX( wb )
 	for title, report in (('Results', Utils.getMainWin().rankSummary), ('Details', Utils.getMainWin().rankDetails), ):
-		sheetCur = wb.add_sheet( title )
+		sheetCur = wb.add_worksheet( title )
 		report.refresh()
-		ExportGrid(title, report.grid).toExcelSheet( sheetCur )
+		ExportGrid(title, report.grid).toExcelSheet( sheetCur, formats )
 

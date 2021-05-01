@@ -1,15 +1,15 @@
 import wx
-import wx.adv
+import wx.adv as adv
 from wx.lib.wordwrap import wordwrap
-import wx.lib.agw.flatnotebook as fnb
+import wx.lib.dialogs
 
 import sys
-import cgi
+from html import escape
 import os
 import io
 import re
 import datetime
-import xlwt
+import xlsxwriter
 import webbrowser
 import pickle
 import subprocess
@@ -34,7 +34,7 @@ from Version import AppVerName
 def ShowSplashScreen():
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'TrackSprint.jpg'), wx.BITMAP_TYPE_JPEG )
 	showSeconds = 2.5
-	wx.adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	adv.SplashScreen(bitmap, adv.SPLASH_CENTRE_ON_SCREEN|adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
@@ -76,14 +76,8 @@ class MainWin( wx.Frame ):
 		#---------------------------------------------------------------
 		# Configure the notebook.
 		#
-		sty = wx.BORDER_SUNKEN
-		if isMac:
-			# Flat notebook generate Segmentation Fault on Mac.
-			self.notebook = wx.Notebook(mainPanel)
-			self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGING, self.onPageChanging )
-		else:
-			self.notebook = fnb.FlatNotebook(mainPanel, wx.ID_ANY, agwStyle=fnb.FNB_VC8|fnb.FNB_NO_X_BUTTON)
-			self.notebook.Bind( fnb.EVT_FLATNOTEBOOK_PAGE_CHANGED, self.onPageChanging )
+		self.notebook = wx.Notebook(mainPanel)
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGING, self.onPageChanging )
 		
 		# Add all the pages to the notebook.
 		self.pages = []
@@ -460,11 +454,11 @@ hr { clear: both; }
 ''')
 					with tag(html, 'body'):
 						with tag(html, 'h1'):
-							write( '{}: {}'.format(cgi.escape(race.name), race.date.strftime('%Y-%m-%d')) )
+							write( '{}: {}'.format(escape(race.name), race.date.strftime('%Y-%m-%d')) )
 							if race.communique:
-								write( ': Communiqu\u00E9 {}'.format(cgi.escape(race.communique)) )
+								write( ': Communiqu\u00E9 {}'.format(escape(race.communique)) )
 						with tag(html, 'h2'):
-							write( 'Category: {}'.format(cgi.escape(race.category)) )
+							write( 'Category: {}'.format(escape(race.category)) )
 						
 						d = race.courseLength*race.laps
 						if d == int(d):
@@ -512,22 +506,30 @@ hr { clear: both; }
 			if not self.menuSaveAs( event ):
 				return
 
-		xlFName = os.path.splitext(self.fileName)[0] + '.xls'
+		xlFName = os.path.splitext(self.fileName)[0] + '.xlsx'
 		
-		wb = xlwt.Workbook()
+		if (
+				os.path.exists( xlFName ) and not
+				Utils.MessageOKCancel(
+					self,
+					'Export file exists:\n\n\t{}\n\nReplace?'.format(xlFName),
+					'Excel Export', iconMask=wx.ICON_INFORMATION
+				)
+			):
+			return
+		
+		wb = xlsxwriter.Workbook( xlFName )
 		ToExcel( wb )
 
 		try:
-			wb.save( xlFName )
-			try:
-				webbrowser.open( xlFName )
-			except:
-				pass
-			#Utils.MessageOK(self, 'Excel file written to:\n\n   {}'.format(xlFName), 'Excel Write', iconMask=wx.ICON_INFORMATION)
+			wb.close()
+			Utils.MessageOK(self,
+						'Exported to:\n\n\t{}.'.format(xlFName),
+						'Excel Export', iconMask=wx.ICON_INFORMATION )
 		except Exception as e:
 			traceback.print_exc()
 			Utils.MessageOK(self,
-						'Cannot write "{}"\n\n{}\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlFName,e),
+						'Cannot write\n\n\t{}\n\n{}\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlFName,e),
 						'Excel File Error', iconMask=wx.ICON_ERROR )
 
 	#-------------------------------------------------------------------
@@ -726,12 +728,12 @@ hr { clear: both; }
 			"DNS : means DNS\n"
 			"DSQ,DQ : means DSQ\n"
 			"\n"
-			"Upper/Lower case is not important.  For example, '10 11 13+' is the shortcut for '+ Lap'.  '14 15 18-' is shorcut for '- Lap'.\n"
+			"Upper/Lower case is unimportant.  For example, '10 11 13+' is the shortcut for '+ Lap'.  '14 15 18-' is shorcut for '- Lap'.\n"
 			"'19 20 21dnf' is short cut for pressing 'DNF'\n"
-			"\n",
-			"Ties are entered with an equals sign (=) between bib numbers (eg. 10=20, 30 40) means 10, 20 tied for first, 30 in 3rd, 40 in 4th\n",
 			"\n"
-			"Edit events by clicking on them.",
+			"Ties are entered with an equals sign (=) between bib numbers (eg. 10=20, 30 40) means 10, 20 tied for first, 30 in 3rd, 40 in 4th\n"
+			"\n"
+			"Edit events by clicking on them."
 			"Delete unwanted events by right-clicking on the Event column in the list.\n"
 			"Rearrange the sequence of Events by dragging-and-dropping rows from Column 1.\n"
 			"\n"
@@ -746,7 +748,7 @@ hr { clear: both; }
 			"in the dialog.\n"
 			"\n"
 			"Up-to-date results are always shown on the Details and Summary screens.\n"
-			"Double-click the Sp column header to edit the results for that sprint.\n",
+			"Double-click the Sp column header to edit the results for that sprint.\n"
 			"Click on the Sp column header to see the Event corresponding\nto that sprint.\n"
 			"\n"
 			"Use the 'Start List' screen to enter rider information (you can also import it from Excel).\n"
@@ -763,12 +765,12 @@ hr { clear: both; }
 			"  2.  If a tie, by Most Points\n"
 			"  3.  If still a tie, by Most Sprint Wins\n"
 			"  4.  If still a tie, by Finish Order\n\n"
-			"If ranking by 'Laps Completed, Points, then Finish Order', riders are ranked by:\n"
+			"If ranking by 'Laps Completed, Points, then Finish Order', riders are ranßked by:\n"
 			"  1.  Most Laps Completed (as specified by +/- Laps)\n"
 			"  2.  If a tie, by Most Points\n"
 			"  3.  If still a tie, by Finish Order\n\n"
 			"")
-		dlg = wx.MessageDialog(self, message, "PointsRaceMgr Help", wx.OK | wx.ICON_INFORMATION)
+		dlg = wx.lib.dialogs.ScrolledMessageDialog(self, message, "PointsRaceMgr Help" )
 		dlg.ShowModal()
 		dlg.Destroy()
 

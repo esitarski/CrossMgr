@@ -7,7 +7,13 @@ from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
 
 import wx
+import wx.lib.agw
 import wx.lib.agw.thumbnailctrl as TC
+try:
+	import wx.lib.agw.scrolledthumbnail as SC
+except:
+	SC = None
+
 import os
 import sys
 import math
@@ -18,11 +24,11 @@ import datetime
 TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 
 def getRiderName( info ):
-	lastName = info.get('LastName',u'')
-	firstName = info.get('FirstName',u'')
+	lastName = info.get('LastName','')
+	firstName = info.get('FirstName','')
 	if lastName:
 		if firstName:
-			return u'{}, {}'.format(lastName, firstName)
+			return '{}, {}'.format(lastName, firstName)
 		else:
 			return lastName
 	return firstName
@@ -195,7 +201,11 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.vbs.Add( self.splitter, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border = 4 )
 		
 		self.Bind( wx.EVT_SIZE, self.OnResize )
-		self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
+		try:
+			self.thumbs.Bind(TC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
+		except AttributeError:
+			# Required for MAC.
+			self.thumbs.Bind(SC.EVT_THUMBNAILS_SEL_CHANGED, self.OnSelChanged)
 		
 		self.SetSizer(self.vbs)
 		self.vbs.SetSizeHints(self)

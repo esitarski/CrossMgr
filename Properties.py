@@ -84,7 +84,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.Bind(wx.adv.EVT_DATE_CHANGED, self.onChanged, self.date)
 		
 		self.raceDisciplineLabel = wx.StaticText( self, label = _('Discipline') )
-		self.raceDiscipline = wx.TextCtrl( self, value=u'Cyclo-cross', size=(160,-1) )
+		self.raceDiscipline = wx.TextCtrl( self, value='Cyclo-cross', size=(160,-1) )
 		self.Bind( wx.EVT_TEXT, self.onChanged, self.raceDiscipline )
 		
 		self.dateDisciplineSizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -326,9 +326,9 @@ class RaceOptionsProperties( wx.Panel ):
 class RfidProperties( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
 	iSkipFirstTagRead = 2
-	choices = [	_('Manual Start: Collect every chip.') + u'  \n' + _('Does NOT restart race clock on first read.'),
-				_('Automatic Start: Reset start clock on first tag read.') + u'  \n' + _('All riders get the start time of the first read.'),
-				_('Manual Start: Skip first tag read for all riders.') + u'  \n' + _('Required when start run-up passes the finish on the first lap.')]
+	choices = [	_('Manual Start: Collect every chip.') + '  \n' + _('Does NOT restart race clock on first read.'),
+				_('Automatic Start: Reset start clock on first tag read.') + '  \n' + _('All riders get the start time of the first read.'),
+				_('Manual Start: Skip first tag read for all riders.') + '  \n' + _('Required when start run-up passes the finish on the first lap.')]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id )
@@ -1326,12 +1326,12 @@ class Properties( wx.Panel ):
 		bookStyle = (
 			  flatnotebook.FNB_NO_NAV_BUTTONS
 			| flatnotebook.FNB_NO_X_BUTTON
-			| flatnotebook.FNB_VC8
+			| flatnotebook.FNB_DROPDOWN_TABS_LIST
 			| flatnotebook.FNB_NODRAG
 		)
 		self.notebook = flatnotebook.FlatNotebook( self, agwStyle=bookStyle )
-		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.SetTabAreaColour( wx.WHITE )
+		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 
 		self.propClassName = [
@@ -1614,12 +1614,12 @@ class PropertiesDialog( wx.Dialog ):
 			fgs = wx.FlexGridSizer( rows=0, cols=3, vgap=5, hgap=5 )
 			fgs.AddGrowableCol( 1 )
 						
-			fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Race File Folder'))), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			fgs.Add( wx.StaticText(self, label='{}:'.format(_('Race File Folder'))), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			self.folder = wx.TextCtrl( self, size=(400,-1) )
 			self.folder.SetValue( Utils.getDocumentsDir() )
 			fgs.Add( self.folder, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.EXPAND)
 
-			btn = wx.Button( self, label=u'{}...'.format(_('Browse')) )
+			btn = wx.Button( self, label='{}...'.format(_('Browse')) )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseFolder )
 			fgs.Add( btn, wx.ALIGN_CENTER_VERTICAL )
 			
@@ -1628,7 +1628,7 @@ class PropertiesDialog( wx.Dialog ):
 			self.categoriesFile.SetValue( Utils.getDocumentsDir() )
 			fgs.Add( self.categoriesFile, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.EXPAND )
 
-			btn = wx.Button( self, label=u'{}...'.format(_('Browse')) )
+			btn = wx.Button( self, label='{}...'.format(_('Browse')) )
 			btn.Bind( wx.EVT_BUTTON, self.onBrowseCategories )
 			fgs.Add( btn, flag=wx.ALIGN_CENTER_VERTICAL )
 			
@@ -1723,13 +1723,13 @@ def SetNewFilename( parent, properties ):
 			not mainWin.fileName or
 			Utils.MessageOKCancel(parent, u'\n\n'.join( [
 				_("The filename will be changed to:"),
-				u'{}',
+				'{}',
 				_("Continue?")]).format(newBaseName), _("Change Filename?"))
 		):
 			if os.path.exists(newFName):
 				if not Utils.MessageOKCancel(parent, u'\n\n'.join( [
 						_("This file already exists:"),
-						u'{}',
+						'{}',
 						_("Overwrite?")]).format(newFName), _("Overwrite Existing File?")):
 					properties.restoreFileNameFields()
 					success = False

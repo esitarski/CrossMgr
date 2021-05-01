@@ -15,13 +15,15 @@
 param (
 	[switch]$help = $false,
 	[string]$environ = "env",
-	[string]$pythonexe = "python3.7.exe",
+	[string]$pythonexe = "python3.9.exe",
 	[switch]$cmgr = $false,
 	[switch]$cmgri = $false,
 	[switch]$trw = $false,
 	[switch]$smgr = $false,
 	[switch]$cmgra = $false,
 	[switch]$video = $false,
+	[switch]$pts = $false,
+	[switch]$spr = $false,
 	[switch]$camera = $false,
 	[switch]$all = $false,
 	[switch]$versioncmd = $false,
@@ -45,7 +47,7 @@ param (
 $environ = "env"
 $script:pythongood = $false
 
-# Check the python version. Current only 3.7.x is supported because pyinstaller doesn't work on 3.8
+# Check the python version. Current only 3.9.x.
 function CheckPythonVersion
 {
 	if ($script:pythongood -eq $false)
@@ -61,9 +63,9 @@ function CheckPythonVersion
 		Remove-Item 'pyver.txt'
 		$version = $pythonver.Split(' ')[1]
 		$minor = $version.Split('.')[1]
-		if ($minor -ne '7')
+		if ($minor -ne '9')
 		{
-			Write-Host "Python 3.7.x required, and you have ", $version, "installed. Aborting..."
+			Write-Host "Python 3.9.x required, and you have ", $version, "installed. Aborting..."
 			exit 1
 		}
 		Write-Host "Found Python ", $version
@@ -155,6 +157,7 @@ function Cleanup($program)
 		'CrossMgrAlien/__pycache__',
 		'SeriesMgr/__pycache__',
 		'PointsRaceMgr/__pycache__',
+		'SprintMgr/__pycache__',
 		'dist',
 		'build',
 		'release',
@@ -292,7 +295,7 @@ function Package($program)
 {
 	$builddir = GetBuildDir($program)
 	$version = GetVersion($program)
-	$newinstallname = "${program}_Setup_x64_v${version}".Replace('.', '_')
+	$newinstallname = "${program}_${version}".Replace('.', '_')
 	$yeartoday = (Get-Date).Year
 	$curdir = (Get-Item -Path ".\").FullName
 	$sourcepath = "$curdir\dist\$program"
@@ -479,7 +482,7 @@ function BuildAll($programs)
 	CheckEnvActive
 	if ($programs.Length -eq 0)
 	{
-		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, or -all required"
+		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts, -spr or -all required"
 		exit 1
 	}
 	Cleanup
@@ -488,7 +491,7 @@ function BuildAll($programs)
 	{
 		if (($program -eq "SeriesMgr") -or ($program -eq "CrossMgrVideo"))
 		{
-			FixSeriesMgrFiles($program)
+			FixDependencies($program)
 		}
 		CompileCode($program)
 		doPyInstaller($program)
@@ -497,18 +500,16 @@ function BuildAll($programs)
 	}
 }
 
-function FixSeriesMgrFiles($program)
+function FixDependencies($program)
 {
 	Write-Host "Fixing dependencies for $program"
 	$dependsfile = Get-Content "$program\Dependencies.py"
 	Set-Location -Path "$program"
-	foreach ($line in $dependsfile)
+	Start-Process -Wait -NoNewWindow -FilePath "python.exe" "UpdateDependencies.py"
+	if ($? -eq $false)
 	{
-		$file = $line.Split(' ')[1]
-		Write-Host "Linking ..\${file}.py to ${file}.py"
-		# We could do a symlink, but that requires developer mode. Ug
-		#New-Item -Path "..\${file}.py" -ItemType SymbolicLink -Value "${file}.py"
-		Copy-Item -Path "..\${file}.py" -Destination "${file}.py"
+		Write-Host "Compile failed. Aborting..."
+		exit 1
 	}
 	Set-Location -Path '..'
 }
@@ -610,6 +611,7 @@ function doHelp
 	-video       - Build CrossMgrVideo
 	-cam         - Build CrossMgrCamera (NOT COMPLETE)
 	-pts         - Build PointsRaceMgr
+	-spr         - Build SprintMgr
 	-all         - Build all programs
 	
 	-checkver     - check python version
@@ -670,6 +672,7 @@ if ((($clean -eq $false) -and ($setupenv -eq $false) -and ($fix -eq $false)) -an
 		($video -eq $false) -and
 		($cam -eq $false) -and
 		($pts -eq $false) -and
+		($spr -eq $false) -and
 		($all -eq $false))
 {
 	Write-Host "You must specify a program to build or -all"
@@ -713,6 +716,10 @@ if ($pts -eq $true)
 {
 	$programs += 'PointsRaceMgr'
 }
+if ($spr -eq $true)
+{
+	$programs += 'SprintMgr'
+}
 if ($all -eq $true)
 {
 	$programs = @(
@@ -722,7 +729,8 @@ if ($all -eq $true)
 		'SeriesMgr',
 		'CrossMgrAlien',
 		'CrossMgrVideo',
-		'PointsRaceMgr'
+		'PointsRaceMgr',
+		'SprintMgr'
 		)
 }
 if ($setupenv -eq $true)
@@ -732,9 +740,9 @@ if ($setupenv -eq $true)
 
 if ($fixsmgr -eq $true)
 {
-	FixSeriesMgrFiles("SeriesMgr")
-	FixSeriesMgrFiles("CrossMgrVideo")
-#	FixSeriesMgrFiles("CrossMgrCamera")
+	FixDependencies("SeriesMgr")
+	FixDependencies("CrossMgrVideo")
+#	FixDependencies("CrossMgrCamera")
 }
 
 if ($clean -eq $true)

@@ -653,7 +653,6 @@ class MainWin( wx.Frame ):
 		# Other data shown in right pane.
 		bookStyle = (
 			  flatnotebook.FNB_NO_X_BUTTON
-			| flatnotebook.FNB_FF2
 			| flatnotebook.FNB_NODRAG
 			| flatnotebook.FNB_DROPDOWN_TABS_LIST
 			| flatnotebook.FNB_NO_NAV_BUTTONS

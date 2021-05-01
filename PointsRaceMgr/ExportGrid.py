@@ -1,14 +1,15 @@
 import wx
 import io
 import os
-import xlwt
+import math
+from html import escape
+import base64
+import xlsxwriter
+from contextlib import contextmanager
+
 import Utils
 import Model
-import math
-import cgi
-import base64
-from FitSheetWrapper import FitSheetWrapper
-from contextlib import contextmanager
+from FitSheetWrapper import FitSheetWrapperXLSX
 
 #---------------------------------------------------------------------------
 
@@ -53,7 +54,7 @@ def getHeaderBitmap():
 
 def writeHtmlHeader( buf, title ):
 	with tag(buf, 'span', {'id': 'idRaceName'}):
-		buf.write( '{}'.format(cgi.escape(title).replace('\n', '<br/>\n')) )
+		buf.write( '{}'.format(escape(title).replace('\n', '<br/>\n')) )
 
 class ExportGrid:
 	PDFLineFactor = 1.10
@@ -230,12 +231,48 @@ class ExportGrid:
 		dc.SetFont( font )
 		w, h = dc.GetMultiLineTextExtent( brandText )
 		self._drawMultiLineText( dc, brandText, borderPix, heightPix - borderPix + h )
+		
+	@staticmethod
+	def getExcelFormatsXLSX( workbook ):
+		titleStyle = workbook.add_format({
+			'bold': True,
+			'font_size': 17,
+		})
+
+		headerStyleLeft = workbook.add_format({
+			'bottom':	2,
+			'bold':		True,
+			'text_wrap':True,
+		})
+		
+		headerStyleRight = workbook.add_format({
+			'bottom':	2,
+			'bold':		True,
+			'text_wrap':True,
+			'align':	'right',
+		})
+		
+		styleLeft = workbook.add_format()
+		
+		styleRight = workbook.add_format({
+			'align':	'right',
+		})
+		
+		return {
+			'titleStyle':				titleStyle,
+			'headerStyleLeft':		headerStyleLeft,
+			'headerStyleRight':	headerStyleRight,
+			'styleLeft':			styleLeft,
+			'styleRight':			styleRight,
+		}
 	
-	def toExcelSheet( self, sheet ):
-		''' Write the contents of the grid to an xlwt excel sheet. '''
-		titleStyle = xlwt.XFStyle()
-		titleStyle.font.bold = True
-		titleStyle.font.height += titleStyle.font.height // 2
+	def toExcelSheet( self, sheet, formats ):
+		''' Write the contents of the grid to an xlsxwriter excel sheet. '''
+		titleStyle			= formats['titleStyle']
+		headerStyleLeft		= formats['headerStyleLeft']
+		headerStyleRight	= formats['headerStyleRight']
+		styleLeft			= formats['styleLeft']
+		styleRight			= formats['styleRight']
 		
 		rowTop = 0
 		if self.title:
@@ -244,31 +281,9 @@ class ExportGrid:
 				rowTop += 1
 			rowTop += 1
 		
-		sheetFit = FitSheetWrapper( sheet )
+		sheetFit = FitSheetWrapperXLSX( sheet )
 		
 		# Write the colnames and data.
-		headerStyleLeft = xlwt.XFStyle()
-		headerStyleLeft.borders.bottom = xlwt.Borders.MEDIUM
-		headerStyleLeft.font.bold = True
-		headerStyleLeft.alignment.horz = xlwt.Alignment.HORZ_LEFT
-		headerStyleLeft.alignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
-
-		headerStyleRight = xlwt.XFStyle()
-		headerStyleRight.borders.bottom = xlwt.Borders.MEDIUM
-		headerStyleRight.font.bold = True
-		headerStyleRight.alignment.horz = xlwt.Alignment.HORZ_RIGHT
-		headerStyleRight.alignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
-
-		styleLeft = xlwt.XFStyle()
-		styleLeft.alignment.horz = xlwt.Alignment.HORZ_LEFT
-		styleLeft.alignment.wrap = True
-		styleLeft.alignment.vert = xlwt.Alignment.VERT_TOP
-			
-		styleRight = xlwt.XFStyle()
-		styleRight.alignment.horz = xlwt.Alignment.HORZ_RIGHT
-		styleRight.alignment.wrap = True
-		styleRight.alignment.vert = xlwt.Alignment.VERT_TOP
-			
 		rowMax = 0
 		for col, c in enumerate(self.colnames):
 			sheetFit.write( rowTop, col, c, headerStyleLeft if col in self.leftJustifyCols else headerStyleRight, bold=True )
@@ -277,12 +292,10 @@ class ExportGrid:
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
-				sheetFit.write( rowCur, col, v, style, bold=True )
+				sheetFit.write( rowCur, col, v, styleLeft, bold=True )
 				
 		# Add branding at the bottom of the sheet.
-		style = xlwt.XFStyle()
-		style.alignment.horz = xlwt.Alignment.HORZ_LEFT
-		sheet.write( rowMax + 2, 0, brandText, style )
+		sheet.write( rowMax + 2, 0, brandText, styleLeft )
 		
 	def toHtml( self, buf ):
 		''' Write the contents to the buffer in HTML format. '''
@@ -293,14 +306,14 @@ class ExportGrid:
 				with tag(buf, 'tr'):
 					for col in self.colnames:
 						with tag(buf, 'th'):
-							buf.write( cgi.escape(col).replace('\n', '<br/>\n') )
+							buf.write( escape(col).replace('\n', '<br/>\n') )
 			with tag(buf, 'tbody'):
 				for row in range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr', {'class':'odd'} if row & 1 else {}):
 						for col in range(len(self.colnames)):
 							with tag(buf, 'td', {'class':'rightAlign'} if col not in self.leftJustifyCols else {}):
 								try:
-									buf.write( cgi.escape(self.data[col][row]).replace('\n', '<br/>\n') )
+									buf.write( escape(self.data[col][row]).replace('\n', '<br/>\n') )
 								except IndexError:
 									buf.write( '&nbsp;' )									
 		return buf

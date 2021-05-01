@@ -9,7 +9,7 @@ if [ "$OSNAME" == "Darwin" ]; then
 	PYTHONVER="python3.7"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.7"
+	PYTHONVER="python3.9"
 fi
 
 getBuildDir() {
@@ -106,7 +106,7 @@ downloadAppImage() {
 			chmod 755 $LINUXDEPLOY
 		fi
 	else
-		echo "AppImage builder not requried for $OSNAME"
+		echo "AppImage builder not required for $OSNAME"
 	fi
 }
 
@@ -289,12 +289,12 @@ envSetup() {
         # The build also takes >40 minutes, which is an excessive amount of time to wait for a failed build.
         # The solution is to grab the pre-built install for this Ubuntu version from wxPython extras.
 		UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
-		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -r /dev/stdin
+		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -v -r /dev/stdin
 	else
-		pip3 install -r requirements.txt
+		pip3 install -v -r requirements.txt
 	fi
     if [ $? -ne 0 ];then
-        echo "Pip requirememnts install failed. Aborting..."
+        echo "Pip requirements install failed. Aborting..."
         exit 1
     fi
     
@@ -302,7 +302,7 @@ envSetup() {
 		pip3 install pywin32
 	fi
     if [ $OSNAME == "Darwin" ];then
-		pip3 install biplist dmgbuild
+		pip3 install biplist "dmgbuild>=1.4.2"
 	else
 		downloadAppImage
 	fi
@@ -366,7 +366,7 @@ buildall() {
 			for program in $PROGRAMS
 			do
                 if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo" ]; then
-                    fixSeriesMgrFiles $program
+                    fixDependencies $program
                 fi
 				getVersion $program
 				compileCode $program
@@ -390,16 +390,15 @@ listFiles() {
     done
 }
 
-fixSeriesMgrFiles() {
+fixDependencies() {
 	PROGRAM=$1
 	echo "Fixing: $PROGRAM"
     cd $PROGRAM
-    cat Dependencies.py | while read import file
-    do
-        echo "Linking; $file"
-        rm -f ${file}.py
-        ln -s "../${file}.py" "${file}.py"
-    done
+	python3 UpdateDependencies.py
+	if [ $? -ne 0 ];then
+		echo "Fix Dependencies Failed...."
+		exit 1
+	fi
     cd ..
 }
 
@@ -465,6 +464,7 @@ $0 [ -hcCtaep: ]
  -w        - Build CrossMgrAlien
  -V        - Build CrossMgrVideo
  -q        - Build PointsRaceMgr
+ -s        - Build SprintMgr
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -494,14 +494,14 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfywVZUr" option
+while getopts "hcitaviCdPBASkomzlTfyqswVZUr" option
 do
 	gotarg=1
 	case ${option} in
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr CrossMgr"
+ 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
@@ -515,6 +515,8 @@ do
 		;;
 		q) PROGRAMS="$PROGRAMS PointsRaceMgr"
 		;;
+		s) PROGRAMS="$PROGRAMS SprintMgr"
+		;;
 		V) PROGRAMS="$PROGRAMS CrossMgrVideo"
 		;;
 		v) 	getVersion "CrossMgr"
@@ -524,6 +526,7 @@ do
 			getVersion "CrossMgrAlien"
 			getVersion "CrossMgrVideo"
 			getVersion "PointsRaceMgr"
+			getVersion "SprintMgr"
 		;;
 		C) 	cleanup
 		;;
@@ -606,8 +609,8 @@ do
 		;;
 		r) dorelease
 		;;
-		f) fixSeriesMgrFiles 'SeriesMgr'
-		   fixSeriesMgrFiles 'CrossMgrVideo'
+		f) fixDependencies 'SeriesMgr'
+		   fixDependencies 'CrossMgrVideo'
 		;;
 		*) doHelp
 		;;

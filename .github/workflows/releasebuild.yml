@@ -11,14 +11,11 @@ name: ReleaseBuild
 jobs:
     buildmac:
         name: MacOSX
-        # env:
-        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         runs-on: macos-latest
         steps:
             - name: Show Environment
               run: set | grep GIT
             - name: Setup Python environment
-              # uses: actions/setup-python@v1.1.1
               uses: actions/setup-python@v2
               with:
                 python-version: 3.7.*
@@ -40,16 +37,13 @@ jobs:
                  files: release/*
     buildwindows:
         name: Windows
-        # env:
-        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         needs: buildmac
         runs-on: windows-latest
         steps:
             - name: Setup Python environment
-              # uses: actions/setup-python@v1.1.1
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Setup Environment
@@ -69,7 +63,6 @@ jobs:
                 cd $env:GITHUB_WORKSPACE
                 .\compile.ps1 -virus
             - name: Production Release
-              # uses: svenstaro/upload-release-action@v1-release
               uses: svenstaro/upload-release-action@v2
               with:
                 repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -79,8 +72,6 @@ jobs:
                 file_glob: true
     buildlinux:
         name: Linux
-        # env:
-        #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         needs: buildmac
         runs-on: ubuntu-latest
         steps:
@@ -88,7 +79,7 @@ jobs:
               # uses: actions/setup-python@v1.1.1
               uses: actions/setup-python@v2
               with:
-                python-version: 3.7.*
+                python-version: 3.9.*
             - name: Checkout code
               uses: actions/checkout@master
             - name: Linux Lib Install
@@ -104,7 +95,6 @@ jobs:
                 cd $GITHUB_WORKSPACE
                 bash compile.sh -a -A
             - name: Production Release
-              # uses: svenstaro/upload-release-action@v1-release
               uses: svenstaro/upload-release-action@v2
               with:
                 repo_token: ${{ secrets.GITHUB_TOKEN }}

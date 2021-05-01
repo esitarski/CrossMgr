@@ -1,6 +1,6 @@
-import Model
-import xlwt
 import re
+import xlwt
+import Model
 
 labelStyle = xlwt.easyxf( "alignment: horizontal right;" )
 fieldStyle = xlwt.easyxf( "alignment: horizontal right;" )
@@ -32,9 +32,6 @@ def ToExcelSheet( ws ):
 	ws.write_merge( rowCur, rowCur, colCur + 1, colCur + 3, race.category, xlwt.easyxf(
 															"font: name Arial, bold on;"
 															) );
-	if race.communique:
-		ws.write( rowCur, 9    , u'Communiqu\u00E9:', labelStyle )
-		ws.write( rowCur, 9 + 1, race.communique, unitsStyle )
 		
 	rowCur = 3
 	writeLabelField( ws, rowCur, 2, 'Distance:', race.getDistance(), 'km' )
@@ -81,39 +78,39 @@ def ToExcelSheet( ws ):
 	maxPlace = race.getMaxPlace()
 	
 	styleTop = xlwt.easyxf(
-		"alignment: horizontal center;"
-		"borders: top thin, left thin, right thin;"
-	)
+	"alignment: horizontal center;"
+    "borders: top thin, left thin, right thin;"
+    )
 	style = xlwt.easyxf(
-		"alignment: horizontal center;"
-		"borders: left thin, right thin;"
-	)
+	"alignment: horizontal center;"
+    "borders: left thin, right thin;"
+    )
 	
 	# Write the points for each placing.
 	rowCur = 7
 	for p in range(1, maxPlace):
 		ws.write( rowCur + p - 1, 2, race.pointsForPlace[p], style if p != 1 else styleTop )
 	styleTop = xlwt.easyxf(
-		"alignment: horizontal center;"
-		"borders: top thin, left thin, right medium;"
-	)
+	"alignment: horizontal center;"
+    "borders: top thin, left thin, right medium;"
+    )
 	style = xlwt.easyxf(
-		"alignment: horizontal center;"
-		"borders: left thin, right medium;"
-	)
+	"alignment: horizontal center;"
+    "borders: left thin, right medium;"
+    )
 	
 	# Write the positions (1 .. maxPlace - 1).
 	for p in range(1, maxPlace):
 		ws.write( rowCur + p - 1, 3, p, style if p != 1 else styleTop )
 		
 	styleTop = xlwt.easyxf(
-		"alignment: horizontal center;"
-		"borders: top thin, left thin, right thin;"
-	)
+	"alignment: horizontal center;"
+    "borders: top thin, left thin, right thin;"
+    )
 	style = xlwt.easyxf(
-		"alignment: horizontal center;"
-		"borders: left thin, right thin;"
-	)
+	"alignment: horizontal center;"
+    "borders: left thin, right thin;"
+    )
 	for (sprint, place), num in race.sprintResults.items():
 		if place < maxPlace:
 			ws.write( rowCur + place - 1, sprint + 3, num, style if place != 1 else styleTop )
@@ -124,54 +121,41 @@ def ToExcelSheet( ws ):
 		
 	#------------------------------------------------------------------------------------------
 	style = xlwt.easyxf(
-		"font: name Arial, bold on;"
-		"alignment: horizontal center;"
-		"borders: top thin, bottom thin, left thin, right thin;"
-	)
+    "font: name Arial, bold on;"
+	"alignment: horizontal center;"
+    "borders: top thin, bottom thin, left thin, right thin;"
+    )
 
 	styleTotal = xlwt.easyxf(
-		"borders: top thin, bottom thin, left thin, right medium;"
-	)
+    "borders: top thin, bottom thin, left thin, right medium;"
+    )
 	styleBib = styleTotal
 	styleRegular = xlwt.easyxf(
-		"borders: top thin, bottom thin, left thin, right thin;"
-	)
+    "borders: top thin, bottom thin, left thin, right thin;"
+    )
 
 	rowCur += maxPlace - 1
 	for c, lab in enumerate(['Rank', 'Bib', 'Name']):
 		ws.write( rowCur, c, lab, style )
 		
 	style = xlwt.easyxf(
-		"font: name Arial, bold on;"
-		"alignment: horizontal center;"
-		"borders: top thin, bottom thin, left thin, right medium;"
+    "font: name Arial, bold on;"
+	"alignment: horizontal center;"
+    "borders: top thin, bottom thin, left thin, right medium;"
     )
 	ws.write( rowCur, c+1, 'TOTAL', style )
 	
 	style = xlwt.easyxf(
-		"font: name Arial, bold on;"
-		"alignment: horizontal center;"
-		"borders: top thin, bottom thin, left thin, right thin;"
+    "font: name Arial, bold on;"
+	"alignment: horizontal center;"
+    "borders: top thin, bottom thin, left thin, right thin;"
     )
 	for s in range(0, maxSprints):
-		ws.write( rowCur, s + 4, 'Sp{}'.format(s + 1), style )
+		ws.write( rowCur, s + 4, 'Sp%d' % (s + 1), style )
 	
-	colCur = maxSprints + 4
-	if not race.pointsForLapping:
-		ws.write( rowCur, colCur, 'Laps +/-', style )
-		colCur += 1
-	if race.pointsForLapping:
-		ws.write( rowCur, colCur, 'Lap Pnts', style )
-		colCur += 1
-	if race.rankBy == race.RankByLapsPointsNumWins:
-		ws.write( rowCur, colCur, 'Num Wins', style )
-		colCur += 1
-	if race.existingPoints:
-		ws.write( rowCur, colCur, 'Existing Pnts', style )
-		colCur += 1
-	if race.finishOrder:
-		ws.write( rowCur, colCur, 'Finish Order', style )
-		colCur += 1
+	ws.write( rowCur, maxSprints + 4, 'Laps Up', style )
+	ws.write( rowCur, maxSprints + 5, 'Lap Pnts', style )
+	ws.write( rowCur, maxSprints + 6, 'Num Wins', style )
 	
 	rowCur += 1
 	riderToRow = {}
@@ -183,31 +167,16 @@ def ToExcelSheet( ws ):
 		else:
 			if r > 0:
 				if not riders[r-1].tiedWith(rider):
-					position = r + 1
+					position += 1
 			ws.write(	rowCur + r, 0,
 						position if rider.status == Model.Rider.Finisher else Model.Rider.statusNames[rider.status],
 						styleRegular )
 		ws.write( rowCur + r, 1, rider.num, styleBib )
 		ws.write( rowCur + r, 2, '', styleRegular )					# Name
 		ws.write( rowCur + r, 3, rider.pointsTotal, styleTotal )
-		
-		colCur = maxSprints + 4
-		if not race.pointsForLapping:
-			ws.write( rowCur + r, colCur, rider.updown if rider.updown != 0 else '', styleRegular )
-			colCur += 1
-		if race.pointsForLapping:
-			ws.write( rowCur + r, colCur, rider.updown * race.pointsForLapping if rider.updown != 0 else '', styleRegular )
-			colCur += 1
-		if race.rankBy == race.RankByLapsPointsNumWins:
-			ws.write( rowCur + r, colCur, rider.numWins if rider.numWins > 0 else '', styleRegular )
-			colCur += 1
-		if race.existingPoints:
-			ws.write( rowCur + r, colCur, rider.existingPoints if rider.existingPoints > 0 else '', styleRegular )
-			colCur += 1
-		if race.finishOrder:
-			ws.write( rowCur + r, colCur, rider.finishOrder if rider.finishOrder < 1000 else '', styleRegular )
-			colCur += 1
-			
+		ws.write( rowCur + r, maxSprints + 4, rider.updown if rider.updown != 0 else '', styleRegular )
+		ws.write( rowCur + r, maxSprints + 5, rider.updown * race.pointsForLapping if rider.updown != 0 else '', styleRegular )
+		ws.write( rowCur + r, maxSprints + 6, rider.numWins if rider.numWins > 0 else '', styleRegular )
 		riderToRow[rider.num] = r
 
 	sprintNumPoints = {}
@@ -217,39 +186,7 @@ def ToExcelSheet( ws ):
 
 	for sprint in range(1, maxSprints+1):
 		for r, rider in enumerate(riders):
-			ws.write( rowCur + r, sprint + 3, sprintNumPoints.get((sprint, rider.num)[0], ''), styleRegular )
-			
-	rowCur += len(riders) + 2
-	for line in race.notes.split('\n'):
-		ws.write( rowCur, 0, line, styleRegular )
-		rowCur += 1
-
-class PrintSheet:
-	def __init__( self ):
-		self.rows = []
-		
-	def write( self, row, col, value, style = None):
-		try:
-			r = self.rows[row]
-		except IndexError:
-			self.rows += [[] for i in range(row - len(self.rows) + 1)]
-			r = self.rows[row]
-			
-		try:
-			v = r[col]
-		except IndexError:
-			r += [None] * (col - len(r) + 1)
-			v = r[col]
-		assert v is None
-		r[col] = value
-		
-	def write_merge( self, rowStart, rowEnd, colStart, colEnd, value, style = None ):
-		for row in range(rowStart, rowEnd+1):
-			for col in range(colStart, colEnd+1):
-				if row == rowStart and col == colStart:
-					self.write( row, col, u'{}'.format(value) )
-				else:
-					self.write( row, col, u'\t' )
+			ws.write( rowCur + r, sprint + 3, sprintNumPoints.get((sprint, rider.num), ''), styleRegular )
 			
 if __name__ == '__main__':
 	Model.setRace( Model.Race() )

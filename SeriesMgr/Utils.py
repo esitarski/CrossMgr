@@ -13,10 +13,10 @@ import io
 
 import wx.lib.agw.genericmessagedialog
 
-if 'WXMAC' in wx.Platform:
+if 'MAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
-	except:
+	except Exception:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
 	if os.path.isdir( os.path.join(topdirName, 'SeriesMgrImages') ):
 		dirName = topdirName
@@ -33,25 +33,25 @@ if 'WXMAC' in wx.Platform:
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
+	except Exception:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 	
-	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe', 'SeriesMgr.exe']:
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'SeriesMgr.exe']:
 		dirName = os.path.dirname(dirName)
-	if 'CrossMgr?' in os.path.basename(dirName):
+	if 'SeriesMgr?' in os.path.basename(dirName):
 		dirName = os.path.dirname(dirName)
 	if not os.path.isdir( os.path.join(dirName, 'SeriesMgrImages') ):
 		dirName = os.path.dirname(dirName)
 
 	if os.path.isdir( os.path.join(dirName, 'SeriesMgrImages') ):
 		pass
-	elif os.path.isdir( '/usr/local/SeriesMgrImages' ):
+	elif os.path.isdir( '/usr/local/CrossMgrImages' ):
 		dirName = '/usr/local'
 
 imageFolder = os.path.join(dirName, 'SeriesMgrImages')
-htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
-helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
-helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
+htmlFolder = os.path.join(dirName, 'SeriesMgrHtml')
+helpFolder = os.path.join(dirName, 'SeriesMgrHtmlDoc')
+helpIndexFolder = os.path.join(dirName, 'SeriesMgrHelpIndex')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
@@ -63,7 +63,7 @@ def getHelpIndexFolder(): return helpIndexFolder
 # Get the user's default language.
 #
 # First check enviroment variable.
-lang = os.environ.get('CrossMgrLanguage', None)
+lang = os.environ.get('SeriesMgrLanguage', None)
 
 # Then check default OS language.
 import locale
@@ -72,7 +72,7 @@ if not lang:
 		import ctypes
 		windll = ctypes.windll.kernel32
 		lang = locale.windows_locale[ windll.GetUserDefaultUILanguage() ]
-	except:
+	except Exception:
 		lang = locale.getdefaultlocale()[0]
 
 # Finally, if that doesn't work, default to English.
@@ -82,11 +82,11 @@ lang = (lang or 'en')[:2]
 # Setup translation.
 #
 import sys
+import builtins
 from Version import AppVerName
 import gettext
 initTranslationCalled = False
 translate = None
-import builtins
 builtins.__dict__['_'] = translate = lambda s: s
 def initTranslation():
 	global initTranslationCalled
@@ -96,16 +96,16 @@ def initTranslation():
 		initTranslationCalled = True
 		
 		try:
-			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
-		except:
-			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'))
+			gettext.install('messages', os.path.join(dirName,'SeriesMgrLocale'), unicode=1)
+		except Exception:
+			gettext.install('messages', os.path.join(dirName,'SeriesMgrLocale'))
 		
 		# Try to use a translation matching the user's language.
 		try:
-			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
+			translation = gettext.translation('messages', os.path.join(dirName,'SeriesMgrLocale'), languages=[lang[:2]])
 			translation.install()
 			builtins.__dict__['_'] = translate = translation.ugettext
-		except:
+		except Exception:
 			pass
 		
 		extra_fields = {
@@ -115,7 +115,7 @@ def initTranslation():
 		
 initTranslation()
 
-class SuspendTranslation( object ):
+class SuspendTranslation:
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
 		self._Save = builtins.__dict__['_']
@@ -123,7 +123,7 @@ class SuspendTranslation( object ):
 	def __exit__(self, type, value, traceback):
 		builtins.__dict__['_'] = self._Save
 
-class UIBusy( object ):
+class UIBusy:
 	def __enter__(self):
 		wx.BeginBusyCursor()
 	
@@ -195,10 +195,10 @@ def stripLeadingZeros( s ):
 def plat_ind_basename( s ):
 	try:
 		return s[s.rindex('/')+1:]
-	except:
+	except Exception:
 		try:
 			return s[s.rindex('\\')+1:]
-		except:
+		except Exception:
 			return s
 	
 def toAscii( s ):
@@ -239,7 +239,7 @@ def removeDiacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 	
 def GetFileName( rDate, rName, rNum, rMemo ):
@@ -253,13 +253,13 @@ def Play( soundFile ):
 	if sys.platform.startswith('linux'):
 		try:
 			subprocess.Popen(['aplay', '-q', soundFile])
-		except:
+		except Exception:
 			pass
 		return True
 		
 	try:
 		return soundCache[soundFile].Play()
-	except:
+	except Exception:
 		soundCache[soundFile] = wx.adv.Sound( soundFile )
 		return soundCache[soundFile].Play()
 		
@@ -494,13 +494,13 @@ def ordinal( value ):
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
 	}.get( lang[:2], lambda v: u'{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
 
-def getHomeDir( appName='CrossMgr' ):
+def getHomeDir( appName='SeriesMgr' ):
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
 	try:
 		if os.path.basename(homedir) == '.{}'.format(appName):
 			homedir = os.path.join( os.path.dirname(homedir), '.{}App'.format(appName) )
-	except:
+	except Exception:
 		pass
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
@@ -513,6 +513,34 @@ def getDocumentsDir():
 		os.makedirs( dd )
 	return dd
 	
+#------------------------------------------------------------------------
+def floatLocale( v ):
+	if isinstance( v, float ):
+		return v
+	if isinstance( v, int ):
+		return float(v)
+	if isinstance( v, str ):
+		v = v.strip()
+		if '.' not in v:
+			v = v.replace(',', '.')			# Normalize decimal sep.
+		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
+	return float( v )
+	
+def floatFormatLocale( v, width=-1, precision=6 ):
+	s = str(int( round(v * (10**precision)) ))
+	fract = s[-precision:]
+	if len(fract) < precision:
+		fract = '0' * (precision-len(fract)) + fract
+	whole = s[:len(s)-precision] if len(s) > precision else '0'
+	
+	ret = ''.join( [whole, locale.localeconv()['decimal_point'], fract] )
+	if width > 0 and len(ret) < width:
+		ret = ' ' * (width - len(s)) + ret
+	return ret
+	
+def fld( v, precision=3 ):
+	return floatFormatLocale( v, precision=precision )
 #------------------------------------------------------------------------
 
 reSpace = re.compile(r'\s')
@@ -546,12 +574,8 @@ def writeLog( message ):
 		pass
 
 def disable_stdout_buffering():
-	fileno = sys.stdout.fileno()
-	temp_fd = os.dup(fileno)
-	sys.stdout.close()
-	os.dup2(temp_fd, fileno)
-	os.close(temp_fd)
-	sys.stdout = os.fdopen(fileno, "w")
+	# No longer necessary as if output goes to the terminal it will be flushed if it ends in newline.
+	''' sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) '''
 
 def logCall( f ):
 	def _getstr( x ):
@@ -600,25 +624,25 @@ def writeRace():
 def writeConfig( key, value ):
 	try:
 		return mainWin.config.Write( key, value )
-	except:
+	except Exception:
 		pass
 
 def readConfig( key, defaultVal ):
 	try:
 		return mainWin.config.Read( key, defaultVal )
-	except:
+	except Exception:
 		return None
 	
 def getFileName():
 	try:
 		return mainWin.fileName
-	except:
+	except Exception:
 		return None
 	
 def getFileDir():
 	try:
 		return os.path.dirname(os.path.abspath(mainWin.fileName))
-	except:
+	except Exception:
 		return os.path.expanduser('~')
 	
 def isMainWin():
@@ -653,7 +677,13 @@ def LayoutChildResize( child ):
 		if parent.IsTopLevel():
 			break
 		parent = parent.GetParent()
-		
+
+def LayoutChildren( sizer ):
+	for c in sizer.GetChildren():
+		if isinstance(c, wx.Sizer):
+			LayoutDescending( c )
+	sizer.Layout()
+
 def GetPngBitmap( fname ):
 	return wx.Bitmap( os.path.join(imageFolder, fname), wx.BITMAP_TYPE_PNG )
 			
@@ -675,7 +705,7 @@ def ParsePhotoFName( fname ):
 	
 	try:
 		raceTime = float(hour)*(60.0*60.0) + float(minute)*60.0 + float(second) + float(decimal)/(10**len(decimal))
-	except:
+	except Exception:
 		writeLog( 'ParsePhotoFName: raceTime fname="{}"'.format(fname) )
 		logException( e, sys.exc_info() )
 		raise
@@ -710,7 +740,7 @@ def GetDefaultHost():
 						DEFAULT_HOST = currentaddress
 						done = True
 						break
-	except:
+	except Exception:
 		DEFAULT_HOST = '0.0.0.0'
 
 	return DEFAULT_HOST
@@ -764,13 +794,33 @@ import json
 def ToJson( v, separators=(',',':') ):
 	''' Make sure we always return a unicode string. '''
 	return json.dumps( v, separators=separators )
+	
+def call_tracer( frame, event, arg ):
+	if event != 'call':
+		return
+	co = frame.f_code
+	func_name = co.co_name
+	if func_name == 'write':
+		# Ignore write() calls from print statements
+		return
+	func_line_no = frame.f_lineno
+	func_filename = co.co_filename
+	caller = frame.f_back
+	caller_line_no = caller.f_lineno
+	caller_filename = caller.f_code.co_filename
+	print( 'Call to {} on line {} of {} from line {} of {}'.format(
+			func_name, func_line_no, func_filename,
+			caller_line_no, caller_filename,
+		)
+	)
 
 if __name__ == '__main__':
+	sys.settrace( call_tracer )
 	initTranslation()
 	app = wx.App(False)
 	
 	print( RemoveDisallowedSheetChars('Cat A/B') )
-	print(  RemoveDisallowedFilenameChars('Cat A/B') )
+	print( RemoveDisallowedFilenameChars('Cat A/B') )
 	
 	MessageOK( None, 'Test', 'Test', wx.ICON_INFORMATION )
 	MessageOKCancel( None, 'Test', 'Test' )

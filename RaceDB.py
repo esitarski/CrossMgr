@@ -75,7 +75,7 @@ class RaceDB( wx.Dialog ):
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
-		explain = wx.StaticText( self, label=(u'{}:').format(
+		explain = wx.StaticText( self, label=('{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
@@ -188,12 +188,12 @@ class RaceDB( wx.Dialog ):
 		except Exception as e:
 			Utils.MessageOK(
 				self,
-				u'{}\n\n"{}"\n\n{}'.format(_('Error Connecting to RaceDB Server'), url, e),
+				'{}\n\n"{}"\n\n{}'.format(_('Error Connecting to RaceDB Server'), url, e),
 				_('Error Connecting to RaceDB Server'),
 				iconMask=wx.ICON_ERROR )
 			return
 		
-		if not Utils.MessageOKCancel( self, u'{}:\n\n"{}"'.format( _('Confirm Open Event'), filename), _('Confirm Open Event') ):
+		if not Utils.MessageOKCancel( self, '{}:\n\n"{}"'.format( _('Confirm Open Event'), filename), _('Confirm Open Event') ):
 			return
 		
 		dir = os.path.join(
@@ -206,7 +206,7 @@ class RaceDB( wx.Dialog ):
 			except Exception as e:
 				Utils.MessageOK(
 					self,
-					u'{}\n\n"{}"'.format( _('Error Creating Folder'), e),
+					'{}\n\n"{}"'.format( _('Error Creating Folder'), e),
 					_('Error Creating Folder'),
 					iconMask=wx.ICON_ERROR,
 				)
@@ -219,7 +219,7 @@ class RaceDB( wx.Dialog ):
 		except Exception as e:
 			Utils.MessageOKCancel(
 				self,
-				u'{}\n\n{}\n\n{}'.format( _('Error Writing File'), e, excelFName),
+				'{}\n\n{}\n\n{}'.format( _('Error Writing File'), e, excelFName),
 				_('Error Writing File'),
 				iconMask=wx.ICON_ERROR,
 			)
@@ -297,12 +297,12 @@ class RaceDB( wx.Dialog ):
 		for cName, events, participant_count, num in sorted(
 				((c['name'], c['events'], c['participant_count'], c['num']) for c in competitions.values()), key=lambda x: x[-1] ):
 			competition = self.tree.AppendItem( self.root, cName )
-			self.tree.SetItemText( competition, self.participantCountCol, u'{}'.format(participant_count) )
+			self.tree.SetItemText( competition, self.participantCountCol, '{}'.format(participant_count) )
 			for e in events:
 				eventData = e
 				event = self.tree.AppendItem( competition,
-					u'{}{}: {}'.format(
-						u'<{}> '.format(_('Past')) if in_the_past(e['date_time']) else u'',
+					'{}{}: {}'.format(
+						'<{}> '.format(_('Past')) if in_the_past(e['date_time']) else '',
 						_('Event'),
 						e['name']),
 					data=eventData
@@ -346,13 +346,13 @@ class RaceDBUpload( wx.Dialog ):
 		
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		self.headerDefault = u'{}\n{}'.format(_('Upload'),u'')
+		self.headerDefault = '{}\n{}'.format(_('Upload'),'')
 		self.header = wx.StaticText( self, label=self.headerDefault )
 		self.header.SetFont( font )
 		
 		fontPixels = 15
 		font = wx.Font((0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		explain = wx.StaticText( self, label=(u'{}:').format(
+		explain = wx.StaticText( self, label=('{}:').format(
 			_('Drag and Drop any RaceDB URL from the browser.\n\nDrag the small icon just to the left of the URL\non the browser page to the RaceDB logo below') ) )
 		explain.SetFont( font )
 		
@@ -407,14 +407,14 @@ class RaceDBUpload( wx.Dialog ):
 		headerText = self.headerDefault
 		race = Model.race
 		if race:
-			headerText = u'{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
+			headerText = '{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
 		self.header.SetLabel( headerText )
 
 	def doUpload( self, event ):
 		busy = wx.BusyCursor()
 		
 		self.uploadStatus.SetValue( _("Starting Upload...") )
-		resultText = u''
+		resultText = ''
 		
 		url = self.fixUrl()
 		try:
@@ -440,11 +440,11 @@ class RaceDBUpload( wx.Dialog ):
 				resultText += (u'\n\n' if resultText else u'') + _('Upload Successful.')
 		
 		if resultText:
-			resultText = u'url="{}"'.format( url ) + '\n' + resultText
+			resultText = 'url="{}"'.format( url ) + '\n' + resultText
 		
 		self.uploadStatus.SetValue( resultText )
 		del busy
-		Utils.MessageOK( self, u'{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
+		Utils.MessageOK( self, '{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
 	
 if __name__ == '__main__':
 	if True:

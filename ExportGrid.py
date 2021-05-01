@@ -670,9 +670,9 @@ class ExportGrid:
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
 				if isSpeed and v:
-					v = (u'{}'.format(v).split() or [''])[0]
-					if v == u'"':
-						v += u'    '
+					v = ('{}'.format(v).split() or [''])[0]
+					if v == '"':
+						v += '    '
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur

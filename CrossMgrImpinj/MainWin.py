@@ -1,12 +1,11 @@
 import sys
-import six
 import threading
 import socket
 import atexit
 import time
 from roundbutton import RoundButton
 import Utils
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 from threading import Thread as Process
 import Impinj
 from Impinj import ImpinjServer
@@ -555,7 +554,7 @@ class MainWin( wx.Frame ):
 			info.SetName('CrossMgrImpinj')
 			info.SetVersion(AppVerName.split(' ')[1])
 			info.SetDescription(description)
-			info.SetCopyright('(C) 2020 Edward Sitarski')
+			info.SetCopyright('(C) 2021 Edward Sitarski')
 			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
 			info.SetLicence(licence)
 
@@ -880,7 +879,7 @@ class MainWin( wx.Frame ):
 			else:
 				antennaReadCount = None
 			
-			message = ' '.join( six.text_type(x) for x in d[1:] )
+			message = ' '.join( '{}'.format(x) for x in d[1:] )
 			if   d[0] == 'Impinj':
 				if 'state' in d:
 					self.impinjMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )

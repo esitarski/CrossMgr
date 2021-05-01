@@ -6,6 +6,7 @@ waitress
 xlsxwriter
 pygments
 xlrd
+openpyxl
 pytz
 fpdf2
 xlwt

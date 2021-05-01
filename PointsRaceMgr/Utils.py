@@ -2,6 +2,7 @@
 # Set translation locale.
 #
 import wx
+import wx.lib.agw.genericmessagedialog
 locale = wx.Locale()
 
 from Version import AppVerName
@@ -11,9 +12,9 @@ def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
 		try:
-			gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
+			gettext.install(AppVerName.split()[0], './locale', unicode=True)
 		except:
-			gettext.install(AppVerName.split(None, 1), './locale')
+			gettext.install(AppVerName.split()[0], './locale')
 		initTranslationCalled = True
 		
 initTranslation()
@@ -78,7 +79,7 @@ def MessageOKCancel( parent, message, title = '', iconMask = 0):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK | wx.CANCEL | iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
-	return True if response == wx.ID_OK else False
+	return response == wx.ID_OK
 	
 def MessageYesNoCancel( parent, message, title = '', iconMask = 0 ):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES_NO | wx.CANCEL | iconMask )
@@ -205,19 +206,15 @@ def tag( buf, name, attrs = {} ):
 		buf.write( '</{}>\n'.format(name) )
 
 #------------------------------------------------------------------------
-try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+if 'MAC' in wx.Platform:
+	# Make message not have the standard python icon on Mac.
+	wx.MessageDialog = wx.lib.agw.genericmessagedialog.GenericMessageDialog
 
-if os.path.basename(dirName) == 'library.zip':
-	dirName = os.path.dirname(dirName)
-imageFolder = os.path.join(dirName, 'PointsRaceMgrImages')
-htmlFolder = os.path.join(dirName, 'PointsRaceMgrHtml')
-
-def getDirName():		return dirName
-def getImageFolder():	return imageFolder
-def getHtmlFolder():	return htmlFolder
+# Add access functions for all resource folders.
+from GetFolder import GetFolders
+globals().update( {'get' + folder[0].upper() + folder[1:]:lambda v=location: v for folder, location in GetFolders().items()} )
+def getImageFile( fname, folder=getImageFolder() ):
+	return os.path.join( folder, fname )
 
 def AlignHorizontalScroll( gFrom, gTo ):
 	xFrom, yFrom = gFrom.GetViewStart()

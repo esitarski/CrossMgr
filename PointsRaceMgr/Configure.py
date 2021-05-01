@@ -6,10 +6,6 @@ import sys
 import os
 import re
 import datetime
-import xlwt
-import webbrowser
-import subprocess
-from optparse import OptionParser
 
 import Utils
 import Model
@@ -108,6 +104,7 @@ class Configure( wx.Panel ):
 		label = wx.StaticText( self, label='Points for Place:', style = wx.ALIGN_RIGHT )
 		self.gbs.Add( label, pos=(2, 6), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
 		ctrl = wx.TextCtrl( self )
+		ctrl.Bind(wx.EVT_TEXT, self.onChange)
 		self.gbs.Add( ctrl, pos=(2, 7), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.pointsForPlaceLabel = label
 		self.pointsForPlaceCtrl = ctrl
@@ -239,7 +236,7 @@ class Configure( wx.Panel ):
 	def onChange( self, event ):
 		self.commit()
 		if Utils.getMainWin():
-			Utils.getMainWin().refresh( False )
+			Utils.getMainWin().refresh( False )	# False means don't include the Configure page.  This avoids an infinite loop.
 	
 	#--------------------------------------------------------------------------------------
 

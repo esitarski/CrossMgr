@@ -1,0 +1,4 @@
+You can Drag-and-Drop to rearrange rows in tables.  Check for the Up/Down arrow in the upper-left corner.  Click on the Row Number and drag the row Up or Down.
+All tables can be printed.  Try "File|Print Preview... and "File|Print..."
+All tables can be exported to Excel.  Try "File|Export to Excel...".
+****************************************\n\nCheck \n\nsites.google.com/site/crossmgrsoftware\n\nfor updates!
