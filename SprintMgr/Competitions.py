@@ -635,7 +635,10 @@ def DoRandomSimulation( model = None ):
 	model = model or Model.model
 	competition = model.competition
 	state = competition.state
-	while se := competition.getCanStart():
+	while True:
+		se = competition.getCanStart()
+		if not se:
+			break
 		e = se[0][1]
 		start = e.getStart()
 		places = [c for c in e.composition if competition.state.inContention(c)]
