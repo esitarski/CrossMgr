@@ -1,7 +1,6 @@
 import wx
 import os
 import io
-import six
 import sys
 import glob
 import math
@@ -25,13 +24,8 @@ def PilImageToWxImage(pil, alpha=False):
 
 	return image
 
-if six.PY2:
-	StringIO = six.StringIO
-	def imageFromJpeg( jpeg ):
-		return wx.Image( StringIO(jpeg), wx.BITMAP_TYPE_JPEG )
-else:
-	def imageFromJpeg( jpeg ):
-		return wx.Image( io.BytesIO(jpeg), wx.BITMAP_TYPE_JPEG )
+def imageFromJpeg( jpeg ):
+	return wx.Image( io.BytesIO(jpeg), wx.BITMAP_TYPE_JPEG )
 
 contrastColour = wx.Colour( 255, 130, 0 )
 

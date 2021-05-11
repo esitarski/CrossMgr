@@ -2,7 +2,6 @@
 # Set translation locale.
 #
 import wx
-import six
 locale = wx.Locale()
 
 from Version import AppVerName
@@ -11,10 +10,7 @@ initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		if six.PY2:
-			gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
-		else:
-			gettext.install(AppVerName.split(None, 1), './locale')
+		gettext.install(AppVerName.split(None, 1), './locale')
 		initTranslationCalled = True
 		
 initTranslation()

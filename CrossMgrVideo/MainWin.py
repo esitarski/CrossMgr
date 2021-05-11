@@ -5,7 +5,6 @@ import wx.lib.intctrl
 import sys
 import os
 import re
-import six
 import time
 import math
 import json
@@ -84,7 +83,7 @@ class DateSelectDialog( wx.Dialog ):
 		self.triggerDatesList.InsertColumn( 1, 'Entries', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
 		for i, (d, c) in enumerate(triggerDates):
 			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
-			self.triggerDatesList.SetItem( i, 1, six.text_type(c) )
+			self.triggerDatesList.SetItem( i, 1, str(c) )
 		
 		if self.triggerDates:
 			self.triggerDatesList.Select( 0 )

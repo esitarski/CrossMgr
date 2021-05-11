@@ -40,7 +40,7 @@ class VideoCaptureManager( object ):
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
-transmitFramesMax = 2
+transmitFramesMax = 4
 bufferSeconds = 8
 
 def EstimateQuerySeconds( ts, s_before, s_after, fps ):

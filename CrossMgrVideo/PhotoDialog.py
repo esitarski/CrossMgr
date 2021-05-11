@@ -128,8 +128,8 @@ class PhotoDialog( wx.Dialog ):
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
-		self.contrast = wx.ToggleButton( self, label='Contrast', style=wx.BU_EXACTFIT)
-		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
+		self.contrast = wx.Button( self, label='Contrast', style=wx.BU_EXACTFIT)
+		self.contrast.Bind( wx.EVT_BUTTON, self.onContrast )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
@@ -290,7 +290,7 @@ class PhotoDialog( wx.Dialog ):
 			self.Refresh()
 	
 	def onContrast( self, event ):
-		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )
+		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) )
 	
 	def onBrightness( self, event ):
 		pass

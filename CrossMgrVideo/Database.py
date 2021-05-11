@@ -12,7 +12,7 @@ from queue import Queue, Empty
 
 import unicodedata
 def removeDiacritic( s ):
-	return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ascii', 'ignore').decode()
+	return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ascii', 'ignore').decode()
 
 now = datetime.now
 
@@ -468,7 +468,7 @@ def DBWriter( q, triggerWriteCB=None, fname=None ):
 				tsJpgs.append( (v[1], sqlite3.Binary(CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
 			fieldLen = len(Database.triggerFieldsInput)
-			tsTriggers.append( (list(v[1:]) + [u''] * fieldLen)[:fieldLen] )
+			tsTriggers.append( (list(v[1:]) + [''] * fieldLen)[:fieldLen] )
 		elif v[0] == 'kmh':
 			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
 		elif v[0] == 'flush':
@@ -482,20 +482,6 @@ def DBWriter( q, triggerWriteCB=None, fname=None ):
 		
 	flush( db )
 	
-def DBReader( q, callback, fname=None ):
-	db = GlobalDatabase( initTables=False, fname=fname  )
-	
-	keepGoing = True
-	while keepGoing:
-		v = q.get()
-		if v[0] == 'getphotos':
-			flush( db )
-			callback( db.getPhotos(v[1], v[2]) )
-		elif v[0] == 'terminate':
-			keepGoing = False
-		
-		q.task_done()
-			
 if __name__ == '__main__':
 	if False:
 		try:
@@ -503,7 +489,7 @@ if __name__ == '__main__':
 		except Exception:
 			pass
 
-	d = Database()
+	d = GlobalDatabase()
 	
 	ts = d.getLastTimestamp(datetime(2000,1,1), datetime(2200,1,1))
 	print( ts )
@@ -512,15 +498,14 @@ if __name__ == '__main__':
 		qTriggers = 'SELECT {} FROM trigger ORDER BY ts LIMIT 8'.format(','.join(d.triggerFieldsInput))
 		print( '*******************' )
 		for row in d.conn.execute(qTriggers):
-			print( removeDiacritic(u','.join( u'{}'.format(v) for v in row )) )
+			print( removeDiacritic(','.join( '{}'.format(v) for v in row )) )
 	
 	# Create existing duplicates all the triggers.
 	tsTriggers = d.conn.execute('SELECT {} FROM trigger'.format(','.join(d.triggerFieldsInput))).fetchall()
-	with d.writeLock:
-		d.conn.executemany(
-			'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(d.triggerFieldsInput), ','.join('?'*len(d.triggerFieldsInput))),
-			tsTriggers
-		)	
+	d.conn.executemany(
+		'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(d.triggerFieldsInput), ','.join('?'*len(d.triggerFieldsInput))),
+		tsTriggers
+	)	
 	printTriggers()
 	
 	# Delete the existing duplicates.
@@ -535,7 +520,7 @@ if __name__ == '__main__':
 	
 		
 	'''
-	tsTriggers = [((time.sleep(0.1) and False) or now(), 100+i, u'', u'', u'', u'', u'') for i in range(100)]
+	tsTriggers = [((time.sleep(0.1) and False) or now(), 100+i, '', '', '', '', '') for i in range(100)]
 	
 	tsJpgs = [((time.sleep(0.01) and False) or now(), b'asdfasdfasdfasdfasdf') for i in range(100)]
 	d.write( tsTriggers, tsJpgs )
