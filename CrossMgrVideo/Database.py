@@ -54,11 +54,11 @@ class Database:
 		'''
 		
 		# Use the RLock so that we serialize writes ourselves.  This allows use to share the same sqlite3 instance between threads.
-		self.writeLock = RLock()
+		self.dbLock = RLock()
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0, check_same_thread=False )
 		
 		if initTables:
-			with self.writeLock, self.conn:
+			with self.dbLock, self.conn:
 				# Add kmh, ts_start, sBefore and sAfter to the trigger table if missing.
 				cur = self.conn.cursor()
 				cur.execute( 'PRAGMA table_info(trigger)' )
@@ -124,12 +124,13 @@ class Database:
 		return self.fname
 		
 	def getsize( self ):
-		try:
-			return os.path.getsize( self.fname )
-		except Exception:
-			return None
+		with self.dbLock:
+			try:
+				return os.path.getsize( self.fname )
+			except Exception:
+				return None
 	
-	def purgeTriggerWriteDuplicates( self, tsTriggers ):
+	def _purgeTriggerWriteDuplicates( self, tsTriggers ):
 		""" Remove all triggers that are already in the database. """
 		if not tsTriggers:
 			return tsTriggers
@@ -142,11 +143,11 @@ class Database:
 		return tsTriggersUnique
 	
 	def write( self, tsTriggers=None, tsJpgs=None ):
-		tsTriggers = self.purgeTriggerWriteDuplicates( tsTriggers )
-		if not tsTriggers and not tsJpgs:
-			return
+		with self.dbLock:
+			tsTriggers = self._purgeTriggerWriteDuplicates( tsTriggers )
+			if not tsTriggers and not tsJpgs:
+				return
 		
-		with self.writeLock:
 			if tsJpgs:
 				# Purge duplicate photos, or with the same timestamp.
 				jpgSeen = set()
@@ -175,7 +176,7 @@ class Database:
 				self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
-		with self.writeLock, self.conn:
+		with self.dbLock, self.conn:
 			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in data.keys())),
 				list(data.values()) + [id]
 			)
@@ -188,7 +189,7 @@ class Database:
 	
 	def initCaptureTriggerData( self, id ):
 		''' Initialize some fields from the previous record. '''
-		with self.writeLock, self.conn:
+		with self.dbLock, self.conn:
 			rows = list( self.conn.execute( 'SELECT ts FROM trigger WHERE id=?', (id,) ) )
 			if not rows:
 				return
@@ -206,7 +207,7 @@ class Database:
 				)
 	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
-		with self.conn:
+		with self.dbLock, self.conn:
 			if not bib:
 				return list( self.conn.execute(
 					'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(self.triggerFieldsAll)),
@@ -224,15 +225,14 @@ class Database:
 		if key == self.tsJpgsKeyLast:
 			return self.tsJpgsLast
 		
-		with self.conn:
+		with self.dbLock, self.conn:
 			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper)) )
 		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
 		return tsJpgs
 	
-	def getPhotoCount( self, tsLower, tsUpper ):
+	def _getPhotoCount( self, tsLower, tsUpper ):
 		key = (tsLower, tsUpper)
-		with self.conn:
-			count = self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()
+		count = self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()
 		return count[0] if count else 0
 	
 	def getPhotoClosest( self, ts ):
@@ -248,25 +248,25 @@ class Database:
 		return tsBest if jpgBest else None, jpgBest
 	
 	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
-		with self.conn:
+		with self.dbLock, self.conn:
 			trigger = list( self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE id=?', (id,) ) )
-		if not trigger:
-			return 0
-		ts, s_before, s_after = trigger[0]
-		if s_before == 0.0 and s_after == 0.0:
-			s_before, s_after = s_before_default, s_after_default
-		tsLower, tsUpper = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
-		return self.getPhotoCount(tsLower, tsUpper)
+			if not trigger:
+				return 0
+			ts, s_before, s_after = trigger[0]
+			if s_before == 0.0 and s_after == 0.0:
+				s_before, s_after = s_before_default, s_after_default
+			tsLower, tsUpper = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
+			return self._getPhotoCount(tsLower, tsUpper)
 		
 	def updateTriggerPhotoCount( self, id, frames=None ):
-		with self.writeLock:
+		with self.dbLock, self.conn:
 			frames = frames or self.getTriggerPhotoCount( id )
 			self.conn.execute( 'UPDATE trigger SET frames=? WHERE id=? AND frames!=?', (frames, id, frames) )
 			return frames
 	
 	def getTriggerPhotoCounts( self, tsLower, tsUpper ):
 		counts = defaultdict( int )
-		with self.conn:
+		with self.dbLock, self.conn:
 			triggers = { r[0]:(r[1]-timedelta(seconds=r[2]), r[1]+timedelta(seconds=r[3])) for r in self.conn.execute(
 				'SELECT id,ts,s_before,s_after FROM trigger WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)
 			) }
@@ -298,47 +298,50 @@ class Database:
 		return counts
 	
 	def updateTriggerPhotoCounts( self, counts ):
-		with self.writeLock, self.conn:
+		with self.dbLock, self.conn:
 			self.conn.executemany( 'UPDATE trigger SET frames=? WHERE id=? AND frames!=?',
 				[(count, id, count) for id, count in counts.items()]
 			)
 	
 	def getLastPhotos( self, count ):
-		with self.conn:
+		with self.dbLock, self.conn:
 			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,)) )
 		tsJpgs.reverse()
 		return tsJpgs
 	
 	def getLastTimestamp( self, tsLower, tsUpper ):
-		c = self.conn.cursor()
-		c.execute( 'SELECT ts FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) )
-		return c.fetchone()[0]
+		with self.dbLock, self.conn:
+			c = self.conn.cursor()
+			c.execute( 'SELECT ts FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) )
+			return c.fetchone()[0]
 		
 	def getTimestampRange( self ):
-		c = self.conn.cursor()
-		c.execute( 'SELECT ts FROM trigger ORDER BY ts ASC' )
-		row = c.fetchone()
-		if not row:
-			return None, None
-		trigFirst = row[0]
-		c.execute( 'SELECT ts FROM trigger ORDER BY ts DESC' )
-		trigLast = c.fetchone()[0]
-		return trigFirst, trigLast
+		with self.dbLock, self.conn:
+			c = self.conn.cursor()
+			c.execute( 'SELECT ts FROM trigger ORDER BY ts ASC' )
+			row = c.fetchone()
+			if not row:
+				return None, None
+			trigFirst = row[0]
+			c.execute( 'SELECT ts FROM trigger ORDER BY ts DESC' )
+			trigLast = c.fetchone()[0]
+			return trigFirst, trigLast
 	
 	def getTriggerDates( self ):
 		dates = defaultdict( int )
-		for row in self.conn.execute( 'SELECT ts FROM trigger' ):
-			if row[0]:
-				dates[row[0].date()] += 1
+		with self.dbLock, self.conn:
+			for row in self.conn.execute( 'SELECT ts FROM trigger' ):
+				if row[0]:
+					dates[row[0].date()] += 1
 		return sorted( dates.items() )
 	
 	def getTriggerEditFields( self, id ):
-		with self.conn:
+		with self.dbLock, self.conn:
 			rows = list( self.conn.execute('SELECT {} FROM trigger WHERE id=?'.format(','.join(self.triggerEditFields)), (id,) ) )
 		return rows[0] if rows else []
 		
 	def setTriggerEditFields( self, id, *args ):
-		with self.writeLock, self.conn:
+		with self.dbLock, self.conn:
 			self.conn.execute(
 				'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in self.triggerEditFields)),
 				args + (id,)
@@ -348,7 +351,7 @@ class Database:
 		return ts in self.photoTsCache
 		
 	def deleteExistingTriggerDuplicates( self ):
-		with self.writeLock:
+		with self.dbLock, self.conn:
 			rowPrev = None
 			duplicateIds = []
 			for row in self.conn.execute( 'SELECT id,{} from trigger ORDER BY ts ASC,kmh DESC'.format(','.join(self.triggerFieldsInput)) ):
@@ -370,12 +373,12 @@ class Database:
 		tsLower = tsLower or datetime.datetime(1900,1,1,0,0,0)
 		tsUpper = tsUpper or datetime.datetime(datetime.datetime.now().year+1000,1,1,0,0,0)
 	
-		with self.writeLock, self.conn:
+		with self.dbLock, self.conn:
 			self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
 			self.conn.execute( 'DELETE from trigger WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
 	
 	def deleteTrigger( self, id, s_before_default=0.5,  s_after_default=2.0 ):
-		with self.writeLock:
+		with self.dbLock:
 			with self.conn:
 				rows = list( self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE id=?', (id,) ) )
 				if not rows:
@@ -426,7 +429,7 @@ class Database:
 						self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (a,b) )
 			
 	def vacuum( self ):
-		with self.writeLock:
+		with self.dbLock, self.conn:
 			self.conn.execute( 'VACUUM' )
 
 dbGlobal = None
