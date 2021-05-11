@@ -1,6 +1,6 @@
 import wx
 import io
-from Database import Database
+from Database import GlobalDatabase
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw
 import io
@@ -14,7 +14,7 @@ def scaledBitmapfromJpg( jpg, scale ):
 	return image
 	
 def CompositeBitmap( qResult, fnameDB, tsLower, tsUpper, pixelsPerSec, scale ):
-	tsJpgs = Database( fnameDB, False ).getPhotos( tsLower, tsUpper )
+	tsJpgs = GlobalDatabase( fnameDB ).getPhotos( tsLower, tsUpper )
 	if not tsJpgs:
 		qResult.put( ('composite', None) )
 		return

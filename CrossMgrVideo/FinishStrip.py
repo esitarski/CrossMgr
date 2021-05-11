@@ -625,7 +625,7 @@ class FinishStripDialog( wx.Dialog ):
 		}
 
 if __name__ == '__main__':
-	from Database import Database
+	from Database import GlobalDatabase
 	app = wx.App(False)
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
@@ -637,7 +637,7 @@ if __name__ == '__main__':
 	fs = FinishStripPanel( mainWin )
 	mainWin.Show()
 	
-	tsJpgs = Database().getLastPhotos( 90 )
+	tsJpgs = GlobalDatabase().getLastPhotos( 90 )
 	fs.SetTsJpgs( tsJpgs, tsJpgs[len(tsJpgs)//2][0], info={} )
 	
 	#fsd = FinishStripDialog( mainWin )

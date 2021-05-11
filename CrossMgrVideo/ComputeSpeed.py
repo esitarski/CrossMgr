@@ -257,10 +257,10 @@ class ComputeSpeed( object ):
 		isForward = evt.GetDirection()
 		
 if __name__ == '__main__':
-	from Database import Database
+	from Database import GlobalDatabase
 	app = wx.App(False)
 
-	tsJpg = Database().getLastPhotos( 12 )
+	tsJpg = GlobalDatabase().getLastPhotos( 12 )
 	t1, t2 = tsJpg[0][0], tsJpg[-1][0]
 	bitmap1 = CVUtil.jpegToBitmap(tsJpg[0][1])
 	bitmap2 = CVUtil.jpegToBitmap(tsJpg[-1][1])
