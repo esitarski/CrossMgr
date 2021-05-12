@@ -24,21 +24,21 @@ def BuildHelpIndex():
 	ix = create_in( indexDir, schema )
 	writer = ix.writer()
 
-	titleTags = set([u'h1', u'h2', u'h3', u'h4', u'h5'])
+	titleTags = set(['h1', 'h2', 'h3', 'h4', 'h5'])
 
 	newLines = re.compile( '\n+' )
 	nonNumeric = re.compile( r'[^\d]' )
 
 	def addDocument( fname, section, lastTitle, textCur ):
-		# print u'addDocument: lastTitle={}'.format(lastTitle)
+		# print 'addDocument: lastTitle={}'.format(lastTitle)
 		if lastTitle and textCur:
 			section = '|'.join( section ) if section else lastTitle.get_text()
-			# print u'Indexing: {}: {}'.format(os.path.basename(fname), section)
-			content = newLines.sub( u'\n', u'\n'.join(textCur) )
-			writer.add_document(	path = os.path.basename(fname) + u'#' + lastTitle['id'],
+			# print 'Indexing: {}: {}'.format(os.path.basename(fname), section)
+			content = newLines.sub( '\n', '\n'.join(textCur) )
+			writer.add_document(	path = os.path.basename(fname) + '#' + lastTitle['id'],
 									title = lastTitle.get_text(),
 									section = section,
-									level = int(nonNumeric.sub(u'', lastTitle.name)),
+									level = int(nonNumeric.sub('', lastTitle.name)),
 									content = content )
 
 	# Extract content sections from the html pages.
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	ix = open_dir( indexDir, readonly=True )
 
 	with ix.searcher() as searcher, open('search.html', 'w') as f:
-		query = QueryParser('content', ix.schema).parse(u'fastest lap')
+		query = QueryParser('content', ix.schema).parse('fastest lap')
 		results = searcher.search(query, limit=20)
 		f.write( '<table><tr><th></th><th align="left">Section</th><th align="left">Match</th></tr>\n' )
 		for i, hit in enumerate(results):

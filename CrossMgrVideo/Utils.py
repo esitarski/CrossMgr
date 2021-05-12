@@ -206,7 +206,7 @@ def GetPngBitmap( fname ):
 	
 invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
 def RemoveDisallowedFilenameChars( filename ):
-	cleanedFilename = unicodedata.normalize('NFKD', u'{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
+	cleanedFilename = unicodedata.normalize('NFKD', '{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
 	cleanedFilename = cleanedFilename.replace( '/', '_' ).replace( '\\', '_' )
 	return invalidFilenameChars.sub( '', cleanedFilename )
 #------------------------------------------------------------------------

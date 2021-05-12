@@ -32,7 +32,7 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480 ):
 	
 	return cap
 
-class VideoCaptureManager( object ):
+class VideoCaptureManager:
 	def __init__( self, **kwargs ):
 		self.cap = getVideoCapture(**kwargs)
 	def __enter__(self):
@@ -40,7 +40,7 @@ class VideoCaptureManager( object ):
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
-transmitFramesMax = 4
+transmitFramesMax = 10
 bufferSeconds = 8
 
 def EstimateQuerySeconds( ts, s_before, s_after, fps ):
@@ -75,7 +75,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 		except MemoryError as e:
 			print( 'pWriterSend: ', e )
 	
-	while 1:
+	while True:
 		with VideoCaptureManager(**camInfo) as cap:
 			time.sleep( 0.25 )
 			frameCount = 0
@@ -100,7 +100,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				
 				try:
 					m = qIn.get_nowait()
-					while 1:
+					while True:
 						cmd = m['cmd']
 						if cmd == 'query':
 							if m['tStart'] > ts:
@@ -112,15 +112,13 @@ def CamServer( qIn, pWriter, camInfo=None ):
 								tsSeen.clear()
 							tsQuery = ts
 
-							times, frames = fcb.getTimeFrames( m['tStart'], m['tEnd'], tsSeen )
-							backlog.extend( (t, f) for t, f in zip(times, frames) )
+							backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], m['tEnd'], tsSeen)) )
 							
 							if m['tEnd'] > tsMax:
 								tsMax = m['tEnd']
 						elif cmd == 'start_capture':
 							if 'tStart' in m:
-								times, frames = fcb.getTimeFrames( m['tStart'], ts, tsSeen )
-								backlog.extend( (t, f) for t, f in zip(times, frames) )
+								backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], ts, tsSeen)) )
 								inCapture = True
 						elif cmd == 'stop_capture':
 							inCapture = False
@@ -183,7 +181,7 @@ def callCamServer( qIn, cmd, **kwargs ):
 	
 if __name__ == '__main__':
 	def handleMessages( q ):
-		while 1:
+		while True:
 			m = q.get()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	

@@ -16,7 +16,7 @@ def removeDiacritic( s ):
 
 now = datetime.now
 
-def createTable( c, table, fields ):
+def _createTable( c, table, fields ):
 	def default_str( d ):
 		return ' DEFAULT {}'.format(d) if d is not None else ''
 	
@@ -80,13 +80,13 @@ class Database:
 					if 'frames' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN frames INTEGER DEFAULT 0' )
 		
-				createTable( self.conn, 'photo', (
+				_createTable( self.conn, 'photo', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
 						('ts', 'timestamp', 'ASC', None),
 						('jpg', 'BLOB', False, None),
 					)
 				)		
-				createTable( self.conn, 'trigger', (
+				_createTable( self.conn, 'trigger', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
 						('ts', 'timestamp', 'ASC', None),			# Capture timestamp.
 						('s_before', 'DOUBLE', False, None),		# Seconds before ts of capture.
