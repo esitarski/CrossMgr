@@ -453,7 +453,7 @@ class FinishStripPanel( wx.Panel ):
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
 		hs.Add( wx.StaticText(self, label='\n'.join([
-					'To Zoom: Ctrl+Mousewheel',
+					'To Zoom In: Ctrl+Mousewheel',
 					'Show Frame: Right-click',
 				])
 			),

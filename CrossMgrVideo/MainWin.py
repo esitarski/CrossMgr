@@ -266,7 +266,7 @@ class FocusDialog( wx.Dialog ):
 		
 		self.title = wx.StaticText(self, label='CrossMgr Video\nFocus Window', style=wx.ALIGN_RIGHT )
 		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		self.explain = wx.StaticText(self, label='Click and Drag to Zoom in Photo')
+		self.explain = wx.StaticText(self, label='Click and Drag to Zoom In')
 		self.snapshot, self.autoCapture, self.capture = CreateCaptureButtons( self )
 		
 		btnSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
