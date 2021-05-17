@@ -8,7 +8,7 @@ import sqlite3
 import platform
 import datetime
 from PIL import Image
-from Database import Database
+from Database import GlobalDatabase
 
 def MPegToDatabase( fnameMPeg, tRecorded=None ):
 	program = os.path.join('ffmpeg','ffmpeg.exe') if platform.system() == 'Windows' else 'ffmpeg'
@@ -30,7 +30,7 @@ def MPegToDatabase( fnameMPeg, tRecorded=None ):
 	] )
 	
 	# Store the frames in the database.  Set a frame timestamp.
-	database = Database()
+	database = GlobalDatabase()
 	secsPerFrame = 1.0 / fps
 	dt = datetime.timedelta( seconds = secsPerFrame )
 	tStart = t = (tRecorded or datetime.datetime.now())

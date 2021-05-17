@@ -5,7 +5,7 @@ import wx.lib.scrolledpanel as scrolled
 import os
 import re
 import sys
-import cgi
+from html import escape
 import copy
 import string
 from io import StringIO
@@ -149,7 +149,7 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 	iNoMatch = len(headers) - 1
 	exactMatch = { h.lower():(100.0, i) for i, h in enumerate(headers) }
 	# For Tag fields, try remove spaces.
-	exactMatch.update( {h.lower().replace(u' ', u''):(100.0, i) for i, h in enumerate(headers) if h.lower().startswith('tag')} )
+	exactMatch.update( {h.lower().replace(' ', ''):(100.0, i) for i, h in enumerate(headers) if h.lower().startswith('tag')} )
 	
 	matchStrength = {}
 	for c, f in enumerate(Fields):
@@ -230,7 +230,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			gs.Add( self.choices[-1] )
 		
 		self.initCategoriesFromExcel = wx.CheckBox( self, label=_('Initialize CrossMgr Categories from Excel EventCategory/CustomCategory and Bib# columns') )
-		self.initCategoriesFromExcel.SetToolTip( wx.ToolTip(u'\n'.join([
+		self.initCategoriesFromExcel.SetToolTip( wx.ToolTip('\n'.join([
 				_('Updates, adds or deletes CrossMgr categories, with bib numbers, using the EventCategory/CustomCategory and Bib# columns in the Excel sheet.  Use with care as the Categories will be updated every time the Excel sheet changes.  Read the documentation first!'),
 			])
 		) )
@@ -295,36 +295,36 @@ class SummaryPage(adv.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, label=u'{}'.format(_('Summary'))), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, label=u' '), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label='{}'.format(_('Summary'))), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label=' '), flag=wx.ALL, border = border )
 
 		rows = 0
 		
-		self.fileLabel = wx.StaticText( self, label=u'{}:'.format(_('Excel File')) )
+		self.fileLabel = wx.StaticText( self, label='{}:'.format(_('Excel File')) )
 		self.fileName = wx.StaticText( self )
 		rows += 1
 
-		self.sheetLabel = wx.StaticText( self, label=u'{}:'.format(_('Sheet Name')) )
+		self.sheetLabel = wx.StaticText( self, label='{}:'.format(_('Sheet Name')) )
 		self.sheetName = wx.StaticText( self )
 		rows += 1
 
-		self.riderLabel = wx.StaticText( self, label=u'{}:'.format(_('Rider Data Entries')) )
+		self.riderLabel = wx.StaticText( self, label='{}:'.format(_('Rider Data Entries')) )
 		self.riderNumber = wx.StaticText( self )
 		rows += 1
 
-		self.getCategoriesFromCategoriesLabel = wx.StaticText( self, label=u'{}:'.format(_('CrossMgr Categories from Excel EventCategory/CustomCategory')) )
+		self.getCategoriesFromCategoriesLabel = wx.StaticText( self, label='{}:'.format(_('CrossMgr Categories from Excel EventCategory/CustomCategory')) )
 		self.initCategoriesFromExcel = wx.StaticText( self )
 		rows += 1
 
-		self.categoryAndPropertiesLabel = wx.StaticText( self, label=u'{}:'.format(_('Categories and Properties')) )
+		self.categoryAndPropertiesLabel = wx.StaticText( self, label='{}:'.format(_('Categories and Properties')) )
 		self.categoryAndProperties = wx.StaticText( self )
 		rows += 1
 
-		self.statusLabel = wx.StaticText( self, label=u'{}:'.format(_('Status')) )
+		self.statusLabel = wx.StaticText( self, label='{}:'.format(_('Status')) )
 		self.statusName = wx.StaticText( self )
 		rows += 1
 
-		self.errorLabel = wx.StaticText( self, label=u'{}:'.format(_('Errors')) )
+		self.errorLabel = wx.StaticText( self, label='{}:'.format(_('Errors')) )
 		self.errorName = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_READONLY, size=(-1,128) )
 		rows += 1
 		
@@ -389,7 +389,7 @@ class SummaryPage(adv.WizardPageSimple):
 			cp.append( _('Read Categories') )
 		if hasPropertiesSheet:
 			cp.append( _('Read Properties') )
-		self.categoryAndProperties.SetLabel( u', '.join(cp) )
+		self.categoryAndProperties.SetLabel( ', '.join(cp) )
 		
 		self.initCategoriesFromExcel.SetLabel( _('Yes') if initCategoriesFromExcel else _('No') )
 		
@@ -403,7 +403,7 @@ class SummaryPage(adv.WizardPageSimple):
 		
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		
-		self.statusName.SetLabel( _('Success!') if infoLen and not errors else u'{} {}'.format(len(errors), _('Error') if len(errors) == 1 else _('Errors')) )
+		self.statusName.SetLabel( _('Success!') if infoLen and not errors else '{} {}'.format(len(errors), _('Error') if len(errors) == 1 else _('Errors')) )
 		self.errorName.SetValue( errStr )
 		
 		self.copyErrorsToClipboard.Enable( bool(self.errors) )
@@ -814,7 +814,7 @@ class ExcelLink:
 						# Normalize and encode the gender information.
 						try:
 							genderFirstChar = '{}'.format(data[field] or 'Open').strip().lower()[:1]
-							if genderFirstChar in 'mhu':	# Men, Male, Hommes, Uomini
+							if genderFirstChar in 'mh':	# Men, Male, Hommes, Uomini
 								data[field] = 'Men'
 							elif genderFirstChar in 'wlfd':	# Women, Ladies, Female, Femmes, Donne
 								data[field] = 'Women'
@@ -867,7 +867,7 @@ class ExcelLink:
 			if num in numRow:
 				errors.append( (
 						num,
-						u'{}: {}  {}: {}  {} {}.'.format(
+						'{}: {}  {}: {}  {} {}.'.format(
 							_('Row'), row,
 							_('Duplicate Bib#'), num,
 							_('Same as row'), numRow[num],
@@ -881,7 +881,7 @@ class ExcelLink:
 				if tField not in data and tField == 'Tag':		# Don't check for missing Tag2s as they are optional.
 					errors.append( (
 							num,
-							u'{}: {}  {}: {}  {}: {}'.format(
+							'{}: {}  {}: {}  {}: {}'.format(
 								_('Row'), row,
 								_('Bib'), num, 
 								_('Missing field'), tField,
@@ -890,12 +890,12 @@ class ExcelLink:
 					)
 					continue
 					
-				tag = '{}'.format(data.get(tField,u'')).lstrip('0').upper()
+				tag = '{}'.format(data.get(tField,'')).lstrip('0').upper()
 				if tag:
 					if tag in tRow:
 						errors.append( (
 								num,
-								u'{}: {}  {}: {} {}.  {} {}: {}  {}: {}'.format(
+								'{}: {}  {}: {} {}.  {} {}: {}  {}: {}'.format(
 									_('Row'), row,
 									_('Duplicate Field'), tField, tag,
 									_('Same as'),
@@ -910,7 +910,7 @@ class ExcelLink:
 					if tField == 'Tag':					# Don't check for empty Tag2s as they are optional.
 						errors.append( (
 								num,
-								u'{}: {}  {}: {}  {}: {}'.format(
+								'{}: {}  {}: {}  {}: {}'.format(
 									_('Row'), row,
 									_('Bib'), num,
 									_('Missing Field'), tField,
@@ -1004,18 +1004,18 @@ class BibInfo:
 		except ValueError:
 			data = {}
 		
-		data['Name'] = u', '.join( v for v in (data.get('LastName',None), data.get('FirstName',None)) if v )
+		data['Name'] = ', '.join( v for v in (data.get('LastName',None), data.get('FirstName',None)) if v )
 		
 		category = self.race.getCategory( bib )
-		data['Wave'] = category.name if category else u''
+		data['Wave'] = category.name if category else ''
 		return data
 		
 	def bibField( self, bib ):
 		data = self.getData( bib )
 		if not data:
 			return '{}'.format(bib)
-		values = [(u'<strong>{}</strong>' if 'Name' in f else u'{}').format(cgi.escape(data[f])) for f in self.fields if data.get(f, None)]
-		return u'{}: {}'.format(bib, u', '.join(values))
+		values = [('<strong>{}</strong>' if 'Name' in f else '{}').format(escape(data[f])) for f in self.fields if data.get(f, None)]
+		return '{}: {}'.format(bib, ', '.join(values))
 	
 	def bibList( self, bibs ):
 		bibs = [b for b in bibs if b]
@@ -1048,18 +1048,18 @@ class BibInfo:
 							with tag( html, 'td', {'style':"text-align:left"}):
 								if 'Name' in f:
 									with tag( html,'strong'):
-										html.write( cgi.escape(data.get(f,u'')) )
+										html.write( escape(data.get(f,'')) )
 								else:
-									html.write( cgi.escape(data.get(f,u'')) )
+									html.write( escape(data.get(f,'')) )
 		return html.getvalue()
 		
 	def getSubValue( self, subkey ):
 		if subkey.startswith('BibTable'):					# {=BibTable 132,110,98}
-			return self.bibTable( reSeparators.sub(u' ', subkey).split()[1:] )
+			return self.bibTable( reSeparators.sub(' ', subkey).split()[1:] )
 		elif subkey.startswith('BibList'):					# {=BibList 132,110,98}
-			return self.bibList( reSeparators.sub(u' ', subkey).split()[1:] )
+			return self.bibList( reSeparators.sub(' ', subkey).split()[1:] )
 		elif subkey.startswith('Bib'):						# {=Bib 111}
-			return self.bibField( u' '.join(reSeparators.sub(u' ', subkey).split()[1:]) )
+			return self.bibField( ' '.join(reSeparators.sub(' ', subkey).split()[1:]) )
 		return None
 
 if __name__ == '__main__':

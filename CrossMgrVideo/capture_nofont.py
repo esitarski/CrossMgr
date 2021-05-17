@@ -228,7 +228,7 @@ class Device(object):
 		self.control.Run()
 
 		try:
-			while 1:
+			while True:
 				# call the function directly, as the in/out semantics of
 				# argtypes isn't working here.
 				try:

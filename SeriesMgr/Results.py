@@ -3,7 +3,7 @@ import wx.grid as gridlib
 
 import os
 import io
-import cgi
+from html import escape
 from urllib.parse import quote
 import sys
 import base64
@@ -408,10 +408,10 @@ function sortTableId( iTable, iCol ) {
 						write( u'<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
-							write( cgi.escape(model.name) )
+							write( escape(model.name) )
 						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
 							if model.organizer:
-								write( u'by {}'.format(cgi.escape(model.organizer)) )
+								write( u'by {}'.format(escape(model.organizer)) )
 							with tag(html, 'span', {'style': 'font-size: 60%'}):
 								write( '&nbsp;' * 5 )
 								write( u' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
@@ -426,7 +426,7 @@ function sortTableId( iTable, iCol ) {
 					for iTable, categoryName in enumerate(categoryNames):
 						with tag(html, 'option', {'value':iTable} ):
 							with tag(html, 'span'):
-								write( '{}'.format(cgi.escape(categoryName)) )
+								write( '{}'.format(escape(categoryName)) )
 			
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
@@ -444,7 +444,7 @@ function sortTableId( iTable, iCol ) {
 					write( u'<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( cgi.escape(categoryName) )
+						write( escape(categoryName) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -455,7 +455,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( '{}'.format(cgi.escape(col).replace('\n', '<br/>\n')) )
+										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -467,9 +467,9 @@ function sortTableId( iTable, iCol ) {
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( '{}'.format(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
-											write( '{}'.format(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
 											write( u'<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):

@@ -83,7 +83,7 @@ Trek Factory Racing'''.split( '\n' )
 					'bib':			0,
 					'time':			tNow,
 					'raceSeconds':	(tNow - tStart).total_seconds(),
-					'race_name':		u'Client Race Test',
+					'race_name':	'Client Race Test',
 				}
 			)
 		success, error = PhotoSendRequests( requests, 'photo' )
@@ -102,7 +102,7 @@ Trek Factory Racing'''.split( '\n' )
 			print( error )
 		time.sleep( random.random() * 2 )
 	
-	while 1:
+	while True:
 		requests = []
 		for i in range(random.randint(0, 5)):
 			tNow = now()
@@ -111,7 +111,7 @@ Trek Factory Racing'''.split( '\n' )
 					'bib':			int(199*random.random()+1),
 					'time':			tNow,
 					'raceSeconds':	(tNow - tStart).total_seconds(),
-					'race_name':		u'Client Race Test',
+					'race_name':	'Client Race Test',
 					'first_name':	choice(first_names),
 					'last_name':		choice(last_names),
 					'team':			choice(teams),

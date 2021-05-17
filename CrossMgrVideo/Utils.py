@@ -2,7 +2,6 @@
 # Set translation locale.
 #
 import wx
-import six
 locale = wx.Locale()
 
 from Version import AppVerName
@@ -11,10 +10,7 @@ initTranslationCalled = False
 def initTranslation():
 	global initTranslationCalled
 	if not initTranslationCalled:
-		if six.PY2:
-			gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
-		else:
-			gettext.install(AppVerName.split(None, 1), './locale')
+		gettext.install(AppVerName.split(None, 1), './locale')
 		initTranslationCalled = True
 		
 initTranslation()
@@ -210,7 +206,7 @@ def GetPngBitmap( fname ):
 	
 invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
 def RemoveDisallowedFilenameChars( filename ):
-	cleanedFilename = unicodedata.normalize('NFKD', u'{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
+	cleanedFilename = unicodedata.normalize('NFKD', '{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
 	cleanedFilename = cleanedFilename.replace( '/', '_' ).replace( '\\', '_' )
 	return invalidFilenameChars.sub( '', cleanedFilename )
 #------------------------------------------------------------------------

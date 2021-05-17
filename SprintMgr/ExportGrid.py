@@ -4,7 +4,7 @@ import xlsxwriter
 import Utils
 import Model
 import math
-import cgi
+from html import escape
 import base64
 from FitSheetWrapper import FitSheetWrapperXLSX
 from contextlib import contextmanager
@@ -64,13 +64,13 @@ def writeHtmlHeader( buf, title ):
 				buf.write( '&nbsp;&nbsp;&nbsp;&nbsp;' )
 			with tag(buf, 'td'):
 				with tag(buf, 'span', {'id': 'idRaceName'}):
-					buf.write( cgi.escape(title).replace('\n', '<br/>\n') )
+					buf.write( escape(title).replace('\n', '<br/>\n') )
 				if Model.model.organizer:
 					with tag(buf, 'br'):
 						pass
 					with tag(buf, 'span', {'id': 'idOrganizer'}):
 						buf.write( 'by ' )
-						buf.write( cgi.escape(Model.model.organizer) )
+						buf.write( escape(Model.model.organizer) )
 
 class ExportGrid:
 	PDFLineFactor = 1.10
@@ -326,14 +326,14 @@ class ExportGrid:
 				with tag(buf, 'tr'):
 					for col in self.colnames:
 						with tag(buf, 'th'):
-							buf.write( cgi.escape(col).replace('\n', '<br/>\n') )
+							buf.write( escape(col).replace('\n', '<br/>\n') )
 			with tag(buf, 'tbody'):
 				for row in range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr'):
 						for col in range(len(self.colnames)):
 							with tag(buf, 'td', {'class':'rAlign'} if col not in self.leftJustifyCols else {}):
 								try:
-									buf.write( cgi.escape(self.data[col][row]).replace('\n', '<br/>\n') )
+									buf.write( escape(self.data[col][row]).replace('\n', '<br/>\n') )
 								except IndexError:
 									buf.write( '&nbsp;' )
 									

@@ -70,7 +70,7 @@ def PrintPhoto( parent, bitmap ):
 
 	if not printer.Print(parent, printout, True):
 		if printer.GetLastError() == wx.PRINTER_ERROR:
-			wx.MessageBox( u'\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"))
+			wx.MessageBox( '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"))
 	else:
 		printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -81,7 +81,7 @@ class PhotoDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
 		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
 			
-		super().__init__( parent, id, size=size, style=style, title=_('Photo: ***Left-click and Drag in the Photo to Zoom***') )
+		super().__init__( parent, id, size=size, style=style, title=_('Photo: *** Left-click and Drag in the Photo to Zoom In ***') )
 		
 		self.clear()
 		
@@ -98,20 +98,20 @@ class PhotoDialog( wx.Dialog ):
 		self.timestamp.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		
-		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u23EA' )
+		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EA' )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
-		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C0' )
+		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C0' )
 		self.playerReverse.Bind( wx.EVT_BUTTON, lambda e: self.playReverse() )
-		self.playerForward = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B6' )
+		self.playerForward = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B6' )
 		self.playerForward.Bind( wx.EVT_BUTTON, lambda e: self.play() )
-		self.playerStop = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25A0' )
+		self.playerStop = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25A0' )
 		self.playerStop.Bind( wx.EVT_BUTTON, lambda e: self.playStop() )		
-		self.playerForwardToEnd = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u23E9' )
+		self.playerForwardToEnd = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23E9' )
 		self.playerForwardToEnd.Bind( wx.EVT_BUTTON, lambda e: self.playForwardToEnd() )
 		
-		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C1' )
+		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C1' )
 		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
-		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B7' )
+		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B7' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
 		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
@@ -128,8 +128,8 @@ class PhotoDialog( wx.Dialog ):
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
-		self.contrast = wx.ToggleButton( self, label='Contrast', style=wx.BU_EXACTFIT)
-		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
+		self.contrast = wx.Button( self, label='Contrast')
+		self.contrast.Bind( wx.EVT_BUTTON, self.onContrast )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
@@ -290,7 +290,7 @@ class PhotoDialog( wx.Dialog ):
 			self.Refresh()
 	
 	def onContrast( self, event ):
-		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) if self.contrast.GetValue() else self.getPhoto() )
+		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) )
 	
 	def onBrightness( self, event ):
 		pass

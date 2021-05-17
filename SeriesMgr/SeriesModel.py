@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-import cgi
+from html import escape
 import copy
 import operator
 import functools
@@ -558,8 +558,8 @@ class SeriesModel( object ):
 			('author', 'Edward Sitarski'),
 			('copyright', "Edward Sitarski, 2013-{}".format(datetime.datetime.now().year)),
 			('description', 'Series: {}, Races: {}'.format(
-					cgi.escape(self.name, quote=True),
-					u';'.join('{}'.format(cgi.escape(n, quote=True)) for n in self.getRaceNames())
+					escape(self.name, quote=True),
+					';'.join('{}'.format(escape(n, quote=True)) for n in self.getRaceNames())
 				)
 			),
 			('generator', "SeriesMgr"),

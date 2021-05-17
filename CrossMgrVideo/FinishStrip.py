@@ -1,7 +1,6 @@
 import wx
 import os
 import io
-import six
 import sys
 import glob
 import math
@@ -25,13 +24,8 @@ def PilImageToWxImage(pil, alpha=False):
 
 	return image
 
-if six.PY2:
-	StringIO = six.StringIO
-	def imageFromJpeg( jpeg ):
-		return wx.Image( StringIO(jpeg), wx.BITMAP_TYPE_JPEG )
-else:
-	def imageFromJpeg( jpeg ):
-		return wx.Image( io.BytesIO(jpeg), wx.BITMAP_TYPE_JPEG )
+def imageFromJpeg( jpeg ):
+	return wx.Image( io.BytesIO(jpeg), wx.BITMAP_TYPE_JPEG )
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -443,23 +437,23 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
 		szs = wx.BoxSizer( wx.HORIZONTAL )
-		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Stretch'))), flag=wx.ALIGN_CENTRE_VERTICAL )
+		szs.Add( wx.StaticText(self, label='{}'.format(_('Stretch'))), flag=wx.ALIGN_CENTRE_VERTICAL )
 		szs.Add( self.stretchSlider, 1, flag=wx.EXPAND )
-		szs.Add( wx.StaticText(self, label=u'{}'.format(_('Zoom'))), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
+		szs.Add( wx.StaticText(self, label='{}'.format(_('Zoom'))), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		szs.Add( zs )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction, flag=wx.ALIGN_CENTRE_VERTICAL )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
-		hs.Add( wx.StaticText(self, label=u'\n'.join([
+		hs.Add( wx.StaticText(self, label='\n'.join([
 					'To Pan: Click and Drag',
 					'To Stretch: Mousewheel',
 				])
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
-		hs.Add( wx.StaticText(self, label=u'\n'.join([
-					'To Zoom: Ctrl+Mousewheel',
+		hs.Add( wx.StaticText(self, label='\n'.join([
+					'To Zoom In: Ctrl+Mousewheel',
 					'Show Frame: Right-click',
 				])
 			),
@@ -578,7 +572,7 @@ class FinishStripPanel( wx.Panel ):
 		
 		self.stretchSlider.SetRange( *self.getSpeedPixelsPerSecondMinMax() )
 		self.scrollCallback()
-		self.frameCount.SetLabel( '{} Frames'.format(len(tsJpgs)) if tsJpgs else u'' )
+		self.frameCount.SetLabel( '{} Frames'.format(len(tsJpgs)) if tsJpgs else '' )
 		
 	def GetTsJpgs( self ):
 		return self.finish.tsJpgs
@@ -625,7 +619,7 @@ class FinishStripDialog( wx.Dialog ):
 		}
 
 if __name__ == '__main__':
-	from Database import Database
+	from Database import GlobalDatabase
 	app = wx.App(False)
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
@@ -637,7 +631,7 @@ if __name__ == '__main__':
 	fs = FinishStripPanel( mainWin )
 	mainWin.Show()
 	
-	tsJpgs = Database().getLastPhotos( 90 )
+	tsJpgs = GlobalDatabase().getLastPhotos( 90 )
 	fs.SetTsJpgs( tsJpgs, tsJpgs[len(tsJpgs)//2][0], info={} )
 	
 	#fsd = FinishStripDialog( mainWin )

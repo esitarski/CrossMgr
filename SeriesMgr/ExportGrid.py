@@ -4,7 +4,7 @@ import xlwt
 import Utils
 import Model
 import math
-import cgi
+from html import escape
 import base64
 import datetime
 from FitSheetWrapper import FitSheetWrapper
@@ -295,27 +295,27 @@ class ExportGrid( object ):
 					buf.write( '&nbsp;&nbsp;&nbsp;&nbsp;' )
 				with tag(buf, 'td'):
 					with tag(buf, 'span', {'id': 'idRaceName'}):
-						buf.write( cgi.escape(self.title).replace('\n', '<br/>\n') )
+						buf.write( escape(self.title).replace('\n', '<br/>\n') )
 					if Model.race.organizer:
 						with tag(buf, 'br'):
 							pass
 						with tag(buf, 'span', {'id': 'idOrganizer'}):
 							buf.write( 'by ' )
-							buf.write( cgi.escape(Model.race.organizer) )
+							buf.write( escape(Model.race.organizer) )
 		
 		with tag(buf, 'table', {'class': 'results'} ):
 			with tag(buf, 'thead'):
 				with tag(buf, 'tr'):
 					for col in self.colnames:
 						with tag(buf, 'th'):
-							buf.write( cgi.escape(col).replace('\n', '<br/>\n') )
+							buf.write( escape(col).replace('\n', '<br/>\n') )
 			with tag(buf, 'tbody'):
 				for row in range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr'):
 						for col in range(self.grid.GetNumberCols()):
 							with tag(buf, 'td', {'class':'rAlign'} if col not in self.leftJustifyCols else {}):
 								try:
-									buf.write( cgi.escape(self.data[col][row]).replace('\n', '<br/>\n') )
+									buf.write( escape(self.data[col][row]).replace('\n', '<br/>\n') )
 								except IndexError:
 									buf.write( '&nbsp;' )
 									

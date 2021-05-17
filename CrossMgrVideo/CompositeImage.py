@@ -1,16 +1,15 @@
-import six
-from Database import Database
-from six.moves.queue import Empty
+from Database import GlobalDatabase
+from queue import Empty
 
 from MakeComposite import MakeComposite
 
 def CompositeImage( qRequest, qReply ):
 	
-	while 1:
+	while True:
 		message = qRequest.get()
 		
 		# Skip all but the last message in case we fall behind.
-		while 1:
+		while True:
 			if message[0] == 'terminate':
 				return
 			try:
@@ -19,7 +18,7 @@ def CompositeImage( qRequest, qReply ):
 				break
 		
 		fnameDB, tsLower, tsUpper, leftToRight, pixelsPerSec, scale = message[1:]
-		tsJpgs = Database(fnameDB, False).getPhotos(tsLower, tsUpper)
+		tsJpgs = GlobalDatabase(fnameDB).getPhotos(tsLower, tsUpper)
 		if not tsJpgs:
 			qReply.put( ('composite', None, None, None) )
 			continue
