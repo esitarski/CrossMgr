@@ -1,6 +1,6 @@
 import wx
 import os
-import html
+from html import escape
 import math
 import datetime
 import Utils
@@ -290,9 +290,9 @@ class GrowTable:
 							with tag( html, 'td', attrs ):
 								if (attr & self.bold) and value:
 									with tag( html, 'strong' ):
-										html.write( html.escape(value) )
+										html.write( escape(value) )
 								else:
-									html.write( html.escape(value) )
+									html.write( escape(value) )
 
 def getTitleGrowTable( includeApprovedBy = True ):
 	race = Model.race

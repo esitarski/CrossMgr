@@ -2,7 +2,7 @@ import os
 import re
 import io
 import wx
-import html
+from html import escape
 import sys
 import math
 from math import radians, degrees, sin, cos, asin, sqrt, atan2, exp, modf, pi
@@ -197,8 +197,8 @@ def CreateGPX( courseName, gpsPoints ):
 		'For more information, see http://sites.google.com/site/crossmgrsoftware',
 		'',
 		'Created:  {}'.format(datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )),
-		'User:     {}'.format(html.escape(getpass.getuser())),
-		'Computer: {}'.format(html.escape(socket.gethostname())),
+		'User:     {}'.format(escape(getpass.getuser())),
+		'Computer: {}'.format(escape(socket.gethostname())),
 		'', ] )
 	) )
 	
@@ -387,8 +387,8 @@ class GeoTrack:
 			'For more information, see http://sites.google.com/site/crossmgrsoftware',
 			'',
 			'Created:  {}'.format(datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )),
-			'User:     {}'.format(html.escape(getpass.getuser())),
-			'Computer: {}'.format(html.escape(socket.gethostname())),
+			'User:     {}'.format(escape(getpass.getuser())),
+			'Computer: {}'.format(escape(socket.gethostname())),
 			'', ] )
 		) )
 		

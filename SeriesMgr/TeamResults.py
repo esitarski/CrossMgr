@@ -3,7 +3,7 @@ import wx.grid as gridlib
 
 import os
 import io
-import cgi
+from html import escape
 from urllib.parse import quote
 import sys
 import urllib
@@ -61,17 +61,17 @@ def formatTeamResults( scoreByPoints, rt ):
 	if scoreByPoints:
 		# The first value is the team score.  Subsequent values are the individual ranks.
 		if not rt[0]:
-			return u'';
-		return u'{} ({})'.format(rt[0], Utils.ordinal(rt[1]))
+			return '';
+		return '{} ({})'.format(rt[0], Utils.ordinal(rt[1]))
 	else:
 		rt = [r for r in rt if r.time]
 		if not rt:
-			return u''
+			return ''
 		total = sum( r.time for r in rt )
 		if len(rt) == 1:
 			r = rt[0]
-			return u'{}'.format(Utils.formatTime(r.time))
-		return u'{} = {}'.format(Utils.formatTime(total), '+'.join( u'{}'.format(Utils.formatTime(r.time)) for r in rt) )
+			return '{}'.format(Utils.formatTime(r.time))
+		return '{} = {}'.format(Utils.formatTime(total), '+'.join( '{}'.format(Utils.formatTime(r.time)) for r in rt) )
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -123,7 +123,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 										generator="SeriesMgr")):
 				pass
 			with tag(html, 'style', dict( type="text/css")):
-				write( u'''
+				write( '''
 body{ font-family: sans-serif; }
 
 h1{ font-size: 250%; }
@@ -295,8 +295,8 @@ hr { clear: both; }
 ''')
 
 			with tag(html, 'script', dict( type="text/javascript")):
-				write( u'\nvar catMax={};\n'.format( len(categoryNames) ) )
-				write( u'''
+				write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
+				write( '''
 function removeClass( classStr, oldClass ) {
 	var classes = classStr.split( ' ' );
 	var ret = [];
@@ -414,13 +414,13 @@ function sortTableId( iTable, iCol ) {
 			with tag(html, 'table'):
 				with tag(html, 'tr'):
 					with tag(html, 'td', dict(valign='top')):
-						write( u'<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
+						write( '<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
-							write( cgi.escape(model.name + ' Team Results') )
+							write( escape(model.name + ' Team Results') )
 						if model.organizer:
 							with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
-								write( u'by {}'.format(cgi.escape(model.organizer)) )
+								write( 'by {}'.format(escape(model.organizer)) )
 			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
 				with tag(html, 'label', {'class':'green'} ):
 					with tag(html, 'input', {
@@ -429,7 +429,7 @@ function sortTableId( iTable, iCol ) {
 							'checked':"true",
 							'onclick':"selectCategory(-1);"} ):
 						with tag(html, 'span'):
-							write( u'All' )
+							write( 'All' )
 				for iTable, categoryName in enumerate(categoryNames):
 					with tag(html, 'label', {'class':'green'} ):
 						with tag(html, 'input', {
@@ -437,7 +437,7 @@ function sortTableId( iTable, iCol ) {
 								'name':"categorySelect",
 								'onclick':"selectCategory({});".format(iTable)} ):
 							with tag(html, 'span'):
-								write( '{}'.format(cgi.escape(categoryName)) )
+								write( '{}'.format(escape(categoryName)) )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
@@ -448,14 +448,14 @@ function sortTableId( iTable, iCol ) {
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 				
-				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
+				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
-					write( u'<p/>')
-					write( u'<hr/>')
+					write( '<p/>')
+					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( cgi.escape(categoryName) )
+						write( escape(categoryName) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -466,7 +466,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( '{}'.format(cgi.escape(col).replace('\n', '<br/>\n')) )
+										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -476,12 +476,12 @@ function sortTableId( iTable, iCol ) {
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
 										if r[2]:
-											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( '{}'.format(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
+												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
-											write( '{}'.format(cgi.escape(r[1]).replace('\n', '<br/>\n')) )
+											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
-											write( u'<br/>' )
+											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( '{}'.format(r[0].strftime('%b %d, %Y')) )
 						with tag(html, 'tbody'):
@@ -490,7 +490,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
 									with tag(html, 'td'):
-										write( '{}'.format(team or u'') )
+										write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(result or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
@@ -502,7 +502,7 @@ function sortTableId( iTable, iCol ) {
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
-					write( u'Bonus Points added to Points for Place.' )
+					write( 'Bonus Points added to Points for Place.' )
 					
 			#-----------------------------------------------------------------------------
 			if scoreByPoints:
@@ -517,7 +517,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'table' ):
 						for ps in pointsStructuresList:
 							with tag(html, 'tr'):
-								for header in [ps.name, u'Races Scored with {}'.format(ps.name)]:
+								for header in [ps.name, 'Races Scored with {}'.format(ps.name)]:
 									with tag(html, 'th'):
 										write( header )
 							
@@ -544,7 +544,7 @@ function sortTableId( iTable, iCol ) {
 						pass
 						
 					with tag(html, 'h2'):
-						write( u'Tie Breaking Rules' )
+						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
 						write( u"If two or more teams are tied on points, the following rules are applied in sequence until the tie is broken:" )
@@ -560,7 +560,7 @@ function sortTableId( iTable, iCol ) {
 							if model.numPlacesTieBreaker == 1:
 								finishStr = finishOrdinals[0]
 							else:
-								finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
+								finishStr = ', '.join(finishOrdinals[:-1]) + ' then ' + finishOrdinals[-1]
 							with tag(html, 'li'):
 								write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
 									finishStr,
@@ -573,7 +573,7 @@ function sortTableId( iTable, iCol ) {
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
-					write( u'Powered by CrossMgr' )
+					write( 'Powered by CrossMgr' )
 	
 	html.close()
 
@@ -695,7 +695,7 @@ class TeamResults(wx.Panel):
 	def doCellClick( self, event ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(u'{}...'.format(_('Copy Team to Clipboard')),	wx.NewId(), self.onCopyTeam),
+				('{}...'.format(_('Copy Team to Clipboard')),	wx.NewId(), self.onCopyTeam),
 			]
 			for p in self.popupInfo:
 				if p[2]:
@@ -794,7 +794,7 @@ class TeamResults(wx.Panel):
 		)
 		results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 		
-		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
+		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
@@ -914,7 +914,7 @@ class TeamResults(wx.Panel):
 			ws.write_merge( rowCur, rowCur, 0, 8, model.name, headerStyle )
 			rowCur += 1
 			if model.organizer:
-				ws.write_merge( rowCur, rowCur, 0, 8, u'by {}'.format(model.organizer), headerStyle )
+				ws.write_merge( rowCur, rowCur, 0, 8, 'by {}'.format(model.organizer), headerStyle )
 				rowCur += 1
 			rowCur += 1
 			colCur = 0
@@ -969,7 +969,7 @@ class TeamResults(wx.Panel):
 		try:
 			getHtml( htmlfileName )
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, u'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
+			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
@@ -1018,9 +1018,9 @@ class TeamResults(wx.Panel):
 			try:
 				subprocess.check_call( cmd, shell=True )
 			except subprocess.CalledProcessError as e:
-				Utils.MessageOK( self, u'{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
+				Utils.MessageOK( self, '{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
 			except Exception as e:
-				Utils.MessageOK( self, u'{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
+				Utils.MessageOK( self, '{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
 		
 ########################################################################
 
