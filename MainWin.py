@@ -2102,11 +2102,8 @@ class MainWin( wx.Frame ):
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
 				self.menuSetContactEmail()
 			
-		d = BatchPublishPropertiesDialog( self )
-		ret = d.ShowModal()
-		d.Destroy()
-		if ret != wx.ID_CANCEL:
-			Utils.MessageOK(self, _('Publish Complete'), _('Publish Complete') )
+		with BatchPublishPropertiesDialog( self ) as dialog:
+			ret = dialog.ShowModal()
 		
 	@logCall
 	def menuPublishHtmlRaceResults( self, event=None, silent=False ):
@@ -3124,7 +3121,9 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuPublishAsRaceDB( self, event=None, silent=False ):
-		self.raceDBUploadDialog.doUpload( silent=silent )
+		self.raceDBUploadDialog.doUpload( silent=True )
+		if not silent:
+			self.raceDBUploadDialog.ShowModal()
 
 	@logCall
 	def menuCloseRace(self, event ):

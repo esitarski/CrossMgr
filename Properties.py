@@ -1045,7 +1045,6 @@ def doBatchPublish( iAttr=None, silent=True ):
 	ftpFiles = []
 	allFiles = []
 	
-	wait = wx.BusyCursor()
 	for i, attr in enumerate(batchPublishAttr):
 		if iAttr is not None and i != iAttr:
 			continue
@@ -1059,6 +1058,7 @@ def doBatchPublish( iAttr=None, silent=True ):
 					if v & 2:
 						ftpFiles.append( f )
 	
+	wait = wx.BusyCursor()
 	if iAttr is None:
 		publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)
 		if publishFormatBikeReg == 1:
@@ -1134,7 +1134,7 @@ def doBatchPublish( iAttr=None, silent=True ):
 				Utils.MessageOK( mainWin, message, _('Post Publish Cmd Error')  )
 			Utils.writeLog( message )
 	
-	if not silent and iAttr is not None:
+	if silent and iAttr is None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
 
 class BatchPublishPropertiesDialog( wx.Dialog ):

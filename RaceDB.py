@@ -409,7 +409,7 @@ class RaceDBUpload( wx.Dialog ):
 		if race:
 			headerText = '{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
 		self.header.SetLabel( headerText )
-
+		
 	def doUpload( self, event=None, silent=False ):
 		busy = wx.BusyCursor()
 		
