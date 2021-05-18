@@ -443,6 +443,7 @@ class RaceDBUpload( wx.Dialog ):
 			resultText = 'url="{}"'.format( url ) + '\n' + resultText
 		
 		self.uploadStatus.SetValue( resultText )
+		
 		del busy
 		if not silent:
 			Utils.MessageOK( self, '{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
