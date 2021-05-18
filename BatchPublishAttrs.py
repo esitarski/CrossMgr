@@ -1,6 +1,6 @@
-import Utils
 import os
 from collections import namedtuple
+import Utils
 
 BatchAttr = namedtuple('BatchAttr', 'name uiname filecode func ftp note getFName')
 
@@ -13,6 +13,10 @@ batchPublishAttr = (
 		lambda fnameBase: fnameBase + '.pdf'),
 	BatchAttr('Excel',	_('Excel'), 		'excel', 		'menuPublishAsExcel', True, _('as .xlsx file'),
 		lambda fnameBase: fnameBase + '.xlsx'),
+		
+	BatchAttr('RaceDB',	_('RaceDB'),	None,				'menuPublishAsRaceDB', False, _('upload results to RaceDB database'),
+		None),
+	
 	BatchAttr('USAC',	_('USAC'),			'usacexcel',	'menuExportUSAC', True, _('as .xls upload file'),
 		lambda fnameBase: fnameBase + '-USAC.xls'),
 	BatchAttr('UCI',	_('UCI'),			'uciexcel',		'menuExportUCI', True, _('as .xlsx upload file'),

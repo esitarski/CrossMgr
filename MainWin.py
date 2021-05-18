@@ -340,9 +340,6 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		
-		self.raceDBDialog = None
-		self.raceDBUploadDialog = None
-		
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.ID_ANY )
 		self.secondCount = 0
@@ -3101,21 +3098,33 @@ class MainWin( wx.Frame ):
 		except IndexError:
 			Utils.MessageOK(self, _('No next race found'), _('No next race found'), iconMask=wx.ICON_ERROR )
 
+	@property
+	def raceDBDialog( self ):
+		try:
+			return self._raceDBDialog
+		except AttributeError:
+			self._raceDBDialog = RaceDB( self )
+			return self._raceDBDialog
+
+	@property
+	def raceDBUploadDialog( self ):
+		try:
+			return self._raceDBUploadDialog
+		except AttributeError:
+			self._raceDBUploadDialog = RaceDBUpload( self )
+			return self._raceDBUploadDialog
+			
 	@logCall
 	def menuOpenRaceDB( self, event ):
-		if self.raceDBDialog is None:
-			self.raceDBDialog = RaceDB( self )
-		else:
-			self.raceDBDialog.refresh()
 		self.raceDBDialog.ShowModal()
 
 	@logCall
 	def menuUploadRaceDB( self, event ):
-		if self.raceDBUploadDialog is None:
-			self.raceDBUploadDialog = RaceDBUpload( self )
-		else:
-			self.raceDBUploadDialog.refresh()
 		self.raceDBUploadDialog.ShowModal()
+
+	@logCall
+	def menuPublishAsRaceDB( self, event=None, silent=False ):
+		self.raceDBUploadDialog.doUpload( silent=silent )
 
 	@logCall
 	def menuCloseRace(self, event ):

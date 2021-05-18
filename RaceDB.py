@@ -117,7 +117,7 @@ class RaceDB( wx.Dialog ):
 		self.tree = dataview.TreeListCtrl( self, style=wx.dataview.TL_SINGLE )
 		self.tree.Bind( dataview.EVT_TREELIST_ITEM_ACTIVATED, self.onEventSelect )
 		
-		self.status = wx.StaticText( self, label=u'\n\n' )
+		self.status = wx.StaticText( self, label='\n\n' )
 		
 		isz = (16,16)
 		self.il = wx.ImageList( *isz )
@@ -258,8 +258,8 @@ class RaceDB( wx.Dialog ):
 				events = {'events':[]}
 
 		if not e and not (events and events.get('events',None)):
-			e = u'{} {:04d}-{:02d}-{:02d}'.format( _('No Events found on'), d.GetYear(), d.GetMonth()+1, d.GetDay() )
-		self.status.SetLabel( u'{}'.format(e) if e else u'{}.'.format(_('Events retrieved successfully')) )
+			e = '{} {:04d}-{:02d}-{:02d}'.format( _('No Events found on'), d.GetYear(), d.GetMonth()+1, d.GetDay() )
+		self.status.SetLabel( '{}'.format(e) if e else '{}.'.format(_('Events retrieved successfully')) )
 				
 		competitions = {}
 		for e in events['events']:
@@ -309,7 +309,7 @@ class RaceDB( wx.Dialog ):
 				)
 				self.tree.SetItemText( event, self.startTimeCol, get_tod(e['date_time']) )
 				self.tree.SetItemText( event, self.eventTypeCol, _('Mass Start') if e['event_type'] == 0 else _('Time Trial') )
-				self.tree.SetItemText( event, self.participantCountCol, u'{}'.format(e['participant_count']) )
+				self.tree.SetItemText( event, self.participantCountCol, '{}'.format(e['participant_count']) )
 				
 				tEvent = datetime.datetime.combine( tNow.date(), get_time(e['date_time']) )
 				if eventClosest is None and tEvent > tNow:
@@ -317,14 +317,14 @@ class RaceDB( wx.Dialog ):
 					self.dataSelect = eventData
 				
 				for w in e['waves']:
-					wave = self.tree.AppendItem( event, u'{}: {}'.format(_('Wave'), w['name']), data=eventData )
-					self.tree.SetItemText( wave, self.participantCountCol, u'{}'.format(w['participant_count']) )
+					wave = self.tree.AppendItem( event, '{}: {}'.format(_('Wave'), w['name']), data=eventData )
+					self.tree.SetItemText( wave, self.participantCountCol, '{}'.format(w['participant_count']) )
 					start_offset = w.get('start_offset',None)
 					if start_offset:
 						self.tree.SetItemText( wave, self.startTimeCol, '+' + start_offset )
 					for cat in w['categories']:
 						category = self.tree.AppendItem( wave, cat['name'], data=eventData )
-						self.tree.SetItemText( category, self.participantCountCol, u'{}'.format(cat['participant_count']) )
+						self.tree.SetItemText( category, self.participantCountCol, '{}'.format(cat['participant_count']) )
 			self.tree.Expand( competition )
 						
 		self.tree.Expand( self.root )
@@ -410,7 +410,7 @@ class RaceDBUpload( wx.Dialog ):
 			headerText = '{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
 		self.header.SetLabel( headerText )
 
-	def doUpload( self, event ):
+	def doUpload( self, event=None, silent=False ):
 		busy = wx.BusyCursor()
 		
 		self.uploadStatus.SetValue( _("Starting Upload...") )
@@ -420,31 +420,32 @@ class RaceDBUpload( wx.Dialog ):
 		try:
 			response = PostEventCrossMgr( url )
 		except Exception as e:
-			response = {'errors':[u'{}'.format(e)], 'warnings':[], 'info':[] }
+			response = {'errors':['{}'.format(e)], 'warnings':[], 'info':[] }
 		
 		resultText = ''
 		if 'errors' in response or 'warnings' in response:
 			if 'errors' in response:
-				resultText += (u'\n\n' if resultText else u'') + u'\n'.join( u'{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
+				resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
 			
 			if 'warnings' in response:
-				resultText += (u'\n\n' if resultText else u'') + u'\n'.join( u'{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+				resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
 			
 			if 'info' in response:
-				resultText += (u'\n\n' if resultText else u'') + u'\n'.join( u'{}: {}'.format(_('Info'), i) for i in response.get('info',[]) )			
+				resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Info'), i) for i in response.get('info',[]) )			
 		
 		if 'errors' not in response:
 			if 'warnings' in response:
-				resultText += (u'\n\n' if resultText else u'') + _('Otherwise, Upload Successful.')
+				resultText += ('\n\n' if resultText else '') + _('Otherwise, Upload Successful.')
 			else:
-				resultText += (u'\n\n' if resultText else u'') + _('Upload Successful.')
+				resultText += ('\n\n' if resultText else '') + _('Upload Successful.')
 		
 		if resultText:
 			resultText = 'url="{}"'.format( url ) + '\n' + resultText
 		
 		self.uploadStatus.SetValue( resultText )
 		del busy
-		Utils.MessageOK( self, '{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
+		if not silent:
+			Utils.MessageOK( self, '{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
 	
 if __name__ == '__main__':
 	if True:
@@ -456,8 +457,8 @@ if __name__ == '__main__':
 	else:
 
 		events = GetRaceDBEvents()
-		print ( GetRaceDBEvents( date=datetime.date.today() ) )
-		print ( GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) ) )
+		print( GetRaceDBEvents( date=datetime.date.today() ) )
+		print( GetRaceDBEvents( date=datetime.date.today() - datetime.timedelta(days=2) ) )
 		
 		app = wx.App(False)
 		mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
