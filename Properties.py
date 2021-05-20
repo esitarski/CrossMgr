@@ -212,7 +212,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.rule80MinLapCountSizer.Add( self.rule80MinLapCount2 )
 		
 		self.distanceUnitLabel = wx.StaticText( self, label=_('Distance Unit: ') )
-		self.distanceUnit = wx.Choice( self, choices=[u'km', u'miles'] )
+		self.distanceUnit = wx.Choice( self, choices=['km', 'miles'] )
 		self.distanceUnit.SetSelection( 0 )
 		self.distanceUnitSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.distanceUnitSizer.Add( self.distanceUnit )
@@ -246,7 +246,7 @@ class RaceOptionsProperties( wx.Panel ):
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND
 		
-		blank = lambda : wx.StaticText( self, label=u'' )
+		blank = lambda : wx.StaticText( self, label='' )
 		
 		labelFieldBatchPublish = [
 			(blank(),				0, labelAlign),		(self.timeTrial,				1, fieldAlign),
@@ -347,7 +347,7 @@ class RfidProperties( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		self.chipReaderChoices=[_('JChip/Impinj/Alien'), _('RaceResult'), _('Ultra')] 
 		self.chipReaderType = wx.StaticText( self )
-		hs.Add( wx.StaticText( self, label=u'{}'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( wx.StaticText( self, label='{}'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.chipReaderType, flag=wx.LEFT, border=4)
 		
 		self.setupButton = wx.Button( self, label=_('Setup/Test Rfid Reader...') )
@@ -482,13 +482,13 @@ class WebProperties( wx.Panel ):
 	
 	def setGraphicStats( self ):
 		bitmap = self.headerImageBitmap.GetBitmap()
-		self.graphicSize.SetLabel( u'({}px \u2715 {}px)'.format(bitmap.GetWidth(), bitmap.GetHeight()) )
+		self.graphicSize.SetLabel( '({}px \u2715 {}px)'.format(bitmap.GetWidth(), bitmap.GetHeight()) )
 	
 	def refresh( self ):
 		race = Model.race
 		mainWin = Utils.getMainWin()
 		
-		self.email.SetValue( race.email or u'' )
+		self.email.SetValue( race.email or '' )
 		self.gaTrackingID.SetValue( getattr(race, 'gaTrackingID', '') )
 		
 		if race.headerImage:
@@ -506,7 +506,7 @@ class WebProperties( wx.Panel ):
 	def commit( self ):
 		race = Model.race
 		race.email = self.email.GetValue().strip()
-		race.gaTrackingID = re.sub( u'[^A-Z0-9]+', u'-', self.gaTrackingID.GetValue().strip().upper() )
+		race.gaTrackingID = re.sub( '[^A-Z0-9]+', '-', self.gaTrackingID.GetValue().strip().upper() )
 		race.headerImage = self.headerImage
 
 #------------------------------------------------------------------------------------------------
@@ -627,15 +627,15 @@ class GPXProperties( wx.Panel ):
 		self.geoAnimation.Refresh()
 		
 		if geoTrack:
-			self.distance.SetLabel( u'{:.3f} km, {:.3f} miles'.format(geoTrack.lengthKm, geoTrack.lengthMiles) )
-			self.elevationGain.SetLabel( u'{:.0f} m, {:.0f} ft'.format(geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt) )
-			self.courseType.SetLabel( u'Point to Point' if geoTrack.isPointToPoint else u'Loop' )
-			self.gpsPoints.SetLabel( u'{}'.format( len(geoTrack.gpsPoints) ) )
+			self.distance.SetLabel( '{:.3f} km, {:.3f} miles'.format(geoTrack.lengthKm, geoTrack.lengthMiles) )
+			self.elevationGain.SetLabel( '{:.0f} m, {:.0f} ft'.format(geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt) )
+			self.courseType.SetLabel( 'Point to Point' if geoTrack.isPointToPoint else 'Loop' )
+			self.gpsPoints.SetLabel( '{}'.format( len(geoTrack.gpsPoints) ) )
 		else:
-			self.distance.SetLabel( u'' )
-			self.elevationGain.SetLabel( u'' )
-			self.courseType.SetLabel( u'' )
-			self.gpsPoints.SetLabel( u'' )
+			self.distance.SetLabel( '' )
+			self.elevationGain.SetLabel( '' )
+			self.courseType.SetLabel( '' )
+			self.gpsPoints.SetLabel( '' )
 		
 		self.GetSizer().Layout()
 		
@@ -663,10 +663,10 @@ class CameraProperties( wx.Panel ):
 		
 		self.antennaReadDistance = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, style=wx.ALIGN_RIGHT, min=-500, max=500, value=0, limited=True, limitOnFieldChange=True, size=(60,-1) )
 		self.antennaReadDistance.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
-		self.antennaReadDistanceUnit = wx.StaticText(self, label=u'm')
+		self.antennaReadDistanceUnit = wx.StaticText(self, label='m')
 		self.finishKMH = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, min=0.0, max=999.99, limited=True, limitOnFieldChange=True, value=50.0, size=(30,-1), style=wx.ALIGN_RIGHT )
 		self.finishKMH.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
-		self.finishSpeedUnit = wx.StaticText(self, label=u'km/h')
+		self.finishSpeedUnit = wx.StaticText(self, label='km/h')
 
 		hsCalc = wx.BoxSizer( wx.HORIZONTAL )
 		hsCalc.Add( wx.StaticText(self, label=_('RFID Read Distance before Finish Line')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_CENTRE_VERTICAL )
@@ -795,7 +795,7 @@ class AnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id )
 		
-		self.note = wx.StaticText( self, label=u'\n'.join ([
+		self.note = wx.StaticText( self, label='\n'.join ([
 				_('This only applies to the Track animation.'),
 				_('GPX animation follows the lat/lng coordinates.')
 			])
@@ -836,11 +836,11 @@ class TeamResultsProperties( wx.Panel ):
 		self.teamRankOption = wx.Choice( self, choices=choices )
 		
 		self.nthTeamRiderLabel = wx.StaticText( self, label=_('Nth Rider') )
-		self.nthTeamRider = wx.Choice( self, choices=[u'{}'.format(i) for i in range(1,16)] )
+		self.nthTeamRider = wx.Choice( self, choices=['{}'.format(i) for i in range(1,16)] )
 		self.nthTeamRiderNote = wx.StaticText( self, label=_('for Nth Rider Time') )
 		
 		self.topTeamResultsLabel = wx.StaticText( self, label=_('# Top Results') )
-		self.topTeamResults = wx.Choice( self, choices=[u'{}'.format(i) for i in range(1,16)] )
+		self.topTeamResults = wx.Choice( self, choices=['{}'.format(i) for i in range(1,16)] )
 		self.topTeamResultsNote = wx.StaticText( self, label=_('for Sum Time, Points and Percent') )
 		
 		self.finishPointsStructureLabel = wx.StaticText( self, label=_('Finish Points') )
@@ -913,7 +913,7 @@ class BatchPublishProperties( wx.Panel ):
 		fgs = wx.FlexGridSizer( cols=4, rows=0, hgap=0, vgap=1 )
 		self.widget = []
 		
-		headers = [_('Format'), _('Ftp'), _('Note'), u'']
+		headers = [_('Format'), _('Ftp'), _('Note'), '']
 		for h in headers:
 			st = wx.StaticText(self, label=h)
 			st.SetFont( fontUnderline )
@@ -926,7 +926,7 @@ class BatchPublishProperties( wx.Panel ):
 			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )
 			fgs.Add( attrCB, flag=wx.ALIGN_CENTRE_VERTICAL )
 			if attr.ftp:
-				ftpCB = wx.CheckBox(self, label=u'          ')
+				ftpCB = wx.CheckBox(self, label='          ')
 				fgs.Add( ftpCB, flag=wx.ALIGN_CENTER|wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 			else:
 				ftpCB = None
@@ -944,7 +944,7 @@ class BatchPublishProperties( wx.Panel ):
 		self.bikeRegChoice = wx.RadioBox(
 			self,
 			label=_('BikeReg'),
-			choices=[_('None'), u'CrossResults', u'RoadResults'],
+			choices=[_('None'), 'CrossResults', 'RoadResults'],
 			majorDimension=0
 		)
 		
@@ -967,7 +967,7 @@ class BatchPublishProperties( wx.Panel ):
 		vs.Add( fgs, flag=wx.TOP|wx.LEFT|wx.RIGHT, border=8 )
 		vs.Add( self.bikeRegChoice, flag=wx.ALL, border=4 )
 		vs.Add( pps, flag=wx.ALL|wx.EXPAND, border=4 )
-		vs.Add( wx.StaticText(self,label=u'\n'.join([
+		vs.Add( wx.StaticText(self,label='\n'.join([
 				_('Postpublish Command is run on CrossMgr generated files.  Use %* to insert the file names into the command line.'),
 				_('You can also use Notes variables, for example: {=RaceDate}, {=Organizer} and {=City}.'),
 				_('Scripts can be shell cmds or scripts (.bat, .py, .rb, .perl, ...).'),
@@ -979,10 +979,10 @@ class BatchPublishProperties( wx.Panel ):
 	def onTest( self, iAttr ):
 		if self.testCallback:
 			self.testCallback()
-		
+			
 		attrCB, ftpCB, testBtn = self.widget[iAttr]
 		doFtp = ftpCB and ftpCB.GetValue()
-		doBatchPublish( iAttr )
+		doBatchPublish( iAttr, silent=False )
 		
 		race = Model.race
 		mainWin = Utils.getMainWin()
@@ -1039,19 +1039,18 @@ class BatchPublishProperties( wx.Panel ):
 		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
 		race.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
-def doBatchPublish( silent=False, iAttr=None ):
+def doBatchPublish( iAttr=None, silent=True ):
 	race = Model.race
 	mainWin = Utils.getMainWin()
 	ftpFiles = []
 	allFiles = []
 	
-	wait = wx.BusyCursor()
 	for i, attr in enumerate(batchPublishAttr):
 		if iAttr is not None and i != iAttr:
 			continue
 		v = getattr( race, batchPublishRaceAttr[i], 0 )
 		if v & 1:
-			getattr( mainWin, attr.func )( silent=True )
+			getattr( mainWin, attr.func )( silent=silent )
 			if attr.filecode:
 				files = mainWin.getFormatFilename(attr.filecode)
 				for f in (files if isinstance(files, list) else [files]):
@@ -1059,6 +1058,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 					if v & 2:
 						ftpFiles.append( f )
 	
+	wait = wx.BusyCursor()
 	if iAttr is None:
 		publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)
 		if publishFormatBikeReg == 1:
@@ -1134,7 +1134,7 @@ def doBatchPublish( silent=False, iAttr=None ):
 				Utils.MessageOK( mainWin, message, _('Post Publish Cmd Error')  )
 			Utils.writeLog( message )
 	
-	if not silent and iAttr is not None:
+	if silent and iAttr is None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
 
 class BatchPublishPropertiesDialog( wx.Dialog ):
@@ -1204,9 +1204,9 @@ class NotesProperties( wx.Panel ):
 		ms = wx.BoxSizer( wx.VERTICAL )
 		self.SetSizer( ms )
 		
-		self.notesLabel = wx.StaticText( self, label=u'\n'.join( [
+		self.notesLabel = wx.StaticText( self, label='\n'.join( [
 			_("Notes to appear on Html output:"),
-			_("(notes containing Html tags must start with <html> and end with </html>)")] ) )
+			_("(notes containing Html must start with <html> and end with </html>)")] ) )
 		self.notes = wx.TextCtrl( self, style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB, size=(-1,60) )
 		self.insertButton = wx.Button( self, label=_('Insert Variable...') )
 		self.insertButton.Bind( wx.EVT_BUTTON, self.onInsertClick )
@@ -1223,11 +1223,11 @@ class NotesProperties( wx.Panel ):
 		if not race:
 			return
 		
-		if not hasattr(self, 'menu'):
+		if not hasattr(self, 'men'):
 			self.menu = wx.Menu()
 			self.idVariable = {}
 			for v in sorted(race.getTemplateValues().keys() + ['Bib ', 'BibList ', 'BibTable ']):
-				v = u'{=' + v + u'}'
+				v = '{=' + v + '}'
 				item = self.menu.Append( wx.ID_ANY, v )
 				self.Bind( wx.EVT_MENU, self.onInsertVariable, item )
 				self.idVariable[item.GetId()] = v
@@ -1297,13 +1297,13 @@ class FilesProperties( wx.Panel ):
 		race = Model.race
 		excelLink = getattr(race, 'excelLink', None)
 		if excelLink:
-			self.excelName.SetLabel( u'{}|{}'.format(
+			self.excelName.SetLabel( '{}|{}'.format(
 				os.path.basename(excelLink.fileName) if excelLink.fileName else '',
 				excelLink.sheetName if excelLink.sheetName else '') )
 		else:
 			self.excelName.SetLabel( '' )
-		self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', u'')) )
-		self.templateFileName.SetLabel( os.path.basename(getattr(race, 'templateFileName', u'')) )
+		self.categoriesFile.SetLabel( os.path.basename(getattr(race, 'categoriesImportFile', '')) )
+		self.templateFileName.SetLabel( os.path.basename(getattr(race, 'templateFileName', '')) )
 		
 	def commit( self ):
 		pass
@@ -1436,7 +1436,7 @@ class Properties( wx.Panel ):
 		if fd.ShowModal() == wx.ID_OK:
 			path = fd.GetPath()
 			if not Utils.MessageOKCancel(
-					self, u'{}\n\n{}\n\n{}\n\n{}'.format(
+					self, '{}\n\n{}\n\n{}\n\n{}'.format(
 						_("Load Template"),
 						os.path.basename(path),
 						_("This will replace existing Properties."),
@@ -1453,7 +1453,7 @@ class Properties( wx.Panel ):
 				template.toRace( Model.race, True )
 				self.refresh()
 			except Exception as e:
-				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
+				Utils.MessageOK( self, '{}\n\n{}\n{}'.format(_("Template Load Failure"), e, path), _("Template Load Failure"), wx.ICON_ERROR )
 	
 	def saveTemplateButtonCallback( self, event ):
 		race = Model.race
@@ -1480,9 +1480,9 @@ class Properties( wx.Panel ):
 				template.write( path )
 				race.templateFileName = path
 				self.refresh()
-				Utils.MessageOK( self, u'{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
+				Utils.MessageOK( self, '{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
 			except Exception as e:
-				Utils.MessageOK( self, u'{}\n\n{}\n{}'.format(_("Template Save Failure"), e, path), _("Template Save Failure"), wx.ICON_ERROR )
+				Utils.MessageOK( self, '{}\n\n{}\n{}'.format(_("Template Save Failure"), e, path), _("Template Save Failure"), wx.ICON_ERROR )
 	
 	def setEditable( self, editable = True ):
 		pass
@@ -1721,13 +1721,13 @@ def SetNewFilename( parent, properties ):
 	if newFName != mainWin.fileName:
 		if (
 			not mainWin.fileName or
-			Utils.MessageOKCancel(parent, u'\n\n'.join( [
+			Utils.MessageOKCancel(parent, '\n\n'.join( [
 				_("The filename will be changed to:"),
 				'{}',
 				_("Continue?")]).format(newBaseName), _("Change Filename?"))
 		):
 			if os.path.exists(newFName):
-				if not Utils.MessageOKCancel(parent, u'\n\n'.join( [
+				if not Utils.MessageOKCancel(parent, '\n\n'.join( [
 						_("This file already exists:"),
 						'{}',
 						_("Overwrite?")]).format(newFName), _("Overwrite Existing File?")):

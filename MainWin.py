@@ -341,9 +341,6 @@ class MainWin( wx.Frame ):
 		self.fileName = None
 		self.numSelect = None
 		
-		self.raceDBDialog = None
-		self.raceDBUploadDialog = None
-		
 		# Setup the objects for the race clock.
 		self.timer = wx.Timer( self, id=wx.ID_ANY )
 		self.secondCount = 0
@@ -2115,11 +2112,8 @@ class MainWin( wx.Frame ):
 				_('Set Email Contact'), wx.ICON_EXCLAMATION ):
 				self.menuSetContactEmail()
 			
-		d = BatchPublishPropertiesDialog( self )
-		ret = d.ShowModal()
-		d.Destroy()
-		if ret != wx.ID_CANCEL:
-			Utils.MessageOK(self, _('Publish Complete'), _('Publish Complete') )
+		with BatchPublishPropertiesDialog( self ) as dialog:
+			ret = dialog.ShowModal()
 		
 	@logCall
 	def menuPublishHtmlRaceResults( self, event=None, silent=False ):
@@ -3111,21 +3105,35 @@ class MainWin( wx.Frame ):
 		except IndexError:
 			Utils.MessageOK(self, _('No next race found'), _('No next race found'), iconMask=wx.ICON_ERROR )
 
+	@property
+	def raceDBDialog( self ):
+		try:
+			return self._raceDBDialog
+		except AttributeError:
+			self._raceDBDialog = RaceDB( self )
+			return self._raceDBDialog
+
+	@property
+	def raceDBUploadDialog( self ):
+		try:
+			return self._raceDBUploadDialog
+		except AttributeError:
+			self._raceDBUploadDialog = RaceDBUpload( self )
+			return self._raceDBUploadDialog
+			
 	@logCall
 	def menuOpenRaceDB( self, event ):
-		if self.raceDBDialog is None:
-			self.raceDBDialog = RaceDB( self )
-		else:
-			self.raceDBDialog.refresh()
 		self.raceDBDialog.ShowModal()
 
 	@logCall
 	def menuUploadRaceDB( self, event ):
-		if self.raceDBUploadDialog is None:
-			self.raceDBUploadDialog = RaceDBUpload( self )
-		else:
-			self.raceDBUploadDialog.refresh()
 		self.raceDBUploadDialog.ShowModal()
+
+	@logCall
+	def menuPublishAsRaceDB( self, event=None, silent=False ):
+		self.raceDBUploadDialog.doUpload( silent=True )
+		if not silent:
+			self.raceDBUploadDialog.ShowModal()
 
 	@logCall
 	def menuCloseRace(self, event ):
