@@ -35,16 +35,26 @@ def getHeaderNames():
 def toFloat( n ):
 	try:
 		return float(n)
-	except:
+	except Exception:
 		pass
 	try:
 		return float(n.split()[0])
-	except:
+	except Exception:
 		pass
 	try:
 		return float(n.split(',')[0])
-	except:
+	except Exception:
 		pass
+		
+	if ':' in n:
+		t = 0.0
+		for v in n.split(':'):
+			try:
+				t = t * 60.0 + float(v)
+			except Exception:
+				return -1
+		return t
+	
 	return -1.0
 
 def getHeaderGraphicBase64():
@@ -110,7 +120,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 				with tag(html, 'meta', {'name':k, 'content':v}):
 					pass
 			with tag(html, 'style', dict( type="text/css")):
-				write( u'''
+				write( '''
 body{ font-family: sans-serif; }
 
 h1{ font-size: 250%; }
@@ -286,8 +296,8 @@ hr { clear: both; }
 ''')
 
 			with tag(html, 'script', dict( type="text/javascript")):
-				write( u'\nvar catMax={};\n'.format( len(categoryNames) ) )
-				write( u'''
+				write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
+				write( '''
 function removeClass( classStr, oldClass ) {
 	var classes = classStr.split( ' ' );
 	var ret = [];
@@ -405,16 +415,16 @@ function sortTableId( iTable, iCol ) {
 			with tag(html, 'table'):
 				with tag(html, 'tr'):
 					with tag(html, 'td', dict(valign='top')):
-						write( u'<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
+						write( '<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
 							write( escape(model.name) )
 						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
 							if model.organizer:
-								write( u'by {}'.format(escape(model.organizer)) )
+								write( 'by {}'.format(escape(model.organizer)) )
 							with tag(html, 'span', {'style': 'font-size: 60%'}):
 								write( '&nbsp;' * 5 )
-								write( u' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
+								write( ' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
 
 			with tag(html, 'h3' ):
 				with tag(html, 'label', {'for':'categoryselect'} ):
@@ -422,7 +432,7 @@ function sortTableId( iTable, iCol ) {
 				with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
 					with tag(html, 'option', {'value':-1} ):
 						with tag(html, 'span'):
-							write( u'All' )
+							write( 'All' )
 					for iTable, categoryName in enumerate(categoryNames):
 						with tag(html, 'option', {'value':iTable} ):
 							with tag(html, 'span'):
@@ -437,11 +447,11 @@ function sortTableId( iTable, iCol ) {
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 				
-				headerNames = HeaderNames + [u'{}'.format(r[1]) for r in races]
+				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
-					write( u'<p/>')
-					write( u'<hr/>')
+					write( '<p/>')
+					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
 						write( escape(categoryName) )
@@ -466,31 +476,31 @@ function sortTableId( iTable, iCol ) {
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
 										if r[2]:
-											with tag(html,'a',dict(href=u'{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
+											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
 												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
 										else:
 											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
 										if r[0]:
-											write( u'<br/>' )
+											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( '{}'.format(r[0].strftime('%b %d, %Y')) )
 										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
-											write( u'<br/>' )
+											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
-												write( u'Top {}'.format(len(r[3].pointStructure)) )
+												write( 'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
 							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
 									with tag(html, 'td'):
-										write( '{}'.format(name or u'') )
+										write( '{}'.format(name or '') )
 									with tag(html, 'td', {'class':'noprint'}):
 										if licenseLinkTemplate and license:
-											with tag(html, 'a', {'href':u'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
-												write( '{}'.format(license or u'') )
+											with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+												write( '{}'.format(license or '') )
 										else:
-											write( '{}'.format(license or u'') )
+											write( '{}'.format(license or '') )
 									with tag(html, 'td'):
 										write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
@@ -499,8 +509,8 @@ function sortTableId( iTable, iCol ) {
 										write( '{}'.format(gap or '') )
 									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
 										if rPoints:
-											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if u'**' in u'{}'.format(rPoints) else '')}):
-												write( u'{}'.format(rPoints).replace(u'[',u'').replace(u']',u'').replace(' ', '&nbsp;') )
+											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if '**' in '{}'.format(rPoints) else '')}):
+												write( '{}'.format(rPoints).replace('[','').replace(']','').replace(' ', '&nbsp;') )
 										else:
 											with tag(html, 'td', {'class':'leftBorder noprint'}):
 												pass
@@ -508,16 +518,16 @@ function sortTableId( iTable, iCol ) {
 										if rRank:
 											if rPrimePoints:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( u'({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
+													write( '({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( u'({})&nbsp;-{}'.format(
+													write( '({})&nbsp;-{}'.format(
 														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
 														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
 													)
 											else:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( u'({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+													write( '({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
 											with tag(html, 'td', {'class':'noprint'}):
 												pass
@@ -528,29 +538,29 @@ function sortTableId( iTable, iCol ) {
 					if scoreByTime:
 						with tag(html, 'strong'):
 							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( u'-MM:SS' )
-						write( u' - {}'.format( u'Time Bonus subtracted from Finish Time.') )
+								write( '-MM:SS' )
+						write( ' - {}'.format( 'Time Bonus subtracted from Finish Time.') )
 					elif not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 						with tag(html, 'strong'):
 							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( u'+N' )
-						write( u' - {}'.format( u'Bonus Points added to Points for Place.') )
+								write( '+N' )
+						write( ' - {}'.format( 'Bonus Points added to Points for Place.') )
 					
 			if bestResultsToConsider > 0 and not scoreByTrueSkill:
 				with tag(html, 'p', {'class':'noprint'}):
 					with tag(html, 'strong'):
-						write( u'**' )
-					write( u' - {}'.format( u'Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) ) )
+						write( '**' )
+					write( ' - {}'.format( 'Result not considered.  Not in best of {} scores.'.format(bestResultsToConsider) ) )
 					
 			if hasUpgrades:
 				with tag(html, 'p', {'class':'noprint'}):
 					with tag(html, 'strong'):
-						write( u'pre-upg' )
-					write( u' - {}'.format( u'Points carried forward from pre-upgrade category results (see Upgrades Progression below).' ) )
+						write( 'pre-upg' )
+					write( ' - {}'.format( 'Points carried forward from pre-upgrade category results (see Upgrades Progression below).' ) )
 			
 			if mustHaveCompleted > 0:
 				with tag(html, 'p', {'class':'noprint'}):
-					write( u'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
+					write( 'Participants completing fewer than {} events are not shown.'.format(mustHaveCompleted) )
 			
 			#-----------------------------------------------------------------------------
 			if scoreByTrueSkill:
@@ -562,7 +572,7 @@ function sortTableId( iTable, iCol ) {
 					
 					with tag(html, 'p'):
 						with tag(html, 'h2'):
-							write( u'TrueSkill' )
+							write( 'TrueSkill' )
 						with tag(html, 'p'):
 							write( u"TrueSkill is a ranking method developed by Microsoft Research for the XBox.  ")
 							write( u"TrueSkill maintains an estimation of the skill of each competitor.  Every time a competitor races, the system accordingly changes the perceived skill of the competitor and acquires more confidence about this perception.  This is unlike a regular points system where a points can be accumulated through regular participation: not necessarily representing  overall racing ability.  ")
@@ -579,7 +589,7 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'p'):
 							write("Full details ")
 							with tag(html, 'a', {'href': 'https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/'} ):
-								write(u'here.')
+								write('here.')
 				
 			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 				with tag(html, 'div', {'class':'noprint'} ):
@@ -593,7 +603,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'table' ):
 						for ps in pointsStructuresList:
 							with tag(html, 'tr'):
-								for header in [ps.name, u'Races Scored with {}'.format(ps.name)]:
+								for header in [ps.name, 'Races Scored with {}'.format(ps.name)]:
 									with tag(html, 'th'):
 										write( header )
 							
@@ -620,7 +630,7 @@ function sortTableId( iTable, iCol ) {
 						pass
 						
 					with tag(html, 'h2'):
-						write( u'Tie Breaking Rules' )
+						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
 						write( u"If two or more riders are tied on points, the following rules are applied in sequence until the tie is broken:" )
@@ -636,7 +646,7 @@ function sortTableId( iTable, iCol ) {
 							if model.numPlacesTieBreaker == 1:
 								finishStr = finishOrdinals[0]
 							else:
-								finishStr = u', '.join(finishOrdinals[:-1]) + u' then ' + finishOrdinals[-1]
+								finishStr = ', '.join(finishOrdinals[:-1]) + ' then ' + finishOrdinals[-1]
 							with tag(html, 'li'):
 								write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
 									finishStr,
@@ -660,7 +670,7 @@ function sortTableId( iTable, iCol ) {
 			#-----------------------------------------------------------------------------
 			with tag(html, 'p'):
 				with tag(html, 'a', dict(href='http://sites.google.com/site/crossmgrsoftware')):
-					write( u'Powered by CrossMgr' )
+					write( 'Powered by CrossMgr' )
 	
 	html.close()
 
@@ -782,9 +792,9 @@ class Results(wx.Panel):
 	def doCellClick( self, event ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
-				(u'{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopyName),
-				(u'{}...'.format(_('Copy License to Clipboard')),	wx.NewId(), self.onCopyLicense),
-				(u'{}...'.format(_('Copy Team to Clipboard')),	wx.NewId(), self.onCopyTeam),
+				('{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopyName),
+				('{}...'.format(_('Copy License to Clipboard')),	wx.NewId(), self.onCopyLicense),
+				('{}...'.format(_('Copy Team to Clipboard')),	wx.NewId(), self.onCopyTeam),
 			]
 			for p in self.popupInfo:
 				if p[2]:
@@ -888,26 +898,26 @@ class Results(wx.Panel):
 		
 		results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 		
-		headerNames = HeaderNames + [u'{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else u'') for r in races]
+		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
 		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
-			self.grid.SetCellValue( row, 1, '{}'.format(name or u'') )
+			self.grid.SetCellValue( row, 1, '{}'.format(name or '') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			self.grid.SetCellValue( row, 2, '{}'.format(license or u'') )
-			self.grid.SetCellValue( row, 3, '{}'.format(team or u'') )
+			self.grid.SetCellValue( row, 2, '{}'.format(license or '') )
+			self.grid.SetCellValue( row, 3, '{}'.format(team or '') )
 			self.grid.SetCellValue( row, 4, '{}'.format(points) )
 			self.grid.SetCellValue( row, 5, '{}'.format(gap) )
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
 				self.grid.SetCellValue( row, 6 + q,
-					u'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-					else u'{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
-					else u'{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
-					else u'({})'.format(Utils.ordinal(rRank)) if rRank
-					else u''
+					'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
+					else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
+					else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
+					else '({})'.format(Utils.ordinal(rRank)) if rRank
+					else ''
 				)
 				
 			for c in range( len(headerNames) ):
@@ -1014,7 +1024,7 @@ class Results(wx.Panel):
 			ws.write_merge( rowCur, rowCur, 0, 8, model.name, headerStyle )
 			rowCur += 1
 			if model.organizer:
-				ws.write_merge( rowCur, rowCur, 0, 8, u'by {}'.format(model.organizer), headerStyle )
+				ws.write_merge( rowCur, rowCur, 0, 8, 'by {}'.format(model.organizer), headerStyle )
 				rowCur += 1
 			rowCur += 1
 			colCur = 0
@@ -1078,7 +1088,7 @@ class Results(wx.Panel):
 		try:
 			getHtml( htmlfileName )
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
-			Utils.MessageOK(self, u'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
+			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "%s".\n\nCheck if this file is open.\nIf so, close it, and try again.' % htmlfileName,
@@ -1128,9 +1138,9 @@ class Results(wx.Panel):
 			try:
 				subprocess.check_call( cmd, shell=True )
 			except subprocess.CalledProcessError as e:
-				Utils.MessageOK( self, u'{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
+				Utils.MessageOK( self, '{}\n\n    {}\n{}: {}'.format('Post Publish Cmd Error', e, 'return code', e.returncode), _('Post Publish Cmd Error')  )
 			except Exception as e:
-				Utils.MessageOK( self, u'{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
+				Utils.MessageOK( self, '{}\n\n    {}'.format('Post Publish Cmd Error', e), 'Post Publish Cmd Error'  )
 		
 ########################################################################
 
