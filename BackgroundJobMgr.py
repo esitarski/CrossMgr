@@ -1,3 +1,4 @@
+import re
 import sys
 import datetime
 import threading
@@ -23,11 +24,11 @@ class BackgroundJobMgr( wx.Dialog ):
 		for col, (k, name, align) in enumerate((
 				('num',			'     ',		wx.LIST_FORMAT_RIGHT),
 				('name', 		_('Name'),		wx.LIST_FORMAT_LEFT),
-				('status', 		_('Status'),	wx.LIST_FORMAT_LEFT),
-				('message',		_('Message'),	wx.LIST_FORMAT_LEFT),
 				('start',		_('Start'),		wx.LIST_FORMAT_RIGHT),
 				('end',			_('End'),		wx.LIST_FORMAT_RIGHT),
 				('dur',			_('Dur'),		wx.LIST_FORMAT_RIGHT),
+				('status', 		_('Status'),	wx.LIST_FORMAT_LEFT),
+				('message',		_('Message'),	wx.LIST_FORMAT_LEFT),
 			)):
 			self.jobList.AppendColumn( name, align )
 			setattr( self, k + 'Col', col )
@@ -50,6 +51,8 @@ class BackgroundJobMgr( wx.Dialog ):
 		self.q_processor.daemon = True
 		self.q_processor.start()
 		
+		self.callLater = None
+		
 		self.SetSizerAndFit( vs )
 		
 	def refresh( self ):
@@ -57,9 +60,7 @@ class BackgroundJobMgr( wx.Dialog ):
 			return
 		
 		def formatTime( t ):
-			if t is None:
-				return ''
-			return t.strftime('%H:%M:%S')
+			return t.strftime('%H:%M:%S') if t is not None else ''
 		
 		def formatDiff( end, start ):
 			secs = int((end - start).total_seconds())
@@ -82,11 +83,11 @@ class BackgroundJobMgr( wx.Dialog ):
 			self.jobList.Append( [
 				'{}.'.format(row+1),
 				v.get('name',''),
-				v.get('status',''),
-				v.get('message',''),
 				formatTime( v.get('start',None) ),
 				formatTime( v.get('end',None) ),
 				formatDiff( v.get('end', now), v.get('start',now) ),
+				v.get('status',''),
+				v.get('message',''),
 			])
 			if v['code'] != 0 or 'end' in v:
 				highlight[row] = colours[v['code']]
@@ -102,7 +103,10 @@ class BackgroundJobMgr( wx.Dialog ):
 			self.jobList.SetColumnWidth( i, wx.LIST_AUTOSIZE_USEHEADER )
 		
 		if not allDone:
-			wx.CallLater( 1000, self.refresh )
+			if not self.callLater:
+				self.callLater = wx.CallLater( 1000, self.refresh )
+			elif not self.callLater.IsRunning():
+				self.callLater.Start( 1000 )
 	
 	def ShowModal( self, *args, **kwargs ):
 		wx.CallAfter( self.refresh )
@@ -111,8 +115,6 @@ class BackgroundJobMgr( wx.Dialog ):
 	def processQ( self ):
 		while True:
 			msg = self.q.get()
-
-			now = datetime.datetime.now()
 			cmd, id = msg.get('cmd', None), msg.get('id', None)
 			
 			# recognized messages are 'start', 'update' and 'end'
@@ -120,19 +122,38 @@ class BackgroundJobMgr( wx.Dialog ):
 			# messages can also include other fields including 'name', 'status' and 'message'
 			# code can have values of 0, 1 and 2. 0 = OK, 1 = Caution, 2 = Error
 			if   cmd == 'start':
-				msg['start'] = now
+				msg['start'] = datetime.datetime.now()
 				msg['code'] = msg.get('code',0)
 				self.jobs[id] = msg
 			elif cmd == 'update':
 				self.jobs[id].update( msg )
 			elif cmd == 'end':
-				msg['end'] = now
+				msg['end'] = datetime.datetime.now()
 				self.jobs[id].update( msg )
 			
 			wx.CallAfter( self.refresh )
 	
+	def send( self, msg ):
+		self.q.put( msg )
+	
 	def onOK( self, event ):
 		self.Show( False )
+		
+	def onCopyToClipboard( self, event ):
+		def csvEscape( s ):
+			s = s.strip()
+			if not re.match( '[",\n]', s):
+				return s
+			return '"{}"'.format( s.replace('"', '""') )	# double-up quotes to escape.
+		
+		rowsToCopy = []
+		for row in range(self.jobList.GetItemCount()):
+			for col in range(1, self.jobList.GetColumnCount()):
+				rowsToCopy.append(','.join(csvEscape(self.jobList.GetItemText(row, col))))
+
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( wx.TextDataObject( '\n'.join(rowsToCopy) ) )
+			wx.TheClipboard.Close()
 			
 if __name__ == '__main__':
 	import time
