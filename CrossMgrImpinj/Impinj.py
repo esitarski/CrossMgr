@@ -565,7 +565,7 @@ class Impinj:
 				if isinstance(response, GET_READER_CONFIG_RESPONSE_Message):
 					self.connectedAntennas = sorted( p.AntennaID for p in response.Parameters
 						if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4 )
-					self.messageQ.put( ('Impinj', 'Antennas connected: {}.'.format(str(a) for a in self.connectedAntennas) ) )
+					self.messageQ.put( ('Impinj', 'Antennas connected: {}.'.format(','.join(str(a) for a in self.connectedAntennas)) ) )
 					self.statusCB(
 						connectedAntennas = self.connectedAntennas,
 						timeCorrection = self.timeCorrection,

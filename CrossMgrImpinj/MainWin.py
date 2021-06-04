@@ -863,8 +863,8 @@ class MainWin( wx.Frame ):
 			if arc < 1000:
 				return arc
 			if arc < 1000000:
-				return '{:.1f}k'.format( arc / 1000.0 )
-			return '{:.1f}m'.format( arc / 1000000.0 )
+				return '{:.0f}k'.format( arc / 1000.0 )
+			return '{:.0f}m'.format( arc / 1000000.0 )
 		
 		if not self.messageQ:
 			return
