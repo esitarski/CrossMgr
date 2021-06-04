@@ -26,7 +26,7 @@ def formatMessage( tagID, t ):
 	count += 1
 	return message
 
-class Impinj2JChip( object ):
+class Impinj2JChip:
 	def __init__( self, dataQ, messageQ, shutdownQ, crossMgrHost, crossMgrPort ):
 		''' Queues:
 				dataQ:		tag/timestamp data to be written out to CrossMgr.

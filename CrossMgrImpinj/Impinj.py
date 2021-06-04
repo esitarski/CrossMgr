@@ -139,7 +139,7 @@ def GetAddRospecRSSIMessage( MessageID = None, ROSpecID = 123, inventoryParamete
 	])	# ADD_ROSPEC_Message
 	return rospecMessage
 	
-class Impinj( object ):
+class Impinj:
 
 	def __init__( self, dataQ, strayQ, messageQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB ):
 		self.impinjHost = impinjHost
@@ -198,7 +198,7 @@ class Impinj( object ):
 	def reconnectDelay( self ):
 		if self.checkKeepGoing():
 			time.sleep( ReconnectDelaySeconds )
-		
+			
 	#-------------------------------------------------------------------------
 	
 	def sendCommand( self, message ):
@@ -242,10 +242,7 @@ class Impinj( object ):
 			return False
 			
 		# Get the connected antennas.
-		success, response = self.sendCommand( GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties) )
-		if success:
-			self.connectedAntennas = [p.AntennaID for p in response.Parameters
-				if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4]
+		self.getConnectedAntennas()
 		
 		# Configure a periodic Keepalive message.
 		# Change receiver sensitivity (if specified).  This value is reader dependent.
@@ -342,6 +339,13 @@ class Impinj( object ):
 		success = (success and isinstance(response, ENABLE_ROSPEC_RESPONSE_Message) and response.success())
 		return success
 	
+	def getConnectedAntennas( self ):
+		success, response = self.sendCommand( GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties) )
+		if success:
+			self.connectedAntennas = [p.AntennaID for p in response.Parameters
+				if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4]
+		return success
+		
 	def reportTag( self, tagID, discoveryTime, sampleSize=1, antennaID=0, quadReg=False ):
 		lrt = self.lastReadTime.get(tagID, tOld)
 		if discoveryTime > lrt:
@@ -457,6 +461,9 @@ class Impinj( object ):
 
 			self.messageQ.put( ('Impinj', 'state', True) )
 			
+			#------------------------------------------------------------
+			# Initialize the reader.
+			#
 			try:
 				success = self.sendCommands()
 			except Exception as e:
@@ -481,7 +488,7 @@ class Impinj( object ):
 			self.tagGroup = TagGroup()
 			self.handleTagGroup()
 				
-			tUpdateLast = tKeepaliveLast = getTimeNow()
+			tUpdateLast = tKeepaliveLast = tAntennaConnectedLast = getTimeNow()
 			self.tagCount = 0
 			lastDiscoveryTime = None
 			while self.checkKeepGoing():
@@ -489,11 +496,30 @@ class Impinj( object ):
 				#------------------------------------------------------------
 				# Read Mode.
 				#
+				
+				t = getTimeNow()
+					
+				#------------------------------------------------------------
+				# Check on the antenna connection status.
+				#
+				if (t - tAntennaConnectedLast).total_seconds() >= 10:
+					try:
+						GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties).send( self.readerSocket )
+						tAntennaConnectedLast = t
+					except Exception as e:
+						self.messageQ.put( ('Impinj', 'GET_READER_CONFIG send fails: {}'.format(e)) )
+						self.readerSocket.close()
+						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
+						break
+				
+				#------------------------------------------------------------
+				# Messages from the reader.
+				# Handle connection/timeout errors here.
+				#
 				try:
 					response = UnpackMessageFromSocket( self.readerSocket )
+				
 				except socket.timeout:
-					t = getTimeNow()
-					
 					if (t - tKeepaliveLast).total_seconds() > KeepaliveSeconds * 2:
 						self.messageQ.put( ('Impinj', 'Reader Connection Lost (missing Keepalive).') )
 						self.readerSocket.close()
@@ -504,9 +530,8 @@ class Impinj( object ):
 						self.messageQ.put( ('Impinj', 'Listening for Impinj reader data...') )
 						tUpdateLast = t
 					continue
+				
 				except Exception as e:
-					t = getTimeNow()
-					
 					if (t - tKeepaliveLast).total_seconds() > KeepaliveSeconds * 2:
 						self.messageQ.put( ('Impinj', 'Reader Connection Lost (Check your network adapter).') )
 						self.readerSocket.close()
@@ -518,6 +543,9 @@ class Impinj( object ):
 						tUpdateLast = t
 					continue
 				
+				#------------------------------------------------------------
+				# Keepalive.
+				#
 				if isinstance(response, KEEPALIVE_Message):
 					# Respond to the KEEP_ALIVE message with KEEP_ALIVE_ACK.
 					try:
@@ -530,12 +558,31 @@ class Impinj( object ):
 						
 					tKeepaliveLast = getTimeNow()
 					continue
+					
+				#------------------------------------------------------------
+				# Reader config (to get antenna connection status).
+				#
+				if isinstance(response, GET_READER_CONFIG_RESPONSE_Message):
+					self.connectedAntennas = sorted( p.AntennaID for p in response.Parameters
+						if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4 )
+					self.messageQ.put( ('Impinj', 'Antennas connected: {}.'.format(str(a) for a in self.connectedAntennas) ) )
+					self.statusCB(
+						connectedAntennas = self.connectedAntennas,
+						timeCorrection = self.timeCorrection,
+					)
+					continue
 				
+				#------------------------------------------------------------
+				# Unexpected messages.
+				#
 				if not isinstance(response, RO_ACCESS_REPORT_Message):
 					if not isinstance(response, READER_EVENT_NOTIFICATION_Message):
 						self.messageQ.put( ('Impinj', 'Skipping: {}'.format(response.__class__.__name__)) )
 					continue
 				
+				#------------------------------------------------------------
+				# Tag read.
+				#
 				try:
 					discoveryTime = utcfromtimestamp( tag['Timestamp'] / 1000000.0 )
 					if ImpinjDebug and lastDiscoveryTime is not None:
