@@ -700,13 +700,15 @@ class Results( wx.Panel ):
 		else:
 			self.showLapSpeedsRadio.Enable( True )
 			self.showRaceSpeedsRadio.Enable( True )
-			
+		
+		'''
 		for r in [self.showLapTimesRadio, self.showRaceTimesRadio, self.showLapSpeedsRadio, self.showRaceSpeedsRadio]:
 			if r.GetValue():
 				r.SetFont( self.boldFont )
 			else:
 				r.SetFont( wx.NullFont )
 		self.hbs.Layout()
+		'''
 		
 		# Find the fastest lap time.
 		self.fastestLapRC, fastestLapSpeed, fastestLapTime = None, 0.0, sys.float_info.max
