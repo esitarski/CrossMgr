@@ -63,7 +63,7 @@ def GetNowSeconds():
 
 class StartRaceAtTime( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Start Race at Time:"),
+		super().__init__( parent, id, _("Start Race at Time:"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		font = wx.Font(24, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)

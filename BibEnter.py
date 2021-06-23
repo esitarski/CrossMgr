@@ -6,7 +6,7 @@ from NumKeypad import getRiderNumsFromText, enterCodes, validKeyCodes
 
 class BibEnter( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Bib Enter"),
+		super().__init__( parent, id, _("Bib Enter"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL|wx.STAY_ON_TOP )
 
 		fontPixels = 20

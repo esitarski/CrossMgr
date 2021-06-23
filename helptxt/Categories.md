@@ -22,7 +22,7 @@ Sometimes organizers come up with creative ranking criteria.  For example, a ran
 
 CrossMgr makes this easy by supporting three types of Categories:
 
-1. __Start Wave:__ a group of riders that start at the same time.  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered in the same race, and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar on the [Record][] page.
+1. __Start Wave:__ a group of riders that start at the same time and are considered to be "in the same race".  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered "in the same race", and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar on the [Record][] page and gets a [LapCounter][].
 1. __Component:__ a sub-group of riders part of a "Start Wave", all of which are in the same category with respect to each other.  Riders in a "Component" can work together with other riders in their "Component", as well as other riders in their "Start Wave".  "Component" categories use the same "Start Offset", "Race Laps" and other options as their "Start Wave".
 1. __Custom:__ a group of riders defined by any criteria - they don't even need to be part of the same "Start Wave".  A "Custom" category could be a completely imaginary ranking of riders in different Start Waves.
 

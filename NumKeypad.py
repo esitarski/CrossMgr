@@ -20,6 +20,7 @@ from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
 from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
+from SetLaps import SetLaps
 
 # key codes recognized as Enter.
 enterCodes = {
@@ -243,7 +244,7 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 		return info	
 	
 	tLap = tNext - tCur
-	info.append( (_("Lap"), u'{}/{} ({} {})'.format(lap,lapsTotal,lapsTotal-lap, _('to go'))) )
+	info.append( (_("Lap"), '{}/{} ({} {})'.format(lap,lapsTotal,lapsTotal-lap, _('to go'))) )
 	info.append( (_("Time"), Utils.formatTimeGap(tLap, highPrecision=False)) )
 	info.append( (_("Start"), (startTime + datetime.timedelta(seconds=tCur)).strftime('%H:%M:%S')) )
 	info.append( (_("End"), (startTime + datetime.timedelta(seconds=tNext)).strftime('%H:%M:%S')) )
@@ -413,7 +414,7 @@ class NumKeypad( wx.Panel ):
 		self.horizontalMainSizer = horizontalMainSizer
 		
 		#----------------------------------------------------------------------------------------------
-		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN, lapInfoFunc=getLapInfo )
+		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN, lapInfoFunc=getLapInfo, leftClickFunc=self.doLeftClickHUD )
 		
 		splitter.SetMinimumPaneSize( 20 )
 		splitter.SplitHorizontally( panel, self.raceHUD, -100 )
@@ -426,6 +427,19 @@ class NumKeypad( wx.Panel ):
 		self.firstTimeDraw = True
 		
 		self.refreshRaceTime()
+		
+	def doLeftClickHUD( self, iWave ):
+		race = Model.race
+		if not race:
+			return
+		try:
+			category = race.getCategories()[iWave]
+		except IndexError:
+			return
+			
+		setLaps = SetLaps( self, category=category )
+		setLaps.ShowModal()
+		setLaps.Destroy()
 	
 	def doClockUpdate( self ):
 		mainWin = Utils.getMainWin()
@@ -455,7 +469,7 @@ class NumKeypad( wx.Panel ):
 			return
 			
 		categories = race.getCategories( startWaveOnly=True )
-		noLap = u''
+		noLap = ''
 		tCur = race.curRaceTime() if race.isRunning() else None
 		
 		def getNoDataCategoryLap( category ):
@@ -464,7 +478,7 @@ class NumKeypad( wx.Panel ):
 			cn = race.getNumLapsFromCategory( category )
 			if cn and tCur and tCur > offset + 30.0:
 				cn -= 1
-			return (u'{}'.format(cn) if cn else noLap, False, tLapStart)
+			return ('{}'.format(cn) if cn else noLap, False, tLapStart)
 		
 		lapCounter = [getNoDataCategoryLap(category) for category in categories]
 		categoryToLapCounterIndex = {category:i for i, category in enumerate(categories)}
@@ -494,11 +508,11 @@ class NumKeypad( wx.Panel ):
 			
 			lapsToGo = max( 0, lapMax - lapCur )
 			if secondsBeforeLeaderToFlipLapCounter < tLeaderArrival <= secondsBeforeLeaderToFlipLapCounter+5.0:
-				v = (u'{}'.format(lapsToGo), True, tLapStart)				# Flash current lap (about to be flipped).
+				v = ('{}'.format(lapsToGo), True, tLapStart)				# Flash current lap (about to be flipped).
 			elif 0.0 <= tLeaderArrival <= secondsBeforeLeaderToFlipLapCounter:
-				v = (u'{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
+				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
 			else:
-				v = (u'{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
+				v = ('{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
 			try:
 				lapCounter[categoryToLapCounterIndex[category]] = v
 			except (KeyError, IndexError):
@@ -519,7 +533,7 @@ class NumKeypad( wx.Panel ):
 			if not leaderCategory:
 				leaderCategory = category
 			categories_seen.add( category )
-			leader.append( u'{} {}'.format(category.fullname if category else u'<{}>'.format(_('Missing')), rr.num) )
+			leader.append( '{} {}'.format(category.fullname if category else '<{}>'.format(_('Missing')), rr.num) )
 			
 			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
 			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )

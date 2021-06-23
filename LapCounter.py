@@ -7,6 +7,7 @@ import Model
 import Utils
 
 from GetResults import GetResults
+from SetLaps import SetLaps
 
 defaultBackgroundColours = [
 	wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0),
@@ -208,6 +209,23 @@ class LapCounter( wx.Panel ):
 				category._numLaps = laps
 				return
 	
+	def OnPopupSetLaps( self, event ):
+		race = Model.race
+		if not race or race.isTimeTrial:
+			return
+
+		try:
+			categoryLaps = Utils.getMainWin().record.raceHUD.GetLaps()
+		except Exception:
+			return
+		
+		for (x, y, w, h), laps, category in zip(self.tessellate(len(self.labels)), categoryLaps, race.getCategories(startWaveOnly=True)):
+			if x <= self.xClick < x+w and y <= self.yClick < y+h:
+				setLaps = SetLaps( self, category=category )
+				setLaps.ShowModal()
+				setLaps.Destroy()
+				return		
+	
 	def OnRightClick( self, event ):
 		race = Model.race
 		self.xClick, self.yClick = event.GetX(), event.GetY()
@@ -224,6 +242,7 @@ class LapCounter( wx.Panel ):
 		if not hasattr(self, 'popupInfo'):
 			self.popupInfo = [
 				(_('Lock in Laps to Go'),	_('Lock in Laps to Go'),	self.OnPopupLockLapsToGo),
+				(_('Set Laps...'),			_('Set Laps...'),			self.OnPopupSetLaps),
 				(_('Options') + u'...',		_('Options'),				self.OnOptions),
 			]
 			self.menuOptions = []
@@ -497,7 +516,7 @@ if __name__ == '__main__':
 	model._populate()
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
-	mainWin = wx.Frame(None,title="LapCounter", size=(displayWidth/2,displayHeight/2))
+	mainWin = wx.Frame(None,title="LapCounter", size=(int(displayWidth/2),int(displayHeight/2)))
 	lapCounter = LapCounter( mainWin, labels=(('17',False), ('15',True)) )
 	lapCounter.refresh()
 	

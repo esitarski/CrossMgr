@@ -57,7 +57,7 @@ def getCatCountImagesCategoryList( parent ):
 
 class ChoosePrintCategoriesDialog( wx.Dialog ):
 	def __init__( self, parent, title=_("Print Categories"), id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, title,
+		super().__init__( parent, id, title,
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
@@ -148,7 +148,7 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 #---------------------------------------------------------------------------------------------------------------------
 class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Print Podium Positions"),
+		super().__init__( parent, id, _("Print Podium Positions"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.positions = 5

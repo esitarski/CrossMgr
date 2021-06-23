@@ -48,13 +48,21 @@ When CrossMgr gets busy, the seconds in the __Countdown Timer__ may not be updat
 # Screen
 Shows a Lap Counter.
 
-If you are running the race by time, one lap counter is shown and follows the category doing the most laps.
-
-If you have categories with specified __Race Laps__ (see [Categories][] for more details), a separate lap counter will be shown for each category.
-
-Right-click on the Lap Counter screen to set options.  You can change the foreground and background color, as well as the seconds before the expected leader to change the lap counter.
-
 * 5 seconds before the Lap Counter changes, it will flash with the current lap count.
 * After 5 seconds, it will switch to the new lap count.
 
 This draws attention to the lap counter just before it changes.
+If you are running the race by one __Race Minutes__ in Race Properties, one lap counter is shown and follows the category doing the most laps.
+
+If you have set a __Race Minutes__ for each Start Wave Category, that will be used to computed the laps and there will be a separate lap counter for each Start Wave.
+
+If you have categories with specified __Race Laps__ (see [Categories][] for more details), the __Race Laps__ determines the laps (that is, they will no longer be computed from the race minutes).
+
+There are some right-click options available on the Lap Counter screen.  Specifically:
+
+Option|Explanation
+:-----|:----------
+Lock in Laps to Go|For races run on time, this sets the __Race Laps__ in [Categories][].  This locks down the number of laps in the race as they are no longer computed from the race minutes and lap times.  This avoids unexpected laps changes if the race pace changes.  It is good practice to use this option 3-4 laps into the race and lock it in.
+Set Laps...|This opens the __Set Laps__ display (see [Record][] for more details).  __Set Laps__ shows all the key implications of changing the race laps during the race.
+Options...|Set and change options for the Lap Counter.  You can change the foreground and background color, as well as the seconds before the expected leader to change the lap counter, among other features.
+

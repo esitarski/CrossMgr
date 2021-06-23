@@ -362,7 +362,7 @@ class Category:
 	
 	@property
 	def fullname( self ):
-		return Category.getFullName( self.name.strip(), getattr(self, 'gender', u'Open') )
+		return Category.getFullName( self.name.strip(), getattr(self, 'gender', 'Open') )
 	
 	@property
 	def firstLapRatio( self ):
@@ -482,7 +482,7 @@ class Category:
 		self.intervals = SetToIntervals( all_nums )
 	
 	def __repr__( self ):
-		return u'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, raceMinutes={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
+		return 'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, raceMinutes={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
 				self.active,
 				self.name,
 				self.catStr,

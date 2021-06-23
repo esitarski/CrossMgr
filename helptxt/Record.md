@@ -134,4 +134,35 @@ This display shows graphically, by Category:
 
 Use this display to manage lap counters by category.  It allows you to easily see what lap each category is on, when to ring the last lap bell, etc.
 
-For additional information, move the mouse over the lap.  This will show more start/end times and lap time.
+For additional information, hover the mouse over the lap.  This will show more start/end times and lap time.
+
+### Set Laps from the Lap Chart
+
+To modify the number of laps during the race, click anywhere on the Progress bars.
+
+This opens the __Set Laps__ dialog which has two columns - __Current__ and __Proposed__.
+This provides all the race information you need to make a decision about changing the number of laps in the race.
+
+As you enter a value in the Proposed __Race Laps__, the race information showing the impact of the change will update automatically.
+No value in __Race Laps__ tells CrossMgr to compute the number of laps from the race minutes.
+
+When you are satisfied with your change and its impacts, press OK.
+
+The display shows:
+
+Field|Description
+:----|:----------
+Race Laps|Number of laps in the race.  If the race is run on time, the Race Laps will be computed from the rider's speed.
+Winner Time|Estimated winner's finish time.
+Winner Time Delta|Difference (+/-) of the winner's time from the scheduled race time.
+Last on Course Time|Estimated finish time of the last rider on course.  This takes lapping into account.
+Winner Clock|Clock time (time of day) of winner.
+Last on Course Clock|Clock time of the last rider on course.  This takes lapping into account.
+Race Time Elapsed|Elapsed time of the race.
+Race Time To Go|Estimated time until the winner's finish.
+Laps Elapsed|Laps current and completed.
+Laps To Go|Laps for the winner to go.
+Laps Total|Laps Elapsed + Laps to Go.
+
+__Reminder:__  If no __Race Laps__ are specified for a Start Wave, CrossMgr will run the race on time (see [Categories][] for details).
+If the __Race Laps__ are set, CrossMgr will run the race according to the Race Laps.

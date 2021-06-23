@@ -664,7 +664,7 @@ def GetResultsWithData( category ):
 					if float(v) == int(v):
 						v = int(v)
 				else:
-					v = u'{}'.format(v)
+					v = '{}'.format(v)
 				setattr( rr, f, v )
 			except (KeyError, ValueError):
 				setattr( rr, f, u'' )

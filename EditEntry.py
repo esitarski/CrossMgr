@@ -12,7 +12,7 @@ import datetime
 #------------------------------------------------------------------------------------------------
 class CorrectNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Correct Number",
+		super().__init__( parent, id, "Correct Number",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -139,7 +139,7 @@ class CorrectNumberDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class ShiftNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Shift Time",
+		super().__init__( parent, id, "Shift Time",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -221,7 +221,7 @@ class ShiftNumberDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class InsertNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Insert Number",
+		super().__init__( parent, id, "Insert Number",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -290,7 +290,7 @@ class InsertNumberDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class SplitNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Split Number",
+		super().__init__( parent, id, "Split Number",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -442,7 +442,7 @@ def SwapEntry( a, b ):
 
 class StatusChangeDialog( wx.Dialog ):
 	def __init__( self, parent, message, title, t=None, externalData=None, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, title,
+		super().__init__( parent, id, title,
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
