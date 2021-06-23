@@ -165,4 +165,4 @@ Laps To Go|Laps for the winner to go.
 Laps Total|Laps Elapsed + Laps to Go.
 
 __Reminder:__  If no __Race Laps__ are specified for a Start Wave, CrossMgr will run the race on time (see [Categories][] for details).
-If the __Race Laps__ are set, CrossMgr will run the race according to the Race Laps.
+If __Race Laps__ is set, CrossMgr will run the race according to the Race Laps and will ignore the __Race Minutes__.
