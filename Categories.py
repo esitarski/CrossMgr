@@ -85,7 +85,7 @@ def getExportGrid():
 
 class CategoriesPrintout( wx.Printout ):
 	def __init__(self, categories = None):
-		wx.Printout.__init__(self)
+		super().__init__()
 
 	def OnBeginDocument(self, start, end):
 		return super().OnBeginDocument(start, end)

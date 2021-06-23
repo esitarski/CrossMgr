@@ -75,7 +75,7 @@ class Histogram(wx.Control):
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="LineGraph"):
 		
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 
 		self.binOption = self.BinOptionAuto

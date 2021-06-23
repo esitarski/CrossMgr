@@ -318,7 +318,7 @@ def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
 		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
-		wx.Frame.__init__(self, parent, id, title, size=size)
+		super().__init__(parent, id, title, size=size)
 
 		Utils.setMainWin( self )
 		

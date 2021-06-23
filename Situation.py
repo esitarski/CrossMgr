@@ -169,7 +169,7 @@ class SituationPanel(wx.Panel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
-		wx.Panel.__init__(self, parent, id, pos, size, style, name)
+		super().__init__(parent, id, pos, size, style, name)
 		self.SetBackgroundColour(wx.WHITE)
 		
 		self.gaps = []
@@ -504,7 +504,7 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 	def __init__( self, parent ):
-		wx.Panel.__init__( self, parent=parent, style=wx.BORDER_SUNKEN )
+		super().__init__( parent=parent, style=wx.BORDER_SUNKEN )
 		
 		self.numSelect = None
 		self.item = None

@@ -49,7 +49,7 @@ ReportFields = (lambda s: [f for f in Fields if f not in s])(set(IgnoreFields))
 
 class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -76,7 +76,7 @@ class FileNamePage(adv.WizardPageSimple):
 	
 class SheetNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		self.choices = []
 		self.expectedSheetName = None
 		
@@ -191,7 +191,7 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 
 class HeaderNamesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 
 		self.expectedFieldCol = None
 		
@@ -289,7 +289,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			
 class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		self.errors = []
 		

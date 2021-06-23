@@ -220,7 +220,7 @@ class RiderDetail( wx.Panel ):
 	ignoreColour = wx.Colour( 180, 180, 180 )
 		
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		
 		self.SetDoubleBuffered( True )
 		

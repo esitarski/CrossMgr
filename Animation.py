@@ -60,7 +60,7 @@ class Animation(wx.Control):
 		# to be overridden in Python derived class. For Animation, we
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
 		self.categoryDetails = {}

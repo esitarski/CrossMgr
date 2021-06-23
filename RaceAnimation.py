@@ -10,7 +10,7 @@ from GetResults import GetAnimationData, GetCategoryDetails
 
 class NumListValidator(wx.Validator):
 	def __init__(self, pyVar=None):
-		wx.Validator.__init__(self)
+		super().__init__()
 		self.Bind(wx.EVT_CHAR, self.OnChar)
 
 	def Clone(self):
@@ -41,7 +41,7 @@ class NumListValidator(wx.Validator):
 
 class RaceAnimation( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		bs = wx.BoxSizer(wx.VERTICAL)
 
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)

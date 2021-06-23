@@ -203,7 +203,7 @@ def getFontToFit( dc, widthToFit, heightToFit, sizeFunc, isBold = False ):
 	
 class FtpQRCodePrintout( wx.Printout ):
 	def __init__(self, categories = None):
-		wx.Printout.__init__(self)
+		super().__init__()
 
 	def OnBeginDocument(self, start, end):
 		return super().OnBeginDocument(start, end)

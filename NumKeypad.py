@@ -81,7 +81,7 @@ def getRiderNumsFromText( txt ):
 
 class Keypad( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		self.SetBackgroundColour( wx.WHITE )
 		self.controller = controller
 		
@@ -262,7 +262,7 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 
 class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		
 		self.bell = None
 		self.lapReminder = {}

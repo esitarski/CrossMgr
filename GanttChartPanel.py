@@ -54,7 +54,7 @@ class GanttChartPanel(wx.Panel):
 				size=wx.DefaultSize, style=wx.NO_BORDER,
 				name="GanttChartPanel" ):
 		
-		wx.Panel.__init__(self, parent, id, pos, size, style, name)
+		super().__init__(parent, id, pos, size, style, name)
 		
 		self.SetBackgroundColour(wx.WHITE)
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )

@@ -99,7 +99,7 @@ else:
 	class TextBoxTipPopup( wx.PopupTransientWindow ):
 		"""Basic Tooltip"""
 		def __init__(self, parent, style, text):
-			wx.PopupTransientWindow.__init__(self, parent, style)
+			super().__init__(parent, style)
 			self.SetBackgroundColour(wx.YELLOW)
 			border = 10
 			st = wx.StaticText(self, label = text, pos=(border/2,border/2))

@@ -18,7 +18,7 @@ reIntPrefix = re.compile( '^[0-9]+' )
 
 class History( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 
 		self.showTimes = False
 		self.showPosition = False

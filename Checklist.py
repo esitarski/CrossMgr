@@ -141,7 +141,7 @@ task
 	
 class Checklist( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
-		wx.Panel.__init__(self, parent, id, style = style)
+		super().__init__(parent, id, style = style)
 		
 		self.Bind( wx.EVT_SIZE, self.onSize )
 				

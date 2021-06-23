@@ -248,7 +248,7 @@ def getRaceCategories():
 
 class CrossMgrPrintout( wx.Printout ):
 	def __init__(self, categories = None):
-		wx.Printout.__init__(self)
+		super().__init__()
 		if not categories:
 			with UnstartedRaceWrapper():
 				self.categories = Model.race.getCategories(startWaveOnly=False, publishOnly=True)
@@ -317,7 +317,7 @@ class CrossMgrPrintout( wx.Printout ):
 
 class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 	def __init__( self, dir, fileBase, orientation, categories = None ):
-		CrossMgrPrintout.__init__(self, categories)
+		super().__init__(categories)
 		self.dir = dir
 		self.fileBase = fileBase
 		self.orientation = orientation
@@ -405,7 +405,7 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 
 class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 	def __init__( self, dir, fileBase, orientation, categories = None, allInOne = False ):
-		CrossMgrPrintout.__init__(self, categories)
+		super().__init__(categories)
 		self.dir = dir
 		self.fileBase = fileBase
 		self.orientation = orientation
@@ -465,7 +465,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 
 class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 	def __init__(self, categories = None, positions = 5):
-		CrossMgrPrintout.__init__( self, categories )
+		super().__init__( categories )
 		self.positions = positions
 		self.pageInfo = {}
 	

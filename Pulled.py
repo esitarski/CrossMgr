@@ -39,7 +39,7 @@ class TimeEditor(gridlib.GridCellEditor):
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.defaultValue
-		gridlib.GridCellEditor.__init__(self)
+		super().__init__()
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = wx.TextCtrl( parent, id, value=self.defaultValue )

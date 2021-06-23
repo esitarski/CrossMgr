@@ -193,7 +193,7 @@ _rt_undo = PyEmbeddedImage(
 
 class RichTextFrame(wx.Frame):
 	def __init__(self, *args, **kw):
-		wx.Frame.__init__(self, *args, **kw)
+		super().__init__(*args, **kw)
 
 		self.MakeMenuBar()
 		self.MakeToolBar()

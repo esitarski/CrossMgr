@@ -22,19 +22,19 @@ class TimeEvalError( Exception ):
 		self.i = i
 		
 	def __repr__( self ):
-		return '%s in %d:%d %d' % self.error, self.line, self.col, self.i
+		return '{} in {}:{} {}'.format(self.error, self.line, self.col, self.i)
 
 class TimeEvalEmptyExpressionError( TimeEvalError ):
 	def __init__( self ):
-		TimeEvalError.__init__( self, 'empty expression', 0, 0, 0 )
+		super().__init__( 'empty expression', 0, 0, 0 )
 		
 class TimeEvalSyntaxError( TimeEvalError ):
 	def __init__( self, error, line, col, i ):
-		TimeEvalError.__init__( self, error, line, col, i )
+		super().__init__( error, line, col, i )
 		
 class TimeEvalDivideByZeroError( TimeEvalError ):
 	def __init__( self, line, col, i ):
-		TimeEvalError.__init__( self, 'divide by zero error', line, col, i )
+		super().__init__( 'divide by zero error', line, col, i )
 
 class TimeEval:
 	def  __init__( self, str = None ):

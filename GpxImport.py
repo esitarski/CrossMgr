@@ -13,7 +13,7 @@ import HelpSearch
 
 class IntroPage(adv.WizardPageSimple):
 	def __init__(self, parent, controller):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		self.controller = controller
 		border = 4
@@ -56,7 +56,7 @@ class IntroPage(adv.WizardPageSimple):
 	
 class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -108,7 +108,7 @@ class FileNamePage(adv.WizardPageSimple):
 
 class UseTimesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -133,7 +133,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		
 class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		self.distanceKm = None
 		self.distanceMiles = None

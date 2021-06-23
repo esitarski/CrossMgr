@@ -80,7 +80,7 @@ class Results( wx.Panel ):
 	DisplayRaceSpeeds = 3
 
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		
 		self.category = None
 		self.showRiderData = True
