@@ -12,6 +12,7 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 from RaceInputState import RaceInputState
+from SetLaps import SetLaps
 from wx.grid import GridCellFloatEditor, GridCellNumberEditor
 
 #--------------------------------------------------------------------------------
@@ -219,7 +220,18 @@ class CategoryIconRenderer(gridlib.GridCellRenderer):
 
 	def Clone(self):
 		return CategoryIconRenderer()
-		
+
+class BitmapRenderer(wx.grid.PyGridCellRenderer):
+	def __init__( self, *argw, **kwargs ):
+		self.bmp = kwargs.pop( 'bmp' )
+		super().__init__( *args, **kwargs )
+	
+	def Draw(self, grid, attr, dc, rect, row, col, is_selected):
+		dc.DrawBitmap(self.bmp, rect.X, rect.Y)
+
+	def Clone(self):
+		return self.__class__()
+
 #--------------------------------------------------------------------------------
 class Categories( wx.Panel ):
 	CategoryTypeChoices = [_('Start Wave'),'    ' + _('Component'),_('Custom')]
@@ -300,7 +312,7 @@ class Categories( wx.Panel ):
 		
 		self.grid = ReorderableGrid( self )
 		self.colNameFields = [
-			(u'',						None),
+			('',						None),
 			(_('Category Type'),		'catType'),
 			(_('Active'),				'active'),
 			(_('Name'),					'name'),
@@ -308,6 +320,7 @@ class Categories( wx.Panel ):
 			(_('Numbers'),				'catStr'),
 			(_('Start\nOffset'),		'startOffset'),
 			(_('Race\nLaps'),			'numLaps'),
+			(_(''),						'setLaps'),
 			(_('Race\nMinutes'),		'raceMinutes'),
 			(_('Lapped\nRiders\nContinue'),	'lappedRidersMustContinue'),
 			(_('Distance'),				'distance'),
@@ -319,7 +332,7 @@ class Categories( wx.Panel ):
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
 		]
-		self.computedFields = {'rule80Time', 'suggestedLaps'}
+		self.computedFields = {'rule80Time', 'suggestedLaps', 'setLaps'}
 		self.colnames = [colName if not colName.startswith('_') else _('Name Copy') for colName, fieldName in self.colNameFields]
 		self.iCol = { fieldName:i for i, (colName, fieldName) in enumerate(self.colNameFields) if fieldName and not colName.startswith('_') }
 		
@@ -348,6 +361,12 @@ class Categories( wx.Panel ):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTRE )
 				attr.SetReadOnly( True )
 				self.readOnlyCols.add( col )
+				
+			elif fieldName == 'setLaps':
+				attr.SetReadOnly( True )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.readOnlyCols.add( col )
+				self.dependentCols.add( col )
 				
 			elif fieldName == 'catType':
 				self.catTypeWidth = 64
@@ -474,8 +493,8 @@ class Categories( wx.Panel ):
 		if event.GetCol() in self.boolCols:
 			r, c = event.GetRow(), event.GetCol()
 			if c == self.iCol['active']:
-				active = (self.grid.GetCellValue(r, self.iCol['active']) == u'1')
-				wx.CallAfter( self.fixRow, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
+				active = (self.grid.GetCellValue(r, self.iCol['active']) == '1')
+				wx.CallAfter( self.fixRowColours, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
 		event.Skip()
 	
@@ -484,6 +503,20 @@ class Categories( wx.Panel ):
 		self.colCur = event.GetCol()
 		if self.colCur in self.choiceCols or self.colCur in self.boolCols:
 			wx.CallAfter( self.grid.EnableCellEditControl )
+		elif self.colCur == self.iCol['setLaps']:
+			race = Model.race
+			if race and race.isRunning():
+				self.commit()
+				try:
+					category = race.getAllCategories()[self.rowCur]
+				except IndexError:
+					category = None
+				if category and category.catType == Model.Category.CatWave:
+					setLaps = SetLaps( self, category )
+					setLaps.ShowModal()
+					setLaps.Destroy()
+					return
+		
 		event.Skip()
 
 	def onCellChanged( self, event ):
@@ -641,6 +674,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
 		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['setLaps'], '\u27F3' )
 		self.grid.SetCellValue( r, self.iCol['raceMinutes'], '{}'.format(raceMinutes) if raceMinutes else '' )
 		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
@@ -669,20 +703,23 @@ and remove them from other categories.'''),
 		if laps:
 			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
 	
-	def fixRow( self, row, catType, active ):
+	def fixRowColours( self, row, catType, active ):
 		activeColour = wx.WHITE if active else self.inactiveColour
 		colour = activeColour if catType == Model.Category.CatWave else self.ignoreColour
 		for colName, fieldName in self.colNameFields:
 			if not fieldName:
 				continue
 			col = self.iCol[fieldName]
-			self.grid.SetCellBackgroundColour( row, col, colour if col in self.dependentCols else activeColour )
+			if fieldName == 'setLaps' and not (Model.race and Model.race.isRunning()):
+				self.grid.SetCellBackgroundColour( row, col, self.inactiveColour )
+			else:
+				self.grid.SetCellBackgroundColour( row, col, colour if col in self.dependentCols else activeColour )
 		
 	def fixCells( self, event = None ):
 		for row in range(self.grid.GetNumberRows()):
 			active = self.grid.GetCellValue( row, self.iCol['active'] )[:1] in 'TtYy1'
 			catType = self.CategoryTypeChoices.index(self.grid.GetCellValue(row, self.iCol['catType']) )
-			self.fixRow( row, catType, active )
+			self.fixRowColours( row, catType, active )
 	
 	def onActivateAll( self, event ):
 		self.commit()
@@ -836,7 +873,7 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
+#							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
 							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
 							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
 							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
