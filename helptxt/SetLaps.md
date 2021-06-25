@@ -4,7 +4,9 @@
 
 __Set Laps__ is a dialog which allows you to change the number of laps easily while a race is underway.
 
-It shows two columns - __Current__ and __Proposed__.
+It is accessible from the [Categories][], [Record][] and [LapCounter][] screens.
+
+It shows two columns: __Current__ and __Proposed__.
 These provide all the race information you need to make a decision about changing the number of laps in the race.
 
 As you enter a value in the Proposed __Race Laps__, the race information showing the impact will update automatically.
@@ -32,4 +34,4 @@ Laps Total|Laps Elapsed + Laps to Go.
 __Note:__  If no __Race Laps__ is specified for a Start Wave, CrossMgr will run the race on time (see [Categories][] for details).
 If __Race Laps__ is set, CrossMgr will run the race according to the Race Laps and will not calculate the laps based on __Race Minutes__.
 
-Changes from an __OK__ in the __Set Laps__ dialog will be immediately applied to the race.
+Pressing __OK__ from __Set Laps__ will apply the change to the race.  The race [Record][] and [LapCounter][] will update immediately.

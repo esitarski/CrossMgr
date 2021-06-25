@@ -35,6 +35,8 @@ Get started with CrossMgr now!
 * [Histogram][]
 * [TeamResults][]
 
+## [SetLaps][]
+
 ## [Para-Cycling][]
 
 ## [FAQ][]
