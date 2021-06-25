@@ -29,7 +29,7 @@ def Simulate( competition ):
 			
 		print()
 		print( 'Available Events:' )
-		print( '\n'.join( e.getRepr() for t, s, e in competition.getCanStart() ) )
+		print( '\n'.join( e.getRepr() for s, e in competition.getCanStart() ) )
 		
 		e = tse[0][2]
 		
@@ -76,7 +76,7 @@ def Simulate( competition ):
 		print( e )
 		print()
 		competition.propagate()
-		tse = competition.getCanStart()
+		se = competition.getCanStart()
 		raw_input()
 			
 	print()
