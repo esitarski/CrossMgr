@@ -23,7 +23,7 @@ class Clock(wx.Control):
 				name="Clock", checkFunc=None, tCur=None ):
 		# If tCur is given, the clock will statically show that time with no update.
 
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
