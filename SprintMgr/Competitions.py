@@ -496,6 +496,22 @@ def getCompetitions():
 		])
 	)
 	
+	competitions.append(
+		Competition( 'MTB: XCE 6', [
+			System( 'Finals', [
+				Event( 'N1 N2 N3 N4 N5 N6 -> 1R 2R 3R 4R 5R 6R' ),
+			]),
+		])
+	)
+	
+	competitions.append(
+		Competition( 'MTB: XCE 4', [
+			System( 'Finals', [
+				Event( 'N1 N2 N3 N4 -> 1R 2R 3R 4R' ),
+			]),
+		])
+	)
+	
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
 		Competition( 'MTB: Four Cross 64', [

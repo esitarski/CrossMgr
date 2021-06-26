@@ -396,7 +396,10 @@ class Event:
 	
 	@property
 	def isSemiFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-2]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-2]
+		except IndexError:
+			return False
 	
 	@property
 	def isFinal( self ):
@@ -404,7 +407,10 @@ class Event:
 	
 	@property
 	def isSmallFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-2]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-2]
+		except IndexError:
+			return False
 		
 	@property
 	def isBigFinal( self ):
