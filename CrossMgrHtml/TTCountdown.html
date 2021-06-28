@@ -9,7 +9,7 @@
 
 <title>TTStartPage</title>
 <style>
-body { font-family: Arial, Helvetica, sans-serif; }
+body { font-family: Sans-Serif; }
 
 #rider-starting {
 	font-size: 10vh;
@@ -184,11 +184,9 @@ var escapeHTML = function(unsafe) {
   });
 };
 
-function FormatTime( t )
-{
+function FormatTime( t ) {
 	var tStr = '';
-	if( t < 0 )
-	{
+	if( t < 0 ) {
 		tStr = '-';
 		t = -t;
 	}
@@ -208,15 +206,18 @@ function GetFlagImage( nation_code ) {
 	if( !flagImages ) {
 		if( !flags )
 			return null;
-		flagImages = {};
-		for( var cc in flags ) {
-			img = new Image();
+		flagImages = new Map();
+		let img_height = 3.25 * window.innerHeight / 100.0;
+		for( let cc in flags ) {
+			let img = new Image();
 			img.src = flags[cc];
 			img.className = 'flag';
-			flagImages[cc] = img;
+			let scale = img_height / img.height;
+			img.height = scale * img.height;
+			flagImages.set(cc, img);
 		}
 	}
-	return flagImages[nation_code.substring(0, 3)];
+	return flagImages.get(nation_code);
 }
 
 var audioCtx = null, isAudioContext = false, isWebkitAudioContext = false;
@@ -276,22 +277,21 @@ function startIntervalTimer() {
 }
 
 function replaceChildrenWithChild( element, child ) {
-	while( element.lastChild ) {
+	while( element.firstChild )
 	  element.removeChild( element.lastChild );
-	}
 	element.appendChild( child );
 }
 
 function updateCountdown() {
-	var tNow = ServerDate();
-	var btg = null;
+	let tNow = ServerDate();
+	let btg = null;
 	
 	if( !raceStarted )
 		iBeepCur = 0;
 	else {
 		for( ; ; ++iBeepCur ) {
 			btg = beepsToGive[iBeepCur];
-			var dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
+			let dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
 			if( dSecs < -0.1 )
 				break;
 			
@@ -306,34 +306,45 @@ function updateCountdown() {
 		--iBeepCur;
 	
 	btg = beepsToGive[iBeepCur];
-	var btgNext = beepsToGive[iBeepCur+1];
+	let btgNext = beepsToGive[iBeepCur+1];
 	
-	var countdown = document.getElementById('countdown-clock');
+	let countdown = document.getElementById('countdown-clock');
 	if( enableBeeps || !isDevice )
 		countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));
 	else
 		countdown.innerHTML = '<span class="btn">Click Here</span>';
 		
 
-	var bibCur = btgNext.startEntry[1];
+	let bibCur = btgNext.startEntry[1];
 	if( bibCur != bibLast ) {
 		
-		var rider_starting = document.getElementById('rider-starting');
+		let rider_starting = document.getElementById('rider-starting');
 		replaceChildrenWithChild( rider_starting, document.createTextNode(
 				(bibCur < 99999 ? (bibCur + ' ') : '') + btgNext.startEntry[2]
 			)
 		);
 		
-		var team_starting = document.getElementById('team-starting');
-		var dataFields = [];
-		for( var f = 3; f < btgNext.startEntry.length; ++f )
-			if( btgNext.startEntry[f] )
-				dataFields.push( btgNext.startEntry[f] );
-		replaceChildrenWithChild( team_starting, document.createTextNode( dataFields.join(', ') ) );
+		let team_starting = document.getElementById('team-starting');
+		let dataSpan = document.createElement( 'SPAN' );
+		dataSpan.style.whiteSpace = "nowrap";
+		let firstField = true;
+		for( let f = 3; f < btgNext.startEntry.length; ++f )
+			if( btgNext.startEntry[f] ) {
+				let flag = GetFlagImage( btgNext.startEntry[f] );
+				if( flag ) {
+					if( !firstField )
+						dataSpan.appendChild( document.createTextNode(', ') );
+					dataSpan.appendChild( flag.cloneNode(true) );
+				}
+				let text = btgNext.startEntry[f];
+				dataSpan.appendChild( document.createTextNode( ((firstField || flag) ? ' ' : ', ') + text) );
+				firstField = false;
+			}
+		replaceChildrenWithChild( team_starting, dataSpan );
 		
-		var rider_next = document.getElementById('rider-next');
-		var startEntryNext = [btgNext.startEntry];
-		for( var i = iBeepCur+1; i < beepsToGive.length; ++i ) {
+		let rider_next = document.getElementById('rider-next');
+		let startEntryNext = [btgNext.startEntry];
+		for( let i = iBeepCur+1; i < beepsToGive.length; ++i ) {
 			if( startEntryNext[startEntryNext.length-1][1] == beepsToGive[i].startEntry[1] )
 				continue;
 			
@@ -343,37 +354,39 @@ function updateCountdown() {
 		}
 		startEntryNext = startEntryNext.slice( 1 );
 		
-		var iIndex = btgNext.index;
-		var table = document.createElement('TABLE');
+		let iIndex = btgNext.index;
+		let table = document.createElement('TABLE');
 		table.style.background = GetBackground();
-		var tbody = document.createElement('TBODY'); table.appendChild( tbody );
-		for( var i = 0; i < startEntryNext.length; ++i ) {
-			var tr = document.createElement('TR'); tbody.appendChild( tr );
+		let tbody = document.createElement('TBODY'); table.appendChild( tbody );
+		for( let i = 0; i < startEntryNext.length; ++i ) {
+			let tr = document.createElement('TR'); tbody.appendChild( tr );
 			tr.className = 'border-top border-left border-right';
 			if( i == startEntryNext.length - 1 )
 				tr.className += ' border-bottom';
 			
-			for( var c = 1; c < startEntryNext[i].length; ++c ) {
-				var td = document.createElement('TD'); tr.appendChild( td );
-				var v = startEntryNext[i][c];
+			for( let c = 1; c < startEntryNext[i].length; ++c ) {
+				let td = document.createElement('TD'); tr.appendChild( td );
+				let v = startEntryNext[i][c];
 				if( c == 5 && v ) {
-					var img = GetFlagImage( v );
-					if( img ) {
+					let flag = GetFlagImage( v );
+					if( flag ) {
 						span = document.createElement('SPAN'); td.appendChild( span );
 						span.style.whiteSpace = "nowrap";
-						span.appendChild( img.cloneNode(true) );
+						span.appendChild( flag.cloneNode(true) );
 						span.appendChild( document.createTextNode(' ' + v) );
 						v = null;
 					}
 				}
-				if( v )
+				if( v ) {
+					v = (''+v).replace('(Men)','(M)').replace('(Women)','(W)').replace('(Open)','(O)');
 					td.appendChild( document.createTextNode(v) );
+				}
 				if( c == 1 )
 					td.className = 'text-center';
 			}
 			
-			var td = document.createElement('TD'); tr.appendChild( td );
-			var tStr = '';
+			let td = document.createElement('TD'); tr.appendChild( td );
+			let tStr = '';
 			if( raceStarted ) {
 				tStr = toInternationalTimeString(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0));
 			}
@@ -420,18 +433,16 @@ else
 	getTimestamp = function() { return Date.now(); };
 
 function getJSON( url, successHandler, errorHandler ) {
-	var xhr = typeof XMLHttpRequest != 'undefined'
+	let xhr = typeof XMLHttpRequest != 'undefined'
 		? new XMLHttpRequest()
 		: new ActiveXObject('Microsoft.XMLHTTP');
 	xhr.open('get', url, true);
 	xhr.onreadystatechange = function() {
-		var status;
-		var data;
 		// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-readystate
 		if (xhr.readyState == 4) { // 'DONE'
-			status = xhr.status;
+			let status = xhr.status;
 			if (status == 200) {
-				data = JSON.parse(xhr.responseText);
+				let data = JSON.parse(xhr.responseText);
 				successHandler && successHandler(data);
 			} else {
 				errorHandler && errorHandler(status);
@@ -442,7 +453,7 @@ function getJSON( url, successHandler, errorHandler ) {
 };
 
 function SetRaceName() {
-	var e = document.getElementById('race-name');
+	let e = document.getElementById('race-name');
 	e.innerHTML = (
 		escapeHTML(raceName?raceName:'') + ' ' +
 		toInternationalString(raceStart) + '  Last Updated ' +
@@ -454,9 +465,9 @@ function SetRaceName() {
 }
 
 function ProcessServerTimestamp( ts ) {
-	var arrivaltimestamp = getTimestamp();
-	var clienttime = Date.now();
-	var latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
+	let arrivaltimestamp = getTimestamp();
+	let clienttime = Date.now();
+	let latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
 	if( latency2Min > latency2 ) {
 		latency2Min = latency2;
 		millisDelta = ts.servertime + latency2 - clienttime;
@@ -468,8 +479,8 @@ function getTimeCorrection() {
 	// Schedule some ajax calls to improve the time sync.
 	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
 		latency2Min = Number.MAX_VALUE;
-		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
-		for( var i = 0; i < syncIterations; ++i ) {
+		let url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
+		for( let i = 0; i < syncIterations; ++i ) {
 			// Pass our current timestamp so we can estimate the latency.
 			setTimeout(
 				function() { getJSON(url + '?' + getTimestamp(), ProcessServerTimestamp) },
@@ -501,11 +512,11 @@ function onload() {
 	
 	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	
-	if( /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
+	if( true || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
 		// On tablets, the first sound must be triggered by a user action.
 		isDevice = true;
 		enableBeeps = false;
-		var countdown_clock = document.getElementById('countdown-clock');
+		let countdown_clock = document.getElementById('countdown-clock');
 		countdown_clock.className = 'disabled';
 		countdown_clock.addEventListener( 'click', initiateSound );
 	}
@@ -526,7 +537,7 @@ function onload() {
 						 ''] );
 		
 		// Set up a callback to automatically refresh the page shortly after the race start time.
-		var waitTime = Math.max(0, raceStart.getTime() - tServer.getTime()) + 10*1000;
+		let waitTime = Math.max(0, raceStart.getTime() - tServer.getTime()) + 10*1000;
 		setTimeout( function() { location.reload(true); }, waitTime );
 		if( raceStart.getTime() >= tServer.getTime() )
 			playBeep( 1 );
@@ -548,16 +559,16 @@ function onload() {
 	
 	if( raceStarted ) {
 		// Get most frequent start gap.
-		var gapTotal = {}
-		for( var i = 1; i < startList.length; ++i ) {
-			var gap = startList[i][0] - startList[i-1][0];
+		let gapTotal = {}
+		for( let i = 1; i < startList.length; ++i ) {
+			let gap = startList[i][0] - startList[i-1][0];
 			if( gap in gapTotal )
 				gapTotal[gap] += 1;
 			else
 				gapTotal[gap] = 1;
 		}
-		var gapTotalMax = 0;
-		var gapMostFrequent = 60;
+		let gapTotalMax = 0;
+		let gapMostFrequent = 60;
 		for( gap in gapTotal ) {
 			if( gapTotal[gap] > gapTotalMax ) {
 				gapTotalMax = gapTotal[gap];
@@ -567,17 +578,17 @@ function onload() {
 		gapTotal = null;
 
 		// Insert Exception starts into the start list gaps exceeding 4 minutes.
-		var startGapMin = 4*60;
-		var startListExceptions = [];
+		let startGapMin = 4*60;
+		let startListExceptions = [];
 		function addExceptionStarts( startCur, startMax ) {
 			while( startCur + gapMostFrequent < startMax ) {
 				startCur += gapMostFrequent;
-				var tFormat = FormatTime(startCur);
+				let tFormat = FormatTime(startCur);
 				startListExceptions.push( [startCur, tFormat, '', '', '', ''] );
 			}
 		}
 		
-		for( var i = 1; i < startList.length; ++i ) {
+		for( let i = 1; i < startList.length; ++i ) {
 			if( startList[i][0] - startList[i-1][0] >= startGapMin )
 				addExceptionStarts( startList[i-1][0], startList[i][0] );
 		}
@@ -588,13 +599,13 @@ function onload() {
 		startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
 	}
 	
-	for( var i = 0; i < startList.length; ++i ) {
-		var startEntry = startList[i];
-		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
+	for( let i = 0; i < startList.length; ++i ) {
+		let startEntry = startList[i];
+		let tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
 		if( tStart < tServer )
 			continue;
-		for( var b = 0; b < beepTimes.length; ++b ) {
-			var tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
+		for( let b = 0; b < beepTimes.length; ++b ) {
+			let tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
 			if( tBeep < tServer || (beepsToGive.length > 0 && beepsToGive[beepsToGive.length-1].t >= tBeep) )
 				continue;
 			beepsToGive.push( {
@@ -610,8 +621,8 @@ function onload() {
 	}
 	
 	if( beepsToGive.length == 0 ) {
-		var startEntry = startList[startList.length-1];
-		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
+		let startEntry = startList[startList.length-1];
+		let tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
 		beepsToGive.push( {
 				't':tStart,
 				'tStart':tStart,
@@ -625,8 +636,8 @@ function onload() {
 
 	// Add a long last entry to avoid special cases.
 	beepsToGive.push( beepsToGive[beepsToGive.length-1] );
-	var tBig = 200.0*365*24*60*60*1000;
-	var btgLast = beepsToGive[beepsToGive.length-1];
+	let tBig = 200.0*365*24*60*60*1000;
+	let btgLast = beepsToGive[beepsToGive.length-1];
 	btgLast.t = new Date(btgLast.t.getTime() + tBig);
 	btgLast.tStart = new Date(btgLast.tStart.getTime() + tBig);
 	btgLast.beep = -1;

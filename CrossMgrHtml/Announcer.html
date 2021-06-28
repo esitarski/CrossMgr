@@ -137,11 +137,12 @@ var raceWasRunning = null;
 var raceIsUnstarted = null;
 var raceIsFinished = null;
 var raceStartTime = null;
+var isTimeTrial = null;
+var winAndOut = null;
 var curRaceTime = null;
 var data = null;
 var catDetails = null;
 var iCategoryCur = 1;
-var isTimeTrial = null;
 var winAndOut = null;
 var version = null;
 var flags = null;
@@ -199,7 +200,7 @@ function decode_utf8( s ) {
 }
 
 function isEmptyObject( obj ) {
-    for ( var name in obj ) {
+    for( let name in obj ) {
         return false;
     }
     return true;
@@ -406,7 +407,7 @@ function ProcessBaseline( msg ) {
 	
 	data = msg.info;
 	
-	var c, k, f;
+	let c, k, f;
 	catDetails = [];
 	for( k in msg.categoryDetails )
 		catDetails.push( msg.categoryDetails[k] );
@@ -503,20 +504,20 @@ function getExpectedRecorded() {
 	if( !data )
 		return;
 	
-	var tCur = getRaceTime();
+	let tCur = getRaceTime();
 	if( !tCur )
 		return;
 	
 	if( isTimeTrial ) {
-		var interpValue = isTimeTrial;
+		let interpValue = true;
 		for( num in data ) {
-			var rr = data[num];
-			if( rr && (isTimeTrial && rr.status == 'NP') || (rr.status == 'Finisher' && rr.lapTimes && rr.lapTimes.length == 0) ) {
-				if( r.firstTime != null ) {
-					var e = {'num':rider.num, 'lap':0, 't':rider.firstTime, 'interp':interpValue};
-					if( r.firstTime >= tCur && e.interp ) {
+			let rr = data[num];
+			if( rr && (rr.status == 'NP' || rr.status == 'Finisher') && (rr.lapTimes && rr.lapTimes.length == 0) ) {
+				if( rr.startTime != null ) {
+					let e = {'num':num, 'lap':0, 't':rr.startTime, 'interp':interpValue};
+					if( rr.startTime >= tCur && e.interp ) {
 						expected.push( e );
-						tExpected[num] = t;
+						tExpected[num] = rr.startTime;
 					}
 					else {
 						recorded.push( e );
@@ -527,24 +528,27 @@ function getExpectedRecorded() {
 		}
 	}
 	
-	var lapMin = 1;
+	let lapMin = 1;
 	for( num in data ) {
-		var rr = data[num];
+		let rr = data[num];
 		if( !rr || rr.status != 'Finisher' || !rr.raceTimes || rr.raceTimes.length < 2 )
 			continue;
-		var offset = isTimeTrial ? (rr.startTime||0.0) : 0.0;
+		// Correct for the TT start time.
+		let offset = isTimeTrial ? (rr.startTime||0.0) : 0.0;
 		
-		var i = rr.raceTimes.binSearch( tCur - offset );
+		let i = rr.raceTimes.binSearch( tCur - offset );
 		
 		// Get the next expected lap.  Consider that the rider could have been missed from the last lap.
-		var lap, t;
+		let lap, t;
 		try {
 			lap = i;
 			if( lap > 1 && rr.interp[lap-1] )
 				lap -= 1;
+			// Add the TT start time back.
 			t = rr.interp[lap] ? rr.raceTimes[lap] + offset : null;
 		}
 		catch( err ) {
+			console.log( err );
 			t = null;
 		}
 		if( t != null && lap >= lapMin ) {
@@ -563,7 +567,7 @@ function getExpectedRecorded() {
 			t = null;
 		}
 		if( t != null && lap >= lapMin ) {
-			var e = {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]};
+			let e = {'num':num, 'lap':lap, 't':t, 'interp':rr.interp[lap]};
 			recorded.push( e );
 			bibRecorded[num] = e;
 		}
@@ -574,9 +578,9 @@ function getExpectedRecorded() {
 }
 
 function GetContrastTextColour( backgroundColour ) {
-	var v = parseInt(backgroundColour.slice(1),16);
-	var r = v>>16, g = (v>>8) & 0xFF, b = v & 0xFF;
-	var yiq = ((r*299)+(g*587)+(b*114))/1000.0
+	let v = parseInt(backgroundColour.slice(1),16);
+	let r = v>>16, g = (v>>8) & 0xFF, b = v & 0xFF;
+	let yiq = ((r*299)+(g*587)+(b*114))/1000.0
 	return yiq >= 128.0 ? '#000000' : '#FFFFFF';
 }
 
@@ -584,6 +588,7 @@ var cols = ['Pos', 'Name', 'Team', 'Bib', 'Gap', 'Group', 'ETA'];
 var iCol = {};
 for( var i = 0; i < cols.length; ++i )
 	iCol[cols[i]] = i;
+iCol['Time'] = iCol['Group'];
 
 var groupColours = '#66c2a5,#fc8d62,#8da0cb,#e78ac3,#a6d854,#ffd92f,#e5c494,#b3b3b3'.split(',');
 var groupTextColours = [];
@@ -595,7 +600,7 @@ var greenScale = '#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17
 greenScale.reverse();
 var greenColourMap = {};
 (function () {
-	var i;
+	let i;
 	greenColourMap = {};
 	for( i = 0; i < alertETA; ++i ) {
 		greenColourMap[i] = greenScale[i];
@@ -610,7 +615,7 @@ var recordedChar = "\u2192";
 var isRecorded = [];
 
 function getScaleColour( eta ) {
-	var colour = greenColourMap[Math.floor(eta)];
+	let colour = greenColourMap[Math.floor(eta)];
 	if( colour )
 		return colour;
 	return eta < 0.0 ? greenScale[greenScale.length-1] : null
@@ -621,7 +626,7 @@ function setCategory( i ) {
 	if( !catDetails || catDetails.length == 0 || i >= catDetails.length )
 		i = 1;
 	iCategoryCur = i;
-	for( var j = 0; j < categoryButtons.length; ++j ) {
+	for( let j = 0; j < categoryButtons.length; ++j ) {
 		categoryButtons[j].style.borderWidth = ((j == i-1 ) ? 4 : 1) + 'px';
 		categoryButtons[j].style.border = (j == i-1) ? 'dotted orange' : 'black';
 	}
@@ -632,7 +637,7 @@ var categoryNames = [];
 function RefreshCategories() {
 	var rebuildButtons = ( catDetails.length-1 != categoryNames.length );
 	if( !rebuildButtons ) {
-		for( var i = 0; i < categoryNames.length; ++i ) {
+		for( let i = 0; i < categoryNames.length; ++i ) {
 			if( categoryNames[i] != catDetails[i+1].name ) {
 				rebuildButtons = true;
 				break;
@@ -645,8 +650,8 @@ function RefreshCategories() {
 		categoryNames = [];
 		categoriesDiv.innerHTML = '';
 		if( catDetails.length > 2 ) {
-			for( var i = 1; i < catDetails.length; ++i ) {
-				var b = document.createElement('BUTTON');
+			for( let i = 1; i < catDetails.length; ++i ) {
+				let b = document.createElement('BUTTON');
 				b.innerHTML = catDetails[i].name.escapeHTML();
 				b.style.margin = '8px';
 				b.style.fontSize = '120%';
@@ -658,12 +663,12 @@ function RefreshCategories() {
 		}
 	}
 	
-	var tRace = getRaceTime();
-	if( tRace ) {
-		for( var i = 0; i < categoryButtons.length; ++i ) {
-			var v = '', colour = null;
+	let tRace = getRaceTime();
+	if( tRace && !isTimeTrial ) {
+		for( let i = 0; i < categoryButtons.length; ++i ) {
+			let v = '', colour = null;
 			if( catDetails[i+1].pos.length > 0 && tExpected[catDetails[i+1].pos[0]] ) {
-				var eta = tExpected[catDetails[i+1].pos[0]] - tRace;
+				let eta = tExpected[catDetails[i+1].pos[0]] - tRace;
 				v = FormatTime( eta );
 				colour = getScaleColour( eta );
 			}
@@ -679,35 +684,37 @@ function RefreshETA() {
 	if( !catDetails || catDetails.length == 0 || iCategoryCur === null )
 	{
 		categoriesDiv.innerHTML = '';
-		var tNow = new Date();
-		var tStr = tNow.getHours() + ':' + ('0'+tNow.getMinutes()).slice(-2) + ':' + ('0'+tNow.getSeconds()).slice(-2);
+		let tNow = new Date();
+		let tStr = tNow.getHours() + ':' + ('0'+tNow.getMinutes()).slice(-2) + ':' + ('0'+tNow.getSeconds()).slice(-2);
 		resultsDiv.innerHTML = '<p style="font-size:700%;">' + tStr + '</p>';
 		return;
 	}
 
 	setCategory();
 
-	var categoryCur = catDetails[iCategoryCur];
+	let categoryCur = catDetails[iCategoryCur];
 	if( !categoryCur )
 		return;
 	
-	var resultsBody = document.getElementById('idResultsBody');
-	var iETA = iCol['ETA'];
-	
-	var tRace = getRaceTime();
-	for( var r = 0, tr = resultsBody.firstChild; r < categoryCur.pos.length && tr; ++r, tr = tr.nextSibling ) {
-		var num = categoryCur.pos[r];
-		var rr = data[num];
+	if( !isTimeTrial ) {
+		let resultsBody = document.getElementById('idResultsBody');
+		let iETA = iCol['ETA'];
 		
-		var v = '', colour = null;
-		if( tExpected[num] ) {
-			var eta = tExpected[num] - tRace;
-			v = FormatTime( eta );
-			colour = getScaleColour( eta );
+		let tRace = getRaceTime();
+		for( let r = 0, tr = resultsBody.firstChild; r < categoryCur.pos.length && tr; ++r, tr = tr.nextSibling ) {
+			let num = categoryCur.pos[r];
+			let rr = data[num];
+			
+			let v = '', colour = null;
+			if( tExpected[num] ) {
+				let eta = tExpected[num] - tRace;
+				v = FormatTime( eta );
+				colour = getScaleColour( eta );
+			}
+			let td = tr.childNodes[iETA];
+			td.innerHTML = v;
+			td.style.backgroundColor = colour ? colour : (isRecorded[r] ? recordedColour : unrecordedColour);
 		}
-		var td = tr.childNodes[iETA];
-		td.innerHTML = v;
-		td.style.backgroundColor = colour ? colour : (isRecorded[r] ? recordedColour : unrecordedColour);
 	}
 	
 	RefreshCategories();
@@ -717,7 +724,7 @@ function strToMillis( s ) {
 	if( s == null )
 		return null;
 	s = s.replace(/[^0-9]/g,' ');
-	var v = s.split(' ');
+	let v = s.split(' ');
 	return (new Date(
 		parseInt(v[0],10), parseInt(v[1],10)-1, parseInt(v[2],10),
 		parseInt(v[3],10), parseInt(v[4],10), parseInt(v[5],10), parseInt(v[6],10)
@@ -733,15 +740,15 @@ function RefreshResultsTable() {
 
 	if( !data || !catDetails || !catDetails.length )
 		return;
-	var categoryCur = catDetails[iCategoryCur];
+	let categoryCur = catDetails[iCategoryCur];
 	
 	// Show results for this category.
 	getExpectedRecorded();
 	
-	var tRace = getRaceTime();
+	let tRace = getRaceTime();
 
 	// Update the category information.
-	var leader, leaderLap, tLeader;
+	let leader, leaderLap, tLeader;
 	try {
 		leader = data[categoryCur.pos[0]];
 		leaderLap = Math.min( leader.raceTimes.binSearch(tRace), leader.raceTimes.length-1 );
@@ -753,8 +760,8 @@ function RefreshResultsTable() {
 		leader = leaderLap = tLeader = null;
 	}
 	
-	var v = categoryCur.name;
-	var lapsToGo;
+	let v = categoryCur.name;
+	let lapsToGo;
 	try {
 		lapsToGo = leader.raceTimes.length - 1 - (leaderLap || 0);
 	}
@@ -777,42 +784,66 @@ function RefreshResultsTable() {
 		titleDiv.appendChild( checkeredFlag );
 	
 	// Update the results information.	
-	var table = document.createElement('TABLE');
+	let table = document.createElement('TABLE');
 	table.className = 'results';
-	var thead = createChild( table, 'THEAD' );
-	var tr = createChild( thead, 'TR' );
-	var td;
-	for( var i = 0; i < cols.length; ++i ) {
-		createTextChild( td = createChild(tr, 'TH'), cols[i] );
-		if( cols[i] == 'Name' || cols[i] == 'Team' )
+	let thead = createChild( table, 'THEAD' );
+	let tr = createChild( thead, 'TR' );
+	let td;
+	for( let i = 0; i < cols.length; ++i ) {
+		let colName = cols[i];
+		if( isTimeTrial && colName == 'ETA' )
+			continue;
+		if( isTimeTrial && colName == 'Group' )
+			colName = 'Time';
+		createTextChild( td = createChild(tr, 'TH'), colName );
+		if( colName == 'Name' || colName == 'Team' )
 			td.style.textAlign = "left";
 	}
 	
-	var tbody = createChild( table, 'TBODY' );
+	let tbody = createChild( table, 'TBODY' );
 	tbody.id = 'idResultsBody';
 	
-	var iGroup = -1;
-	var rowGroup = [], groupCount = {};
-	var tdGroup = [];
-	var numPrev = null;
-	for( var r = 0; r < categoryCur.pos.length; ++r ) {
-		var num = categoryCur.pos[r];
-		var rr = data[num];
-		if( rr.status != 'Finisher' )
-			break;
+	let iGroup = -1;
+	let rowGroup = [], groupCount = {};
+	let tdGroup = [];
+	let numPrev = null;
+	for( let r = 0; r < categoryCur.pos.length; ++r ) {
+		let num = categoryCur.pos[r];
+		let rr = data[num];
+		let isComplete = (rr.raceTimes && rr.raceTimes.back() && !rr.interp.back());
+		if( isTimeTrial ) {
+			if( !(rr.status == 'Finisher' || rr.status == 'NP') )
+				break;
+		}
+		else {	// !isTimeTrial
+			if( !(rr.status == 'Finisher') )
+				break;
+		}
 		tr = createChild( tbody, 'TR' );
 		
-		var pos, bg;
-		var e = bibRecorded[num];
-		if( !raceIsRunning || (leaderLap == 1 || (e && tLeader !== null && e.t >= tLeader)) ) {
-			pos = r + 1;
-			isRecorded.push( true );
-			bg = recordedColour;
+		let pos, bg;
+		let e = bibRecorded[num];
+		if( isTimeTrial ) {
+			if( isComplete ) {
+				pos = r + 1;
+				bg = recordedColour;
+			}
+			else {
+				pos = 'NP';
+				bg = unrecordedColour;
+			}
 		}
 		else {
-			pos = (r+1) + recordedChar;
-			isRecorded.push( false );
-			bg = unrecordedColour;
+			if( !raceIsRunning || (leaderLap == 1 || (e && tLeader !== null && e.t >= tLeader)) ) {
+				pos = r + 1;
+				isRecorded.push( true );
+				bg = recordedColour;
+			}
+			else {
+				pos = (r+1) + recordedChar;
+				isRecorded.push( false );
+				bg = unrecordedColour;
+			}
 		}
 			
 		createTextChild( td = createChild(tr, 'TD'), pos );										// Pos
@@ -829,9 +860,12 @@ function RefreshResultsTable() {
 		createTextChild( td = createChild(tr, 'TD'), num );										// Bib
 		td.style.backgroundColor = bg;
 		
-		var gapValue = categoryCur.gapValue[r];
+		let gapValue = categoryCur.gapValue[r];
 		if( r == 0 )
 			gap = '';
+		else if ( isTimeTrial ) {
+			gap = (isComplete ? FormatTimeGap( gapValue ) : '');
+		}
 		else if ( gapValue > 0 )
 			gap = FormatTimeGap( gapValue );
 		else
@@ -839,40 +873,54 @@ function RefreshResultsTable() {
 		createTextChild( td = createChild(tr, 'TD'), gap );										// Gap
 		td.style.backgroundColor = bg;
 		
-		createTextChild( td = createChild(tr, 'TD'), '' );										// Group
-		td.style.backgroundColor = bg;
-		tdGroup.push( td );
+		if( isTimeTrial ) {
+			let finishTime = '';
+			if( isComplete )
+				finishTime = FormatTime(rr.raceTimes.back());
+			else if( tRace < rr.startTime )
+				finishTime = '[' + FormatTime(rr.startTime) + ']';
+			createTextChild( td = createChild(tr, 'TD'), finishTime );							// Finish Time
+			td.style.backgroundColor = bg;
+		}
+		else {
+			createTextChild( td = createChild(tr, 'TD'), '' );									// Group
+			td.style.backgroundColor = bg;
+			tdGroup.push( td );
+		}
 		
-		createTextChild( td = createChild(tr, 'TD'), '' );										// ETA
-		td.style.backgroundColor = bg;
-		if( !(tExpected[num] && tExpected[numPrev] && Math.abs(tExpected[num] - tExpected[numPrev]) < 1.0) )
-			++iGroup;
-		rowGroup.push( iGroup );
-		groupCount[iGroup] = (groupCount[iGroup] || 0) + 1;
+		if( !isTimeTrial ) {
+			createTextChild( td = createChild(tr, 'TD'), '' );									// ETA
+			td.style.backgroundColor = bg;
+			if( !(tExpected[num] && tExpected[numPrev] && Math.abs(tExpected[num] - tExpected[numPrev]) < 1.0) )
+				++iGroup;
+			rowGroup.push( iGroup );
+			groupCount[iGroup] = (groupCount[iGroup] || 0) + 1;
+		}
 
 		numPrev = num;
 	}
 	
-	var iGroupColour = 0;
-	var r = 0;
-	while( r < rowGroup.length ) {
-		if( groupCount[rowGroup[r]] > 1 ) {
-			tdGroup[r].innerHTML = (iGroupColour + 1) + ' [' + groupCount[rowGroup[r]] + ']';
+	if( !isTimeTrial ) {
+		let iGroupColour = 0;
+		let r = 0;
+		while( r < rowGroup.length ) {
+			if( groupCount[rowGroup[r]] > 1 ) {
+				tdGroup[r].innerHTML = (iGroupColour + 1) + ' [' + groupCount[rowGroup[r]] + ']';
 
-			var iGroupCur = rowGroup[r];
-			var colour = groupColours[iGroupColour % groupColours.length];
-			var colourText = groupTextColours[iGroupColour % groupColours.length];
-			while( rowGroup[r] == iGroupCur && r < rowGroup.length ) {
-				tdGroup[r].style.background = colour;
-				tdGroup[r].style.color = colourText;
-				++r;
+				let iGroupCur = rowGroup[r];
+				let colour = groupColours[iGroupColour % groupColours.length];
+				let colourText = groupTextColours[iGroupColour % groupColours.length];
+				while( rowGroup[r] == iGroupCur && r < rowGroup.length ) {
+					tdGroup[r].style.background = colour;
+					tdGroup[r].style.color = colourText;
+					++r;
+				}
+				++iGroupColour;
 			}
-			++iGroupColour;
+			else
+				++r;
 		}
-		else
-			++r;
 	}
-	
 	
 	resultsDiv.appendChild( table );
 	RefreshETA();
@@ -890,9 +938,9 @@ function RGB2Color(r,g,b) {
 function lighterColour( k, factor ) {
 	if( !factor )
 		factor = 0.6;
-	var s = '#';
-	for( var i = 0; i < 3; ++i ) {
-		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
+	let s = '#';
+	for( let i = 0; i < 3; ++i ) {
+		let c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
 		c += (255 - c) * factor;
 		c = ~~c;
 		s += (c < 16 ? '0' : '') + c.toString(16);
