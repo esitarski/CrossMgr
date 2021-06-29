@@ -220,6 +220,15 @@ function GetFlagImage( nation_code ) {
 	return flagImages.get(nation_code);
 }
 
+function Abbreviate( s ) {
+	s = s.replace( / powered by| presented by/gi, ' pb' );
+	s = s.replace( / cycling| team/gi, ' ' );
+	s = s.replace( '(Women)', '(W)' ).replace( '(Men)', '(M)' ).replace( '(Open)', '(O)' );
+	s = s.replace( /\.[abcdefghijklmnopqrstuvwxyz]{2,3}$/i, '' );
+	s = s.replace( /  +/, ' ' );
+	return s.trim();
+}
+
 var audioCtx = null, isAudioContext = false, isWebkitAudioContext = false;
 if( window.AudioContext ) {
 	audioCtx = new window.AudioContext();
@@ -337,7 +346,7 @@ function updateCountdown() {
 					dataSpan.appendChild( flag.cloneNode(true) );
 				}
 				let text = btgNext.startEntry[f];
-				dataSpan.appendChild( document.createTextNode( ((firstField || flag) ? ' ' : ', ') + text) );
+				dataSpan.appendChild( document.createTextNode( ((firstField || flag) ? ' ' : ', ') + Abbreviate(text)) );
 				firstField = false;
 			}
 		replaceChildrenWithChild( team_starting, dataSpan );
@@ -378,8 +387,7 @@ function updateCountdown() {
 					}
 				}
 				if( v ) {
-					v = (''+v).replace('(Men)','(M)').replace('(Women)','(W)').replace('(Open)','(O)');
-					td.appendChild( document.createTextNode(v) );
+					td.appendChild( document.createTextNode(Abbreviate(''+v)) );
 				}
 				if( c == 1 )
 					td.className = 'text-center';
@@ -406,11 +414,27 @@ function dateFromTuple( t ) {
 	return new Date(t[0], t[1], t[2], t[3], t[4], t[5], t[6]);
 }
 
+/* Get the documentElement (<html>) to display the page in fullscreen */
+var elem = document.documentElement;
+
+/* View in fullscreen */
+function openFullscreen() {
+	if (elem.requestFullscreen) {
+		elem.requestFullscreen();
+	} else if (elem.webkitRequestFullscreen) { /* Safari */
+		elem.webkitRequestFullscreen();
+	} else if (elem.msRequestFullscreen) { /* IE11 */
+		elem.msRequestFullscreen();
+	}
+}
+
 function initiateSound() {
 	if( !enableBeeps ) {
 		enableBeeps = true;
-		playBeep(10);
-		playBeep(0);
+		// Play some beeps to set the volume.
+		for( let i = 0; i < 16; ++i )
+			setTimeout(function() { playBeep(i%4); }, 250*i);
+		openFullscreen();			
 	}
 	document.getElementById('countdown-clock').className = '';
 }
@@ -513,7 +537,7 @@ function onload() {
 	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	
 	if( true || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
-		// On tablets, the first sound must be triggered by a user action.
+		// On certain devices the first sound must be triggered by a user action.
 		isDevice = true;
 		enableBeeps = false;
 		let countdown_clock = document.getElementById('countdown-clock');
