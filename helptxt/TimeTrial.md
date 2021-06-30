@@ -93,3 +93,7 @@ If the "new" time is 1 minute later than the "old" time, the rider's overall tim
 Try hard to avoid changing the start times during a time trial as it can lead to incredible confusion.
 
 Also, use the TTCountDown page so you get perfect starts every time.
+
+__Things really messed up and I have to change the Start Times after the race.  What do I do?__
+
+Just change them in Excel.  CrossMgr will automaticaly apply the same adjustments for the "new" times (see above).
