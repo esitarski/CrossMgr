@@ -142,7 +142,7 @@ Other races in the same folder will also be shown.
 ## QR Code Share Page
 Opens a browser and loads the CrossMgr web QR Code Share page.
 
-Publish this to allow people to connect to real-time results.
+Publish this to allow people to connect to real-time results or the TTCountDown page.
 Print this out and post it at the race.  This will allow people to easily access the real-time results.
 
 ## Controlling Results Web Page

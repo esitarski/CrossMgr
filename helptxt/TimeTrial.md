@@ -58,7 +58,7 @@ On race day:
 +  Import the start times into CrossMgr race ahead of time if you have them in a separate spreadsheet.  If they are in the same spreadsheet, they will auto-import.
 +  Get together with the manual timers (or on phone/radio) to synchronize the CrossMgr start with the manual stopwatches.  On a countdown of 5, Start the race, and get everyone to start the stopwatches at the same time.  Remember the race start Confirm dialog - get it up on the screen first, then press OK.
 +  If you mess up syncing the stop watches, Ctrl-Z will "undo" the start (for safety, it only works 8 seconds after the start).  After undoing the start, get everyone to reset, then start the race and stopwatches again.
-
++	Use the TTCountdown feature on a tablet (see [Web][] for details).  This does a UCI-style countdown on a tablet complete with the correct "beeps" on the 10s, 5, 4, 3, 2, 1, 0.  Using the Countdown page eliminates confusion regarding the start time and the rider.
 
 ## Without a Start List: Manual Starts
 
@@ -71,4 +71,25 @@ Subsequent entries for that rider will count as usual (either the finish, or tow
 
 ## Both Automatic Starts and Manual Starts
 
-Starts on the start list will happen automatically.  However, if you have a rider not on the start list (eg. late entry), just do a Manual Start.
+Starts from the start list will happen automatically.  However, if you have a rider not on the start list (eg. late entry), just do a Manual Start.
+You can then update the Excel sheet with rider information at any time.
+
+## Frequently Asked Questions
+
+__What happens if the Start Times change during a race?__
+
+CrossMgr assumes that all the "new" start times are the correct ones.
+
+For all riders who have not started yet, CrossMgr will use the new start time.  The TTCountDown page will also update.
+It is bad practice to make the the "new" start times earlier as it can lead to rider's missing the "new" time as they were expecting the old one.
+
+If a rider has already started (or finished), CrossMgr will make the rider's start the "new" time, and not the "old" time.
+
+The rider's time will be updated accordingly.
+
+For example if the "new" time is 1 minute earlier than the "old" time, the rider's overall time will be adjusted longer by 1 minute.
+If the "new" time is 1 minute later than the "old" time, the rider's overall time will be adjusted shorter by 1 minute.
+
+Try hard to avoid changing the start times during a time trial as it can lead to incredible confusion.
+
+Also, use the TTCountDown page so you get perfect starts every time.
