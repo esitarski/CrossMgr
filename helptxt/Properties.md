@@ -50,7 +50,7 @@ See the [Record][] screen for details on managing a race with one lap counter, o
 ## Race Options
 Property|Description
 :-------|:----------
-Time Trial|Specifies Time Trial mode.  In this mode, the rider's start time from the Excel spreadsheet is used.  If pre-seeded start times are not used, or there is no start time for the rider in the Excel sheet, the first time recorded for a rider starts the clock for that rider.  See [Further Explanation](#time-trial-mode).
+Time Trial|Specifies Time Trial mode.  In this mode, the rider's start time from the Excel spreadsheet is used.  If pre-seeded start times are not used, or there is no start time for the rider in the Excel sheet, the first time recorded for a rider starts the clock for that rider.  See [TimeTrial][].
 All Categories Finish After Fastest Rider's Last Lap|Applies to multi-category races only.  Tells CrossMgr that all riders were stopped after the fastest rider in the race finished.  This means you stopped riders lapped by the fastest Category leader, but not lapped by their own Category leader.  This option is ignored for all Categories with "Race Laps" specified (see [Categories][]).
 Set "Autocorrect Lap Data" option by Default|If true, CrossMgr sets the Autocorrect option by default when a rider is added to the race.  See [RiderDetail](RiderDetail.html) for details about Autocorrect.  If false, the Autocorrect option will not be set when a rider is added to the race.  You can change the Autocorrect option by rider in RiderDetail.  You can also enable/disable Autocorrect for all riders at once with "Edit/Enable Autocorrect for All Riders" and "Edit/Disable Autocorrect for All Riders".
 Distance Unit|km or miles for the distances specified in Categories

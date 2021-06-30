@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 import copy
+import datetime
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.adv as adv
@@ -380,7 +381,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		try:
 			startTime = data['StartTime']
 		except KeyError:
-			errors.append( u'{} {}: {}'.format(_('Bib'), num, _('missing start time')) )
+			errors.append( '{} {}: {}'.format(_('Bib'), num, _('missing start time')) )
 			continue
 			
 		# Try to make sense of the StartTime (Stopwatch time, not clock time).
@@ -396,11 +397,13 @@ def DoImportTTStartTimes( race, excelLink ):
 					hh = 0.0
 					mm, ss = [float(f.strip()) for f in fields[:2]]
 				except Exception:
-					errors.append( u'{} {}:  {}: "{}"'.format(_('Bib'), num, _('cannot read time format'), startTime) )
+					errors.append( '{} {}:  {}: "{}"'.format(_('Bib'), num, _('cannot read time format'), startTime) )
 					continue
 			t = hh * 60.0*60.0 + mm * 60.0 + ss
+		elif isinstance(startTime, (datetime.time, datetime.datetime)):
+			t = startTime.hour * 60.0*60.0 + startTime.minute * 60.0 + startTime.second + startTime.microsecond / 1000000.0
 		else:
-			errors.append( u'{} {}:  {}'.format(_('Bib'), num, _('cannot read start time (neither Excel time nor String)') ) )
+			errors.append( '{} {}:  {}'.format(_('Bib'), num, _('cannot read start time (neither Excel time nor String)') ) )
 			continue
 			
 		startTimes[num] = t
@@ -437,10 +440,11 @@ def AutoImportTTStartTimes():
 	if not race or not race.isUnstarted() or not getattr(race, 'isTimeTrial', False) or not getattr(race, 'excelLink', None):
 		return False
 	
+	# Create a subset Excel link with two field, Bib# and StartTime, and read the times.
 	excelLink = ExcelLink()
 	excelLink.setFileName( race.excelLink.fileName )
 	excelLink.setSheetName( race.excelLink.sheetName )
-	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )
+	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )	# Hack to hardcode StartTime as the first column.
 	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	return True
 
@@ -455,13 +459,13 @@ def ImportTTStartTimes( parent ):
 	
 	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	if errors:
-		errorStr = u'\n'.join( errors[:20] )
+		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:
 			errorStr += '\n...'
 		Utils.MessageOK( parent, errorStr, _('Start Time Import Errors') )
 		
 	Utils.refresh()
-	Utils.MessageOK( parent, u'{}: {}'.format(_('Start Times Changed'), changeCount), _('Start Times Success') )
+	Utils.MessageOK( parent, '{}: {}'.format(_('Start Times Changed'), changeCount), _('Start Times Success') )
 	if Utils.getMainWin():
 		Utils.getMainWin().menuFind()
 

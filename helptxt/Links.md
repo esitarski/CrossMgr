@@ -37,6 +37,7 @@
 [Histogram]:		Histogram.html
 [TeamResults]:		TeamResults.html
 [Restart]:			Restart.html
+[TimeTrial]:		TimeTrial.html
 [FAQ]:				FAQ.html
 
 [SetLaps]:			SetLaps.html
