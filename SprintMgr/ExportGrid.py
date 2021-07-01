@@ -58,7 +58,7 @@ def writeHtmlHeader( buf, title ):
 		with tag(buf, 'tr'):
 			with tag(buf, 'td', dict(valign='top')):
 				data = base64.b64encode(open(getHeaderFName(),'rb').read())
-				buf.write( '<img id="idImgHeader" src="data:image/png;base64,%s" />' % data )
+				buf.write( '<img id="idImgHeader" src="data:image/png;base64,{}" />'.format(data.decode()) )
 			with tag(buf, 'td'):
 				buf.write( '&nbsp;&nbsp;&nbsp;&nbsp;' )
 			with tag(buf, 'td'):

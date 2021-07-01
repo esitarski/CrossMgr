@@ -679,7 +679,7 @@ table.results tr td.fastest{
 						data = base64.b64encode( fp.read() )
 					os.remove( pngFName )
 					writeHtmlHeader( html, title )
-					html.write( '<img id="idResultsSummary" src="data:image/png;base64,{}" />'.format(data) )
+					html.write( '<img id="idResultsSummary" src="data:image/png;base64,{}" />'.format(data.decode()) )
 		
 		html = htmlStream.getvalue()
 		
@@ -927,14 +927,12 @@ table.results tr td.fastest{
 		fileType = os.path.splitext(graphicFName)[1].lower()
 		if not fileType:
 			return None
-		fileType = fileType[1:]
-		if fileType == 'jpg':
-			fileType = 'jpeg'
+		fileType = fileType[1:].replace('jpg', 'jpeg')
 		if fileType not in ('png', 'gif', 'jpeg'):
 			return None
 		try:
 			with open(graphicFName, 'rb') as f:
-				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read()))
+				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read().decode()))
 				return b64
 		except IOError:
 			pass

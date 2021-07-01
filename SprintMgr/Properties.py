@@ -129,11 +129,12 @@ class Properties(wx.Panel):
 		model = Model.model
 		for f in self.modelFields:
 			f.refresh( model )
-		self.competitionFormatCtrl.SetSelection( 0 )
-		for i, c in enumerate(getCompetitions()):
-			if c.name == model.competition.name:
-				self.competitionFormatCtrl.SetSelection( i )
-				break
+		
+		try:
+			self.competitionFormatCtrl.SetSelection( next(i for i, c in enumerate(getCompetitions()) if c.name == model.competition.name) )
+		except StopIteration:
+			self.competitionFormatCtrl.SetSelection( 0 )
+
 		self.modifierCtrl.SetSelection( model.modifier )
 		self.updateGraph()
 

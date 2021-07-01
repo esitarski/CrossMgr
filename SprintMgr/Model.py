@@ -983,8 +983,10 @@ class Model:
 	def setChanged( self, changed = True ):
 		self.changed = changed
 		
-	def setCompetition( self, competition, modifier=0 ):
-		self.competition = copy.deepcopy( competition )
+	def setCompetition( self, competitionNew, modifier=0 ):
+		competitionNew = copy.deepcopy( competitionNew )
+		competitionNew.state = self.competition.state
+		self.competition = competition
 		self.modifier = modifier
 		if modifier:
 			for system, event in self.competition.allEvents():
