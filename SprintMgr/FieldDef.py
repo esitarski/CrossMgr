@@ -1,17 +1,20 @@
-import Utils
-import datetime
 import re
+import datetime
+
 import wx
-import wx.lib.masked.numctrl as NC
-import wx.lib.intctrl as IC
+from wx.adv import DatePickerCtrl
+from wx.lib.intctrl import IntCtrl
+from wx.lib.masked.numctrl import NumCtrl
 from wx.lib.masked import TimeCtrl, EVT_TIMEUPDATE
+
+import Utils
 
 def convert(name):
 	s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
 	return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 # Includes articles and conjunctions.
-nonCapWords = set( ['the', 'of', 'by', 'in', 'to', 'a', 'an', 'some', 'at', 'on', 'to', 'for', 'from', 'and', 'or', 'but', 'yet', 'so', ] )
+nonCapWords = {'the', 'of', 'by', 'in', 'to', 'a', 'an', 'some', 'at', 'on', 'to', 'for', 'from', 'and', 'or', 'but', 'yet', 'so',}
 	
 def niceName( name ):
 	names = [n[0].upper() + n[1:] if n not in nonCapWords else n for n in convert(name).split('_')]
@@ -64,20 +67,20 @@ class FieldDef:
 			self.editCtrl.Bind( wx.EVT_TEXT, self.onChanged )
 			
 		elif self.type == FieldDef.IntType:
-			self.editCtrl = IC.IntCtrl( parent, min=0, value=0, limited=True, style=wx.ALIGN_RIGHT, size=(32,-1) )
+			self.editCtrl = IntCtrl( parent, min=0, value=0, limited=True, style=wx.ALIGN_RIGHT, size=(32,-1) )
 			self.editCtrl.Bind( wx.EVT_TEXT, self.onChanged )
 			
 		elif self.type == FieldDef.FloatType:
-			self.editCtrl = NC.NumCtrl( parent, min = 0, integerWidth = 3, fractionWidth = 3, style=wx.ALIGN_RIGHT, size=(32,-1), useFixedWidthFont = False )
+			self.editCtrl = NumCtrl( parent, min=0, integerWidth=3, fractionWidth=3, style=wx.ALIGN_RIGHT, size=(32,-1), useFixedWidthFont = False )
 			self.editCtrl.SetAllowNegative(False)
 			self.editCtrl.Bind( wx.EVT_TEXT, self.onChanged )
 			
 		elif self.type == FieldDef.DateType:
-			self.editCtrl = wx.adv.DatePickerCtrl( parent, style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY, size=(120,-1))
+			self.editCtrl = DatePickerCtrl( parent, style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY, size=(120,-1))
 			self.editCtrl.Bind( wx.adv.EVT_DATE_CHANGED, self.onChanged )
 			
 		elif self.type == FieldDef.TimeType:
-			self.editCtrl = TimeCtrl( parent, format = '24HHMM', displaySeconds = False, useFixedWidthFont = False )
+			self.editCtrl = TimeCtrl( parent, format='24HHMM', displaySeconds=False, useFixedWidthFont=False )
 			self.editCtrl.Bind( EVT_TIMEUPDATE, self.onChanged)
 			
 		elif self.type == FieldDef.ChoiceType:

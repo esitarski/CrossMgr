@@ -165,7 +165,7 @@ class State:
 		
 		# Initialize extra open spaces to make sure we have enough starters.
 		self.labels.update( {'N{}'.format(i):self.OpenRider for i in range(len(riders)+1, 128)} )
-		self.OpenRider.qualifying_time =  QualifyingTimeDefault + 1.0
+		self.OpenRider.qualifying_time = QualifyingTimeDefault + 1.0
 
 	def inContention( self, label ):
 		return self.labels.get(label, None) != self.OpenRider and label not in self.noncontinue
@@ -173,6 +173,10 @@ class State:
 	def canReassignStarters( self ):
 		''' Check if no competitions have started and we can reasign starters. '''
 		return all( label.startswith('N') for label in self.labels.keys() )
+		
+	def __repr__( self ):
+		st = [(k,v) for k,v in self.labels.items() if not str(v).startswith('0')]
+		return ','.join('{}:{}'.format(k,v) for k,v in st) if st else '<<< no state >>>'
 
 #------------------------------------------------------------------------------------------------
 
@@ -980,13 +984,13 @@ class Model:
 	def canReassignStarters( self ):
 		return self.competition.state.canReassignStarters()
 		
-	def setChanged( self, changed = True ):
+	def setChanged( self, changed=True ):
 		self.changed = changed
 		
 	def setCompetition( self, competitionNew, modifier=0 ):
-		competitionNew = copy.deepcopy( competitionNew )
-		competitionNew.state = self.competition.state
-		self.competition = competition
+		stateSave = self.competition.state
+		self.competition = copy.deepcopy( competitionNew )
+		self.competition.state = stateSave
 		self.modifier = modifier
 		if modifier:
 			for system, event in self.competition.allEvents():

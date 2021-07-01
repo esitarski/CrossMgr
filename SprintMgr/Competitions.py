@@ -637,7 +637,8 @@ def SetDefaultData( name = None, modifier = 0, random = False ):
 			if name in competition.name:
 				model.competition = competition
 				break
-	
+
+	# Call setCompetition so that we set the correct heat numbers.
 	model.setCompetition( model.competition, modifier )
 	testData = getRandomTestData( competition.starters ) if random else getTestData()
 	for attrs in testData:
