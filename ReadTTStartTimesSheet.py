@@ -225,7 +225,7 @@ class SummaryPage(adv.WizardPageSimple):
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
-		self.riderNumber.SetLabel( u'{}'.format(infoLen) )
+		self.riderNumber.SetLabel( '{}'.format(infoLen) )
 		self.statusName.SetLabel( _('Success!') if infoLen else _('Failure') )
 	
 class GetExcelTTStartTimeLink:
@@ -285,14 +285,14 @@ class GetExcelTTStartTimeLink:
 					if fileName == '':
 						message = _('Please specify an Excel file.')
 					else:
-						message = u'{}:\n\n    "{}"\n\n{}'.format(_('Cannot open file'), fileName, _('Please check the file name and/or its read permissions.') )
+						message = '{}:\n\n    "{}"\n\n{}'.format(_('Cannot open file'), fileName, _('Please check the file name and/or its read permissions.') )
 					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.') + u'\n' + _('Check the format.'),
+					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.') + '\n' + _('Check the format.'),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
@@ -301,7 +301,7 @@ class GetExcelTTStartTimeLink:
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
+					Utils.MessageOK( self.wizard, '{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
@@ -310,7 +310,7 @@ class GetExcelTTStartTimeLink:
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + u'\n' + _('Check the Excel format.'),
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + '\n' + _('Check the Excel format.'),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
@@ -403,7 +403,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		elif isinstance(startTime, (datetime.time, datetime.datetime)):
 			t = startTime.hour * 60.0*60.0 + startTime.minute * 60.0 + startTime.second + startTime.microsecond / 1000000.0
 		else:
-			errors.append( '{} {}:  {}'.format(_('Bib'), num, _('cannot read start time (neither Excel time nor String)') ) )
+			errors.append( '{} {}:  {}'.format(_('Bib'), num, _('cannot read start time') ) )
 			continue
 			
 		startTimes[num] = t

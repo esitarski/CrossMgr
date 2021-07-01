@@ -593,13 +593,13 @@ class MainWin( wx.Frame ):
 		title = self.getTitle()
 		
 		htmlStream = StringIO()
-		html = codecs.getwriter('utf8')( htmlStream )
+		html = htmlStream
 		
 		with tag(html, 'html'):
 			with tag(html, 'head'):
 				with tag(html, 'title'):
-					html.write( title.replace(u'\n', u' ') )
-				with tag(html, 'meta', dict(charset="UTF-8", author="Edward Sitarski", copyright="Edward Sitarski, 2013", generator="SprintMgr")):
+					html.write( title.replace('\n', ' ') )
+				with tag(html, 'meta', dict(author="Edward Sitarski", copyright="Edward Sitarski, 2013", generator="SprintMgr")):
 					pass
 				with tag(html, 'style', dict( type="text/css")):
 					html.write( '''
@@ -679,12 +679,12 @@ table.results tr td.fastest{
 						data = base64.b64encode( fp.read() )
 					os.remove( pngFName )
 					writeHtmlHeader( html, title )
-					html.write( '<img id="idResultsSummary" src="data:image/png;base64,%s" />' % data )
+					html.write( '<img id="idResultsSummary" src="data:image/png;base64,{}" />'.format(data) )
 		
 		html = htmlStream.getvalue()
 		
 		try:
-			with open(htmlFName, 'wb') as fp:
+			with open(htmlFName, 'w') as fp:
 				fp.write( html )
 			webbrowser.open( htmlFName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlFName), 'Html Write')

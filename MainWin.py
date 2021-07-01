@@ -3267,6 +3267,7 @@ class MainWin( wx.Frame ):
 			
 			timeBeforeFirstRider = 30.0
 			startGap = 15.0
+			#startGap = 60.0
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []

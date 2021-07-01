@@ -1,6 +1,5 @@
 import wx
 import os
-import xlsxwriter
 import Utils
 import Model
 import math
@@ -284,7 +283,7 @@ class ExportGrid:
 	
 	def toExcelSheet( self, sheet, formats ):
 
-		''' Write the contents of the grid to an xlwt excel sheet. '''
+		''' Write the contents of the grid to an excel sheet. '''
 		titleStyle			= formats['titleStyle']
 		headerStyleLeft		= formats['headerStyleLeft']
 		headerStyleRight	= formats['headerStyleRight']
@@ -301,7 +300,6 @@ class ExportGrid:
 		sheetFit = FitSheetWrapperXLSX( sheet )
 		
 		# Write the colnames and data.
-
 		rowMax = 0
 		for col, c in enumerate(self.colnames):
 			sheetFit.write( rowTop, col, c, headerStyleLeft if col in self.leftJustifyCols else headerStyleRight, bold=True )
@@ -313,9 +311,7 @@ class ExportGrid:
 				sheetFit.write( rowCur, col, v, style )
 				
 		# Add branding at the bottom of the sheet.
-		style = xlwt.XFStyle()
-		style.alignment.horz = xlwt.Alignment.HORZ_LEFT
-		sheet.write( rowMax + 2, 0, brandText, style )
+		sheet.write( rowMax + 2, 0, brandText, styleLeft )
 		
 	def toHtml( self, buf ):
 		''' Write the contents to the buffer in HTML format. '''

@@ -2,6 +2,7 @@ import os
 import sys
 import wx
 import wx.grid as gridlib
+from operator import attrgetter
 
 import TestData
 import Model
@@ -21,23 +22,23 @@ class Results(wx.Panel):
  
 		self.font = wx.Font( (0,FontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		
-		self.showResultsLabel = wx.StaticText( self, wx.ID_ANY, 'Show:' )
+		self.showResultsLabel = wx.StaticText( self, label='Show:' )
 		self.showResultsLabel.SetFont( self.font )
-		self.showResults = wx.Choice( self, wx.ID_ANY, choices = ['Qualifiers'] )
+		self.showResults = wx.Choice( self, choices=['Qualifiers'] )
 		self.showResults.SetFont( self.font )
 		self.showResults.SetSelection( 0 )
 		
-		self.communiqueLabel = wx.StaticText( self, wx.ID_ANY, 'Communiqu\u00E9:' )
+		self.communiqueLabel = wx.StaticText( self, label='Communiqu\u00E9:' )
 		self.communiqueLabel.SetFont( self.font )
-		self.communiqueNumber = wx.TextCtrl( self, wx.ID_ANY, '', size=(80,-1) )
+		self.communiqueNumber = wx.TextCtrl( self, value='', size=(80,-1) )
 		self.communiqueNumber.SetFont( self.font )
 		
 		self.showResults.Bind( wx.EVT_LEFT_DOWN, self.onClickResults )
 		self.showResults.Bind( wx.EVT_CHOICE, self.onShowResults )
-		self.showNames = wx.ToggleButton( self, wx.ID_ANY, 'Show Names' )
+		self.showNames = wx.ToggleButton( self, label='Show Names' )
 		self.showNames.SetFont( self.font )
 		self.showNames.Bind( wx.EVT_TOGGLEBUTTON, self.onToggleShow )
-		self.showTeams = wx.ToggleButton( self, wx.ID_ANY, 'Show Teams' )
+		self.showTeams = wx.ToggleButton( self, label='Show Teams' )
 		self.showTeams.SetFont( self.font )
 		self.showTeams.Bind( wx.EVT_TOGGLEBUTTON, self.onToggleShow )
 		self.competitionTime = wx.StaticText( self )
@@ -96,7 +97,7 @@ class Results(wx.Panel):
 	def getResultChoices( self ):
 		model = Model.model
 		competition = model.competition
-		choices = ['Seeding' if self.isKeirin else 'Qualifiers'] + [system.name for system in self.systems]
+		choices = ['Seeding' if competition.isKeirin else 'Qualifiers'] + [system.name for system in competition.systems]
 		choices.append( 'Final Classification' )
 		return choices
 	
@@ -167,10 +168,10 @@ class Results(wx.Panel):
 			hideCols = self.getHideCols( self.headerNames )
 			self.headerNames = [h for c, h in enumerate(self.headerNames) if c not in hideCols]
 			
-			riders = sorted( model.riders, key = lambda r: r.keyQualifying() )
+			riders = sorted( model.riders, key = Model.Rider.getKeyQualifying(competition.isKeirin) )
 			for row, r in enumerate(riders):
 				if row >= starters or r.status == 'DNQ':
-					riders[row:] = sorted( riders[row:], key=lambda r: r.keyQualifying()[1:] )
+					riders[row:] = sorted( riders[row:], key=attrgetter('iSeeding') )
 					break
 			Utils.AdjustGridSize( self.grid, rowsRequired = len(riders), colsRequired = len(self.headerNames) )
 			Utils.SetGridCellBackgroundColour( self.grid, wx.WHITE )
@@ -186,7 +187,7 @@ class Results(wx.Panel):
 						self.grid.SetCellBackgroundColour( row, col, wx.Colour(200,200,200) )
 						
 				writeCell = WriteCell( self.grid, row )
-				for col, value in enumerate([pos,' {}'.format(r.bib), r.full_name, r.team, r.qualifyingTimeText]):
+				for col, value in enumerate([pos,' {}'.format(r.bib), r.full_name, r.team, r.qualifying_time_text]):
 					if col not in hideCols:
 						writeCell( value )
 						
@@ -200,7 +201,7 @@ class Results(wx.Panel):
 			self.headerNames = [h for c, h in enumerate(self.headerNames) if c not in hideCols]
 			
 			results, dnfs, dqs = competition.getResults()
-			Utils.AdjustGridSize( self.grid, rowsRequired = len(model.riders), colsRequired = len(self.headerNames) )
+			Utils.AdjustGridSize( self.grid, rowsRequired = len(results), colsRequired = len(self.headerNames) )
 			Utils.SetGridCellBackgroundColour( self.grid, wx.WHITE )
 
 			self.setColNames()
@@ -210,7 +211,7 @@ class Results(wx.Panel):
 					for col in range(self.grid.GetNumberCols()):
 						writeCell( '' )
 				else:
-					for col, value in enumerate([classification, r.bib if r.bib else '', r.full_name, r.team, r.uci_id]):
+					for col, value in enumerate([classification, r.bib or '', r.full_name, r.team, r.uci_id]):
 						if col not in hideCols:
 							writeCell(' {}'.format(value) )
 			self.competitionTime.SetLabel( '' ) 
