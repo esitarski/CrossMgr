@@ -146,18 +146,16 @@ class Properties(wx.Panel):
 			model.changed |= f.commit( model )
 			
 		competition = getCompetitions()[self.competitionFormatCtrl.GetSelection()]
-		if competition.name != model.competition.name:
-			# Check that changing the competition will screw anything up.
+		modifier = self.modifierCtrl.GetSelection()
+		
+		if competition.name != model.competition.name or modifier != model.modifier:
+			# Check if changing the competition format will screw anything up.
 			if model.canReassignStarters():
-				model.setCompetition( competition, self.modifierCtrl.GetSelection() )
+				model.setCompetition( competition, modifier )
 				model.setQualifyingInfo()
 				Utils.getMainWin().resetEvents()
-				model.setChanged( True )
 			else:
 				Utils.MessageOK( self, 'Cannot Change Competition Format after Event has Started', 'Cannot Change Competion Format' )
-		else:
-			model.setCompetition( competition, self.modifierCtrl.GetSelection() )
-
 		
 ########################################################################
 

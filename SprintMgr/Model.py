@@ -1003,6 +1003,8 @@ class Model:
 				elif modifier == 1:
 					if '1/4' in system.name:
 						event.heatsMax = 1
+		
+		self.setChanged( True )
 
 model = Model()
 
