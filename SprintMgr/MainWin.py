@@ -171,8 +171,8 @@ class MainWin( wx.Frame ):
 		self.fileMenu.Append( wx.ID_NEW , "&New...", "Create a new competition" )
 		self.Bind(wx.EVT_MENU, self.menuNew, id=wx.ID_NEW )
 
-		self.fileMenu.Append( wx.ID_NEW , "New N&ext...", "Create a new competition from the existing competition" )
-		self.Bind(wx.EVT_MENU, self.menuNewNext, id=wx.ID_NEW )
+		item = self.fileMenu.Append( wx.ID_ANY , "New N&ext...", "Create a new competition from the existing competition" )
+		self.Bind(wx.EVT_MENU, self.menuNewNext, item )
 
 		self.fileMenu.Append( wx.ID_OPEN , "&Open...", "Open an existing competition" )
 		self.Bind(wx.EVT_MENU, self.menuOpen, id=wx.ID_OPEN )
@@ -836,7 +836,6 @@ table.results tr td.fastest{
 							defaultFile = '',
 							wildcard = 'SprintMgr files (*.smr)|*.smr',
 							style=wx.FD_SAVE | wx.FD_CHANGE_DIR )
-		response = dlg.ShowModal()
 		fileName = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
 		dlg.Destroy()
 		

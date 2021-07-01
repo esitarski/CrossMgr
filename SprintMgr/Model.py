@@ -385,7 +385,7 @@ class Event:
 		self.finishRiders, self.finishRiderPlace, self.finishRiderRank = [], {}, {}
 		self.compositionRiders = []	# Input riders.
 		
-		# The following fields are set by the competition.
+		# The following are convenience fields and are set by the competition.
 		self.competition = None
 		self.system = None
 	
@@ -407,7 +407,10 @@ class Event:
 	
 	@property
 	def isFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-1]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-1]
+		except IndexError:
+			return False
 	
 	@property
 	def isSmallFinal( self ):
@@ -418,7 +421,10 @@ class Event:
 		
 	@property
 	def isBigFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-1]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-1]
+		except IndexError:
+			return False
 		
 	@property
 	def output( self ):
@@ -555,14 +561,6 @@ class Event:
 		
 		# Check for default winner(s).
 		availableStarters = [c for c in self.composition if c not in state.noncontinue]
-		
-		'''
-		# XCE Case
-		if any('RR' in o for o in self.output) and len(availableStarters) <= sum(1 for o in self.output if 'RR' not in o):
-			for i, o in enumerate(self.output):
-				state.labels[o] = state.labels[s.continuingPositions[i]] if i < len(s.continuingPositions) else state.OpenRider
-			return True
-		'''
 		
 		# Single sprint case.
 		if len(availableStarters) == 1:
@@ -739,7 +737,7 @@ class Competition:
 		return [(s, e) for s, e in self.allEvents() if e.canStart()]
 		
 	def propagate( self ):
-		while 1:
+		while True:
 			success = False
 			for s, e in self.allEvents():
 				success |= e.propagate()
@@ -988,6 +986,9 @@ class Model:
 		self.changed = changed
 		
 	def setCompetition( self, competitionNew, modifier=0 ):
+		if self.competition.name == competitionNew.name and self.modifier == modifier:
+			return
+		
 		stateSave = self.competition.state
 		self.competition = copy.deepcopy( competitionNew )
 		self.competition.state = stateSave

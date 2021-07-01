@@ -127,7 +127,6 @@ class Properties(wx.Panel):
 	
 	def refresh( self ):
 		model = Model.model
-		print( 'Properties refresh:', model.competition.state )
 			
 		for f in self.modelFields:
 			f.refresh( model )
@@ -142,7 +141,6 @@ class Properties(wx.Panel):
 
 	def commit( self ):
 		model = Model.model
-		print( 'Properties commit:', model.competition.state )
 					
 		for f in self.modelFields:
 			model.changed |= f.commit( model )
