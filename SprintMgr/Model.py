@@ -21,6 +21,7 @@ class Rider:
 	uci_points = 0
 	
 	fields = { 'bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'seeding_rank', 'status' }
+	extended_fields = fields | {'full_name', 'bib_full_name', 'uci_points_text', 'short_name', 'long_name'}
 	def __init__( self, bib,
 			first_name = '', last_name = '', team = '', team_code = '', uci_id = '',
 			qualifying_time = QualifyingTimeDefault,
@@ -87,7 +88,7 @@ class Rider:
 		for col, h in enumerate(headers):
 			h = h.strip().lower().replace(' ', '_')
 			h = Rider.aliases.get( h, h )
-			if h in Rider.fields:
+			if h in Rider.extended_fields:
 				header_map[h]  = col
 		return header_map
 
@@ -123,7 +124,7 @@ class Rider:
 		
 	@property
 	def full_name( self ):
-		return ', '.join( n for n in [self.last_name.upper(), self.first_name] if n )
+		return ', '.join( n for n in (self.last_name.upper(), self.first_name) if n )
 	
 	@property
 	def bib_full_name( self ):

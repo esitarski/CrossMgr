@@ -405,12 +405,12 @@ def formatTime( secs,
 			minutes = 0
 			hours += 1
 	if forceHours or hours > 0:
-		return "{}{:0{hourWidth}d}:{:02d}:{}".format(sign, hours, minutes, secStr, hourWidth=2 if twoDigitHours else 0)
+		return '{}{:0{hourWidth}d}:{:02d}:{}'.format(sign, hours, minutes, secStr, hourWidth=2 if twoDigitHours else 0)
 	else:
 		if forceMinutes or minutes > 0:
-			return "{}{:0{minuteWidth}d}:{}".format(sign, minutes, secStr, minuteWidth=2 if twoDigitMinutes else 0)
+			return '{}{:0{minuteWidth}d}:{}'.format(sign, minutes, secStr, minuteWidth=2 if twoDigitMinutes else 0)
 		else:
-			return "{}{}".format(
+			return '{}{}'.format(
 				sign,
 				secStr if twoDigitSeconds else (secStr.lstrip('0') if not secStr.startswith('00') else secStr[1:])
 			)

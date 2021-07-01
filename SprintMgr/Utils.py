@@ -194,17 +194,46 @@ def ChangeFontInChildren(win, font):
 	except Exception:
 		pass
 		
-def formatTime( secs ):
+def formatTime( secs,
+				highPrecision=False,	extraPrecision=False,
+				forceHours=False, 		twoDigitHours=False,
+				forceMinutes=True,		twoDigitMinutes=True,
+				twoDigitSeconds=False ):
 	if secs is None:
 		secs = 0
-	secs = int(secs + 0.5)
+	if secs < 0:
+		sign = '-'
+		secs = -secs
+	else:
+		sign = ''
+	f, ss = math.modf(secs)
+	secs = int(ss)
 	hours = int(secs // (60*60))
 	minutes = int( (secs // 60) % 60 )
-	secs = secs % 60
-	if hours > 0:
-		return "{:d}:{:02d}:{:02d}".forrmat(hours, minutes, secs)
+	secs = (secs % 60) + f
+	if highPrecision or extraPrecision:
+		if extraPrecision:
+			secStr = '{:06.3f}'.format( secs )
+		else:
+			secStr = '{:05.2f}'.format( secs )
 	else:
-		return "{:02d}:{:02d}".format(minutes, secs)
+		secStr = '{:02.0f}'.format( secs )
+	if secStr.startswith('60'):
+		secStr = '00' + secStr[2:]
+		minutes += 1
+		if minutes == 60:
+			minutes = 0
+			hours += 1
+	if forceHours or hours > 0:
+		return '{}{:0{hourWidth}d}:{:02d}:{}'.format(sign, hours, minutes, secStr, hourWidth=2 if twoDigitHours else 0)
+	else:
+		if forceMinutes or minutes > 0:
+			return '{}{:0{minuteWidth}d}:{}'.format(sign, minutes, secStr, minuteWidth=2 if twoDigitMinutes else 0)
+		else:
+			return '{}{}'.format(
+				sign,
+				secStr if twoDigitSeconds else (secStr.lstrip('0') if not secStr.startswith('00') else secStr[1:])
+			)
 
 def formatDate( date ):
 	y, m, d = date.split('-')
