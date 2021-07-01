@@ -370,6 +370,8 @@ class Event:
 		
 		fields = rule.split()
 		iSep = fields.index( '>' )
+		
+		# Event transformation.
 		self.composition = fields[:iSep]
 		self.winner = fields[iSep+1]	# Winner of competition.
 		self.others = fields[iSep+2:]	# Other non-winners.
@@ -379,15 +381,16 @@ class Event:
 		
 		assert len(self.composition) == len(self.others) + 1, 'Rule outputs cannot exceed inputs.'
 			
-		self.heatsMax = heatsMax	# Number of heats to decide the outcome.
-		self.starts = []
-		
-		self.finishRiders, self.finishRiderPlace, self.finishRiderRank = [], {}, {}
-		self.compositionRiders = []	# Input riders.
-		
-		# The following are convenience fields and are set by the competition.
+		self.heatsMax = heatsMax	# Number of heats required to decide the outcome.
+				
+		# Convenience fields and are set by the competition.
 		self.competition = None
 		self.system = None
+
+		# State of the Event.
+		self.finishRiders, self.finishRiderPlace, self.finishRiderRank = [], {}, {}
+		self.starts = []
+		self.compositionRiders = []	# Input riders.
 	
 	@property
 	def competitionTime( self ):
