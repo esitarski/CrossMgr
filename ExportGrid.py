@@ -916,11 +916,11 @@ class ExportGrid:
 						ttt = (v - rr.raceTimes[0]) if v and rr.raceTimes else 0.0
 						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else u'' )
 					else:
-						data[col].append( u'' )
+						data[col].append( '' )
 			elif f in ('clockStartTime', 'startTime', 'finishTime'):
 				for row, rr in enumerate(results):
 					if f == 'finishTime' and rr.status != Finisher:
-						data[col].append( u'' )
+						data[col].append( '' )
 						continue
 						
 					sfTime = getattr( rr, f, None )
@@ -928,23 +928,23 @@ class ExportGrid:
 						data[col].append( Utils.formatTimeCompressed(sfTime, highPrecision) )
 						continue
 						
-					data[col].append( u'' )
+					data[col].append( '' )
 			elif f == 'factor':
 				for row, rr in enumerate(results):
 					factor = getattr( rr, f, None )
 					if factor is not None:
-						data[col].append( u'{:.2f}'.format(factor) )
+						data[col].append( '{:.2f}'.format(factor) )
 					else:
-						data[col].append( u'' )
+						data[col].append( '' )
 			elif f == 'prize':
 				for row, rr in enumerate(results):
 					try:
 						data[col].append( prizes[row] )
 					except IndexError:
-						data[col].append( u'' )
+						data[col].append( '' )
 			else:
 				for row, rr in enumerate(results):
-					data[col].append( getattr(rr, f, u'') )
+					data[col].append( getattr(rr, f, '') )
 		
 		if showLapTimes:
 			for row, rr in enumerate(results):
@@ -965,7 +965,7 @@ class ExportGrid:
 					lap = i + 1
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax:
 						try:
-							data[iCol].append( u'' )
+							data[iCol].append( '' )
 							iCol += 1
 						except IndexError as e:
 							break
@@ -974,7 +974,7 @@ class ExportGrid:
 		self.infoColumns     = set( range(2, 2+len(infoFields)) ) if infoFields else set()
 		self.leftJustifyCols = set( range(2, 2+len(infoFields)) ) if infoFields else set()
 		try:
-			self.leftJustifyCols.remove( self.colnames.index('Age') )
+			self.leftJustifyCols.remove( self.colnames.index(_('Age')) )
 		except ValueError:
 			pass
 		

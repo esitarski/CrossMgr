@@ -139,12 +139,13 @@ class Qualifiers(wx.Panel):
 				pass
 	
 		if len(headerMap) < 2:
-			message = '{}:\n\n\t{}\n\n{}'.format(
+			message = '{}\n{}\n\n\t{}\n\n{}'.format(
+				"Missing Bib and Time Headers.",
 				"Recognized Excel column headers are",
 				', '.join(str(h) for h in sorted(bib_headers|time_headers)),
-				'Capitalization and spaces are ignored.'
+				'Capitalization, underscores and spaces are ignored.'
 			)
-			with wx.MessageDialog( self, message, "Unrecognized column headers in Excel sheet", style=wx.OK ) as messageDialog:
+			with wx.MessageDialog( self, message, "Missing Bib and Time Headers", style=wx.OK ) as messageDialog:
 				messageDialog.ShowModal()
 				return
 
