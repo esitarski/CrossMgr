@@ -105,8 +105,8 @@ class ExportGrid:
 		self.fontSize = 16
 	
 	def setTimeCols( self ):
-		# self.timeCols = set( c for c, name in enumerate(self.colnames) if name.lower().strip() in {_('time'), _('finish'), _('start'), _('clock')}  )
-		self.timeCols = set()
+		cols = {_('time'), _('finish'), _('start'), _('clock')} 
+		self.timeCols = set( c for c, name in enumerate(self.colnames) if name.lower().strip() in cols or name.startswith(_('Lap') + ' ')  )
 	
 	def combineFirstLastNames( self ):
 		try:
@@ -634,6 +634,7 @@ class ExportGrid:
 			'align':	'right',
 		})
 		
+		#---------------------------------------------------------------
 		styleTime = workbook.add_format({
 			'align':	'right',
 			'num_format': 'hh:mm:ss.000',
@@ -649,6 +650,24 @@ class ExportGrid:
 			'num_format': 'ss.000',
 		})
 		
+		#---------------------------------------------------------------
+		# Low-precision time formats
+		#
+		styleTimeLP = workbook.add_format({
+			'align':	'right',
+			'num_format': 'hh:mm:ss',
+		})
+		
+		styleMMSSLP = workbook.add_format({
+			'align':	'right',
+			'num_format': 'mm:ss',
+		})
+		
+		styleSSLP = workbook.add_format({
+			'align':	'right',
+			'num_format': 'ss',
+		})
+		
 		return {
 			'titleStyle':				titleStyle,
 			'headerStyleAlignLeft':		headerStyleAlignLeft,
@@ -659,6 +678,11 @@ class ExportGrid:
 			'styleHHMMSS':				styleTime,
 			'styleMMSS':				styleMMSS,
 			'styleSS':					styleSS,
+
+			'styleTimeLP':				styleTimeLP,
+			'styleHHMMSSLP':			styleTimeLP,
+			'styleMMSSLP':				styleMMSSLP,
+			'styleSSLP':				styleSSLP,
 		}
 	
 	def toExcelSheetXLSX( self, formats, sheet ):
@@ -668,9 +692,14 @@ class ExportGrid:
 		headerStyleAlignRight	= formats['headerStyleAlignRight']
 		styleAlignLeft			= formats['styleAlignLeft']
 		styleAlignRight			= formats['styleAlignRight']
+		
 		styleTime				= formats['styleTime']
 		styleMMSS				= formats['styleMMSS']
 		styleSS					= formats['styleSS']
+		
+		styleTimeLP				= formats['styleTimeLP']
+		styleMMSSLP				= formats['styleMMSSLP']
+		styleSSLP				= formats['styleSSLP']
 				
 		rowTop = 0
 		if self.title:
@@ -697,15 +726,22 @@ class ExportGrid:
 			if col in self.timeCols:
 				# Find a time format closest to the maximum value.
 				vMax = 0.0
+				highPrecision = False
 				for v in self.data[col]:
 					try:
-						vMax = max( vMax, abs(Utils.StrToSeconds(v)) )
-					except Exception:
+						v = abs(Utils.StrToSeconds(v))
+						highPrecision |= (int(v) != v)
+						vMax = max( vMax, v )
+					except Exception as e:
+						print( e )
 						continue
+				# If all the times lack decimals, use low precision format.
 				if vMax < 60.0:
-					style = styleSS
+					style = styleSS if highPrecision else styleSSLP
 				elif vMax < 60.0*60.0:
-					style = styleMMSS
+					style = styleMMSS if highPrecision else styleMMSSLP
+				else:
+					style = styleTime if highPrecision else styleTimeLP
 			
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
@@ -714,10 +750,11 @@ class ExportGrid:
 					if v == '"':
 						v += '    '
 				elif col in self.timeCols:
-					try:
-						v = Utils.StrToSeconds(v) / (24.0*60.0*60.0)	# Convert seconds to fraction of a day.
-					except Exception:
-						pass
+					if v:
+						try:
+							v = Utils.StrToSeconds(v) / (24.0*60.0*60.0)	# Convert seconds to fraction of a day for Excel.
+						except Exception:
+							pass
 				
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
@@ -812,7 +849,7 @@ class ExportGrid:
 			if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
 				if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
 					catData.append(
-						u'{} {:.2f} {}, {} {} {:.2f} {}'.format(
+						'{} {:.2f} {}, {} {} {:.2f} {}'.format(
 								_('1st lap'), cd['firstLapDistance'], cd['distanceUnit'],
 								cd['laps'] - 1, _('more laps of'), cd['lapDistance'], cd['distanceUnit']
 						)
@@ -855,6 +892,8 @@ class ExportGrid:
 		if leader.lapTimes and showLapTimes:
 			self.colnames.extend( ['{} {}'.format(_('Lap'),lap) for lap in range(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
+		
+		self.setTimeCols()
 		
 		highPrecision = Model.highPrecisionTimes()
 		data = [ [] for i in range(len(self.colnames)) ]
