@@ -630,8 +630,6 @@ class ExportGrid:
 		
 		styleAlignLeft = workbook.add_format()
 		
-		styleAlignLeft = workbook.add_format()
-		
 		styleAlignRight = workbook.add_format({
 			'align':	'right',
 		})
