@@ -104,7 +104,7 @@ class Qualifiers(wx.Panel):
 		model = Model.model
 		riders = model.riders
 		
-		with wx.FileDialog(self, "Choose the Excel file for Qualifying times", wildcard="Excel files (*.xlsx)|*.xlsx",
+		with wx.FileDialog(self, "Choose Excel file with Qualifying times", wildcard="Excel files (*.xlsx)|*.xlsx",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR) as fileDialog:
 		
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -113,7 +113,7 @@ class Qualifiers(wx.Panel):
 
 		reader = GetExcelReader( pathname )
 		sheet_names = reader.sheet_names()
-		with wx.SingleChoiceDialog(self, "Sheet containing the qualifying times", "Choose Qualifying Sheet", sheet_names) as choiceDialog:
+		with wx.SingleChoiceDialog(self, "Choose Sheet with qualifying times", "Choose Qualifying Sheet", sheet_names) as choiceDialog:
 			if choiceDialog.ShowModal() == wx.ID_CANCEL:
 				return
 			sheet_name = choiceDialog.GetStringSelection()
