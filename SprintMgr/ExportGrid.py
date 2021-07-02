@@ -93,15 +93,18 @@ class ExportGrid:
 		self.fontName = 'Helvetica'
 		self.fontSize = 16
 		
-		self.leftJustifyCols = {}
-		self.rightJustifyCols = {}
+		self.leftJustifyCols = set()
+		self.rightJustifyCols = set()
+		self.timeCols = set()
 		
 		rightJustify = {'Pos', 'Bib', 'Time'}
 		for c, n in enumerate(self.colnames):
 			if n in rightJustify:
-				self.rightJustifyCols[c] = True
+				self.rightJustifyCols.add( c )
 			else:
-				self.leftJustifyCols[c] = True
+				self.leftJustifyCols.add( c )
+			if n == 'Time':
+				self.timeCols.add( c )
 	
 	def _getFont( self, pixelSize = 28, bold = False ):
 		return wx.Font( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
@@ -134,8 +137,7 @@ class ExportGrid:
 	def _drawMultiLineText( self, dc, text, x, y ):
 		if not text:
 			return
-		wText, hText = dc.GetMultiLineTextExtent( text )
-		lineHeightText = dc.GetTextExtent( 'PpJj' )[1]
+		wText, hText, lineHeightText = dc.GetFullMultiLineTextExtent( text )
 		for line in text.split( '\n' ):
 			dc.DrawText( line, x, y )
 			y += lineHeightText
@@ -273,12 +275,31 @@ class ExportGrid:
 			'align':	'right',
 		})
 		
+		styleTime = workbook.add_format({
+			'align':	'right',
+			'num_format': 'hh:mm:ss.000',
+		})
+		
+		styleMMSS = workbook.add_format({
+			'align':	'right',
+			'num_format': 'mm:ss.000',
+		})
+		
+		styleSS = workbook.add_format({
+			'align':	'right',
+			'num_format': 'ss.000',
+		})
+		
 		return {
 			'titleStyle':		titleStyle,
 			'headerStyleLeft':	headerStyleLeft,
 			'headerStyleRight':	headerStyleRight,
 			'styleLeft':		styleLeft,
 			'styleRight':		styleRight,
+			'styleTime':		styleTime,
+			'styleHHMMSS':		styleTime,
+			'styleMMSS':		styleMMSS,
+			'styleSS':			styleSS,
 		}
 	
 	def toExcelSheet( self, sheet, formats ):
@@ -289,6 +310,9 @@ class ExportGrid:
 		headerStyleRight	= formats['headerStyleRight']
 		styleLeft			= formats['styleLeft']
 		styleRight			= formats['styleRight']
+		styleTime			= formats['styleTime']
+		styleMMSS			= formats['styleMMSS']
+		styleSS				= formats['styleSS']
 		
 		rowTop = 0
 		if self.title:
@@ -303,11 +327,30 @@ class ExportGrid:
 		rowMax = 0
 		for col, c in enumerate(self.colnames):
 			sheetFit.write( rowTop, col, c, headerStyleLeft if col in self.leftJustifyCols else headerStyleRight, bold=True )
-			style = styleLeft if col in self.leftJustifyCols else styleRight
+			style = styleTime if col in self.timeCols else styleLeft if col in self.leftJustifyCols else styleRight
+			
+			if col in self.timeCols:
+				# Find a time format closest to the maximum value.
+				vMax = 0.0
+				for v in self.data[col]:
+					try:
+						vMax = max( vMax, abs(Utils.StrToSeconds(v)) )
+					except Exception:
+						continue
+				if vMax < 60.0:
+					style = styleSS
+				elif vMax < 60.0*60.0:
+					style = styleMMSS
+				
 			for row, v in enumerate(self.data[col]):
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
+				if col in self.timeCols:
+					try:
+						v = Utils.StrToSeconds(v) / (24.0*60.0*60.0)	# Convert seconds to fraction of a day.
+					except Exception:
+						pass
 				sheetFit.write( rowCur, col, v, style )
 				
 		# Add branding at the bottom of the sheet.

@@ -146,8 +146,8 @@ class ReadExcelXlsx:
 			values.append( value )
 		return values
 		
-	def iter_list(self, sname, date_as_tuple=False):
-		sheet = self.book[sname]
+	def iter_list(self, sheet_name, date_as_tuple=False):
+		sheet = self.book[sheet_name]
 		for i, row in enumerate(sheet.iter_rows()):
 			yield self._parse_row(row, date_as_tuple)
 

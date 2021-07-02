@@ -88,13 +88,14 @@ def drawQRCode( url, dc, x, y, size ):
 class ExportGrid:
 	PDFLineFactor = 1.10
 
-	def __init__( self, title='', colnames=[], data=[], footer='', leftJustifyCols=None, infoColumns=None ):
+	def __init__( self, title='', colnames=None, data=None, footer='', leftJustifyCols=None, infoColumns=None ):
 		self.title = title
 		self.footer = footer
-		self.colnames = colnames
-		self.data = data
+		self.colnames = (colnames or [])
+		self.data = (data or [])
 		self.leftJustifyCols = (leftJustifyCols or set())
 		self.infoColumns = (infoColumns or set())
+		self.setTimeCols()
 		self.iLapTimes = 0
 		self.rowDrawCount = 1000000
 		
@@ -102,6 +103,10 @@ class ExportGrid:
 		
 		self.fontName = 'Helvetica'
 		self.fontSize = 16
+	
+	def setTimeCols( self ):
+		# self.timeCols = set( c for c, name in enumerate(self.colnames) if name.lower().strip() in {_('time'), _('finish'), _('start'), _('clock')}  )
+		self.timeCols = set()
 	
 	def combineFirstLastNames( self ):
 		try:
@@ -625,8 +630,25 @@ class ExportGrid:
 		
 		styleAlignLeft = workbook.add_format()
 		
+		styleAlignLeft = workbook.add_format()
+		
 		styleAlignRight = workbook.add_format({
 			'align':	'right',
+		})
+		
+		styleTime = workbook.add_format({
+			'align':	'right',
+			'num_format': 'hh:mm:ss.000',
+		})
+		
+		styleMMSS = workbook.add_format({
+			'align':	'right',
+			'num_format': 'mm:ss.000',
+		})
+		
+		styleSS = workbook.add_format({
+			'align':	'right',
+			'num_format': 'ss.000',
 		})
 		
 		return {
@@ -635,6 +657,10 @@ class ExportGrid:
 			'headerStyleAlignRight':	headerStyleAlignRight,
 			'styleAlignLeft':			styleAlignLeft,
 			'styleAlignRight':			styleAlignRight,
+			'styleTime':				styleTime,
+			'styleHHMMSS':				styleTime,
+			'styleMMSS':				styleMMSS,
+			'styleSS':					styleSS,
 		}
 	
 	def toExcelSheetXLSX( self, formats, sheet ):
@@ -644,7 +670,10 @@ class ExportGrid:
 		headerStyleAlignRight	= formats['headerStyleAlignRight']
 		styleAlignLeft			= formats['styleAlignLeft']
 		styleAlignRight			= formats['styleAlignRight']
-		
+		styleTime				= formats['styleTime']
+		styleMMSS				= formats['styleMMSS']
+		styleSS					= formats['styleSS']
+				
 		rowTop = 0
 		if self.title:
 			for line in self.title.split('\n'):
@@ -665,7 +694,20 @@ class ExportGrid:
 					c = self.colnames[col] = ''
 
 			headerStyle = headerStyleAlignLeft if col in self.leftJustifyCols else headerStyleAlignRight
-			style = styleAlignLeft if col in self.leftJustifyCols else styleAlignRight
+			style = styleTime if col in self.timeCols else styleAlignLeft if col in self.leftJustifyCols else styleAlignRight
+			
+			if col in self.timeCols:
+				# Find a time format closest to the maximum value.
+				vMax = 0.0
+				for v in self.data[col]:
+					try:
+						vMax = max( vMax, abs(Utils.StrToSeconds(v)) )
+					except Exception:
+						continue
+				if vMax < 60.0:
+					style = styleSS
+				elif vMax < 60.0*60.0:
+					style = styleMMSS
 			
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
@@ -673,6 +715,12 @@ class ExportGrid:
 					v = ('{}'.format(v).split() or [''])[0]
 					if v == '"':
 						v += '    '
+				elif col in self.timeCols:
+					try:
+						v = Utils.StrToSeconds(v) / (24.0*60.0*60.0)	# Convert seconds to fraction of a day.
+					except Exception:
+						pass
+				
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
@@ -736,11 +784,11 @@ class ExportGrid:
 					dnf += 1
 				if rr.gap.startswith('-'):
 					lapped += 1
-			self.footer = (u''.join([
-					_('Total'), u':',
-					u'   {} ', _('Starters'),
-					u',  {} ', _('DNF'),
-					u',  {} ', _('Lapped')])).format( starters, dnf, lapped )
+			self.footer = (''.join([
+					_('Total'), ':',
+					'   {} ', _('Starters'),
+					',  {} ', _('DNF'),
+					',  {} ', _('Lapped')])).format( starters, dnf, lapped )
 
 		leader = results[0]
 		
@@ -772,14 +820,14 @@ class ExportGrid:
 						)
 					)
 				else:
-					catData.append( u'{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
+					catData.append( '{} {} {:.2f} {}'.format(cd['laps'], _('laps of'), cd['lapDistance'], cd['distanceUnit']) )
 		if leader.status == Finisher:
 			if getattr(leader, 'speed', None):
-				catData.append( u'{}: {} - {}'.format(_('winner'), leaderTime, leader.speed) )
+				catData.append( '{}: {} - {}'.format(_('winner'), leaderTime, leader.speed) )
 			else:
-				catData.append( u'{}: {}'.format(_('winner'), leaderTime) )
+				catData.append( '{}: {}'.format(_('winner'), leaderTime) )
 	
-		self.title = u'\n'.join( [race.title, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
+		self.title = '\n'.join( [race.title, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		roadRaceFinishTimes = race.roadRaceFinishTimes
 
@@ -799,7 +847,7 @@ class ExportGrid:
 		if showPrizes:
 			self.colnames.append( _('Prize') )
 			
-		self.colnames = [u'{} {}'.format(name[:-len(_('Name'))], _('Name')) if name.endswith(_('Name')) else name for name in self.colnames]
+		self.colnames = ['{} {}'.format(name[:-len(_('Name'))], _('Name')) if name.endswith(_('Name')) else name for name in self.colnames]
 		self.iLapTimes = len(self.colnames)
 		if race.winAndOut:
 			lapsMax = max(len(rr.lapTimes or []) for rr in results)
@@ -807,7 +855,7 @@ class ExportGrid:
 			lapsMax = len(leader.lapTimes or [])
 			
 		if leader.lapTimes and showLapTimes:
-			self.colnames.extend( [u'{} {}'.format(_('Lap'),lap) for lap in range(1, lapsMax+1) \
+			self.colnames.extend( ['{} {}'.format(_('Lap'),lap) for lap in range(1, lapsMax+1) \
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
 		highPrecision = Model.highPrecisionTimes()

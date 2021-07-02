@@ -17,7 +17,7 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 			self._tc.PushEventHandler( evtHandler )
 	
 	def SetSize( self, rect ):
-		self._tc.SetDimensions(int(rect.x), int(rect.y), int(rect.width+2), int(rect.height+2), wx.SIZE_ALLOW_MINUS_ONE )
+		self._tc.SetSize( int(rect.x), int(rect.y), int(rect.width+2), int(rect.height+2), wx.SIZE_ALLOW_MINUS_ONE )
 	
 	def BeginEdit( self, row, col, grid ):
 		self.startValue = grid.GetTable().GetValue(row, col).strip()

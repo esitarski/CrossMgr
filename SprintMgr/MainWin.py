@@ -195,10 +195,10 @@ class MainWin( wx.Frame ):
 
 		self.fileMenu.AppendSeparator()
 
-		item = self.fileMenu.Append( wx.ID_ANY , "&Export to Excel...", "Export to Excel (.xlsx)" )
+		item = self.fileMenu.Append( wx.ID_ANY , "&Export Current Screen to Excel...", "Export Current Screen to Excel (.xlsx)" )
 		self.Bind(wx.EVT_MENU, self.menuExportToExcel, item )
 		
-		item = self.fileMenu.Append( wx.ID_ANY , "Export to &HTML...", "Export to HTML (.html)" )
+		item = self.fileMenu.Append( wx.ID_ANY , "Export Current Screen to &HTML...", "Export to HTML (.html)" )
 		self.Bind(wx.EVT_MENU, self.menuExportToHtml, item )
 
 		self.fileMenu.AppendSeparator()
@@ -502,42 +502,42 @@ class MainWin( wx.Frame ):
 		sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', sheetName)[:31]
 
 		sheetCur = wb.add_worksheet( sheetName )
-		sheetFit = FitSheetWrapperXLXS( sheetCur )
+		sheetFit = FitSheetWrapperXLSX( sheetCur )
 		
 		headerNames = ['Pos', 'Bib', 'LastName', 'FirstName', 'Team', 'UCI ID', 'Team']
 		leftJustifyCols = { h for h in headerNames if h not in {'Pos', 'Bib'} }
 		
 		formats = ExportGrid.getExcelFormatsXLSX( wb )
-		leftStyle = formats['leftStyle']
-		rightStyle = formats['rightStyle']
-		leftHeaderStyle = formats['leftHeaderStyle']
-		rightHeaderStyle = formats['rightHeaderStyle']
+		styleLeft = formats['styleLeft']
+		styleRight = formats['styleRight']
+		headerStyleLeft = formats['headerStyleLeft']
+		headerStyleRight = formats['headerStyleRight']
 
 		rowTop = 0
 		results, dnfs, dqs = competition.getResults()
 		for col, c in enumerate(headerNames):
-			sheetFit.write( rowTop, col, c, leftHeaderStyle if c in leftJustifyCols else rightHeaderStyle, bold=True )
+			sheetFit.write( rowTop, col, c, headerStyleLeft if c in leftJustifyCols else headerStyleRight, bold=True )
 		rowTop += 1
 		
 		for row, r in enumerate(results):
 			if r:
 				for col, value in enumerate([row+1, r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-					sheetFit.write( rowTop, col, value, leftStyle if headerNames[col] in leftJustifyCols else rightStyle )
+					sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
 			rowTop += 1
 		
 		for r in dnfs:
 			for col, value in enumerate(['DNF', r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-				sheetFit.write( rowTop, col, value, leftStyle if headerNames[col] in leftJustifyCols else rightStyle )
+				sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
 			rowTop += 1
 			
 		for r in dqs:
 			for col, value in enumerate(['DQ', r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-				sheetFit.write( rowTop, col, value, leftStyle if headerNames[col] in leftJustifyCols else rightStyle )
+				sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
 			rowTop += 1
 			
 		for r in model.getDNQs():
 			for col, value in enumerate(['DQ', r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-				sheetFit.write( rowTop, col, value, leftStyle if headerNames[col] in leftJustifyCols else rightStyle )
+				sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
 			rowTop += 1
 
 		try:
