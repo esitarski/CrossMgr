@@ -104,7 +104,7 @@ class Qualifiers(wx.Panel):
 		model = Model.model
 		riders = model.riders
 		
-		with wx.FileDialog(self, "Choose Excel file with Qualifying times", wildcard="Excel files (*.xlsx)|*.xlsx",
+		with wx.FileDialog(self, "Choose Excel file with qualifying times", wildcard="Excel files (*.xlsx)|*.xlsx",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR) as fileDialog:
 		
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -161,7 +161,7 @@ class Qualifiers(wx.Panel):
 			else:
 				missingBibs.append( bib )
 	
-		# Report any missing bibs.
+		# Report missing bibs.
 		if missingBibs:
 			message = '{}:\n\n\t\t{}'.format(
 				"Bibs missing from Import",
