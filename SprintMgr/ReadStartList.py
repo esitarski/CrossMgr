@@ -93,16 +93,9 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		# and the headers we found in the Excel sheet.
 		sp = scrolled.ScrolledPanel( self, size=(750, 64), style=wx.TAB_TRAVERSAL )
 		
-		boldFont = None
-		
 		gs = wx.GridSizer( 2, len(Fields), 4, 4 )
 		for c, f in enumerate(Fields):
 			label = wx.StaticText(sp, label=f)
-			if boldFont is None:
-				font = label.GetFont()
-				fontSize = label.GetFont()
-				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
-			label.SetFont( boldFont )
 			gs.Add( label )
 		
 		self.headers = []
@@ -118,7 +111,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		self.gs = gs
 		vbs.Add( sp, flag=wx.ALL, border = border )
 		
-		self.SetSizer( vbs )
+		self.SetSizerAndFit( vbs )
 	
 	def setExpectedFieldCol( self, fieldCol ):
 		self.expectedFieldCol = copy.copy(fieldCol)

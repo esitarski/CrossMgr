@@ -10,10 +10,18 @@ from mmap import mmap, ACCESS_READ
 def toAscii( s ):
 	if not s:
 		return ''
-	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if isinstance(s, str) else str(s)
-	if ret.endswith( '.0' ):
-		ret = ret[:-2]
-	return ret
+	'''
+	Accept a unicode string, and return a normal string
+	without any diacritical marks.
+	'''
+	try:
+		s = unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except Exception:
+		return s
+	
+	if s.endswith('.0'):
+		s = s[:-2]
+	return s
 
 #----------------------------------------------------------------------------
 

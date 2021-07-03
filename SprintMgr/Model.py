@@ -86,7 +86,7 @@ class Rider:
 	def GetHeaderNameMap( headers ):
 		header_map = {}
 		for col, h in enumerate(headers):
-			h = h.strip().lower().replace(' ', '_')
+			h = h.strip().replace(' ', '_').lower()
 			h = Rider.aliases.get( h, h )
 			if h in Rider.extended_fields:
 				header_map[h]  = col

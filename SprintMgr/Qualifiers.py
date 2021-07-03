@@ -37,7 +37,7 @@ class Qualifiers(wx.Panel):
 		hs.Add( self.renumberButton, flag=wx.ALL, border = 6 )
 		hs.Add( self.excelImportButton, flag=wx.ALL, border = 6 )
  
-		self.headerNames = ['Bib', 'Name', 'Team', 'Time', 'Status']
+		self.headerNames = ['Bib', 'First Name', 'Last Name', 'Team', 'Time', 'Status']
 		self.headerNameMap = Model.Rider.GetHeaderNameMap( self.headerNames )
 		self.iBib = 0
 		self.iQualifyingTime = self.headerNameMap['qualifying_time']
@@ -86,7 +86,6 @@ class Qualifiers(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(testData) )
 			
 		for row, data in enumerate(testData):
-			data['full_name'] = data['last_name'].upper() + ' ' + data['first_name']
 			for k,v in data.items():
 				if k in self.headerNameMap:
 					self.grid.SetCellValue( row, self.headerNameMap[k], '{}'.format(v) )
