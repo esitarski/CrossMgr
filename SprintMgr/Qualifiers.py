@@ -148,7 +148,7 @@ class Qualifiers(wx.Panel):
 				messageDialog.ShowModal()
 				return
 
-		# Write the qualifying times into the grid.
+		# Write the qualifying times into the grid.  This won't commit them until the user changes screens.
 		missingBibs = []
 		for row in range(self.grid.GetNumberRows()):
 			try:

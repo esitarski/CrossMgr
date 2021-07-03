@@ -73,6 +73,8 @@ def approximateMatch( s1, s2 ):
 	s2 = reSpace.sub( '', s2 ).lower()
 	if s1 == 'lastname' and s2 == 'name':
 		return 99.0
+	if s1 == 'teamcode' and s2 == 'team':
+		return 0.0
 	if s1[-1].isdigit():
 		return 1.2 if s1 == s2 else 0.0
 	if s1.startswith(s2) or s2.startswith(s1):
