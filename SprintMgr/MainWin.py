@@ -187,25 +187,6 @@ class MainWin( wx.Frame ):
 		self.fileMenu.Append( wx.ID_PAGE_SETUP , "Page &Setup...", "Setup the print page" )
 		self.Bind(wx.EVT_MENU, self.menuPageSetup, id=wx.ID_PAGE_SETUP )
 
-		self.fileMenu.Append( wx.ID_PREVIEW , "Print P&review...\tCtrl+R", "Preview the current page on screen" )
-		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
-
-		self.fileMenu.Append( wx.ID_PRINT , "&Print...\tCtrl+P", "Print the current page to a printer" )
-		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
-
-		self.fileMenu.AppendSeparator()
-
-		item = self.fileMenu.Append( wx.ID_ANY , "&Export Current Screen to Excel...", "Export Current Screen to Excel (.xlsx)" )
-		self.Bind(wx.EVT_MENU, self.menuExportToExcel, item )
-		
-		item = self.fileMenu.Append( wx.ID_ANY , "Export Current Screen to &HTML...", "Export to HTML (.html)" )
-		self.Bind(wx.EVT_MENU, self.menuExportToHtml, item )
-
-		self.fileMenu.AppendSeparator()
-		
-		item = self.fileMenu.Append( wx.ID_ANY , "Export Final &Classification to Excel...", "Export Final Classification Only to Excel (.xlsx)" )
-		self.Bind(wx.EVT_MENU, self.menuExportFinalClassificationToExcel, item )
-		
 		self.fileMenu.AppendSeparator()
 		
 		recent = wx.Menu()
@@ -253,6 +234,25 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), n )
 			
 		self.notebook.SetSelection( 0 )
+		
+		#-----------------------------------------------------------------------
+		self.publishMenu = wx.Menu()
+		
+		self.publishMenu.Append( wx.ID_PREVIEW , "Print P&review...\tCtrl+R", "Preview the current page on screen" )
+		self.Bind(wx.EVT_MENU, self.menuPrintPreview, id=wx.ID_PREVIEW )
+
+		self.publishMenu.Append( wx.ID_PRINT , "&Print...\tCtrl+P", "Print the current page to a printer" )
+		self.Bind(wx.EVT_MENU, self.menuPrint, id=wx.ID_PRINT )
+
+		self.publishMenu.AppendSeparator()
+
+		item = self.publishMenu.Append( wx.ID_ANY , "&Export Current Page to Excel...", "Export Current Page to Excel (.xlsx)" )
+		self.Bind(wx.EVT_MENU, self.menuExportToExcel, item )
+		
+		item = self.publishMenu.Append( wx.ID_ANY , "Export Current Page to &HTML...", "Export Current Page to HTML (.html)" )
+		self.Bind(wx.EVT_MENU, self.menuExportToHtml, item )
+
+		self.menuBar.Append( self.publishMenu, _("&Publish") )
 		
 		#-----------------------------------------------------------------------
 		self.toolsMenu = wx.Menu()
@@ -442,16 +442,7 @@ class MainWin( wx.Frame ):
 			return
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
-		xlFName = self.fileName[:-4] + '-' + pageTitle + '.xlsx'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
+		xlFName = os.path.splitext(self.fileName)[0] + '-' + pageTitle + '.xlsx'
 
 		title = self.getTitle()
 		
@@ -465,89 +456,12 @@ class MainWin( wx.Frame ):
 
 		try:
 			wb.close()
-			Utils.MessageOK(self, 'Exported to:\n\n   {}'.format(xlFName), 'Excel Export')
+			Utils.MessageOK(self, 'Excel Published to:\n\n   {}'.format(xlFName), 'Excel Export')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write:\n\n\t{}.\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlFName),
 						'Excel File Error', iconMask=wx.ICON_ERROR )
-						
-	def menuExportFinalClassificationToExcel( self, event ):
-		self.commit()
 		
-		pageTitle = 'Final Classification'
-		
-		if not self.fileName or len(self.fileName) < 4:
-			Utils.MessageOK(self, 'You must Save before you can Export to Excel', 'Excel Write')
-			return
-			
-		model = Model.model
-		competition = model.competition
-
-		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
-		xlFName = self.fileName[:-4] + '-' + pageTitle + '.xlsx'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		xlFName = os.path.join( dName, os.path.basename(xlFName) )
-
-		title = self.getTitle()
-		
-		wb = xlsxwriter.Workbook( xlFName )
-		sheetName = 'Final Classification'
-		sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', sheetName)[:31]
-
-		sheetCur = wb.add_worksheet( sheetName )
-		sheetFit = FitSheetWrapperXLSX( sheetCur )
-		
-		headerNames = ['Pos', 'Bib', 'LastName', 'FirstName', 'Team', 'UCI ID', 'Team']
-		leftJustifyCols = { h for h in headerNames if h not in {'Pos', 'Bib'} }
-		
-		formats = ExportGrid.getExcelFormatsXLSX( wb )
-		styleLeft = formats['styleLeft']
-		styleRight = formats['styleRight']
-		headerStyleLeft = formats['headerStyleLeft']
-		headerStyleRight = formats['headerStyleRight']
-
-		rowTop = 0
-		results, dnfs, dqs = competition.getResults()
-		for col, c in enumerate(headerNames):
-			sheetFit.write( rowTop, col, c, headerStyleLeft if c in leftJustifyCols else headerStyleRight, bold=True )
-		rowTop += 1
-		
-		for row, r in enumerate(results):
-			if r:
-				for col, value in enumerate([row+1, r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-					sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
-			rowTop += 1
-		
-		for r in dnfs:
-			for col, value in enumerate(['DNF', r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-				sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
-			rowTop += 1
-			
-		for r in dqs:
-			for col, value in enumerate(['DQ', r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-				sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
-			rowTop += 1
-			
-		for r in model.getDNQs():
-			for col, value in enumerate(['DQ', r.bib if r.bib else '', r.last_name.upper(), r.first_name, r.team, r.uci_id, model.category]):
-				sheetFit.write( rowTop, col, value, styleLeft if headerNames[col] in leftJustifyCols else styleRight )
-			rowTop += 1
-
-		try:
-			wb.close()
-			Utils.MessageOK(self, 'Excel file written to:\n\n\t{}'.format(xlFName), 'Excel Export')
-		except IOError:
-			Utils.MessageOK(self,
-						'Cannot write\n\n\t{}\n\nCheck if this spreadsheet is open.\nIf so, close it, and try again.'.format(xlFName),
-						'Excel File Error', iconMask=wx.ICON_ERROR )
-	
 	def menuExportToHtml( self, event ):
 		self.commit()
 		iSelection = self.notebook.GetSelection()
@@ -579,28 +493,22 @@ class MainWin( wx.Frame ):
 			return
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
-		htmlFName = self.fileName[:-4] + '-' + pageTitle + '.html'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(htmlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
-
-		htmlFName = os.path.join( dName, os.path.basename(htmlFName) )
+		htmlFName = os.path.splitext(self.fileName)[0] + '-' + pageTitle + '.html'
+		dName = os.path.dirname( htmlFName )
 
 		title = self.getTitle()
+		html = htmlStream = StringIO()
 		
-		htmlStream = StringIO()
-		html = htmlStream
-		
+		year = datetime.datetime.now().year
 		with tag(html, 'html'):
 			with tag(html, 'head'):
 				with tag(html, 'title'):
 					html.write( title.replace('\n', ' ') )
-				with tag(html, 'meta', dict(author="Edward Sitarski", copyright="Edward Sitarski, 2013", generator="SprintMgr")):
+				with tag(html, 'meta', dict(charset="UTF-8")):
 					pass
+				for k, v in dict(author="Edward Sitarski", copyright="Edward Sitarski, 2013-{}".format(year), generator="SprintMgr").items():
+					with tag(html, 'meta', dict(name=k, content=v)):
+						pass
 				with tag(html, 'style', dict( type="text/css")):
 					html.write( '''
 body{ font-family: sans-serif; }
@@ -687,7 +595,7 @@ table.results tr td.fastest{
 			with open(htmlFName, 'w') as fp:
 				fp.write( html )
 			webbrowser.open( htmlFName, new = 2, autoraise = True )
-			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlFName), 'Html Write')
+			Utils.MessageOK(self, 'Html Published to:\n\n   {}'.format(htmlFName), 'Html Write')
 		except IOError:
 			Utils.MessageOK(self,
 						'Cannot write "{}".\n\nCheck if this file is open.\nIf so, close it, and try again.'.format(htmlFName),
@@ -1069,7 +977,7 @@ def MainLoop():
 	parser = ArgumentParser( prog="SprintMgr", description='Sprint competitions with qualifications, eliminations and repechages' )
 	parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
 	parser.add_argument("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
-	parser.add_argument(dest="filename", default=None, nargs='?', help="CrossMgr race file, or Excel generated by RaceDB", metavar="RaceFile.cmn or .xls, .xlsx, .xlsm file")
+	parser.add_argument(dest="filename", default=None, nargs='?', help="SprintMgr race file", metavar="RaceFile.tp5")
 	args = parser.parse_args()
 
 	dataDir = Utils.getHomeDir()
