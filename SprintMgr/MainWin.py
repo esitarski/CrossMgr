@@ -331,13 +331,8 @@ class MainWin( wx.Frame ):
 		
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		psdd.CalculatePaperSizeFromId()
 		dlg = wx.PageSetupDialog(self, psdd)
 		dlg.ShowModal()
-
-		# this makes a copy of the wx.PrintData instead of just saving
-		# a reference to the one inside the PrintDialogData that will
-		# be destroyed when the dialog is destroyed
 		self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
 		dlg.Destroy()
 
@@ -349,7 +344,7 @@ class MainWin( wx.Frame ):
 		except Exception:
 			pageTitle = self.attrClassName[iSelection][2]
 			
-		title = '%s\n%s (%s)\n%s' % (
+		title = '{}\n{} ({})\n{}'.format(
 			pageTitle,
 			model.competition_name, model.date.strftime('%Y-%m-%d'),
 			model.category,
@@ -407,9 +402,8 @@ class MainWin( wx.Frame ):
 				return
 		
 		pdd = wx.PrintDialogData(self.printData)
-		pdd.SetAllPages( 1 )
-		pdd.EnablePageNumbers( 0 )
-		pdd.EnableHelp( 0 )
+		pdd.EnablePageNumbers( False )
+		pdd.EnableHelp( False )
 		
 		printer = wx.Printer(pdd)
 
