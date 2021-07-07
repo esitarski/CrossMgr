@@ -470,11 +470,11 @@ def getCompetitions():
 				Event( 'N1 N8  N9 N16 -> 1E1 1E2' ),
 				Event( 'N4 N5 N12 N13 -> 2E3 2E4' ),
 				Event( 'N2 N7 N10 N15 -> 3F1 3F2' ),
-				Event( 'N3 N6 N11 N14 -> 3F3 3F4' ),
+				Event( 'N3 N6 N11 N14 -> 4F3 4F4' ),
 			]),
 			System( '1/2 Finals', [
 				Event( '1E1 1E2 2E3 2E4 -> 1G1 1G2 1G3 1G4' ),
-				Event( '3F1 3F2 3F3 3F4 -> 2H1 2H2 2H3 2H4' ),
+				Event( '3F1 3F2 4F3 4F4 -> 2H1 2H2 2H3 2H4' ),
 			]),
 			System( 'Finals', [
 				Event( '1G3 1G4 2H3 2H4 -> 5R 6R 7R 8R' ),
@@ -572,6 +572,31 @@ def getCompetitions():
 			if system.name.startswith( 'Round' ):
 				system.name = 'Round {}'.format(int(system.name.split()[1]) - 1)
 		competitions.append( fcX )
+	
+	#-----------------------------------------------------------------------------------------
+	
+	competitions.append(
+		Competition( 'Road: 16 4-Sprint Challenge', [
+			System( '1/4 Finals', [
+				Event( 'N1 N8  N9 N16 -> 1E1 1E2 1P1 1P2' ),
+				Event( 'N4 N5 N12 N13 -> 2E3 2E4 2P3 2P4' ),
+				Event( 'N2 N7 N10 N15 -> 3F1 3F2 3Q1 3Q2' ),
+				Event( 'N3 N6 N11 N14 -> 4F3 4F4 4Q3 4Q4' ),
+			]),
+			System( '1/2 Finals', [
+				Event( '1P1 1P2 2P3 2P4 -> 1S1 1S2 1S3 1S4' ),
+				Event( '3Q1 3Q2 4Q3 4Q4 -> 2T1 2T2 2T3 2T4' ),
+				Event( '1E1 1E2 2E3 2E4 -> 1G1 1G2 1G3 1G4' ),
+				Event( '3F1 3F2 4F3 4F4 -> 2H1 2H2 2H3 2H4' ),
+			]),
+			System( 'Finals', [
+				Event( '1S3 1S4 2T3 2T4 -> 13R 14R 15R 16R' ),
+				Event( '1S1 1S2 2T1 2T2 -> 9R 10R 11R 12R' ),
+				Event( '1G3 1G4 2H3 2H4 -> 5R 6R 7R 8R' ),
+				Event( '1G1 1G2 2H1 2H2 -> 1R 2R 3R 4R' ),
+			]),
+		])
+	)
 	
 	#-----------------------------------------------------------------------------------------
 	'''

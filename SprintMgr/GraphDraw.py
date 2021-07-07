@@ -124,7 +124,7 @@ class Graph( wx.Control ):
 					grid[col].extend( [{}] * (13 if 'XCE' in competition.name or 'Keirin' in competition.name else 8) )
 				elif '5-8' in system.name:
 					grid[col].extend( [{}] * 12 )
-				elif 'XCE' not in competition.name and len(event.composition) == 4: # Offset the 4-ways to another column (if not XCE)
+				elif len(event.composition) == 4 and not any(comp_type in competition.name for comp_type in ('XCE', 'Road')): # Offset the 4-ways to another column (if not XCE or road)
 					rowLast = len(grid[col])
 					if 'Repechages' in system.name:
 						rowLast -= (4+1)
