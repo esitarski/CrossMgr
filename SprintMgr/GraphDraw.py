@@ -95,7 +95,7 @@ class Graph( wx.Control ):
 		# Set the list of qualifiers/seeding.  Double-space the rows.
 		grid = [[{'title':'Seeding' if competition.isKeirin else 'Qualifiers'}, {}]]
 		for i in range(competition.starters):
-			grid[0].append( {'rider':state.labels.get('N{}'.format(i+1),None)} )
+			grid[0].append( {'rider':state.labels.get('N{}'.format(i+1),None),'iStarting':(i+1)} )
 			grid[0].append( {} )
 		
 		# Add the event results.
@@ -264,12 +264,13 @@ class Graph( wx.Control ):
 			dc.DrawSpline( [wx.Point(int(x1),int(y1)), wx.Point(int(cx1),int(cy1)), wx.Point(int(cx2),int(cy2)), wx.Point(int(x2),int(y2))] )
 		
 		# Draw the connections.
+		widthStarting = dc.GetFullTextExtent('00.  ')[0]
 		for c, col in enumerate(grid):
 			for r, v in enumerate(col):
 				if 'rider' not in v:
 					continue
 				rider = v['rider']
-				x1 = colX[c] + dc.GetFullTextExtent(getFullName(rider, v))[0]
+				x1 = colX[c] + dc.GetFullTextExtent(getFullName(rider, v))[0] + (widthStarting if 'iStarting' in v else 0)
 				y1 = yTop + r * rowHeight + rowHeight / 2
 				
 				cTo, rTo = getToCR(c, rider)
@@ -396,18 +397,19 @@ class Graph( wx.Control ):
 					if rider:
 						name = drawName( getFullName(rider, v), x, y, rider == self.selectedRider, pos )
 						colRects.append( (wx.Rect(int(x), int(y), dc.GetFullTextExtent(name)[0], int(rowHeight)), rider) )
-				elif 'rider' in v:
+				elif v.get('rider',None):
 					rider = v['rider']
-					if rider:
-						name = getFullName( rider, v )
-						if 'classification' in v:
-							pos = '{}'.format(v['classification'])
-							if pos.isdigit():
-								name = '{}.  {}'.format(pos, name)
-							else:
-								name = '{}  {}'.format(pos, name)
-						drawName( name, x, y, rider == self.selectedRider )
-						colRects.append( (wx.Rect(int(x), int(y), dc.GetFullTextExtent(name)[0], int(rowHeight)), rider) )
+					name = getFullName( rider, v )
+					if 'classification' in v:
+						pos = '{}'.format(v['classification'])
+						if pos.isdigit():
+							name = '{}.  {}'.format(pos, name)
+						else:
+							name = '{}  {}'.format(pos, name)
+					if 'iStarting' in v:
+						name = '{}.  {}'.format(v['iStarting'], name)
+					drawName( name, x, y, rider == self.selectedRider )
+					colRects.append( (wx.Rect(int(x), int(y), dc.GetFullTextExtent(name)[0], int(rowHeight)), rider) )
 			self.rectRiders.append( colRects )
 		self.colX = colX
 		

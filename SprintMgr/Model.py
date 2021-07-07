@@ -615,6 +615,7 @@ class Competition:
 		inLabels = set()
 		outLabels = set()
 		self.starters = 0
+		starterLabels = set()
 		self.isMTB = 'MTB' in name
 		self.isSprint = not self.isMTB
 		self.isKeirin = self.isSprint and 'Keirin' in name
@@ -650,7 +651,11 @@ class Competition:
 					assert c not in inLabels, '{}-{} c={}, outLabels={}'.format(e.competition.name, e.system.name, c, ','.join( sorted(outLabels) ))
 					inLabels.add( c )
 					if c.startswith('N'):
-						self.starters += 1			
+						self.starters += 1
+						assert c[1:].isdigit(), '{}-{} Non-numeric starter reference "{}"'.format(e.competition.name, e.system.name, c)
+						starterLabels.add( int(c[1:]) )
+					else:
+						assert c in outLabels, '{}-{} Rule uses undefined input label "{}"'.format(e.competition.name, e.system.name, c)
 							
 				assert e.winner not in outLabels, '{}-{} winner: {}, outLabels={}'.format(
 					e.competition.name, e.system.name, e.winner, ','.join( sorted(outLabels) ))
@@ -670,7 +675,11 @@ class Competition:
 			
 		assert self.starters != 0, '{}-{} No starters.  Check for missing N values'.format(
 					e.competition.name, e.system.name )
-
+		assert self.starters == len(starterLabels), '{}-{} Starters reused in input'.format(
+					e.competition.name, e.system.name )
+		assert self.starters == max( s for s in starterLabels), '{}-{} Starter references are not sequential'.format(
+					e.competition.name, e.system.name )
+		
 		# Process Bye events (substitute outcome into composition of subsequent events, delete bye event).
 		# Assign indexes to each component for sorting purposes.
 		for j, system in enumerate(self.systems):
