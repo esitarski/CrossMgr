@@ -113,7 +113,10 @@ class Chart(wx.Panel):
 				
 				writeCell( '{}'.format(i+1) )
 				writeCell( ' {}'.format(event.heatsMax) )
-				writeCell( '\n'.join(event.composition).replace('\n',' ({})\n'.format(len(event.composition)),1) )
+				cv = '\n'.join( event.composition )
+				if len(event.composition) > 4:
+					cv = cv.replace('\n',' ({})\n'.format(len(event.composition)),1)
+				writeCell( cv )
 				
 				riders = [state.labels.get(c, None) for c in event.composition]
 				writeCell( '\n'.join(['{}'.format(rider.bib if rider.bib else '') if rider else '' for rider in riders]) )
@@ -129,7 +132,10 @@ class Chart(wx.Panel):
 						writeCell( '' )
 				
 				out = [event.winner] + event.others
-				writeCell( '\n'.join(out).replace('\n',' ({})\n'.format(len(out)),1) )
+				cv = '\n'.join( out )
+				if len(out) > 4:
+					cv = cv.replace('\n',' ({})\n'.format(len(out)),1)
+				writeCell( cv )
 				riders = [state.labels.get(c, None) for c in out]
 				writeCell( '\n'.join(['{}'.format(rider.bib if rider.bib else '') if rider else '' for rider in riders]) )
 				if getattr(model, 'chartShowNames', True):

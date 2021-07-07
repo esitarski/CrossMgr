@@ -53,6 +53,7 @@ def writeHtmlHeader( buf, title ):
 	buf.write( '<style>\n' )
 	buf.write( 'td { vertical-align: top; }\n')
 	buf.write( 'th { vertical-align: top; }\n')
+	buf.write( '.text-nowrap { white-space: nowrap; }\n')
 	buf.write( '</style>\n')
 	with tag(buf, 'table', {'class': 'TitleTable'} ):
 		with tag(buf, 'tr'):
@@ -370,7 +371,10 @@ class ExportGrid:
 				for row in range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr'):
 						for col in range(len(self.colnames)):
-							with tag(buf, 'td', {'class':'rAlign'} if col not in self.leftJustifyCols else {}):
+							mods = {'class':'rAlign'} if col not in self.leftJustifyCols else {}
+							if self.colnames[col] in ('In', 'Out'):
+								mods['class'] = 'text-nowrap'
+							with tag(buf, 'td', mods):
 								try:
 									buf.write( escape(self.data[col][row]).replace('\n', '<br/>\n') )
 								except IndexError:

@@ -576,7 +576,7 @@ def getCompetitions():
 	#-----------------------------------------------------------------------------------------
 	
 	competitions.append(
-		Competition( 'Road: 16 4-Sprint Challenge', [
+		Competition( 'Road: 16 3-Sprint Challenge', [
 			System( '1/4 Finals', [
 				Event( 'N1 N8  N9 N16 -> 1E1 1E2 1P1 1P2' ),
 				Event( 'N4 N5 N12 N13 -> 2E3 2E4 2P3 2P4' ),
