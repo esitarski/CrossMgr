@@ -61,10 +61,13 @@ class Chart(wx.Panel):
 	def getHideCols( self, headerNames ):
 		model = Model.model
 		toHide = set()
+		heatsMax = model.competition.heatsMax
 		for col, h in enumerate(headerNames):
 			if h == 'Name' and not getattr(model, 'chartShowNames', True):
 				toHide.add( col )
 			elif h == 'Team' and not getattr(model, 'chartShowTeams', True):
+				toHide.add( col )
+			elif heatsMax == 1 and h in {'Heats', 'H1', 'H2', 'H3'}:
 				toHide.add( col )
 		return toHide
 	
@@ -79,6 +82,7 @@ class Chart(wx.Panel):
 		model = Model.model
 		competition = model.competition
 		state = competition.state
+		heatsMax = model.competition.heatsMax
 		
 		self.showNames.SetValue( getattr(model, 'chartShowNames', True) )
 		self.showTeams.SetValue( getattr(model, 'chartShowTeams', True) )
@@ -96,11 +100,10 @@ class Chart(wx.Panel):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( font )
 			attr.SetReadOnly( True )
-			if col >= 4:
-				attr.SetRenderer( GridCellMultiLineStringRenderer() )
+			attr.SetRenderer( GridCellMultiLineStringRenderer() )
 			if self.headerNames[col] in self.numericFields:
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
-			elif self.headerNames[col].startswith( 'H' ):
+			elif self.headerNames[col] in {'H1', 'H2', 'H3'}:
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			self.grid.SetColAttr( col, attr )
 		
@@ -112,7 +115,8 @@ class Chart(wx.Panel):
 				writeCell = WriteCell( self.grid, row, 2 )
 				
 				writeCell( '{}'.format(i+1) )
-				writeCell( ' {}'.format(event.heatsMax) )
+				if heatsMax > 1:
+					writeCell( ' {}'.format(event.heatsMax) )
 				cv = '\n'.join( event.composition )
 				if len(event.composition) > 4:
 					cv = cv.replace('\n',' ({})\n'.format(len(event.composition)),1)
@@ -125,11 +129,12 @@ class Chart(wx.Panel):
 				if getattr(model, 'chartShowTeams', True):
 					writeCell( '\n'.join([rider.team if rider else '' for rider in riders]) )
 				
-				for heat in range(3):
-					if event.heatsMax > 1:
-						writeCell( '\n'.join(event.getHeatPlaces(heat+1)) )
-					else:
-						writeCell( '' )
+				if heatsMax > 1:
+					for heat in range(3):
+						if event.heatsMax > 1:
+							writeCell( '\n'.join(event.getHeatPlaces(heat+1)) )
+						else:
+							writeCell( '' )
 				
 				out = [event.winner] + event.others
 				cv = '\n'.join( out )

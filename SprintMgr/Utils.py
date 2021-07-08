@@ -99,7 +99,7 @@ def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION, pos 
 	dlg.Destroy()
 	return True
 	
-def MessageYesNo( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+def MessageYesNo( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()

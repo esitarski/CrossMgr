@@ -640,7 +640,7 @@ table.results tr td.fastest{
 	
 		self.showResultsPage()
 		model = Model.model
-		if model.changed and Utils.MessageOKCancel(self, 'Save Existing Competition?', u'Save Existing Competition?')  == wx.ID_OK:
+		if model.changed and Utils.MessageOKCancel(self, 'Save Existing Competition?', 'Save Existing Competition?')  == wx.ID_OK:
 			try:
 				self.writeRace()
 			except Exception:
@@ -656,7 +656,7 @@ table.results tr td.fastest{
 			fileName = fileName + ' (2)' + ext
 			
 		if (	os.path.isfile(fileName) and
-				Utils.MessageOKCancel(self, 'File exists.  Replace?:\n\n"{}"'.format(fileName), u'File exists' ) != wx.ID_OK ):
+				Utils.MessageOKCancel(self, 'File exists.  Replace?:\n\n"{}"'.format(fileName), 'File exists' ) != wx.ID_OK ):
 			return
 		
 		self.fileName = fileName

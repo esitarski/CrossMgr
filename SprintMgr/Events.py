@@ -680,7 +680,7 @@ class EventFinishOrder(EnablePanel):
 		oldBibOrder = [int(self.grid.GetCellValue(row, 0)) for row in range(self.grid.GetNumberRows())]				
 		oldBibs = set( oldBibOrder )
 		
-		v = re.sub( r'[^\d]', u' ', v )
+		v = re.sub( r'[^\d]', ' ', v )
 		newBibOrder = [int(f) for f in v.split()]
 		newBibOrder = [b for b in newBibOrder if b in oldBibs]
 		

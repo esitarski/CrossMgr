@@ -14,7 +14,7 @@ from contextlib import contextmanager
 def tag( buf, name, attrs = {} ):
 	if isinstance(attrs, str) and attrs:
 		attrs = { 'class': attrs }
-	buf.write( '<{}>'.format( u' '.join(
+	buf.write( '<{}>'.format( ' '.join(
 			[name] + ['{}="{}"'.format(attr, value) for attr, value in attrs.items()]
 		) ) )
 	yield
