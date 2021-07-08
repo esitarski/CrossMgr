@@ -165,7 +165,7 @@ class PropertiesFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
-		wx.Frame.__init__(self, None, title="Properties Test", size=(800,600) )
+		super().__init__( None, title="Properties Test", size=(800,600) )
 		panel = Properties(self)
 		panel.refresh()
 		self.Show()

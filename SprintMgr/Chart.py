@@ -163,7 +163,7 @@ class ChartFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
-		wx.Frame.__init__(self, None, title="Chart Grid Test", size=(1000,800) )
+		super().__init__(None, title="Chart Grid Test", size=(1000,800) )
 		self.panel = Chart(self)
 		self.Show()
  

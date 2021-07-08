@@ -7,7 +7,7 @@ import Utils
 
 class GridCellMultiLineStringRenderer(gridlib.GridCellRenderer):   
 	def __init__(self):
-		gridlib.GridCellRenderer.__init__(self)
+		super().__init__()
 
 	def Draw(self, grid, attr, dc, rect, row, col, isSelected):
 		text = grid.GetCellValue(row, col)

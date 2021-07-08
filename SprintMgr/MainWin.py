@@ -80,7 +80,7 @@ class MyTipProvider( wx.adv.TipProvider ):
 		if tipNo is None:
 			tipNo = 0
 		self.tipNo = tipNo
-		wx.adv.TipProvider.__init__( self, self.tipNo )
+		super().__init__( self.tipNo )
 			
 	def GetCurrentTip( self ):
 		if self.tipNo < 0 or self.tipNo >= len(self.tips):
@@ -142,7 +142,7 @@ def showHelp( url ):
 		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
-		wx.Frame.__init__(self, parent, id, title, size=size)
+		super().__init__( parent, id, title, size=size)
 
 		Utils.setMainWin( self )
 

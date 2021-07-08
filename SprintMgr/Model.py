@@ -721,14 +721,14 @@ class Competition:
 	def canReassignStarters( self ):
 		return self.state.canReassignStarters()
 		
-	@property
-	def heatsMax( self ):
-		return max( event.heatsMax for system, event in self.allEvents() )
-	
 	def allEvents( self ):
 		for system in self.systems:
 			for event in system.events:
 				yield system, event
+	
+	@property
+	def heatsMax( self ):
+		return max( event.heatsMax for system, event in self.allEvents() )
 	
 	@property
 	def competitionTime( self ):

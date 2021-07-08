@@ -251,7 +251,7 @@ class QualifiersFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
-		wx.Frame.__init__(self, None, title="Qualifier Grid Test", size=(800,600) )
+		super().__init__( None, title="Qualifier Grid Test", size=(800,600) )
 		panel = Qualifiers(self)
 		panel.refresh()
 		self.Show()

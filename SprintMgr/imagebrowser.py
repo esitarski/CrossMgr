@@ -107,7 +107,7 @@ class ImageView(wx.Window):
     def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, 
                  style=wx.BORDER_SUNKEN
                  ):
-        wx.Window.__init__(self, parent, id, pos, size, style=style)
+        super().__init__(parent, id, pos, size, style=style)
         
         self.image = None
 
@@ -384,7 +384,7 @@ class ImagePanel(wx.Panel):
 
 class ImageDialog(wx.Dialog):
     def __init__(self, parent, set_dir = None):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, "Image Browser", wx.DefaultPosition, (400, 400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        super().__init__(parent, wx.ID_ANY, "Image Browser", wx.DefaultPosition, (400, 400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         self.set_dir = os.getcwd()
         self.set_file = None

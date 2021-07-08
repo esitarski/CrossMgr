@@ -22,7 +22,7 @@ FieldToAttr = {f:Model.Rider.aliases[f.strip().lower().replace(' ', '_')] for f 
 
 class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -47,7 +47,7 @@ class FileNamePage(adv.WizardPageSimple):
 	
 class SheetNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		self.choices = []
 		self.expectedSheetName = None
 		
@@ -78,7 +78,7 @@ class SheetNamePage(adv.WizardPageSimple):
 	
 class HeaderNamesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 
 		self.expectedFieldCol = None
 		
@@ -184,7 +184,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			
 class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
