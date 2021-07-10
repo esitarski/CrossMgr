@@ -3253,6 +3253,10 @@ class MainWin( wx.Frame ):
 			categories[1]['numLaps'] = 2
 			race.setCategories( categories )
 			
+			scheduledStart = datetime.datetime.now() + datetime.timedelta(seconds=120)
+			scheduledStart -= datetime.timedelta( seconds=scheduledStart.second ) + datetime.timedelta( seconds=scheduledStart.microsecond/1000000.0 ) 
+			race.scheduledStart = '{:02d}:{:02d}'.format(scheduledStart.hour, scheduledStart.minute)
+			
 			nums = set()
 			numTimes = defaultdict( list )
 			for t, num in self.lapTimes:
@@ -3265,9 +3269,8 @@ class MainWin( wx.Frame ):
 				times.sort()
 				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 			
-			timeBeforeFirstRider = 30.0
-			startGap = 15.0
-			#startGap = 60.0
+			timeBeforeFirstRider = 120.0
+			startGap = 30.0
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []
@@ -3324,24 +3327,23 @@ class MainWin( wx.Frame ):
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
 
 		self.nextNum = None
-		race.startRaceNow()
-		if not (race.isTimeTrial or (race.enableJChipIntegration and race.resetStartClockOnFirstTag)):
-			# Backup all the events and race start so we don't have to wait for the first lap.
-			race.startTime -= datetime.timedelta( seconds = (tMin-5) )
-			'''
-			# Simulate RFID first read.
-			nums = set( num for t, num in self.lapTimes )
-			for num in nums:
-				rider = race.getRider( num )
-				rider.firstTime = 0.0
-			'''
+		if race.isTimeTrial:
+			def startRaceInFuture():
+				race.startRaceNow()
+				self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
+			wx.CallLater( int(1000.0*(datetime.datetime.now()-scheduledStart).total_seconds()), startRaceInFuture )
+		else:
+			race.startRaceNow()
+			if not (race.enableJChipIntegration and race.resetStartClockOnFirstTag):
+				# Backup all the events and race start so we don't have to wait for the first lap.
+				race.startTime -= datetime.timedelta( seconds = (tMin-5) )
+			self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 
 		self.writeRace()
 		OutputStreamer.writeRaceStart()
 		if race.isTimeTrial:
 			self.menuPublishHtmlTTStart()
 			
-		self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 		self.updateRaceClock()
 		self.refresh()
 

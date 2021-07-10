@@ -59,7 +59,6 @@ body { font-family: Sans-Serif; }
   border-radius: 28px;
   font-family: Arial;
   color: #ffffff;
-  font-size: 40%;
   padding: 10px 20px 10px 20px;
   text-decoration: none;
 }
@@ -127,16 +126,17 @@ var serverTimestamp = null;
 var raceStarted = true;
 
 var startList = null;
+var startListTestOffset = 10*60, startListTestInterval = 60;
 var startListTest = [/*(-*/
-	[5700, 9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
-	[5730, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
-	[5760, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
-	[5790, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
-	[5820, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
-	[5850, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
-	[5880+30, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
-	[5910+60, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
-	[5940+90, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
+	[startListTestOffset+=startListTestInterval, 9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval+10*60, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
+	[startListTestOffset+=startListTestInterval, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
 /*-)*/];
 var flags = {"GBR":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAOCAYAAAArMezNAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oDBAo1B4Zxqq0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADv0lEQVQ4y02Tf0zVZRTGP+/7fuGSiQoIMhTBMHUjA1O5sRJNnLOcTVcunfi7FrXZVqZMcmnRhMj1jxU0wMo0JwtqJWtozoQwkNR0osuxEoRxRfAORAfc+31Pf3yt9d85z9k5z55znqNOP5937skPCudHps9if2UTxZ834IYFQRCB4ZEQJ/YtJXHvbgACe4rILagnItJBBASLQrN7cxbrzn+P7Q8i+3a06s75C2zgw0/pLihi56a5NBx7hYVZKYRCLsYojFEoQBmDMhqUQhuF0YpwOEzughnUr45na8Mhxi9dyIxT1VwMDFv98a+32RGbwxj/E1zNXskjgwF+rMij7P0VWGsx2huG1qA0CjBGY0WoKFpB+cAZpradJ6m6krgta1m25Wve2X8SLVhONF5nbvlftOa9Tk/JAboKS9i8OJULx7exyD8NEQGjUUZjBRZlpXBmQzK5Bz8i+tnFTK+t4sjJduLmFVP/y5+ICOrN9440ixPjtxa0UaSnxPBS7BBDF66Q8Op6wuPGE+rspnNtPoiQUlPF4Omz6Nu9TMzfiBn7MGVHW7l8LYBrBVA4Ntji5GdEkxYfi1gBBNe6jLoPEZ2Tzb2LbWAtob5+xFqUCMONvzE2JQlSJzPUdA4EtiQ6mKQYREAraO9zUT8vXtWc2D/oRwAErPVCK/AA4sEqRATcsJdbQQAl4uGeRUCEW5NiWhy0tzsRTwbKcwH6fw0o0AYtFhEDIogSFF5dPRgo/8ZK4UzZtom0iQl4/GCtZWTEBQTt84EIo90Bbh2oAhEmvbEVJy7Ws53Phw2F8BlBKwWAQhHZdxvni7b7aN+gJ10pZqXFs2FlBu69+9z5qhobF0v00350xWEQweefS8SUJMzdQXorviE6M53DvWNouxHEhq1HGL6HuTUy8+UTTTendAUG2PTCHNYsn02wpo7+0k/oSZ7OnkthJo/RRLe2oLTi+rTZ7Co7yzz/o0z1P0ZfTR3JLQ2EUlKpPPU3LRc6CAaD3Xo0FCY7czIXf8hn6ZwErizPo7/2OD89t5GVx7povtSNNvq/BzFG0fxHF0vWVXK06SZJe98mcXs+WbUHaclPY9mimUQ4GqforSWsefEZAuWHGP7uOB2ZT1HaM46Gnd9CpIERl2B/kKgbnSituTswRFfPHaJ8Duu3V1NVfY59BcvIqvuS9l2l7O64SePj83AyJkXpa7mrURMmcCxnHSWHfsfaXoiK8OxmrHdx10Vcl3A4hB0e5b61AJw62072qs8ofC2HguJCRi5fJfndYv0Pm/a+HCONOTIAAAAASUVORK5CYII="};
 var version = '';
@@ -318,11 +318,7 @@ function updateCountdown() {
 	let btgNext = beepsToGive[iBeepCur+1];
 	
 	let countdown = document.getElementById('countdown-clock');
-	if( enableBeeps || !isDevice )
-		countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));
-	else
-		countdown.innerHTML = '<span class="btn">Click Here</span>';
-		
+	countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));		
 
 	let bibCur = btgNext.startEntry[1];
 	if( bibCur != bibLast ) {
@@ -394,11 +390,7 @@ function updateCountdown() {
 			}
 			
 			let td = document.createElement('TD'); tr.appendChild( td );
-			let tStr = '';
-			if( raceStarted ) {
-				tStr = toInternationalTimeString(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0));
-			}
-			td.innerHTML = tStr;
+			td.innerHTML = toInternationalTimeString(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0));
 		}
 		replaceChildrenWithChild( rider_next, table );
 		
@@ -436,7 +428,10 @@ function initiateSound() {
 			setTimeout(function() { playBeep(i%4); }, 250*i);
 		openFullscreen();			
 	}
-	document.getElementById('countdown-clock').className = '';
+	let beep_btn = document.getElementById('beep-btn')
+	beep_btn.innerHTML = '';
+	beep_btn.className = '';
+	beep_btn.removeEventListener( 'click', initiateSound );
 }
 
 // Keep track of the correction driven from the smallest latency.
@@ -503,7 +498,7 @@ function getTimeCorrection() {
 	// Schedule some ajax calls to improve the time sync.
 	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
 		latency2Min = Number.MAX_VALUE;
-		let url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
+		let url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
 		for( let i = 0; i < syncIterations; ++i ) {
 			// Pass our current timestamp so we can estimate the latency.
 			setTimeout(
@@ -529,23 +524,34 @@ function toInternationalTimeString( d ) {
 }
 
 function onload() {
-	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
-	if( startList == null ) startList = [];
-	
+	if( payload ) {
+		for( v in payload )
+			window[v] = payload[v];
+		payload = null;
+	}
+	else {
+		// Running in test mode.
+		let r = new Date( (new Date()).getTime() + 1.5 * (60*1000) );
+		raceScheduledStartTuple = [r.getFullYear(), r.getMonth(), r.getDate(), r.getHours(), r.getMinutes(), r.getSeconds(), r.getMilliseconds()];
+		raceName = 'Test Race';
+		startList = startListTest;
+	}
+	if( startList == null )
+		startList = [];
+	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.	
+
 	getTimeCorrection();
 	
 	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	
-	if( true || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
-		// On certain devices the first sound must be triggered by a user action.
-		isDevice = true;
-		enableBeeps = false;
-		let countdown_clock = document.getElementById('countdown-clock');
-		countdown_clock.className = 'disabled';
-		countdown_clock.addEventListener( 'click', initiateSound );
-	}
-	else
-		enableBeeps = true;
+	// The first sound must be triggered by a user action.
+	isDevice = true;
+	enableBeeps = false;
+	let countdown_clock = document.getElementById('countdown-clock');
+	let beep_btn = document.getElementById('beep-btn');
+	beep_btn.innerHTML = 'Press to enable Beep';
+	beep_btn.className = 'btn';
+	beep_btn.addEventListener( 'click', initiateSound );
 	
 	tServer = ServerDate();
 	if( raceStartTuple != null ) {
@@ -553,25 +559,23 @@ function onload() {
 	}
 	else if( raceScheduledStartTuple != null ) {
 		raceStart = dateFromTuple( raceScheduledStartTuple );
-		startList.push( [0,
-						 999999,
-						 raceName + ' (not started)', "Countdown to Scheduled Start at " + toInternationalString(raceStart) + ' (' + startList.length + ' Starters)',
-						 '',
-						 '',
-						 ''] );
-		
-		// Set up a callback to automatically refresh the page shortly after the race start time.
-		let waitTime = Math.max(0, raceStart.getTime() - tServer.getTime()) + 10*1000;
-		setTimeout( function() { location.reload(true); }, waitTime );
-		if( raceStart.getTime() >= tServer.getTime() )
-			playBeep( 1 );
-		enableBeeps = false;
-		raceStarted = false;
-	}
-	else {
-		raceStart = new Date(tServer.getTime() - 94*60*1000 - 3287);
-		startList = startListTest;
-		playBeep( 1 );
+		if( raceStart.getTime() < (new Date()).getTime() ) {
+			raceStarted = true;
+		}
+		else {
+			raceStarted = false;
+			// Add a start time to start the race.
+			startList.unshift(
+					[0,
+					999999,
+					raceName,
+					'TT Countdown to '+('0'+raceStart.getHours()).slice(-2)+':'+('0'+raceStart.getMinutes()).slice(-2)+':'+('0'+raceStart.getSeconds()).slice(-2),
+					'('+startList.length+' Starters)',
+					""]
+			);
+			// Automatically start the race at the scheduled start time if we don't get refreshed in the meantime.
+			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
+		}
 	}
 	
 	SetRaceName();
@@ -579,49 +583,46 @@ function onload() {
 	if( startList.length == 0 )
 		return;
 		
-	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
-	
-	if( raceStarted ) {
-		// Get most frequent start gap.
-		let gapTotal = {}
-		for( let i = 1; i < startList.length; ++i ) {
-			let gap = startList[i][0] - startList[i-1][0];
-			if( gap in gapTotal )
-				gapTotal[gap] += 1;
-			else
-				gapTotal[gap] = 1;
-		}
-		let gapTotalMax = 0;
-		let gapMostFrequent = 60;
-		for( gap in gapTotal ) {
-			if( gapTotal[gap] > gapTotalMax ) {
-				gapTotalMax = gapTotal[gap];
-				gapMostFrequent = parseInt(gap);
-			}
-		}
-		gapTotal = null;
-
-		// Insert Exception starts into the start list gaps exceeding 4 minutes.
-		let startGapMin = 4*60;
-		let startListExceptions = [];
-		function addExceptionStarts( startCur, startMax ) {
-			while( startCur + gapMostFrequent < startMax ) {
-				startCur += gapMostFrequent;
-				let tFormat = FormatTime(startCur);
-				startListExceptions.push( [startCur, tFormat, '', '', '', ''] );
-			}
-		}
-		
-		for( let i = 1; i < startList.length; ++i ) {
-			if( startList[i][0] - startList[i-1][0] >= startGapMin )
-				addExceptionStarts( startList[i-1][0], startList[i][0] );
-		}
-		
-		// Insert Exception starts at the end.
-		addExceptionStarts( startList[startList.length-1][0], startList[startList.length-1][0] + gapMostFrequent * 9 );
-		startList = startList.concat( startListExceptions );
-		startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
+	// Get most frequent start gap.
+	let gapTotal = {}
+	for( let i = 1; i < startList.length; ++i ) {
+		let gap = startList[i][0] - startList[i-1][0];
+		if( gap in gapTotal )
+			gapTotal[gap] += 1;
+		else
+			gapTotal[gap] = 1;
 	}
+	let gapTotalMax = 0;
+	let gapMostFrequent = 60;
+	for( gap in gapTotal ) {
+		if( gapTotal[gap] > gapTotalMax ) {
+			gapTotalMax = gapTotal[gap];
+			gapMostFrequent = parseInt(gap);
+		}
+	}
+	gapTotal = null;
+
+	// Insert Exception starts into the start list gaps exceeding 4 minutes.
+	let startGapMin = 4*60;
+	let startListExceptions = [];
+	function addExceptionStarts( startCur, startMax ) {
+		let exceptionCount = 0;
+		while( startCur + gapMostFrequent < startMax && exceptionCount++ < 5 ) {
+			startCur += gapMostFrequent;
+			let tFormat = FormatTime(startCur);
+			startListExceptions.push( [startCur, tFormat, '', '', '', ''] );
+		}
+	}
+	
+	for( let i = 2; i < startList.length; ++i ) {
+		if( startList[i][0] - startList[i-1][0] >= startGapMin )
+			addExceptionStarts( startList[i-1][0], startList[i][0] );
+	}
+	
+	// Insert Exception starts at the end.
+	addExceptionStarts( startList[startList.length-1][0], startList[startList.length-1][0] + gapMostFrequent * 9 );
+	startList = startList.concat( startListExceptions );
+	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
 	
 	for( let i = 0; i < startList.length; ++i ) {
 		let startEntry = startList[i];
@@ -680,6 +681,7 @@ function onload() {
 	<span id="team-starting">CrossMgr Time Trial Starter</span>
 </div>
 <div id="countdown-clock-div">
+	<span id="beep-btn"></span><br/>
 	<span id="countdown-clock">&nbsp;&nbsp;</span>
 </div>
 <div id="rider-next">

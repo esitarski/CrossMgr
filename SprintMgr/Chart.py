@@ -158,9 +158,6 @@ class Chart(wx.Panel):
 ########################################################################
 
 class ChartFrame(wx.Frame):
-	""""""
- 
-	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
 		super().__init__(None, title="Chart Grid Test", size=(1000,800) )

@@ -41,46 +41,24 @@ class Rider:
 		self.seeding_rank = int(seeding_rank or 0)
 		self.status = status
 	
-	aliases = {
-		'bib#':'bib',
-		'bib_#':'bib',
-		'#':'bib',
-		'num':'bib',
-		'bibnum':'bib',
-		'bib_num':'bib',
-		
-		'name':'full_name',
-		'rider_name':'full_name',
-		
-		'first':'first_name',
-		'fname':'first_name',
-		'firstname':'first_name',
-		'rider_first':'first_name',
-		
-		'last':'last_name',
-		'lname':'last_name',
-		'lastname':'last_name',
-		'rider_last':'last_name',
-		
-		'uciid':'uci_id',
-		'rider_uciid':'uci_id',
-		
-		'ucipoints':'uci_points',
-		'points':'uci_points',
-		'rider_ucipoints':'uci_points',
-		
-		'qualifying':'qualifying_time',
-		'time':'qualifying_time',
-		'rider_time':'qualifying_time',
-		
-		'rank':'seeding_rank',
-		
-		'rider_team':'team',
-		'teamcode':'team_code',
-		
-		'rider_status':'status',
-	}
-	aliases.update( {v:v for v in aliases.values()} )
+	named_aliases = (
+		(('bib#','bib_#','#','num','bibnum','bib_num',)					'bib'),
+		(('name','rider_name'),											'full_name'),
+		(('first','fname','firstname','rider_first'),					'first_name'),
+		(('last','lname','lastname','rider_last',),						'last_name'),
+		(('uciid','rider_uciid',),										'uci_id'),
+		(('ucipoints','points','riderucipoints','rider_ucipoints',),	'uci_points'),
+		(('qualifying','time','rider_time',),							'qualifying_time'),
+		(('rank', 'seedingrank',),										'seeding_rank'),
+		(('rider_team',),												'team'),
+		(('teamcode',),													'team_code'),
+		(('rider_status',),												'status'),
+	)
+	aliases = {}
+	for names, key in named_aliases:
+		aliases[key] = key
+		for n in names:
+			aliases[n] = key
 	
 	@staticmethod	
 	def GetHeaderNameMap( headers ):
@@ -978,7 +956,7 @@ class Model:
 		return self.competition and self.competition.isKeirin
 	
 	def getProperties( self ):
-		return { a : getattr(self, a) for a in ['competition_name', 'date', 'category', 'track', 'organizer', 'chief_official'] }
+		return { a : getattr(self, a) for a in ('competition_name', 'date', 'category', 'track', 'organizer', 'chief_official') }
 
 	def setProperties( self, properties ):
 		for a, v in properties.items():

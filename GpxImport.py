@@ -20,7 +20,7 @@ class IntroPage(adv.WizardPageSimple):
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, label = _('Import a GPX File containing coordinates for the course.\nContinue if you want to load or change the GPX course file.')),
 					flag=wx.ALL, border = border )
-		self.info = wx.TextCtrl(self, value = u'\n\n\n\n\n\n', style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,180))
+		self.info = wx.TextCtrl(self, value = '\n\n\n\n\n\n', style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,180))
 		vbs.Add( self.info, flag=wx.ALL|wx.EXPAND, border = border )
 		
 		self.removeButton = wx.Button( self, label = _('Remove GPX Course') )
@@ -40,7 +40,7 @@ class IntroPage(adv.WizardPageSimple):
 	def setInfo( self, geoTrack, geoTrackFName ):
 		self.geoTrack = geoTrack
 		if geoTrack:
-			s = u'\n\n'.join( [
+			s = '\n\n'.join( [
 					_('Existing GPX file:'),
 					u'{}: "{}"'.format(('Imported from'), geoTrackFName),
 					u'{}: {}'.format(_('Number of Coords'), geoTrack.numPoints),
@@ -140,22 +140,22 @@ class SummaryPage(adv.WizardPageSimple):
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, label = u'{}:'.format(_('Summary'))), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = '{}:'.format(_('Summary'))), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = ' '), flag=wx.ALL, border = border )
 
-		self.fileLabel = wx.StaticText( self, label = u'{}:'.format(_('GPX File')) )
+		self.fileLabel = wx.StaticText( self, label = '{}:'.format(_('GPX File')) )
 		self.fileName = wx.StaticText(self )
 
-		self.numCoordsLabel = wx.StaticText( self, label = u'{}:'.format(_('Number of Coords')) )
+		self.numCoordsLabel = wx.StaticText( self, label = '{}:'.format(_('Number of Coords')) )
 		self.numCoords = wx.StaticText(self )
 
-		self.distanceLabel = wx.StaticText( self, label = u'{}:'.format(_('Lap Length')) )
+		self.distanceLabel = wx.StaticText( self, label = '{}:'.format(_('Lap Length')) )
 		self.distance = wx.TextCtrl(self, style=wx.TE_READONLY)
 
-		self.totalElevationGainLabel = wx.StaticText( self, label = u'{}:'.format(_('Total Elevation Gain')) )
+		self.totalElevationGainLabel = wx.StaticText( self, label = '{}:'.format(_('Total Elevation Gain')) )
 		self.totalElevationGain = wx.TextCtrl(self, style=wx.TE_READONLY)
 
-		self.courseTypeLabel = wx.StaticText( self, label = u'{}:'.format(_('Course is')) )
+		self.courseTypeLabel = wx.StaticText( self, label = '{}:'.format(_('Course is')) )
 		self.courseType = wx.TextCtrl(self, style=wx.TE_READONLY)
 
 		self.setCategoryDistanceLabel = wx.StaticText( self )
@@ -181,13 +181,13 @@ class SummaryPage(adv.WizardPageSimple):
 	
 	def setInfo( self, fileName, numCoords, distance, totalElevationGain, isPointToPoint ):
 		self.fileName.SetLabel( fileName )
-		self.numCoords.SetLabel( u'{}'.format(numCoords) )
+		self.numCoords.SetLabel( '{}'.format(numCoords) )
 		self.distanceKm = distance
 		self.distanceMiles = distance*0.621371
-		self.distance.ChangeValue( u'{:.3f} km, {:.3f} miles'.format(self.distanceKm, self.distanceMiles) )
+		self.distance.ChangeValue( '{:.3f} km, {:.3f} miles'.format(self.distanceKm, self.distanceMiles) )
 		self.totalElevationGainM = totalElevationGain
 		self.totalElevationGainFt = totalElevationGain*3.28084
-		self.totalElevationGain.ChangeValue( u'{:.0f} m, {:.0f} ft'.format(self.totalElevationGainM, self.totalElevationGainFt) )
+		self.totalElevationGain.ChangeValue( '{:.0f} m, {:.0f} ft'.format(self.totalElevationGainM, self.totalElevationGainFt) )
 		self.courseType.ChangeValue( _('Point to Point') if isPointToPoint else _('Loop') )
 		
 class GetGeoTrack:
@@ -269,7 +269,7 @@ class GetGeoTrack:
 				if fileName == '':
 					message = _('Please specify a GPX file.')
 				else:
-					message = u'{}:\n\n    "{}"\n\n{}'.format(
+					message = '{}:\n\n    "{}"\n\n{}'.format(
 							_('Cannot open file'), fileName,
 							_('Please check the file name and/or its read permissions.'),
 						)
@@ -291,7 +291,7 @@ class GetGeoTrack:
 			# Check for too few points.
 			if geoTrack.numPoints < 2:
 				Utils.MessageOK( self.wizard,
-					u'{}: {}'.format(_('Import Failed'), _('GPX file contains fewer than two points.')),
+					'{}: {}'.format(_('Import Failed'), _('GPX file contains fewer than two points.')),
 					title=_('File Format Error'),
 					iconMask=wx.ICON_ERROR)
 				evt.Veto()
@@ -303,7 +303,7 @@ class GetGeoTrack:
 					open(fileNameElevation).close()
 				except IOError as e:
 					logException( e, sys.exc_info() )
-					message = u'{}: {}\n\n    "{}"\n\n{}'.format(
+					message = '{}: {}\n\n    "{}"\n\n{}'.format(
 							_('Cannot Open Elevation File'), e, fileNameElevation,
 							_('Please check the file name and/or its read permissions.'),
 						)
@@ -313,7 +313,7 @@ class GetGeoTrack:
 						geoTrack.readElevation( fileNameElevation )
 					except Exception as e:
 						logException( e, sys.exc_info() )
-						message = u'{}: {}\n\n    "{}"'.format(_('Elevation File Error'), e, fileNameElevation )
+						message = '{}: {}\n\n    "{}"'.format(_('Elevation File Error'), e, fileNameElevation )
 						Utils.MessageOK( self.wizard, message, title=_('File Read Error'), iconMask=wx.ICON_ERROR )
 				
 			self.geoTrackFName = fileName

@@ -2124,7 +2124,7 @@ class Race:
 			if category.fullname in newCategories:
 				originalName = category.name
 				for count in range(1, 999):
-					category.name = u'{} {}({})'.format(originalName, _('Copy'), count)
+					category.name = '{} {}({})'.format(originalName, _('Copy'), count)
 					if not category.fullname in newCategories:
 						break
 			newCategories[category.fullname] = category
@@ -2368,18 +2368,18 @@ class Race:
 	
 	def getRaceIntro( self ):
 		intro = [
-			u'{}:{}'.format(self.name, self.raceNum),
-			u'{}: {} ({})'.format(_('Start'), self.scheduledStart, self.date),
+			'{}:{}'.format(self.name, self.raceNum),
+			'{}: {} ({})'.format(_('Start'), self.scheduledStart, self.date),
 			_('Time Trial') if self.isTimeTrial else _('Mass Start'),
 		]
 		activeCategories = [c for c in self.categories.values() if c.active]
 		if all( c.numLaps for c in activeCategories ):
 			activeCategories.sort( key = Category.key )
-			intro.append( u'{}: {}'.format(_('Category Laps'), ', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
+			intro.append( '{}: {}'.format(_('Category Laps'), ', '.join( '{}'.format(c.numLaps) for c in activeCategories )) )
 		else:
-			intro.append( u'{}: {} min'.format(_('Duration'), self.minutes) )
-		intro.append( u'{}: {}'.format( 'Min Possible Lap Time', Utils.formatTime(self.minPossibleLapTime)) )
-		return u'\n'.join( intro )
+			intro.append( '{}: {} min'.format(_('Duration'), self.minutes) )
+		intro.append( '{}: {}'.format( 'Min Possible Lap Time', Utils.formatTime(self.minPossibleLapTime)) )
+		return '\n'.join( intro )
 	
 	def getNextExpectedLeaderTNL( self, t ):
 		leaderTimes, leaderNums = self.getLeaderTimesNums()
@@ -2508,7 +2508,7 @@ class Race:
 						ret[r][e.num] = Utils.formatTimeGap( e.t - leader.t ) if leader.num != e.num else ' '
 					else:
 						lapsDown = e.lap - leader.lap
-						ret[r][e.num] = u'{} {}'.format(lapsDown, _('laps') if lapsDown < -1 else _('lap'))
+						ret[r][e.num] = '{} {}'.format(lapsDown, _('laps') if lapsDown < -1 else _('lap'))
 				iLap += 1
 					
 		return ret
