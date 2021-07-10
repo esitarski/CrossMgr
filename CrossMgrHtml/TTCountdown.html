@@ -564,7 +564,7 @@ function onload() {
 		}
 		else {
 			raceStarted = false;
-			// Add a start time to start the race.
+			// Add a countdown to the race start.
 			startList.unshift(
 					[0,
 					999999,
@@ -573,7 +573,7 @@ function onload() {
 					'('+startList.length+' Starters)',
 					""]
 			);
-			// Automatically start the race at the scheduled start time if we don't get refreshed in the meantime.
+			// Automatically start the race at the scheduled start time (if we don't get refreshed after the race starts).
 			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
 		}
 	}

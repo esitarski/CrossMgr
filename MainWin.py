@@ -3280,6 +3280,9 @@ class MainWin( wx.Frame ):
 				self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
 			self.lapTimes.sort( reverse=True )
 		else:
+			scheduledStart = datetime.datetime.now()
+			race.scheduledStart = '{:02d}:{:02d}'.format(scheduledStart.hour, scheduledStart.minute)
+			
 			race.setCategories( categories )
 			self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 			if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
@@ -3326,24 +3329,25 @@ class MainWin( wx.Frame ):
 
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
 
+		# Start the race.
 		self.nextNum = None
 		if race.isTimeTrial:
+			# If a TT, start the race at the start time in the future.
 			def startRaceInFuture():
 				race.startRaceNow()
 				self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 			wx.CallLater( int(1000.0*(datetime.datetime.now()-scheduledStart).total_seconds()), startRaceInFuture )
+			self.menuPublishHtmlTTStart()
 		else:
+			# If a Mass Start, start the race now.
 			race.startRaceNow()
 			if not (race.enableJChipIntegration and race.resetStartClockOnFirstTag):
 				# Backup all the events and race start so we don't have to wait for the first lap.
 				race.startTime -= datetime.timedelta( seconds = (tMin-5) )
 			self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
+			OutputStreamer.writeRaceStart()
 
 		self.writeRace()
-		OutputStreamer.writeRaceStart()
-		if race.isTimeTrial:
-			self.menuPublishHtmlTTStart()
-			
 		self.updateRaceClock()
 		self.refresh()
 
