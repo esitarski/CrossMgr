@@ -3337,6 +3337,11 @@ class MainWin( wx.Frame ):
 				race.startRaceNow()
 				self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 			wx.CallLater( int(1000.0*(datetime.datetime.now()-scheduledStart).total_seconds()), startRaceInFuture )
+			Utils.MessageOK(
+				self,
+				'{}\n\n{}'.format( _('TT will start automatically in about 2 minutes'), _('Be sure to look at the TTCountdown web page.') ),
+				_('TT Start'),
+			)
 			self.menuPublishHtmlTTStart()
 		else:
 			# If a Mass Start, start the race now.

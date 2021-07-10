@@ -424,7 +424,7 @@ function initiateSound() {
 	if( !enableBeeps ) {
 		enableBeeps = true;
 		// Play some beeps to set the volume.
-		for( let i = 0; i < 16; ++i )
+		for( let i = 0; i < 8; ++i )
 			setTimeout(function() { playBeep(i%4); }, 250*i);
 		openFullscreen();			
 	}
@@ -569,9 +569,9 @@ function onload() {
 					[0,
 					999999,
 					raceName,
-					'TT Countdown to '+('0'+raceStart.getHours()).slice(-2)+':'+('0'+raceStart.getMinutes()).slice(-2)+':'+('0'+raceStart.getSeconds()).slice(-2),
-					'('+startList.length+' Starters)',
-					""]
+					'TT Countdown to ' + toInternationalTimeString(raceStart),
+					'(' + startList.length + ' Starters)',
+					'']
 			);
 			// Automatically start the race at the scheduled start time (if we don't get refreshed after the race starts).
 			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
