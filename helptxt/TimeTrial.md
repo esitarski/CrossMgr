@@ -98,14 +98,26 @@ The TTCountdown page is accessible from the CrossMgr Web page:
 
 If you start (or reload) the TTCountdown page after you start the race in CrossMgr, it will synchronize with CrossMgr's race start time.
 
-If you start it before you start the race in CrossMgr, it will automatically start at the race's scheduled start time.
+If you start it before you start the race in CrossMgr, it will countdown to the race start and automatically switch to the rider countdown at the race's scheduled start time.
 
-To maintain the best timing accuracy, the TTCountdown page does not "phone home" to CrossMgr while it is running (network delays could cause it to hang).
+If the race starts at a different time than scheduled, you will need to refresh the TTCoundown page from CrossMgr so it will pick up the actual race time.
+
+To maintain the best timing accuracy, the TTCountdown page does not "phone home" to CrossMgr (network delays could cause it to hang).
 Changes to the rider Excel spreadsheet, or changes to start times will not show in TTCountdown until you reload/refresh it.
 
-The TTCountdown page does not require a live network connection to CrossMgr.  For example, you can start it from the CrossMgr computer, then move to a different location for the finish,
-leaving the tablet at the start.
-Of course, it is important that no one touch the TTCountdown tablet.
+This also means that the TTCountdown page does not need a live network connection to CrossMgr.
+
+For example, you can start it from the CrossMgr computer, then move to a different location for the finish,
+leaving the tablet at the start.  Of course, it is important that no one touch the TTCountdown tablet in this case as there is no way to reload it.
+
+Another scenario is:
+
++ upload the TTCountdown page (see [DataMgmt][] Publish) to a web site ahead of time.
++ initialize a start tablet on location at the race start (say, from a hotspot).
++ start the race in CrossMgr based on the TTCountdown to the race start time.  This can be done by time-of-day, or by phone/radio communication with the start line.
+
+Starting from time-of-day is convenient for hill climbs and other situations when there is no communication between the start and the finish.
+
 
 ## Frequently Asked Questions
 
