@@ -577,7 +577,7 @@ function onload() {
 	else if( raceScheduledStartTuple != null ) {
 		raceStart = dateFromTuple( raceScheduledStartTuple );
 		if( raceStart.getTime() < (new Date()).getTime() ) {
-			raceStarted = true;raceStart.getTime() - (new Date()).getTime() );
+			raceStarted = true;
 		}
 		else {
 			raceStarted = false;
@@ -594,8 +594,13 @@ function onload() {
 			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
 			
 			// Play some high beeps.
-			for( let i = 6; i < 10; ++i )
-				setTimeout( function() { playBeep(0); }, raceStart.getTime() - 1000*i - (new Date()).getTime() );
+			for( let i = 6; i <= 15; ++i ) {
+				if( i == 10 )
+					continue;
+				let beepInterval = raceStart.getTime() - (new Date()).getTime() - 1000*i;
+				if( beepInterval > 0 )
+					setTimeout( function() { playBeep(1); }, beepInterval );
+			}
 		}
 	}
 	
