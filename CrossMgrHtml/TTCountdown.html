@@ -126,17 +126,18 @@ var serverTimestamp = null;
 var raceStarted = true;
 
 var startList = null;
-var startListTestOffset = 10*60, startListTestInterval = 60;
+var startListTestInterval = 60;
+var startListTCur = 60;
 var startListTest = [/*(-*/
-	[startListTestOffset+=startListTestInterval, 9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval+10*60, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
-	[startListTestOffset+=startListTestInterval, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
+	[startListTCur,						   9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
 /*-)*/];
 var flags = {"GBR":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAOCAYAAAArMezNAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oDBAo1B4Zxqq0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADv0lEQVQ4y02Tf0zVZRTGP+/7fuGSiQoIMhTBMHUjA1O5sRJNnLOcTVcunfi7FrXZVqZMcmnRhMj1jxU0wMo0JwtqJWtozoQwkNR0osuxEoRxRfAORAfc+31Pf3yt9d85z9k5z55znqNOP5937skPCudHps9if2UTxZ834IYFQRCB4ZEQJ/YtJXHvbgACe4rILagnItJBBASLQrN7cxbrzn+P7Q8i+3a06s75C2zgw0/pLihi56a5NBx7hYVZKYRCLsYojFEoQBmDMhqUQhuF0YpwOEzughnUr45na8Mhxi9dyIxT1VwMDFv98a+32RGbwxj/E1zNXskjgwF+rMij7P0VWGsx2huG1qA0CjBGY0WoKFpB+cAZpradJ6m6krgta1m25Wve2X8SLVhONF5nbvlftOa9Tk/JAboKS9i8OJULx7exyD8NEQGjUUZjBRZlpXBmQzK5Bz8i+tnFTK+t4sjJduLmFVP/y5+ICOrN9440ixPjtxa0UaSnxPBS7BBDF66Q8Op6wuPGE+rspnNtPoiQUlPF4Omz6Nu9TMzfiBn7MGVHW7l8LYBrBVA4Ntji5GdEkxYfi1gBBNe6jLoPEZ2Tzb2LbWAtob5+xFqUCMONvzE2JQlSJzPUdA4EtiQ6mKQYREAraO9zUT8vXtWc2D/oRwAErPVCK/AA4sEqRATcsJdbQQAl4uGeRUCEW5NiWhy0tzsRTwbKcwH6fw0o0AYtFhEDIogSFF5dPRgo/8ZK4UzZtom0iQl4/GCtZWTEBQTt84EIo90Bbh2oAhEmvbEVJy7Ws53Phw2F8BlBKwWAQhHZdxvni7b7aN+gJ10pZqXFs2FlBu69+9z5qhobF0v00350xWEQweefS8SUJMzdQXorviE6M53DvWNouxHEhq1HGL6HuTUy8+UTTTendAUG2PTCHNYsn02wpo7+0k/oSZ7OnkthJo/RRLe2oLTi+rTZ7Co7yzz/o0z1P0ZfTR3JLQ2EUlKpPPU3LRc6CAaD3Xo0FCY7czIXf8hn6ZwErizPo7/2OD89t5GVx7povtSNNvq/BzFG0fxHF0vWVXK06SZJe98mcXs+WbUHaclPY9mimUQ4GqforSWsefEZAuWHGP7uOB2ZT1HaM46Gnd9CpIERl2B/kKgbnSituTswRFfPHaJ8Duu3V1NVfY59BcvIqvuS9l2l7O64SePj83AyJkXpa7mrURMmcCxnHSWHfsfaXoiK8OxmrHdx10Vcl3A4hB0e5b61AJw62072qs8ofC2HguJCRi5fJfndYv0Pm/a+HCONOTIAAAAASUVORK5CYII="};
 var version = '';
@@ -249,15 +250,35 @@ function playBeep( beep ) {
 		return;
 
 	if( isAudioContext ) {
-		var oscillator = audioCtx.createOscillator();
-		oscillator.frequency.value = (beep > 0 ? 440 : 880);
-		oscillator.type = 'triangle';
-		oscillator.connect( audioCtx.destination );
-		oscillator.start(0);
-		oscillator.stop(audioCtx.currentTime + 0.2);
+        let currentTime = audioCtx.currentTime;
+
+        let frequency = (beep > 0 ? 440 : 880);
+        let duration = 0.250;
+        
+        let ramp_value = 0.00001;
+        let ramp_duration = duration * 2;
+
+        let oscillator = audioCtx.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        let gain = audioCtx.createGain();                
+		gain.gain.setValueAtTime(gain.gain.value, currentTime);
+		gain.gain.exponentialRampToValueAtTime(ramp_value, currentTime + ramp_duration + 0.03);
+
+        oscillator.connect(gain);
+		oscillator.onended = function () {
+		  gain.disconnect(audioCtx.destination);
+		  oscillator.disconnect(gain);
+		}
+
+        gain.connect(audioCtx.destination);
+
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime+duration);
 	}
 	else if( isWebkitAudioContext ) {
-		var oscillator = audioCtx.createOscillator();
+		let oscillator = audioCtx.createOscillator();
 		oscillator.frequency.value = (beep > 0 ? 440 : 880);
 		oscillator.type = 3; // TRIANGLE
 		oscillator.connect( audioCtx.destination );
@@ -265,7 +286,7 @@ function playBeep( beep ) {
 		oscillator.noteOff(audioCtx.currentTime + 0.2);
 	}
 	else {
-		var audPlay = (beep > 0 ? aud440 : aud880);	
+		let audPlay = (beep > 0 ? aud440 : aud880);	
 		audPlay.pause();
 		audPlay.currentTime = 0.0;
 		audPlay.play();
@@ -295,19 +316,15 @@ function updateCountdown() {
 	let tNow = ServerDate();
 	let btg = null;
 	
-	if( !raceStarted )
-		iBeepCur = 0;
-	else {
-		for( ; ; ++iBeepCur ) {
-			btg = beepsToGive[iBeepCur];
-			let dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
-			if( dSecs < -0.1 )
-				break;
-			
-			if( !btg.given ) {
-				playBeep( btg.beep );
-				btg.given = true;
-			}
+	for( ; ; ++iBeepCur ) {
+		btg = beepsToGive[iBeepCur];
+		let dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
+		if( dSecs < -0.1 )
+			break;
+		
+		if( !btg.given ) {
+			playBeep( btg.beep );
+			btg.given = true;
 		}
 	}
 	
@@ -531,7 +548,7 @@ function onload() {
 	}
 	else {
 		// Running in test mode.
-		let r = new Date( (new Date()).getTime() + 1.5 * (60*1000) );
+		let r = new Date( (new Date()).getTime() + 0.5 * (60*1000) );
 		raceScheduledStartTuple = [r.getFullYear(), r.getMonth(), r.getDate(), r.getHours(), r.getMinutes(), r.getSeconds(), r.getMilliseconds()];
 		raceName = 'Test Race';
 		startList = startListTest;
@@ -549,7 +566,7 @@ function onload() {
 	enableBeeps = false;
 	let countdown_clock = document.getElementById('countdown-clock');
 	let beep_btn = document.getElementById('beep-btn');
-	beep_btn.innerHTML = 'Press to enable Beep';
+	beep_btn.innerHTML = 'Press to enable Beep2';
 	beep_btn.className = 'btn';
 	beep_btn.addEventListener( 'click', initiateSound );
 	
@@ -575,6 +592,10 @@ function onload() {
 			);
 			// Automatically start the race at the scheduled start time (if we don't get refreshed after the race starts).
 			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
+			
+			// Play some high beeps.
+			for( let i = 6; i < 10; ++i )
+				setTimeout( function() { playBeep(0); }, raceStart.getTime() - 1000*i - (new Date()).getTime() );
 		}
 	}
 	
@@ -629,6 +650,7 @@ function onload() {
 		let tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
 		if( tStart < tServer )
 			continue;
+		
 		for( let b = 0; b < beepTimes.length; ++b ) {
 			let tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
 			if( tBeep < tServer || (beepsToGive.length > 0 && beepsToGive[beepsToGive.length-1].t >= tBeep) )
