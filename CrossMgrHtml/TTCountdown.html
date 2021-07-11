@@ -566,7 +566,7 @@ function onload() {
 	enableBeeps = false;
 	let countdown_clock = document.getElementById('countdown-clock');
 	let beep_btn = document.getElementById('beep-btn');
-	beep_btn.innerHTML = 'Press to enable Beep2';
+	beep_btn.innerHTML = 'Press to enable Beeps';
 	beep_btn.className = 'btn';
 	beep_btn.addEventListener( 'click', initiateSound );
 	
@@ -577,7 +577,7 @@ function onload() {
 	else if( raceScheduledStartTuple != null ) {
 		raceStart = dateFromTuple( raceScheduledStartTuple );
 		if( raceStart.getTime() < (new Date()).getTime() ) {
-			raceStarted = true;
+			raceStarted = true;raceStart.getTime() - (new Date()).getTime() );
 		}
 		else {
 			raceStarted = false;
