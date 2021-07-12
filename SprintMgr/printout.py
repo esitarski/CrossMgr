@@ -251,7 +251,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 		try:
 			rows = len(self.data)
 		except TypeError:
-			self.data = [[u'{}'.format(self.data)]] # a non-iterable becomes a single cell
+			self.data = [['{}'.format(self.data)]] # a non-iterable becomes a single cell
 			rows = 1
 		first_value = self.data[0]
 
@@ -270,7 +270,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 			if self.label == [] and self.set_column == []:
 				data = []	   #becomes one column
 				for x in self.data:
-					data.append([u'{}'.format(x)])
+					data.append(['{}'.format(x)])
 				column_total = 1
 			else:
 				data = [self.data] #becomes one row
@@ -485,17 +485,17 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 
 			ftype = val["Type"]
 			if ftype == "Pageof":
-				addtext = u'{} {} {} {}'.format("Page", self.page, "of", self.total_pages)
+				addtext = '{} {} {} {}'.format("Page", self.page, "of", self.total_pages)
 			elif ftype == "Page":
-				addtext = u'{} {}'.format("Page", self.page)
+				addtext = '{} {}'.format("Page", self.page)
 			elif ftype == "Num":
-				addtext = u'{}'.format(self.page)
+				addtext = '{}'.format(self.page)
 			elif ftype == "Date":
 				addtext = self.GetDate()
 			elif ftype == "Date & Time":
 				addtext = self.GetDateTime()
 			else:
-				addtext = u""
+				addtext = ""
 
 			self.OutTextPageWidth(text+addtext, footer_pos, val["Align"], footer_indent, True)
 

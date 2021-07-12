@@ -88,7 +88,7 @@ def getRiderNameFromFName( fname ):
 	
 class PhotoPrintout(wx.Printout):
 	def __init__(self, title, fname):
-		wx.Printout.__init__(self)
+		super().__init__()
 		self.title = title
 		self.fname = fname
 

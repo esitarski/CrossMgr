@@ -3,8 +3,10 @@
 # Categories
 
 A race category is a pattern of numbers ranked together - it does not have to be the same as the category that appears on a rider's license code.
+It is easy to change CrossMgr categories before, during and after a race.  A rider can be moved between categories at any time, and the results will automatically update.
 
-It is easy to change CrossMgr categories before, during and afterwards.  A rider can be moved between categories before, during and after a race, and the results will automatically update.
+
+__NOTE:__ As with all CrossMgr screens, values are saved when you leave the screen, not as you dynamically edit the fields.  For example, if you change the number ranges or number of laps, those changes will not be committed until you switch screens.  Of course, this does not apply to the __SetLaps__ dialog which allows you to change the number of laps easily while a race is running (see below for details).
 
 Ideally, each category in the race would have a unique number range, for example 1-99 would be in one category, 100-199 would be in another, etc.
 This is not only easier to configure in CrossMgr, it makes it easy for riders and race officials to know the set of competitors in the same race.
@@ -22,7 +24,7 @@ Sometimes organizers come up with creative ranking criteria.  For example, a ran
 
 CrossMgr makes this easy by supporting three types of Categories:
 
-1. __Start Wave:__ a group of riders that start at the same time.  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered in the same race, and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar on the [Record][] page.
+1. __Start Wave:__ a group of riders that start at the same time and are considered to be "in the same race".  The riders may all be in the same category, or they may be made up of multiple component categories riding together.  A "Start Wave" may, or may not have "Components".  Riders in a "Start Wave" are considered "in the same race", and can work together.  Each "Start Wave" is managed in CrossMgr with a race progress bar on the [Record][] page and gets a [LapCounter][].
 1. __Component:__ a sub-group of riders part of a "Start Wave", all of which are in the same category with respect to each other.  Riders in a "Component" can work together with other riders in their "Component", as well as other riders in their "Start Wave".  "Component" categories use the same "Start Offset", "Race Laps" and other options as their "Start Wave".
 1. __Custom:__ a group of riders defined by any criteria - they don't even need to be part of the same "Start Wave".  A "Custom" category could be a completely imaginary ranking of riders in different Start Waves.
 
@@ -108,7 +110,7 @@ Set the __Upload__ flag to control whether you want to upload the the "Start Wav
 
 The __Series__flag works similarly, but indicates that a category should be included in a race Series.  The program SeriesMgr looks at this flag.
 
-### Note about __Initialize CrossMgr Categories from Excel EventCategory/CustomCategory and Bib# columns__ option in [DataMgmt][]/Link to External Excel Data...
+### "Initialize CrossMgr Categories from Excel EventCategory/CustomCategory and Bib# columns" option in [DataMgmt][]/Link to External Excel Data...
 If you choose this option, the Categories and Bib numbers will be determined by the contents of the Excel sheet.
 Any changes you make in CrossMgr will be over-written by the information in the Excel sheet.
 
@@ -160,7 +162,7 @@ Allows you to automatically add a bib exception to a selected category.  This ac
 Press this button to format the number ranges in a more compact format with as many number ranges as possible.  For example, __1,2,3,4,5,8,9,10,11,12,-8__ will change to __1-5,9-12__.
 
 ## Update Start Wave Numbers
-Press this button to automatically adjust the Start Wave category to include all the Component categories numbers.  __This button is pressed automatically when you leave the Categories page.__
+Press this button to automatically adjust the Start Wave category to include all the Component categories numbers.  __This button is auto-pressed when you leave the Categories page.__
 
 # Category Screen
 
@@ -174,7 +176,8 @@ Name|Name of the Category
 Gender|Gender of the Category.  Choices are "Men", "Women" or "Open".
 Numbers|The numbers of riders in this Category.  Numbers can be expressed individually like 103,105 or a range, like 100-199.  Exclusions exceptions are expressed by preceding the excluded number with a '-' sign.  Exceptions can be express individually, like -201,-205 or in a range -201-205.  See [Number Patterns](#number-patterns) for more details below.  You can cut-and-paste in numbers from Excel, either in vertical columns or horizontally in rows.  This makes it easier to enter irregular number ranges from Excel when necessary.  When using the __Initialize CrossMgr Categories from Excel EventCategory and Bib# columns__ option, the number ranges will be automatically determined from the Excel sheet.
 Start Offset|When starting multiple categories at the same time, here is where you enter the offset of later starts from the first start.
-Race Laps|If you know the number of laps, enter it here.  If you leave this blank, CrossMgr will compute the laps for this category based on the __Race Minutes__ defined in the next field, or in [Properties][].  Specifying a __Race Laps__ will override CrossMgr's computation.
+Race Laps|If you know the number of laps, enter it here.  If you leave this blank, CrossMgr will compute the laps for this category based on the __Race Minutes__ defined in the next field, or in [Properties][].  Specifying __Race Laps__ will always override CrossMgr's time-based lap computation.  Race Laps only applies to the __Start Wave__.  It is greyed-out for all other Category types.
+&#x27F3;|When the race is running, this launches the __Set Laps__ dialog (see [SetLaps][] for details).  __Set Laps__ is the preferred way to change the number of laps while the race is running as it shows all important information required to make a decision.  Similar to Race Laps above, this only applies to __Start Wave__ Categories.
 Race Minutes|If you want to run this category on a time different from the Properties' __Race Minutes__, enter the minutes here.  If __Race Laps__ is defined, __Race Minutes__ is ignored.  If both fields are blank, the number of laps will be determined from the [Properties][] __Race Minutes__.
 Lapped Riders Continue|If selected, riders who are lapped by their category leader will be expected to complete the full number of laps in the race, not just the laps completed on the winners lap.  In normal CycloCross and MTB events, all riders finish on the last lap, and this option should not be set.  With combined Paracycling categories, you will need to select this as lapped athletes may still be in contention due to the Performance Factors.
 Distance|The distance of the lap or the race (depends on the value of the next column).  The distance unit will be what you configured in Properties.

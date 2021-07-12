@@ -8,7 +8,7 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.Empty
-		gridlib.GridCellEditor.__init__(self)
+		super().__init__()
 		
 	def Create( self, parent, id=wx.ID_ANY, evtHandler=None ):
 		self._tc = HighPrecisionTimeEdit(parent, id, allow_none=False, style=wx.TE_PROCESS_ENTER)
@@ -17,7 +17,7 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 			self._tc.PushEventHandler( evtHandler )
 	
 	def SetSize( self, rect ):
-		self._tc.SetDimensions(int(rect.x), int(rect.y), int(rect.width+2), int(rect.height+2), wx.SIZE_ALLOW_MINUS_ONE )
+		self._tc.SetSize( int(rect.x), int(rect.y), int(rect.width+2), int(rect.height+2), wx.SIZE_ALLOW_MINUS_ONE )
 	
 	def BeginEdit( self, row, col, grid ):
 		self.startValue = grid.GetTable().GetValue(row, col).strip()

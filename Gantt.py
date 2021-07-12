@@ -24,7 +24,7 @@ def GetNowTime():
 
 class Gantt( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 
 		self.numSelect = None
 		self.entry = None

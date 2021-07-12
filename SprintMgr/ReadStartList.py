@@ -22,7 +22,7 @@ FieldToAttr = {f:Model.Rider.aliases[f.strip().lower().replace(' ', '_')] for f 
 
 class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -47,7 +47,7 @@ class FileNamePage(adv.WizardPageSimple):
 	
 class SheetNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		self.choices = []
 		self.expectedSheetName = None
 		
@@ -78,7 +78,7 @@ class SheetNamePage(adv.WizardPageSimple):
 	
 class HeaderNamesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 
 		self.expectedFieldCol = None
 		
@@ -93,16 +93,9 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		# and the headers we found in the Excel sheet.
 		sp = scrolled.ScrolledPanel( self, size=(750, 64), style=wx.TAB_TRAVERSAL )
 		
-		boldFont = None
-		
 		gs = wx.GridSizer( 2, len(Fields), 4, 4 )
 		for c, f in enumerate(Fields):
 			label = wx.StaticText(sp, label=f)
-			if boldFont is None:
-				font = label.GetFont()
-				fontSize = label.GetFont()
-				boldFont = wx.Font( font.GetPointSize()+1, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
-			label.SetFont( boldFont )
 			gs.Add( label )
 		
 		self.headers = []
@@ -118,7 +111,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		self.gs = gs
 		vbs.Add( sp, flag=wx.ALL, border = border )
 		
-		self.SetSizer( vbs )
+		self.SetSizerAndFit( vbs )
 	
 	def setExpectedFieldCol( self, fieldCol ):
 		self.expectedFieldCol = copy.copy(fieldCol)
@@ -191,7 +184,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			
 class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )

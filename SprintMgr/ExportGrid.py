@@ -1,6 +1,5 @@
 import wx
 import os
-import xlsxwriter
 import Utils
 import Model
 import math
@@ -15,7 +14,7 @@ from contextlib import contextmanager
 def tag( buf, name, attrs = {} ):
 	if isinstance(attrs, str) and attrs:
 		attrs = { 'class': attrs }
-	buf.write( '<{}>'.format( u' '.join(
+	buf.write( '<{}>'.format( ' '.join(
 			[name] + ['{}="{}"'.format(attr, value) for attr, value in attrs.items()]
 		) ) )
 	yield
@@ -54,12 +53,13 @@ def writeHtmlHeader( buf, title ):
 	buf.write( '<style>\n' )
 	buf.write( 'td { vertical-align: top; }\n')
 	buf.write( 'th { vertical-align: top; }\n')
+	buf.write( '.text-nowrap { white-space: nowrap; }\n')
 	buf.write( '</style>\n')
 	with tag(buf, 'table', {'class': 'TitleTable'} ):
 		with tag(buf, 'tr'):
 			with tag(buf, 'td', dict(valign='top')):
 				data = base64.b64encode(open(getHeaderFName(),'rb').read())
-				buf.write( '<img id="idImgHeader" src="data:image/png;base64,%s" />' % data )
+				buf.write( '<img id="idImgHeader" src="data:image/png;base64,{}" />'.format(data.decode()) )
 			with tag(buf, 'td'):
 				buf.write( '&nbsp;&nbsp;&nbsp;&nbsp;' )
 			with tag(buf, 'td'):
@@ -94,15 +94,18 @@ class ExportGrid:
 		self.fontName = 'Helvetica'
 		self.fontSize = 16
 		
-		self.leftJustifyCols = {}
-		self.rightJustifyCols = {}
+		self.leftJustifyCols = set()
+		self.rightJustifyCols = set()
+		self.timeCols = set()
 		
 		rightJustify = {'Pos', 'Bib', 'Time'}
 		for c, n in enumerate(self.colnames):
 			if n in rightJustify:
-				self.rightJustifyCols[c] = True
+				self.rightJustifyCols.add( c )
 			else:
-				self.leftJustifyCols[c] = True
+				self.leftJustifyCols.add( c )
+			if n == 'Time':
+				self.timeCols.add( c )
 	
 	def _getFont( self, pixelSize = 28, bold = False ):
 		return wx.Font( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
@@ -135,8 +138,7 @@ class ExportGrid:
 	def _drawMultiLineText( self, dc, text, x, y ):
 		if not text:
 			return
-		wText, hText = dc.GetMultiLineTextExtent( text )
-		lineHeightText = dc.GetTextExtent( 'PpJj' )[1]
+		wText, hText, lineHeightText = dc.GetFullMultiLineTextExtent( text )
 		for line in text.split( '\n' ):
 			dc.DrawText( line, x, y )
 			y += lineHeightText
@@ -274,22 +276,44 @@ class ExportGrid:
 			'align':	'right',
 		})
 		
+		styleTime = workbook.add_format({
+			'align':	'right',
+			'num_format': 'hh:mm:ss.000',
+		})
+		
+		styleMMSS = workbook.add_format({
+			'align':	'right',
+			'num_format': 'mm:ss.000',
+		})
+		
+		styleSS = workbook.add_format({
+			'align':	'right',
+			'num_format': 'ss.000',
+		})
+		
 		return {
 			'titleStyle':		titleStyle,
 			'headerStyleLeft':	headerStyleLeft,
 			'headerStyleRight':	headerStyleRight,
 			'styleLeft':		styleLeft,
 			'styleRight':		styleRight,
+			'styleTime':		styleTime,
+			'styleHHMMSS':		styleTime,
+			'styleMMSS':		styleMMSS,
+			'styleSS':			styleSS,
 		}
 	
 	def toExcelSheet( self, sheet, formats ):
 
-		''' Write the contents of the grid to an xlwt excel sheet. '''
+		''' Write the contents of the grid to an excel sheet. '''
 		titleStyle			= formats['titleStyle']
 		headerStyleLeft		= formats['headerStyleLeft']
 		headerStyleRight	= formats['headerStyleRight']
 		styleLeft			= formats['styleLeft']
 		styleRight			= formats['styleRight']
+		styleTime			= formats['styleTime']
+		styleMMSS			= formats['styleMMSS']
+		styleSS				= formats['styleSS']
 		
 		rowTop = 0
 		if self.title:
@@ -301,21 +325,37 @@ class ExportGrid:
 		sheetFit = FitSheetWrapperXLSX( sheet )
 		
 		# Write the colnames and data.
-
 		rowMax = 0
 		for col, c in enumerate(self.colnames):
 			sheetFit.write( rowTop, col, c, headerStyleLeft if col in self.leftJustifyCols else headerStyleRight, bold=True )
-			style = styleLeft if col in self.leftJustifyCols else styleRight
+			style = styleTime if col in self.timeCols else styleLeft if col in self.leftJustifyCols else styleRight
+			
+			if col in self.timeCols:
+				# Find a time format closest to the maximum value.
+				vMax = 0.0
+				for v in self.data[col]:
+					try:
+						vMax = max( vMax, abs(Utils.StrToSeconds(v)) )
+					except Exception:
+						continue
+				if vMax < 60.0:
+					style = styleSS
+				elif vMax < 60.0*60.0:
+					style = styleMMSS
+				
 			for row, v in enumerate(self.data[col]):
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
+				if col in self.timeCols:
+					try:
+						v = Utils.StrToSeconds(v) / (24.0*60.0*60.0)	# Convert seconds to fraction of a day.
+					except Exception:
+						pass
 				sheetFit.write( rowCur, col, v, style )
 				
 		# Add branding at the bottom of the sheet.
-		style = xlwt.XFStyle()
-		style.alignment.horz = xlwt.Alignment.HORZ_LEFT
-		sheet.write( rowMax + 2, 0, brandText, style )
+		sheet.write( rowMax + 2, 0, brandText, styleLeft )
 		
 	def toHtml( self, buf ):
 		''' Write the contents to the buffer in HTML format. '''
@@ -331,7 +371,10 @@ class ExportGrid:
 				for row in range(max(len(d) for d in self.data)):
 					with tag(buf, 'tr'):
 						for col in range(len(self.colnames)):
-							with tag(buf, 'td', {'class':'rAlign'} if col not in self.leftJustifyCols else {}):
+							mods = {'class':'rAlign'} if col not in self.leftJustifyCols else {}
+							if self.colnames[col] in ('In', 'Out'):
+								mods['class'] = 'text-nowrap'
+							with tag(buf, 'td', mods):
 								try:
 									buf.write( escape(self.data[col][row]).replace('\n', '<br/>\n') )
 								except IndexError:

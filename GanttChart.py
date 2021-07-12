@@ -14,7 +14,7 @@ if wx.Platform == '__WXMAC__':
 class BarInfoPopup( wx.PopupTransientWindow ):
 	"""Shows Specific Rider and Lap information."""
 	def __init__(self, parent, style, text):
-		wx.PopupTransientWindow.__init__(self, parent, style)
+		super().__init__(parent, style)
 		self.SetBackgroundColour(wx.WHITE)
 		border = 10
 		st = wx.StaticText(self, label = text, pos=(border/2,border/2))
@@ -54,7 +54,7 @@ class GanttChart(wx.Control):
 		"""
 		Default class constructor.
 		"""
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.data = None
 		self.labels = None

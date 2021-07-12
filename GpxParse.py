@@ -6,7 +6,7 @@ reGpxTime = re.compile( '[^0-9+.]' )
 
 class GpxContentHandler( xml.sax.ContentHandler ):
 	def __init__( self ):
-		xml.sax.ContentHandler.__init__( self )
+		super().__init__()
 		self.reset()
 	
 	def reset( self ):

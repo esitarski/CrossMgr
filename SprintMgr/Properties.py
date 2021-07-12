@@ -127,35 +127,35 @@ class Properties(wx.Panel):
 	
 	def refresh( self ):
 		model = Model.model
+			
 		for f in self.modelFields:
 			f.refresh( model )
-		self.competitionFormatCtrl.SetSelection( 0 )
-		for i, c in enumerate(getCompetitions()):
-			if c.name == model.competition.name:
-				self.competitionFormatCtrl.SetSelection( i )
-				break
+		
+		try:
+			self.competitionFormatCtrl.SetSelection( next(i for i, c in enumerate(getCompetitions()) if c.name == model.competition.name) )
+		except StopIteration:
+			self.competitionFormatCtrl.SetSelection( 0 )
+
 		self.modifierCtrl.SetSelection( model.modifier )
 		self.updateGraph()
 
 	def commit( self ):
 		model = Model.model
-		
+					
 		for f in self.modelFields:
 			model.changed |= f.commit( model )
 			
 		competition = getCompetitions()[self.competitionFormatCtrl.GetSelection()]
-		if competition.name != model.competition.name:
-			# Check that changing the competition will screw anything up.
+		modifier = self.modifierCtrl.GetSelection()
+		
+		if competition.name != model.competition.name or modifier != model.modifier:
+			# Check if changing the competition format will screw anything up.
 			if model.canReassignStarters():
-				model.setCompetition( competition, self.modifierCtrl.GetSelection() )
+				model.setCompetition( competition, modifier )
 				model.setQualifyingInfo()
 				Utils.getMainWin().resetEvents()
-				model.setChanged( True )
 			else:
 				Utils.MessageOK( self, 'Cannot Change Competition Format after Event has Started', 'Cannot Change Competion Format' )
-		else:
-			model.setCompetition( competition, self.modifierCtrl.GetSelection() )
-
 		
 ########################################################################
 
@@ -165,7 +165,7 @@ class PropertiesFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
-		wx.Frame.__init__(self, None, title="Properties Test", size=(800,600) )
+		super().__init__( None, title="Properties Test", size=(800,600) )
 		panel = Properties(self)
 		panel.refresh()
 		self.Show()

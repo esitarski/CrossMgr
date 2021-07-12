@@ -12,7 +12,7 @@ def GetCosSin( pos ):
 	return cos(a), sin(a)
 
 def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
-	pen = wx.Pen( colour, width )
+	pen = wx.Pen( colour, int(width) )
 	pen.SetCap( cap )
 	pen.SetJoin( join )
 	return pen
@@ -20,15 +20,11 @@ def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
 class Clock(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="Clock", checkFunc=None ):
+				name="Clock", checkFunc=None, tCur=None ):
+		# If tCur is given, the clock will statically show that time with no update.
 
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		
-		self.timer = wx.CallLater( 10, self.onTimer )
-		
-		# Bind the events related to our control: first of all, we use a
-		# combination of wx.BufferedPaintDC and an empty handler for
-		# wx.EVT_ERASE_BACKGROUND (see later) to reduce flicker
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -36,8 +32,9 @@ class Clock(wx.Control):
 		self.initialSize = size
 		
 		self.checkFunc = checkFunc if checkFunc else lambda: True
-		self.tCur = now()
-	
+		self.timer = None
+		self.SetTCur( tCur )
+		
 	def DoGetBestSize(self):
 		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
 
@@ -54,16 +51,31 @@ class Clock(wx.Control):
 
 	def ShouldInheritColours(self):
 		return True
+		
+	def SetTCur( self, tCur=None ):
+		self.tCur = tCur or now()
+		if tCur is None:
+			self.timer = wx.CallLater( 10, self.onTimer )
+		else:
+			if self.timer and self.timer.IsRunning():
+				self.timer.Stop()
+			self.timer = None
+			self.Refresh()
 
 	def onTimer( self, event=None ):
 		try:
 			self.tCur = now()
 			self.Refresh()
 			
+			# Schedule the next update.
 			if self.checkFunc():
-				if self.timer.IsRunning():
-					self.timer.Stop()
-				self.timer.Start( 1001 - now().microsecond//1000, True )			
+				delay = 1001 - now().microsecond//1000
+				if self.timer is None:
+					self.timer = wx.CallLater( delay, self.onTimer )
+				else:
+					if self.timer.IsRunning():
+						self.timer.Stop()
+					self.timer.Start( delay, True )			
 		except Exception:
 			pass
 	
@@ -172,7 +184,7 @@ class Clock(wx.Control):
 		#
 		ctx.SetFont( ctx.CreateFont(
 				wx.Font(
-					(0,max(1,radius*0.37)),
+					(0,int(max(1,radius*0.37))),
 					wx.FONTFAMILY_SWISS,
 					wx.FONTSTYLE_NORMAL,
 					wx.FONTWEIGHT_NORMAL,
@@ -222,6 +234,7 @@ class Clock(wx.Control):
 if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="Clock", size=(600,400))
-	Clock = Clock(mainWin)
+	Clock = Clock(mainWin, tCur=now())
 	mainWin.Show()
+	wx.CallLater( 5000, Clock.Start )
 	app.MainLoop()

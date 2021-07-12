@@ -664,7 +664,7 @@ def GetResultsWithData( category ):
 					if float(v) == int(v):
 						v = int(v)
 				else:
-					v = u'{}'.format(v)
+					v = '{}'.format(v)
 				setattr( rr, f, v )
 			except (KeyError, ValueError):
 				setattr( rr, f, u'' )
@@ -989,6 +989,8 @@ def GetAnimationData( category=None, getExternalData=False ):
 						else:
 							info[a] = getattr( rr, a )
 					
+					if race.isTimeTrial:
+						info['startTime'] = race.riders[rr.num].firstTime
 					animationData[rr.num] = info
 		
 	return animationData
@@ -1010,6 +1012,8 @@ def getReferenceInfo():
 		'raceIsRunning': race.isRunning() if race else False,
 		'raceIsUnstarted': race.isUnstarted() if race else False,
 		'raceIsFinished': race.isFinished() if race else False,
+		'isTimeTrial': race.isTimeTrial if race else False,
+		'winAndOut': race.winAndOut if race else False,
 		'timestamp': [tNow.ctime(), tLastRaceTime],
 		'tNow': tNow.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
 		'raceTimeZone': race.timezone if race else '',

@@ -7,7 +7,7 @@ from Undo import undo
 #------------------------------------------------------------------------------------------------
 class SetAutoCorrectDialog( wx.Dialog ):
 	def __init__( self, parent, categories, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Set Autocorrect"),
+		super().__init__( parent, id, _("Set Autocorrect"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.categories = categories

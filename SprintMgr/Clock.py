@@ -2,17 +2,17 @@ import wx
 from math import cos, sin, pi
 import datetime
 
+now = datetime.datetime.now
+
 tCos60 = [cos((i/60.0)*2.0*pi-pi/2.0) for i in range(60)]
 tSin60 = [sin((i/60.0)*2.0*pi-pi/2.0) for i in range(60)]
 
-def GetCos( pos ):
-	return cos(pos*2.0*pi-pi/2.0)
-	
-def GetSin( pos ):
-	return sin(pos*2.0*pi-pi/2.0)
+def GetCosSin( pos ):
+	a = pos*2.0*pi-pi/2.0
+	return cos(a), sin(a)
 
 def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
-	pen = wx.Pen( colour, width )
+	pen = wx.Pen( colour, int(width) )
 	pen.SetCap( cap )
 	pen.SetJoin( join )
 	return pen
@@ -20,33 +20,11 @@ def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
 class Clock(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="Clock", checkFunc=None ):
-		"""
-		Default class constructor.
+				name="Clock", checkFunc=None, tCur=None ):
+		# If tCur is given, the clock will statically show that time with no update.
 
-		@param parent: Parent window. Must not be None.
-		@param id: StatusBar identifier. A value of -1 indicates a default value.
-		@param pos: StatusBar position. If the position (-1, -1) is specified
-					then a default position is chosen.
-		@param style: not used
-		@param validator: Window validator.
-		@param name: Window name.
-		"""
-
-		# Ok, let's see why we have used wx.PyControl instead of wx.Control.
-		# Basically, wx.PyControl is just like its wxWidgets counterparts
-		# except that it allows some of the more common C++ virtual method
-		# to be overridden in Python derived class. For StatusBar, we
-		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
+		super().__init__(parent, id, pos, size, style, validator, name)
 		
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
-		
-		self.timer = wx.Timer( self )
-		self.Bind( wx.EVT_TIMER, self.onTimer )
-		
-		# Bind the events related to our control: first of all, we use a
-		# combination of wx.BufferedPaintDC and an empty handler for
-		# wx.EVT_ERASE_BACKGROUND (see later) to reduce flicker
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -54,47 +32,60 @@ class Clock(wx.Control):
 		self.initialSize = size
 		
 		self.checkFunc = checkFunc if checkFunc else lambda: True
-		self.tCur = datetime.datetime.now()
-		wx.CallAfter( self.onTimer )
+		self.timer = None
+		self.SetTCur( tCur )
 		
 	def DoGetBestSize(self):
 		return wx.Size(100, 100) if self.initialSize is wx.DefaultSize else self.initialSize
 
 	def SetForegroundColour(self, colour):
-		wx.PyControl.SetForegroundColour(self, colour)
+		wx.Control.SetForegroundColour(self, colour)
 		self.Refresh()
 
 	def SetBackgroundColour(self, colour):
-		wx.PyControl.SetBackgroundColour(self, colour)
+		wx.Control.SetBackgroundColour(self, colour)
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):
-		"""
-		Overridden base class virtual.  By default we should use
-		the same font/colour attributes as the native wx.StaticText.
-		"""
 		return wx.StaticText.GetClassDefaultAttributes()
 
 	def ShouldInheritColours(self):
-		"""
-		Overridden base class virtual.  If the parent has non-default
-		colours then we want this control to inherit them.
-		"""
 		return True
-
-	def onTimer( self, event=None):
-		if not self.timer.IsRunning():
-			self.tCur = datetime.datetime.now()
+		
+	def SetTCur( self, tCur=None ):
+		self.tCur = tCur or now()
+		if tCur is None:
+			self.timer = wx.CallLater( 10, self.onTimer )
+		else:
+			if self.timer and self.timer.IsRunning():
+				self.timer.Stop()
+			self.timer = None
 			self.Refresh()
+
+	def onTimer( self, event=None ):
+		try:
+			self.tCur = now()
+			self.Refresh()
+			
+			# Schedule the next update.
 			if self.checkFunc():
-				self.timer.Start( 1001 - datetime.datetime.now().microsecond//1000, True )
+				delay = 1001 - now().microsecond//1000
+				if self.timer is None:
+					self.timer = wx.CallLater( delay, self.onTimer )
+				else:
+					if self.timer.IsRunning():
+						self.timer.Stop()
+					self.timer.Start( delay, True )			
+		except Exception:
+			pass
 	
 	def Start( self ):
 		self.onTimer()
-	
+		
 	def OnPaint(self, event):
-		dc = wx.BufferedPaintDC(self)
-		self.Draw(dc)
+		if self.IsShown():
+			dc = wx.BufferedPaintDC( self )
+			self.Draw(dc)
 
 	def OnSize(self, event):
 		self.Refresh()
@@ -104,6 +95,7 @@ class Clock(wx.Control):
 		t = self.tCur
 		
 		size = self.GetClientSize()
+		
 		width = size.width
 		height = size.height
 		middle = min(width, height) // 2
@@ -192,14 +184,14 @@ class Clock(wx.Control):
 		#
 		ctx.SetFont( ctx.CreateFont(
 				wx.Font(
-					(0,int(radius*0.37)),
+					(0,int(max(1,radius*0.37))),
 					wx.FONTFAMILY_SWISS,
 					wx.FONTSTYLE_NORMAL,
 					wx.FONTWEIGHT_NORMAL,
 				),
 				wx.Colour(100,100,100)) )
-		tStr = '{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
-		w, h = ctx.GetTextExtent('00:00:00'[:len(tStr)])
+		tStr = u'{}:{:02d}:{:02d}'.format( t.hour, t.minute, t.second )
+		w, h = ctx.GetTextExtent(u'00:00:00'[:len(tStr)])
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
 		#-----------------------------------------------------------------------------
@@ -210,15 +202,13 @@ class Clock(wx.Control):
 		hourPos = (t.hour % 12 + minutePos) / 12.0
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,0,180,128), width=wHourHand) ) )
-		cosCur = GetCos(hourPos)
-		sinCur = GetSin(hourPos)
+		cosCur, sinCur = GetCosSin(hourPos)
 		ctx.StrokeLine(
 			xCenter + rBack * cosCur, yCenter + rBack * sinCur,
 			xCenter + rHour * cosCur, yCenter + rHour * sinCur
 		)
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.Colour(0,150,0,128), width=wMinuteHand) ) )
-		cosCur = GetCos(minutePos)
-		sinCur = GetSin(minutePos)
+		cosCur, sinCur = GetCosSin(minutePos)
 		ctx.StrokeLine(
 			xCenter + rBack * cosCur,   yCenter + rBack * sinCur,
 			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
@@ -226,8 +216,7 @@ class Clock(wx.Control):
 		
 		ctx.SetPen( ctx.CreatePen( GetPen(colour=wx.RED,width=wSecondHand) ) )
 		ctx.SetBrush( ctx.CreateBrush(wx.Brush(wx.RED)) )
-		cosCur = GetCos(secondPos)
-		sinCur = GetSin(secondPos)
+		cosCur, sinCur = GetCosSin(secondPos)
 		ctx.StrokeLine(
 			xCenter + rDot * cosCur,    yCenter + rDot * sinCur,
 			xCenter + rMinute * cosCur, yCenter + rMinute * sinCur
@@ -245,6 +234,7 @@ class Clock(wx.Control):
 if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="Clock", size=(600,400))
-	Clock = Clock(mainWin)
+	Clock = Clock(mainWin, tCur=now())
 	mainWin.Show()
+	wx.CallLater( 5000, Clock.Start )
 	app.MainLoop()

@@ -22,7 +22,7 @@ def GetFilename( bib, t, dirName, i ):
 
 class FrameSaver( threading.Thread ):
 	def __init__( self ):
-		threading.Thread.__init__( self )
+		super().__init__()
 		self.daemon = True
 		self.name = 'FrameSaver'
 		self.reset()

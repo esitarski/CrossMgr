@@ -291,25 +291,25 @@ wx.ICON_QUESTION	Shows a question mark icon.
 wx.ICON_INFORMATION	Shows an information (i) icon.
 '''
 
-def MessageOK( parent, message, title = u'', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
+def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK|iconMask, pos=pos)
 	dlg.ShowModal()
 	dlg.Destroy()
 	return True
 	
-def MessageOKCancel( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+def MessageOKCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.OK|wx.CANCEL|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
 	return response == wx.ID_OK
 	
-def MessageYesNo( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+def MessageYesNo( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
 	return response == wx.ID_YES
 	
-def MessageYesNoCancel( parent, message, title = u'', iconMask = wx.ICON_QUESTION):
+def MessageYesNoCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
 	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|wx.CANCEL|iconMask )
 	response = dlg.ShowModal()
 	dlg.Destroy()
@@ -405,12 +405,12 @@ def formatTime( secs,
 			minutes = 0
 			hours += 1
 	if forceHours or hours > 0:
-		return "{}{:0{hourWidth}d}:{:02d}:{}".format(sign, hours, minutes, secStr, hourWidth=2 if twoDigitHours else 0)
+		return '{}{:0{hourWidth}d}:{:02d}:{}'.format(sign, hours, minutes, secStr, hourWidth=2 if twoDigitHours else 0)
 	else:
 		if forceMinutes or minutes > 0:
-			return "{}{:0{minuteWidth}d}:{}".format(sign, minutes, secStr, minuteWidth=2 if twoDigitMinutes else 0)
+			return '{}{:0{minuteWidth}d}:{}'.format(sign, minutes, secStr, minuteWidth=2 if twoDigitMinutes else 0)
 		else:
-			return "{}{}".format(
+			return '{}{}'.format(
 				sign,
 				secStr if twoDigitSeconds else (secStr.lstrip('0') if not secStr.startswith('00') else secStr[1:])
 			)

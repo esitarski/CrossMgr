@@ -558,7 +558,7 @@ class GeoAnimation(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="GeoAnimation"):
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')
 		self.data = {}
 		self.categoryDetails = {}

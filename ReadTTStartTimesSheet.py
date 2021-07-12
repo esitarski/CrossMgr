@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 import copy
+import datetime
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.adv as adv
@@ -17,7 +18,7 @@ Fields = ['Bib#', 'StartTime']
 
 class FileNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -44,7 +45,7 @@ class FileNamePage(adv.WizardPageSimple):
 	
 class SheetNamePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		self.choices = []
 		self.expectedSheetName = None
 		
@@ -75,7 +76,7 @@ class SheetNamePage(adv.WizardPageSimple):
 	
 class HeaderNamesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 
 		self.expectedFieldCol = None
 		
@@ -184,7 +185,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 			
 class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -224,7 +225,7 @@ class SummaryPage(adv.WizardPageSimple):
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
-		self.riderNumber.SetLabel( u'{}'.format(infoLen) )
+		self.riderNumber.SetLabel( '{}'.format(infoLen) )
 		self.statusName.SetLabel( _('Success!') if infoLen else _('Failure') )
 	
 class GetExcelTTStartTimeLink:
@@ -284,14 +285,14 @@ class GetExcelTTStartTimeLink:
 					if fileName == '':
 						message = _('Please specify an Excel file.')
 					else:
-						message = u'{}:\n\n    "{}"\n\n{}'.format(_('Cannot open file'), fileName, _('Please check the file name and/or its read permissions.') )
+						message = '{}:\n\n    "{}"\n\n{}'.format(_('Cannot open file'), fileName, _('Please check the file name and/or its read permissions.') )
 					Utils.MessageOK( self.wizard, message, title=_('File Open Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.sheetNamePage:
 				try:
 					self.headerNamesPage.setFileNameSheetName(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName())
 				except ValueError:
-					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.') + u'\n' + _('Check the format.'),
+					Utils.MessageOK( self.wizard, _('Cannot find at least 5 header names in the Excel sheet.') + '\n' + _('Check the format.'),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 			elif page == self.headerNamesPage:
@@ -300,7 +301,7 @@ class GetExcelTTStartTimeLink:
 				excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 				fieldCol = self.headerNamesPage.getFieldCol()
 				if fieldCol[Fields[0]] < 0:
-					Utils.MessageOK( self.wizard, u'{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
+					Utils.MessageOK( self.wizard, '{}: "{}"'.format(_('You must specify column'), GetTranslation(Fields[0])),
 										title=_('Excel Format Error'), iconMask=wx.ICON_ERROR)
 					evt.Veto()
 				else:
@@ -309,7 +310,7 @@ class GetExcelTTStartTimeLink:
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + u'\n' + _('Check the Excel format.'),
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + '\n' + _('Check the Excel format.'),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		
@@ -380,7 +381,7 @@ def DoImportTTStartTimes( race, excelLink ):
 		try:
 			startTime = data['StartTime']
 		except KeyError:
-			errors.append( u'{} {}: {}'.format(_('Bib'), num, _('missing start time')) )
+			errors.append( '{} {}: {}'.format(_('Bib'), num, _('missing start time')) )
 			continue
 			
 		# Try to make sense of the StartTime (Stopwatch time, not clock time).
@@ -396,11 +397,13 @@ def DoImportTTStartTimes( race, excelLink ):
 					hh = 0.0
 					mm, ss = [float(f.strip()) for f in fields[:2]]
 				except Exception:
-					errors.append( u'{} {}:  {}: "{}"'.format(_('Bib'), num, _('cannot read time format'), startTime) )
+					errors.append( '{} {}:  {}: "{}"'.format(_('Bib'), num, _('cannot read time format'), startTime) )
 					continue
 			t = hh * 60.0*60.0 + mm * 60.0 + ss
+		elif isinstance(startTime, (datetime.time, datetime.datetime)):
+			t = startTime.hour * 60.0*60.0 + startTime.minute * 60.0 + startTime.second + startTime.microsecond / 1000000.0
 		else:
-			errors.append( u'{} {}:  {}'.format(_('Bib'), num, _('cannot read start time (neither Excel time nor String)') ) )
+			errors.append( '{} {}:  {}'.format(_('Bib'), num, _('cannot read start time') ) )
 			continue
 			
 		startTimes[num] = t
@@ -437,10 +440,11 @@ def AutoImportTTStartTimes():
 	if not race or not race.isUnstarted() or not getattr(race, 'isTimeTrial', False) or not getattr(race, 'excelLink', None):
 		return False
 	
+	# Create a subset Excel link with two field, Bib# and StartTime, and read the times.
 	excelLink = ExcelLink()
 	excelLink.setFileName( race.excelLink.fileName )
 	excelLink.setSheetName( race.excelLink.sheetName )
-	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )
+	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )	# Hack to hardcode StartTime as the first column.
 	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	return True
 
@@ -455,13 +459,13 @@ def ImportTTStartTimes( parent ):
 	
 	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	if errors:
-		errorStr = u'\n'.join( errors[:20] )
+		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:
 			errorStr += '\n...'
 		Utils.MessageOK( parent, errorStr, _('Start Time Import Errors') )
 		
 	Utils.refresh()
-	Utils.MessageOK( parent, u'{}: {}'.format(_('Start Times Changed'), changeCount), _('Start Times Success') )
+	Utils.MessageOK( parent, '{}: {}'.format(_('Start Times Changed'), changeCount), _('Start Times Success') )
 	if Utils.getMainWin():
 		Utils.getMainWin().menuFind()
 

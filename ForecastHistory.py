@@ -130,7 +130,7 @@ def GetLabelGrid( parent, bigFont=False, colnames=[], leftAlignCols=[] ):
 		
 class LabelGrid( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, style=0, bigFont=False, colnames=[], leftAlignCols=[] ):
-		wx.Panel.__init__(self, parent, id, style=style)
+		super().__init__(parent, id, style=style)
 		
 		bsMain = wx.BoxSizer( wx.VERTICAL )
 		
@@ -143,7 +143,7 @@ class LabelGrid( wx.Panel ):
 
 class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
-		wx.Panel.__init__(self, parent, id, style=style)
+		super().__init__(parent, id, style=style)
 		
 		self.quickRecorded = None
 		self.quickExpected = None

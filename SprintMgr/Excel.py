@@ -10,10 +10,18 @@ from mmap import mmap, ACCESS_READ
 def toAscii( s ):
 	if not s:
 		return ''
-	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if isinstance(s, str) else str(s)
-	if ret.endswith( '.0' ):
-		ret = ret[:-2]
-	return ret
+	'''
+	Accept a unicode string, and return a normal string
+	without any diacritical marks.
+	'''
+	try:
+		s = unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except Exception:
+		return s
+	
+	if s.endswith('.0'):
+		s = s[:-2]
+	return s
 
 #----------------------------------------------------------------------------
 
@@ -146,8 +154,8 @@ class ReadExcelXlsx:
 			values.append( value )
 		return values
 		
-	def iter_list(self, sname, date_as_tuple=False):
-		sheet = self.book[sname]
+	def iter_list(self, sheet_name, date_as_tuple=False):
+		sheet = self.book[sheet_name]
 		for i, row in enumerate(sheet.iter_rows()):
 			yield self._parse_row(row, date_as_tuple)
 

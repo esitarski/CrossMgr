@@ -183,6 +183,7 @@ class Announcer( wx.Panel ):
 		
 		tRace = race.lastRaceTime()
 		isRunning = race.isRunning()
+		isTimeTrial = race.isTimeTrial
 		
 		categories = self.refreshCategories( race )
 		
@@ -191,7 +192,6 @@ class Announcer( wx.Panel ):
 		if not categories:
 			self.grid.ClearGrid()
 			return
-		
 		
 		self.iCategory = min( self.iCategory, len(categories)-1 )
 		category = categories[self.iCategory]
@@ -250,8 +250,10 @@ class Announcer( wx.Panel ):
 			iGroup += 1
 			if e: 
 				eta = e.t - tRace
+				if isTimeTrial:
+					eta += race.riders[rr.num].firstTime
 				bibETA[rr.num] = eta
-				if row > 0:
+				if row > 0 and not isTimeTrial:
 					try:
 						numPrev = results[row-1].num
 						if abs(abs(eta - bibETA[results[row-1].num]) < 1.0):

@@ -84,7 +84,7 @@ b"     .***-432,. ",
 b"     .......... "
 ]
 
-class MessageManager( object ):
+class MessageManager:
 	MessagesMax = 400	# Maximum number of messages before we start throwing some away.
 
 	def __init__( self, messageList ):
@@ -534,7 +534,7 @@ class MainWin( wx.Frame ):
 			description = """CrossMgrImpinj is an Impinj interface to CrossMgr
 	"""
 
-			licence = """CrossMgrImpinjis free software; you can redistribute 
+			licence = """CrossMgrImpinj is free software; you can redistribute 
 	it and/or modify it under the terms of the GNU General Public License as 
 	published by the Free Software Foundation; either version 2 of the License, 
 	or (at your option) any later version.
@@ -568,7 +568,7 @@ class MainWin( wx.Frame ):
 
 	def refreshMethodName( self ):
 		if Impinj.ProcessingMethod == 0 and QuadReg.samplesTotal:
-			s = u'{}: Inliers: {:.1%}'.format(
+			s = '{}: Inliers: {:.1%}'.format(
 				MethodNames[Impinj.ProcessingMethod],
 				float(QuadReg.inliersTotal)/float(QuadReg.samplesTotal)
 			)
@@ -863,8 +863,8 @@ class MainWin( wx.Frame ):
 			if arc < 1000:
 				return arc
 			if arc < 1000000:
-				return '{:.1f}k'.format( arc / 1000.0 )
-			return '{:.1f}m'.format( arc / 1000000.0 )
+				return '{:.0f}k'.format( arc / 1000.0 )
+			return '{:.0f}m'.format( arc / 1000000.0 )
 		
 		if not self.messageQ:
 			return
@@ -889,7 +889,7 @@ class MainWin( wx.Frame ):
 						total = max(1, sum( antennaReadCount[i] for i in range(1,4+1)) )
 						label = '{}: {} ({})'.format(
 								'ANT Used' if Impinj.ProcessingMethod != FirstReadMethod else 'ANT Reads',
-								' | '.join('{}:{} {:.1f}%'.format(
+								' | '.join('{}:{} {:.0f}%'.format(
 									i,
 									formatAntennaReadCount(antennaReadCount[i]),
 									antennaReadCount[i]*100.0/total) for i in range(1,4+1)

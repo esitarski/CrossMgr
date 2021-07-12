@@ -5,9 +5,9 @@ from  ExportGrid import ExportGrid
 
 class SprintMgrPrintout(wx.Printout):
 	def __init__(self, title, grid):
-		wx.Printout.__init__(self)
 		self.title = title
 		self.grid = grid
+		super().__init__()
 
 	def HasPage(self, page):
 		return page == 1
@@ -24,9 +24,9 @@ class SprintMgrPrintout(wx.Printout):
 
 class GraphDrawPrintout(wx.Printout):
 	def __init__(self, title, graph = None):
-		wx.Printout.__init__(self)
 		self.title = title
 		self.graph = graph
+		super().__init__()
 
 	def HasPage(self, page):
 		return page == 1

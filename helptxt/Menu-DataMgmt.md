@@ -84,34 +84,14 @@ Remember Ctrl-Z (Undo) and Ctrl-Y (Redo) if you need to.
 
 ## Import Time Trial Start Times...
 
-Imports start times for a time trial from a spreadsheet.
-The race must be in TimeTrial mode (see [Properties][]).
+Imports start times for a time trial from a separate spreadsheet other than the regular Excel spreadsheet.
 
-If CrossMgr has no imported start times, the first recorded time will start the rider's clock.  Otherwise the rider's clock will start automatically on the start time.
+Start times can also be auto-imported from the rider data Excel sheet, just like any other participant data.
+This requires a "StartTime" column to be the first column in the Excel sheet.  The column name "StartTime" must also be spelled exactly as shown (including the capitalizaton and no spaces).
 
-The times must be relative to the start of the stopwatch start time, not clock time.  For example, the event starts when the stopwatches start at 00:00:00.
-This also corresponds to when you push the Start Race button on the [Actions][] screen.
+The race must be in TimeTrial mode (see [Properties][], [TimeTrial][]) for start times to be meaningful.
 
-The first rider usually leaves a minute or two after the event start time, for example, at 00:01:00.  Subsequent riders leave on 30 second gaps with start times of 00:01:30, 00:02:00, etc.
-
-The spreadsheet must have a Header row, and must have the Bib number and Start Time of the rider as columns.
-
-Again, the times are not "on the clock on the wall", rather, they are relative to what would be seen on a stopwatch started at the beginning of the event.
-
-The procedure for using imported start times is:
-
-+  Create the rider registration sheet in Excel.  This will include the Bib number and other information about the rider including, names, teams, tags, etc.
-+  Add a column called "Start Time" to the spreadsheet.
-+  Change the Excel format for the column to a HH:MM:SS time format.
-+  Change the order of the rows to the start order.  Normally, the fastest riders start at the end.  Pay attention to teammates starting consecutively too, as they may try to work together if they catch each other.
-+  When you are satisfied with the start order, set the first rider's start time to "00:01:00".
-+  Set the second rider's start time to "00:01:30".
-+  Select the "00:01:00" and "00:01:30" cells.
-+  Drag the small box at the bottom of the selection down to the last rider.  This will automatically populate the start times on 30 seconds.  You can also use 60 or 20 seconds - whatever you like.
-+  Add gaps between categories to latecomers and day-ofs.  Add extra time between the fastest riders.
-+  Import the start times into CrossMgr race ahead of time.
-+  Get together with the manual timers (or get them on phone/radio) to synchronize CrossMgr and the manual stopwatches.  On a countdown of 5, Start the race, and get everyone to start the stopwatches at the same time.  Remember the Confirm dialog - get it up on the screen first, then press OK.
-+  If you mess up pressing, remember that Ctrl-Z will "undo" the start (for safety, it only works 8 seconds after the start).  After undo-ing the start, get everyone to reset, and start the race and stopwatches again.
+For more information about time trial mode, see [TimeTrial][].
 
 ## Import Categories from File...
 Read the categories from a previously exported Categories file.

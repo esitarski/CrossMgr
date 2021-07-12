@@ -272,7 +272,7 @@ class EventSelect(EnablePanel):
 		if not model:
 			return
 			
-		self.events = [e for t, s, e in model.competition.getCanStart()]
+		self.events = [e for s, e in model.competition.getCanStart()]
 		self.events.sort( key = lambda e: (0 if e == self.event else 1, e.system.i, e.getHeat(), e.i) )
 			
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(self.events) )
@@ -680,7 +680,7 @@ class EventFinishOrder(EnablePanel):
 		oldBibOrder = [int(self.grid.GetCellValue(row, 0)) for row in range(self.grid.GetNumberRows())]				
 		oldBibs = set( oldBibOrder )
 		
-		v = re.sub( r'[^\d]', u' ', v )
+		v = re.sub( r'[^\d]', ' ', v )
 		newBibOrder = [int(f) for f in v.split()]
 		newBibOrder = [b for b in newBibOrder if b in oldBibs]
 		

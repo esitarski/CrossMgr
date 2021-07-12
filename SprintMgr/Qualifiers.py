@@ -11,6 +11,7 @@ from ReorderableGrid import ReorderableGrid
 from Events import GetFont
 from HighPrecisionTimeEditor import HighPrecisionTimeEditor
 from Competitions import getCompetitions
+from Excel import GetExcelReader
 
 #--------------------------------------------------------------------------------
 class Qualifiers(wx.Panel):
@@ -19,20 +20,26 @@ class Qualifiers(wx.Panel):
 		super().__init__(parent)
  
 		font = GetFont()
-		self.title = wx.StaticText(self, label="Enter each rider's qualifying time in hh:mm:ss.ddd format.")
+		self.title = wx.StaticText(self, label="Qualifying times in hh:mm:ss.000 format.")
 		self.title.SetFont( font )
 		
 		self.renumberButton = wx.Button( self, label='Renumber Bibs by Time' )
 		self.renumberButton.SetFont( font )
 		self.renumberButton.Bind( wx.EVT_BUTTON, self.doRenumber )
 		
+		self.excelImportButton = wx.Button( self, label='Import Times from Excel' )
+		self.excelImportButton.SetFont( font )
+		self.excelImportButton.Bind( wx.EVT_BUTTON, self.doExcelImport )
+		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.title, 0, flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL, border = 6 )
 		hs.AddStretchSpacer()
-		hs.Add( self.renumberButton, 0, flag=wx.ALL, border = 6 )
+		hs.Add( self.renumberButton, flag=wx.ALL, border = 6 )
+		hs.Add( self.excelImportButton, flag=wx.ALL, border = 6 )
  
-		self.headerNames = ['Bib', 'Name', 'Team', 'Time', 'Status']
+		self.headerNames = ['Bib', 'First Name', 'Last Name', 'Team', 'Time', 'Status']
 		self.headerNameMap = Model.Rider.GetHeaderNameMap( self.headerNames )
+		self.iBib = 0
 		self.iQualifyingTime = self.headerNameMap['qualifying_time']
 		self.iStatus = self.headerNameMap['status']
 		
@@ -79,7 +86,6 @@ class Qualifiers(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(testData) )
 			
 		for row, data in enumerate(testData):
-			data['full_name'] = data['last_name'].upper() + ' ' + data['first_name']
 			for k,v in data.items():
 				if k in self.headerNameMap:
 					self.grid.SetCellValue( row, self.headerNameMap[k], '{}'.format(v) )
@@ -90,7 +96,80 @@ class Qualifiers(wx.Panel):
 		
 		Model.model.setCompetition( next(c for c in getCompetitions() if 'Keirin' in c.name), 0 )
 		self.commit()
+	
+	def doExcelImport( self, event ):
+		self.grid.SaveEditControlValue()
 		
+		model = Model.model
+		riders = model.riders
+		
+		with wx.FileDialog(self, "Choose Excel file with qualifying times", wildcard="Excel files (*.xlsx)|*.xlsx",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR) as fileDialog:
+		
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return
+			pathname = fileDialog.GetPath()
+
+		reader = GetExcelReader( pathname )
+		sheet_names = reader.sheet_names()
+		with wx.SingleChoiceDialog(self, "Choose Sheet with qualifying times", "Choose Qualifying Sheet", sheet_names) as choiceDialog:
+			if choiceDialog.ShowModal() == wx.ID_CANCEL:
+				return
+			sheet_name = choiceDialog.GetStringSelection()
+
+		# Extract the times from the sheet.
+		bib_headers = {'bib', 'bib#', 'bibnum', 'bibnumber', 'riderbib', 'ridernum', 'num', 'number'}
+		time_headers = {'time', 'qualifying', 'qualifyingtime'}
+
+		qualifyingTimes = {}
+		headerMap = {}
+		for row in reader.iter_list(sheet_name):
+			if len(headerMap) < 2:
+				for c, v in enumerate(row):
+					if str(v).lower().replace(' ','').replace('_','').strip() in bib_headers:
+						headerMap['bib'] = c
+					if str(v).lower().replace(' ','').replace('_','').strip() in time_headers:
+						headerMap['time'] = c
+				continue
+				
+			try:
+				qualifyingTimes[int(row[headerMap['bib']])] = Utils.StrToSeconds(str(row[headerMap['time']]))
+			except Exception as e:
+				pass
+	
+		if len(headerMap) < 2:
+			message = '{}\n{}\n\n\t{}\n\n{}'.format(
+				"Missing Bib and Time Headers.",
+				"Recognized Excel column headers are",
+				', '.join(str(h) for h in sorted(bib_headers|time_headers)),
+				'Capitalization, underscores and spaces are ignored.'
+			)
+			with wx.MessageDialog( self, message, "Missing Bib and Time Headers", style=wx.OK ) as messageDialog:
+				messageDialog.ShowModal()
+				return
+
+		# Write the qualifying times into the grid.  This won't commit them until the user changes screens.
+		missingBibs = []
+		for row in range(self.grid.GetNumberRows()):
+			try:
+				bib = int(self.grid.GetCellValue( row, self.iBib ).strip())
+			except Exception:
+				continue
+				
+			if bib in qualifyingTimes:
+				self.grid.SetCellValue( row, self.iQualifyingTime, Utils.SecondsToStr(qualifyingTimes[bib]) )
+			else:
+				missingBibs.append( bib )
+	
+		# Report missing bibs.
+		if missingBibs:
+			message = '{}:\n\n\t\t{}'.format(
+				"Bibs missing from Import",
+				', '.join(str(bib) for bib in missingBibs)
+			)
+			with wx.MessageDialog( self, message, "Import Warning", style=wx.OK ) as messageDialog:
+				messageDialog.ShowModal()
+	
 	def refresh( self ):
 		model = Model.model
 		riders = model.riders
@@ -172,7 +251,7 @@ class QualifiersFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
 		"""Constructor"""
-		wx.Frame.__init__(self, None, title="Qualifier Grid Test", size=(800,600) )
+		super().__init__( None, title="Qualifier Grid Test", size=(800,600) )
 		panel = Qualifiers(self)
 		panel.refresh()
 		self.Show()

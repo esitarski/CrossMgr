@@ -319,7 +319,7 @@ def AppendMenuItemBitmap( menu, id, name, help, bitmap ):
 		
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
-		wx.Frame.__init__(self, parent, id, title, size=size)
+		super().__init__(parent, id, title, size=size)
 
 		Utils.setMainWin( self )
 		
@@ -3178,7 +3178,7 @@ class MainWin( wx.Frame ):
 		return self.lapTimes
 		
 	@logCall
-	def menuSimulate( self, event=None, userConfirm=True ):
+	def menuSimulate( self, event=None, userConfirm=True, isTimeTrial=False ):
 		# Put simulation in user's home directory.
 		simulationDir = os.path.join( os.path.expanduser('~'), 'CrossMgrSimulation' )
 		
@@ -3202,7 +3202,7 @@ class MainWin( wx.Frame ):
 			isTimeTrial = (ret == SimulateDialog.ID_TIME_TRIAL)
 		else:
 			rfidResetStartClockOnFirstTag = False
-			isTimeTrial = False
+			isTimeTrial = isTimeTrial
 
 		# Delete any pre-existing Simulation directory.
 		try:
@@ -3263,6 +3263,10 @@ class MainWin( wx.Frame ):
 			categories[1]['numLaps'] = 2
 			race.setCategories( categories )
 			
+			scheduledStart = datetime.datetime.now() + datetime.timedelta(seconds=120)
+			scheduledStart -= datetime.timedelta( seconds=scheduledStart.second ) + datetime.timedelta( seconds=scheduledStart.microsecond/1000000.0 ) 
+			race.scheduledStart = '{:02d}:{:02d}'.format(scheduledStart.hour, scheduledStart.minute)
+			
 			nums = set()
 			numTimes = defaultdict( list )
 			for t, num in self.lapTimes:
@@ -3275,8 +3279,8 @@ class MainWin( wx.Frame ):
 				times.sort()
 				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 			
-			timeBeforeFirstRider = 30.0
-			startGap = 15.0
+			timeBeforeFirstRider = 120.0
+			startGap = 30.0
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []
@@ -3286,6 +3290,9 @@ class MainWin( wx.Frame ):
 				self.lapTimes.extend( [(t + startTime, num) for t in raceTimes] )
 			self.lapTimes.sort( reverse=True )
 		else:
+			scheduledStart = datetime.datetime.now()
+			race.scheduledStart = '{:02d}:{:02d}'.format(scheduledStart.hour, scheduledStart.minute)
+			
 			race.setCategories( categories )
 			self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 			if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
@@ -3332,25 +3339,30 @@ class MainWin( wx.Frame ):
 
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
 
+		# Start the race.
 		self.nextNum = None
-		race.startRaceNow()
-		if not (race.isTimeTrial or (race.enableJChipIntegration and race.resetStartClockOnFirstTag)):
-			# Backup all the events and race start so we don't have to wait for the first lap.
-			race.startTime -= datetime.timedelta( seconds = (tMin-5) )
-			'''
-			# Simulate RFID first read.
-			nums = set( num for t, num in self.lapTimes )
-			for num in nums:
-				rider = race.getRider( num )
-				rider.firstTime = 0.0
-			'''
+		if race.isTimeTrial:
+			# If a TT, start the race at the start time in the future.
+			def startRaceInFuture():
+				race.startRaceNow()
+				self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
+			wx.CallLater( int(1000.0*(datetime.datetime.now()-scheduledStart).total_seconds()), startRaceInFuture )
+			Utils.MessageOK(
+				self,
+				'{}\n\n{}'.format( _('TT will start automatically in about 2 minutes'), _('Be sure to look at the TTCountdown web page.') ),
+				_('TT Start'),
+			)
+			self.menuPublishHtmlTTStart()
+		else:
+			# If a Mass Start, start the race now.
+			race.startRaceNow()
+			if not (race.enableJChipIntegration and race.resetStartClockOnFirstTag):
+				# Backup all the events and race start so we don't have to wait for the first lap.
+				race.startTime -= datetime.timedelta( seconds = (tMin-5) )
+			self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
+			OutputStreamer.writeRaceStart()
 
 		self.writeRace()
-		OutputStreamer.writeRaceStart()
-		if race.isTimeTrial:
-			self.menuPublishHtmlTTStart()
-			
-		self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
 		self.updateRaceClock()
 		self.refresh()
 
@@ -4176,6 +4188,7 @@ def MainLoop():
 	parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
 	parser.add_argument("-r", "--regular", action="store_false", dest="fullScreen", default=True, help='regular size (not full screen)')
 	parser.add_argument("-s", "--simulation", action="store_true", dest="simulation", default=False, help='run simulation automatically')
+	parser.add_argument("-t", "--tt", action="store_true", dest="timetrial", default=False, help='run time trial simulation')
 	parser.add_argument("-p", "--page", dest="page", default=None, nargs='?', help="Default page")
 	parser.add_argument(dest="filename", default=None, nargs='?', help="CrossMgr race file, or Excel generated by RaceDB", metavar="RaceFile.cmn or .xls, .xlsx, .xlsm file")
 	args = parser.parse_args()
@@ -4248,7 +4261,7 @@ def MainLoop():
 	mainWin.forecastHistory.setSash()
 	
 	if args.simulation:
-		wx.CallAfter( mainWin.menuSimulate, userConfirm=False )
+		wx.CallAfter( mainWin.menuSimulate, userConfirm=False, isTimeTrial=args.timetrial)
 	if args.page:
 		wx.CallAfter( mainWin.showPageName, args.page )
 	

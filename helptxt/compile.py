@@ -20,12 +20,6 @@ def working_directory(directory):
 	finally: 
 		os.chdir(original_directory)
 		
-def fileOlderThan( srcFile, transFile ):
-	try:
-		return os.path.getmtime(srcFile) <= os.path.getmtime(transFile)
-	except:
-		return False
-
 reImage = re.compile( r'src="\.\/images\/([^"]+)"' )
 def InlineImages( html ):
 	while 1:
@@ -50,17 +44,6 @@ def getHelpFiles( dir='.' ):
 
 def CompileHelp( dir = '.' ):
 	with working_directory( dir ):
-		# Check if any of the help files need rebuilding.
-		doNothing = True
-		for fname in getHelpFiles():
-			fbase = os.path.splitext(os.path.basename(fname))[0]
-			fhtml = os.path.join( '..', HtmlDocFolder, fbase + '.html' )
-			if not fileOlderThan(fhtml, fname):
-				doNothing = False
-				break
-		if doNothing:
-			return
-	
 		md = markdown.Markdown(
 				extensions=['toc', 'tables', 'sane_lists'], 
 				#safe_mode='escape',

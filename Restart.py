@@ -58,7 +58,7 @@ def RestartAfterLap( race, lap, rfidDelay ):
 
 class Restart( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__(self, parent, id, title=_('Restart Race'))
+		super().__init__(parent, id, title=_('Restart Race'))
 		
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		

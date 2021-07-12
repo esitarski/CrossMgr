@@ -16,18 +16,18 @@ def rescaleBitmap( b, s ):
 class RaceHUD(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name=_("RaceHUD"), lapInfoFunc=None ):
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+				name=_("RaceHUD"), lapInfoFunc=None, leftClickFunc=None ):
+		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.raceTimes = None	# Last time is red lantern.
 		self.leader = None
 		self.nowTime = None
 		self.getNowTimeCallback = None
 		self.lapInfoFunc = lapInfoFunc
+		self.leftClickFunc = leftClickFunc
 		
 		self.resetDimensions()
 		
-		# self.colour = wx.Colour(0, 200, 0)
 		self.colour = wx.Colour(0, 191, 255)
 		self.lighterColour = lighterColour( self.colour )
 
@@ -35,9 +35,6 @@ class RaceHUD(wx.Control):
 		self.broom = wx.Bitmap(os.path.join(Utils.getImageFolder(), 'Broom.png'), wx.BITMAP_TYPE_PNG)
 		self.bell = wx.Bitmap(os.path.join(Utils.getImageFolder(), 'LittleBell.png'), wx.BITMAP_TYPE_PNG)
 
-		#for a in ['checkeredFlag', 'broom', 'bell']:
-		#	setattr( self, a, rescaleBitmap(getattr(self, a), 0.75) )
-		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
 		# wx.EVT_ERASE_BACKGROUND (see later) to reduce flicker
@@ -46,6 +43,11 @@ class RaceHUD(wx.Control):
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.Bind(wx.EVT_MOTION, self.OnMotion)
 		self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
+		self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+		
+		if leftClickFunc:
+			self.SetCursor( wx.Cursor(wx.CURSOR_LEFT_BUTTON) )
+		
 
 	def resetDimensions(self):
 		self.xLeft = self.xRight = self.xMult = self.hudHeight = self.iRaceTimesHover = self.iLapHover = None
@@ -124,6 +126,26 @@ class RaceHUD(wx.Control):
 			self.iLapHover = iLapHover
 			wx.CallAfter( self.Refresh )
 	
+	def OnLeftUp( self, event ):
+		if not self.leftClickFunc or not self.raceTimes:
+			event.Skip()
+			return
+			
+		x, y = event.GetX(), event.GetY()
+		
+		iRaceTimesHover = None
+		yTop = 0
+		for i, raceTimes in enumerate(self.raceTimes):
+			if not raceTimes:
+				continue
+			if yTop <= y < yTop + self.hudHeight:
+				iRaceTimesHover = i
+				break
+			yTop += self.hudHeight
+		
+		if iRaceTimesHover is not None:
+			wx.CallAfter( self.leftClickFunc, iRaceTimesHover )
+	
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
 		self.Draw(dc)
@@ -164,7 +186,7 @@ class RaceHUD(wx.Control):
 		legendHeight = max( hudHeight / 4, 10 )
 		fontLegend = wx.Font( (0,legendHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontLegend )
-		textWidth, textHeight = dc.GetTextExtent( u'1:00:00' )
+		textWidth, textHeight = dc.GetTextExtent( '1:00:00' )
 		broomTimeWidth = textWidth
 		
 		tickHeight = (hudHeight - textHeight * 2) / 2
@@ -203,7 +225,7 @@ class RaceHUD(wx.Control):
 		
 			# Draw the legend.
 			dc.SetFont( fontLegend )
-			textWidth, textHeight = dc.GetTextExtent( u'0:00:00' )
+			textWidth, textHeight = dc.GetTextExtent( '0:00:00' )
 			hMiddle = textHeight + tickHeight
 			dc.DrawLine( xLeft, yTop + hMiddle, xLeft + raceTimes[-1] * xMult, yTop + hMiddle )
 			dc.DrawLine( xLeft, yTop + hMiddle - tickHeight, xLeft, yTop + hMiddle + tickHeight )

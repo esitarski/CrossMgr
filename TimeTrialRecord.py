@@ -32,7 +32,7 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.Empty
-		gridlib.GridCellEditor.__init__(self)
+		super().__init__()
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
 		self._tc = HighPrecisionTimeEdit(parent, id, allow_none = False, style = wx.TE_PROCESS_ENTER)
@@ -67,7 +67,7 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 
 class TimeTrialRecord( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		self.SetBackgroundColour( wx.WHITE )
 
 		self.controller = controller

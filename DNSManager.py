@@ -187,7 +187,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 
 class DNSManagerDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "DNS Manager",
+		super().__init__( parent, id, "DNS Manager",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		vs = wx.BoxSizer( wx.VERTICAL )

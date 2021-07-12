@@ -21,6 +21,7 @@ class Rider:
 	uci_points = 0
 	
 	fields = { 'bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'seeding_rank', 'status' }
+	extended_fields = fields | {'full_name', 'bib_full_name', 'uci_points_text', 'short_name', 'long_name'}
 	def __init__( self, bib,
 			first_name = '', last_name = '', team = '', team_code = '', uci_id = '',
 			qualifying_time = QualifyingTimeDefault,
@@ -40,54 +41,32 @@ class Rider:
 		self.seeding_rank = int(seeding_rank or 0)
 		self.status = status
 	
-	aliases = {
-		'bib#':'bib',
-		'bib_#':'bib',
-		'#':'bib',
-		'num':'bib',
-		'bibnum':'bib',
-		'bib_num':'bib',
-		
-		'name':'full_name',
-		'rider_name':'full_name',
-		
-		'first':'first_name',
-		'fname':'first_name',
-		'firstname':'first_name',
-		'rider_first':'first_name',
-		
-		'last':'last_name',
-		'lname':'last_name',
-		'lastname':'last_name',
-		'rider_last':'last_name',
-		
-		'uciid':'uci_id',
-		'rider_uciid':'uci_id',
-		
-		'ucipoints':'uci_points',
-		'points':'uci_points',
-		'rider_ucipoints':'uci_points',
-		
-		'qualifying':'qualifying_time',
-		'time':'qualifying_time',
-		'rider_time':'qualifying_time',
-		
-		'rank':'seeding_rank',
-		
-		'rider_team':'team',
-		'teamcode':'team_code',
-		
-		'rider_status':'status',
-	}
-	aliases.update( {v:v for v in aliases.values()} )
+	named_aliases = (
+		(('bib#','bib_#','#','num','bibnum','bib_num',)					'bib'),
+		(('name','rider_name'),											'full_name'),
+		(('first','fname','firstname','rider_first'),					'first_name'),
+		(('last','lname','lastname','rider_last',),						'last_name'),
+		(('uciid','rider_uciid',),										'uci_id'),
+		(('ucipoints','points','riderucipoints','rider_ucipoints',),	'uci_points'),
+		(('qualifying','time','rider_time',),							'qualifying_time'),
+		(('rank', 'seedingrank',),										'seeding_rank'),
+		(('rider_team',),												'team'),
+		(('teamcode',),													'team_code'),
+		(('rider_status',),												'status'),
+	)
+	aliases = {}
+	for names, key in named_aliases:
+		aliases[key] = key
+		for n in names:
+			aliases[n] = key
 	
 	@staticmethod	
 	def GetHeaderNameMap( headers ):
 		header_map = {}
 		for col, h in enumerate(headers):
-			h = h.strip().lower().replace(' ', '_')
+			h = h.strip().replace(' ', '_').lower()
 			h = Rider.aliases.get( h, h )
-			if h in Rider.fields:
+			if h in Rider.extended_fields:
 				header_map[h]  = col
 		return header_map
 
@@ -123,7 +102,7 @@ class Rider:
 		
 	@property
 	def full_name( self ):
-		return ', '.join( n for n in [self.last_name.upper(), self.first_name] if n )
+		return ', '.join( n for n in (self.last_name.upper(), self.first_name) if n )
 	
 	@property
 	def bib_full_name( self ):
@@ -165,7 +144,7 @@ class State:
 		
 		# Initialize extra open spaces to make sure we have enough starters.
 		self.labels.update( {'N{}'.format(i):self.OpenRider for i in range(len(riders)+1, 128)} )
-		self.OpenRider.qualifying_time =  QualifyingTimeDefault + 1.0
+		self.OpenRider.qualifying_time = QualifyingTimeDefault + 1.0
 
 	def inContention( self, label ):
 		return self.labels.get(label, None) != self.OpenRider and label not in self.noncontinue
@@ -173,6 +152,10 @@ class State:
 	def canReassignStarters( self ):
 		''' Check if no competitions have started and we can reasign starters. '''
 		return all( label.startswith('N') for label in self.labels.keys() )
+		
+	def __repr__( self ):
+		st = [(k,v) for k,v in self.labels.items() if not str(v).startswith('0')]
+		return ','.join('{}:{}'.format(k,v) for k,v in st) if st else '<<< no state >>>'
 
 #------------------------------------------------------------------------------------------------
 
@@ -366,6 +349,8 @@ class Event:
 		
 		fields = rule.split()
 		iSep = fields.index( '>' )
+		
+		# Event transformation.
 		self.composition = fields[:iSep]
 		self.winner = fields[iSep+1]	# Winner of competition.
 		self.others = fields[iSep+2:]	# Other non-winners.
@@ -375,15 +360,16 @@ class Event:
 		
 		assert len(self.composition) == len(self.others) + 1, 'Rule outputs cannot exceed inputs.'
 			
-		self.heatsMax = heatsMax	# Number of heats to decide the outcome.
-		self.starts = []
-		
-		self.finishRiders, self.finishRiderPlace, self.finishRiderRank = [], {}, {}
-		self.compositionRiders = []	# Input riders.
-		
-		# The following fields are set by the competition.
+		self.heatsMax = heatsMax	# Number of heats required to decide the outcome.
+				
+		# Convenience fields and are set by the competition.
 		self.competition = None
 		self.system = None
+
+		# State of the Event.
+		self.finishRiders, self.finishRiderPlace, self.finishRiderRank = [], {}, {}
+		self.starts = []
+		self.compositionRiders = []	# Input riders.
 	
 	@property
 	def competitionTime( self ):
@@ -396,19 +382,31 @@ class Event:
 	
 	@property
 	def isSemiFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-2]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-2]
+		except IndexError:
+			return False
 	
 	@property
 	def isFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-1]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-1]
+		except IndexError:
+			return False
 	
 	@property
 	def isSmallFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-2]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-2]
+		except IndexError:
+			return False
 		
 	@property
 	def isBigFinal( self ):
-		return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-1]
+		try:
+			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-1]
+		except IndexError:
+			return False
 		
 	@property
 	def output( self ):
@@ -546,14 +544,6 @@ class Event:
 		# Check for default winner(s).
 		availableStarters = [c for c in self.composition if c not in state.noncontinue]
 		
-		'''
-		# XCE Case
-		if any('RR' in o for o in self.output) and len(availableStarters) <= sum(1 for o in self.output if 'RR' not in o):
-			for i, o in enumerate(self.output):
-				state.labels[o] = state.labels[s.continuingPositions[i]] if i < len(s.continuingPositions) else state.OpenRider
-			return True
-		'''
-		
 		# Single sprint case.
 		if len(availableStarters) == 1:
 			# Set the default winner.
@@ -603,6 +593,7 @@ class Competition:
 		inLabels = set()
 		outLabels = set()
 		self.starters = 0
+		starterLabels = set()
 		self.isMTB = 'MTB' in name
 		self.isSprint = not self.isMTB
 		self.isKeirin = self.isSprint and 'Keirin' in name
@@ -638,7 +629,11 @@ class Competition:
 					assert c not in inLabels, '{}-{} c={}, outLabels={}'.format(e.competition.name, e.system.name, c, ','.join( sorted(outLabels) ))
 					inLabels.add( c )
 					if c.startswith('N'):
-						self.starters += 1			
+						self.starters += 1
+						assert c[1:].isdigit(), '{}-{} Non-numeric starter reference "{}"'.format(e.competition.name, e.system.name, c)
+						starterLabels.add( int(c[1:]) )
+					else:
+						assert c in outLabels, '{}-{} Rule uses undefined input label "{}"'.format(e.competition.name, e.system.name, c)
 							
 				assert e.winner not in outLabels, '{}-{} winner: {}, outLabels={}'.format(
 					e.competition.name, e.system.name, e.winner, ','.join( sorted(outLabels) ))
@@ -658,7 +653,11 @@ class Competition:
 			
 		assert self.starters != 0, '{}-{} No starters.  Check for missing N values'.format(
 					e.competition.name, e.system.name )
-
+		assert self.starters == len(starterLabels), '{}-{} Starters reused in input'.format(
+					e.competition.name, e.system.name )
+		assert self.starters == max( s for s in starterLabels), '{}-{} Starter references are not sequential'.format(
+					e.competition.name, e.system.name )
+		
 		# Process Bye events (substitute outcome into composition of subsequent events, delete bye event).
 		# Assign indexes to each component for sorting purposes.
 		for j, system in enumerate(self.systems):
@@ -699,11 +698,15 @@ class Competition:
 	
 	def canReassignStarters( self ):
 		return self.state.canReassignStarters()
-	
+		
 	def allEvents( self ):
 		for system in self.systems:
 			for event in system.events:
 				yield system, event
+	
+	@property
+	def heatsMax( self ):
+		return max( event.heatsMax for system, event in self.allEvents() )
 	
 	@property
 	def competitionTime( self ):
@@ -729,7 +732,7 @@ class Competition:
 		return [(s, e) for s, e in self.allEvents() if e.canStart()]
 		
 	def propagate( self ):
-		while 1:
+		while True:
 			success = False
 			for s, e in self.allEvents():
 				success |= e.propagate()
@@ -953,7 +956,7 @@ class Model:
 		return self.competition and self.competition.isKeirin
 	
 	def getProperties( self ):
-		return { a : getattr(self, a) for a in ['competition_name', 'date', 'category', 'track', 'organizer', 'chief_official'] }
+		return { a : getattr(self, a) for a in ('competition_name', 'date', 'category', 'track', 'organizer', 'chief_official') }
 
 	def setProperties( self, properties ):
 		for a, v in properties.items():
@@ -974,11 +977,16 @@ class Model:
 	def canReassignStarters( self ):
 		return self.competition.state.canReassignStarters()
 		
-	def setChanged( self, changed = True ):
+	def setChanged( self, changed=True ):
 		self.changed = changed
 		
-	def setCompetition( self, competition, modifier=0 ):
-		self.competition = copy.deepcopy( competition )
+	def setCompetition( self, competitionNew, modifier=0 ):
+		if self.competition.name == competitionNew.name and self.modifier == modifier:
+			return
+		
+		stateSave = self.competition.state
+		self.competition = copy.deepcopy( competitionNew )
+		self.competition.state = stateSave
 		self.modifier = modifier
 		if modifier:
 			for system, event in self.competition.allEvents():
@@ -990,6 +998,8 @@ class Model:
 				elif modifier == 1:
 					if '1/4' in system.name:
 						event.heatsMax = 1
+		
+		self.setChanged( True )
 
 model = Model()
 

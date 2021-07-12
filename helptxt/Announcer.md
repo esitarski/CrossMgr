@@ -8,9 +8,19 @@ Shows a results screen suitable for an announcer to call the race.  It has a num
 * As each competitor approaches the finish, the projected postion is shown in grey.  When the competitor cross the finish line on each lap, the row is un-greyed and the known position is shown.
 * Shows results information including rider name, team, bib, position, time gap (to leader) and color-coded chase grouup.
 
-The __Annouuncer__ screen is also available as a live web page (see [Web][] for details).  This web page will automatically update with information from the current race, just like the internal screen in CrossMgr.  With a tablet connected to a local wifi, you can provide the race announcer with mobile access to the __Accouncer__ info.
+The __Annouuncer__ screen is also available as a live web page (see [Web][] for details).  This web page will __automatically__ update with the latest information information from the current race.
+With a tablet connected to a local wifi, you can provide the race announcer with mobile access to the __Accouncer__ info.
 
 To see the __Announcer__ screen in action, start a race simulation from [Menu-Tools][] and watch the screen, both in CrossMgr and the web page.
+
+It is great to be able to give a tablet to the race announcer with the live results.  The easiest way to do this is:
+
+* Make sure there is a QRCode reader app installed on the tablet ahead of time.
+* Ensure the CrossMgr computer and the tablet are connected to the same wireless LAN.
+* From CrossMgr, do __Web|QRCode Share Page__.  This will open up the browser with a web page showing a QRCode that connects to CrossMgr.
+* Open the QRCode app on the tablet and point it at the CrossMgr computer screen.  When it recognizes the code, press "Open".
+* Now the tablet is connected to CrossMgr's Index page.
+* From the Index page, click on __Announcer__ at the top.
 
 ## Function
 

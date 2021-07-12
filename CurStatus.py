@@ -6,7 +6,7 @@ import  wx
 
 class CurStatus(wx.StatusBar):
 	def __init__(self, parent):
-		wx.StatusBar.__init__(self, parent, -1)
+		super().__init__(parent, -1)
 
 		# This status bar has three fields
 		self.SetFieldsCount(3)

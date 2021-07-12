@@ -2,14 +2,16 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="cache-control" content="no-cache"/>
 <meta name="author" content="Edward Sitarski">
 <meta name="copyright" content="Edward Sitarski, 2011-2018">
 <meta name="generator" content="CrossMgr">  
-<meta name="keywords" content="CrossMgr, Cycling, Race, Results, Time Trial">
+<meta name="keywords" content="CrossMgr, Cycling, Race, Results, Time Trial, Countdown">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 
 <title>TTStartPage</title>
 <style>
-body { font-family: Arial, Helvetica, sans-serif; }
+body { font-family: Sans-Serif; }
 
 #rider-starting {
 	font-size: 10vh;
@@ -59,7 +61,6 @@ body { font-family: Arial, Helvetica, sans-serif; }
   border-radius: 28px;
   font-family: Arial;
   color: #ffffff;
-  font-size: 40%;
   padding: 10px 20px 10px 20px;
   text-decoration: none;
 }
@@ -127,16 +128,18 @@ var serverTimestamp = null;
 var raceStarted = true;
 
 var startList = null;
+var startListTestInterval = 60;
+var startListTCur = 60;
 var startListTest = [/*(-*/
-	[5700, 9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
-	[5730, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
-	[5760, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
-	[5790, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
-	[5820, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
-	[5850, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
-	[5880+30, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
-	[5910+60, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
-	[5940+90, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
+	[startListTCur,						   9, "Geraint Thomas", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 8, "Ian Stannard", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 7, "Kanstantsin Sivtsov", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 6, "Richie Porte", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 5, "David L\u00f3pez", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 4, "Vasil Kiryienka", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 3, "Peter Kennaugh", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 2, "Edvald Boasson Hagen", "Team Sky", "RME", "GBR"], 
+	[startListTCur+=startListTestInterval, 1, "Chris Froome", "Team Sky", "RME", "GBR"]
 /*-)*/];
 var flags = {"GBR":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAOCAYAAAArMezNAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oDBAo1B4Zxqq0AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADv0lEQVQ4y02Tf0zVZRTGP+/7fuGSiQoIMhTBMHUjA1O5sRJNnLOcTVcunfi7FrXZVqZMcmnRhMj1jxU0wMo0JwtqJWtozoQwkNR0osuxEoRxRfAORAfc+31Pf3yt9d85z9k5z55znqNOP5937skPCudHps9if2UTxZ834IYFQRCB4ZEQJ/YtJXHvbgACe4rILagnItJBBASLQrN7cxbrzn+P7Q8i+3a06s75C2zgw0/pLihi56a5NBx7hYVZKYRCLsYojFEoQBmDMhqUQhuF0YpwOEzughnUr45na8Mhxi9dyIxT1VwMDFv98a+32RGbwxj/E1zNXskjgwF+rMij7P0VWGsx2huG1qA0CjBGY0WoKFpB+cAZpradJ6m6krgta1m25Wve2X8SLVhONF5nbvlftOa9Tk/JAboKS9i8OJULx7exyD8NEQGjUUZjBRZlpXBmQzK5Bz8i+tnFTK+t4sjJduLmFVP/y5+ICOrN9440ixPjtxa0UaSnxPBS7BBDF66Q8Op6wuPGE+rspnNtPoiQUlPF4Omz6Nu9TMzfiBn7MGVHW7l8LYBrBVA4Ntji5GdEkxYfi1gBBNe6jLoPEZ2Tzb2LbWAtob5+xFqUCMONvzE2JQlSJzPUdA4EtiQ6mKQYREAraO9zUT8vXtWc2D/oRwAErPVCK/AA4sEqRATcsJdbQQAl4uGeRUCEW5NiWhy0tzsRTwbKcwH6fw0o0AYtFhEDIogSFF5dPRgo/8ZK4UzZtom0iQl4/GCtZWTEBQTt84EIo90Bbh2oAhEmvbEVJy7Ws53Phw2F8BlBKwWAQhHZdxvni7b7aN+gJ10pZqXFs2FlBu69+9z5qhobF0v00350xWEQweefS8SUJMzdQXorviE6M53DvWNouxHEhq1HGL6HuTUy8+UTTTendAUG2PTCHNYsn02wpo7+0k/oSZ7OnkthJo/RRLe2oLTi+rTZ7Co7yzz/o0z1P0ZfTR3JLQ2EUlKpPPU3LRc6CAaD3Xo0FCY7czIXf8hn6ZwErizPo7/2OD89t5GVx7povtSNNvq/BzFG0fxHF0vWVXK06SZJe98mcXs+WbUHaclPY9mimUQ4GqforSWsefEZAuWHGP7uOB2ZT1HaM46Gnd9CpIERl2B/kKgbnSituTswRFfPHaJ8Duu3V1NVfY59BcvIqvuS9l2l7O64SePj83AyJkXpa7mrURMmcCxnHSWHfsfaXoiK8OxmrHdx10Vcl3A4hB0e5b61AJw62072qs8ofC2HguJCRi5fJfndYv0Pm/a+HCONOTIAAAAASUVORK5CYII="};
 var version = '';
@@ -184,11 +187,9 @@ var escapeHTML = function(unsafe) {
   });
 };
 
-function FormatTime( t )
-{
+function FormatTime( t ) {
 	var tStr = '';
-	if( t < 0 )
-	{
+	if( t < 0 ) {
 		tStr = '-';
 		t = -t;
 	}
@@ -208,15 +209,27 @@ function GetFlagImage( nation_code ) {
 	if( !flagImages ) {
 		if( !flags )
 			return null;
-		flagImages = {};
-		for( var cc in flags ) {
-			img = new Image();
+		flagImages = new Map();
+		let img_height = 3.25 * window.innerHeight / 100.0;
+		for( let cc in flags ) {
+			let img = new Image();
 			img.src = flags[cc];
 			img.className = 'flag';
-			flagImages[cc] = img;
+			let scale = img_height / img.height;
+			img.height = scale * img.height;
+			flagImages.set(cc, img);
 		}
 	}
-	return flagImages[nation_code.substring(0, 3)];
+	return flagImages.get(nation_code);
+}
+
+function Abbreviate( s ) {
+	s = s.replace( / powered by| presented by/gi, ' pb' );
+	s = s.replace( / cycling| team/gi, ' ' );
+	s = s.replace( '(Women)', '(W)' ).replace( '(Men)', '(M)' ).replace( '(Open)', '(O)' );
+	s = s.replace( /\.[abcdefghijklmnopqrstuvwxyz]{2,3}$/i, '' );
+	s = s.replace( /  +/, ' ' );
+	return s.trim();
 }
 
 var audioCtx = null, isAudioContext = false, isWebkitAudioContext = false;
@@ -238,24 +251,49 @@ function playBeep( beep ) {
 	if( beep < 0 || beep == resetSecond || !enableBeeps )
 		return;
 
+	let low = (beep > 0);
+	
 	if( isAudioContext ) {
-		var oscillator = audioCtx.createOscillator();
-		oscillator.frequency.value = (beep > 0 ? 440 : 880);
-		oscillator.type = 'triangle';
-		oscillator.connect( audioCtx.destination );
-		oscillator.start(0);
-		oscillator.stop(audioCtx.currentTime + 0.2);
+        let currentTime = audioCtx.currentTime;
+        
+		let frequency = (low ? 349.228  : 523.251); // F to C.
+		let duration = (low ? 0.500 : 1.750);
+
+        let ramp_value = 0.00001;
+        let ramp_duration = duration * 2 + 0.03;
+
+        let oscillator = audioCtx.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        let gain = audioCtx.createGain();                
+		gain.gain.setValueAtTime(gain.gain.value, currentTime);
+		gain.gain.exponentialRampToValueAtTime(ramp_value, currentTime + ramp_duration);
+
+        oscillator.connect(gain);
+		oscillator.onended = function () {
+		  gain.disconnect(audioCtx.destination);
+		  oscillator.disconnect(gain);
+		}
+
+        gain.connect(audioCtx.destination);
+
+        oscillator.start(currentTime);
+        oscillator.stop(currentTime+duration);
 	}
 	else if( isWebkitAudioContext ) {
-		var oscillator = audioCtx.createOscillator();
-		oscillator.frequency.value = (beep > 0 ? 440 : 880);
+		let frequency = (low ? 440  : 880); // A to high A.
+		let duration = (low ? 0.250 : 0.500);
+
+		let oscillator = audioCtx.createOscillator();
+		oscillator.frequency.value = frequency;
 		oscillator.type = 3; // TRIANGLE
 		oscillator.connect( audioCtx.destination );
 		oscillator.noteOn(0);
-		oscillator.noteOff(audioCtx.currentTime + 0.2);
+		oscillator.noteOff(audioCtx.currentTime + duration);
 	}
 	else {
-		var audPlay = (beep > 0 ? aud440 : aud880);	
+		let audPlay = (low ? aud440 : aud880);	
 		audPlay.pause();
 		audPlay.currentTime = 0.0;
 		audPlay.play();
@@ -276,29 +314,24 @@ function startIntervalTimer() {
 }
 
 function replaceChildrenWithChild( element, child ) {
-	while( element.lastChild ) {
+	while( element.firstChild )
 	  element.removeChild( element.lastChild );
-	}
 	element.appendChild( child );
 }
 
 function updateCountdown() {
-	var tNow = ServerDate();
-	var btg = null;
+	let tNow = ServerDate();
+	let btg = null;
 	
-	if( !raceStarted )
-		iBeepCur = 0;
-	else {
-		for( ; ; ++iBeepCur ) {
-			btg = beepsToGive[iBeepCur];
-			var dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
-			if( dSecs < -0.1 )
-				break;
-			
-			if( !btg.given ) {
-				playBeep( btg.beep );
-				btg.given = true;
-			}
+	for( ; ; ++iBeepCur ) {
+		btg = beepsToGive[iBeepCur];
+		let dSecs = (tNow.getTime() - btg.t.getTime()) / 1000.0;
+		if( dSecs < -0.1 )
+			break;
+		
+		if( !btg.given ) {
+			playBeep( btg.beep );
+			btg.given = true;
 		}
 	}
 	
@@ -306,34 +339,41 @@ function updateCountdown() {
 		--iBeepCur;
 	
 	btg = beepsToGive[iBeepCur];
-	var btgNext = beepsToGive[iBeepCur+1];
+	let btgNext = beepsToGive[iBeepCur+1];
 	
-	var countdown = document.getElementById('countdown-clock');
-	if( enableBeeps || !isDevice )
-		countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));
-	else
-		countdown.innerHTML = '<span class="btn">Click Here</span>';
-		
+	let countdown = document.getElementById('countdown-clock');
+	countdown.innerHTML = (btgNext.beep < 0 ? '0:00' : FormatTime(0.5 + (btgNext.tStart.getTime() - tNow.getTime()) / 1000.0));		
 
-	var bibCur = btgNext.startEntry[1];
+	let bibCur = btgNext.startEntry[1];
 	if( bibCur != bibLast ) {
 		
-		var rider_starting = document.getElementById('rider-starting');
+		let rider_starting = document.getElementById('rider-starting');
 		replaceChildrenWithChild( rider_starting, document.createTextNode(
 				(bibCur < 99999 ? (bibCur + ' ') : '') + btgNext.startEntry[2]
 			)
 		);
 		
-		var team_starting = document.getElementById('team-starting');
-		var dataFields = [];
-		for( var f = 3; f < btgNext.startEntry.length; ++f )
-			if( btgNext.startEntry[f] )
-				dataFields.push( btgNext.startEntry[f] );
-		replaceChildrenWithChild( team_starting, document.createTextNode( dataFields.join(', ') ) );
+		let team_starting = document.getElementById('team-starting');
+		let dataSpan = document.createElement( 'SPAN' );
+		dataSpan.style.whiteSpace = "nowrap";
+		let firstField = true;
+		for( let f = 3; f < btgNext.startEntry.length; ++f )
+			if( btgNext.startEntry[f] ) {
+				let flag = GetFlagImage( btgNext.startEntry[f] );
+				if( flag ) {
+					if( !firstField )
+						dataSpan.appendChild( document.createTextNode(', ') );
+					dataSpan.appendChild( flag.cloneNode(true) );
+				}
+				let text = btgNext.startEntry[f];
+				dataSpan.appendChild( document.createTextNode( ((firstField || flag) ? ' ' : ', ') + Abbreviate(text)) );
+				firstField = false;
+			}
+		replaceChildrenWithChild( team_starting, dataSpan );
 		
-		var rider_next = document.getElementById('rider-next');
-		var startEntryNext = [btgNext.startEntry];
-		for( var i = iBeepCur+1; i < beepsToGive.length; ++i ) {
+		let rider_next = document.getElementById('rider-next');
+		let startEntryNext = [btgNext.startEntry];
+		for( let i = iBeepCur+1; i < beepsToGive.length; ++i ) {
 			if( startEntryNext[startEntryNext.length-1][1] == beepsToGive[i].startEntry[1] )
 				continue;
 			
@@ -343,41 +383,38 @@ function updateCountdown() {
 		}
 		startEntryNext = startEntryNext.slice( 1 );
 		
-		var iIndex = btgNext.index;
-		var table = document.createElement('TABLE');
+		let iIndex = btgNext.index;
+		let table = document.createElement('TABLE');
 		table.style.background = GetBackground();
-		var tbody = document.createElement('TBODY'); table.appendChild( tbody );
-		for( var i = 0; i < startEntryNext.length; ++i ) {
-			var tr = document.createElement('TR'); tbody.appendChild( tr );
+		let tbody = document.createElement('TBODY'); table.appendChild( tbody );
+		for( let i = 0; i < startEntryNext.length; ++i ) {
+			let tr = document.createElement('TR'); tbody.appendChild( tr );
 			tr.className = 'border-top border-left border-right';
 			if( i == startEntryNext.length - 1 )
 				tr.className += ' border-bottom';
 			
-			for( var c = 1; c < startEntryNext[i].length; ++c ) {
-				var td = document.createElement('TD'); tr.appendChild( td );
-				var v = startEntryNext[i][c];
+			for( let c = 1; c < startEntryNext[i].length; ++c ) {
+				let td = document.createElement('TD'); tr.appendChild( td );
+				let v = startEntryNext[i][c];
 				if( c == 5 && v ) {
-					var img = GetFlagImage( v );
-					if( img ) {
+					let flag = GetFlagImage( v );
+					if( flag ) {
 						span = document.createElement('SPAN'); td.appendChild( span );
 						span.style.whiteSpace = "nowrap";
-						span.appendChild( img.cloneNode(true) );
+						span.appendChild( flag.cloneNode(true) );
 						span.appendChild( document.createTextNode(' ' + v) );
 						v = null;
 					}
 				}
-				if( v )
-					td.appendChild( document.createTextNode(v) );
+				if( v ) {
+					td.appendChild( document.createTextNode(Abbreviate(''+v)) );
+				}
 				if( c == 1 )
 					td.className = 'text-center';
 			}
 			
-			var td = document.createElement('TD'); tr.appendChild( td );
-			var tStr = '';
-			if( raceStarted ) {
-				tStr = toInternationalTimeString(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0));
-			}
-			td.innerHTML = tStr;
+			let td = document.createElement('TD'); tr.appendChild( td );
+			td.innerHTML = toInternationalTimeString(new Date(raceStart.getTime() + startEntryNext[i][0]*1000.0));
 		}
 		replaceChildrenWithChild( rider_next, table );
 		
@@ -393,18 +430,37 @@ function dateFromTuple( t ) {
 	return new Date(t[0], t[1], t[2], t[3], t[4], t[5], t[6]);
 }
 
+/* Get the documentElement (<html>) to display the page in fullscreen */
+var elem = document.documentElement;
+
+/* View in fullscreen */
+function openFullscreen() {
+	if (elem.requestFullscreen) {
+		elem.requestFullscreen();
+	} else if (elem.webkitRequestFullscreen) { /* Safari */
+		elem.webkitRequestFullscreen();
+	} else if (elem.msRequestFullscreen) { /* IE11 */
+		elem.msRequestFullscreen();
+	}
+}
+
 function initiateSound() {
 	if( !enableBeeps ) {
 		enableBeeps = true;
-		playBeep(10);
-		playBeep(0);
+		// Play some beeps to set the volume.
+		for( let i = 0; i < 8; ++i )
+			setTimeout(function() { playBeep(i%4); }, 250*i);
+		openFullscreen();			
 	}
-	document.getElementById('countdown-clock').className = '';
+	let beep_btn = document.getElementById('beep-btn')
+	beep_btn.innerHTML = '';
+	beep_btn.className = '';
+	beep_btn.removeEventListener( 'click', initiateSound );
 }
 
 // Keep track of the correction driven from the smallest latency.
 // This will be the best estimate of the server time.
-var syncIterations = 60;
+var syncIterations = 5;
 var millisDelta = 0.0;
 var latency2Min = Number.MAX_VALUE;
 function ServerDate() {
@@ -420,18 +476,16 @@ else
 	getTimestamp = function() { return Date.now(); };
 
 function getJSON( url, successHandler, errorHandler ) {
-	var xhr = typeof XMLHttpRequest != 'undefined'
+	let xhr = typeof XMLHttpRequest != 'undefined'
 		? new XMLHttpRequest()
 		: new ActiveXObject('Microsoft.XMLHTTP');
 	xhr.open('get', url, true);
 	xhr.onreadystatechange = function() {
-		var status;
-		var data;
 		// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-readystate
 		if (xhr.readyState == 4) { // 'DONE'
-			status = xhr.status;
+			let status = xhr.status;
 			if (status == 200) {
-				data = JSON.parse(xhr.responseText);
+				let data = JSON.parse(xhr.responseText);
 				successHandler && successHandler(data);
 			} else {
 				errorHandler && errorHandler(status);
@@ -442,7 +496,7 @@ function getJSON( url, successHandler, errorHandler ) {
 };
 
 function SetRaceName() {
-	var e = document.getElementById('race-name');
+	let e = document.getElementById('race-name');
 	e.innerHTML = (
 		escapeHTML(raceName?raceName:'') + ' ' +
 		toInternationalString(raceStart) + '  Last Updated ' +
@@ -454,9 +508,9 @@ function SetRaceName() {
 }
 
 function ProcessServerTimestamp( ts ) {
-	var arrivaltimestamp = getTimestamp();
-	var clienttime = Date.now();
-	var latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
+	let arrivaltimestamp = getTimestamp();
+	let clienttime = Date.now();
+	let latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
 	if( latency2Min > latency2 ) {
 		latency2Min = latency2;
 		millisDelta = ts.servertime + latency2 - clienttime;
@@ -468,8 +522,8 @@ function getTimeCorrection() {
 	// Schedule some ajax calls to improve the time sync.
 	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
 		latency2Min = Number.MAX_VALUE;
-		var url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.html';
-		for( var i = 0; i < syncIterations; ++i ) {
+		let url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
+		for( let i = 0; i < syncIterations; ++i ) {
 			// Pass our current timestamp so we can estimate the latency.
 			setTimeout(
 				function() { getJSON(url + '?' + getTimestamp(), ProcessServerTimestamp) },
@@ -494,23 +548,34 @@ function toInternationalTimeString( d ) {
 }
 
 function onload() {
-	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
-	if( startList == null ) startList = [];
-	
+	if( payload ) {
+		for( v in payload )
+			window[v] = payload[v];
+		payload = null;
+	}
+	else {
+		// Running in test mode.
+		let r = new Date( (new Date()).getTime() + 0.5 * (60*1000) );
+		raceScheduledStartTuple = [r.getFullYear(), r.getMonth(), r.getDate(), r.getHours(), r.getMinutes(), r.getSeconds(), r.getMilliseconds()];
+		raceName = 'Test Race';
+		startList = startListTest;
+	}
+	if( startList == null )
+		startList = [];
+	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.	
+
 	getTimeCorrection();
 	
 	lastUpdated = (lastUpdatedTuple == null ? ServerDate() : dateFromTuple(lastUpdatedTuple));
 	
-	if( /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ) {
-		// On tablets, the first sound must be triggered by a user action.
-		isDevice = true;
-		enableBeeps = false;
-		var countdown_clock = document.getElementById('countdown-clock');
-		countdown_clock.className = 'disabled';
-		countdown_clock.addEventListener( 'click', initiateSound );
-	}
-	else
-		enableBeeps = true;
+	// The first sound must be triggered by a user action.
+	isDevice = true;
+	enableBeeps = false;
+	let countdown_clock = document.getElementById('countdown-clock');
+	let beep_btn = document.getElementById('beep-btn');
+	beep_btn.innerHTML = 'Press to enable Beeps';
+	beep_btn.className = 'btn';
+	beep_btn.addEventListener( 'click', initiateSound );
 	
 	tServer = ServerDate();
 	if( raceStartTuple != null ) {
@@ -518,25 +583,32 @@ function onload() {
 	}
 	else if( raceScheduledStartTuple != null ) {
 		raceStart = dateFromTuple( raceScheduledStartTuple );
-		startList.push( [0,
-						 999999,
-						 raceName + ' (not started)', "Countdown to Scheduled Start at " + toInternationalString(raceStart) + ' (' + startList.length + ' Starters)',
-						 '',
-						 '',
-						 ''] );
-		
-		// Set up a callback to automatically refresh the page shortly after the race start time.
-		var waitTime = Math.max(0, raceStart.getTime() - tServer.getTime()) + 10*1000;
-		setTimeout( function() { location.reload(true); }, waitTime );
-		if( raceStart.getTime() >= tServer.getTime() )
-			playBeep( 1 );
-		enableBeeps = false;
-		raceStarted = false;
-	}
-	else {
-		raceStart = new Date(tServer.getTime() - 94*60*1000 - 3287);
-		startList = startListTest;
-		playBeep( 1 );
+		if( raceStart.getTime() < (new Date()).getTime() ) {
+			raceStarted = true;
+		}
+		else {
+			raceStarted = false;
+			// Add a countdown to the race start.
+			startList.unshift(
+					[0,
+					999999,
+					raceName,
+					'TT Countdown to ' + toInternationalTimeString(raceStart),
+					'(' + startList.length + ' Starters)',
+					'']
+			);
+			// Automatically start the race at the scheduled start time (if we don't get refreshed after the race starts).
+			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
+			
+			// Play some high beeps.
+			for( let i = 6; i <= 15; ++i ) {
+				if( i == 10 )
+					continue;
+				let beepInterval = raceStart.getTime() - (new Date()).getTime() - 1000*i;
+				if( beepInterval > 0 )
+					setTimeout( function() { playBeep(1); }, beepInterval );
+			}
+		}
 	}
 	
 	SetRaceName();
@@ -544,57 +616,55 @@ function onload() {
 	if( startList.length == 0 )
 		return;
 		
-	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
-	
-	if( raceStarted ) {
-		// Get most frequent start gap.
-		var gapTotal = {}
-		for( var i = 1; i < startList.length; ++i ) {
-			var gap = startList[i][0] - startList[i-1][0];
-			if( gap in gapTotal )
-				gapTotal[gap] += 1;
-			else
-				gapTotal[gap] = 1;
+	// Get most frequent start gap.
+	let gapTotal = {}
+	for( let i = 1; i < startList.length; ++i ) {
+		let gap = startList[i][0] - startList[i-1][0];
+		if( gap in gapTotal )
+			gapTotal[gap] += 1;
+		else
+			gapTotal[gap] = 1;
+	}
+	let gapTotalMax = 0;
+	let gapMostFrequent = 60;
+	for( gap in gapTotal ) {
+		if( gapTotal[gap] > gapTotalMax ) {
+			gapTotalMax = gapTotal[gap];
+			gapMostFrequent = parseInt(gap);
 		}
-		var gapTotalMax = 0;
-		var gapMostFrequent = 60;
-		for( gap in gapTotal ) {
-			if( gapTotal[gap] > gapTotalMax ) {
-				gapTotalMax = gapTotal[gap];
-				gapMostFrequent = parseInt(gap);
-			}
-		}
-		gapTotal = null;
+	}
+	gapTotal = null;
 
-		// Insert Exception starts into the start list gaps exceeding 4 minutes.
-		var startGapMin = 4*60;
-		var startListExceptions = [];
-		function addExceptionStarts( startCur, startMax ) {
-			while( startCur + gapMostFrequent < startMax ) {
-				startCur += gapMostFrequent;
-				var tFormat = FormatTime(startCur);
-				startListExceptions.push( [startCur, tFormat, '', '', '', ''] );
-			}
+	// Insert Exception starts into the start list gaps exceeding 4 minutes.
+	let startGapMin = 4*60;
+	let startListExceptions = [];
+	function addExceptionStarts( startCur, startMax ) {
+		let exceptionCount = 0;
+		while( startCur + gapMostFrequent < startMax && exceptionCount++ < 5 ) {
+			startCur += gapMostFrequent;
+			let tFormat = FormatTime(startCur);
+			startListExceptions.push( [startCur, tFormat, '', '', '', ''] );
 		}
-		
-		for( var i = 1; i < startList.length; ++i ) {
-			if( startList[i][0] - startList[i-1][0] >= startGapMin )
-				addExceptionStarts( startList[i-1][0], startList[i][0] );
-		}
-		
-		// Insert Exception starts at the end.
-		addExceptionStarts( startList[startList.length-1][0], startList[startList.length-1][0] + gapMostFrequent * 9 );
-		startList = startList.concat( startListExceptions );
-		startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
 	}
 	
-	for( var i = 0; i < startList.length; ++i ) {
-		var startEntry = startList[i];
-		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
+	for( let i = 2; i < startList.length; ++i ) {
+		if( startList[i][0] - startList[i-1][0] >= startGapMin )
+			addExceptionStarts( startList[i-1][0], startList[i][0] );
+	}
+	
+	// Insert Exception starts at the end.
+	addExceptionStarts( startList[startList.length-1][0], startList[startList.length-1][0] + gapMostFrequent * 9 );
+	startList = startList.concat( startListExceptions );
+	startList.sort( function(a, b) { return a[0] - b[0]; } );	// Sort by start time.
+	
+	for( let i = 0; i < startList.length; ++i ) {
+		let startEntry = startList[i];
+		let tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
 		if( tStart < tServer )
 			continue;
-		for( var b = 0; b < beepTimes.length; ++b ) {
-			var tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
+		
+		for( let b = 0; b < beepTimes.length; ++b ) {
+			let tBeep = new Date(tStart.getTime() - beepTimes[b] * 1000);
 			if( tBeep < tServer || (beepsToGive.length > 0 && beepsToGive[beepsToGive.length-1].t >= tBeep) )
 				continue;
 			beepsToGive.push( {
@@ -610,8 +680,8 @@ function onload() {
 	}
 	
 	if( beepsToGive.length == 0 ) {
-		var startEntry = startList[startList.length-1];
-		var tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
+		let startEntry = startList[startList.length-1];
+		let tStart = new Date(raceStart.getTime() + startEntry[0] * 1000);
 		beepsToGive.push( {
 				't':tStart,
 				'tStart':tStart,
@@ -625,8 +695,8 @@ function onload() {
 
 	// Add a long last entry to avoid special cases.
 	beepsToGive.push( beepsToGive[beepsToGive.length-1] );
-	var tBig = 200.0*365*24*60*60*1000;
-	var btgLast = beepsToGive[beepsToGive.length-1];
+	let tBig = 200.0*365*24*60*60*1000;
+	let btgLast = beepsToGive[beepsToGive.length-1];
 	btgLast.t = new Date(btgLast.t.getTime() + tBig);
 	btgLast.tStart = new Date(btgLast.tStart.getTime() + tBig);
 	btgLast.beep = -1;
@@ -645,6 +715,7 @@ function onload() {
 	<span id="team-starting">CrossMgr Time Trial Starter</span>
 </div>
 <div id="countdown-clock-div">
+	<span id="beep-btn"></span><br/>
 	<span id="countdown-clock">&nbsp;&nbsp;</span>
 </div>
 <div id="rider-next">

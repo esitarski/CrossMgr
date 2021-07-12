@@ -32,7 +32,7 @@ def getStFtLaps( rider ):
 	
 class AdjustTimeDialog( wx.Dialog ):
 	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Adjust Time Trial Times"),
+		super().__init__( parent, id, _("Adjust Time Trial Times"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.rider = rider
@@ -149,7 +149,7 @@ class AdjustTimeDialog( wx.Dialog ):
 
 class ChangeOffsetDialog( wx.Dialog ):
 	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("Adjust Start Time"),
+		super().__init__( parent, id, _("Adjust Start Time"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.rider = rider
@@ -220,7 +220,7 @@ class RiderDetail( wx.Panel ):
 	ignoreColour = wx.Colour( 180, 180, 180 )
 		
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__(parent, id)
 		
 		self.SetDoubleBuffered( True )
 		
@@ -1508,7 +1508,7 @@ class RiderDetail( wx.Panel ):
 		
 class RiderDetailDialog( wx.Dialog ):
 	def __init__( self, parent, num = None, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, _("RiderDetail"),
+		super().__init__( parent, id, _("RiderDetail"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL|wx.RESIZE_BORDER )
 						
 		vs = wx.BoxSizer( wx.VERTICAL )

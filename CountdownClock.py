@@ -42,7 +42,7 @@ class CountdownClock(wx.Control):
 		# to be overridden in Python derived class. For StatusBar, we
 		# basically need to override DoGetBestSize and AcceptsFocusFromKeyboard
 		
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 		
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.onTimer )

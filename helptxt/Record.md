@@ -134,4 +134,10 @@ This display shows graphically, by Category:
 
 Use this display to manage lap counters by category.  It allows you to easily see what lap each category is on, when to ring the last lap bell, etc.
 
-For additional information, move the mouse over the lap.  This will show more start/end times and lap time.
+For additional information, hover the mouse over the lap.  This will show more start/end times and lap time.
+
+### Set Laps from the Lap Chart
+
+To modify the number of laps during the race, click anywhere on the Progress bars.
+
+This opens the __Set Laps__ dialog which makes it easy to change the number of laps during a race.  For more details, see [SetLaps][].
