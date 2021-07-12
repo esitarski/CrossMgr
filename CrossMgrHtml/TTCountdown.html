@@ -575,7 +575,7 @@ function onload() {
 	let beep_btn = document.getElementById('beep-btn');
 	beep_btn.innerHTML = 'Press to enable Beeps';
 	beep_btn.className = 'btn';
-	beep_btn.addEventListener( 'click', initiateSound );
+	beep_btn.addEventListener( 'mousedown', initiateSound );
 	
 	tServer = ServerDate();
 	if( raceStartTuple != null ) {
