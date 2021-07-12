@@ -2,10 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="cache-control" content="no-cache"/>
 <meta name="author" content="Edward Sitarski">
 <meta name="copyright" content="Edward Sitarski, 2011-2018">
 <meta name="generator" content="CrossMgr">  
-<meta name="keywords" content="CrossMgr, Cycling, Race, Results, Time Trial">
+<meta name="keywords" content="CrossMgr, Cycling, Race, Results, Time Trial, Countdown">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 
 <title>TTStartPage</title>
 <style>
@@ -249,14 +251,16 @@ function playBeep( beep ) {
 	if( beep < 0 || beep == resetSecond || !enableBeeps )
 		return;
 
+	let low = (beep > 0);
+	
 	if( isAudioContext ) {
         let currentTime = audioCtx.currentTime;
-
-        let frequency = (beep > 0 ? 440 : 880);
-        let duration = 0.250;
         
+		let frequency = (low ? 349.228  : 523.251); // F to C.
+		let duration = (low ? 0.500 : 1.750);
+
         let ramp_value = 0.00001;
-        let ramp_duration = duration * 2;
+        let ramp_duration = duration * 2 + 0.03;
 
         let oscillator = audioCtx.createOscillator();
         oscillator.type = "sine";
@@ -264,7 +268,7 @@ function playBeep( beep ) {
 
         let gain = audioCtx.createGain();                
 		gain.gain.setValueAtTime(gain.gain.value, currentTime);
-		gain.gain.exponentialRampToValueAtTime(ramp_value, currentTime + ramp_duration + 0.03);
+		gain.gain.exponentialRampToValueAtTime(ramp_value, currentTime + ramp_duration);
 
         oscillator.connect(gain);
 		oscillator.onended = function () {
@@ -278,15 +282,18 @@ function playBeep( beep ) {
         oscillator.stop(currentTime+duration);
 	}
 	else if( isWebkitAudioContext ) {
+		let frequency = (low ? 440  : 880); // A to high A.
+		let duration = (low ? 0.250 : 0.500);
+
 		let oscillator = audioCtx.createOscillator();
-		oscillator.frequency.value = (beep > 0 ? 440 : 880);
+		oscillator.frequency.value = frequency;
 		oscillator.type = 3; // TRIANGLE
 		oscillator.connect( audioCtx.destination );
 		oscillator.noteOn(0);
-		oscillator.noteOff(audioCtx.currentTime + 0.2);
+		oscillator.noteOff(audioCtx.currentTime + duration);
 	}
 	else {
-		let audPlay = (beep > 0 ? aud440 : aud880);	
+		let audPlay = (low ? aud440 : aud880);	
 		audPlay.pause();
 		audPlay.currentTime = 0.0;
 		audPlay.play();
@@ -453,7 +460,7 @@ function initiateSound() {
 
 // Keep track of the correction driven from the smallest latency.
 // This will be the best estimate of the server time.
-var syncIterations = 60;
+var syncIterations = 5;
 var millisDelta = 0.0;
 var latency2Min = Number.MAX_VALUE;
 function ServerDate() {
