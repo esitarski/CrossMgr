@@ -65,7 +65,7 @@ def ReadPropertiesFromExcel( reader ):
 			v = row[c]
 			t = FieldType[a]
 			if t == 's':
-				v = '{}'.format(v)
+				v = '{}'.format('' if v is None else v)
 			elif t == 'b':
 				v = bool(v)
 			elif t == 'n':
