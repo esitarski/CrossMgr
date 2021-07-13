@@ -245,7 +245,7 @@ def formatUciId( uci_id ):
 		uci_id = '{:.0f}'.format( uci_id )
 	else:
 		uci_id = '{}'.format( uci_id )
-	#s = u' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id	# add separating spaces to UCI ID.
+	#s = ' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id	# add separating spaces to UCI ID.
 	s = uci_id
 	return s.replace( ' ', '' )		# UCI does not accept spaces in UCI IDs.
 	
@@ -271,7 +271,7 @@ def UCIExcel( category, fname, startList=False ):
 	if startList:
 		results = sorted( copy.deepcopy(results), key=operator.attrgetter('num') )
 		for pos, rr in enumerate(results, 1):
-			rr.pos = u'{}'.format(pos)
+			rr.pos = '{}'.format(pos)
 			rr.status = Finisher
 	
 	wb = xlsxwriter.Workbook( fname )
@@ -284,19 +284,19 @@ def UCIExcel( category, fname, startList=False ):
 	#-------------------------------------------------------------------------------------------------------
 	ws = wb.add_worksheet('General')
 	if startList:
-		ws.write( 0, 0, u"UCI Event's Start List File", title_format )
+		ws.write( 0, 0, "UCI Event's Start List File", title_format )
 	else:
-		ws.write( 0, 0, u"UCI Event's Results File", title_format )
+		ws.write( 0, 0, "UCI Event's Results File", title_format )
 	ws.set_row( 0, 26 )
 	
 	general = [
-		(u'Field',				u'Value',		u'Description',								u'Comment'),
-		(u'Competition Code',	u'',			u'UCI unique competition code',				u'Filled by the system'),
-		(u'Event Code',			u'',			u'UCI unique event code',					u'Filled by the system'),
-		(u'Race Type',			u'',			u'Race type of the Event (IRR, XCO, OM)',	u'Optional'),
-		(u'Competitor Type',	u'A',			u'A or T (Athlete or Team)',				u'Mandatory'),
-		(u'Result type',		u'Time',		u'Points or Time',							u'Mandatory'),
-		(u'Document version',	1.0,			u'Version number of the file',				u'Mandatory'),
+		('Field',				'Value',	'Description',								'Comment'),
+		('Competition Code',	'',			'UCI unique competition code',				'Mandatory'),
+		('Event Code',			'',			'UCI unique event code',					'Mandatory'),
+		('Race Type',			'',			'Race type of the Event (IRR, XCO, OM)',	'Optional'),
+		('Competitor type',		'A',		'A or T (Athlete or Team)',					'Mandatory'),
+		('Result type',			'Time',		'Points or Time',							'Mandatory'),
+		('Document version',	1.0,		'Version number of the file',				'Mandatory'),
 	]
 	
 	colWidths = {}
@@ -376,21 +376,21 @@ def UCIExcel( category, fname, startList=False ):
 			return 'REL'
 		if rrWinner and rr.laps != rrWinner.laps:
 			return 'LAP'
-		return u'' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
+		return '' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
 	
 	getValue = {
 		'Start Order':	lambda rr: toInt(rr.pos),
 		'Rank':			lambda rr: toInt(rr.pos) if rr.status == Finisher else '',
 		'BIB':			operator.attrgetter('num'),
-		'UCI ID':		lambda rr: formatUciId(getattr(rr, 'UCIID', u'')),
-		'Last Name':	lambda rr: getattr(rr, 'LastName', u''),
-		'First Name':	lambda rr: getattr(rr, 'FirstName', u''),
-		'Country':		lambda rr: getattr(rr, 'NatCode', u''),
-		'Team':			lambda rr: getattr(rr, 'TeamCode', u''),
-		'Gender':		lambda rr: getattr(rr, 'Gender', u'')[:1],
+		'UCI ID':		lambda rr: formatUciId(getattr(rr, 'UCIID', '')),
+		'Last Name':	lambda rr: getattr(rr, 'LastName', ''),
+		'First Name':	lambda rr: getattr(rr, 'FirstName', ''),
+		'Country':		lambda rr: getattr(rr, 'NatCode', ''),
+		'Team':			lambda rr: getattr(rr, 'TeamCode', ''),
+		'Gender':		lambda rr: getattr(rr, 'Gender', '')[:1],
 		'Result':		getFinishTime,
 		'IRM':			getIRM,
-		'Phase':		lambda rr: u'Final',
+		'Phase':		lambda rr: 'Final',
 	}
 
 	colWidths.clear()
@@ -399,7 +399,7 @@ def UCIExcel( category, fname, startList=False ):
 		
 	for row, rr in enumerate(results, 1):
 		for col, name in enumerate(colNames):
-			ww( row, col, getValue.get(name, lambda rr:u'')(rr), getFmt(name, row) )
+			ww( row, col, getValue.get(name, lambda rr:'')(rr), getFmt(name, row) )
 	
 	for col, width in colWidths.items():
 		ws.set_column( col, col, width+2 )
