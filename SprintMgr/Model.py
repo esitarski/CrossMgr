@@ -42,7 +42,7 @@ class Rider:
 		self.status = status
 	
 	named_aliases = (
-		(('bib#','bib_#','#','num','bibnum','bib_num',)					'bib'),
+		(('bib#','bib_#','#','num','bibnum','bib_num',),				'bib'),
 		(('name','rider_name'),											'full_name'),
 		(('first','fname','firstname','rider_first'),					'first_name'),
 		(('last','lname','lastname','rider_last',),						'last_name'),
