@@ -464,7 +464,7 @@ function initiateSound() {
 	enableBeeps = true;
 }
 
-// Use Christian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
+// Use Cristian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
 // We go for a number of iterations and use the one with the minimal network latency to estimate the correction.
 const syncIterations = 5;
 const syncMillis = 500;
@@ -493,6 +493,9 @@ function getJSON( url, successHandler, errorHandler ) {
 			}
 		}
 	};
+	// Set a timeout for the xhr call.
+	xhr.timeout = 3000;
+	xhr.ontimeout = function (e) {};
 	xhr.send();
 };
 
@@ -515,7 +518,7 @@ function getTimeCorrection() {
 		tRoundTripMin = Number.MAX_VALUE;
 		const url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
 		for( let i = 0; i < syncIterations; ++i ) {
-			// Pass our current timestamp so we can compute the latency.
+			// Pass our current time so we can compute the latency when handling the call.
 			setTimeout(
 				function() { getJSON(url + '?clientTime=' + getTimestamp(), ProcessServerTimestamp) },
 				i*1000 + 500
