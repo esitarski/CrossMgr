@@ -477,7 +477,6 @@ function getTimestamp() {
 }
 
 function getJSON( url, successHandler, errorHandler ) {
-	console.log( ['getJSON', url] );
 	let xhr = new XMLHttpRequest();
 	xhr.open('get', url, true);
 	xhr.onreadystatechange = function() {
@@ -503,8 +502,6 @@ function ProcessServerTimestamp( ts ) {
 		tRoundTripMin = tRoundTrip;
 		millisDelta = tNow - getTimestamp();
 		SetRaceName();
-		console.log( ['tReceived', tReceived, 'tSent', tSent, 'tServer', tServer, 'tRoundTrip', tRoundTrip, 'tNow', tNow] );
-		console.log( ['millisDelta', millisDelta] );
 	}
 }
 
