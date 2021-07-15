@@ -9,7 +9,7 @@ _ = lambda x: x
 
 class WheelEdgesPage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		self.tsJpg, self.iPhoto1, self.iPhoto2 = None, None, None
 		self.wheelDiameter = None
@@ -95,7 +95,7 @@ class WheelEdgesPage(adv.WizardPageSimple):
 	
 class FrontWheelEdgePage(adv.WizardPageSimple):
 	def __init__(self, parent, getSpeed):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		self.getSpeed = getSpeed
 		
@@ -131,7 +131,7 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 	
 class TimePage(adv.WizardPageSimple):
 	def __init__(self, parent):
-		adv.WizardPageSimple.__init__(self, parent)
+		super().__init__(parent)
 		
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )

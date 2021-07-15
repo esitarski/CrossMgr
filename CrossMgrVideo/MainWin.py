@@ -26,7 +26,7 @@ import Utils
 import CVUtil
 from SocketListener import SocketListener
 from MultiCast import multicast_group, multicast_port
-from Database import GlobalDatabase, DBWriter
+from Database import GlobalDatabase, DBWriter, Database
 from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
@@ -66,7 +66,7 @@ def OpenHelp():
 from CalendarHeatmap import CalendarHeatmap
 class DateSelectDialog( wx.Dialog ):
 	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
-		wx.Dialog.__init__( self, parent, id, title=_("Date Select") )
+		super().__init__( parent, id, title=_("Date Select") )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		self.dateSelect = None
@@ -150,7 +150,7 @@ def getCameraResolutionChoice( resolution ):
 	
 class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, cameraDeviceNum=0, fps=30, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Configuration') )
+		super().__init__( parent, id, title=_('CrossMgr Video Configuration') )
 		
 		fps = int( fps )
 		sizer = wx.BoxSizer( wx.VERTICAL )
@@ -252,7 +252,7 @@ def CreateCaptureButtons( parent ):
 
 class FocusDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id,
+		super().__init__( parent, id,
 			style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX,
 			title=_('CrossMgr Video Focus')
 		)
@@ -296,7 +296,7 @@ class FocusDialog( wx.Dialog ):
 
 class TriggerDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Trigger Editor') )
+		super().__init__( parent, id, title=_('CrossMgr Video Trigger Editor') )
 		
 		self.db = None
 		self.triggerId = None
@@ -329,7 +329,7 @@ class TriggerDialog( wx.Dialog ):
 		ef = db.getTriggerEditFields( self.triggerId )
 		ef = ef or ['' for f in Database.triggerEditFields]
 		for e, v in zip(self.editFields, ef):
-			e.SetValue( '{}'.format(v) )
+			e.SetValue( '{}'.format(v) if v is not None else '' )
 	
 	def get( self ):
 		values = []
@@ -352,7 +352,7 @@ class TriggerDialog( wx.Dialog ):
 		
 class AutoCaptureDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, title=_('CrossMgr Video Auto Capture') )
+		super().__init__( parent, id, title=_('CrossMgr Video Auto Capture') )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		gs = wx.FlexGridSizer( 2, 2, 4 )
@@ -395,7 +395,7 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(1000,800) ):
-		wx.Frame.__init__(self, parent, id, title, size=size)
+		super().__init__( parent, id, title, size=size )
 		
 		self.db = GlobalDatabase()
 		
@@ -625,6 +625,7 @@ class MainWin( wx.Frame ):
 				i, h,
 				wx.LIST_FORMAT_RIGHT if h in ('Bib','km/h','mph','Frames') else wx.LIST_FORMAT_LEFT
 			)
+		self.iNoteCol = self.fieldCol['note']
 		self.itemDataMap = {}
 		
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
@@ -818,8 +819,12 @@ class MainWin( wx.Frame ):
 				elif k == 'frames':
 					v = '{}'.format(v) if v else ''
 				else:
-					v = '{}'.format(v)
+					v = '{}'.format(v) if v is not None else ''
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
+
+	def updateTriggerColumnWidths( self ):
+		for c in range(self.triggerList.GetColumnCount()):
+			self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
 				
 	def updateTriggerRowID( self, id, fields ):
 		row = self.getTriggerRowFromID( id )
@@ -903,9 +908,8 @@ class MainWin( wx.Frame ):
 				if (tNow - tsU).total_seconds() < 5.0*60.0:
 					del counts[id]
 			self.db.updateTriggerPhotoCounts( counts )
-			
-		for i in range(self.triggerList.GetColumnCount()):
-			self.triggerList.SetColumnWidth(i, wx.LIST_AUTOSIZE)
+		
+		self.updateTriggerColumnWidths()
 
 		if self.triggerList.GetItemCount() >= 1:
 			if iTriggerRow is not None:
@@ -1161,6 +1165,7 @@ class MainWin( wx.Frame ):
 			row = self.iTriggerSelect
 			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
 			self.updateTriggerRow( row, fields )
+			self.updateTriggerColumnWidths()
 			self.triggerInfo.update( fields )
 		return self.triggerInfo
 	
@@ -1169,7 +1174,7 @@ class MainWin( wx.Frame ):
 		self.doTriggerEdit()
 	
 	def showMessages( self ):
-		while 1:
+		while True:
 			message = self.messageQ.get()
 			assert len(message) == 2, 'Incorrect message length'
 			cmd, info = message

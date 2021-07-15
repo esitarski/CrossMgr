@@ -29,7 +29,7 @@ def RescaleBitmap( bitmap, width, height ):
 	
 class PhotoPrintout( wx.Printout ):
 	def __init__(self, bitmap):
-		wx.Printout.__init__(self)
+		super().__init__()
 		self.bitmap = bitmap
 
 	def HasPage(self, page):

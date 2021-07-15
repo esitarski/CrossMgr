@@ -85,7 +85,7 @@ class CalendarHeatmapEvent(wx.PyCommandEvent):
 		:param `eventId`: the event identifier.
 		"""
 		
-		wx.PyCommandEvent.__init__(self, eventType, eventId)
+		super().__init__(eventType, eventId)
 		self.theButton = None
 		self.date = None
 
@@ -131,7 +131,7 @@ class CalendarHeatmap(wx.Control):
 		:param `name`: the button name.
 		"""
 		
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
