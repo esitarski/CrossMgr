@@ -8,7 +8,7 @@ EVT_VERTICAL_LINES = wx.PyEventBinder(EVT_VERTICAL_LINES_Type, 1)
 
 class VerticalLineEvent(wx.PyCommandEvent):
 	def __init__(self, evtType, id):
-		wx.PyCommandEvent.__init__(self, evtType, id)
+		super().__init__(evtType, id)
 		self.verticalLines = []
 
 	def SetVerticalLines(self, verticalLines):

@@ -7,7 +7,6 @@
 <meta name="copyright" content="Edward Sitarski, 2011-2018">
 <meta name="generator" content="CrossMgr">  
 <meta name="keywords" content="CrossMgr, Cycling, Race, Results, Time Trial, Countdown">
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 
 <title>TTStartPage</title>
 <style>
@@ -155,10 +154,10 @@ function SetStartedBackground( forceUpdate ) {
 	if( backgroundLast !== background || forceUpdate ) {
 		backgroundLast = background;
 		var ids = ['rider-starting-div', 'team-starting-div'];
-		for( var i = 0; i < ids.length; ++i )
+		for( let i = 0; i < ids.length; ++i )
 			document.getElementById(ids[i]).style.background = background;
 		var tables = document.getElementsByTagName("table");
-		for( var i = 0; i < tables.length; ++i )
+		for( let i = 0; i < tables.length; ++i )
 			tables[i].style.background = background;
 	}
 }
@@ -227,7 +226,8 @@ function Abbreviate( s ) {
 	s = s.replace( / powered by| presented by/gi, ' pb' );
 	s = s.replace( / cycling| team/gi, ' ' );
 	s = s.replace( '(Women)', '(W)' ).replace( '(Men)', '(M)' ).replace( '(Open)', '(O)' );
-	s = s.replace( /\.[abcdefghijklmnopqrstuvwxyz]{2,3}$/i, '' );
+	s = s.replace( '(Femmes)', '(F)' ).replace( '(Hommes)', '(H)' ).replace( '(Open)', '(O)' );
+	s = s.replace( /\.[abcdefghijklmnopqrstuvwxyz]{2,3}$/i, '' );	// web suffix (.ca, .com, .org, etc.).
 	s = s.replace( /  +/, ' ' );
 	return s.trim();
 }
@@ -445,55 +445,84 @@ function openFullscreen() {
 }
 
 function initiateSound() {
-	if( !enableBeeps ) {
-		enableBeeps = true;
-		// Play some beeps to set the volume.
-		for( let i = 0; i < 8; ++i )
-			setTimeout(function() { playBeep(i%4); }, 250*i);
-		openFullscreen();			
-	}
+	if( enableBeeps )
+		return;
+	
 	let beep_btn = document.getElementById('beep-btn')
 	beep_btn.innerHTML = '';
 	beep_btn.className = '';
 	beep_btn.removeEventListener( 'click', initiateSound );
+
+	openFullscreen();
+	
+	// Resume the context as we now have a user gesture.
+	audioCtx.resume();
+	
+	// Play some beeps to set the volume.
+	for( let i = 0; i < 8; ++i )
+		setTimeout(function() { playBeep(i%4); }, 250*i);
+	enableBeeps = true;
 }
 
-// Keep track of the correction driven from the smallest latency.
-// This will be the best estimate of the server time.
-var syncIterations = 5;
+// Use Christian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
+// We go for a number of iterations and use the one with the minimal network latency to estimate the correction.
+const syncIterations = 5;
+const syncMillis = 500;
+const syncTime = (syncIterations+1) * syncMillis;
 var millisDelta = 0.0;
-var latency2Min = Number.MAX_VALUE;
+var tRoundTripMin = Number.MAX_VALUE;
 function ServerDate() {
+	// Date corrected from server.
 	return new Date( Date.now() + millisDelta );
 }
 
-var getTimestamp = null;
-if( performance.now  )
-	getTimestamp = function() { return performance.now(); };
-else if( performance.webkitNow )
-	getTimestamp = function() { return performance.webkitNow(); };
-else
-	getTimestamp = function() { return Date.now(); };
+function getTimestamp() {
+	return Date.now();
+}
 
 function getJSON( url, successHandler, errorHandler ) {
-	let xhr = typeof XMLHttpRequest != 'undefined'
-		? new XMLHttpRequest()
-		: new ActiveXObject('Microsoft.XMLHTTP');
+	let xhr = new XMLHttpRequest();
 	xhr.open('get', url, true);
 	xhr.onreadystatechange = function() {
-		// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-readystate
 		if (xhr.readyState == 4) { // 'DONE'
-			let status = xhr.status;
-			if (status == 200) {
+			if (xhr.status == 200) {
 				let data = JSON.parse(xhr.responseText);
 				successHandler && successHandler(data);
 			} else {
-				errorHandler && errorHandler(status);
+				errorHandler && errorHandler(xhr.status);
 			}
 		}
 	};
 	xhr.send();
 };
+
+function ProcessServerTimestamp( ts ) {
+	const tReceived = getTimestamp();
+	const tSent = parseFloat( ts.clientTime );
+	const tServer = parseFloat( ts.serverTime );
+	const tRoundTrip = tReceived - tSent;
+	const tNow = tServer + tRoundTrip / 2.0;
+	if( tRoundTrip < tRoundTripMin ) {
+		tRoundTripMin = tRoundTrip;
+		millisDelta = tNow - getTimestamp();
+		SetRaceName();
+	}
+}
+
+function getTimeCorrection() {
+	// Schedule some calls to improve the time sync.
+	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
+		tRoundTripMin = Number.MAX_VALUE;
+		const url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
+		for( let i = 0; i < syncIterations; ++i ) {
+			// Pass our current timestamp so we can compute the latency.
+			setTimeout(
+				function() { getJSON(url + '?clientTime=' + getTimestamp(), ProcessServerTimestamp) },
+				i*1000 + 500
+			);
+		}
+	}
+}
 
 function SetRaceName() {
 	let e = document.getElementById('race-name');
@@ -502,35 +531,9 @@ function SetRaceName() {
 		toInternationalString(raceStart) + '  Last Updated ' +
 		toInternationalString(lastUpdated) + ' ' + 
 		'(&delta;=' + (millisDelta/1000.0).toFixed(3) + 's, ' +
-		'&lambda;=' + Math.min(999.0,latency2Min/1000.0).toFixed(3) + 's)'
-	)
+		'&lambda;=' + (tRoundTripMin == Number.MAX_VALUE ? '?' : (tRoundTripMin/2000.0).toFixed(3)) + 's)'
+	);
 	SetStartedBackground();
-}
-
-function ProcessServerTimestamp( ts ) {
-	let arrivaltimestamp = getTimestamp();
-	let clienttime = Date.now();
-	let latency2 = (arrivaltimestamp - ts.requesttimestamp) / 2.0;
-	if( latency2Min > latency2 ) {
-		latency2Min = latency2;
-		millisDelta = ts.servertime + latency2 - clienttime;
-		SetRaceName();
-	}
-}
-
-function getTimeCorrection() {
-	// Schedule some ajax calls to improve the time sync.
-	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
-		latency2Min = Number.MAX_VALUE;
-		let url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
-		for( let i = 0; i < syncIterations; ++i ) {
-			// Pass our current timestamp so we can estimate the latency.
-			setTimeout(
-				function() { getJSON(url + '?' + getTimestamp(), ProcessServerTimestamp) },
-				i*1000 + 500
-			);
-		}
-	}
 }
 
 function digit2( v ) { return (v < 10 ? "0" : "") + v; }
@@ -573,7 +576,7 @@ function onload() {
 	enableBeeps = false;
 	let countdown_clock = document.getElementById('countdown-clock');
 	let beep_btn = document.getElementById('beep-btn');
-	beep_btn.innerHTML = 'Press to enable Beeps';
+	beep_btn.innerHTML = 'Press for Beeps';
 	beep_btn.className = 'btn';
 	beep_btn.addEventListener( 'mousedown', initiateSound );
 	
@@ -588,7 +591,7 @@ function onload() {
 		}
 		else {
 			raceStarted = false;
-			// Add a countdown to the race start.
+			// Add a countdown event to the start list.
 			startList.unshift(
 					[0,
 					999999,
@@ -597,17 +600,27 @@ function onload() {
 					'(' + startList.length + ' Starters)',
 					'']
 			);
-			// Automatically start the race at the scheduled start time (if we don't get refreshed after the race starts).
-			setTimeout( function() { raceStarted=true; SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
 			
-			// Play some high beeps.
-			for( let i = 6; i <= 15; ++i ) {
-				if( i == 10 )
-					continue;
-				let beepInterval = raceStart.getTime() - (new Date()).getTime() - 1000*i;
-				if( beepInterval > 0 )
-					setTimeout( function() { playBeep(1); }, beepInterval );
+			// Schedule a race start at the scheduled start time (if we don't get refreshed after the race starts).
+			// Add a small delay to give the time correction messages a chance to work.
+			function scheduleRaceStart() {
+				// By this time, the time has been synced.
+				// Schedule some beeps to count down the race start.
+				for( let i = 6; i <= 15; ++i ) {
+					if( i == 10 )
+						continue;
+					let beepInterval = raceStart.getTime() - ServerDate().getTime() - 1000*i;
+					if( beepInterval > 0 )
+						setTimeout( function() { playBeep(1); }, beepInterval );
+				}
+				
+				function startRaceNow() {
+					raceStarted = true;
+					SetRaceName();
+				}
+				setTimeout( startRaceNow, Math.max(0,raceStart.getTime() - ServerDate().getTime()) );
 			}
+			setTimeout( scheduleRaceStart, syncTime );
 		}
 	}
 	

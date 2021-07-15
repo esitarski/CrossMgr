@@ -35,7 +35,10 @@ class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
 	pass
     
 def epochTime():
-	return (datetime.datetime.now() - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)).total_seconds()
+	return (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)).total_seconds()
+	
+def epochMilliseconds():
+	return epochTime() * 1000.0
     
 now = datetime.datetime.now
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
@@ -432,12 +435,12 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				# Return the clientTime and the serverTime so the client can computer the round-trip time.
 				# Used by Christian's algorithm to estimate the round-trip time and get a better time correction between the two computers.
 				try:
-					clientTime = float( urllib.parse.parse_qs(up.query).get('clientTime', None)[0] )
+					clientMilliseconds = float( urllib.parse.parse_qs(up.query).get('clientTime', None)[0] )
 				except Exception:
-					clientTime = 0.0
+					clientMilliseconds = 0.0
 				content = json.dumps( {
-						'serverTime':epochTime(),
-						'clientTime':clientTime,
+						'serverTime':epochMilliseconds(),
+						'clientTime':clientMilliseconds,
 					}
 				).encode()
 				content_type = self.json_content
