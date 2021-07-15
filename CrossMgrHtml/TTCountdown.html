@@ -226,7 +226,8 @@ function Abbreviate( s ) {
 	s = s.replace( / powered by| presented by/gi, ' pb' );
 	s = s.replace( / cycling| team/gi, ' ' );
 	s = s.replace( '(Women)', '(W)' ).replace( '(Men)', '(M)' ).replace( '(Open)', '(O)' );
-	s = s.replace( /\.[abcdefghijklmnopqrstuvwxyz]{2,3}$/i, '' );
+	s = s.replace( '(Femmes)', '(F)' ).replace( '(Hommes)', '(H)' ).replace( '(Open)', '(O)' );
+	s = s.replace( /\.[abcdefghijklmnopqrstuvwxyz]{2,3}$/i, '' );	// web suffix (.ca, .com, .org, etc.).
 	s = s.replace( /  +/, ' ' );
 	return s.trim();
 }
@@ -466,6 +467,8 @@ function initiateSound() {
 // Use Christian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
 // We go for a number of iterations and use the one with the minimal network latency to estimate the correction.
 const syncIterations = 5;
+const syncMillis = 500;
+const syncTime = (syncIterations+1) * syncMillis;
 var millisDelta = 0.0;
 var tRoundTripMin = Number.MAX_VALUE;
 function ServerDate() {
@@ -615,9 +618,9 @@ function onload() {
 					raceStarted = true;
 					SetRaceName();
 				}
-				setTimeout( startRaceNow, max(0,raceStart.getTime() - ServerDate().getTime()) );
+				setTimeout( startRaceNow, Math.max(0,raceStart.getTime() - ServerDate().getTime()) );
 			}
-			setTimeout( scheduleRaceStart, 2000 );
+			setTimeout( scheduleRaceStart, syncTime );
 		}
 	}
 	
