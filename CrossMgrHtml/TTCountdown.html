@@ -463,12 +463,13 @@ function initiateSound() {
 	enableBeeps = true;
 }
 
-// Keep track of the correction driven from the smallest latency.
-// This will be the best estimate of the server time.
-var syncIterations = 5;
+// Use Christian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
+// We go for a number of iterations and use the one with the minimal network latency to estimate the correction.
+const syncIterations = 5;
 var millisDelta = 0.0;
 var tRoundTripMin = Number.MAX_VALUE;
 function ServerDate() {
+	// Date corrected from server.
 	return new Date( Date.now() + millisDelta );
 }
 
@@ -493,11 +494,11 @@ function getJSON( url, successHandler, errorHandler ) {
 };
 
 function ProcessServerTimestamp( ts ) {
-	let tReceived = getTimestamp();
-	let tSent = parseFloat( ts.clientTime );
-	let tServer = parseFloat( ts.serverTime );
-	let tRoundTrip = tReceived - tSent;
-	let tNow = tServer + tRoundTrip / 2.0;
+	const tReceived = getTimestamp();
+	const tSent = parseFloat( ts.clientTime );
+	const tServer = parseFloat( ts.serverTime );
+	const tRoundTrip = tReceived - tSent;
+	const tNow = tServer + tRoundTrip / 2.0;
 	if( tRoundTrip < tRoundTripMin ) {
 		tRoundTripMin = tRoundTrip;
 		millisDelta = tNow - getTimestamp();
@@ -509,7 +510,7 @@ function getTimeCorrection() {
 	// Schedule some calls to improve the time sync.
 	if( window.location.protocol == 'http:' || window.location.protocol == 'https:' ) {
 		tRoundTripMin = Number.MAX_VALUE;
-		let url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
+		const url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
 		for( let i = 0; i < syncIterations; ++i ) {
 			// Pass our current timestamp so we can compute the latency.
 			setTimeout(
@@ -587,7 +588,7 @@ function onload() {
 		}
 		else {
 			raceStarted = false;
-			// Add a countdown to the race start.
+			// Add a countdown event to the start list.
 			startList.unshift(
 					[0,
 					999999,
@@ -596,17 +597,27 @@ function onload() {
 					'(' + startList.length + ' Starters)',
 					'']
 			);
-			// Automatically start the race at the scheduled start time (if we don't get refreshed after the race starts).
-			setTimeout( function() { raceStarted=true; getTimeCorrection(); SetRaceName(); }, raceStart.getTime() - (new Date()).getTime() );
 			
-			// Play some high beeps.
-			for( let i = 6; i <= 15; ++i ) {
-				if( i == 10 )
-					continue;
-				let beepInterval = raceStart.getTime() - (new Date()).getTime() - 1000*i;
-				if( beepInterval > 0 )
-					setTimeout( function() { playBeep(1); }, beepInterval );
+			// Schedule a race start at the scheduled start time (if we don't get refreshed after the race starts).
+			// Add a small delay to give the time correction messages a chance to work.
+			function scheduleRaceStart() {
+				// By this time, the time has been synced.
+				// Schedule some beeps to count down the race start.
+				for( let i = 6; i <= 15; ++i ) {
+					if( i == 10 )
+						continue;
+					let beepInterval = raceStart.getTime() - ServerDate().getTime() - 1000*i;
+					if( beepInterval > 0 )
+						setTimeout( function() { playBeep(1); }, beepInterval );
+				}
+				
+				function startRaceNow() {
+					raceStarted = true;
+					SetRaceName();
+				}
+				setTimeout( startRaceNow, max(0,raceStart.getTime() - ServerDate().getTime()) );
 			}
+			setTimeout( scheduleRaceStart, 2000 );
 		}
 	}
 	
