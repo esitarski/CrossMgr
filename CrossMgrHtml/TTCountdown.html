@@ -464,20 +464,28 @@ function initiateSound() {
 	enableBeeps = true;
 }
 
-// Use Christian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
+// Use Cristian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
 // We go for a number of iterations and use the one with the minimal network latency to estimate the correction.
 const syncIterations = 5;
 const syncMillis = 500;
 const syncTime = (syncIterations+1) * syncMillis;
 var millisDelta = 0.0;
 var tRoundTripMin = Number.MAX_VALUE;
-function ServerDate() {
-	// Date corrected from server.
-	return new Date( Date.now() + millisDelta );
+
+if( performance && performance.timeOrigin ) {
+	function getTimestamp() {
+		return performance.now() + performance.timeOrigin;
+	}
+}
+else {
+	function getTimestamp() {
+		return Date.now();
+	}
 }
 
-function getTimestamp() {
-	return Date.now();
+function ServerDate() {
+	// Date corrected from server.
+	return new Date( getTimestamp() + millisDelta );
 }
 
 function getJSON( url, successHandler, errorHandler ) {
@@ -493,6 +501,9 @@ function getJSON( url, successHandler, errorHandler ) {
 			}
 		}
 	};
+	// Set a timeout for the xhr call.
+	xhr.timeout = 3000;
+	xhr.ontimeout = function (e) {};
 	xhr.send();
 };
 
@@ -515,7 +526,7 @@ function getTimeCorrection() {
 		tRoundTripMin = Number.MAX_VALUE;
 		const url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/servertimestamp.js';
 		for( let i = 0; i < syncIterations; ++i ) {
-			// Pass our current timestamp so we can compute the latency.
+			// Pass our current time so we can compute the latency when handling the call.
 			setTimeout(
 				function() { getJSON(url + '?clientTime=' + getTimestamp(), ProcessServerTimestamp) },
 				i*1000 + 500
@@ -531,7 +542,7 @@ function SetRaceName() {
 		toInternationalString(raceStart) + '  Last Updated ' +
 		toInternationalString(lastUpdated) + ' ' + 
 		'(&delta;=' + (millisDelta/1000.0).toFixed(3) + 's, ' +
-		'&lambda;=' + (tRoundTripMin == Number.MAX_VALUE ? '?' : (tRoundTripMin/2000.0).toFixed(3)) + 's)'
+		'&lambda;=' + (tRoundTripMin == Number.MAX_VALUE ? '' : (tRoundTripMin/2000.0).toFixed(3) + 's)')
 	);
 	SetStartedBackground();
 }

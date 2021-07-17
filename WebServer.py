@@ -34,12 +34,12 @@ from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
 	pass
     
-def epochTime():
-	return (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)).total_seconds()
-	
 def epochMilliseconds():
-	return epochTime() * 1000.0
+	return time.time_ns() / 1000000.0		# milliseconds since epoch.
     
+def epochTime():
+	return time.time_ns() / 1000000000.0	# seconds since epoch.
+	
 now = datetime.datetime.now
 reCrossMgrHtml = re.compile( r'^\d\d\d\d-\d\d-\d\d-.*\.html$' )
 futureDate = datetime.datetime( now().year+20, 1, 1 )
