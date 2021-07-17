@@ -20,4 +20,4 @@ def AddExcelInfo( wb ):
 	set_custom_property('{}_User.format(app)',			get_user())
 	set_custom_property('{}_Python.format(app)',		sys.version.replace('\n', ' '))
 	for a in ('system', 'release', 'version', 'machine', 'processor'):
-		set_custom_property( '{}_{}'.format(app), a.capitalize()), getattr(uname, a, ''))
+		set_custom_property( '{}_{}'.format(app, a.capitalize()), getattr(uname, a, ''))
