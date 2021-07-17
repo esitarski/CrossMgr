@@ -320,7 +320,7 @@ class Categories( wx.Panel ):
 			(_('Numbers'),				'catStr'),
 			(_('Start\nOffset'),		'startOffset'),
 			(_('Race\nLaps'),			'numLaps'),
-			(_(''),						'setLaps'),
+			('',						'setLaps'),
 			(_('Race\nMinutes'),		'raceMinutes'),
 			(_('Lapped\nRiders\nContinue'),	'lappedRidersMustContinue'),
 			(_('Distance'),				'distance'),

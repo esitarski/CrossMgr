@@ -3333,13 +3333,16 @@ class MainWin( wx.Frame ):
 		self.nextNum = None
 		if race.isTimeTrial:
 			# If a TT, start the race at the start time in the future.
-			def startRaceInFuture():
-				race.startRaceNow()
-				self.simulateTimer = wx.CallLater( 1, self.updateSimulation, True )
-			wx.CallLater( int(1000.0*(datetime.datetime.now()-scheduledStart).total_seconds()), startRaceInFuture )
+			def startRaceInFuture( aSelf, aRace ):
+				aRace.startRaceNow()
+				aSelf.simulateTimer = wx.CallLater( 1, aSelf.updateSimulation, True )
+				OutputStreamer.writeRaceStart()
+				wx.CallAfter( self.refresh )
+				
+			wx.CallLater( max(0,int((scheduledStart-datetime.datetime.now()).total_seconds()*1000.0)), startRaceInFuture, self, race )
 			Utils.MessageOK(
 				self,
-				'{}\n\n{}'.format( _('TT will start automatically in about 2 minutes'), _('Be sure to look at the TTCountdown web page.') ),
+				'{}\n\n{}'.format( _('TT will start automatically in 1-2 minutes'), _('Review the TTCountdown page (from Web/Index).') ),
 				_('TT Start'),
 			)
 			self.menuPublishHtmlTTStart()
