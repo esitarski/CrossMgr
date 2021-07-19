@@ -154,9 +154,9 @@ class Histogram(wx.Control):
 			self.data = [float(x) for x in data]
 			self.setBins()
 		while len(self.label) < len(self.data):
-			self.label.append( u'' )
+			self.label.append( '' )
 		while len(self.category) < len(self.data):
-			self.category.append( u'' )
+			self.category.append( '' )
 		self.categoryColor = makePastelColours( len(set(category)) )
 		self.categoryMap = {}
 		i = 0
@@ -188,7 +188,7 @@ class Histogram(wx.Control):
 		if not self.bins or width < 50 or height < 50 or self.dataMax == self.dataMin:
 			return
 
-		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
+		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 			
 		xLeft = dc.GetTextExtent( '{}'.format(self.barMax) )[0] + 4 + tickBorder
 		xRight = width - 8 - tickBorder
@@ -228,7 +228,7 @@ class Histogram(wx.Control):
 		dFactor = (yBottom - yTop) / float(self.barMax)
 		dc.SetPen(wx.Pen('light gray', 1))
 		for i in range(0, self.barMax+1, d):
-			s = u'{}'.format(i)
+			s = '{}'.format(i)
 			y = yBottom - int(i * dFactor)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, xLeft - w - 2 - tickBorder, y-textHeight/2 - 1)

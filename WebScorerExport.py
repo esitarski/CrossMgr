@@ -77,7 +77,7 @@ def WebScorerExport( fname ):
 		
 	webScorerCategoryFields = [f for f in WebScorerCategoryFields if (hasDistance or f != 'Distance')]
 	
-	colNames = webScorerFields + webScorerCategoryFields + [u'{} {}'.format(_('Lap'), i+1) for i in range(maxLaps)]
+	colNames = webScorerFields + webScorerCategoryFields + ['{} {}'.format(_('Lap'), i+1) for i in range(maxLaps)]
 	
 	def toInt( n ):
 		try:
@@ -86,7 +86,7 @@ def WebScorerExport( fname ):
 			return n
 	
 	with io.open(fname, 'w', encoding = 'utf-16') as txtFile:
-		txtFile.write( u'{}\n'.format( u'\t'.join('{}'.format(c) for c in colNames) ) )
+		txtFile.write( '{}\n'.format( '\t'.join('{}'.format(c) for c in colNames) ) )
 		
 		for cat in publishCategories:
 			results = GetResults( cat )
@@ -97,9 +97,9 @@ def WebScorerExport( fname ):
 			raceDistance = cd.get('raceDistance', '')
 			raceDistanceType = cd.get('distanceUnit', '')
 			if raceDistance:
-				distance = u'{:.2f} {}'.format( raceDistance, raceDistanceType )
+				distance = '{:.2f} {}'.format( raceDistance, raceDistanceType )
 			else:
-				distance = u''
+				distance = ''
 				
 			if cat.gender.startswith( 'M' ):
 				gender = 'M'
@@ -139,6 +139,6 @@ def WebScorerExport( fname ):
 						lapTime = ''
 					dataRow.append( lapTime )
 				
-				txtFile.write( u'{}\n'.format( u'\t'.join('{}'.format(d).strip().replace(u'\t','    ') for d in dataRow) ) )
+				txtFile.write( '{}\n'.format( '\t'.join('{}'.format(d).strip().replace('\t','    ') for d in dataRow) ) )
 				
 	return True, _('Success')

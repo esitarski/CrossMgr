@@ -110,7 +110,7 @@ def CrossResultsExport( fname ):
 						lapTime = ''
 					dataRow.append( lapTime )
 				
-				csvWriter.writerow( [u'{}'.format(d) for d in dataRow] )
+				csvWriter.writerow( ['{}'.format(d) for d in dataRow] )
 				
 			csvWriter.writerow( [] )		# Blank line separates each category.
 			

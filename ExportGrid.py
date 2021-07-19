@@ -25,7 +25,7 @@ statusSortSeq = Model.Rider.statusSortSeq
 
 brandText = _('Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)')
 def getBrandText():
-	return u'{}      {}'.format( brandText, datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S') )
+	return '{}      {}'.format( brandText, datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S') )
 
 '''
 def ImageToPil( image ):
@@ -126,7 +126,7 @@ class ExportGrid:
 			except IndexError:
 				first = None
 			if first and last:
-				name = u'{}, {}'.format( last, first )
+				name = '{}, {}'.format( last, first )
 			elif first:
 				name = first
 			else:
@@ -148,7 +148,7 @@ class ExportGrid:
 		dc.SetFont( font )
 		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
 		extents = [ dc.GetMultiLineTextExtent(self.colnames[col]) ]
-		extents.extend( dc.GetMultiLineTextExtent(u'{}'.format(v)) for v in self.data[col] )
+		extents.extend( dc.GetMultiLineTextExtent('{}'.format(v)) for v in self.data[col] )
 		width = max( e[0] for e in extents )
 		height = sum( e[1] for e in extents[:self.rowDrawCount] )
 		return width, height + hSpace/4
@@ -255,7 +255,7 @@ class ExportGrid:
 		# Add space for the flag on the NatCode.
 		def padCol( iCodeCol ):
 			for c, v in enumerate(self.data[iCodeCol]):
-				self.data[iCodeCol][c] = u'     ' + v
+				self.data[iCodeCol][c] = '     ' + v
 				
 		try:
 			iUCICodeCol = self.colnames.index( _("UCICode") )
@@ -272,7 +272,7 @@ class ExportGrid:
 		# Remember: _getDataSizeTuple understands self.rowDrawCount and will compute the height using the count.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace = dc.GetMultiLineTextExtent( u'    ' )
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
 		textHeight = lh = dc.GetTextExtent( 'Py' )[1]
 		
 		# Get the row slice for each column.
@@ -291,9 +291,9 @@ class ExportGrid:
 			yPix = yPixTop
 			w, h = dc.GetMultiLineTextExtent( c )
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix )					# left justify
+				self._drawMultiLineText( dc, '{}'.format(c), xPix, yPix )					# left justify
 			else:
-				self._drawMultiLineText( dc, u'{}'.format(c), xPix + colWidth - w, yPix )	# right justify
+				self._drawMultiLineText( dc, '{}'.format(c), xPix + colWidth - w, yPix )	# right justify
 			yPix += h + hSpace/4
 			if col == 0:
 				yLine = yPix - hSpace/8
@@ -303,12 +303,12 @@ class ExportGrid:
 				dc.SetPen( wx.BLACK_PEN )
 			
 			for v in dataDraw[col]:
-				vStr = u'{}'.format(v)
+				vStr = '{}'.format(v)
 				if vStr:
 					if isSpeed:
 						vStr = vStr.split()[0]
-						if vStr == u'"':
-							vStr += u'    '
+						if vStr == '"':
+							vStr += '    '
 					w, h = dc.GetMultiLineTextExtent( vStr )
 					if col in self.leftJustifyCols:
 						self._drawMultiLineText( dc, vStr, xPix, yPix )					# left justify
@@ -355,9 +355,9 @@ class ExportGrid:
 		# Put the page number info at the bottom of the page.
 		if pageNumber is not None:
 			if pageNumberTotal is not None:
-				s = u'{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
+				s = '{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
 			else:
-				s = u'{} {}'.format(_('Page'), pageNumber)
+				s = '{} {}'.format(_('Page'), pageNumber)
 			w, h = dc.GetMultiLineTextExtent( s )
 			self._drawMultiLineText( dc, s, widthPix - w - borderPix, yFooter )
 			
@@ -462,13 +462,13 @@ class ExportGrid:
 					v = dataDraw[c][r]
 				except IndexError:
 					v = ''
-				v = u'{}'.format(v)
+				v = '{}'.format(v)
 				if c == speedCol:
 					v = (v.split() or [''])[0]
-					if v == u'"':
-						v += u'    '
+					if v == '"':
+						v += '    '
 				elif c == uciCodeCol or c == natCodeCol:
-					v = u'     ' + v	# Add some spacing to fit the flag on the UCI code.
+					v = '     ' + v	# Add some spacing to fit the flag on the UCI code.
 				row.append( v )
 			table.append( row )
 	
@@ -534,9 +534,9 @@ class ExportGrid:
 		# Put the page number info at the bottom of the page.
 		if pageNumber is not None:
 			if pageNumberTotal is not None:
-				s = u'{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
+				s = '{} {} / {}'.format(_('Page'), pageNumber, pageNumberTotal)
 			else:
-				s = u'{} {}'.format(_('Page'), pageNumber)
+				s = '{} {}'.format(_('Page'), pageNumber)
 			write_text( widthPix - pdf.get_string_width(s) - borderPix, yFooter, s )
 			
 	def toExcelSheet( self, sheet ):
@@ -588,9 +588,9 @@ class ExportGrid:
 			sheetFit.write( rowTop, col, c, headerStyle, bold=True )
 			for row, v in enumerate(self.data[col]):
 				if isSpeed and v:
-					v = (u'{}'.format(v).split() or [''])[0]
-					if v == u'"':
-						v += u'    '
+					v = ('{}'.format(v).split() or [''])[0]
+					if v == '"':
+						v += '    '
 				rowCur = rowTop + 1 + row
 				if rowCur > rowMax:
 					rowMax = rowCur
@@ -833,7 +833,7 @@ class ExportGrid:
 		leaderTime = (
 			Utils.formatTime(leader.lastTime - leader.raceTimes[0])
 				if leader.lastTime and leader.raceTimes and leader.status == Finisher
-			else u''
+				else ''
 		)
 		
 		if showLapTimes and showLapsFrequency is None:
@@ -845,7 +845,7 @@ class ExportGrid:
 		catStr = category.fullname if category else 'All'
 		catData = []
 		if cd and cd.get('raceDistance', None):
-			catData.append( u'{:.2f} {}'.format(cd['raceDistance'], cd['distanceUnit']) )
+			catData.append( '{:.2f} {}'.format(cd['raceDistance'], cd['distanceUnit']) )
 			if cd.get('lapDistance', None) and cd.get('laps', 0) > 1:
 				if cd.get('firstLapDistance', None) and cd['firstLapDistance'] != cd['lapDistance']:
 					catData.append(
@@ -862,7 +862,7 @@ class ExportGrid:
 			else:
 				catData.append( '{}: {}'.format(_('winner'), leaderTime) )
 	
-		self.title = '\n'.join( [race.title, Utils.formatDate(race.date), catStr, u', '.join(catData)] )
+		self.title = '\n'.join( [race.title, Utils.formatDate(race.date), catStr, ', '.join(catData)] )
 		isTimeTrial = getattr( race, 'isTimeTrial', False )
 		roadRaceFinishTimes = race.roadRaceFinishTimes
 
@@ -914,7 +914,7 @@ class ExportGrid:
 					if rr.status == Finisher:
 						v = getattr( rr, f, 0.0 )
 						ttt = (v - rr.raceTimes[0]) if v and rr.raceTimes else 0.0
-						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else u'' )
+						data[col].append( Utils.formatTimeCompressed(ttt, highPrecision) if ttt > 0.0 else '' )
 					else:
 						data[col].append( '' )
 			elif f in ('clockStartTime', 'startTime', 'finishTime'):

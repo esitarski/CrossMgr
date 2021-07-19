@@ -63,7 +63,7 @@ def getLapCounterOptions( isDialog ):
 				hs.Add( cs, flag=wx.LEFT, border=4 if i else 0 )
 			fgs.Add( hs )
 			
-			fgs.Add( wx.StaticText(self, label=u''), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+			fgs.Add( wx.StaticText(self, label=''), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 			self.lapElapsedClock = wx.CheckBox(self, label=_('Show Lap Elapsed Time'))
 			fgs.Add( self.lapElapsedClock )
 			
@@ -243,7 +243,7 @@ class LapCounter( wx.Panel ):
 			self.popupInfo = [
 				(_('Lock in Laps to Go'),	_('Lock in Laps to Go'),	self.OnPopupLockLapsToGo),
 				(_('Set Laps...'),			_('Set Laps...'),			self.OnPopupSetLaps),
-				(_('Options') + u'...',		_('Options'),				self.OnOptions),
+				(_('Options') + '...',		_('Options'),				self.OnOptions),
 			]
 			self.menuOptions = []
 			for caseCode in range(2):
@@ -277,7 +277,7 @@ class LapCounter( wx.Panel ):
 			self.OnTimer()
 
 	def SetLabels( self, labels=None, showTime=False ):
-		labels = labels or [(u'\u25AF\u25AF', False, None)]
+		labels = labels or [('\u25AF\u25AF', False, None)]
 		
 		self.showTime = showTime
 		
@@ -315,7 +315,7 @@ class LapCounter( wx.Panel ):
 		if not race:
 			return None
 		if race.isUnstarted():
-			return u'{} {}'.format( race.minutes, _('min') )
+			return '{} {}'.format( race.minutes, _('min') )
 		if not race.isRunning():
 			return None
 		
@@ -395,7 +395,7 @@ class LapCounter( wx.Panel ):
 				lapCur %= self.lapCounterCycle
 				if lapCur == 0:
 					lapCur = self.lapCounterCycle
-			return u'{}'.format(lapCur)
+			return '{}'.format(lapCur)
 		
 		dc.SetPen( wx.TRANSPARENT_PEN )
 		
@@ -450,7 +450,7 @@ class LapCounter( wx.Panel ):
 				drawText( text, self.foregrounds[i], x, yCC, hCC, hCC )
 
 			if label == '1':
-				text = u"\U0001F514"
+				text = '\U0001F514'
 				hCC = int( h * footerMult )
 				yCC = y + h - hCC
 				getFontSizeToFit( text, hCC, hCC )
@@ -484,9 +484,9 @@ class LapCounter( wx.Panel ):
 		lap = race.getNumLapsFromCategory( category )
 		if lap:
 			lap = lap % self.lapCounterCycle if self.lapCounterCycle else lap
-			return u'{}'.format( lap )
+			return '{}'.format( lap )
 		minutes = category.raceMinutes if category.raceMinutes else race.raceMinutes
-		return u'{} min'.format( minutes ) if minutes else u''
+		return '{} min'.format( minutes ) if minutes else ''
 	
 	def refresh( self ):
 		race = Model.race

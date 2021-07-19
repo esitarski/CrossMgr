@@ -99,7 +99,7 @@ class Keypad( wx.Panel ):
 		
 		self.numEditHS = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.numEditLabel = wx.StaticText(self, label=u'{}'.format(_('Bib')))
+		self.numEditLabel = wx.StaticText(self, label='{}'.format(_('Bib')))
 		self.numEditLabel.SetFont( font )
 		
 		editWidth = 140
@@ -121,12 +121,12 @@ class Keypad( wx.Panel ):
 		numButtonStyle = 0
 		self.num = []
 
-		self.num.append( MakeKeypadButton( self.keypadPanel, label=u'&0', style=wx.BU_EXACTFIT, font = font) )
+		self.num.append( MakeKeypadButton( self.keypadPanel, label='&0', style=wx.BU_EXACTFIT, font = font) )
 		self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = 0 : self.onNumPress(event, aValue) )
 		gbs.Add( self.num[0], pos=(3+rowCur,0), span=(1,2), flag=wx.EXPAND )
 
 		for i in range(9):
-			self.num.append( MakeKeypadButton( self.keypadPanel, label=u'&{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
+			self.num.append( MakeKeypadButton( self.keypadPanel, label='&{}'.format(i+1), style=numButtonStyle, size=(wNum,hNum), font = font) )
 			self.num[-1].Bind( wx.EVT_BUTTON, lambda event, aValue = i+1 : self.onNumPress(event, aValue) )
 			j = 8-i
 			gbs.Add( self.num[-1], pos=(j//3 + rowCur, 2-j%3) )
@@ -257,7 +257,7 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 		pass
 	if lapDistance is not None:
 		sLap = (lapDistance / tLap) * 60.0*60.0
-		info.append( (u'', u'{:.02f} {}'.format(sLap, 'km/h')) )
+		info.append( ('', '{:.02f} {}'.format(sLap, 'km/h')) )
 	return info
 
 class NumKeypad( wx.Panel ):
@@ -346,7 +346,7 @@ class NumKeypad( wx.Panel ):
 		gbs.Add( line, pos=(rowCur, 0), span=(1,2), flag=wx.EXPAND|wx.ALL, border=2 )
 		rowCur += 1
 		
-		label = wx.StaticText( panel, label = u'{}:'.format(_("Last Rider")) )
+		label = wx.StaticText( panel, label = '{}:'.format(_("Last Rider")) )
 		label.SetFont( font )
 		gbs.Add( label, pos=(rowCur, colCur), span=(1,2), flag=wx.EXPAND|wx.ALL, border=3 )
 		rowCur += 1
@@ -602,7 +602,7 @@ class NumKeypad( wx.Panel ):
 			self.refreshRaceHUD()
 			if race.enableUSBCamera:
 				self.photoButton.Show( True )
-				self.photoCount.SetLabel( u'{}'.format(race.photoCount) )
+				self.photoCount.SetLabel( '{}'.format(race.photoCount) )
 				if Utils.cameraError:
 					self.photoButton.SetBitmapLabel( self.camera_broken_bitmap )
 					self.photoButton.SetToolTip( wx.ToolTip(Utils.cameraError) )
@@ -693,9 +693,9 @@ class NumKeypad( wx.Panel ):
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.lapCountList.InsertItem( 999999, u'{}'.format(row[0]) if row else u'' )
+			r = self.lapCountList.InsertItem( 999999, '{}'.format(row[0]) if row else '' )
 			for c in range(1, len(row)):
-				self.lapCountList.SetItem( r, c, u'{}'.format(row[c]) )
+				self.lapCountList.SetItem( r, c, '{}'.format(row[c]) )
 			if colour is not None:
 				item = self.lapCountList.GetItem( r )
 				item.SetTextColour( colour )
@@ -723,12 +723,12 @@ class NumKeypad( wx.Panel ):
 				appendListRow(
 					(
 						category.fullname,
-						u'{}'.format(onCourseCat[category]),
-						(u'({} {})'.format(categoryLaps if categoryLaps < 1000 else u'', _('laps') if categoryLaps > 1 else _('lap'))),
+						'{}'.format(onCourseCat[category]),
+						('({} {})'.format(categoryLaps if categoryLaps < 1000 else '', _('laps') if categoryLaps > 1 else _('lap'))),
 					),
 					bold = True,
 				)
-			appendListRow( ('', count, u'({} {})'.format( _('on lap'), lap ) ) )
+			appendListRow( ('', count, '({} {})'.format( _('on lap'), lap ) ) )
 			lastCategory = category
 
 	def refreshLastRiderOnCourse( self ):
@@ -741,25 +741,25 @@ class NumKeypad( wx.Panel ):
 			rider = race.riders[lastRiderOnCourse.num]
 			short_name = lastRiderOnCourse.short_name(maxLength)
 			if short_name:
-				lastRiderOnCourseName = u'{}: {}'.format(lastRiderOnCourse.num, lastRiderOnCourse.short_name())
+				lastRiderOnCourseName = '{}: {}'.format(lastRiderOnCourse.num, lastRiderOnCourse.short_name())
 			else:
-				lastRiderOnCourseName = u'{}'.format(lastRiderOnCourse.num)
+				lastRiderOnCourseName = '{}'.format(lastRiderOnCourse.num)
 			
-			lastRiderOnCourseTeam = u'{}'.format( getattr(lastRiderOnCourse, 'Team', u'') )
+			lastRiderOnCourseTeam = '{}'.format( getattr(lastRiderOnCourse, 'Team', '') )
 			if len(lastRiderOnCourseTeam) > maxLength:
-				lastRiderOnCourseTeam = lastRiderOnCourseTeam[:maxLength].strip() + u'...'
+				lastRiderOnCourseTeam = lastRiderOnCourseTeam[:maxLength].strip() + '...'
 			
 			category = race.getCategory( lastRiderOnCourse.num )
 			lastRiderOnCourseCategory = category.fullname
 			
 			t = (lastRiderOnCourse._lastTimeOrig or 0.0) + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0)
 			tFinish = race.startTime + datetime.timedelta( seconds=t )
-			lastRiderOnCourseTime = u'{} {}'.format(_('Finishing'), tFinish.strftime('%H:%M:%S') )
+			lastRiderOnCourseTime = '{} {}'.format(_('Finishing'), tFinish.strftime('%H:%M:%S') )
 		else:
-			lastRiderOnCourseName = u''
-			lastRiderOnCourseTeam = u''
-			lastRiderOnCourseCategory = u''
-			lastRiderOnCourseTime = u''
+			lastRiderOnCourseName = ''
+			lastRiderOnCourseTeam = ''
+			lastRiderOnCourseCategory = ''
+			lastRiderOnCourseTime = ''
 		changed |= SetLabel( self.lastRiderOnCourseName, lastRiderOnCourseName )
 		changed |= SetLabel( self.lastRiderOnCourseTeam, lastRiderOnCourseTeam )
 		changed |= SetLabel( self.lastRiderOnCourseCategory, lastRiderOnCourseCategory )

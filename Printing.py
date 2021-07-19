@@ -44,7 +44,7 @@ def getCatCountImagesCategoryList( parent ):
 				index = list.InsertItem(999999, c.name, sm_rt)
 				list.SetItem( index, 1, getattr(c, 'gender', 'Open') )
 				list.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
-				list.SetItem( index, 3, u'{}'.format(catCount[c]) )
+				list.SetItem( index, 3, '{}'.format(catCount[c]) )
 	
 	for col in range(4+1):
 		list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
@@ -156,7 +156,7 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		title = wx.StaticText( self, label = u'{}\n{}'.format(
+		title = wx.StaticText( self, label = '{}\n{}'.format(
 			_('Click to select Categories.'), _('Use Ctrl-Click to select Multiple Categories.')) )
 		
 		self.selectAllButton = wx.Button( self, label=_('Select All') )
@@ -367,14 +367,14 @@ class CrossMgrPrintoutPNG( CrossMgrPrintout ):
 		pageTotal = self.pageInfo[page][4]
 		
 		if pageTotal != 1:
-			fname = u'{categoryName}-({pageNumber})-{fileBase}{fileExt}'.format(
+			fname = '{categoryName}-({pageNumber})-{fileBase}{fileExt}'.format(
 				fileBase = self.fileBase,
 				categoryName = category.fullname if category != 'Primes' else 'Primes',
 				pageNumber = pageNumber,
 				fileExt=fileExt,
 			)
 		else:
-			fname = u'{categoryName}-{fileBase}{fileExt}'.format(
+			fname = '{categoryName}-{fileBase}{fileExt}'.format(
 				fileBase = self.fileBase,
 				categoryName = category.fullname if category != 'Primes' else 'Primes',
 				fileExt=fileExt,
@@ -417,7 +417,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 		if self.pdf and self.allInOne:
 			if self.dir and not os.path.isdir( self.dir ):
 				os.mkdir( self.dir )
-			fname = u'{fileBase}.pdf'.format( fileBase=self.fileBase )
+			fname = '{fileBase}.pdf'.format( fileBase=self.fileBase )
 			self.pdf.set_title( '{}'.format(os.path.splitext(fname)[0].replace('-', ' ')) )
 			fname = os.path.join( self.dir, fname )
 			self.pdf.output( fname, 'F' )
@@ -437,7 +437,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 		pageNumber = self.pageInfo[page][3]
 		pageTotal = self.pageInfo[page][4]
 		
-		fname = u'{fileBase}-{categoryName}.pdf'.format(
+		fname = '{fileBase}-{categoryName}.pdf'.format(
 			fileBase = self.fileBase,
 			categoryName = category.fullname if category != 'Primes' else 'Primes'
 		)
@@ -508,7 +508,7 @@ class CrossMgrPodiumPrintout( CrossMgrPrintout ):
 					exportGrid.setResultsOneList( self.pageInfo[page][0], True, showLapTimes=False, showPrizes=True )
 		except KeyError:
 			return ExportGrid()
-		exportGrid.title = u'\n'.join( [_('Podium Results'), u'', exportGrid.title] )
+		exportGrid.title = '\n'.join( [_('Podium Results'), '', exportGrid.title] )
 		return exportGrid
 		
 if __name__ == '__main__':

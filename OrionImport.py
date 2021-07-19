@@ -14,13 +14,13 @@ def parseTagTime( line, lineNo, errors ):
 		tag = fields[2]
 		tStr = fields[5]
 	except IndexError:
-		errors.append( u'{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
+		errors.append( '{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
 		return None, None
 	
 	try:
 		secs = int(tStr) / 1000.0	# Convert from 1000's of a second.
 	except ValueError:
-		errors.append( u'{} {}: {}'.format( _('line'), lineNo, _('invalid time')) )
+		errors.append( '{} {}: {}'.format( _('line'), lineNo, _('invalid time')) )
 		return None, None
 	else:
 		t = datetime.datetime.combine( JChip.dateToday, datetime.time() ) + datetime.timedelta( seconds = secs )

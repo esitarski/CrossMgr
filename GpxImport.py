@@ -42,14 +42,14 @@ class IntroPage(adv.WizardPageSimple):
 		if geoTrack:
 			s = '\n\n'.join( [
 					_('Existing GPX file:'),
-					u'{}: "{}"'.format(('Imported from'), geoTrackFName),
-					u'{}: {}'.format(_('Number of Coords'), geoTrack.numPoints),
-					u'{}: {:.3f} km, {:.3f} {}'.format(_('Lap Length'), geoTrack.lengthKm, geoTrack.lengthMiles, _('miles')),
-					u'{}: {:.0f} m, {:.0f} ft'.format(_('Total Elevation Gain'), geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt),
-					u'{}: {}'.format(_('Course Type'), _('Point to Point') if getattr(geoTrack, 'isPointToPoint', False) else _('Loop'))
+					'{}: "{}"'.format(('Imported from'), geoTrackFName),
+					'{}: {}'.format(_('Number of Coords'), geoTrack.numPoints),
+					'{}: {:.3f} km, {:.3f} {}'.format(_('Lap Length'), geoTrack.lengthKm, geoTrack.lengthMiles, _('miles')),
+					'{}: {:.0f} m, {:.0f} ft'.format(_('Total Elevation Gain'), geoTrack.totalElevationGainM, geoTrack.totalElevationGainFt),
+					'{}: {}'.format(_('Course Type'), _('Point to Point') if getattr(geoTrack, 'isPointToPoint', False) else _('Loop'))
 				] )
 		else:
-			s = u''
+			s = ''
 		self.removeButton.Enable( bool(geoTrack) )
 		self.info.ChangeValue( s )
 		self.GetSizer().Layout()

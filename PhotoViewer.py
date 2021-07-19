@@ -81,8 +81,8 @@ def getRiderNameFromFName( fname ):
 			externalInfo = {}
 		info = externalInfo.get(num, {})
 		name = getRiderName( info )
-		if info.get('Team', u''):
-			name = u'{}  ({})'.format(name, info.get('Team', '').strip())
+		if info.get('Team', ''):
+			name = '{}  ({})'.format(name, info.get('Team', '').strip())
 		
 	return name
 	
@@ -251,12 +251,12 @@ class PhotoViewerDialog( wx.Dialog ):
 		try:
 			wx.TheClipboard.SetData( d ) 
 			wx.TheClipboard.Flush() 
-			Utils.MessageOK( self, u'\n\n'.join([_('Photo Copied to Clipboard.'), _('You can now Paste it into another program.')]),
+			Utils.MessageOK( self, '\n\n'.join([_('Photo Copied to Clipboard.'), _('You can now Paste it into another program.')]),
 				_('Copy to Clipboard Succeeded')
 			)
 		except Exception as e:
 			Utils.logException( e, sys.exc_info() )
-			Utils.MessageOK( self, u'{}:\n\n{}'.format( _('Error copying Clipboard'), e ), _('Copy Failed'), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK( self, '{}:\n\n{}'.format( _('Error copying Clipboard'), e ), _('Copy Failed'), iconMask=wx.ICON_ERROR )
 		finally:
 			wx.TheClipboard.Close() 
 	
@@ -288,7 +288,7 @@ class PhotoViewerDialog( wx.Dialog ):
 
 		if not printer.Print(self, printout, True):
 			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."), _('Check your printer setup.')] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK(self, '\n\n'.join( [_("There was a printer problem."), _('Check your printer setup.')] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 		else:
 			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -323,8 +323,8 @@ class PhotoViewerDialog( wx.Dialog ):
 		if num:
 			name = getRiderNameFromFName( self.thumbFileName )
 			numPhotos = self.thumbs.GetItemCount()
-			name = u'{}  ({} {})'.format(name, numPhotos, _('photos') if self.num != self.ShowAllPhotos else _('last race photos'))
-			self.title.SetLabel( u'{}  {}'.format(num, name) )
+			name = '{}  ({} {})'.format(name, numPhotos, _('photos') if self.num != self.ShowAllPhotos else _('last race photos'))
+			self.title.SetLabel( '{}  {}'.format(num, name) )
 		
 		try:
 			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
@@ -369,7 +369,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		if success:
 			wx.CallLater( 750, self.refresh, testNum )
 		else:
-			Utils.MessageOK( self, u'{}: {}'.format(_('Camera error'), error), _('Camera Error') )
+			Utils.MessageOK( self, '{}: {}'.format(_('Camera error'), error), _('Camera Error') )
 		
 	def OnPhotoViewer( self, event ):
 		self.OnDoPhotoViewer()

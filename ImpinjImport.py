@@ -24,7 +24,7 @@ def parseTagTime( line, lineNo, errors ):
 	try:
 		tag, tStr = line.split(',')[:2]
 	except (IndexError, ValueError):
-		errors.append( u'{}: {} {}'.format(_('line'), lineNo, _('unrecognised input')) )
+		errors.append( '{}: {} {}'.format(_('line'), lineNo, _('unrecognised input')) )
 		return None, None
 	
 	if tag.startswith( 'Tag' ):
@@ -61,7 +61,7 @@ def parseTagTime( line, lineNo, errors ):
 			microsecond = fract * 1000000.0
 			t = combine( tDate, datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=int(microsecond)) )
 		except (IndexError, ValueError):
-			errors.append( u'{}: {}  {}: "{}"'.format( _('line'), lineNo, _('invalid time'), tStrSave) )
+			errors.append( '{}: {}  {}: "{}"'.format( _('line'), lineNo, _('invalid time'), tStrSave) )
 			return None, None
 	
 	return tag, t

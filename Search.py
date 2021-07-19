@@ -63,7 +63,7 @@ class Search( wx.Panel ):
 			self.GetParent().Show( False )
 		
 	def OnCloseSearch( self, event ):
-		self.search.ChangeValue( u'' )
+		self.search.ChangeValue( '' )
 		
 	def OnDoSearch( self, event = None ):
 		self.refresh()
@@ -190,7 +190,7 @@ class Search( wx.Panel ):
 					elif f == _('StartTime'):
 						r = race.riders.get(num, None)
 						st = r.firstTime if r and hasattr(r, 'firstTime') else None
-						data[c].append( Utils.formatTime(st) if st is not None else u'' )
+						data[c].append( Utils.formatTime(st) if st is not None else '' )
 					else:
 						data[c].append( '' )
 					
@@ -222,7 +222,7 @@ class Search( wx.Panel ):
 		for c, col in enumerate(data):
 			data[c] = [col[r] for v, n, r in sortPairs]
 		
-		colnames[self.sortCol] = u'<%s>' % colnames[self.sortCol]
+		colnames[self.sortCol] = '<{}>'.format(colnames[self.sortCol])
 		self.grid.Set( data = data, colnames = colnames )
 		self.grid.SetLeftAlignCols( set(i for i in range(1, len(colnames)) if 'Tag' not in colnames[i]) )
 		self.grid.AutoSizeColumns( True )

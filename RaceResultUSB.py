@@ -71,7 +71,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
-		Utils.writeLog( u'RaceResult: {}: {}'.format(category, message) )
+		Utils.writeLog( 'RaceResult: {}: {}'.format(category, message) )
 	
 	def keepGoing():
 		try:
@@ -88,21 +88,21 @@ def Server( q, shutdownQ, comPort, startTime ):
 		if not message.endswith(EOL):
 			message += EOL
 		cmd = message.split(';', 1)[0]
-		qLog( 'command', u'sending: {}'.format(message) )
+		qLog( 'command', 'sending: {}'.format(message) )
 		try:
 			bMsg = bytes(message.encode())
 			bytesWritten = s.write( bMsg )
 			if bytesWritten != len(bMsg):
-				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), _('Write length error')) )
+				qLog( 'connection', '{}: {}: "{}"'.format(cmd, _('Connection failed'), _('Write length error')) )
 				raise ValueError
 			s.flush()
 			buffer = readResponse( s )
 		except Exception as e:
-			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			qLog( 'connection', '{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
 		if not buffer.startswith( '{};00'.format(cmd) ):
-			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Command failed'), buffer) )
+			qLog( 'command', '{}: {} "{}"'.format(cmd, _('Command failed'), buffer) )
 			raise ValueError
 		
 		return buffer[buffer.index(EOL)+1:]		# Strip off the cmd repeat and return code.
@@ -136,7 +136,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 					value = '{}%'.format(value)
 			except IndexError:
 				pass
-			qLog( 'status', u'{}={}'.format(i[1], value) )
+			qLog( 'status', '{}={}'.format(i[1], value) )
 	
 	beaconFields = (
 		('decoderID', 4),
@@ -211,19 +211,19 @@ def Server( q, shutdownQ, comPort, startTime ):
 			time.sleep( delaySecs )
 		
 		#-----------------------------------------------------------------------------------------------------
-		qLog( 'connection', u'{}{}'.format(_('Attempting to connect to RaceResult reader on COM'), comPort) )
+		qLog( 'connection', '{}{}'.format(_('Attempting to connect to RaceResult reader on COM'), comPort) )
 		try:
 			s = serial.Serial( port='COM{}'.format(comPort), baudrate=19200,
 				timeout=timeoutSecs, write_timeout=timeoutSecs )
 			s.open()
 		except Exception as e:
-			qLog( 'connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
+			qLog( 'connection', '{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
 			s, status, startOperation = None, None, None
 			
-			qLog( 'connection', u'{}'.format(_('Attempting AutoDetect...')) )
+			qLog( 'connection', '{}'.format(_('Attempting AutoDetect...')) )
 			comPortAuto = AutoDetect( callback = autoDetectCallback )
 			if comPortAuto is not None:
-				qLog( 'connection', u'{}{}'.format(_('AutoDetect RaceResult at COM'), comPort) )
+				qLog( 'connection', '{}{}'.format(_('AutoDetect RaceResult at COM'), comPort) )
 				comPort = comPortAuto
 			else:
 				time.sleep( delaySecs )
@@ -260,7 +260,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 			continue
 		loopID = int(ret.strip(), 16)
 		if loopID != 0:
-			qLog( 'reader', u'{} "{}"'.format(_('Warning: Loop ID != 0'), loopID) )			
+			qLog( 'reader', '{} "{}"'.format(_('Warning: Loop ID != 0'), loopID) )			
 				
 		#-----------------------------------------------------------------------------------------------------
 		# Get the epoch reference.
@@ -317,7 +317,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 				try:
 					ret = makeCall( cmd )
 				except Exception as e:
-					qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+					qLog( 'connection', '{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 					break
 
 				lines = ret.split( EOL )
@@ -329,7 +329,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 						continue
 					tag, t = parseTagTime(line, passingsCur+i, errors)
 					if tag is None or t is None:
-						qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
+						qLog( 'command', '{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
 						continue
 					
 					t += readerComputerTimeDiff

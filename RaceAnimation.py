@@ -86,7 +86,7 @@ class RaceAnimation( wx.Panel ):
 		self.Bind( wx.EVT_BUTTON, self.onPlayStop, self.playStopButton )
 		hs.Add(self.playStopButton, 0, flag=wx.GROW|wx.ALL, border=2 )
 		hs.Add( wx.Size(20, 1) )
-		self.playbackSpeed = wx.StaticText(self, label = _('Playback Speed') + u':' )
+		self.playbackSpeed = wx.StaticText(self, label = _('Playback Speed') + ':' )
 		hs.Add(self.playbackSpeed, 0, flag=wx.ALIGN_CENTER|wx.ALL, border=2 )
 		
 		self.speed = []
@@ -100,7 +100,7 @@ class RaceAnimation( wx.Panel ):
 		bs.Add( hs, 0, flag=wx.GROW|wx.ALL, border = 0 )
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.watchText = wx.StaticText( self, label = _('Highlight Numbers') + u':' )
+		self.watchText = wx.StaticText( self, label = _('Highlight Numbers') + ':' )
 		hs.Add( self.watchText, 0, flag=wx.ALIGN_CENTER|wx.ALL, border = 2 )
 		
 		self.watch = wx.TextCtrl( self, validator=NumListValidator(), style=wx.TE_PROCESS_ENTER )

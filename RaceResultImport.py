@@ -18,7 +18,7 @@ def parseTagTime( line, lineNo, errors ):
 		dStr = fields[2]						# Date
 		tStr = fields[3]						# Time
 	except IndexError:
-		errors.append( u'{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
+		errors.append( '{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
 		return None, None
 
 	secs = 0.0
@@ -26,14 +26,14 @@ def parseTagTime( line, lineNo, errors ):
 		for f in tStr.split(':'):
 			secs = secs * 60.0 + float(f.strip())
 	except Exception as e:
-		errors.append( u'{} {}: {}: {}'.format( _('line'), lineNo, _('invalid time'), e) )
+		errors.append( '{} {}: {}: {}'.format( _('line'), lineNo, _('invalid time'), e) )
 		return None, None
 
 	try:
 		year, month, day = [int(f.strip()) for f in dStr.split('-')]
 		d = datetime.date( year, month, day )
 	except Exception as e:
-		errors.append( u'{} {}: {}: {}'.format( _('line'), lineNo, _('invalid date'), e) )
+		errors.append( '{} {}: {}: {}'.format( _('line'), lineNo, _('invalid date'), e) )
 		return None, None
 		
 	t = datetime.datetime.combine( d, datetime.time() ) + datetime.timedelta( seconds = secs )

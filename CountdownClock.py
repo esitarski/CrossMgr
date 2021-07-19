@@ -223,8 +223,8 @@ class CountdownClock(wx.Control):
 				wx.FONTWEIGHT_NORMAL,
 			),
 			wx.Colour(100,100,100)) )
-		tStr = u'{}:{:02d}:{:02d}'.format( hour, minute, second )
-		w, h = ctx.GetTextExtent(u'00:00:00'[:len(tStr)])
+		tStr = '{}:{:02d}:{:02d}'.format( hour, minute, second )
+		w, h = ctx.GetTextExtent('00:00:00'[:len(tStr)])
 		ctx.DrawText( tStr, xCenter-w/2, yCenter+radius/2-h )
 		
 		#-----------------------------------------------------------------------------

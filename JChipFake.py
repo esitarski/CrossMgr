@@ -16,7 +16,7 @@ DEFAULT_HOST = '127.0.0.1'
 
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
-CR = u'\r'
+CR = '\r'
 
 class JChipFake( threading.Thread ):
 
@@ -35,23 +35,23 @@ class JChipFake( threading.Thread ):
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.sock.settimeout( 3.0 )
 
-		print( u'Trying to connect to CrossMgr...' )
+		print( 'Trying to connect to CrossMgr...' )
 		self.sock.connect((self.host, self.port))
 
 		#------------------------------------------------------------------------------	
-		print( u'Connection succeeded!' )
-		print( u'Sending connection name...', self.connectionName )
-		message = u"N0000{}{}".format(self.connectionName, CR)
+		print( 'Connection succeeded!' )
+		print( 'Sending connection name...', self.connectionName )
+		message = 'N0000{}{}'.format(self.connectionName, CR)
 		self.sock.send( message.encode() )
 
 		#------------------------------------------------------------------------------	
-		print( u'Waiting for get time command...' )
-		while 1:
+		print( 'Waiting for get time command...' )
+		while True:
 			received = self.sock.recv(1).decode()
 			if received == 'G':
 				while received[-1] != CR:
 					received += self.sock.recv(1).decode()
-				print( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
+				print( 'Received cmd: "{}" from CrossMgr'.format(received[:-1]) )
 				break
 
 		#------------------------------------------------------------------------------	
@@ -60,7 +60,7 @@ class JChipFake( threading.Thread ):
 		# The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
 		# The date can be sent in the form date=YYYYMMDD.
 		self.dBase = datetime.datetime.now()
-		message = u'GT0%02d%02d%02d%02d date=%s%s' % (
+		message = 'GT0%02d%02d%02d%02d date=%s%s' % (
 			self.dBase.hour, self.dBase.minute, self.dBase.second, int((self.dBase.microsecond / 1000000.0) * 100.0),
 			self.dBase.strftime('%Y%m%d'),
 			CR
@@ -69,13 +69,13 @@ class JChipFake( threading.Thread ):
 		self.sock.send( message.encode() )
 
 		#------------------------------------------------------------------------------	
-		print( u'Waiting for send command from CrossMgr...' )
+		print( 'Waiting for send command from CrossMgr...' )
 		while 1:
 			received = self.sock.recv(1).decode()
 			if received == 'S':
 				while received[-1] != CR:
 					received += self.sock.recv(1).decode()
-				print( u'Received cmd: "%s" from CrossMgr' % received[:-1] )
+				print( 'Received cmd: "%s" from CrossMgr' % received[:-1] )
 				break
 
 	#------------------------------------------------------------------------------	
@@ -83,7 +83,7 @@ class JChipFake( threading.Thread ):
 	# Parameter t must be a Python datetime.
 	# eg. Z413A35 10:11:16.4433 10  10000      C7
 	def formatMessage( self, tag, t ):
-		message = u"DJ%s %s 10  %05X      C7 date=%s%s" % (
+		message = "DJ%s %s 10  %05X      C7 date=%s%s" % (
 					tag,								# Tag code
 					t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 					self.count,							# Data index number in hex.
@@ -108,7 +108,7 @@ class JChipFake( threading.Thread ):
 						continue
 				
 				message = self.formatMessage( tag, t )
-				print( u'sending:', message[:-1] )
+				print( 'sending:', message[:-1] )
 				try:
 					self.sock.send( message.encode() )
 					break

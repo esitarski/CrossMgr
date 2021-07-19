@@ -90,7 +90,7 @@ class History( wx.Panel ):
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimeDownToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showRiderNameToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
-		self.hbs.Add( wx.StaticText(self, label = u' '), proportion=2 )
+		self.hbs.Add( wx.StaticText(self, label = ' '), proportion=2 )
 		self.hbs.Add( self.search, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomInButton, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.zoomOutButton, flag=wx.RIGHT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
@@ -175,11 +175,11 @@ class History( wx.Panel ):
 				(_('Delete...'),	_('Delete an entry'),	self.OnPopupDelete, nonInterpCase),
 				(_('Split...'),		_('Split an entry into two'),self.OnPopupSplit, nonInterpCase),
 				(None, None, None, None),
-				(u'{}...'.format(_('Swap with Entry before')),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
-				(u'{}...'.format(_('Swap with Entry after')),_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
+				('{}...'.format(_('Swap with Entry before')),	_('Swap with Entry before'), self.OnPopupSwapBefore, nonInterpCase),
+				('{}...'.format(_('Swap with Entry after')),_('Swap with Entry after'),	self.OnPopupSwapAfter, nonInterpCase),
 				(None, None, None, None),
-				(_('Pull After Lap') + u'...',	_('Pull After lap'),	self.OnPopupPull, nonInterpCase),
-				(_('DNF After Lap') + u'...',	_('DNF After lap'),	self.OnPopupDNF, nonInterpCase),
+				(_('Pull After Lap') + '...',	_('Pull After lap'),	self.OnPopupPull, nonInterpCase),
+				(_('DNF After Lap') + '...',	_('DNF After lap'),	self.OnPopupDNF, nonInterpCase),
 			]
 					
 			self.menuOptions = []
@@ -244,7 +244,7 @@ class History( wx.Panel ):
 		if not entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			u'{}: {}  {} {} - {}?'.format(
+			'{}: {}  {} {} - {}?'.format(
 				_('Bib'), entry.num,
 				_('Pull after lap'), entry.lap, Utils.formatTime(entry.t+1, True), ),
 			_('Pull Rider') ):
@@ -266,7 +266,7 @@ class History( wx.Panel ):
 		entry = self.history[self.colPopup][self.rowPopup]
 
 		if not Utils.MessageOKCancel( self,
-			u'{}: {}  {} {} - {}?'.format(
+			'{}: {}  {} {} - {}?'.format(
 				_('Bib'), entry.num,
 				_('DNF after lap'), entry.lap, Utils.formatTime(entry.t+1, True), ),
 			_('DNF Rider') ):
@@ -552,7 +552,7 @@ class History( wx.Panel ):
 		if self.showLapTimes:	formatStr.append(', $lapTime')
 		if self.showTimeDown:	formatStr.append(', $downTime')
 		if self.showRiderName:	formatStr.append(', $riderName')
-		template = Template( u''.join(formatStr) )
+		template = Template( ''.join(formatStr) )
 		
 		try:
 			info = race.excelLink.read()
@@ -561,7 +561,7 @@ class History( wx.Panel ):
 			
 		def getName( num ):
 			d = info.get(num, {})
-			return u', '.join( v for v in [d.get('LastName',None), d.get('FirstName',None)] if v )
+			return ', '.join( v for v in [d.get('LastName',None), d.get('FirstName',None)] if v )
 		
 		templateSave = template
 		data = []
@@ -570,13 +570,13 @@ class History( wx.Panel ):
 			if col+1 == winnerLaps:
 				if self.showPosition:
 					formatStr.insert(0, '$pos$lapsDown: ')
-				template = Template( u''.join(formatStr) )
+				template = Template( ''.join(formatStr) )
 			
 			data.append( [ template.safe_substitute(
 				{
 					'num':		e.num,
 					'pos':		Utils.ordinal(position.get(e.num, '')),
-					'lapsDown':	u' ({})'.format(lapsDown[e.num]) if e.num in lapsDown else u'',
+					'lapsDown':	' ({})'.format(lapsDown[e.num]) if e.num in lapsDown else '',
 					'raceTime':	formatTime(e.t) if self.showTimes else '',
 					'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
 					'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',

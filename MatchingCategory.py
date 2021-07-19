@@ -35,7 +35,7 @@ def AddToMatchingCategory( bib, fields ):
 		if found is None:
 			found = Model.Category(
 				name=categoryName,
-				catStr=u'{}'.format(bib),
+				catStr='{}'.format(bib),
 				sequence=len(categories),
 				gender=gender,
 				catType=Model.Category.CatCustom if isCustom else Model.Category.CatWave

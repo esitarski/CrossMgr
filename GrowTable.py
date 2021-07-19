@@ -69,7 +69,7 @@ class GrowTable:
 		
 	def set( self, row, col, value, attr=attrDefault ):
 		self.table += [[] for i in range(max(0, row+1 - len(self.table)))]
-		self.table[row] += [(u'', self.attrDefault) for i in range(max(0, col+1 - len(self.table[row])))]
+		self.table[row] += [('', self.attrDefault) for i in range(max(0, col+1 - len(self.table[row])))]
 		self.table[row][col] = (value, attr)
 		return row, col
 		

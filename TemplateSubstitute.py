@@ -1,7 +1,7 @@
 import re
 from ReadSignOnSheet import BibInfo
 
-reVariable = re.compile( u'\{=[^}]+\}' )
+reVariable = re.compile( '\{=[^}]+\}' )
 
 def TemplateSubstitute( s, keyValues ):
 	bibInfo = BibInfo()
@@ -14,14 +14,14 @@ def TemplateSubstitute( s, keyValues ):
 		components.append( bibInfo.getSubValue(subkey) or keyValues.get(subkey, m.group() ) )
 		iLast = m.end()
 	components.append( s[iLast:] )
-	return u''.join(components)
+	return ''.join(components)
 		
 if __name__ == '__main__':
-	s = u'{=Organizer}: ({=City} {=StateProv} {=Country}) is {=Unknown} super!'
+	s = '{=Organizer}: ({=City} {=StateProv} {=Country}) is {=Unknown} super!'
 	keyValues = {
-		u'Organizer':	u'Super Organizer',
-		u'City':		u'Toronto',
-		u'StateProv':	u'Ontario',
-		u'Country':		u'Canada',
+		'Organizer':	'Super Organizer',
+		'City':			'Toronto',
+		'StateProv':	'Ontario',
+		'Country':		'Canada',
 	}
 	print( TemplateSubstitute(s, keyValues) )

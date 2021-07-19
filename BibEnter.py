@@ -12,7 +12,7 @@ class BibEnter( wx.Dialog ):
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 						
-		self.numEditLabel = wx.StaticText(self, label=u'{}'.format(_('Bib')))
+		self.numEditLabel = wx.StaticText(self, label='{}'.format(_('Bib')))
 		self.numEdit = wx.TextCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
 		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 

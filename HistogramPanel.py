@@ -24,7 +24,7 @@ class GetCategoryName:
 			if race.inCategory( bib, c ):
 				self.lastCategory = c
 				return self.catName[c]
-		return u''
+		return ''
 
 class HistogramPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize ):
@@ -39,20 +39,20 @@ class HistogramPanel( wx.Panel ):
 		self.hbs.Add( self.categoryLabel, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
 		
-		self.hbs.Add( wx.StaticText(self, label=_('Lap')+u':'), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=24 )
+		self.hbs.Add( wx.StaticText(self, label=_('Lap')+':'), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=24 )
 		self.lapOption = wx.Choice(self, choices=[_('Last')])
 		self.lapOption.SetSelection( 0 )
 		self.lapOption.Bind( wx.EVT_CHOICE, self.doChooseLap )
 		self.hbs.Add( self.lapOption, flag=wx.ALL, border=4 )
 		self.lap = 0
 		
-		self.hbs.Add( wx.StaticText(self, label=_('Bin by')+u':'), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=24 )
+		self.hbs.Add( wx.StaticText(self, label=_('Bin by')+':'), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=24 )
 		self.binOption = wx.Choice(self, choices=[_('Auto'), _('1 second'), _('30 seconds'), _('1 minute'), _('5 minutes')])
 		self.binOption.SetSelection( 0 )
 		self.binOption.Bind( wx.EVT_CHOICE, self.doChooseBinOption )
 		self.hbs.Add( self.binOption, flag=wx.ALL, border=4 )
 		
-		self.hbs.Add( wx.StaticText(self, label=_('Bin width')+u':'), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=24 )
+		self.hbs.Add( wx.StaticText(self, label=_('Bin width')+':'), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=24 )
 		self.binWidthLabel = wx.StaticText( self )
 		self.hbs.Add( self.binWidthLabel, 1, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=4 )
 		
@@ -128,7 +128,7 @@ class HistogramPanel( wx.Panel ):
 			if len(rr.raceTimes) - 1 < maxLaps:
 				continue
 			data.append( rr.raceTimes[self.lap or -1] )
-			label.append( u'{}: {}'.format(rr.num, rr.short_name()) )
+			label.append( '{}: {}'.format(rr.num, rr.short_name()) )
 			category.append( getCatName(rr.num) )
 		self.histogram.SetData( data, label, category, self.binOption.GetSelection() )
 		self.fixBinWidth()

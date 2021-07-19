@@ -54,7 +54,7 @@ class Prizes( wx.Panel ):
 		name = ''
 		results = GetResults( category )
 		try:
-			name = u'{}: {}'.format(results[row].num, results[row].full_name())
+			name = '{}: {}'.format(results[row].num, results[row].full_name())
 		except IndexError:
 			pass
 		return name

@@ -171,8 +171,8 @@ class GanttChartPanel(wx.Panel):
 				elif len(self.labels) > len(self.data):
 					self.labels = self.labels[:len(self.data)]
 			else:
-				self.labels = [u''] * len(data)
-				self.status = [u''] * len(data)
+				self.labels = [''] * len(data)
+				self.status = [''] * len(data)
 			self.nowTime = nowTime
 			
 		self.interp = interp
@@ -283,7 +283,7 @@ class GanttChartPanel(wx.Panel):
 		width = size.width
 		height = size.height
 		
-		maxBib = u'999999'
+		maxBib = '999999'
 		
 		minBarWidth = 48
 		minBarHeight = 18
@@ -335,7 +335,7 @@ class GanttChartPanel(wx.Panel):
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] + statusTextWidth )
 				num = numFromLabel(label)
 				if num is not None:
-					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent(u'{}'.format(num))[0] )
+					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent('{}'.format(num))[0] )
 		textWidthRightMax += statusTextWidth
 				
 		if textWidthLeftMax + textWidthRightMax > width:
@@ -382,7 +382,7 @@ class GanttChartPanel(wx.Panel):
 				textWidthLeftMax = max( textWidthLeftMax, dc.GetTextExtent(label)[0] + statusTextWidth )
 				num = numFromLabel(label)
 				if num is not None:
-					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( u'{}'.format(num) )[0] )
+					textWidthRightMax = max( textWidthRightMax, dc.GetTextExtent( '{}'.format(num) )[0] )
 		textWidthRightMax += statusTextWidth
 				
 		if textWidthLeftMax + textWidthRightMax > width:
@@ -413,7 +413,7 @@ class GanttChartPanel(wx.Panel):
 		fontNote = wx.Font( (0,barHeight*.8), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
 		dc.SetFont( fontLegend )
-		textWidth, textHeight = dc.GetTextExtent( u'00:00' if self.dataMax < 60*60 else u'00:00:00' )
+		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 			
 		# Draw the horizontal labels.
 		# Find some reasonable tickmarks for the x axis.
@@ -430,18 +430,18 @@ class GanttChartPanel(wx.Panel):
 		
 		def getTickLabel( t ):
 			if t < 60:
-				return u':{:02d}'.format(t)
+				return ':{:02d}'.format(t)
 			elif t < 60*60:
-				return u'{}:{:02d}'.format((t // 60), t%60)
+				return '{}:{:02d}'.format((t // 60), t%60)
 			elif t < 24*60*60:
-				return u'{}:{:02d}:{:02d}'.format(t//(60*60), (t // 60)%60, t%60)
+				return '{}:{:02d}:{:02d}'.format(t//(60*60), (t // 60)%60, t%60)
 			else:
 				if t % (24*60*60) == 0:
-					return u'{}d'.format(t//(24*60*60))
+					return '{}d'.format(t//(24*60*60))
 				elif t % (60*60) == 0:
-					return u'{}d{:02d}h'.format( t//(24*60*60), (t%(24*60*60))//(60*60) )
+					return '{}d{:02d}h'.format( t//(24*60*60), (t%(24*60*60))//(60*60) )
 				else:
-					return u'{}d{:02d}:{:02d}'.format( t//(24*60*60), (t%(24*60*60))//(60*60), (t // 60)%60 )
+					return '{}d{:02d}:{:02d}'.format( t//(24*60*60), (t%(24*60*60))//(60*60), (t // 60)%60 )
 			
 		def getXT( d ):
 			for t in range(int(tAdjust) - int(tAdjust)%d, int(self.dataMax), d):
@@ -568,7 +568,7 @@ class GanttChartPanel(wx.Panel):
 						if note:
 							dc.SetFont( fontNote )
 							noteWidth, noteHeight = dc.GetTextExtent( note )
-							noteBorderWidth = int(dc.GetTextExtent( u'   ' )[0] / 2)
+							noteBorderWidth = int(dc.GetTextExtent( '   ' )[0] / 2)
 							noteBarWidth = xCur - xLast - noteBorderWidth * 2
 							if noteBarWidth <= 0:
 								noteBarWidth = xCur - xLast
@@ -584,7 +584,7 @@ class GanttChartPanel(wx.Panel):
 										lenLeft = lenMid
 									else:
 										lenRight = lenMid
-								note = note[:lenLeft].strip() + u'...'
+								note = note[:lenLeft].strip() + '...'
 								noteWidth, noteHeight = dc.GetTextExtent( note )
 							dc.DrawText( note, xLast + noteBorderWidth, yLast + (dy - noteHeight) / 2 )
 							dc.SetFont( fontBarLabel )
@@ -650,7 +650,7 @@ class GanttChartPanel(wx.Panel):
 					if statusTextWidth and self.status[i]:
 						dc.DrawText( self.status[i], width - statusTextWidth + statusTextSpace, yLast )
 
-			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
+			if '{}'.format(self.numSelect) == '{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur
 
 			yLast = yCur

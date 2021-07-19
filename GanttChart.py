@@ -120,7 +120,7 @@ class GanttChart(wx.Control):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = [u'{}'.format(lab) for lab in labels]
+				self.labels = ['{}'.format(lab) for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
@@ -194,8 +194,8 @@ class GanttChart(wx.Control):
 		tLapStart = self.data[iRider][iLap-1]
 		tLapEnd = self.data[iRider][iLap]
 		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
-								u'{}: {}  {}: {}\n{}:  {} {}: {}\n{}: {}'.format(
-								_('Rider'), self.labels[iRider] if self.labels else u'{}'.format(iRider),
+								'{}: {}  {}: {}\n{}:  {} {}: {}\n{}: {}'.format(
+								_('Rider'), self.labels[iRider] if self.labels else '{}'.format(iRider),
 								_('Lap'), iLap,
 								_('Lap Start'), Utils.formatTime(tLapStart),
 								_('Lap End'), Utils.formatTime(tLapEnd),
@@ -383,7 +383,7 @@ class GanttChart(wx.Control):
 						label = label[lastSpace+1:]
 					dc.DrawText( label, width - labelsWidthRight + legendSep, yLast )
 
-			if u'{}'.format(self.numSelect) == u'{}'.format(numFromLabel(self.labels[i])):
+			if '{}'.format(self.numSelect) == '{}'.format(numFromLabel(self.labels[i])):
 				yHighlight = yCur
 
 			yLast = yCur
@@ -479,7 +479,7 @@ if __name__ == '__main__':
 	t = 55*60
 	tVar = t * 0.15
 	data, interp = GetData()
-	gantt.SetData( data, [u'{}'.format(i) for i in range(100, 100+len(data))], interp = interp )
+	gantt.SetData( data, ['{}'.format(i) for i in range(100, 100+len(data))], interp = interp )
 
 	mainWin.Show()
 	app.MainLoop()

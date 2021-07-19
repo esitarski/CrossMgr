@@ -426,22 +426,22 @@ class FinishStripPanel( wx.Panel ):
 		self.copyToClipboard = wx.Button( self, label=_('Copy to Clipboard') )
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
 		
-		self.save = wx.Button( self, label=u'{}...'.format(_('Save')) )
+		self.save = wx.Button( self, label='{}...'.format(_('Save')) )
 		self.save.Bind( wx.EVT_BUTTON, self.onSave )
 		
 		fgs = wx.FlexGridSizer( cols=2, vgap=4, hgap=0 )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Time'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label='{}:'.format(_('Time'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.timeSlider, flag=wx.EXPAND )
 		
 		fgs.Add( wx.StaticText(self) )
 		fgs.Add( self.photoExists, flag=wx.EXPAND|wx.ALIGN_CENTRE_VERTICAL )
 		
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Pixels/Sec'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label='{}:'.format(_('Pixels/Sec'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.speedSlider, flag=wx.EXPAND )
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Scale'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label='{}:'.format(_('Scale'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.scaleSlider, flag=wx.EXPAND )
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format(_('Clip'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		fgs.Add( wx.StaticText(self, label='{}:'.format(_('Clip'))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		fgs.Add( self.clipSlider, flag=wx.EXPAND )
 		
 		fgs.AddGrowableCol( 1, 1 )
@@ -497,9 +497,9 @@ class FinishStripPanel( wx.Panel ):
 		dlg = wx.FileDialog(
 			self,
 			message=_('Save Finish as'),
-			wildcard=u"PNG {} (*.png)|*.png".format(_("files")),
+			wildcard='PNG {} (*.png)|*.png'.format(_("files")),
 			defaultDir=Utils.getFileDir(),
-			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + u'_Finish.png',
+			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + '_Finish.png',
 			style=wx.FD_SAVE,
 		)
 		if dlg.ShowModal() == wx.ID_OK:

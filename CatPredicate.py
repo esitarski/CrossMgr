@@ -186,7 +186,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=3, hgap=3)
 		
 		row = 0
-		numbersLabel = wx.StaticText( self, label=u'{}:'.format(_('Numbers')) )
+		numbersLabel = wx.StaticText( self, label='{}:'.format(_('Numbers')) )
 		
 		bs.Add( numbersLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
@@ -196,7 +196,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND )
 		row += 1
 			
-		genderLabel = wx.StaticText( self, label = u'{}:'.format(_('Gender')) )
+		genderLabel = wx.StaticText( self, label = '{}:'.format(_('Gender')) )
 		bs.Add( genderLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			
@@ -206,7 +206,7 @@ class CategoryPredicateDialog( wx.Dialog ):
 		self.gender.SetSelection( 0 )
 		row += 1
 		
-		ageLabel = wx.StaticText( self, label = u'{}:'.format(_('Age')) )
+		ageLabel = wx.StaticText( self, label = '{}:'.format(_('Age')) )
 		bs.Add( ageLabel, pos=(row,0), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 			
@@ -217,13 +217,13 @@ class CategoryPredicateDialog( wx.Dialog ):
 		self.ageRange[1] = wx.lib.intctrl.IntCtrl( self, min = 0, max = 110, allow_none = True, limited = True,
 			size=(32,-1) )
 		hs.Add( self.ageRange[0] )
-		hs.Add( wx.StaticText(self, label = u' ' + _('to') + u' '), flag=wx.ALIGN_CENTER_VERTICAL )
+		hs.Add( wx.StaticText(self, label = ' ' + _('to') + ' '), flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.ageRange[1] )
 		bs.Add( hs, pos = (row,1), span=(1,1),
 			border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT )
 		row += 1
 		
-		categoryLabel = wx.StaticText( self, label = u'{}:'.format(_('Categories')) )
+		categoryLabel = wx.StaticText( self, label = '{}:'.format(_('Categories')) )
 		bs.Add( categoryLabel, pos=(row,0), span=(1,1),
 			border = 8, flag=wx.LEFT|wx.TOP|wx.ALIGN_TOP|wx.ALIGN_RIGHT )
 			

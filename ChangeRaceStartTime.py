@@ -56,7 +56,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			return
 		if race.isTimeTrial and race.hasRiderTimes():
 			Utils.MessageOKCancel( self,
-				_('Cannot change Time Trial Start Time') + u'\n\n' + _('There are already recorded results.'),
+				_('Cannot change Time Trial Start Time') + '\n\n' + _('There are already recorded results.'),
 				_('Cannot change Start Time')
 			)
 			self.EndModal( wx.ID_OK )
@@ -69,7 +69,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			return
 		
 		if dTime > 0.0 and not Utils.MessageOKCancel( self,
-				_('Are you Sure you want to change the Race Start to Later?') + u'\n' + _('(you can always undo).'), _('Are you sure?') ):
+				_('Are you Sure you want to change the Race Start to Later?') + '\n' + _('(you can always undo).'), _('Are you sure?') ):
 			return
 		
 		undo.pushState()

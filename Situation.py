@@ -111,14 +111,14 @@ def GetSituationGaps( category=None, t=None ):
 	
 	def getInfo( bib, lapsDown ):
 		name = riderName[bib]
-		nameStr = u'' if not name else u' ' + name
+		nameStr = '' if not name else ' ' + name
 		if lapsDown:
-			lapsDownStr = u' ({})'.format(lapsDown)
-			bibStr = u'\u2198{}'.format(bib)
+			lapsDownStr = ' ({})'.format(lapsDown)
+			bibStr = '\u2198{}'.format(bib)
 		else:
-			lapsDownStr = u''
+			lapsDownStr = ''
 			bibStr = '{}'.format(bib)
-		return u''.join([bibStr, nameStr, lapsDownStr])
+		return ''.join([bibStr, nameStr, lapsDownStr])
 	
 	gaps = []
 	for riderPosition, riderSpeed, bib in positionSpeeds:
@@ -147,17 +147,17 @@ def GetSituationGaps( category=None, t=None ):
 	lap = min( thisLap + 1, laps )
 	lapsToGo = max(laps - lap, 0)
 	
-	title =  u'   {}: {}/{}   {}: {}'.format(
+	title =  '   {}: {}/{}   {}: {}'.format(
 		_('Lap'), lap, laps,
 		_('Laps to go'), lapsToGo,
 	)
 	if tCur is not None:
-		title += u'    {}: {}'.format(_('Race'), Utils.formatTime(tCur))
+		title += '    {}: {}'.format(_('Race'), Utils.formatTime(tCur))
 	if tClock is not None:
 		if title:
-			title += u'   {}: {}'.format(_('Clock'), Utils.formatTime(tClock))
+			title += '   {}: {}'.format(_('Clock'), Utils.formatTime(tClock))
 	if tETA is not None:
-		title += u'   {}: {}'.format(_('Leader ETA'), Utils.formatTime(tETA))
+		title += '   {}: {}'.format(_('Leader ETA'), Utils.formatTime(tETA))
 	
 	return gaps, tAfterLeader, title, tCur
 	
@@ -439,7 +439,7 @@ class SituationPanel(wx.Panel):
 					fieldWidths = [-spaceWidth/2]
 					iSpace = 0
 					while True:
-						iSpace = title.find( u'  ', iSpace )
+						iSpace = title.find( '  ', iSpace )
 						if iSpace < 0:
 							fieldWidths.append( dc.GetTextExtent(title)[0] + spaceWidth )
 							break
@@ -558,8 +558,8 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			self.popupInfo = [
 				(_('RiderDetail'),	_('Show RiderDetail tab'), self.OnPopupRiderDetail),
 				(None, None, None),
-				(_('Pull After Last Recorded Time') + u'...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
-				(_('DNF After Last Recorded Time') + u'...',	_('DNF After Last Recorded Time'),	self.OnPopupDNF),
+				(_('Pull After Last Recorded Time') + '...',	_('Pull After Last Recorded Time'),	self.OnPopupPull),
+				(_('DNF After Last Recorded Time') + '...',		_('DNF After Last Recorded Time'),	self.OnPopupDNF),
 			]
 
 			self.menu = wx.Menu()
@@ -587,7 +587,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			return
 		t = rider.getLastKnownTime()+1
 		if not Utils.MessageOKCancel( self,
-			u'{}: {}  {} {}?'.format(
+			'{}: {}  {} {}?'.format(
 				_('Bib'), self.numSelect,
 				_('Pull at '), Utils.formatTime(t, True), ),
 			_('Pull Rider') ):
@@ -612,7 +612,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			return
 		t = rider.getLastKnownTime()+1
 		if not Utils.MessageOKCancel( self,
-			u'{}: {}  {} {}?'.format(
+			'{}: {}  {} {}?'.format(
 				_('Bib'), self.numSelect,
 				_('DNF at '), Utils.formatTime(t, True), ),
 			_('DNF Rider') ):
@@ -654,7 +654,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		for i, (gap, info) in enumerate(groupInfo):
 			fields = info.split()
 			num = int( reNonDigit.sub('',fields[0]) )
-			if fields[-1].startswith(u'(') and fields[-1].endswith(u')'):
+			if fields[-1].startswith('(') and fields[-1].endswith(')'):
 				lapsDown[num] = fields[-1][1:-1]
 			nums.append( num )
 			sequence[num] = i+1
@@ -665,7 +665,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 		else:
 			# Adjust to usual name format.
 			def GetName( info ):
-				return u', '.join( n for n in [info.get('LastName','').upper(), info.get('FirstName', '')] if n )
+				return ', '.join( n for n in [info.get('LastName','').upper(), info.get('FirstName', '')] if n )
 			externalFields = [f if f != 'LastName' else 'Name' for f in externalFields if f != 'FirstName']
 			externalInfo = { num : externalInfo[num].copy() for num in nums }
 			for num, info in externalInfo.items():
@@ -680,7 +680,7 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 				externalFields.append( LapsDown )
 			
 			for num, info in externalInfo.items():
-				info[LapsDown] = lapsDown.get(num, u'')
+				info[LapsDown] = lapsDown.get(num, '')
 				
 		# Add the sequence number.
 		Sequence = 'Seq'
@@ -694,12 +694,12 @@ class GroupInfoPopup( wx.Panel, listmix.ColumnSorterMixin ):
 			self.list.InsertColumn( c+1, GetTranslation(f), wx.LIST_FORMAT_RIGHT if f.startswith(_('Bib')) else wx.LIST_FORMAT_LEFT )
 		
 		# Create the data.  Sort by sequence.
-		data = [tuple( sequence[num] if i == 0 else num if i == 1 else externalInfo.get(num).get(f, u'') for i, f in enumerate(externalFields)) for num in nums]
+		data = [tuple( sequence[num] if i == 0 else num if i == 1 else externalInfo.get(num).get(f, '') for i, f in enumerate(externalFields)) for num in nums]
 		data.sort()
 		
 		# Populate the list.
 		for row, d in enumerate(data):
-			index = self.list.InsertItem(999999, u'{}'.format(d[0]), self.sm_rt)
+			index = self.list.InsertItem(999999, '{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
 				self.list.SetItem( index, i+1, '{}'.format(v) )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin
@@ -721,7 +721,7 @@ class TopPanel( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id, style=wx.BORDER_SUNKEN )
 		
-		self.categoryLabel = wx.StaticText( self, label = u'{}:'.format(_('Category')) )
+		self.categoryLabel = wx.StaticText( self, label = '{}:'.format(_('Category')) )
 		self.categoryChoice = wx.Choice( self )
 		
 		self.zoomSlider = wx.Slider( self, style=wx.VERTICAL|wx.SL_INVERSE )
@@ -745,7 +745,7 @@ class TopPanel( wx.Panel ):
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		hbs.Add( self.categoryChoice, flag=wx.ALL, border=4 )
-		hbs.Add( wx.StaticText(self, label=u'\u2193 {}        \u2190{}'.format(
+		hbs.Add( wx.StaticText(self, label='\u2193 {}        \u2190{}'.format(
 				_('Drag Top Slider to Change Time'),
 				_('Drag Left Slider to Zoom'),
 			)),
@@ -786,15 +786,15 @@ class BottomPanel( wx.Panel ):
 		
 	def refresh( self, groupIndex, groupInfo, raceTime, clockTime ):
 		if groupInfo:
-			self.title.SetLabel( u'{}     {}: {}     {}: {}     {}: {}     {}: {}'.format(
-				u'{}: {}'.format(_('Chase Group'), groupIndex) if groupIndex else u'{}: \u2714'.format(_('Leaders')),
-				_('Gap'), shortFormatTimeGap(groupInfo[0][0]) if groupIndex else u' ',
+			self.title.SetLabel( '{}     {}: {}     {}: {}     {}: {}     {}: {}'.format(
+				'{}: {}'.format(_('Chase Group'), groupIndex) if groupIndex else '{}: \u2714'.format(_('Leaders')),
+				_('Gap'), shortFormatTimeGap(groupInfo[0][0]) if groupIndex else ' ',
 				_('Size'), len(groupInfo),
 				_('Race'), Utils.formatTime(raceTime),
-				_('Clock'), Utils.formatTime(clockTime) if clockTime is not None else u'',
+				_('Clock'), Utils.formatTime(clockTime) if clockTime is not None else '',
 			) )
 		else:
-			self.title.SetLabel( u'' )
+			self.title.SetLabel( '' )
 
 		self.groupInfoPopup.refresh( groupInfo )
 		self.GetSizer().Layout()

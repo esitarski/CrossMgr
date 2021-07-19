@@ -198,11 +198,11 @@ class RaceHUD(wx.Control):
 		raceTimeHeight = tickHeight * 2 * 0.6
 		fontRaceTime = wx.Font( (0,raceTimeHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		dc.SetFont( fontRaceTime )
-		textWidth, textHeight = dc.GetTextExtent( u'0' )
+		textWidth, textHeight = dc.GetTextExtent( '0' )
 		zeroCharWidth = textWidth
-		textWidth = max( dc.GetTextExtent(u'{}'.format(ldr))[0] for ldr in self.leader )
+		textWidth = max( dc.GetTextExtent('{}'.format(ldr))[0] for ldr in self.leader )
 		textWidth = max( textWidth, int(self.checkeredFlag.GetWidth() * 1.2) )
-		textWidth += dc.GetTextExtent(u'  ')[0]
+		textWidth += dc.GetTextExtent('  ')[0]
 		
 		dy = int(tickHeight * 2 * 0.75)
 
@@ -319,7 +319,7 @@ class RaceHUD(wx.Control):
 			
 			# Draw the leader.
 			if leader is not None:
-				leaderText = u'{}'.format(leader)
+				leaderText = '{}'.format(leader)
 				dc.SetFont( fontLegend if legendHeight > raceTimeHeight else fontRaceTime )
 				textWidth, textHeight = dc.GetTextExtent( leaderText )
 				dc.DrawText( leaderText, xLeft - textWidth - textHeight / 8, yTop + hMiddle - textHeight / 2 )
@@ -339,9 +339,9 @@ class RaceHUD(wx.Control):
 					dc.SetFont( fontHover )
 					labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
 					valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)
-					hoverBorderHeight = dc.GetTextExtent(u'  ')[1]//3
-					hoverBorderWidth = dc.GetTextExtent(u'  ')[0]
-					hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(u' ')[0]
+					hoverBorderHeight = dc.GetTextExtent('  ')[1]//3
+					hoverBorderWidth = dc.GetTextExtent('  ')[0]
+					hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(' ')[0]
 					hoverHeight = hoverLineHeight * len(info)
 					xHover = xLeft + int( tCur * xMult ) - hoverWidth
 					if xHover < 0:
@@ -380,14 +380,14 @@ if __name__ == '__main__':
 			return info		
 
 		tLap = tNext - tCur
-		info.append( (_("Lap"), u'{}/{} ({} {})'.format(lap,lapsTotal,lapsTotal-lap, _('to go'))) )
+		info.append( (_("Lap"), '{}/{} ({} {})'.format(lap,lapsTotal,lapsTotal-lap, _('to go'))) )
 		info.append( (_("Time"), Utils.formatTimeGap(tLap, highPrecision=False)) )
 		info.append( (_("Start"), (startTime + datetime.timedelta(seconds=tCur)).strftime('%H:%M:%S')) )
 		info.append( (_("End"), (startTime + datetime.timedelta(seconds=tNext)).strftime('%H:%M:%S')) )
 		lapDistance = 1.5
 		if lapDistance is not None:
 			sLap = (lapDistance / tLap) * 60.0*60.0
-			info.append( (u'', u'{:.02f} {}'.format(sLap, 'km/h')) )
+			info.append( ('', '{:.02f} {}'.format(sLap, 'km/h')) )
 		return info
 	
 	multiple = 10

@@ -81,17 +81,17 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
-		todoList =  u'\n'.join( '%d)  %s' % (i + 1, s) for i, s in enumerate( [
+		todoList =  '\n'.join( '{})  {}'.format(i + 1, s) for i, s in enumerate( [
 			_('Make sure the RFID receiver is plugged into the network.'),
 			_('If you are using Impinj/Alien, make sure the CrossMgrImpinj or CrossMgrAlien bridge programs are running.'),
 			_('You must have the Sign-On Excel sheet ready and linked before your race.'),
 			_('You must configure a "Tag" field in your Sign-On Excel Sheet.'),
 			_('Run this test before each race.'),
 		]) )
-		intro = (u'\n'.join( [
+		intro = ('\n'.join( [
 				_('CrossMgr supports the JChip, RaceResult, Ultra, Impinj and Alien RFID readers.'),
 				_('For more details, consult the documentation for your reader.'),
-				] ) + u'\n' + _('Checklist:') + u'\n\n{}\n').format( todoList )
+				] ) + '\n' + _('Checklist:') + '\n\n{}\n').format( todoList )
 		
 		border = 4
 		bs.Add( wx.StaticText(self, label = intro), 0, wx.EXPAND|wx.ALL, border )
@@ -107,7 +107,7 @@ class JChipSetupDialog( wx.Dialog ):
 		bs.Add( rowColSizer, 0, wx.EXPAND|wx.ALL, border )
 		
 		row = 0
-		rowColSizer.Add( wx.StaticText( self, label=u'{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
+		rowColSizer.Add( wx.StaticText( self, label='{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra'),  _('WebReader')] )
 		self.chipReaderType.SetSelection( 0 )
@@ -116,7 +116,7 @@ class JChipSetupDialog( wx.Dialog ):
 			row=row, col=1, border=border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
-		sep = u'  -' + _('or') + u'-  '
+		sep = '  -' + _('or') + '-  '
 		ips = sep.join( GetAllIps() )
 		self.ipaddr = wx.TextCtrl( self, value = ips, style = wx.TE_READONLY, size=(240,-1) )
 		self.autoDetect = wx.Button( self, label=_('AutoDetect') )
@@ -253,14 +253,14 @@ class JChipSetupDialog( wx.Dialog ):
 		if error:
 			Utils.MessageOK(
 				self,
-				u'{}:\n\n{}'.format(_("AutoDetect Error"), error),
+				'{}:\n\n{}'.format(_("AutoDetect Error"), error),
 				_("AutoDetect Error"),
 				wx.ICON_ERROR
 			)
 			return
 		if not readerHost:
 			Utils.MessageOK(
-				self, u'{}:\n\n{}'.format(_("AutoDetect Failure"), _('Reader not found.')),
+				self, '{}:\n\n{}'.format(_("AutoDetect Failure"), _('Reader not found.')),
 				_("AutoDetect Failure"),
 				wx.ICON_ERROR
 			)
@@ -300,7 +300,7 @@ class JChipSetupDialog( wx.Dialog ):
 						_('You may proceed with the test, but you need to fix the Excel sheet.') + '\n\n' + \
 						_('See documentation for details.')
 			if not correct:
-				if not Utils.MessageOKCancel( self, (_('Problems with Excel sheet.') + u'\n\n    ' + _('Reason:') + ' {}\n\n{}').format(reason, explain),
+				if not Utils.MessageOKCancel( self, (_('Problems with Excel sheet.') + '\n\n    ' + _('Reason:') + ' {}\n\n{}').format(reason, explain),
 									title = _('Excel Link Problem'), iconMask = wx.ICON_WARNING ):
 					self.testJChip.SetValue( False )
 					return
@@ -356,7 +356,7 @@ class JChipSetupDialog( wx.Dialog ):
 				self.appendMsg( '' )
 				self.appendMsg( _('listening for RFID connection...') )
 			elif d[0] == 'name':
-				self.appendMsg( u'{}: {}'.format(_('receiver name'), d[1]) )
+				self.appendMsg( '{}: {}'.format(_('receiver name'), d[1]) )
 			else:
 				self.appendMsg( '{}: {}'.format(d[0], ', '.join('<<{}>>'.format(s) for s in d[1:]) ) )
 		if data:

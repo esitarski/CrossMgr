@@ -261,7 +261,7 @@ class FtpQRCodePrintout( wx.Printout ):
 		dc.DrawBitmap( bm, xPix, yPix )
 		
 		# Draw the title.
-		title = u'{}:{}\n{} {}\n{}   {}'.format( race.title, race.raceNum, _('by'), race.organizer, race.date, race.scheduledStart )
+		title = '{}:{}\n{} {}\n{}   {}'.format( race.title, race.raceNum, _('by'), race.organizer, race.date, race.scheduledStart )
 		def getTitleTextSize( font ):
 			dc.SetFont( font )
 			return dc.GetMultiLineTextExtent( title )
@@ -410,7 +410,7 @@ def GetFtpPublish( isDialog=True ):
 				result = FtpTest()
 				del busy
 				if result:
-					Utils.MessageOK(self, u'{}\n\n{}\n'.format(_("Ftp Test Failed"), result), _("Ftp Test Failed"), iconMask=wx.ICON_ERROR)
+					Utils.MessageOK(self, '{}\n\n{}\n'.format(_("Ftp Test Failed"), result), _("Ftp Test Failed"), iconMask=wx.ICON_ERROR)
 				else:
 					Utils.MessageOK(self, _("Ftp Test Successful"), _("Ftp Test Successful"))
 								
@@ -445,7 +445,7 @@ def GetFtpPublish( isDialog=True ):
 
 			if not printer.Print(self, printout, True):
 				if printer.GetLastError() == wx.PRINTER_ERROR:
-					Utils.MessageOK(self, u'\n\n'.join( [_("There was a printer problem."),_("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+					Utils.MessageOK(self, '\n\n'.join( [_("There was a printer problem."),_("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
 
 			pd.SetOrientation( orientationSave )
 			printout.Destroy()
@@ -506,7 +506,7 @@ def FtpUploadNow( parent ):
 	host = getattr( race, 'ftpHost', '' )
 		
 	if not host:
-		Utils.MessageOK(parent, u'{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+		Utils.MessageOK(parent, '{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
 		return
 	
 	wx.BeginBusyCursor()
@@ -514,7 +514,7 @@ def FtpUploadNow( parent ):
 	wx.EndBusyCursor()
 
 	if e:
-		Utils.MessageOK(parent, u'{}  {}\n\n{}'.format(_('Ftp Upload Failed.'), _('Error'), e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+		Utils.MessageOK(parent, '{}  {}\n\n{}'.format(_('Ftp Upload Failed.'), _('Error'), e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
 	else:
 		# Automatically open the browser on the published file for testing.
 		if race.urlFull and race.urlFull != 'http://':

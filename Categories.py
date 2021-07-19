@@ -751,7 +751,7 @@ and remove them from other categories.'''),
 	
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name=u'<{}>     '.format(_('CategoryName')), catStr='100-199,504,-128' )
+		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name='<{}>     '.format(_('CategoryName')), catStr='100-199,504,-128' )
 		self.doAutosize()
 		
 	def onDelCategory( self, event ):

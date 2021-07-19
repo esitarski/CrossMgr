@@ -177,7 +177,7 @@ class StartRaceAtTime( wx.Dialog ):
 		if self.startSeconds < GetNowSeconds():
 			Utils.MessageOK(
 				None,
-				u'\n\n'.join( [_('Scheduled Start Time is in the Past'),_('Please enter a Scheduled Start Time in the Future.')] ),
+				'\n\n'.join( [_('Scheduled Start Time is in the Past'),_('Please enter a Scheduled Start Time in the Future.')] ),
 				_('Scheduled Start Time is in the Past')
 			)
 			return
@@ -235,7 +235,7 @@ class Actions( wx.Panel ):
 		self.clock = Clock( self, size=(190,190), checkFunc=self.updateClock )
 		self.clock.SetBackgroundColour( wx.WHITE )
 		
-		self.raceIntro = wx.StaticText( self.leftPanel, label =  u'' )
+		self.raceIntro = wx.StaticText( self.leftPanel, label =  '' )
 		self.raceIntro.SetFont( wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
 		
 		self.chipTimingOptions = wx.RadioBox(
@@ -297,7 +297,7 @@ class Actions( wx.Panel ):
 		wrapWidth = self.leftPanel.GetClientSize()[0] - self.button.GetClientSize()[0] - 20
 		dc = wx.WindowDC( self.raceIntro )
 		dc.SetFont( self.raceIntro.GetFont() )
-		label = wordwrap( Model.race.getRaceIntro() if Model.race else u'', wrapWidth, dc )
+		label = wordwrap( Model.race.getRaceIntro() if Model.race else '', wrapWidth, dc )
 		self.raceIntro.SetLabel( label )
 		self.leftPanel.GetSizer().Layout()
 		if event:
@@ -354,7 +354,7 @@ class Actions( wx.Panel ):
 			if not externalInfo:
 				Utils.MessageOK(
 					self,
-					u'\n\n'.join( [_('Cannot Start. Excel Sheet read failure.'), _('The Excel file is either unconfigured or unreadable.')] ),
+					'\n\n'.join( [_('Cannot Start. Excel Sheet read failure.'), _('The Excel file is either unconfigured or unreadable.')] ),
 					_('Excel Sheet Read '),
 					wx.ICON_ERROR
 				)
@@ -364,7 +364,7 @@ class Actions( wx.Panel ):
 			except StopIteration:
 				Utils.MessageOK(
 					self,
-					u'\n\n'.join( [_('Cannot Start.  Excel Sheet missing Tag column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
+					'\n\n'.join( [_('Cannot Start.  Excel Sheet missing Tag column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
 					_('Excel Sheet missing Tag column'),
 					wx.ICON_ERROR
 				)
@@ -376,7 +376,7 @@ class Actions( wx.Panel ):
 			self.onStartRace( event )
 	
 	def onStartRace( self, event ):
-		if Model.race and Utils.MessageOKCancel(self, _('Start Race Now?\n\n'), _('Start Race')):
+		if Model.race and Utils.MessageOKCancel(self, _('Start Race Now?'), _('Start Race')):
 			StartRaceNow()
 	
 	def onStartRaceTime( self, event ):

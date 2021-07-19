@@ -67,19 +67,19 @@ class RiderResult:
 		
 	_reMissingName = re.compile( '^, |, $' )
 	def full_name( self ):
-		return self._reMissingName.sub( u'', u'{}, {}'.format(getattr(self, 'LastName', u''), getattr(self,'FirstName', u'')), 1 )
+		return self._reMissingName.sub( '', '{}, {}'.format(getattr(self, 'LastName', ''), getattr(self,'FirstName', '')), 1 )
 		
 	_reMissingShortName = re.compile( '^, |, $' )
 	def short_name( self, maxLen=20 ):
-		lastName = getattr(self, 'LastName', u'')
+		lastName = getattr(self, 'LastName', '')
 		if len(lastName) + 3 >= maxLen:
 			return lastName
-		firstName = getattr(self,'FirstName', u'')
+		firstName = getattr(self,'FirstName', '')
 		if not lastName:
 			return firstName
 		if len(lastName) + len(firstName) + 3 <= maxLen:
-			return self._reMissingShortName.sub( u'', u'{}, {}'.format(lastName, firstName), 1 )
-		return self._reMissingShortName.sub( u'', u'{}, {}.'.format(lastName, firstName[:1]), 1 )
+			return self._reMissingShortName.sub( '', '{}, {}'.format(lastName, firstName), 1 )
+		return self._reMissingShortName.sub( '', '{}, {}.'.format(lastName, firstName[:1]), 1 )
 		
 	def __repr__( self ):
 		return str(self.__dict__)
@@ -110,7 +110,7 @@ class RiderResult:
 		return (statusSortSeq[self.status], self.laps if self.laps else 999999, toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
 		
 	def _setLapsDown( self, lapsDown ):
-		self.gap = u'-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
+		self.gap = '-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
 		self.gapValue = -lapsDown
 
 def assignFinishPositions( riderResults ):
@@ -120,7 +120,7 @@ def assignFinishPositions( riderResults ):
 		if rr.status != Finisher:
 			rr.pos = statusNames[rr.status]
 		else:
-			rr.pos = u'{}'.format(pos+1)
+			rr.pos = '{}'.format(pos+1)
 
 DefaultSpeed = 0.00001
 
@@ -458,7 +458,7 @@ def _GetResultsCore( category ):
 			rr.pos = Model.Rider.statusNames[rr.status]
 			continue
 			
-		rr.pos = u'{}{}'.format(pos+1, u' '+_('REL') if rr.num in relegatedNums else u'')
+		rr.pos = '{}{}'.format(pos+1, ' '+_('REL') if rr.num in relegatedNums else '')
 		
 		# if gapValue is negative, it is laps down.  Otherwise, it is seconds.
 		rr.gapValue = 0
@@ -467,7 +467,7 @@ def _GetResultsCore( category ):
 		elif (winAndOut or rr != leader) and not (isTimeTrial and rr.lastTime == leader.lastTime):
 			rr.gap = (
 				Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
-					if leader.lastTime < rr.lastTime else u''
+					if leader.lastTime < rr.lastTime else ''
 			)
 			rr.gapValue = max(0.0, rr.lastTime - leader.lastTime)
 
@@ -481,7 +481,7 @@ def _GetResultsCore( category ):
 			rr.projectedTime = rr.lastTime
 			if rr.status != Finisher or not rr.raceTimes:
 				rr.roadRaceLastTime = floor(rr.lastTime)
-				rr.roadRaceGap = rr.gap.split(u'.')[0]
+				rr.roadRaceGap = rr.gap.split('.')[0]
 				rr.roadRaceGapValue = 0
 			elif rr.laps == leader.laps:
 				if not (groupFinishTimes[iTime] <= rr.lastTime < groupFinishTimes[iTime+1]):
@@ -509,7 +509,7 @@ def _GetResultsCore( category ):
 					rr.roadRaceGap = Utils.formatTimeGap( rr.roadRaceGapValue, False ) if rr != leader else ''
 				else:
 					rr.roadRaceLastTime = floor(rr.lastTime)
-					rr.roadRaceGap = rr.gap.split(u'.')[0]
+					rr.roadRaceGap = rr.gap.split('.')[0]
 					rr.roadRaceGapValue = rr.gapValue				
 	
 	if isTimeTrial:
@@ -517,7 +517,7 @@ def _GetResultsCore( category ):
 			rider = riders[rr.num]
 			if rider.status == Finisher and hasattr(rider, 'ttPenalty'):
 				rr.ttPenalty = getattr(rider, 'ttPenalty')
-				rr.ttNote = getattr(rider, 'ttNote', u'')
+				rr.ttNote = getattr(rider, 'ttNote', '')
 	elif winAndOut:
 		riderResults.sort( key=RiderResult._getWinAndOutKey )
 		assignFinishPositions( riderResults )
@@ -599,10 +599,10 @@ def GetNonWaveCategoryResults( category ):
 			rr.gap = ''
 			rr.gapValue = 0
 			if rr.status == Finisher:
-				rr.pos = u'{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else u'{} {}'.format(pos + 1, _('REL'))
+				rr.pos = '{}'.format( pos + 1 ) if not getattr(rr, 'relegated', False) else '{} {}'.format(pos + 1, _('REL'))
 				if rr.laps != leader.laps:
 					lapsDown = leader.laps - rr.laps
-					rr.gap = u'-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
+					rr.gap = '-{} {}'.format(lapsDown, _('laps') if lapsDown > 1 else _('lap'))
 					rr.gapValue = -lapsDown
 				elif (rr != leader or winAndOut) and not (isTimeTrial and rr.lastTime == leader.lastTime):
 					rr.gap = Utils.formatTimeGap( TimeDifference(rr.lastTime, leader.lastTime, highPrecision), highPrecision )
@@ -667,7 +667,7 @@ def GetResultsWithData( category ):
 					v = '{}'.format(v)
 				setattr( rr, f, v )
 			except (KeyError, ValueError):
-				setattr( rr, f, u'' )
+				setattr( rr, f, '' )
 	
 	if excelLink and excelLink.hasField('Factor'):
 		riderResults = [copy.copy(rr) for rr in riderResults]
@@ -868,10 +868,10 @@ def GetLapDetails():
 	lapNote = getattr(race, 'lapNote', {})
 	for rr in GetResultsWithData( None ):
 		for lap, t in enumerate(rr.raceTimes):
-			i1 = lapNote.get((rr.num, lap), u'')
+			i1 = lapNote.get((rr.num, lap), '')
 			i2 = numTimeInfo.getInfoStr(rr.num, t)
 			if i1 or i2:
-				details[u'{},{}'.format(rr.num, lap)] = [i1, i2]
+				details['{},{}'.format(rr.num, lap)] = [i1, i2]
 				
 	return details
 

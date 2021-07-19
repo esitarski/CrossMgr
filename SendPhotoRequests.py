@@ -38,7 +38,7 @@ def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 		'advanceSeconds':	race.advancePhotoMilliseconds/1000.0,
 	}
 	category = race.getCategory( bib )
-	info['wave'] = category.fullname if category else u''
+	info['wave'] = category.fullname if category else ''
 	try:
 		riderInfo = externalInfo[bib]
 		for a, b in (('firstName', 'FirstName'), ('lastName','LastName'), ('team', 'Team')):
