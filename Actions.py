@@ -76,16 +76,15 @@ class StartRaceAtTime( wx.Dialog ):
 		autoStartLabel = wx.StaticText( self, label = _('Automatically Start Race at:') )
 		
 		# Make sure we don't suggest a start time in the past.
-		value = race.scheduledStart
-		startSeconds = Utils.StrToSeconds( value ) * 60
+		startSeconds = Utils.StrToSeconds( race.scheduledStart ) * 60	# race.scheduledStart has no seconds.
 		nowSeconds = GetNowSeconds()
 		if startSeconds < nowSeconds:
 			startOffset = 3 * 60
 			startSeconds = nowSeconds - nowSeconds % startOffset
 			startSeconds = nowSeconds + startOffset
-			value = u'{:02d}:{:02d}'.format(startSeconds // (60*60), (startSeconds // 60) % 60)
 		
-		self.autoStartTime = HighPrecisionTimeEdit( self, display_seconds=False, value=value, size=wx.Size(60,-1) )
+		autoStartTimeSize = wx.Size(80,-1)
+		self.autoStartTime = HighPrecisionTimeEdit( self, display_seconds=False, seconds=startSeconds, size=autoStartTimeSize )
 		
 		self.pagesLabel = wx.StaticText( self, label=_('After Start, Switch to:') )
 		mainWin = Utils.getMainWin()
@@ -129,30 +128,31 @@ class StartRaceAtTime( wx.Dialog ):
 		vs = wx.BoxSizer( wx.VERTICAL )
 
 		border = 8
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( autoStartLabel, border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( self.autoStartTime, border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( self.pagesLabel, border = border, flag=wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL )
-		hs.Add( self.pages, border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_VERTICAL )
-		vs.Add( hs )
+		fgs = wx.FlexGridSizer( cols=4, vgap=8, hgap=8 )
+		fgs.AddGrowableCol( 1 )
+		fgs.Add( autoStartLabel, flag=wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.autoStartTime, flag=wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.pagesLabel, flag=wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.pages, flag=wx.ALIGN_CENTER_VERTICAL )
+		vs.Add( fgs, flag=wx.EXPAND|wx.ALL, border=8 )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.okBtn, border = border, flag=wx.ALL )
-		hs.Add( self.start30, border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT)
-		hs.Add( self.start60, border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT)
+		hs.Add( self.start30, flag=wx.TOP|wx.BOTTOM|wx.RIGHT, border = border )
+		hs.Add( self.start60, flag=wx.TOP|wx.BOTTOM|wx.RIGHT, border = border)
 		self.okBtn.SetDefault()
 		hs.AddStretchSpacer()
-		hs.Add( self.cancelBtn, border = border, flag=wx.ALL )
+		hs.Add( self.cancelBtn, flag=wx.ALL, border = border )
 		vs.Add( hs, flag=wx.EXPAND )
 		
-		vs.Add( self.countdown, 1, border = border, flag=wx.ALL|wx.ALIGN_CENTRE|wx.EXPAND )
+		vs.Add( self.countdown, 1, border = border, flag=wx.ALL|wx.EXPAND )
 		
 		self.SetSizerAndFit( vs )
 		
 		self.CentreOnParent(wx.BOTH)
 		wx.CallAfter( self.SetFocus )
 		
-		wx.CallLater( 100, self.autoStartTime.SetSize, (48,-1) )
+		wx.CallLater( 100, self.autoStartTime.SetSize, autoStartTimeSize )
 
 	def startInFuture( self, event, seconds ):
 		startSeconds = GetNowSeconds() + seconds
@@ -200,8 +200,8 @@ class StartRaceAtTime( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 #-------------------------------------------------------------------------------------------
-StartText = u'\n'.join(_('Start Race').split(maxsplit=1))
-FinishText = u'\n'.join(_('Finish Race').split(maxsplit=1))
+StartText = '\n'.join(_('Start Race').split(maxsplit=1))
+FinishText = '\n'.join(_('Finish Race').split(maxsplit=1))
 
 class Actions( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
