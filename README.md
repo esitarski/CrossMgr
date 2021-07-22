@@ -3,7 +3,7 @@
 
 # Cross Manager Race Scoring Software
 
-Welcome to Cross Manager. Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
+Welcome to Cross Manager! Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
 
 The software consists of a set of executables.  For Cyclocross, MTB CX, TimeTrial, Road and Criterium races, you will need:
 
@@ -16,9 +16,15 @@ If you are scoring Track races you will need:
 * PointsRaceMgr - for scoring races with intermediate sprints and Laps gained/lost.
 * SprintMgr - for Track sprint races as well as MTB (4x, eliminator, etc.)
 
+CrossMgr was also designed to work with [RaceDB](https://github.com/esitarski/RaceDB), a web-based database for competition management and race check-in.
+
+## What's New in this Release
+
+After installing CrossMgr, check __Help/What's New__.
+
 ## System Requirements
 
-All applications are written in Python and compiled into machine code. Builds are made available for Windows, MacOSX, and Linux. In order to publish results, an internet connect is required.
+All applications are written in Python and compiled into machine code. Builds are made available for Windows, MacOSX, and Linux. In order to publish results, an internet connection is required.
 
 The minimum system requires are as follows:
 
