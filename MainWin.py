@@ -2848,7 +2848,7 @@ class MainWin( wx.Frame ):
 			excelLink.bindDefaultFieldCols()
 		except Exception as e:
 			logException( e, sys.exc_info() )
-			Utils.MessageOK( self, '{}:\n\n   {}'.format(_('Excel Read Failure'), e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK( self, '{}:\n\n   {}'.format(_("Excel Read Failure"), e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
 			Model.race = raceSave
 			return
 		
@@ -2861,7 +2861,7 @@ class MainWin( wx.Frame ):
 		AutoImportTTStartTimes()
 		
 		# Show the Properties screen for the user to review.
-		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
+		dlg = PropertiesDialog(self, title=_("Configure Race"), style=wx.DEFAULT_DIALOG_STYLE )
 		dlg.properties.refresh()
 		dlg.properties.setEditable( True )
 		dlg.folder.SetValue(os.path.dirname(fname))
