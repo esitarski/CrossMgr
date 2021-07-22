@@ -16,7 +16,7 @@ class SetGraphicDialog( wx.Dialog ):
 		
 		bhh = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.chooseButton = wx.Button( self, label = u'{}...'.format(_('Choose')) )
+		self.chooseButton = wx.Button( self, label = '{}...'.format(_('Choose')) )
 		bhh.Add( self.chooseButton, flag = wx.ALL, border = 4 )
 		self.Bind( wx.EVT_BUTTON, self.onChoose, self.chooseButton )
 

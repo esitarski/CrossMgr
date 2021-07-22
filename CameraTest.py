@@ -71,7 +71,7 @@ class CameraTestDialog( wx.Dialog ):
 		
 		self.SetSizer( sizer )
 		
-		self.resolutionFormat = _("Camera Resolution") + u': {} x {}  fps: {:.3f}'
+		self.resolutionFormat = _("Camera Resolution") + ': {} x {}  fps: {:.3f}'
 		
 		self.tStart = now()
 		self.framesPerSecond = 25

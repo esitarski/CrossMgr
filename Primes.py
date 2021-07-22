@@ -16,12 +16,12 @@ from wx.grid import GridCellFloatEditor, GridCellNumberEditor
 def getWinnerInfo( bib ):
 	race = Model.race
 	if not race or not bib:
-		return u''
+		return ''
 	
 	try:
 		riderInfo = race.excelLink.read()[bib]
 	except Exception as e:
-		return u''
+		return ''
 
 	fields = [
 		' '.join( f for f in (riderInfo.get('FirstName',''), riderInfo.get('LastName','')) if f ),
@@ -59,7 +59,7 @@ class Primes( wx.Panel ):
 			(_('Points'),				'points', 		'i'),
 			(_('Time\nBonus'),			'timeBonus', 	't'),
 			(_('Winner\nBib'),			'winnerBib',	'i'),
-			(u'',						'winnerInfo',	's'),
+			('',						'winnerInfo',	's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
@@ -143,7 +143,7 @@ class Primes( wx.Panel ):
 			if self.grid.GetCellValue(row, col) != 'Custom':
 				self.grid.SetCellValue( row, col+1, '' )
 		elif colName == 'winnerBib':
-			bib = int( u''.join(c for c in self.grid.GetCellValue(row, col) if c.isdigit()) )
+			bib = int( ''.join(c for c in self.grid.GetCellValue(row, col) if c.isdigit()) )
 			self.grid.SetCellValue( row, col+1, getWinnerInfo(bib) )
 		
 		wx.CallAfter( self.grid.AutoSizeColumns, False )
@@ -303,7 +303,7 @@ class Primes( wx.Panel ):
 				v = '{:.2f}'.format(f) if f else ''
 			elif dataType == 't':
 				t = prime.get(attr, 0.0)
-				v = Utils.formatTime(t, forceHours=True, twoDigitHours=True) if t != 0 else u''
+				v = Utils.formatTime(t, forceHours=True, twoDigitHours=True) if t != 0 else ''
 			else:
 				v = '{}'.format(prime.get(attr, ''))
 			if updateGrid:
@@ -382,7 +382,7 @@ def GetGrid():
 		externalFields = set()
 		externalInfo = {}
 	
-	title = '\n'.join( [race.title, Utils.formatDate(race.date), u'Primes'] )
+	title = '\n'.join( [race.title, Utils.formatDate(race.date), 'Primes'] )
 	
 	rightJustifyCols = set([0, 1])
 	colnames = ['Prime', _('Bib'),]
@@ -432,7 +432,7 @@ def GetGrid():
 		info = externalInfo.get( bib, {} )
 		
 		row.append( p+1 )
-		row.append( bib or u'' )
+		row.append( bib or '' )
 		
 		if hasName:
 			row.append( ', '.join( f for f in [info.get('LastName', ''), info.get('FirstName', '')] if f ) )
@@ -478,11 +478,11 @@ if __name__ == '__main__':
 	race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
 	
 	race.primes = [
-		{'sponsor': u'11111111111111', 'cash': 100, 'merchandise': '', 'winnerBib': 101, 'lapsToGo': 7 },
-		{'sponsor': u'22222222222222', 'cash': 200, 'merchandise': '', 'winnerBib': 110, 'lapsToGo': 6 },
-		{'sponsor': u'33333333333333', 'cash': 0, 'merchandise': 'Water bottle', 'winnerBib': 115, 'lapsToGo': 5 },
-		{'sponsor': u'44444444444444', 'cash': 300, 'merchandise': '', 'winnerBib': 199, 'lapsToGo': 4 },
-		{'sponsor': u'55555555555555', 'cash': 0.51, 'merchandise': 'New bike', 'winnerBib': 101, 'lapsToGo': 3 },
+		{'sponsor': '11111111111111', 'cash': 100, 'merchandise': '', 'winnerBib': 101, 'lapsToGo': 7 },
+		{'sponsor': '22222222222222', 'cash': 200, 'merchandise': '', 'winnerBib': 110, 'lapsToGo': 6 },
+		{'sponsor': '33333333333333', 'cash': 0, 'merchandise': 'Water bottle', 'winnerBib': 115, 'lapsToGo': 5 },
+		{'sponsor': '44444444444444', 'cash': 300, 'merchandise': '', 'winnerBib': 199, 'lapsToGo': 4 },
+		{'sponsor': '55555555555555', 'cash': 0.51, 'merchandise': 'New bike', 'winnerBib': 101, 'lapsToGo': 3 },
 	]
 	
 	mainWin = wx.Frame(None, title="Primes", size=(800,700) )

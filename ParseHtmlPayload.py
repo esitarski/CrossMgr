@@ -7,10 +7,10 @@ import datetime
 def ParseHtmlPayload( fname=None, content=None ):
 	assert fname or content
 	
-	payloadStart = u"/* !!! payload begin !!! */"
-	payloadEnd = u"/* !!! payload end !!! */"
+	payloadStart = "/* !!! payload begin !!! */"
+	payloadEnd = "/* !!! payload end !!! */"
 	
-	imgHeaderStart = u'id="idImgHeader" src='
+	imgHeaderStart = 'id="idImgHeader" src='
 
 	if not content:
 		try:

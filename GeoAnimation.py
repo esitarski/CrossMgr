@@ -188,7 +188,7 @@ def CreateGPX( courseName, gpsPoints ):
 	gpx.attributes['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
 	gpx.attributes['xsi:schemaLocation'] = "http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd"
 	
-	gpx.appendChild( doc.createComment( u'\n'.join( [
+	gpx.appendChild( doc.createComment( '\n'.join( [
 		'',
 		'DO NOT EDIT!',
 		'',

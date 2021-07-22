@@ -371,7 +371,7 @@ while 1:
 	
 	def sendResponse( response ):
 		print ( response )
-		clientsocket.sendall( u'{}{}'.format(response, EOL).encode() )
+		clientsocket.sendall( '{}{}'.format(response, EOL).encode() )
 	
 	print(  'Connection from:', address )
 	PROTOCOL = '1.1'

@@ -151,9 +151,9 @@ def tag( buf, name, attrs = None ):
 	if not isinstance(attrs, dict):
 		attrs = { 'class': attrs }
 	if attrs:
-		buf.write( u'<{} {}>'.format(name, u' '.join(['{}="{}"'.format(attr, value) for attr, value in attrs.items()])) )
+		buf.write( '<{} {}>'.format(name, ' '.join(['{}="{}"'.format(attr, value) for attr, value in attrs.items()])) )
 	else:
-		buf.write( u'<{}>'.format(name) )
+		buf.write( '<{}>'.format(name) )
 	yield
 	buf.write( '</{}>\n'.format(name) )
 
@@ -204,19 +204,19 @@ def plat_ind_basename( s ):
 def toAscii( s ):
 	if s is None or s == '':
 		return ''
-	ret = unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ascii','ignore').decode()
+	ret = unicodedata.normalize('NFKD', '{}'.format(s)).encode('ascii','ignore').decode()
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret
 
 invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
 def RemoveDisallowedFilenameChars( filename ):
-	cleanedFilename = unicodedata.normalize('NFKD', u'{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
+	cleanedFilename = unicodedata.normalize('NFKD', '{}'.format(filename).strip()).encode('ASCII', 'ignore').decode()
 	cleanedFilename = cleanedFilename.replace( '/', '_' ).replace( '\\', '_' )
 	return invalidFilenameChars.sub( '', cleanedFilename )
 
 def RemoveDisallowedSheetChars( sheetName ):
-	sheetName = unicodedata.normalize('NFKD', u'{}'.format(sheetName)).encode('ASCII', 'ignore').decode()
+	sheetName = unicodedata.normalize('NFKD', '{}'.format(sheetName)).encode('ASCII', 'ignore').decode()
 	return re.sub('[+!#$%&+~`".:;|\\\\/?*\[\] ]+', ' ', sheetName)[:31]		# four backslashes required to match one backslash in re.
 
 class UniqueExcelSheetName():
@@ -238,12 +238,12 @@ def removeDiacritic( s ):
 	without any diacritical marks.
 	'''
 	try:
-		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
 	except Exception:
 		return s
 	
 def GetFileName( rDate, rName, rNum, rMemo ):
-	return u'{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
+	return '{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
 		
 soundCache = {}
 def Play( soundFile ):
@@ -484,15 +484,15 @@ def ordinal( value ):
 		try:
 			value = int(value)
 		except ValueError:
-			return u'{}'.format(value)
+			return '{}'.format(value)
 		
 	if value == 999999:
-		return translate(u'DNF')
+		return translate('DNF')
 
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
-	}.get( lang[:2], lambda v: u'{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
+	}.get( lang[:2], lambda v: '{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
 
 def getHomeDir( appName='CrossMgr' ):
 	sp = wx.StandardPaths.Get()
@@ -561,7 +561,7 @@ def writeLog( message ):
 	try:
 		dt = datetime.datetime.now()
 		dt = dt.replace( microsecond = 0 )
-		msg = u'{} ({} {}) {}{}'.format(
+		msg = '{} ({} {}) {}{}'.format(
 			dt.isoformat(),
 			AppVer,
 			PlatformName,
@@ -579,11 +579,11 @@ def disable_stdout_buffering():
 
 def logCall( f ):
 	def _getstr( x ):
-		return u'{}'.format(x) if not isinstance(x, wx.Object) else u'<<{}>>'.format(x.__class__.__name__)
+		return '{}'.format(x) if not isinstance(x, wx.Object) else u'<<{}>>'.format(x.__class__.__name__)
 	
 	def new_f( *args, **kwargs ):
-		parameters = [_getstr(a) for a in args] + [ u'{}={}'.format( key, _getstr(value) ) for key, value in kwargs.items() ]
-		writeLog( 'call: {}({})'.format(f.__name__, removeDiacritic(u', '.join(parameters))) )
+		parameters = [_getstr(a) for a in args] + [ '{}={}'.format( key, _getstr(value) ) for key, value in kwargs.items() ]
+		writeLog( 'call: {}({})'.format(f.__name__, removeDiacritic(', '.join(parameters))) )
 		return f( *args, **kwargs)
 	return new_f
 	

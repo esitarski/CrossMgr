@@ -171,7 +171,7 @@ if __name__ == '__main__':
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
 	Model.race.winAndOut = True
-	Model.race.organizer = u'\u2713\u2713\u2713\u2713\u2713\u2713'
+	Model.race.organizer = '\u2713\u2713\u2713\u2713\u2713\u2713'
 	p1 = Template( Model.race )
 	p1.write( 'TemplateTest1.template' )
 	p2 = Template()

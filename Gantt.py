@@ -123,32 +123,32 @@ class Gantt( wx.Panel ):
 			self.popupInfo = [
 				(_('Add Missing Last Lap'),		_('Add Missing Last Lap'),		self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None),
-				(_('Pull after Lap End') + u'...',_('Pull after Lap End'),		self.OnPopupPull, allCases),
-				(_('DNF after Lap End') + u'...',	_('DNF after Lap End'),			self.OnPopupDNF, allCases),
+				(_('Pull after Lap End') + '...',_('Pull after Lap End'),		self.OnPopupPull, allCases),
+				(_('DNF after Lap End') + '...',	_('DNF after Lap End'),			self.OnPopupDNF, allCases),
 				(None, None, None, None),
-				(_('Correct Lap End Time') + u'...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
-				(_('Shift Lap End Time') + u'...',_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
-				(_('Delete Lap End Time') + u'...',_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
+				(_('Correct Lap End Time') + '...',_('Change number or lap end time'),		self.OnPopupCorrect, interpCase),
+				(_('Shift Lap End Time') + '...',_('Move lap end time earlier/later'),	self.OnPopupShift, interpCase),
+				(_('Delete Lap End Time') + '...',_('Delete Lap End Time'),		self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None),
-				(_('Mass Pull after Lap End Time') + u'...',_('Pull Rider and all Riders after at Lap End'), self.OnPopupMassPull, allCases),
+				(_('Mass Pull after Lap End Time') + '...',_('Pull Rider and all Riders after at Lap End'), self.OnPopupMassPull, allCases),
 				(None, None, None, None),
-				(_('Note') + u'...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
+				(_('Note') + '...',				_('Add/Edit lap Note'),			self.OnPopupLapNote, allCases),
 				(None, None, None, None),
-				(_('Turn off Autocorrect') + u'...',_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
+				(_('Turn off Autocorrect') + '...',_('Turn off Autocorrect'),		self.OnPopupAutocorrect, allCases),
 				(None, None, None, None),
 				(_('Swap with Rider before'),		_('Swap with Rider before'),	self.OnPopupSwapBefore, nonInterpCase),
 				(_('Swap with Rider after'),		_('Swap with Rider after'),		self.OnPopupSwapAfter, nonInterpCase),
 				(None, None, None, None),
-				(_('Show Lap Details') + u'...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
+				(_('Show Lap Details') + '...', 	_('Show Lap Details'),			self.OnPopupLapDetail, allCases),
 				(None, None, None, None),
-				(_('RiderDetail') + u'...',			_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
+				(_('RiderDetail') + '...',			_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
 				(_('Results'), 						_('Switch to Results tab'),		self.OnPopupResults, allCases),
 			]
 			
 			self.splitMenuInfo = [
-					(u'{} {}'.format(split-1, _('Split') if split-1 == 1 else _('Splits')),
+					('{} {}'.format(split-1, _('Split') if split-1 == 1 else _('Splits')),
 					lambda evt, s = self, splits = split: s.doSplitLap(splits)) for split in range(2,8) ] + [
-					(_('Custom') + u'...',
+					(_('Custom') + '...',
 					lambda evt, s = self: s.doCustomSplitLap())]
 
 			self.menuOptions = {}
@@ -260,7 +260,7 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			u'{} {}: {} {}, {}?'.format(
+			'{} {}: {} {}, {}?'.format(
 				_('Bib'), self.entry.num,
 				_('Pull Rider after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True)),
 			_('Pull Rider') ):
@@ -280,7 +280,7 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			u'{} {}: {} {}, {}?'.format(
+			'{} {}: {} {}, {}?'.format(
 				_('Bib'), self.entry.num,
 				_('DNF Rider after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True)),
 			_('DNF Rider') ):
@@ -300,7 +300,7 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			u'{} {}: {}?'.format(_('Bib'), self.entry.num, _('Turn off Autocorrect')),
+			'{} {}: {}?'.format(_('Bib'), self.entry.num, _('Turn off Autocorrect')),
 			_('Turn off Autocorrect') ):
 			return
 		try:
@@ -353,7 +353,7 @@ class Gantt( wx.Panel ):
 		if not self.entry or not Model.race:
 			return
 		Model.race.lapNote = getattr(Model.race, 'lapNote', {})
-		dlg = wx.TextEntryDialog( self, u"{} {}: {} {}: {}:".format(
+		dlg = wx.TextEntryDialog( self, '{} {}: {} {}: {}:'.format(
 						_('Bib'), self.entry.num, _('Lap'), self.entry.lap, _('Note'), 
 					), _("Lap Note"),
 					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
@@ -379,7 +379,7 @@ class Gantt( wx.Panel ):
 		if not self.entry:
 			return
 		if not Utils.MessageOKCancel( self,
-			u'{} {}: {} {}, {}.\n{} {}.\n\n{}?'.format(
+			'{} {}: {} {}, {}.\n{} {}.\n\n{}?'.format(
 				_('Bib'), self.entry.num,
 				_('Pull Rider after lap'), self.entry.lap, Utils.formatTime(self.entry.t+1, True),
 				_('And, Pull all riders ranked lower after lap'), self.entry.lap,
@@ -451,37 +451,37 @@ class Gantt( wx.Panel ):
 				riderInfo = {}
 			
 			try:
-				riderName = u'{}, {} {}'.format(riderInfo['LastName'], riderInfo['FirstName'], self.entryEnd.num)
+				riderName = '{}, {} {}'.format(riderInfo['LastName'], riderInfo['FirstName'], self.entryEnd.num)
 			except KeyError:
 				try:
-					riderName = u'{} {}'.format(riderInfo['LastName'], self.entryEnd.num)
+					riderName = '{} {}'.format(riderInfo['LastName'], self.entryEnd.num)
 				except KeyError:
 					try:
-						riderName = u'{} {}'.format(riderInfo['FirstName'], self.entryEnd.num)
+						riderName = '{} {}'.format(riderInfo['FirstName'], self.entryEnd.num)
 					except KeyError:
-						riderName = u'{}'.format(self.entryEnd.num)
+						riderName = '{}'.format(self.entryEnd.num)
 						
 			if leaderEntryStart:
 				tDown = tLapStart - leaderEntryStart.t
-				infoDownStart = u'\n' + u'{}: {} ({})'.format(
+				infoDownStart = '\n' + '{}: {} ({})'.format(
 					_('Lap Start down from leader'), Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownStart = ''
 			if leaderEntryEnd:
 				tDown = tLapEnd - leaderEntryEnd.t
-				infoDownEnd = u'\n' + u'{}: {} {}'.format(
+				infoDownEnd = '\n' + '{}: {} {}'.format(
 					_('Lap End down from leader'), Utils.formatTime(tDown, True), leaderEntryStart.num)
 			else:
 				infoDownEnd = ''
 				
 			infoStart = race.numTimeInfo.getInfoStr( self.entryStart.num, tLapStart )
 			if infoStart:
-				infoStart = u'\n{} {}'.format(_('Lap Start'), infoStart)
+				infoStart = '\n{} {}'.format(_('Lap Start'), infoStart)
 			infoEnd = race.numTimeInfo.getInfoStr( self.entryEnd.num, tLapEnd )
 			if infoEnd:
-				infoEnd = u'\n{} {}'.format(_('Lap End'), infoEnd)
+				infoEnd = '\n{} {}'.format(_('Lap End'), infoEnd)
 		
-			info = (u'{}: {}  {}: {}\n{}: {}   {}: {}\n{}: {}\n{}{}{}{}'.format(
+			info = ('{}: {}  {}: {}\n{}: {}   {}: {}\n{}: {}\n{}{}{}{}'.format(
 					_('Rider'),		riderName,
 					_('Lap'),		self.entryEnd.lap,
 					_('Lap Start'),	Utils.formatTime(tLapStart),
@@ -523,7 +523,7 @@ class Gantt( wx.Panel ):
 				projected	+= sum( 1 for i, n in enumerate(r.interp)	if n and i < len(r.raceTimes) and r.raceTimes[i] < tCur )
 			if total:
 				toPercent = 100.0 / float(total)
-				s = u'  {}: {}    {}: {} ({:.2n}%)    {}: {} ({:.2n}%)    {}: {} ({:.2n}%)    {}: {}'.format(
+				s = '  {}: {}    {}: {} ({:.2n}%)    {}: {} ({:.2n}%)    {}: {} ({:.2n}%)    {}: {}'.format(
 						_('Total Entries'),	total,
 						_('Projected'),		projected,	projected * toPercent,
 						_('Edited'),		edited,		edited * toPercent,
@@ -583,10 +583,10 @@ class Gantt( wx.Panel ):
 		
 		if race.showFullNamesInChart:
 			def getLabel( r ):
-				return u'{} {} {}'.format( getattr(r, 'FirstName', u''), getattr(r, 'LastName', u''), r.num or u'' ).strip()
+				return '{} {} {}'.format( getattr(r, 'FirstName', ''), getattr(r, 'LastName', ''), r.num or '' ).strip()
 		else:
 			def getLabel( r ):
-				return u'{} {}'.format( r.short_name(12), r.num or u'' ).strip()
+				return '{} {}'.format( r.short_name(12), r.num or '' ).strip()
 		
 		resultBest = (0, sys.float_info.max)
 		labels, status = [], []

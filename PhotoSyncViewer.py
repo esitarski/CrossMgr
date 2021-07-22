@@ -149,7 +149,7 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 		milliseconds = fields[0]
 		if milliseconds and Model.race:
 			Model.race.advancePhotoMilliseconds = int( milliseconds )
-			Utils.MessageOK( self, u'{} {}'.format(_('Advance/Delay Photo Milliseconds set to'), milliseconds), _('Advance/Delay Milliseconds') )
+			Utils.MessageOK( self, '{} {}'.format(_('Advance/Delay Photo Milliseconds set to'), milliseconds), _('Advance/Delay Milliseconds') )
 		
 	def OnClose( self, event ):
 		self.Show( False )
@@ -202,10 +202,10 @@ class PhotoSyncViewerDialog( wx.Dialog ):
 				deltaMin = abs(deltaMS[i])
 				iMin = i
 			if deltaMS[i] is None:
-				photoLabels[i].SetLabel( u'' )
+				photoLabels[i].SetLabel( '' )
 				photoBitmaps[i].SetBitmapLabel( wx.NullBitmap )
 			else:
-				photoLabels[i].SetLabel( u'{}ms'.format(deltaMS[i]) )
+				photoLabels[i].SetLabel( '{}ms'.format(deltaMS[i]) )
 				image = PhotoFinish.PilImageToWxImage( frame )
 				image = RescaleImage( image, self.photoWidth, self.photoHeight )
 				bitmap = image.ConvertToBitmap()
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 	
 	mainWin = wx.Frame(None, title="CrossMan", size=(600,400))
 	mainWin.Show()
-	photoSyncDialog = PhotoSyncViewerDialog( mainWin, title = u"PhotoSyncViewer", size=(600,400) )
+	photoSyncDialog = PhotoSyncViewerDialog( mainWin, title = "PhotoSyncViewer", size=(600,400) )
 	def doRefresh( bib ):
 		t = (datetime.datetime.now() - tRef).total_seconds()
 		wx.CallLater( 300, photoSyncDialog.refresh, vb, t, bib )

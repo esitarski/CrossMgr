@@ -11,7 +11,7 @@ class FtpUploadProgress( wx.Dialog ):
 		self.bytesTotal = bytesTotal
 		self.startTime = datetime.datetime.now()
 		
-		self.message = wx.StaticText( self, label=u'{}:\n\n{}/{}:  '.format(
+		self.message = wx.StaticText( self, label='{}:\n\n{}/{}:  '.format(
 				_('Ftp Update Progress'),
 				1, self.fileTotal,
 			)
@@ -26,18 +26,18 @@ class FtpUploadProgress( wx.Dialog ):
 		self.SetSizerAndFit( ms )
 		
 	def update( self, bytestr, fname, i ):
-		eta = u''
+		eta = ''
 		tCur = (datetime.datetime.now() - self.startTime).total_seconds()
 		self.bytesCur += len(bytestr)
 		if self.bytesTotal:
 			tEnd = tCur * float(self.bytesTotal) / float(self.bytesCur)
-			eta = u'{},  {} {}'.format(Utils.formatTime(
+			eta = '{},  {} {}'.format(Utils.formatTime(
 				max(0.0, tEnd - tCur + 1.0)),
 				max(0.0, self.bytesTotal - self.bytesCur) // 1024, _('KB to go'),
 			)
 	
 		self.bytesGauge.SetValue( self.bytesCur )
-		self.message.SetLabel( u'{}:  {}\n\n{} {} {} {}:  {}'.format(
+		self.message.SetLabel( '{}:  {}\n\n{} {} {} {}:  {}'.format(
 				_('Ftp Update Progress'), eta,
 				_('Uploading'), i+1, _('of'), self.fileTotal,
 				os.path.basename(fname),

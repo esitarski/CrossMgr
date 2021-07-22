@@ -190,7 +190,7 @@ class SummaryPage(adv.WizardPageSimple):
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		vbs.Add( wx.StaticText(self, label = _('Summary:')), flag=wx.ALL, border = border )
-		vbs.Add( wx.StaticText(self, label = u' '), flag=wx.ALL, border = border )
+		vbs.Add( wx.StaticText(self, label = ' '), flag=wx.ALL, border = border )
 
 		self.fileLabel = wx.StaticText( self, label = _('Excel File:') )
 		self.fileName = wx.StaticText( self )

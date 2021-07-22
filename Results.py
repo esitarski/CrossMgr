@@ -234,14 +234,14 @@ class Results( wx.Panel ):
 				pos = int(self.labelGrid.GetCellValue(row, 0))
 			except Exception:
 				return
-			event.GetEventObject().SetToolTip(u'{} {}, {} {}: {} {}'.format(
+			event.GetEventObject().SetToolTip('{} {}, {} {}: {} {}'.format(
 					_('Pos'), pos,
 					_('Bib'), num,
-					_('close finish to'), u','.join( u'{} {}'.format(_('Bib'), bib) for bib in self.closeFinishBibs[num]),
+					_('close finish to'), ','.join( '{} {}'.format(_('Bib'), bib) for bib in self.closeFinishBibs[num]),
 				)
 			)
 		else:
-			event.GetEventObject().SetToolTip(u'')
+			event.GetEventObject().SetToolTip('')
 	
 	def alignLabelToLapScroll(self): 
 		Utils.AlignVerticalScroll( self.labelGrid, self.lapGrid )
@@ -306,7 +306,7 @@ class Results( wx.Panel ):
 					race.sortLap = int(label.split()[1])
 			else:
 				label = self.labelGrid.GetColLabelValue( col )
-				if label[:1] != u'<':
+				if label[:1] != '<':
 					race.sortLabel = label
 		
 		wx.CallAfter( self.refresh )
@@ -577,7 +577,7 @@ class Results( wx.Panel ):
 		self.numSelect = None
 	
 	def setNumSelect( self, num ):
-		self.numSelect = num if num is None else u'{}'.format(num)
+		self.numSelect = num if num is None else '{}'.format(num)
 		if self.numSelect:
 			self.search.SetValue( self.numSelect )
 
@@ -749,7 +749,7 @@ class Results( wx.Panel ):
 				if getattr(result, 'lapSpeeds', None):
 					for i, s in enumerate(result.lapSpeeds):
 						try:
-							data[i+firstLapCol][r] = u'{:.2f}'.format(s)
+							data[i+firstLapCol][r] = '{:.2f}'.format(s)
 						except IndexError:
 							pass
 		elif self.selectDisplay == Results.DisplayRaceSpeeds:
@@ -757,7 +757,7 @@ class Results( wx.Panel ):
 				if getattr(result, 'raceSpeeds', None):
 					for i, s in enumerate(result.raceSpeeds):
 						try:
-							data[i+firstLapCol][r] = u'{:.2f}'.format(s)
+							data[i+firstLapCol][r] = '{:.2f}'.format(s)
 						except IndexError:
 							pass
 		
@@ -780,7 +780,7 @@ class Results( wx.Panel ):
 				elif colnames[sortCol] in [_('Pos'), _('Bib')]:
 					getFunc = lambda x: int(x) if x and '{}'.format(x).isdigit() else maxVal
 				else:
-					getFunc = lambda x: u'{}'.format(x)
+					getFunc = lambda x: '{}'.format(x)
 					maxVal = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 			sortPairs = []
 			for r, result in enumerate(results):
@@ -793,12 +793,12 @@ class Results( wx.Panel ):
 			
 			for c in range(len(data)):
 				col = data[c]
-				data[c] = [col[i] if i < len(col) else u'' for k, i in sortPairs]
+				data[c] = [col[i] if i < len(col) else '' for k, i in sortPairs]
 			
 			if colnames[sortCol] != _('Bib'):
 				for r in range(len(data[sortCol])):
 					if data[sortCol][r]:
-						data[sortCol][r] = u'{} [{}: {}]'.format(data[sortCol][r], r+1, data[1][r])
+						data[sortCol][r] = '{} [{}: {}]'.format(data[sortCol][r], r+1, data[1][r])
 		
 		# Highlight the sorted column.
 		if sortLap:
@@ -806,7 +806,7 @@ class Results( wx.Panel ):
 			for name in exportGrid.colnames:
 				try:
 					if int(name.split()[1]) == sortLap:
-						name = u'<{}>\n{}'.format(name,
+						name = '<{}>\n{}'.format(name,
 												[_('by Lap Time'), _('by Race Time'), _('by Lap Speed'), _('by Race Speed')][self.selectDisplay])
 				except Exception:
 					pass
@@ -815,7 +815,7 @@ class Results( wx.Panel ):
 			colnames = []
 			for name in exportGrid.colnames:
 				if name == sortLabel:
-					name = u'<{}>'.format(name)
+					name = '<{}>'.format(name)
 				colnames.append( name )
 		else:
 			colnames = exportGrid.colnames

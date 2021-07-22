@@ -141,12 +141,12 @@ class Recommendations( wx.Panel ):
 				last = info.get('LastName','')
 				first = info.get('FirstName','')
 				if last and first:
-					return u'{}, {}'.format(last, first)
+					return '{}, {}'.format(last, first)
 				return last or first or ' '
 				
 			colnames = [ _('Num'), _('Name'), _('Issue'), _('Recommendation') ]
 			data = [[],[], [], []]
-			def append( num = u'', name = u'', issue = u'', recommendation = u'' ):
+			def append( num = '', name = '', issue = '', recommendation = '' ):
 				data[0].append( '{}'.format(num) )
 				data[1].append( '{}'.format(name) )
 				data[2].append( '{}'.format(issue) )
@@ -156,7 +156,7 @@ class Recommendations( wx.Panel ):
 
 			# Check for Excel errors (very bad!).
 			for num, errorStr in excelErrors:
-				append( num, getName(num), 'Excel', u'{} {}'.format(_('Fix'), errorStr) )
+				append( num, getName(num), 'Excel', '{} {}'.format(_('Fix'), errorStr) )
 			
 			firstRiderInCategory = []
 			entries = race.interpolate()
@@ -193,7 +193,7 @@ class Recommendations( wx.Panel ):
 							startOffsetStr = Utils.formatTime( race.getStartOffset(rider.num) )
 							append( rider.num, getName(rider.num),
 									_('EarlyTimes'),
-									u'{} {} ({}={}, {}={} {}, {}="{}")'.format(
+									'{} {} ({}={}, {}={} {}, {}="{}")'.format(
 										_('Rider has entries before the Start Offset.'),
 										_('Early times are not shown in the results.'),
 										_('Count'), earlyTimeCount,
@@ -212,7 +212,7 @@ class Recommendations( wx.Panel ):
 							extra = numRecordedTimes - rr.laps
 							append( rider.num, getName(rider.num),
 									_('Laps'),
-									u'{} ({}={})'.format(
+									'{} ({}={})'.format(
 										_("Rider has extra laps not shown in results (all riders finish on leader's last lap)"),
 										_('Count'), extra,
 									),
@@ -223,9 +223,9 @@ class Recommendations( wx.Panel ):
 						for rr in results:
 							rider = race.riders[rr.num]
 							if rider.status == rider.Finisher and getattr(rr,'ttPenalty',0.0) > 0.0:
-								reason = u' '.join( [u'{:.3f}'.format(getattr(rr,'ttPenalty')), _('sec'), _("time penalty")] )
-								if getattr(rr, 'ttNote', u''):
-									reason += u' - {}'.format( getattr(rr, 'ttNote') )
+								reason = ' '.join( ['{:.3f}'.format(getattr(rr,'ttPenalty')), _('sec'), _("time penalty")] )
+								if getattr(rr, 'ttNote', ''):
+									reason += ' - {}'.format( getattr(rr, 'ttNote') )
 								append( rider.num, getName(rider.num), _('Penalty'), reason )
 				
 				# Trim out all entries not in this category and all non-finishers.
@@ -263,7 +263,7 @@ class Recommendations( wx.Panel ):
 							append(
 								category.catStr, category.fullname,
 								_('Laps'),
-								u'{}: {}  {}: {}  {}'.format(
+								'{}: {}  {}: {}  {}'.format(
 									_('Category'), category.fullname,
 									_('Race Laps'), maxNonInterpLap,
 									_('Verify that Category did Race Laps.  Update Race Laps for Category if necessary.'),
@@ -288,7 +288,7 @@ class Recommendations( wx.Panel ):
 							if iLast != len(riderEntriesCur) and race.isFinished():
 								append( num, getName(num),
 										_('DNF'),
-										u'{} {}.'.format(_('Check for DNF after rider lap'), iLast-1) )
+										'{} {}.'.format(_('Check for DNF after rider lap'), iLast-1) )
 						except (KeyError, StopIteration):
 							pass
 							
@@ -310,7 +310,7 @@ class Recommendations( wx.Panel ):
 							if missingCount:
 								append( num, getName(num),
 										_('Lapped'),
-										u'{} {}'.format(
+										'{} {}'.format(
 											_("Confirm rider was lapped by Category Leader in leader's lap"),
 											(', '.join( '{}'.format(i) for i, b in enumerate(appearedInLap) if not b ))
 										)
@@ -323,7 +323,7 @@ class Recommendations( wx.Panel ):
 						if rider.times:
 							append( num, getName(num),
 									_('DNS'),
-									u'{} {}: {}'.format(_('Rider has recorded times.'), _('Check status'), statusName)
+									'{} {}: {}'.format(_('Rider has recorded times.'), _('Check status'), statusName)
 							)
 							
 					elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
@@ -331,7 +331,7 @@ class Recommendations( wx.Panel ):
 							# Missing status times.
 							append( num, getName(num),
 									_('Time'),
-									u'{}  {}: {}'.format(_('Check if time is accurate.'), _('Status'), statusName)
+									'{}  {}: {}'.format(_('Check if time is accurate.'), _('Status'), statusName)
 							)
 						else:
 							# Recorded time exceeds status time.
@@ -339,7 +339,7 @@ class Recommendations( wx.Panel ):
 								append(
 									num, getName(num),
 									_('Time'),
-									u'{}: {}.  {}: {} > {}'.format(
+									'{}: {}.  {}: {} > {}'.format(
 										_('Check time for Status'), statusName,
 										_('Found recorded time'), Utils.SecondsToStr(rider.times[-1]), Utils.SecondsToStr(rider.tStatus),
 									)
@@ -364,7 +364,7 @@ class Recommendations( wx.Panel ):
 						append(
 							num, getName(num),
 							_('Projected'),
-							u'{} ({})'.format(_('Check rider has projected times'), count)
+							'{} ({})'.format(_('Check rider has projected times'), count)
 						)
 					
 				# Show missing tag reads.
@@ -381,7 +381,7 @@ class Recommendations( wx.Panel ):
 				for t, rider, catCur in firstRiderInCategory:
 					append( rider.num, getName(rider.num),
 							_('Start'),
-							u'{}: {}  {}: {}'.format(_('Category'), catCur.name, _('First recorded time'), Utils.formatTime(t, True), )
+							'{}: {}  {}: {}'.format(_('Category'), catCur.name, _('First recorded time'), Utils.formatTime(t, True), )
 					)
 				
 				# end if entries

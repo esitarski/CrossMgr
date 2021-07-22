@@ -21,7 +21,7 @@ def getRiderInfo( bib ):
 	try:
 		riderInfo = race.excelLink.read()[bib]
 	except (KeyError, AttributeError) as e:
-		return u'', u'', u''
+		return '', '', ''
 	
 	CatComponent = Model.Category.CatComponent
 	for cat in race.getCategories( startWaveOnly=False ):
@@ -29,9 +29,9 @@ def getRiderInfo( bib ):
 			componentName = cat.fullname
 			break
 	else:
-		componentName = u''
+		componentName = ''
 	
-	return u', '.join( f for f in (riderInfo.get('LastName',u''), riderInfo.get('FirstName',u'')) if f ), riderInfo.get('Team', u''), componentName
+	return ', '.join( f for f in (riderInfo.get('LastName',''), riderInfo.get('FirstName','')) if f ), riderInfo.get('Team', ''), componentName
 
 class TimeEditor(gridlib.GridCellEditor):
 	defaultValue = '00:00.000'
@@ -66,7 +66,7 @@ class TimeEditor(gridlib.GridCellEditor):
 				s += float( f )
 			except Exception:
 				pass
-		val = Utils.formatTime( s, highPrecision=True ) if s else u''
+		val = Utils.formatTime( s, highPrecision=True ) if s else ''
 		if val != self.startValue:
 			changed = True
 			grid.GetTable().SetValue( row, col, val )
@@ -86,7 +86,7 @@ class Pulled( wx.Panel ):
 		vsOverall = wx.BoxSizer( wx.VERTICAL )
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.showingCategoryLabel = wx.StaticText( self, label=u'{}:'.format(_('Start Wave')) )
+		self.showingCategoryLabel = wx.StaticText( self, label='{}:'.format(_('Start Wave')) )
 		self.showingCategory = wx.StaticText( self )
 		self.showingCategory.SetFont( self.showingCategory.GetFont().Bold() )
 		self.categoryLabel = wx.StaticText( self, label=_('Category:') )
@@ -106,11 +106,11 @@ class Pulled( wx.Panel ):
 		#---------------------------------------------------------------
 		self.colNameFields = (
 			(_('Laps to Go'),			'lapsToGo',			'i'),
-			(u'    ' + _('Bib'),		'pulledBib',		'i'),
-			(u'Name',					'pulledName',		's'),
-			(u'Team',					'pulledTeam',		's'),
-			(u'Component',				'pulledComponent',	's'),
-			(u'Error',					'pulledError',		's'),
+			('    ' + _('Bib'),			'pulledBib',		'i'),
+			('Name',					'pulledName',		's'),
+			('Team',					'pulledTeam',		's'),
+			('Component',				'pulledComponent',	's'),
+			('Error',					'pulledError',		's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
@@ -167,7 +167,7 @@ class Pulled( wx.Panel ):
 			category = None
 		else:
 			category = race.getCategoryStartWave( FixCategories(self.categoryChoice, getattr(race, 'resultsCategory', 0)) )
-		categoryName = category.fullname if category else u''
+		categoryName = category.fullname if category else ''
 		if categoryName != self.showingCategory.GetLabel():
 			self.showingCategory.SetLabel( categoryName )
 			self.hbs.Layout()
@@ -190,26 +190,26 @@ class Pulled( wx.Panel ):
 	
 	def getError( self, bib, lapsToGo, laps ):
 		if not bib:
-			return u''
+			return ''
 		if not lapsToGo:
 			lapsToGo = 1
 		success, info = self.getRaceInfo()
 		if not success:
-			return u''
+			return ''
 		race, category, results, laps = info
 		
 		if bib not in race.riders:
-			return _(u'Bib not in Race')
+			return _('Bib not in Race')
 		if race.getCategory(bib) != category:
-			return _(u'Bib not in Category')
+			return _('Bib not in Category')
 		rider = race.riders[bib]
 		if rider.status not in (Model.Rider.Pulled, Model.Rider.Finisher):
-			return u'{}: {}'.format(_('Bib has non-Finisher Status'), Model.Rider.statusNames[rider.status])			
+			return '{}: {}'.format(_('Bib has non-Finisher Status'), Model.Rider.statusNames[rider.status])			
 		if lapsToGo >= laps:
-			return u'{}: {}'.format(_('Laps To Go exceeds for Race Laps'), laps )
+			return '{}: {}'.format(_('Laps To Go exceeds for Race Laps'), laps )
 		if lapsToGo <= 0:
-			return u'{}'.format(_('Laps To Go must be >= 0') )
-		return u''
+			return '{}'.format(_('Laps To Go must be >= 0') )
+		return ''
 	
 	def onCellChange( self, event ):
 		row, col = event.GetRow(), event.GetCol()
@@ -253,10 +253,10 @@ class Pulled( wx.Panel ):
 		for col, (name, attr, dataType) in enumerate(self.colNameFields):
 			v = self.grid.GetCellValue( row, col ).strip()
 			if dataType == 'i':
-				v = u''.join( c for c in v if c.isdigit() )
+				v = ''.join( c for c in v if c.isdigit() )
 				v = int( v or 0 )
 			elif dataType == 'f':
-				v = u''.join( c for c in v if c.isdigit() or c == '.')
+				v = ''.join( c for c in v if c.isdigit() or c == '.')
 				v = float( v or 0.0 )
 			elif dataType == 't':
 				v = Utils.StrToSeconds( v or '' )
@@ -293,7 +293,7 @@ class Pulled( wx.Panel ):
 		col = self.iCol['lapsToGo']
 		for row in range(self.grid.GetNumberRows()-1, 0, -1):
 			if self.grid.GetCellValue( row, col) == self.grid.GetCellValue( row-1, col):
-				self.grid.SetCellValue( row, col, u'')
+				self.grid.SetCellValue( row, col, '')
 		
 		self.grid.AutoSizeColumns( False )								# Resize to fit the column name.
 		self.grid.AutoSizeRows( False )
@@ -309,7 +309,7 @@ class Pulled( wx.Panel ):
 			self.grid.ClearGrid()
 			return
 		col = self.iCol['pulledBib']
-		tableBibs = set( int(u'0' + self.grid.GetCellValue(row, col)) for row in range(self.grid.GetNumberRows()) )
+		tableBibs = set( int('0' + self.grid.GetCellValue(row, col)) for row in range(self.grid.GetNumberRows()) )
 		tableBibs.discard( 0 )
 		if not tableBibs:
 			return self.updateGrid()

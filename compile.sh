@@ -288,11 +288,21 @@ envSetup() {
         # Unfortunately, this always fails in an virtualenv and/or there are other missing C/C++ libraries.
         # The build also takes >40 minutes, which is an excessive amount of time to wait for a failed build.
         # The solution is to grab the pre-built install for this Ubuntu version from wxPython extras.
-		UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
+
+		# Old way, but lsb_release is not always included in Linux, so this can fail.
+		# UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
+		
+		# New way.  Get version information from /etc/os-release.  Ignore the third version value (if present).
+		UBUNTU_RELEASE=$(awk '/VERSION_ID/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release)
+		if [ $? -ne 0 ];then
+			echo "Pip requirements: could not get UBUNTU_RELEASE from /etc/os-release. Aborting..."
+			exit 1
+		fi
 		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -v -r /dev/stdin
 	else
 		pip3 install -v -r requirements.txt
 	fi
+	
     if [ $? -ne 0 ];then
         echo "Pip requirements install failed. Aborting..."
         exit 1

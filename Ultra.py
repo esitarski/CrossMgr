@@ -123,7 +123,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
-		Utils.writeLog( u'Ultra: {}: {}'.format(category, message) )
+		Utils.writeLog( 'Ultra: {}: {}'.format(category, message) )
 	
 	def keepGoing():
 		try:
@@ -139,14 +139,14 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	def makeCall( s, message, getReply=True, comment='' ):
 		cmd = message.split(';', 1)[0]
 		buffer = None
-		qLog( 'command', u'sending: {}{}'.format(message, ' ({})'.format(comment) if comment else '') )
+		qLog( 'command', 'sending: {}{}'.format(message, ' ({})'.format(comment) if comment else '') )
 		try:
 			#socketSend( s, bytes('{}{}'.format(message,EOL)) )
 			socketSend( s, bytes(message) )
 			if getReply:
 				buffer = socketReadDelimited( s )
 		except Exception as e:
-			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			qLog( 'connection', '{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
 		return buffer
@@ -161,25 +161,25 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			time.sleep( delaySecs )
 		
 		#-----------------------------------------------------------------------------------------------------
-		qLog( 'connection', u'{} {}:{}'.format(_('Attempting to connect to Ultra reader at'), HOST, PORT) )
+		qLog( 'connection', '{} {}:{}'.format(_('Attempting to connect to Ultra reader at'), HOST, PORT) )
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			s.settimeout( timeoutSecs )
 			s.connect( (HOST, PORT) )
 		except Exception as e:
-			qLog( 'connection', u'{}: {}'.format(_('Connection to Ultra reader failed'), e) )
+			qLog( 'connection', '{}: {}'.format(_('Connection to Ultra reader failed'), e) )
 			s, status, startOperation = None, None, None
 			
-			qLog( 'connection', u'{}'.format(_('Attempting AutoDetect...')) )
+			qLog( 'connection', '{}'.format(_('Attempting AutoDetect...')) )
 			HOST_AUTO = AutoDetect( callback = autoDetectCallback )
 			if HOST_AUTO:
-				qLog( 'connection', u'{}: {}'.format(_('AutoDetect Ultra at'), HOST_AUTO) )
+				qLog( 'connection', '{}: {}'.format(_('AutoDetect Ultra at'), HOST_AUTO) )
 				HOST = HOST_AUTO
 			else:
 				time.sleep( delaySecs )
 			continue
 
-		qLog( 'connection', u'{} {}:{}'.format(_('connect to Ultra reader SUCCEEDS on'), HOST, PORT) )
+		qLog( 'connection', '{} {}:{}'.format(_('connect to Ultra reader SUCCEEDS on'), HOST, PORT) )
 		
 		#-----------------------------------------------------------------------------------------------------
 		try:
@@ -212,7 +212,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 					qLog( 'connection', _('Lost heartbeat.') )
 				continue
 			except Exception as e:
-				qLog( 'connection', u'{}: "{}"'.format(_('Connection failed'), e) )
+				qLog( 'connection', '{}: "{}"'.format(_('Connection failed'), e) )
 				break
 
 			tagTimes = []
@@ -231,7 +231,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				tag, t = parseTagTime( message )
 				
 				if tag is None or t is None:
-					qLog( 'command', u'{}: "{}"'.format(_('Unexpected reader message'), message) )
+					qLog( 'command', '{}: "{}"'.format(_('Unexpected reader message'), message) )
 					continue
 				
 				t += readerComputerTimeDiff

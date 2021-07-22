@@ -25,7 +25,7 @@ def parseTagTime( line, lineNo, errors ):
 		t = datetime.datetime( int(year), int(mon), int(day), int(hh), int(mm), int(ss), int(mss) )
 		return tag, t
 	except Exception:
-		errors.append( u'{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
+		errors.append( '{} {}: {}'.format(_('line'), lineNo, _('unrecognised input')) )
 		return None, None
 
 def AlienImportDialog( parent, id = wx.ID_ANY ):

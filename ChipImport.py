@@ -18,7 +18,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 
 	race = Model.race
 	if race and race.isRunning():
-		Utils.MessageOK( Utils.getMainWin(), u'\n\n'.join( [_('Cannot Import into a Running Race.'), _('Wait until you have a complete data set, then import the full data into a New race.')] ),
+		Utils.MessageOK( Utils.getMainWin(), '\n\n'.join( [_('Cannot Import into a Running Race.'), _('Wait until you have a complete data set, then import the full data into a New race.')] ),
 						title = _('Cannot Import into Running Race'), iconMask = wx.ICON_ERROR )
 		return
 
@@ -57,7 +57,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 			if tag is None:
 				continue
 			if raceStart and t < raceStart:
-				errors.append( u'{} {}: {} ({})'.format(_('line'), lineNo, _('time is before race start'), t.strftime('%H:%M:%S.%f')) )
+				errors.append( '{} {}: {} ({})'.format(_('line'), lineNo, _('time is before race start'), t.strftime('%H:%M:%S.%f')) )
 				continue
 			
 			tag = tag.lstrip('0').upper()
@@ -71,7 +71,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 				riderRaceTimes.setdefault( num, [] ).append( t )
 			except KeyError:
 				if tag not in race.missingTags:
-					errors.append( u'{} {}: {}: {}'.format(_('line'), lineNo, _('tag missing from Excel sheet'), tag) )
+					errors.append( '{} {}: {}: {}'.format(_('line'), lineNo, _('tag missing from Excel sheet'), tag) )
 					race.missingTags.add( tag )
 				continue
 
@@ -119,26 +119,26 @@ class ChipImportDialog( wx.Dialog ):
 		self.parseTagTime = parseTagTime
 		self.fileSuffix = fileSuffix
 		todoList = [
-			u'{} {}'.format(chipName, _('Import Data File')),
-			u'',
+			'{} {}'.format(chipName, _('Import Data File')),
+			'',
 			_('You must first "New" a race and fill in the details.'),
 			_('You must also configure a "Tag" field in your Sign-On Excel Sheet and link the sheet to the race.'),
 			_('This is required so CrossMgr can link the tags in the import file back to rider numbers and info.'),
-			u'',
+			'',
 			_('Race Data:'),
 			_('If the first chip read is NOT the start of the race, you will need to enter the start time manually.'),
 			_('Otherwise the import will use the first chip read as the race start.'),
-			u'',
+			'',
 			_('TimeTrial Data:'),
 			_("The first chip read for each rider will be interpreted as the rider's start time."),
-			u'',
+			'',
 			_('Warning: Importing from chip data could replace all the data in this race.'),
 			_('Proceed with caution.'),
 		]
-		intro = u'\n'.join(todoList)
+		intro = '\n'.join(todoList)
 		
 		gs = wx.FlexGridSizer( rows=0, cols=3, vgap=10, hgap=5 )
-		gs.Add( wx.StaticText(self, label = u'{} {}:'.format(chipName, _('Data File'))), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		gs.Add( wx.StaticText(self, label = '{} {}:'.format(chipName, _('Data File'))), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.chipDataFile = wx.TextCtrl( self, -1, '', size=(450,-1) )
 		defaultPath = Utils.getFileName()
 		if not defaultPath:
@@ -148,7 +148,7 @@ class ChipImportDialog( wx.Dialog ):
 		self.chipDataFile.SetValue( defaultPath )
 		gs.Add( self.chipDataFile, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.GROW)
 
-		btn = wx.Button( self, label=_('Browse') + u'...' )
+		btn = wx.Button( self, label=_('Browse') + '...' )
 		btn.Bind( wx.EVT_BUTTON, self.onBrowseChipReaderDataFile )
 		gs.Add( btn, 0, wx.ALIGN_CENTER_VERTICAL )
 		
@@ -251,9 +251,9 @@ class ChipImportDialog( wx.Dialog ):
 		else:
 			defaultPath, defaultFile = os.path.split(defaultPath)
 			
-		dlg = wx.FileDialog( self, u"{} {}".format( self.chipName, _('Import file') ),
+		dlg = wx.FileDialog( self, '{} {}'.format( self.chipName, _('Import file') ),
 							style=wx.FD_OPEN | wx.FD_CHANGE_DIR,
-							wildcard="RFID (*.{})|*.{}".format(self.fileSuffix, self.fileSuffix),
+							wildcard='RFID (*.{})|*.{}'.format(self.fileSuffix, self.fileSuffix),
 							defaultDir=defaultPath if defaultPath else '',
 							defaultFile=defaultFile if defaultFile else '',
 							)
@@ -267,7 +267,7 @@ class ChipImportDialog( wx.Dialog ):
 			with open(fname) as f:
 				pass
 		except IOError:
-			Utils.MessageOK( self, u'{}:\n\n"{}"'.format(_('Could not open data file for import'), fname),
+			Utils.MessageOK( self, '{}:\n\n"{}"'.format(_('Could not open data file for import'), fname),
 									title = _('Cannot Open File'), iconMask = wx.ICON_ERROR)
 			return
 			
@@ -280,7 +280,7 @@ class ChipImportDialog( wx.Dialog ):
 		if not clearExistingData:
 			if not Model.race or not Model.race.startTime:
 				Utils.MessageOK( self,
-					u'\n\n'.join( [_('Cannot Merge into Unstarted Race.'), _('Clear All Existing Data is allowed.')] ),
+					'\n\n'.join( [_('Cannot Merge into Unstarted Race.'), _('Clear All Existing Data is allowed.')] ),
 					title = _('Import Merge Failed'), iconMask = wx.ICON_ERROR
 				)
 				return
@@ -312,7 +312,7 @@ class ChipImportDialog( wx.Dialog ):
 				errors.append( '...' )
 			tagStr = '\n'.join(errors)
 			Utils.MessageOK( self,
-							u'{}:\n\n{}\n\n{}.'.format(_('Import File contains errors'), tagStr, _('All errors have been copied to the clipboard')),
+							'{}:\n\n{}\n\n{}.'.format(_('Import File contains errors'), tagStr, _('All errors have been copied to the clipboard')),
 							_('Import Warning'),
 							iconMask = wx.ICON_WARNING )
 		else:

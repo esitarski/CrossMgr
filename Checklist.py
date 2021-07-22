@@ -6,23 +6,23 @@ import rsonlite
 import Model
 import Utils
 
-_raceStatusNames = [u'NotStarted'.lower(), u'Finished'.lower(), u'Running'.lower()]
+_raceStatusNames = ['NotStarted'.lower(), 'Finished'.lower(), 'Running'.lower()]
 def _checkRaceStatus( race, val ):
 	val = val.lower()
 	if val not in _raceStatusNames:
-		raise ValueError( u'Unknown option: "RaceStatus = {}"'.format(val) )
+		raise ValueError( 'Unknown option: "RaceStatus = {}"'.format(val) )
 	return (val == _raceStatusNames[0 if race.isUnstarted() else 1 if race.isFinished() else 2])
 
 def _toBool( s ):
 	if s[:1] not in 'TtYy1FfNn0':
-		raise ValueError( u'Unknown boolean value "{}"'.format(s) )
+		raise ValueError( 'Unknown boolean value "{}"'.format(s) )
 	return s[:1] in 'TtYy1'
 
 _processRequirementLookup = {
-	u'RaceStatus'.lower():	_checkRaceStatus,
-	u'TimeTrial'.lower(): 	lambda race, v: race.isTimeTrial == _toBool(v),
-	u'ChipReader'.lower(): 	lambda race, v: race.enableJChipIntegration == _toBool(v),
-	u'Camera'.lower(): 		lambda race, v: race.enableUSBCamera ==_toBool(v),
+	'RaceStatus'.lower():	_checkRaceStatus,
+	'TimeTrial'.lower(): 	lambda race, v: race.isTimeTrial == _toBool(v),
+	'ChipReader'.lower(): 	lambda race, v: race.enableJChipIntegration == _toBool(v),
+	'Camera'.lower(): 		lambda race, v: race.enableUSBCamera ==_toBool(v),
 }
 
 class Task:
@@ -31,8 +31,8 @@ class Task:
 	Done = 2
 
 	def __init__( self ):
-		self.title = u''
-		self.note = u''
+		self.title = ''
+		self.note = ''
 		self.status = self.NotDone
 		self.expand = True
 		self.requires = []
@@ -49,7 +49,7 @@ class Task:
 				if not _processRequirementLookup[req.lower()]( race, val ):
 					success = False
 			except KeyError:
-				raise ValueError( u'{} "{}"'.format(u'Unknown Requirement', req) )
+				raise ValueError( '{} "{}"'.format('Unknown Requirement', req) )
 		
 		return success
 		
@@ -71,7 +71,7 @@ class Task:
 			t.meetsRequirements()
 		return True
 		
-	def pprint( self, indent = u'  ', indent_level = 0 ):
+	def pprint( self, indent = '  ', indent_level = 0 ):
 		print( '{}task'.format( indent*indent_level ) )
 		print( '{}title = {}'.format( indent*(indent_level+1), self.title ) )
 		if self.note:

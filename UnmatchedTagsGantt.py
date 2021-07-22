@@ -19,7 +19,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 		self.SetBackgroundColour( wx.WHITE )
 		
 		self.hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.titleLabel = wx.StaticText( self, label = u'{}:'.format(_('Unmatched RFID Tags')) )
+		self.titleLabel = wx.StaticText( self, label = '{}:'.format(_('Unmatched RFID Tags')) )
 		self.excelButton = wx.Button( self, label=_('Export to Excel') )
 		self.excelButton.Bind( wx.EVT_BUTTON, self.onExcel )
 		
@@ -43,7 +43,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 
 		fileName = Utils.getFileName() or 'test.cmn'
 		xlFName = os.path.splitext(fileName)[0] + '-Unmatched-RFID-Tags.xls'
-		dlg = wx.DirDialog( self, u'{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
+		dlg = wx.DirDialog( self, '{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
 		ret = dlg.ShowModal()
 		dName = dlg.GetPath()
@@ -64,7 +64,7 @@ class UnmatchedTagsGantt( wx.Panel ):
 
 		sheetFit.write( 0, 0, _('Tag'), headerStyle, bold=True )
 		for col, t in enumerate(results[0][1], 1):
-			sheetFit.write( 0, col, u'{} {}'.format(_('Time'), col), headerStyle, bold=True )
+			sheetFit.write( 0, col, '{} {}'.format(_('Time'), col), headerStyle, bold=True )
 		
 		for rowTop, (tag, times) in enumerate(self.getResults(), 1):
 			sheetFit.write( rowTop, 0, tag )
@@ -78,10 +78,10 @@ class UnmatchedTagsGantt( wx.Panel ):
 		try:
 			wb.save( xlFName )
 			Utils.LaunchApplication( xlFName )
-			Utils.MessageOK(self, u'{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
+			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
 		except IOError:
 			Utils.MessageOK(self,
-						u'{} "{}"\n\n{}\n{}'.format(
+						'{} "{}"\n\n{}\n{}'.format(
 							_('Cannot write'), xlFName,
 							_('Check if this spreadsheet is already open.'),
 							_('If so, close it, and try again.')

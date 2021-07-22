@@ -10,10 +10,10 @@ class LogPrintStackStderr( wx.Log ):
         sys.stderr.write( '*' * 78 + '\n' )
 
     def doPrint( self, *args, **kwargs ):
-        sys.stderr.write( u': '.join(u'{}'.format(a) for a in args) )
+        sys.stderr.write( ': '.join('{}'.format(a) for a in args) )
         sys.stderr.write( '\n' )
         for k, v in kwargs.items():
-            sys.stderr.write( u'{}: {}\n'.format(k,v) )
+            sys.stderr.write( '{}: {}\n'.format(k,v) )
                 
     def DoLogText( self, *args, **kwargs ):
         self.logHeader()

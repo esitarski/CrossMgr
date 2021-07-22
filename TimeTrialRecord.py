@@ -72,7 +72,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.controller = controller
 
-		self.headerNames = [_('Time'), u'   {}   '.format(_('Bib'))]
+		self.headerNames = [_('Time'), '   {}   '.format(_('Bib'))]
 		
 		self.maxRows = 10
 		
@@ -91,7 +91,7 @@ class TimeTrialRecord( wx.Panel ):
 		
 		self.recordTimeButton.SetFont( self.bigFont )
 		
-		self.recordTimeButton.SetToolTip( wx.ToolTip(u'\n'.join([
+		self.recordTimeButton.SetToolTip( wx.ToolTip('\n'.join([
 				_('Tap to get a Time, or press "t".'),
 				_('Then enter the Bib number(s) and Save.')
 			])) )
@@ -111,7 +111,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		dc = wx.WindowDC( self.grid )
 		dc.SetFont( self.font )
-		width, height = dc.GetTextExtent(u" 999 ")
+		width, height = dc.GetTextExtent(' 999 ')
 		self.rowLabelSize = width
 		self.grid.SetRowLabelSize( self.rowLabelSize )
 		
@@ -192,7 +192,7 @@ class TimeTrialRecord( wx.Panel ):
 				break
 		
 		if not success:
-			Utils.MessageOK( self, u'\n'.join([
+			Utils.MessageOK( self, '\n'.join([
                 _('Insufficient space to Record Time.'),
                 _('Enter Bib numbers and press Commit.'),
                 _('Or delete some entries')]), _('Record Time Failed.') )

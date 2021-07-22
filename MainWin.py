@@ -812,9 +812,9 @@ class MainWin( wx.Frame ):
 		for i, p in enumerate(self.pages):
 			name = self.notebook.GetPageText(i)
 			if i <= 11:
-				item = self.pageMenu.Append( wx.ID_ANY, '{}\tF{}'.format(name, i+1), u"{} {}".format(_('Jump to'), name) )
+				item = self.pageMenu.Append( wx.ID_ANY, '{}\tF{}'.format(name, i+1), '{} {}'.format(_('Jump to'), name) )
 			else:
-				item = self.pageMenu.Append( wx.ID_ANY, name, u"{} {}".format(_('Jump to'), name) )
+				item = self.pageMenu.Append( wx.ID_ANY, name, '{} {}'.format(_('Jump to'), name) )
 			self.idPage[item.GetId()] = i
 			self.Bind(wx.EVT_MENU, self.menuShowPage, item )
 			jumpToIds.append( item.GetId() )
@@ -993,7 +993,7 @@ class MainWin( wx.Frame ):
 			return
 			
 		race = Model.race
-		if Utils.MessageOKCancel( self, u"{}\n\n   {} \u21D4 {}".format(_('Confirm Swap Bib Numbers'), num, newNum), _("Swap Bib Numbers") ):
+		if Utils.MessageOKCancel( self, '{}\n\n   {} \u21D4 {}'.format(_('Confirm Swap Bib Numbers'), num, newNum), _("Swap Bib Numbers") ):
 			self.closeFindDialog()
 
 			undo.pushState()
@@ -1012,7 +1012,7 @@ class MainWin( wx.Frame ):
 			if newNum is None:
 				return
 			if not race.getCategory(newNum) and Utils.MessageOKCancel( self,
-					u"{} {}:\n\n{}\n{}".format(_("New Bib"), newNum,
+					'{} {}:\n\n{}\n{}'.format(_("New Bib"), newNum,
 						_("The new Bib number does not match a Category."),
 						_("Add this Bib number to a Category later, or press Cancel to select a different number."),
 						),
@@ -1020,7 +1020,7 @@ class MainWin( wx.Frame ):
 				continue
 			break
 		
-		if Utils.MessageOKCancel( self, u"{}\n\n{} \u21D2 {}.".format(_("Confirm Change Bib Number"), num, newNum), _("Change Bib Number") ):
+		if Utils.MessageOKCancel( self, '{}\n\n{} \u21D2 {}.'.format(_("Confirm Change Bib Number"), num, newNum), _("Change Bib Number") ):
 			undo.pushState()
 			race.renumberRider( num, newNum )
 			race.numTimeInfo.renumberRider( num, newNum )
@@ -1033,7 +1033,7 @@ class MainWin( wx.Frame ):
 			if newNum is None:
 				return
 			if not race.getCategory(newNum) and Utils.MessageOKCancel( self,
-					u"{} {}:\n\n{}\n{}".format(_("New Bib"), newNum,
+					'{} {}:\n\n{}\n{}'.format(_("New Bib"), newNum,
 						_("The new Bib number does not match a Category."),
 						_("Add this Bib number to a Category later, or press Cancel to select a different number."),
 						),
@@ -2546,7 +2546,7 @@ class MainWin( wx.Frame ):
 			try:
 				iStart = html.index( 'var imageSrc =' )
 				iEnd = html.index( "';", iStart )
-				html = ''.join( [html[:iStart], u"var imageSrc = '{}';".format(graphicBase64), html[iEnd+2:]] )
+				html = ''.join( [html[:iStart], "var imageSrc = '{}';".format(graphicBase64), html[iEnd+2:]] )
 			except ValueError:
 				pass
 			
@@ -2711,9 +2711,9 @@ class MainWin( wx.Frame ):
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
-				Utils.MessageOK( self, u"{}:\n{}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, "{}:\n{}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
-				Utils.MessageOK( self, u"{}:\n{}".format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, "{}:\n{}".format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
 
 		# Create some defaults so the page is not blank.
 		if not importedCategories:
@@ -2804,9 +2804,9 @@ class MainWin( wx.Frame ):
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
-				Utils.MessageOK( self, u"{}:\n\n    {}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, '{}:\n\n    {}'.format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError) as e:
-				Utils.MessageOK( self, u"{}:\n\n    {}\n\n{}".format(_('Bad file format'), categoriesFile, e), _("File Read Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, '{}:\n\n    {}\n\n{}'.format(_('Bad file format'), categoriesFile, e), _("File Read Error"), iconMask=wx.ICON_ERROR)
 
 		if not importedCategories:
 			race.categories = categoriesSave
@@ -2858,7 +2858,7 @@ class MainWin( wx.Frame ):
 			excelLink.bindDefaultFieldCols()
 		except Exception as e:
 			logException( e, sys.exc_info() )
-			Utils.MessageOK( self, u"{}:\n\n   {}".format(_('Excel Read Failure'), e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
+			Utils.MessageOK( self, '{}:\n\n   {}'.format(_("Excel Read Failure"), e), _("Excel Read Failure"), iconMask=wx.ICON_ERROR )
 			Model.race = raceSave
 			return
 		
@@ -2871,7 +2871,7 @@ class MainWin( wx.Frame ):
 		AutoImportTTStartTimes()
 		
 		# Show the Properties screen for the user to review.
-		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
+		dlg = PropertiesDialog(self, title=_("Configure Race"), style=wx.DEFAULT_DIALOG_STYLE )
 		dlg.properties.refresh()
 		dlg.properties.setEditable( True )
 		dlg.folder.SetValue(os.path.dirname(fname))
@@ -3445,9 +3445,9 @@ class MainWin( wx.Frame ):
 				with io.open(categoriesFile, 'r') as fp, Model.LockRace() as race:
 					race.importCategories( fp )
 			except IOError:
-				Utils.MessageOK( self, u"{}:\n\n{}".format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, '{}:\n\n{}'.format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
 			except (ValueError, IndexError):
-				Utils.MessageOK( self, u"{}:\n\n{}".format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, '{}:\n\n{}'.format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
 			else:
 				self.refresh()
 			self.showPage( self.iCategoriesPage )
@@ -3474,7 +3474,7 @@ class MainWin( wx.Frame ):
 				with io.open(fname, 'w') as fp, Model.LockRace() as race:
 					race.exportCategories( fp )
 			except IOError:
-				Utils.MessageOK( self, u"{}:\n{}".format(_('Cannot open file'), fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
+				Utils.MessageOK( self, '{}:\n{}'.format(_('Cannot open file'), fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
 				
 		dlg.Destroy()	
 		

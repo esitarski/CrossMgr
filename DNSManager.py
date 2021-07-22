@@ -59,7 +59,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		bs = wx.BoxSizer(wx.VERTICAL)
 		
 		bs.Add(self.hbs, 0, wx.EXPAND )
-		bs.Add(wx.StaticText(self, label = u'  ' + _('Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)')), 0, wx.ALL, 4 )
+		bs.Add(wx.StaticText(self, label = '  ' + _('Potential DNS Entrants (use Shift-Click and Ctrl-Click to multi-select)')), 0, wx.ALL, 4 )
 		bs.Add(self.list, 1, wx.EXPAND|wx.GROW|wx.ALL, 5 )
 		
 		self.SetSizer(bs)
@@ -88,7 +88,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		lines = []
 		for i in range( 0, len(nums), 10 ):
 			lines.append( ', '.join( '{}'.format(n) for n in itertools.islice( nums, i, min(i+10, len(nums)) ) ) )
-		message = u'{}\n\n{}'.format(_('DNS the following entrants?'), u',\n'.join(lines))
+		message = '{}\n\n{}'.format(_('DNS the following entrants?'), ',\n'.join(lines))
 			
 		if not Utils.MessageOKCancel( self, message, _('DNS Entrants') ):
 			return

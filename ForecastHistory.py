@@ -115,7 +115,7 @@ def GetLabelGrid( parent, bigFont=False, colnames=[], leftAlignCols=[] ):
 	dc.SetFont( font )
 	w, h = dc.GetTextExtent( '999' )
 
-	label = wx.StaticText( parent, label = u'{}:'.format(_('Recorded')) )
+	label = wx.StaticText( parent, label = '{}:'.format(_('Recorded')) )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
 	grid.SetLeftAlignCols( leftAlignCols )
@@ -247,13 +247,13 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = self.quickRecorded[r]
 		if not hasattr(self, 'historyPopupInfo'):
 			self.historyPopupInfo = [
-				(u'{}...'.format(_('Correct')),	self.OnPopupHistoryCorrect),
-				(u'{}...'.format(_('Split')),	self.OnPopupHistorySplit),
-				(u'{}...'.format(_('Shift')),	self.OnPopupHistoryShift),
-				(u'{}...'.format(_('Insert')),	self.OnPopupHistoryInsert),
-				(u'{}...'.format(_('Delete')),	self.OnPopupHistoryDelete),
+				('{}...'.format(_('Correct')),	self.OnPopupHistoryCorrect),
+				('{}...'.format(_('Split')),	self.OnPopupHistorySplit),
+				('{}...'.format(_('Shift')),	self.OnPopupHistoryShift),
+				('{}...'.format(_('Insert')),	self.OnPopupHistoryInsert),
+				('{}...'.format(_('Delete')),	self.OnPopupHistoryDelete),
 				(None,				    		None),
-				(u'{}...'.format(_('DNF')),		self.OnPopupHistoryDNF),
+				('{}...'.format(_('DNF')),		self.OnPopupHistoryDNF),
 				(None,				    		None),
 				(_('RiderDetail'),				self.OnPopupHistoryRiderDetail),
 				(_('Results'),					self.OnPopupHistoryResults),
@@ -388,8 +388,8 @@ class ForecastHistory( wx.Panel ):
 		
 		if not hasattr(self, 'expectedPopupInfo'):
 			self.expectedPopupInfo = [
-				(u'{}...'.format(_('DNF')),		self.OnPopupExpectedDNF),
-				(u'{}...'.format(_('Pull')),	self.OnPopupExpectedPull),
+				('{}...'.format(_('DNF')),		self.OnPopupExpectedDNF),
+				('{}...'.format(_('Pull')),	self.OnPopupExpectedPull),
 				(None,							None),
 				(_('RiderDetail'),				self.OnPopupExpectedRiderDetail),
 				(_('Results'),					self.OnPopupExpectedResults),
@@ -487,7 +487,7 @@ class ForecastHistory( wx.Panel ):
 		
 		mainWin = Utils.getMainWin()
 		if mainWin:
-			mainWin.record.keypad.numEdit.SetValue( u'' )
+			mainWin.record.keypad.numEdit.SetValue( '' )
 			mainWin.record.refreshLaps()
 			wx.CallAfter( mainWin.refresh )
 		if race.ftpUploadDuringRace:
@@ -636,17 +636,17 @@ class ForecastHistory( wx.Panel ):
 				outsideTimeBound.add( e.num )
 		
 		data = [None] * iExpectedColMax
-		data[iExpectedNumCol] = [u'{}'.format(e.num) for e in expected]
+		data[iExpectedNumCol] = ['{}'.format(e.num) for e in expected]
 		getT = self.getETATimeFunc()
 		data[iExpectedTimeCol] = [formatTime(getT(e) - tRace) if (e.lap or 0) > 0
-			else (u'[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999)))) for e in expected]
-		data[iExpectedLapCol] = [u'{}'.format(e.lap) if (e.lap or 0) > 0 else u'' for e in expected]
+			else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999)))) for e in expected]
+		data[iExpectedLapCol] = ['{}'.format(e.lap) if (e.lap or 0) > 0 else '' for e in expected]
 		def getNoteExpected( e ):
 			if (e.lap or 0) == 0:
 				return _('Start')
 			try:
-				position = prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else \
-						   nextRiderPosition.get(e.num, -1)
+				position =(prevRiderPosition.get(e.num, -1) if e.t < catNextTime[race.getCategory(e.num)] else
+						   nextRiderPosition.get(e.num, -1) )
 			except KeyError:
 				position = prevRiderPosition.get(e.num, -1)
 				
@@ -657,22 +657,22 @@ class ForecastHistory( wx.Panel ):
 			elif position >= 0:
 				return Utils.ordinal(position)
 			else:
-				return u' '
+				return ' '
 		data[iExpectedNoteCol] = [getNoteExpected(e) for e in expected]
 		def getName( e ):
 			info = externalInfo.get(e.num, {})
 			last = info.get('LastName','')
 			first = info.get('FirstName','')
 			if last and first:
-				return u'{}, {}'.format(last, first)
-			return last or first or u' '
+				return '{}, {}'.format(last, first)
+			return last or first or ' '
 		data[iExpectedNameCol] = [getName(e) for e in expected]
 		
 		def getWave( e ):
 			try:
 				return race.getCategory(e.num).fullname
 			except Exception:
-				return u' '
+				return ' '
 		data[iExpectedWaveCol] = [getWave(e) for e in expected]
 		
 		self.quickExpected = expected
@@ -682,7 +682,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.AutoSizeRows()
 		
 		if iBeforeLeader:
-			Utils.SetLabel( self.expectedName, u'{}: {} {}'.format(_('Expected'), iBeforeLeader, _('before race leader')) )
+			Utils.SetLabel( self.expectedName, '{}: {} {}'.format(_('Expected'), iBeforeLeader, _('before race leader')) )
 		else:
 			Utils.SetLabel( self.expectedName, _('Expected (click Bib to record entry)') )
 		
@@ -708,15 +708,15 @@ class ForecastHistory( wx.Panel ):
 				outsideTimeBound.add( e.num )
 								
 		data = [None] * iRecordedColMax
-		data[iRecordedNumCol] = [u'{}{}'.format(e.num,u"\u2190" if IsRiderFinished(e.num, e.t) else u'') if e.num > 0 else u' ' for e in recorded]
+		data[iRecordedNumCol] = ['{}{}'.format(e.num,"\u2190" if IsRiderFinished(e.num, e.t) else '') if e.num > 0 else ' ' for e in recorded]
 		data[iRecordedTimeCol] = [
 			formatTime(e.t) if (e.lap or -1) > 0 else
-			(u'{}'.format(formatTimeGap(e.t)) if e.t is not None else u' ') if e.isGap() else
-			u'[{}]'.format(formatTime(e.t)) for e in recorded]
-		data[iRecordedLapCol] = [u'{}'.format(e.lap) if e.lap else u' ' for e in recorded]
+			('{}'.format(formatTimeGap(e.t)) if e.t is not None else ' ') if e.isGap() else
+			'[{}]'.format(formatTime(e.t)) for e in recorded]
+		data[iRecordedLapCol] = ['{}'.format(e.lap) if e.lap else ' ' for e in recorded]
 		def getNoteHistory( e ):
 			if e.isGap():
-				return u'{}'.format(e.groupCount)
+				return '{}'.format(e.groupCount)
 			
 			if (e.lap or 0) == 0:
 				return _('Start')
@@ -732,7 +732,7 @@ class ForecastHistory( wx.Panel ):
 		def getGapHistory( e ):
 			if (e.lap or 0) == 0:
 				return ' '
-			return prevRiderGap.get(e.num, u'')
+			return prevRiderGap.get(e.num, '')
 		data[iRecordedGapCol] = [getGapHistory(e) for e in recorded]
 		data[iRecordedNameCol] = [getName(e) for e in recorded]
 		data[iRecordedWaveCol] = [getWave(e) for e in recorded]

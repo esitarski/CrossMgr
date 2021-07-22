@@ -165,7 +165,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
-		Utils.writeLog( u'JChip: {}: {}'.format(category, message) )
+		Utils.writeLog( 'JChip: {}: {}'.format(category, message) )
 	
 	while inputs:
 		# qLog( 'waiting', 'for communication' )
@@ -188,7 +188,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				connCur, addr = s.accept()
 				connCur.setblocking( 0 )
 				inputs.append( connCur )
-				readerReadStr[connCur], readerWriteStr[connCur] = u'', u''
+				readerReadStr[connCur], readerWriteStr[connCur] = '', ''
 				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
@@ -284,9 +284,9 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						q.put( ('name', name) )
 						
 						# Now, get the reader's current time.
-						cmd = u'GT'
+						cmd = 'GT'
 						qLog( 'transmitting', '{} command to "{}" (gettime)'.format(cmd, readerName[s]) )
-						readerWriteStr[s] += u'{}{}'.format(cmd, CR)
+						readerWriteStr[s] += '{}{}'.format(cmd, CR)
 						safeAppend( outputs, s )
 					
 					elif line.startswith( 'GT' ):
@@ -320,10 +320,10 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 								) )
 						
 						# Send command to start sending data.
-						cmd = u'S0000'
+						cmd = 'S0000'
 						qLog( 'transmitting', '{} command to "{}" (start transmission)'.format(
 							cmd, readerName.get(s, '<<unknown>>')) )
-						readerWriteStr[s] += u'{}{}'.format(cmd, CR)
+						readerWriteStr[s] += '{}{}'.format(cmd, CR)
 						safeAppend( outputs, s )
 					else:
 						q.put( ('unknown', line ) )
@@ -341,8 +341,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			try:
 				readerWriteStr[s] = readerWriteStr[s][s.send(readerWriteStr[s].encode()):]
 			except Exception as e:
-				qLog( 'exception', u'send error: {}'.format(e) )
-				readerWriteStr[s] = u''
+				qLog( 'exception', 'send error: {}'.format(e) )
+				readerWriteStr[s] = ''
 			if not readerWriteStr[s]:
 				outputs.remove( s )
 			

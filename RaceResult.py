@@ -79,7 +79,7 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 
 		cmd = 'GETSTATUS'
 		try:
-			socketSend( s, u'{}{}'.format(cmd, EOL) )
+			socketSend( s, '{}{}'.format(cmd, EOL) )
 		except Exception as e:
 			continue
 			
@@ -124,7 +124,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
-		Utils.writeLog( u'RaceResult: {}: {}'.format(category, message) )
+		Utils.writeLog( 'RaceResult: {}: {}'.format(category, message) )
 	
 	def keepGoing():
 		try:
@@ -134,21 +134,21 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		return False
 	
 	def autoDetectCallback( m ):
-		qLog( 'autodetect', u'{} {}'.format(_('Checking'), m) )
+		qLog( 'autodetect', '{} {}'.format(_('Checking'), m) )
 		return keepGoing()
 		
 	def makeCall( s, message ):
 		cmd = message.split(';', 1)[0]
-		qLog( 'command', u'sending: {}'.format(message) )
+		qLog( 'command', 'sending: {}'.format(message) )
 		try:
-			socketSend( s, u'{}{}'.format(message,EOL) )
+			socketSend( s, '{}{}'.format(message,EOL) )
 			buffer = socketReadDelimited( s )
 		except Exception as e:
-			qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+			qLog( 'connection', '{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 			raise ValueError
 		
-		if not buffer.startswith( u'{};'.format(cmd) ):
-			qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+		if not buffer.startswith( '{};'.format(cmd) ):
+			qLog( 'command', '{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 			raise ValueError
 		
 		return buffer
@@ -163,19 +163,19 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			time.sleep( delaySecs )
 		
 		#-----------------------------------------------------------------------------------------------------
-		qLog( 'connection', u'{} {}:{}'.format(_('Attempting to connect to RaceResult reader at'), HOST, PORT) )
+		qLog( 'connection', '{} {}:{}'.format(_('Attempting to connect to RaceResult reader at'), HOST, PORT) )
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			s.settimeout( timeoutSecs )
 			s.connect( (HOST, PORT) )
 		except Exception as e:
-			qLog( 'connection', u'{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
+			qLog( 'connection', '{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
 			s, status, startOperation = None, None, None
 			
-			qLog( 'connection', u'{}'.format(_('Attempting AutoDetect...')) )
+			qLog( 'connection', '{}'.format(_('Attempting AutoDetect...')) )
 			HOST_AUTO = AutoDetect( callback = autoDetectCallback )
 			if HOST_AUTO:
-				qLog( 'connection', u'{}: {}'.format(_('AutoDetect RaceResult at'), HOST_AUTO) )
+				qLog( 'connection', '{}: {}'.format(_('AutoDetect RaceResult at'), HOST_AUTO) )
 				HOST = HOST_AUTO
 			else:
 				time.sleep( delaySecs )
@@ -195,7 +195,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		if tuple(int(i) for i in maxSupported.split('.')) < crossMgrMinProtocol:
 			qLog(
 				'connection',
-				u'{}. {} >={}. {} {}.'.format(
+				'{}. {} >={}. {} {}.'.format(
 					_("RaceResult requires Firmware Upgrade"),
 					_("CrossMgr requires PROTOCOL"), crossMgrMinProtocolStr,
 					_("RaceResult supports"), maxSupported,
@@ -209,7 +209,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		except ValueError:
 			continue
 		
-		qLog( 'status', u'{}'.format(buffer.strip()) )
+		qLog( 'status', '{}'.format(buffer.strip()) )
 		
 		try:
 			buffer = makeCall( s, 'GETSTATUS' )
@@ -219,7 +219,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		fields = [f.strip() for f in buffer.strip().split(';')]
 		status = zip( statusFields, fields[1:] )
 		for name, value in status:
-			qLog( 'status', u'{}: {}'.format(name, value) )
+			qLog( 'status', '{}: {}'.format(name, value) )
 		
 		#-----------------------------------------------------------------------------------------------------
 		try:
@@ -238,7 +238,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			buffer = makeCall( s, 'STARTOPERATION' )
 		except ValueError:
 			continue
-		qLog( 'status', u'{}'.format(buffer.strip()) )
+		qLog( 'status', '{}'.format(buffer.strip()) )
 		
 		#-----------------------------------------------------------------------------------------------------
 		try:
@@ -252,34 +252,34 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			readerTime = datetime.datetime( *[int(f) for f in dt.split()] )
 			readerComputerTimeDiff = datetime.datetime.now() - readerTime
 		except Exception as e:
-			qLog( 'command', u'GETTIME: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
+			qLog( 'command', 'GETTIME: {} "{}" "{}"'.format(_('Unexpected return'), buffer, e) )
 			continue
 		
 		while keepGoing():
 			#-------------------------------------------------------------------------------------------------
 			cmd = 'PASSINGS'
 			try:
-				socketSend( s, u'{}{}'.format(cmd, EOL) )
+				socketSend( s, '{}{}'.format(cmd, EOL) )
 				buffer = socketReadDelimited( s )
 				if buffer.startswith( '{};'.format(cmd) ):
 					fields = buffer.split(';')
 					try:
 						passingsText = fields[1]
 					except Exception as e:
-						qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
+						qLog( 'command', '{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
 						continue
 					
 					try:
 						passingsNew = int( reNonDigit.sub(' ', passingsText).strip() )
 					except Exception as e:
-						qLog( 'command', u'{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
+						qLog( 'command', '{}: {} "{}" "{}"'.format(cmd, _('Unexpected return'), buffer, e) )
 						continue
 					
 				else:
-					qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
+					qLog( 'command', '{}: {} "{}"'.format(cmd, _('Unexpected return'), buffer) )
 					continue
 			except Exception as e:
-				qLog( 'connection', u'{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+				qLog( 'connection', '{}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 				break
 
 			if passingsNew != passingsCur:
@@ -294,12 +294,12 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				
 				#---------------------------------------------------------------------------------------------
 				cmd = '{}:{}'.format(passingsCur+1, passingsCount)	# Add one as the reader counts inclusively.
-				qLog( 'command', u'sending: {} ({}+{}={} passings)'.format(cmd, passingsCur, passingsCount, passingsNew) )
+				qLog( 'command', 'sending: {} ({}+{}={} passings)'.format(cmd, passingsCur, passingsCount, passingsNew) )
 				try:
 					# Get the passing data.
-					socketSend( s, u'{}{}'.format(cmd, EOL) )
+					socketSend( s, '{}{}'.format(cmd, EOL) )
 				except Exception as e:
-					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+					qLog( 'connection', 'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 					break
 				
 				tagReadSuccess = False
@@ -322,7 +322,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 							tag, t = parseTagTime(line, passingsCur+len(tagTimes), errors)
 							if tag is None or t is None:
-								qLog( 'command', u'{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
+								qLog( 'command', '{}: {} "{}"'.format(cmd, _('Unexpected return'), line) )
 								continue
 							
 							t += readerComputerTimeDiff
@@ -335,7 +335,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 					tagReadSuccess = True
 				
 				except Exception as e:
-					qLog( 'connection', u'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
+					qLog( 'connection', 'cmd={}: {}: "{}"'.format(cmd, _('Connection failed'), e) )
 				
 				sendReaderEvent( tagTimes )
 				for tag, t in tagTimes:
@@ -350,7 +350,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	# Final cleanup.
 	cmd = 'STOPOPERATION'
 	try:
-		socketSend( s, u'{}{}'.format(cmd, EOL) )
+		socketSend( s, '{}{}'.format(cmd, EOL) )
 		buffer = socketReadDelimited( s )
 		s.shutdown( socket.SHUT_RDWR )
 		s.close()

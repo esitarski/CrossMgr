@@ -43,7 +43,7 @@ def Server( q, fname ):
 		if messages:
 			try:
 				with io.open(fname, 'a') as f:
-					f.write( u''.join(messages) )
+					f.write( ''.join(messages) )
 				for m in messages:
 					q.task_done()
 			except IOError:

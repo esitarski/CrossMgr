@@ -138,7 +138,7 @@ class Category:
 	DistanceByLap = 0
 	DistanceByRace = 1
 
-	badRangeCharsRE = re.compile( u'[^0-9,\-]' )
+	badRangeCharsRE = re.compile( '[^0-9,\-]' )
 	
 	active = True
 	CatWave = 0
@@ -183,9 +183,9 @@ class Category:
 		return ','.join( s )
 		
 	def _setStr( self, s ):
-		s = self.badRangeCharsRE.sub( u'', u'{}'.format(s) )
+		s = self.badRangeCharsRE.sub( '', '{}'.format(s) )
 		if not s:
-			s = u'{}-{}'.format(self.MaxBib, self.MaxBib)
+			s = '{}-{}'.format(self.MaxBib, self.MaxBib)
 		self.intervals = []
 		self.exclude = set()
 		for f in s.split(','):
@@ -263,15 +263,15 @@ class Category:
 			self.catType = int(catType)
 		except ValueError:
 			try:
-				if catType.startswith(u'component'):
+				if catType.startswith('component'):
 					self.catType = self.CatComponent
-				elif catType.startswith(u'custom'):
+				elif catType.startswith('custom'):
 					self.catType = self.CatCustom
 			except Exception:
 				pass
 		
 		def toBool( v ):
-			return u'{}'.format(v).strip()[:1] in u'TtYy1'
+			return '{}'.format(v).strip()[:1] in 'TtYy1'
 		
 		self.active = toBool( active )
 		self.publishFlag = toBool( publishFlag )
@@ -319,8 +319,8 @@ class Category:
 			
 		self.gender = 'Open'
 		try:
-			genderFirstChar = '{}'.format(gender or u'Open').strip()[:1].lower()
-			if genderFirstChar in 'mhu':
+			genderFirstChar = '{}'.format(gender or 'Open').strip()[:1].lower()
+			if genderFirstChar in 'muh':
 				self.gender = 'Men'
 			elif genderFirstChar in 'wfld':
 				self.gender = 'Women'
@@ -328,8 +328,8 @@ class Category:
 			pass
 			
 		self.lappedRidersMustContinue = False
-		lappedRidersMustContinue = u'{}'.format(lappedRidersMustContinue).strip()
-		if lappedRidersMustContinue[:1] in u'TtYy1':
+		lappedRidersMustContinue = '{}'.format(lappedRidersMustContinue).strip()
+		if lappedRidersMustContinue[:1] in 'TtYy1':
 			self.lappedRidersMustContinue = True
 
 	def __setstate( self, d ):
@@ -358,7 +358,7 @@ class Category:
 	@staticmethod
 	def getFullName( name, gender ):
 		GetTranslation = _
-		return u'{} ({})'.format(name, GetTranslation(gender))
+		return '{} ({})'.format(name, GetTranslation(gender))
 	
 	@property
 	def fullname( self ):
@@ -632,7 +632,7 @@ class Rider(object):
 		return state
 
 	def __repr__( self ):
-		return u'{} ({})'.format( self.num, self.statusNames[self.status] )
+		return '{} ({})'.format( self.num, self.statusNames[self.status] )
 		
 	def setAutoCorrect( self, on = True ):
 		self.autocorrectLaps = on
@@ -1063,8 +1063,8 @@ class NumTimeInfo:
 	def getInfoStr( self, num, t ):
 		info = self.getInfo( num, t )
 		if info is None:
-			return u''
-		infoStr = u'{}, {}\n    {}: {}\n    {}: {}\n'.format(
+			return ''
+		infoStr = '{}, {}\n    {}: {}\n    {}: {}\n'.format(
 			Utils.formatTime(t, True), NumTimeInfo.ReasonName[info[0]],
 			_('by'), info[1],
 			_('on'), info[2].ctime()
@@ -1140,10 +1140,10 @@ class Race:
 	timezone = ''
 	discipline = 'Cyclo-cross'
 	
-	notes = u''
+	notes = ''
 	
 	showCourseAnimationInHtml = True
-	licenseLinkTemplate = u''			# Used to create an html link from the rider's license number in the html output.
+	licenseLinkTemplate = ''			# Used to create an html link from the rider's license number in the html output.
 	hideDetails = True
 	
 	lapCounterForegrounds = []
@@ -1198,7 +1198,7 @@ class Race:
 		self.scheduledStart = '10:00'
 		self.minutes = 60
 		self.commissaire = 'MyCommissaire'
-		self.memo = u''
+		self.memo = ''
 		self.discipline = 'Cyclo-cross'
 
 		self.categories = {}
@@ -1253,9 +1253,9 @@ class Race:
 	def getTemplateValues( self ):
 		excelLink = getattr(self, 'excelLink', None)
 		if excelLink:
-			excelLinkStr = u'{}|{}'.format( os.path.basename(excelLink.fileName or u''), excelLink.sheetName or u'')
+			excelLinkStr = '{}|{}'.format( os.path.basename(excelLink.fileName or ''), excelLink.sheetName or '')
 		else:
-			excelLinkStr = u''
+			excelLinkStr = ''
 		
 		path = Utils.getFileName() or ''
 		return {
@@ -2186,7 +2186,7 @@ class Race:
 		fp.write( '#################################################################\n' )
 		categoryTypeName = ['Wave', 'Component', 'Custom']
 		for c in sorted( self.categories.values(), key=Category.key ):
-			fp.write( u'{}\n'.format( u'|'.join( [
+			fp.write( '{}\n'.format( '|'.join( [
 							c.name.replace('|',''),
 							c.catStr.replace('|',''),
 							getattr(c,'gender','Open'),
@@ -2777,7 +2777,7 @@ if __name__ == '__main__':
 	for i in range(1, 11):
 		r.addTime( 10, i*100 )
 	r.addTime( 10, 10*100 + 1 )
-	print( u'\n'.join( '{}'.format(f) for f in r.interpolate()[:20] ) )
+	print( '\n'.join( '{}'.format(f) for f in r.interpolate()[:20] ) )
 	'''
 	
 	categories = [

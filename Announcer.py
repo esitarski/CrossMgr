@@ -157,7 +157,7 @@ class Announcer( wx.Panel ):
 				eta = et - tRace
 				etaColour = self.colourMap.get(int(eta), self.greenScale[-1] if eta < 0.0 else None )
 				colour = etaColour or colour
-			self.grid.SetCellValue( row, iCol, Utils.formatTime(eta) if et else u'' )				
+			self.grid.SetCellValue( row, iCol, Utils.formatTime(eta) if et else '' )				
 			self.grid.SetCellBackgroundColour( row, iCol, colour )
 	
 		categories = race.getCategories( startWaveOnly=False, publishOnly=True )
@@ -169,7 +169,7 @@ class Announcer( wx.Panel ):
 				eta = e.t - tRace
 				etaColour = self.colourMap.get(int(eta), None)
 				colour = etaColour or colour
-			b.SetLabel( '{} {}'.format(Utils.formatTime(eta) if e else u'', c.fullname) )
+			b.SetLabel( '{} {}'.format(Utils.formatTime(eta) if e else '', c.fullname) )
 			b.SetBackgroundColour( colour )
 	
 	def refresh( self ):
@@ -242,7 +242,7 @@ class Announcer( wx.Panel ):
 			self.grid.SetCellValue( row, self.iCol['Pos'], '{}'.format(rr.pos) )
 			self.grid.SetCellValue( row, self.iCol['Bib'], '{}'.format(rr.num) )
 			self.grid.SetCellValue( row, self.iCol['Name'],
-				'{} {}'.format(getattr(rr,'FirstName',u''), getattr(rr,'LastName','')).strip()
+				'{} {}'.format(getattr(rr,'FirstName',''), getattr(rr,'LastName','')).strip()
 			)
 			self.grid.SetCellValue( row, self.iCol['Team'], getattr(rr,'Team','') )
 			self.grid.SetCellValue( row, self.iCol['Gap'], rr.gap )
@@ -264,7 +264,7 @@ class Announcer( wx.Panel ):
 			self.tExpected.append( e.t if e else None )
 			group.append( iGroup+1 )
 			groupCount[iGroup+1] += 1
-			self.grid.SetCellValue( row, self.iCol['ETA'], Utils.formatTime(eta) if e else u'' )
+			self.grid.SetCellValue( row, self.iCol['ETA'], Utils.formatTime(eta) if e else '' )
 			
 			e = bibRecorded.get( rr.num, None )
 			if not isRunning or (leaderLap == 1 or (e and tLeader is not None and e.t >= tLeader)):
