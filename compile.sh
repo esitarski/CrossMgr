@@ -293,7 +293,7 @@ envSetup() {
 		# UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
 		
 		# New way.  Get version information from /etc/os-release.  Ignore the third version value (if present).
-		UBUNTU_RELEASE=$(awk '/VERSION_ID/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release)
+		UBUNTU_RELEASE=$(awk '/^VERSION_ID\s*=/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release)
 		if [ $? -ne 0 ];then
 			echo "Pip requirements: could not get UBUNTU_RELEASE from /etc/os-release. Aborting..."
 			exit 1
