@@ -4,7 +4,9 @@
 
 __Set Laps__ is a dialog which allows you to change the number of laps easily while a race is underway.
 
-It is accessible from the [Categories][], [Record][] and [LapCounter][] screens.
+It is accessible from the [Categories][] by clicking on "&#x27F3;", [Record][] by clicking on the race progress bar at the bottom of the screen and [LapCounter][] by clicking on the lap number.
+
+__Set Laps__ only opens __when the race is running.__  If the race is not started or is finished, it doesn't come up.
 
 It shows two columns: __Current__ and __Proposed__.
 These provide all the race information you need to make a decision about changing the number of laps in the race.
