@@ -293,7 +293,7 @@ envSetup() {
 		# UBUNTU_RELEASE=`lsb_release -r | awk '{ print $2 }'`
 		
 		# New way.  Get version information from /etc/os-release.  Ignore the third version value (if present).
-		UBUNTU_RELEASE=`awk '/VERSION_ID/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release'`
+		UBUNTU_RELEASE=`awk '/VERSION_ID/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release`
 		
 		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -v -r /dev/stdin
 	else
