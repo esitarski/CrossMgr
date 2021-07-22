@@ -294,7 +294,10 @@ envSetup() {
 		
 		# New way.  Get version information from /etc/os-release.  Ignore the third version value (if present).
 		UBUNTU_RELEASE=$(awk '/VERSION_ID/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release)
-		
+		if [ $? -ne 0 ];then
+			echo "Pip requirements: could not get UBUNTU_RELEASE from /etc/os-release. Aborting..."
+			exit 1
+		fi
 		sed "s+wxPython+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-${UBUNTU_RELEASE} wxPython+g" < requirements.txt | pip3 install -v -r /dev/stdin
 	else
 		pip3 install -v -r requirements.txt
