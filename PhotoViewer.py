@@ -187,6 +187,7 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.splitter = wx.SplitterWindow( self )
 		self.splitter.Bind( wx.EVT_SPLITTER_SASH_POS_CHANGED, self.OnSplitterChange )
 		self.thumbs = TC.ThumbnailCtrl( self.splitter, imagehandler=TC.NativeImageHandler )
+		self.thumbs.ShowFileNames( True )	# Should fix the _showFileName undefined bug in ThumbnailCtrl.
 		self.thumbs.EnableToolTips( True )
 		self.thumbs.SetThumbOutline( TC.THUMB_OUTLINE_FULL )
 		self.thumbs._scrolled.filePrefix = '#######################'
@@ -407,11 +408,11 @@ class PhotoViewerDialog( wx.Dialog ):
 				if rLast and rLast.num != self.num:
 					return
 					
-		dir = getPhotoDirName( Utils.mainWin.fileName ) if Utils.mainWin and Utils.mainWin.fileName else 'Photos'
+		photoDir = getPhotoDirName( Utils.mainWin.fileName ) if Utils.mainWin and Utils.mainWin.fileName else 'Photos'
 		self.thumbs._scrolled.filePrefix = '' if self.num == self.ShowAllPhotos else 'bib-{:04d}'.format(self.num)
 		
-		if os.path.isdir(dir):
-			self.thumbs.ShowDir( dir )
+		if os.path.isdir(photoDir):
+			self.thumbs.ShowDir( photoDir )
 		else:
 			self.clear()
 			return
