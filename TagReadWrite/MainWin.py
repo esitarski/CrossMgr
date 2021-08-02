@@ -17,10 +17,10 @@ import Images
 
 from pyllrp import *
 from pyllrp.TagInventory import TagInventory
+from pyllrp.AutoDetect import AutoDetect
+
 from TagWriterCustom import TagWriterCustom
 from AdvancedDialog import AdvancedDialog
-
-from AutoDetect import AutoDetect
 
 ImpinjHostNamePrefix = 'SpeedwayR-'
 ImpinjHostNameSuffix = '.local'
@@ -365,7 +365,7 @@ class MainWin( wx.Frame ):
 			info.SetName('TagReadWrite')
 			info.SetVersion(AppVerName.split(' ')[1])
 			info.SetDescription(description)
-			info.SetCopyright('(C) 2020 Edward Sitarski')
+			info.SetCopyright('(C) 2013-{} Edward Sitarski'.format(datetime.datetime.now().year) )
 			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
 			info.SetLicence(licence)
 
@@ -374,17 +374,17 @@ class MainWin( wx.Frame ):
 	def setWriteSuccess( self, success ):
 		self.writeSuccess.SetValue( 100 if success else 0 )
 	
-	reTemplate = re.compile( u'#+' )
+	reTemplate = re.compile( '#+' )
 	def getFormatStr( self ):
 		template = self.template.GetValue()
-		if u'#' not in template:
-			template = u'#' + template
+		if '#' not in template:
+			template = '#' + template
 		
 		while 1:
 			m = self.reTemplate.search( template )
 			if not m:
 				break
-			template = template[:m.start(0)] + u'{{n:0{}d}}'.format(len(m.group(0))) + template[m.end(0):]
+			template = template[:m.start(0)] + '{{n:0{}d}}'.format(len(m.group(0))) + template[m.end(0):]
 			
 		return template
 	
@@ -450,7 +450,7 @@ class MainWin( wx.Frame ):
 	def doAutoDetect( self, event ):
 		wx.BeginBusyCursor()
 		self.shutdown()
-		impinjHost = AutoDetect( ImpinjInboundPort, self.autoDetectCallback )
+		impinjHost, computerIP = AutoDetect( ImpinjInboundPort )
 		wx.EndBusyCursor()
 		
 		if impinjHost:
@@ -552,8 +552,8 @@ class MainWin( wx.Frame ):
 		
 	def onReadButton( self, event=None ):
 		if not self.tagWriter:
-			Utils.MessageOK( self,  u'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".',
-									u'Reader Not Connected' )
+			Utils.MessageOK( self,  'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".',
+									'Reader Not Connected' )
 			return
 		
 		busy = wx.BusyCursor()
