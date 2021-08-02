@@ -868,6 +868,12 @@ class MainWin( wx.Frame ):
 		self.helpSearch = HelpSearchDialog( self, title=_('Help Search') )
 		item = self.helpMenu.Append( wx.ID_HELP, _("&Help..."), _("Help about CrossMgr...") )
 		self.Bind(wx.EVT_MENU, self.menuHelp, item )
+
+		self.helpMenu.AppendSeparator()
+		item = self.helpMenu.Append( wx.ID_ANY, _("&What's New..."), _("What's New in CrossMgr...") )
+		self.Bind(wx.EVT_MENU, self.menuHelpWhatsNew, item )
+
+		self.helpMenu.AppendSeparator()
 		item = self.helpMenu.Append( wx.ID_ANY, _("&QuickStart..."), _("Get started with CrossMgr Now...") )
 		self.Bind(wx.EVT_MENU, self.menuHelpQuickStart, item )
 		
@@ -3802,6 +3808,13 @@ class MainWin( wx.Frame ):
 	def menuHelpQuickStart( self, event ):
 		try:
 			webbrowser.open( getHelpURL('QuickStart.html') )
+		except Exception as e:
+			logException( e, sys.exc_info() )
+	
+	@logCall
+	def menuHelpWhatsNew( self, event ):
+		try:
+			webbrowser.open( getHelpURL('WhatsNew.html') )
 		except Exception as e:
 			logException( e, sys.exc_info() )
 	

@@ -13,6 +13,7 @@
 [Windows]:			Menu-Windows.html
 [Web]:				Menu-Web.html
 [Help]:				Menu-Help.html
+[WhatsNew]:			WhatsNew.html
 
 [Main]:				Main.html
 [Main Screen]:		MainScreen.html
