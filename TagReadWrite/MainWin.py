@@ -411,6 +411,7 @@ class MainWin( wx.Frame ):
 				self,
 				receive_sensitivity_table=self.tagWriter.receive_sensitivity_table, receive_dB=self.receiveSensitivity_dB.GetLabel(),
 				transmit_power_table=self.tagWriter.transmit_power_table, transmit_dBm=self.transmitPower_dBm.GetLabel(),
+				general_capabilities=self.tagWriter.general_capabilities,
 			) as advDlg:
 			if advDlg.ShowModal() == wx.ID_OK:
 				r, t = advDlg.get()

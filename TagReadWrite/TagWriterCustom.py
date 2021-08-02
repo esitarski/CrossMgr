@@ -11,7 +11,7 @@ def getAllParametersByClass( v, parameterClass ):
 		else:
 			yield from getAllParametersByClass( p, parameterClass )
 
-def GetReceiveTransmitPower( connector):
+def GetReceiveTransmitPowerGeneralCapabilities( connector):
 	# Query the reader to get the receive and transmit power tables.
 	message = GET_READER_CAPABILITIES_Message( MessageID = 0xed, RequestedData = GetReaderCapabilitiesRequestedData.All )
 	response = connector.transact( message )
@@ -24,14 +24,23 @@ def GetReceiveTransmitPower( connector):
 	transmit_power_table = [e.TransmitPowerValue/100.0
 		for e in sorted(getAllParametersByClass(response,TransmitPowerLevelTableEntry_Parameter), key=operator.attrgetter('Index'))
 	]
-	return receive_sensitivity_table, transmit_power_table
+
+	# General device info.
+	try:
+		p = next( getAllParametersByClass(response,GeneralDeviceCapabilities_Parameter) )
+		general_capabilities = [(a,getattr(p,a))
+			for a in ('ReaderFirmwareVersion', 'ModelName', 'DeviceManufacturerName', 'MaxNumberOfAntennaSupported', 'CanSetAntennaProperties', 'HasUTCClockCapability')]
+	except StopIteration:
+		general_device_capabilities = []
+		
+	return receive_sensitivity_table, transmit_power_table, general_capabilities
 
 class TagWriterCustom( TagWriter ):
 	def Connect( self, receivedB, transmitdBm ):
 		# In order to validate the parameters, we need to do two connects.
 		# The first call gets the tables, the second call sets the receive sensitivity and transmit power based on the available options.
 		super().Connect()
-		self.receive_sensitivity_table, self.transmit_power_table = GetReceiveTransmitPower( self.connector )
+		self.receive_sensitivity_table, self.transmit_power_table, self.general_capabilities = GetReceiveTransmitPowerGeneralCapabilities( self.connector )
 		super().Disconnect()
 		self.setReceiveSensitivity_dB( receivedB )
 		self.setTransmitPower_dBm( transmitdBm )

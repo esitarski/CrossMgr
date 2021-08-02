@@ -1,3 +1,4 @@
+import re
 import wx
 
 def floatOrNone( v ):
@@ -12,23 +13,27 @@ class AdvancedDialog( wx.Dialog ):
 		self.transmit_power_table = kwargs.pop('transmit_power_table')
 		self.receive_dB = kwargs.pop('receive_dB')
 		self.transmit_dBm = kwargs.pop('transmit_dBm')
+		self.generalCapabilities = kwargs.pop('general_capabilities')
 		kwargs['title'] = 'Advanced RFID Options'
 		super().__init__( *args, **kwargs )
 		
-		fgs = wx.FlexGridSizer( 2, 2, 4, 6 )
+		fgs = wx.FlexGridSizer( 2, 3, 4, 6 )
 		fgs.AddGrowableRow( 1 )
 		
+		fgs.Add( wx.StaticText( self, label="General Info" ), flag=wx.ALIGN_CENTRE )
 		fgs.Add( wx.StaticText( self, label="Transmit Power" ) )
 		fgs.Add( wx.StaticText( self, label="Receiver Sensitivity" ) )
 		
 		self.transmitPower = wx.ListCtrl( self, style=wx.LC_SINGLE_SEL|wx.LC_REPORT, size=(-1,300) )
 		self.transmitPower.AppendColumn( 'dBm',  format=wx.LIST_FORMAT_RIGHT, width=64 )
 		
+		self.fgsGeneral = wx.FlexGridSizer( len(self.generalCapabilities), 2, 4, 4 )
 		self.receiveSensitivity = wx.ListCtrl( self, style=wx.LC_SINGLE_SEL|wx.LC_REPORT )
 		self.receiveSensitivity.AppendColumn( 'dB',  format=wx.LIST_FORMAT_RIGHT, width=64 )
 		
 		self.initialize()
 		
+		fgs.Add( self.fgsGeneral )
 		fgs.Add( self.transmitPower, flag=wx.EXPAND )
 		fgs.Add( self.receiveSensitivity, flag=wx.EXPAND )
 		
@@ -65,6 +70,12 @@ class AdvancedDialog( wx.Dialog ):
 		self.transmitPower.Append( ('Max',) )
 		self.transmitPower.Select( iSelect )
 		self.transmitPower.EnsureVisible( iSelect )
+		
+		def formatAttr( s ):
+			return re.sub('[A-Z]', lambda m: ' ' + m.group(0), s).replace('U T C','UTC').strip()
+		for a, v in self.generalCapabilities:
+			self.fgsGeneral.Add( wx.StaticText(self, label='{}:'.format(formatAttr(a))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+			self.fgsGeneral.Add( wx.TextCtrl(self, value='{}'.format(v), style=wx.TE_READONLY) )
 
 	def get( self ):
 		try:
@@ -80,7 +91,11 @@ class AdvancedDialog( wx.Dialog ):
 if __name__ == '__main__':
 	app = wx.App( False )
 	app.SetAppName( 'TagReadWrite' )
-	with AdvancedDialog(None, receive_sensitivity_table=list(range(-80, -30)), receive_dB=None, transmit_power_table=list(range(15, 35)), transmit_dBm=None) as advDlg:
+	with AdvancedDialog(
+			None,
+			receive_sensitivity_table=list(range(-80, -30)), receive_dB=None,
+			transmit_power_table=list(range(15, 35)), transmit_dBm=None,
+			general_capabilities=[('ReaderFirmwareVersion', '3.4')]) as advDlg:
 		advDlg.ShowModal()
 		print( advDlg.get() )
 	
