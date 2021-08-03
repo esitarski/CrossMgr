@@ -256,7 +256,7 @@ function playBeep( beep ) {
 	if( isAudioContext ) {
         let currentTime = audioCtx.currentTime;
         
-		let frequency = (low ? 349.228  : 523.251); // F to C.
+		let frequency = (low ? 493.8833  : 987.7666); // B to high B (Omega timing)
 		let duration = (low ? 0.500 : 1.750);
 
         let ramp_value = 0.00001;
@@ -282,7 +282,7 @@ function playBeep( beep ) {
         oscillator.stop(currentTime+duration);
 	}
 	else if( isWebkitAudioContext ) {
-		let frequency = (low ? 440  : 880); // A to high A.
+		let frequency = (low ? 493.8833  : 987.7666); // B to high B (Omega timing)
 		let duration = (low ? 0.250 : 0.500);
 
 		let oscillator = audioCtx.createOscillator();

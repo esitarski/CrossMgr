@@ -27,12 +27,34 @@ def GetReceiveTransmitPowerGeneralCapabilities( connector):
 
 	# General device info.
 	try:
-		p = next( getAllParametersByClass(response,GeneralDeviceCapabilities_Parameter) )
+		p = next( getAllParametersByClass(response, GeneralDeviceCapabilities_Parameter) )
 		general_capabilities = [(a,getattr(p,a))
 			for a in ('ReaderFirmwareVersion', 'ModelName', 'DeviceManufacturerName', 'MaxNumberOfAntennaSupported', 'CanSetAntennaProperties', 'HasUTCClockCapability')]
 	except StopIteration:
 		general_device_capabilities = []
+
+	# Current device info.
+	message = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 0xeded )
+	response = connector.transact( message )
+	print( response )
 		
+	if response.success():
+		try:
+			message = GET_READER_CONFIG_Message( MessageID = 0xededed, RequestedData = GetReaderConfigRequestedData.All )
+		except Exception as e:
+			print( e, message )
+		
+		response = connector.transact( message )
+		'''
+		print( response )
+	
+		try:
+			p = next( getAllParametersByClass(response, ImpinjReaderTemperature_Parameter) )
+			general_capabilities.append( ('ReaderTemperature', p.Temperature) )
+		except StopIteration:
+			pass
+		'''
+	
 	return receive_sensitivity_table, transmit_power_table, general_capabilities
 
 class TagWriterCustom( TagWriter ):
