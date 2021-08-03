@@ -15,7 +15,6 @@ whoosh
 qrcode
 tornado
 ftputil
-wxPython
 markdown
 bs4
 trueskill
@@ -25,3 +24,4 @@ opencv-python
 piexif
 virustotal-api
 -e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
+wxPython

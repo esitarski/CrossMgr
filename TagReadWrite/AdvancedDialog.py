@@ -20,7 +20,7 @@ class AdvancedDialog( wx.Dialog ):
 		fgs = wx.FlexGridSizer( 2, 3, 4, 6 )
 		fgs.AddGrowableRow( 1 )
 		
-		fgs.Add( wx.StaticText( self, label="General Info" ), flag=wx.ALIGN_CENTRE )
+		fgs.Add( wx.StaticText( self, label="Reader Info" ), flag=wx.ALIGN_CENTRE )
 		fgs.Add( wx.StaticText( self, label="Transmit Power" ) )
 		fgs.Add( wx.StaticText( self, label="Receiver Sensitivity" ) )
 		

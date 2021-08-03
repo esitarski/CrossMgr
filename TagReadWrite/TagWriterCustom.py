@@ -3,14 +3,6 @@ import operator
 from pyllrp.pyllrp import *
 from pyllrp.TagWriter import TagWriter
 
-def getAllParametersByClass( v, parameterClass ):
-	# Workaround for bug in llrp.
-	for p in v.Parameters:
-		if isinstance( p, parameterClass ):
-			yield p
-		else:
-			yield from getAllParametersByClass( p, parameterClass )
-
 def GetReceiveTransmitPowerGeneralCapabilities( connector):
 	# Query the reader to get the receive and transmit power tables.
 	message = GET_READER_CAPABILITIES_Message( MessageID = 0xed, RequestedData = GetReaderCapabilitiesRequestedData.All )
@@ -18,42 +10,34 @@ def GetReceiveTransmitPowerGeneralCapabilities( connector):
 	
 	# Receive power expressed as -80db + value relative to maximum power.
 	receive_sensitivity_table = [-80 + e.ReceiveSensitivityValue
-		for e in sorted(getAllParametersByClass(response,ReceiveSensitivityTableEntry_Parameter), key=operator.attrgetter('Index'))
+		for e in sorted(response.getAllParametersByClass(ReceiveSensitivityTableEntry_Parameter), key=operator.attrgetter('Index'))
 	]
 	# Transmit power expressed as dBm*100 (dB relative to a milliwatt).
 	transmit_power_table = [e.TransmitPowerValue/100.0
-		for e in sorted(getAllParametersByClass(response,TransmitPowerLevelTableEntry_Parameter), key=operator.attrgetter('Index'))
+		for e in sorted(response.getAllParametersByClass(TransmitPowerLevelTableEntry_Parameter), key=operator.attrgetter('Index'))
 	]
 
 	# General device info.
-	try:
-		p = next( getAllParametersByClass(response, GeneralDeviceCapabilities_Parameter) )
-		general_capabilities = [(a,getattr(p,a))
-			for a in ('ReaderFirmwareVersion', 'ModelName', 'DeviceManufacturerName', 'MaxNumberOfAntennaSupported', 'CanSetAntennaProperties', 'HasUTCClockCapability')]
-	except StopIteration:
-		general_device_capabilities = []
+	general_capabilities = []
 
-	# Current device info.
+	p = response.getFirstParameterByClass( GeneralDeviceCapabilities_Parameter )
+	if p:
+		for a in ('ReaderFirmwareVersion', 'DeviceManufacturerName', 'ModelName', 'MaxNumberOfAntennaSupported', 'CanSetAntennaProperties', 'HasUTCClockCapability'):
+			if a == 'DeviceManufacturerName':
+				general_capabilities.append( (a, getVendorName(getattr(p,a,'missing'))) )
+			else:
+				general_capabilities.append( (a, getattr(p,a,'missing')) )
+
+	# Reader Temperature.
 	message = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 0xeded )
 	response = connector.transact( message )
-	print( response )
-		
 	if response.success():
-		try:
-			message = GET_READER_CONFIG_Message( MessageID = 0xededed, RequestedData = GetReaderConfigRequestedData.All )
-		except Exception as e:
-			print( e, message )
-		
+		message = GET_READER_CONFIG_Message( MessageID = 0xededed, RequestedData = GetReaderConfigRequestedData.All )		
 		response = connector.transact( message )
-		'''
-		print( response )
-	
-		try:
-			p = next( getAllParametersByClass(response, ImpinjReaderTemperature_Parameter) )
-			general_capabilities.append( ('ReaderTemperature', p.Temperature) )
-		except StopIteration:
-			pass
-		'''
+		if response.success():
+			p = response.getFirstParameterByClass( ImpinjReaderTemperature_Parameter )
+			if p:
+				general_capabilities.append( ('ReaderTemperature', p.Temperature) )
 	
 	return receive_sensitivity_table, transmit_power_table, general_capabilities
 
