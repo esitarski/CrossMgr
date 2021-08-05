@@ -4,6 +4,11 @@ from pyllrp.pyllrp import *
 from pyllrp.TagWriter import TagWriter
 
 def GetReceiveTransmitPowerGeneralCapabilities( connector):
+	# Enable Impinj Extensions
+	message = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 0xeded )
+	response = connector.transact( message )
+	hasImpinjExtensions = response.success()
+	
 	# Query the reader to get the receive and transmit power tables.
 	message = GET_READER_CAPABILITIES_Message( MessageID = 0xed, RequestedData = GetReaderCapabilitiesRequestedData.All )
 	response = connector.transact( message )
@@ -18,28 +23,42 @@ def GetReceiveTransmitPowerGeneralCapabilities( connector):
 	]
 
 	# General device info.
-	general_capabilities = []
+	device_fields = {}
+	general_capabilities = {}
+	
+	def set_capability( k, v ):
+		general_capabilities[k] = v
+		if k not in device_fields:
+			device_fields[k] = len(device_fields)
 
 	p = response.getFirstParameterByClass( GeneralDeviceCapabilities_Parameter )
 	if p:
-		for a in ('ReaderFirmwareVersion', 'DeviceManufacturerName', 'ModelName', 'MaxNumberOfAntennaSupported', 'CanSetAntennaProperties', 'HasUTCClockCapability'):
-			if a == 'DeviceManufacturerName':
-				general_capabilities.append( (a, getVendorName(getattr(p,a,'missing'))) )
-			else:
-				general_capabilities.append( (a, getattr(p,a,'missing')) )
+		for a in ('ReaderFirmwareVersion', 'DeviceManufacturerName', 'ModelName', 'MaxNumberOfAntennaSupported', 'HasUTCClockCapability'):
+			v = getattr( p, a, 'missing' )
+			set_capability( a, getVendorName(v) if a == 'DeviceManufacturerName' else v )
 
-	# Reader Temperature.
-	message = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 0xeded )
-	response = connector.transact( message )
-	if response.success():
-		message = GET_READER_CONFIG_Message( MessageID = 0xededed, RequestedData = GetReaderConfigRequestedData.All )		
+	if hasImpinjExtensions:
+		# Impinj Detailed Version.
+		p = response.getFirstParameterByClass( ImpinjDetailedVersion_Parameter )
+		if p:
+			for a in ('ModelName', 'SerialNumber', 'SoftwareVersion', 'FirmwareVersion'):
+				v = getattr( p, a, 'missing' )
+				set_capability( a, v )
+
+		# Reader Temperature.
+		message = GET_READER_CONFIG_Message( MessageID = 0xededed, RequestedData = GetReaderConfigRequestedData.All )
 		response = connector.transact( message )
 		if response.success():
 			p = response.getFirstParameterByClass( ImpinjReaderTemperature_Parameter )
+			#if not p:
+			#	p = ImpinjReaderTemperature_Parameter( Temperature=33 )
 			if p:
-				general_capabilities.append( ('ReaderTemperature', p.Temperature) )
+				a = 'Temperature'
+				v = getattr( p, a, 'missing' )
+				if isinstance( v, int ):
+					set_capability( a, '{}C  |  {}F'.format(v, int(v * (9.0/5.0) + 32.0 + 0.5)) )
 	
-	return receive_sensitivity_table, transmit_power_table, general_capabilities
+	return receive_sensitivity_table, transmit_power_table, [(a,general_capabilities[a]) for a in sorted(device_fields.keys(), key=device_fields.__getitem__)]
 
 class TagWriterCustom( TagWriter ):
 	def Connect( self, receivedB, transmitdBm ):

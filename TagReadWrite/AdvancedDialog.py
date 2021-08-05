@@ -20,7 +20,7 @@ class AdvancedDialog( wx.Dialog ):
 		fgs = wx.FlexGridSizer( 2, 3, 4, 6 )
 		fgs.AddGrowableRow( 1 )
 		
-		fgs.Add( wx.StaticText( self, label="Reader Info" ), flag=wx.ALIGN_CENTRE )
+		fgs.Add( wx.StaticText( self, label="" ), flag=wx.ALIGN_CENTRE )	# Reader info.
 		fgs.Add( wx.StaticText( self, label="Transmit Power" ) )
 		fgs.Add( wx.StaticText( self, label="Receiver Sensitivity" ) )
 		
@@ -74,8 +74,8 @@ class AdvancedDialog( wx.Dialog ):
 		def formatAttr( s ):
 			return re.sub('[A-Z]', lambda m: ' ' + m.group(0), s).replace('U T C','UTC').strip()
 		for a, v in self.generalCapabilities:
-			self.fgsGeneral.Add( wx.StaticText(self, label='{}:'.format(formatAttr(a))), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-			self.fgsGeneral.Add( wx.TextCtrl(self, value='{}'.format(v), style=wx.TE_READONLY) )
+			self.fgsGeneral.Add( wx.StaticText(self, label='{}:'.format(formatAttr(a))), flag=wx.ALIGN_RIGHT )
+			self.fgsGeneral.Add( wx.StaticText(self, label='{}'.format(v)) )
 
 	def get( self ):
 		try:
