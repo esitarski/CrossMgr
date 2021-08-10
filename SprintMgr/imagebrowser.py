@@ -75,7 +75,7 @@ def ConvertBMP(file_nm):
     return BAD_IMAGE
 
 
-def GetCheckeredBitmap(blocksize=8,ntiles=4,rgb0='\xFF', rgb1='\xCC'):
+def GetCheckeredBitmap(blocksize=8,ntiles=4,rgb0=b'\xFF', rgb1=b'\xCC'):
     """Creates a square RGB checkered bitmap using the two specified colors.
 
     Inputs:
@@ -97,7 +97,7 @@ def GetCheckeredBitmap(blocksize=8,ntiles=4,rgb0='\xFF', rgb1='\xCC'):
     strip1 = (rgb1*blocksize + rgb0*blocksize)*(ntiles*blocksize)
     band = strip0 + strip1
     data = band * ntiles
-    return wx.BitmapFromBuffer(size, size, data)
+    return wx.Bitmap(data, size, size)
 
 def GetNamedBitmap(name):
     return IMG_CATALOG[name].GetBitmap()
@@ -174,7 +174,7 @@ class ImageView(wx.Window):
         else:
             if self.check_bmp is None:
                 self.check_bmp = GetCheckeredBitmap()
-                self.check_dim_bmp = GetCheckeredBitmap(rgb0='\x7F', rgb1='\x66')
+                self.check_dim_bmp = GetCheckeredBitmap(rgb0=b'\x7F', rgb1=b'\x66')
             if border == ID_CROP_FRAME:
                 self.dark_bg = self.check_dim_bmp
                 self.lite_bg = self.check_bmp
@@ -384,7 +384,7 @@ class ImagePanel(wx.Panel):
 
 class ImageDialog(wx.Dialog):
     def __init__(self, parent, set_dir = None):
-        super().__init__(parent, wx.ID_ANY, "Image Browser", wx.DefaultPosition, (400, 400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        super().__init__( parent, wx.ID_ANY, "Image Browser", wx.DefaultPosition, (400, 400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
         self.set_dir = os.getcwd()
         self.set_file = None
@@ -463,7 +463,7 @@ class ImageDialog(wx.Dialog):
         split_left.SetSizer(vbox_left)
 
 
-        self.tb = tb = wx.ListBox( split_left, -1, wx.DefaultPosition, wx.DefaultSize,
+        self.tb = tb = wx.ListBox( split_left, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
                                    self.fl_list, wx.LB_SINGLE )
         self.Bind(wx.EVT_LISTBOX, self.OnListClick, tb)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnListDClick, tb)
@@ -471,7 +471,7 @@ class ImageDialog(wx.Dialog):
 
         width, height = self.tb.GetSize()
 
-        split_right = wx.Panel( splitter, -1, wx.DefaultPosition, wx.DefaultSize,
+        split_right = wx.Panel( splitter, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
                                 wx.NO_BORDER|wx.TAB_TRAVERSAL )
         vbox_right = wx.BoxSizer(wx.VERTICAL)
         split_right.SetSizer(vbox_right)

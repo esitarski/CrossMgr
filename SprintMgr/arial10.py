@@ -132,7 +132,17 @@ charwidths = {
 # what Excel reports as the column width is wonky between 0 and 1.
 # The only way I know to find out the padding for a desired font is
 # to set that font as the standard font in Excel and count pixels.
-
+import unicodedata
+def remove_accents( s ):
+	'''
+	Accept a unicode string, and return a normal string
+	without any diacritical marks.
+	'''
+	try:
+		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except Exception:
+		return s
+	
 def colwidth(n):
     '''Translate human-readable units to BIFF column width units'''
     if n <= 0:
@@ -144,7 +154,7 @@ def colwidth(n):
 def fitlinewidth(data, bold=False):
     '''Try to autofit Arial 10'''
     units = 220
-    for char in str(data):
+    for char in remove_accents(data):
         if char in charwidths:
             units += charwidths[char]
         else:
@@ -154,10 +164,10 @@ def fitlinewidth(data, bold=False):
     return max(units, 700) # Don't go smaller than a reported width of 2
 
 def fitWidth(data, bold=False):
-	return max( fitlinewidth(line) for line in str(data).split('\n') )
+	return max( fitlinewidth(line) for line in remove_accents(data).split('\n') )
 
 def fitWidthHeight( data, bold = False ):
-	lines = str(data).split( '\n' )
+	lines = remove_accents(data).split( '\n' )
 	width = max( fitlinewidth(line) for line in lines )
 	height = int( len(lines) * 220 * 1.2 )
 	return width, height

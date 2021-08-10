@@ -107,8 +107,8 @@ else:
 			self.SetSize( (sz.width+border, sz.height+border) )
 
 	class HighPrecisionTimeEdit( wx.TextCtrl ):
-		defaultValue = u'00:00:00.000'
-		emptyValue   = u''
+		defaultValue = '00:00:00.000'
+		emptyValue   = ''
 
 		def __init__( self, parent, id=wx.ID_ANY, seconds=None, value=None, display_seconds=True, display_milliseconds=True, allow_none=False, style=0, size=wx.DefaultSize ):
 		
