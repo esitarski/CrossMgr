@@ -30,6 +30,10 @@ import WebReader
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
 from Synchronizer import syncfunc
 
+# import LockLog
+# Lock, RLock = LockLog.Lock, LockLog.RLock
+Lock, RLock = threading.Lock, threading.RLock
+
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrServer(ThreadPoolMixIn, HTTPServer):
 	pass
@@ -108,6 +112,9 @@ class Generic:
 		self.__dict__.update( kwargs )
 
 class ContentBuffer:
+	'''
+		Underscore functions require the lock before calling.
+	'''
 	Unchanged = 0
 	Changed = 1
 	ReadError = 2
@@ -117,7 +124,7 @@ class ContentBuffer:
 		self.fileCache = {}
 		self.fnameRace = None
 		self.dirRace = None
-		self.lock = threading.Lock()
+		self.lock = RLock()
 	
 	def _updateFile( self, fname, forceUpdate=False ):
 		if not self.fnameRace:
@@ -193,10 +200,13 @@ class ContentBuffer:
 		with self.lock:
 			self.fnameRace = fnameRace
 			self.dirRace = os.path.dirname( fnameRace )
-			coreNameRace = coreName( os.path.basename(fnameRace) )
-			
+		
+		coreNameRace = coreName( os.path.basename(fnameRace) )
+		
+		with self.lock:
 			self.fileCache = {}
 			self._updateFile( os.path.splitext(os.path.basename(fnameRace))[0] + '.html' )
+		
 			for f in glob.glob( os.path.join(self.dirRace, '*.html') ):
 				self._updateFile( os.path.basename(f), coreName(os.path.basename(f)) == coreNameRace )
 	
@@ -224,17 +234,17 @@ class ContentBuffer:
 			return '', None
 		
 	def getIndexInfo( self ):
+		race = Model.race
+		if not race:
+			return {}
+		
+		result = {
+			'logoSrc': race.headerImage or DefaultLogoSrc,
+			'organizer': race.organizer.encode(),
+		}
+		
 		with self.lock:
-			race = Model.race
-			if not race:
-				return {}
-			
-			result = {
-				'logoSrc': race.headerImage or DefaultLogoSrc,
-				'organizer': race.organizer.encode(),
-			}
-			
-			files = self._getFiles()
+			files = self._getFiles()			
 			info = []
 			for fname in files:
 				cache = self._getCache( fname, False )
@@ -266,9 +276,9 @@ class ContentBuffer:
 				else:
 					g.urlLapCounter = urllib.request.pathname2url('LapCounter.html')
 				info.append( g )
-			
-			result['info'] = info
-			return result
+		
+		result['info'] = info
+		return result
 
 #-----------------------------------------------------------------------
 
@@ -509,7 +519,7 @@ def GetCrossMgrHomePage( ip=None ):
 server = None
 def WebServer():
 	global server
-	while 1:
+	while True:
 		try:
 			server = CrossMgrServer(('', PORT_NUMBER), CrossMgrHandler)
 			server.init_thread_pool()
@@ -557,7 +567,7 @@ def message_received(client, server, message):
 wsServer = None
 def WsServerLaunch():
 	global wsServer
-	while 1:
+	while True:
 		try:
 			wsServer = WebsocketServer( port=PORT_NUMBER + 1, host='' )
 			wsServer.set_fn_message_received( message_received )
@@ -593,7 +603,7 @@ wsTimer = tTimerStart = None
 def WsPost():
 	global wsServer, wsTimer, tTimerStart
 	if wsServer and wsServer.hasClients():
-		while 1:
+		while True:
 			try:
 				ram = GetResultsRAM()
 				break
@@ -648,7 +658,7 @@ def lap_counter_new_client(client, server):
 wsLapCounterServer = None
 def WsLapCounterServerLaunch():
 	global wsLapCounterServer
-	while 1:
+	while True:
 		try:
 			wsLapCounterServer = WebsocketServer( port=PORT_NUMBER + 2, host='' )
 			wsLapCounterServer.set_fn_new_client( lap_counter_new_client )

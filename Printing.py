@@ -445,7 +445,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 		
 		if not self.pdf:
 			self.pdf = PDF( orientation = 'L' if self.orientation == wx.LANDSCAPE else 'P' )
-			self.pdf.set_font( 'Arial', '', 12 )
+			self.pdf.set_font( 'Helvetica', '', 12 )	# Pick a font that is always available.
 			self.pdf.set_author( getpass.getuser() )
 			self.pdf.set_keywords( 'CrossMgr Results' )
 			self.pdf.set_creator( Version.AppVerName )

@@ -40,7 +40,7 @@ class PDF( fpdf.FPDF ):
 	
 	def fit_text_in_rectangle( self, x, y, width, height, text, align = 'M' ):
 		'''
-			Make the font bigger/smaller to make it fit but to not stretch it.
+			Make the font bigger/smaller to make the text fit (but not stretch it).
 		'''
 		text = normalize_text( text )
 		

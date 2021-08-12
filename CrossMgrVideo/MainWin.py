@@ -147,9 +147,11 @@ def getCameraResolutionChoice( resolution ):
 		if resolution == pixelsFromRes(res):
 			return i
 	return len(cameraResolutionChoices) - 1
-	
+
+FOURCC_DEFAULT = 'MJPG'
+
 class ConfigDialog( wx.Dialog ):
-	def __init__( self, parent, cameraDeviceNum=0, fps=30, cameraResolution=(imageWidth,imageHeight), id=wx.ID_ANY ):
+	def __init__( self, parent, usb=0, fps=30, width=imageWidth, height=imageHeight, fourcc='', id=wx.ID_ANY ):
 		super().__init__( parent, id, title=_('CrossMgr Video Configuration') )
 		
 		fps = int( fps )
@@ -159,30 +161,36 @@ class ConfigDialog( wx.Dialog ):
 		self.title.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		self.explanation = [
 			'Check that the USB Webcam is plugged in.',
-			'Check the Camera Device (Usually 0 but could be 1, 2, etc.).',
+			'Check the Camera USB (usually 0 but could be 1, 2, etc.).',
 		]
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
-		pfgs.Add( wx.StaticText(self, label='Camera Device'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.cameraDevice = wx.Choice( self, choices=['{}'.format(i) for i in range(8)] )
-		self.cameraDevice.SetSelection( cameraDeviceNum )
-		pfgs.Add( self.cameraDevice )
+		pfgs.Add( wx.StaticText(self, label='Camera USB'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(8)] )
+		self.usb.SetSelection( usb )
+		pfgs.Add( self.usb )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera Resolution'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.cameraResolution = wx.Choice( self, choices=cameraResolutionChoices )
-		self.cameraResolution.SetSelection( getCameraResolutionChoice(cameraResolution) )
+		self.cameraResolution.SetSelection( getCameraResolutionChoice((width, height)) )
 		pfgs.Add( self.cameraResolution )
 		
 		pfgs.Add( wx.StaticText(self, label='Frames per second'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.fps = wx.lib.intctrl.IntCtrl( self, value=fps, min=10, max=1000 )
 		pfgs.Add( self.fps )
 		
+		pfgs.Add( wx.StaticText(self, label='FourCC'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
+		self.fourccChoices = ['', FOURCC_DEFAULT]
+		self.fourcc = wx.Choice( self, choices=self.fourccChoices )
+		self.fourcc.SetSelection( self.fourccChoices.index(fourcc if fourcc in self.fourccChoices else FOURCC_DEFAULT) )
+		pfgs.Add( self.fourcc )
+		
 		pfgs.AddSpacer( 1 )
 		pfgs.Add( wx.StaticText(self, label='\n'.join([
-				'Your camera may not support all resolutions.',
-				'Your Camera/Computer may not support the frame rate in low light.',
-				'Check that the "Frame Processing Time" does not exceed the "Available Time Per Frame".',
-				'If so, you will have to choose a lower Frames Per Second".',
+				'After pressing Apply, check the "Actual" frame rate above.',
+				'Your camera may not support the desired frame rate at the resolutions.',
+				'Cameras are known to drop the frame rate in low light.',
+				"If your fps is low or your camera doesn't work, try FourCC=MJPG.",
 			])), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )
@@ -193,34 +201,24 @@ class ConfigDialog( wx.Dialog ):
 		sizer.AddSpacer( 8 )
 		sizer.Add( pfgs, flag=wx.ALL, border=4 )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, self.onHelp, self.helpBtn )
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.APPLY|wx.CANCEL|wx.HELP )
+		wx.FindWindowById( wx.ID_APPLY , self ).Bind( wx.EVT_BUTTON, lambda event: self.EndModal(wx.ID_APPLY) )
+		wx.FindWindowById( wx.ID_HELP, self ).Bind( wx.EVT_BUTTON, lambda event: OpenHelp() )
+		wx.FindWindowById( wx.ID_OK, self ).SetDefault()
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, border=4, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		hs.AddStretchSpacer()
-		hs.Add( self.helpBtn, border=4, flag=wx.ALL )
-		hs.Add( self.cancelBtn, border=4, flag=wx.ALL )
-		
-		sizer.AddSpacer( 8 )
-		sizer.Add( hs, flag=wx.EXPAND )
+		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
 		
 		self.SetSizerAndFit( sizer )
 		
-	def GetCameraDeviceNum( self ):
-		return self.cameraDevice.GetSelection()
-		
-	def GetCameraResolution( self ):
-		return pixelsFromRes(cameraResolutionChoices[self.cameraResolution.GetSelection()])
-
-	def GetFPS( self ):
-		return self.fps.GetValue()
-		
-	def onHelp( self, event ):
-		OpenHelp()
+	def GetValues( self ):
+		width, height = pixelsFromRes(cameraResolutionChoices[self.cameraResolution.GetSelection()])
+		return {
+			'usb':			self.usb.GetSelection(),
+			'width':		width,
+			'height':		height,
+			'fps':			self.fps.GetValue(),
+			'fourcc':		self.fourccChoices[self.fourcc.GetSelection()],
+		}
 
 snapshotEnableColour = wx.Colour(0,0,100)
 snapshotDisableColour = wx.Colour(100,100,0)
@@ -499,23 +497,26 @@ class MainWin( wx.Frame ):
 		headerSizer.Add( clock, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, border=4 )
 		
 		#------------------------------------------------------------------------------
-		self.cameraDevice = wx.StaticText( self )
+		self.usb = wx.StaticText( self )
 		self.cameraResolution = wx.StaticText( self )
 		self.targetFPS = wx.StaticText( self, label='30 fps' )
 		self.actualFPS = wx.StaticText( self, label='30.0 fps' )
-		self.frameShape = (0,0,0)
+		self.fourcc = wx.StaticText( self, label=FOURCC_DEFAULT )
 		
-		boldFont = self.cameraDevice.GetFont()
+		boldFont = self.usb.GetFont()
 		boldFont.SetWeight( wx.BOLD )
-		for w in (self.cameraDevice, self.cameraResolution, self.targetFPS, self.actualFPS):
+		for w in (self.usb, self.cameraResolution, self.targetFPS, self.actualFPS, self.fourcc):
 			w.SetFont( boldFont )
 		
 		fgs = wx.FlexGridSizer( 2, 2, 2 )	# 2 Cols
-		fgs.Add( wx.StaticText(self, label='Camera Device:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.cameraDevice )
+		fgs.Add( wx.StaticText(self, label='Camera USB:'), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.usb )
 		
 		fgs.Add( wx.StaticText(self, label='Resolution:'), flag=wx.ALIGN_RIGHT )
 		fgs.Add( self.cameraResolution )
+		
+		fgs.Add( wx.StaticText(self, label='FourCC:'), flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.fourcc )
 		
 		fgs.Add( wx.StaticText(self, label='Target:'), flag=wx.ALIGN_RIGHT )
 		fgs.Add( self.targetFPS, flag=wx.ALIGN_RIGHT )
@@ -1229,7 +1230,7 @@ class MainWin( wx.Frame ):
 		lastFrame = None
 		lastPrimaryTime = now()
 		primaryCount = 0
-		while 1:
+		while True:
 			try:
 				msg = self.camReader.recv()
 			except EOFError:
@@ -1241,8 +1242,10 @@ class MainWin( wx.Frame ):
 					self.dbWriterQ.put( ('photo', t, f) )
 					lastFrame = f
 			elif cmd == 'update':
-				name, lastFrame = msg['name'], lastFrame if msg['frame'] is None else msg['frame']
-				if lastFrame is not None:
+				name, lastFrame = msg['name'], msg['frame']
+				if lastFrame is None:
+					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
+				else:
 					if name == 'primary':
 						wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
 						
@@ -1259,11 +1262,9 @@ class MainWin( wx.Frame ):
 							wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
 						else:
 							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
-					
-					if lastFrame.shape != self.frameShape:
-						self.frameShape = lastFrame.shape
-						wx.CallAfter( self.setCameraResolution, self.frameShape[1], self.frameShape[0] )
-			
+			elif cmd == 'info':
+				vals = {name:update_value for name, property_index, call_status, update_value in msg['retvals']}
+				wx.CallAfter( self.setCameraResolution, int(vals['frame_width']), int(vals['frame_height']) )
 			elif cmd == 'snapshot':
 				lastFrame = lastFrame if msg['frame'] is None else msg['frame']
 				wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
@@ -1274,7 +1275,7 @@ class MainWin( wx.Frame ):
 		def refresh():
 			self.dbWriterQ.put( ('flush',) )
 	
-		while 1:
+		while True:
 			msg = self.requestQ.get()
 			
 			tSearch = msg['time']
@@ -1324,24 +1325,32 @@ class MainWin( wx.Frame ):
 			self.dbWriterThread.start()
 	
 	def resetCamera( self, event=None ):
-		dlg = ConfigDialog( self, self.getCameraDeviceNum(), self.fps, self.getCameraResolution() )
-		ret = dlg.ShowModal()
-		cameraDeviceNum = dlg.GetCameraDeviceNum()
-		cameraResolution = dlg.GetCameraResolution()
-		fps = dlg.GetFPS()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return False
-		
-		info = {'usb':cameraDeviceNum, 'fps':fps, 'width':cameraResolution[0], 'height':cameraResolution[1]}
-		self.camInQ.put( {'cmd':'cam_info', 'info':info} )			
+		status = False
+		while True:
+			width, height = self.getCameraResolution()
+			info = {'usb':self.getUsb(), 'fps':self.fps, 'width':width, 'height':height, 'fourcc':self.fourcc.GetLabel()}
+			with ConfigDialog( self, **info ) as dlg:
+				ret = dlg.ShowModal()
+				if ret == wx.ID_CANCEL:
+					return status
+				info = dlg.GetValues()
 
-		self.setCameraDeviceNum( cameraDeviceNum )
-		self.updateFPS( fps )		
-		self.GetSizer().Layout()
+			self.camInQ.put( {'cmd':'cam_info', 'info':info} )			
 
-		self.writeOptions()
-		return True
+			self.setUsb( info['usb'] )
+			self.setCameraResolution( info['width'], info['height'] )
+			self.updateFPS( info['fps'] )
+			self.fourcc.SetLabel( info['fourcc'] )
+			
+			self.GetSizer().Layout()
+
+			self.writeOptions()
+			
+			status = True
+			if ret == wx.ID_OK:
+				return status
+				
+		return status
 	
 	def manageDatabase( self, event ):
 		trigFirst, trigLast = self.db.getTimestampRange()
@@ -1359,14 +1368,14 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()
 	
-	def setCameraDeviceNum( self, num ):
-		self.cameraDevice.SetLabel( '{}'.format(num) )
+	def setUsb( self, num ):
+		self.usb.SetLabel( '{}'.format(num) )
 		
 	def setCameraResolution( self, width, height ):
-		self.cameraResolution.SetLabel( '{}x{}'.format(width, height) )
+		self.cameraResolution.SetLabel( '{}x{}'.format(width if width < 5000 else 'MAX', height if height < 5000 else 'MAX') )
 			
-	def getCameraDeviceNum( self ):
-		return int(self.cameraDevice.GetLabel())
+	def getUsb( self ):
+		return int(self.usb.GetLabel())
 		
 	def getCameraFPS( self ):
 		return int(float(self.targetFPS.GetLabel().split()[0]))
@@ -1376,25 +1385,30 @@ class MainWin( wx.Frame ):
 			return pixelsFromRes( self.cameraResolution.GetLabel() )
 		except Exception:
 			return 640, 480
-		
+	
+	def getFourCC( self ):
+		return self.fourcc.GetLabel()
+	
 	def onCloseWindow( self, event ):
 		self.shutdown()
 		wx.Exit()
 		
 	def writeOptions( self ):
 		self.config.Write( 'DBName', self.db.fname )
-		self.config.Write( 'CameraDevice', self.cameraDevice.GetLabel() )
+		self.config.Write( 'CameraDevice', self.usb.GetLabel() )
 		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
 		self.config.Write( 'FPS', self.targetFPS.GetLabel() )
+		self.config.Write( 'FourCC', self.fourcc.GetLabel() )
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.Flush()
 	
 	def readOptions( self ):
 		self.setDBName( self.config.Read('DBName', '') )
-		self.cameraDevice.SetLabel( self.config.Read('CameraDevice', '0') )
+		self.usb.SetLabel( self.config.Read('CameraDevice', '0') )
 		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', '640x480') )
 		self.targetFPS.SetLabel( self.config.Read('FPS', '30.000') )
+		self.fourcc.SetLabel( self.config.Read('FourCC', FOURCC_DEFAULT) )
 		s_before = self.config.Read('SecondsBefore', '0.5')
 		s_after = self.config.Read('SecondsAfter', '2.0')
 		try:
@@ -1408,7 +1422,7 @@ class MainWin( wx.Frame ):
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()
-		return {'usb':self.getCameraDeviceNum(), 'fps':self.getCameraFPS(), 'width':width, 'height':height}
+		return {'usb':self.getUsb(), 'fps':self.getCameraFPS(), 'width':width, 'height':height, 'fourcc':self.getFourCC()}
 
 def disable_stdout_buffering():
 	fileno = sys.stdout.fileno()

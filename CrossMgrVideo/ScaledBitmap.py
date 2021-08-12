@@ -183,20 +183,22 @@ class ScaledBitmap( wx.Panel ):
 		dc = wx.MemoryDC()
 		dc.SelectObject( self.bitmap )
 		
-		colours = [(255,255,255), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (0,0,0) ]
+		colours = (
+			wx.Colour(255,255,255), wx.Colour(255,0,0), wx.Colour(0,255,0), wx.Colour(0,0,255),
+			wx.Colour(255,255,0), wx.Colour(255,0,255), wx.Colour(0,255,255), wx.Colour(0,0,0),
+		)
 		rWidth = int(float(width) / len(colours) + 0.5)
-		for y, hCur in ((0, height*0.75), (height*0.75, height*0.25)):
-			for i, c in enumerate(colours):
-				dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
-				dc.DrawRectangle( rWidth * i, y, rWidth+1, hCur )
-			colours.reverse()
+		for row, (y, hCur) in enumerate(((0, height*0.75), (height*0.75, height*0.25))):
+			for col, c in enumerate(colours if row == 0 else reversed(colours)):
+				dc.SetBrush( wx.Brush(c, wx.SOLID) )
+				dc.DrawRectangle( rWidth * col, y, rWidth+1, hCur )
 		
 		s = min(width, height) / 1.5
 		x = (width-s) / 2
 		y = (height-s) / 2
 		angle = 360.0 / len(colours)
 		for i, c in enumerate(colours):
-			dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
+			dc.SetBrush( wx.Brush(c, wx.SOLID) )
 			dc.DrawEllipticArc(x, y, s, s, angle*i, angle*(i+1))
 		
 		self.Refresh()

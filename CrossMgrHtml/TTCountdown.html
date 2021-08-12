@@ -165,7 +165,8 @@ function SetStartedBackground( forceUpdate ) {
 var maxNext = 8000;
 var resetSecond = 20;
 var enableBeeps = true;
-var beepTimes = [resetSecond, 10, 5, 4, 3, 2, 1, 0, -3];
+var turnOnSoundFlag = 12;	// Make a low sound to turn on the browser audio.  Otherwise the first beep will be late.
+var beepTimes = [resetSecond, turnOnSoundFlag, 10, 5, 4, 3, 2, 1, 0, -3];
 
 var beepsToGive = [];
 var iBeepCur = 0;
@@ -232,14 +233,10 @@ function Abbreviate( s ) {
 	return s.trim();
 }
 
-var audioCtx = null, isAudioContext = false, isWebkitAudioContext = false;
+var audioCtx = null, isAudioContext = false;
 if( window.AudioContext ) {
 	audioCtx = new window.AudioContext();
 	isAudioContext = true;
-}
-else if( window.webkitAudioContext ) {
-	audioCtx = new window.webkitAudioContext();
-	isWebkitAudioContext = true;
 }
 var aud440 = null, aud800 = null;
 if( audioCtx == null ) {
@@ -251,13 +248,17 @@ function playBeep( beep ) {
 	if( beep < 0 || beep == resetSecond || !enableBeeps )
 		return;
 
-	let low = (beep > 0);
+	let nonFinal = (beep > 0);
 	
 	if( isAudioContext ) {
         let currentTime = audioCtx.currentTime;
         
-		let frequency = (low ? 493.8833  : 987.7666); // B to high B (Omega timing)
-		let duration = (low ? 0.500 : 1.750);
+		let frequency = (nonFinal ? 493.8833  : 987.7666); // B to high B (Omega timing from 2020 Olympics Track)
+		let duration = (nonFinal ? 0.500 : 1.750);
+		if( beep == turnOnSoundFlag ) {
+			frequency = 10;	// Make a low sound to get the browser to turn on the audio.  This eliminates the beep delay at 10s.
+			duration = 0.1;
+		}
 
         let ramp_value = 0.00001;
         let ramp_duration = duration * 2 + 0.03;
@@ -281,22 +282,13 @@ function playBeep( beep ) {
         oscillator.start(currentTime);
         oscillator.stop(currentTime+duration);
 	}
-	else if( isWebkitAudioContext ) {
-		let frequency = (low ? 493.8833  : 987.7666); // B to high B (Omega timing)
-		let duration = (low ? 0.250 : 0.500);
-
-		let oscillator = audioCtx.createOscillator();
-		oscillator.frequency.value = frequency;
-		oscillator.type = 3; // TRIANGLE
-		oscillator.connect( audioCtx.destination );
-		oscillator.noteOn(0);
-		oscillator.noteOff(audioCtx.currentTime + duration);
-	}
 	else {
-		let audPlay = (low ? aud440 : aud880);	
-		audPlay.pause();
-		audPlay.currentTime = 0.0;
-		audPlay.play();
+		if( beep != turnOnSoundFlag ) {
+			let audPlay = (nonFinal ? aud440 : aud880);	
+			audPlay.pause();
+			audPlay.currentTime = 0.0;
+			audPlay.play();
+		}
 	}
 }
 
@@ -617,12 +609,19 @@ function onload() {
 			function scheduleRaceStart() {
 				// By this time, the time has been synced.
 				// Schedule some beeps to count down the race start.
-				for( let i = 6; i <= 15; ++i ) {
+				const iMax = 16;
+				for( let i = 6; i <= iMax; ++i ) {
 					if( i == 10 )
 						continue;
 					let beepInterval = raceStart.getTime() - ServerDate().getTime() - 1000*i;
-					if( beepInterval > 0 )
-						setTimeout( function() { playBeep(1); }, beepInterval );
+					if( beepInterval < 0 )
+						continue;
+					let k = i;
+					if( i == turnOnSoundFlag )
+						k = 1;
+					else if( i == iMax )
+						k = turnOnSoundFlag;
+					setTimeout( function() { playBeep(k); }, beepInterval );
 				}
 				
 				function startRaceNow() {
