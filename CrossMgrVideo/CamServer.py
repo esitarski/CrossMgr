@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import sys
 import time
 import platform
 from queue import Empty
@@ -10,33 +11,43 @@ from FrameCircBuf import FrameCircBuf
 
 now = datetime.now
 
-retvals = []
-def getVideoCapture( usb=1, fps=30, width=640, height=480 ):
-	global retvals
+def getCameraUsb():
+	cameraUsb = []
+	for usb in range(0, 16):
+		cap = cv2.VideoCapture( usb )
+		if cap.isOpened():
+			cameraUsb.append( usb )
+		cap.release()
 	
+	return cameraUsb
+
+def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 	cap = cv2.VideoCapture( usb )
-	properties = [
-		('frame_width', cv2.CAP_PROP_FRAME_WIDTH, width),
-		('frame_height', cv2.CAP_PROP_FRAME_HEIGHT, height),
-		('fps', cv2.CAP_PROP_FPS, fps),
-	]
-	retvals.clear()
-	for pname, pindex, pvalue in properties:
-		retvals.append( (pname, pindex, cap.set(pindex, pvalue), cap.get(pindex)) )
 	
-	try:
-		if platform.system() == 'Linux':	# HACK HACK HACK
-			cap.set(cv2.CAP_PROP_MODE, cv2.CAP_MODE_YUYV)
-	except Exception:
-		pass
+	if cap.isOpened():
+		properties = []
+		if fourcc and len(fourcc) == 4:
+			properties.append( ('fourcc', cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fourcc) ) )
+		properties.append( ('frame_width', cv2.CAP_PROP_FRAME_WIDTH, width) )
+		properties.append( ('frame_height', cv2.CAP_PROP_FRAME_HEIGHT, height) )
+		properties.append( ('fps', cv2.CAP_PROP_FPS, fps) )
+		
+		# Set all the attributes.
+		retvals = []
+		for pname, pindex, pvalue in properties:
+			retvals.append( (pname, pindex, cap.set(pindex, pvalue)) )
+			
+		# Then, get all the attribute values.
+		for i, (pname, pindex, pvalue) in enumerate(properties):
+			retvals[i] += tuple( [cap.get(pindex)] )
 	
-	return cap
+	return cap, retvals
 
 class VideoCaptureManager:
 	def __init__( self, **kwargs ):
-		self.cap = getVideoCapture(**kwargs)
+		self.cap, self.retvals = getVideoCapture(**kwargs)
 	def __enter__(self):
-		return self.cap
+		return self.cap, self.retvals
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
@@ -76,7 +87,9 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			print( 'pWriterSend: ', e )
 	
 	while True:
-		with VideoCaptureManager(**camInfo) as cap:
+		pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
+		
+		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			time.sleep( 0.25 )
 			frameCount = 0
 			inCapture = False
@@ -84,19 +97,24 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			tsSeen.clear()
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			tsQuery = tsMax = now()
-			keepCapturing = 1
+			keepCapturing = True
 			
 			while keepCapturing:
 				# Capture frame-by-frame
-				try:
-					ret, frame = cap.read()
-				except KeyboardInterrupt:
-					return
+				if not cap.isOpened():		# Handle the case if the camera cannot open.
+					ret, frame = True, None
+					time.sleep( 1.0/30.0 )
+				else:						
+					try:
+						ret, frame = cap.read()
+					except KeyboardInterrupt:
+						return
 				
 				ts = now()
 				if not ret:
 					break
-				fcb.append( ts, frame )
+				if frame is not None:
+					fcb.append( ts, frame )
 				
 				try:
 					m = qIn.get_nowait()
@@ -133,7 +151,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 								sendUpdates.pop(m['name'], None)
 						elif cmd == 'cam_info':
 							camInfo = m['info'] or {}
-							keepCapturing = 0
+							keepCapturing = False
 							break
 						elif cmd == 'terminate':
 							pWriterSend( {'cmd':'terminate'} )
@@ -143,8 +161,12 @@ def CamServer( qIn, pWriter, camInfo=None ):
 						m = qIn.get_nowait()						
 				except Empty:
 					pass
+					
+				if retvals:
+					pWriterSend( {'cmd':'info', 'retvals':retvals} )
+					retvals = None
 				
-				if tsMax > ts or inCapture:
+				if (tsMax > ts or inCapture) and frame is not None:
 					backlog.append( (ts, frame) )
 					tsSeen.add( ts )
 
@@ -161,7 +183,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 						pWriterSend( {'cmd':'update', 'name':name, 'frame':updateFrame} )
 						updateFrame = None
 				if doSnapshot:
-					pWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':updateFrame} )
+					if updateFrame is not None:
+						pWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':updateFrame} )
 					doSnapshot = False
 						
 				del backlog[-transmitFramesMax:]
@@ -180,6 +203,9 @@ def callCamServer( qIn, cmd, **kwargs ):
 	qIn.put( kwargs )
 	
 if __name__ == '__main__':
+	print( getCameraUsb() )
+	sys.exit()
+	
 	def handleMessages( q ):
 		while True:
 			m = q.get()

@@ -411,6 +411,7 @@ class MainWin( wx.Frame ):
 				self,
 				receive_sensitivity_table=self.tagWriter.receive_sensitivity_table, receive_dB=self.receiveSensitivity_dB.GetLabel(),
 				transmit_power_table=self.tagWriter.transmit_power_table, transmit_dBm=self.transmitPower_dBm.GetLabel(),
+				general_capabilities=self.tagWriter.general_capabilities,
 			) as advDlg:
 			if advDlg.ShowModal() == wx.ID_OK:
 				r, t = advDlg.get()
@@ -430,8 +431,13 @@ class MainWin( wx.Frame ):
 		try:
 			self.tagWriter.Connect( self.receiveSensitivity_dB.GetLabel(), self.transmitPower_dBm.GetLabel() )
 		except Exception as e:
+			print("-"*60)
+			traceback.print_exc(file=sys.stdout)
+			print("-"*60)
+			
 			self.DisableAccelerator()
 			self.setStatus( self.StatusError )
+			
 			Utils.MessageOK( self, 'Reader Connection Fails to "{}": {}\n\nCheck the reader connection and configuration.\nThen press "Reset Connection"'.format(self.getHost(), e),
 							'Reader Connection Fails' )
 			self.tagWriter = None

@@ -8,8 +8,8 @@ import glob
 import re
 from bs4 import BeautifulSoup
 
-htmlDocDir = 'SeriesMgrHtmlDoc'
-indexDir = 'SeriesMgrHelpIndex'
+htmlDocDir = 'CrossMgrHtmlDoc'
+indexDir = 'CrossMgrHelpIndex'
 
 def BuildHelpIndex():
 

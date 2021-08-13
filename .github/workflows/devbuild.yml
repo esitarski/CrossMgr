@@ -68,34 +68,34 @@ jobs:
                 tag: latest
                 overwrite: true
                 file_glob: true
-    buildlinux:
-        name: Linux
-        needs: buildmac
-        runs-on: ubuntu-latest
-        steps:
-            - name: Setup Python Environment
-              uses: actions/setup-python@v2
-              with:
-                python-version: 3.9.*
-            - name: Checkout code
-              uses: actions/checkout@master
-            - name: Linux Lib Install
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash linuxdeps.sh
-            - name: Setup Environment
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -S
-            - name: Build project
-              run: |
-                cd $GITHUB_WORKSPACE
-                bash compile.sh -a -A
-            - name: Dev Release
-              uses: svenstaro/upload-release-action@v2
-              with:
-                repo_token: ${{ secrets.GITHUB_TOKEN }}
-                file: release/*
-                tag: latest
-                overwrite: true
-                file_glob: true
+    #~ buildlinux:
+        #~ name: Linux
+        #~ needs: buildmac
+        #~ runs-on: ubuntu-latest
+        #~ steps:
+            #~ - name: Setup Python Environment
+              #~ uses: actions/setup-python@v2
+              #~ with:
+                #~ python-version: 3.9.*
+            #~ - name: Checkout code
+              #~ uses: actions/checkout@master
+            #~ - name: Linux Lib Install
+              #~ run: |
+                #~ cd $GITHUB_WORKSPACE
+                #~ bash linuxdeps.sh
+            #~ - name: Setup Environment
+              #~ run: |
+                #~ cd $GITHUB_WORKSPACE
+                #~ bash compile.sh -S
+            #~ - name: Build project
+              #~ run: |
+                #~ cd $GITHUB_WORKSPACE
+                #~ bash compile.sh -a -A
+            #~ - name: Dev Release
+              #~ uses: svenstaro/upload-release-action@v2
+              #~ with:
+                #~ repo_token: ${{ secrets.GITHUB_TOKEN }}
+                #~ file: release/*
+                #~ tag: latest
+                #~ overwrite: true
+                #~ file_glob: true

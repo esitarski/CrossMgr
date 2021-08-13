@@ -1039,16 +1039,20 @@ class BatchPublishProperties( wx.Panel ):
 		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
 		race.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
-def doBatchPublish( iAttr=None, silent=True ):
+def doBatchPublish( iAttr=None, silent=True, cmdline=False ):
 	race = Model.race
 	mainWin = Utils.getMainWin()
 	ftpFiles = []
 	allFiles = []
+	success = True
 	
 	for i, attr in enumerate(batchPublishAttr):
 		if iAttr is not None and i != iAttr:
 			continue
+		if cmdline and attr.name == 'IndexHtml':
+			continue
 		v = getattr( race, batchPublishRaceAttr[i], 0 )
+			
 		if v & 1:
 			getattr( mainWin, attr.func )( silent=silent )
 			if attr.filecode:
@@ -1058,23 +1062,22 @@ def doBatchPublish( iAttr=None, silent=True ):
 					if v & 2:
 						ftpFiles.append( f )
 	
-	wait = wx.BusyCursor()
 	if iAttr is None:
 		publishFormatBikeReg = getattr(race, 'publishFormatBikeReg', 0)
 		if publishFormatBikeReg == 1:
-			mainWin.menuExportCrossResults( silent=True )
+			with wx.BusyCursor():
+				mainWin.menuExportCrossResults( silent=True )
 		elif publishFormatBikeReg == 2:
-			mainWin.menuExportRoadResults( silent=True )
-	
-	del wait
-	
+			with wx.BusyCursor():
+				mainWin.menuExportRoadResults( silent=True )
+		
 	e = None
 	if ftpFiles:
-		if not FtpIsConfigured() and Utils.MessageOKCancel(
+		if not FtpIsConfigured() and (silent or Utils.MessageOKCancel(
 					mainWin,
 					'{}\n\n{}'.format( _('Ftp is Not Configured'), _('Configure it now?')), 
 					('Ftp is Not Configured')
-				):
+				)):
 			dlg = FtpPublishDialog( mainWin )
 			ret = dlg.ShowModal()
 			dlg.Destroy()
@@ -1106,6 +1109,7 @@ def doBatchPublish( iAttr=None, silent=True ):
 			if not silent:
 				Utils.MessageOK( mainWin, message, _('Ftp Upload Error'), wx.ICON_ERROR )
 			Utils.writeLog( message )
+			success = False
 
 	postPublishCmd = getattr(race, 'postPublishCmd', None)
 	if postPublishCmd and allFiles:
@@ -1128,14 +1132,19 @@ def doBatchPublish( iAttr=None, silent=True ):
 			if not silent:
 				Utils.MessageOK( mainWin, message, _('Post Publish Cmd Error')  )
 			Utils.writeLog( message )
+			success = False
+
 		except Exception as e:
 			message = '{}\n\n    {}'.format(_('Post Publish Cmd Error'), e)
 			if not silent:
 				Utils.MessageOK( mainWin, message, _('Post Publish Cmd Error')  )
 			Utils.writeLog( message )
+			success = False
 	
-	if silent and iAttr is None:
+	if not silent and iAttr is None:
 		Utils.MessageOK( mainWin, _('Publish Complete'), _('Publish Complete') )
+		
+	return success
 
 class BatchPublishPropertiesDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
