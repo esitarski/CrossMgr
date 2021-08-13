@@ -190,7 +190,7 @@ class ConfigDialog( wx.Dialog ):
 				'After pressing Apply, check the "Actual" fps on the main screen.',
 				'The camera may not support the frame rate at the desired resolution,',
 				'or may lower the frame rate in low light.',
-				"If your fps is low or your camera doesn't work, try FourCC=MJPG.",
+				"If your fps is low or your camera doesn't work, try FourCC={}.".format(FOURCC_DEFAULT),
 			])), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )

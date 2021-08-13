@@ -48,7 +48,12 @@ The minimum system requires are as follows:
 
 ## User Installation
 
-As a user, you can install the CrossManager applications on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. The Windows, MacOSX and Linux versions are available as binary releases. See the Releases tab in the github repo for binaries.
+As a user, you can install the CrossManager applications on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. The Windows and MacOSX versions are available as binary releases.
+See the Releases tab in the github repo for binaries.
+
+Unfortunately, Linux binaries cannot be supported because wxPython is not manylinux1 compliant (we are holding out hope for manylinux2).
+
+You can still run on Linux, but you have to run from the source code.
 
 ### Windows Installation
 
@@ -79,27 +84,12 @@ Python is setup to dump logs to stdout which usually indicates the problem. Some
 
 ### Linux Installation
 
-Download the CrossMgr-VERSION.AppImage file. Store this file in a convenient location such as $HOME/bin. Make the executable with
-
-```bash
-chmod 755 CrossMgr-VERSION.AppImage
-```
-
-Next, just run the AppImage with:
-
-```bash
-./CrossMgr-VERSION.AppImage
-```
-
-...from the command prompt.
-
-CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process.
-
-Alternative, setup a desktop icon to call it directly.
+Follow the instructions for building CrossMgr on your system.
 
 ## Building Cross Manager (for developers)
 
-There are two scripts to build CrossMgr and the associated tools. One for Linux/Mac and one for Windows. Each platform has a build script to install the dependancies, build the binaries for the application, and package the programs.
+There are two scripts to build CrossMgr and the associated tools. One for Linux/Mac and one for Windows
+Each platform has a build script to install the dependancies, build the binaries for the application, and package the programs.
 
 | Script  | Help Parameter |Purpose |
 |---------|---------|--------|
@@ -114,7 +104,7 @@ Windows builds require InnoSetup V6.x from [https://www.jrsoftware.org/isdl.php]
 
 The build has been automated, and compile.sh/ps1 script does everything to enable the developer to build CrossMgr and the associated tools. However, you can also download the binary from the github Releases tab.
 
-Linux dependancies are contained in the linuxdeps.sh script. The linuxdeploy-plugin-appimage-x86_64.AppImage binary is required from https://github.com/linuxdeploy/linuxdeploy-plugin-appimage. The compile.sh script will download linuxdeploy-plugin-appimage if it does not exist in the current directory automatically.
+Linux dependancies are contained in the linuxdeps.sh script.
 
 The build procedure for Linux and MacOSX platforms are as follows:
 

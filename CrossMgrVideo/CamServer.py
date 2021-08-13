@@ -13,7 +13,7 @@ now = datetime.now
 
 def getCameraUsb():
 	cameraUsb = []
-	for usb in range(0, 12):
+	for usb in range(0, 16):
 		cap = cv2.VideoCapture( usb )
 		if cap.isOpened():
 			cameraUsb.append( usb )
