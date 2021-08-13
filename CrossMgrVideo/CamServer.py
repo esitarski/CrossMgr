@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import sys
 import time
 import platform
 from queue import Empty
@@ -9,6 +10,16 @@ from datetime import datetime, timedelta
 from FrameCircBuf import FrameCircBuf
 
 now = datetime.now
+
+def getCameraUsb():
+	cameraUsb = []
+	for usb in range(0, 12):
+		cap = cv2.VideoCapture( usb )
+		if cap.isOpened():
+			cameraUsb.append( usb )
+		cap.release()
+	
+	return cameraUsb
 
 def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 	cap = cv2.VideoCapture( usb )
@@ -76,6 +87,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			print( 'pWriterSend: ', e )
 	
 	while True:
+		pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
+		
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			time.sleep( 0.25 )
 			frameCount = 0
@@ -190,6 +203,9 @@ def callCamServer( qIn, cmd, **kwargs ):
 	qIn.put( kwargs )
 	
 if __name__ == '__main__':
+	print( getCameraUsb() )
+	sys.exit()
+	
 	def handleMessages( q ):
 		while True:
 			m = q.get()

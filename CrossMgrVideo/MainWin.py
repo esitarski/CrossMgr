@@ -151,24 +151,24 @@ def getCameraResolutionChoice( resolution ):
 FOURCC_DEFAULT = 'MJPG'
 
 class ConfigDialog( wx.Dialog ):
-	def __init__( self, parent, usb=0, fps=30, width=imageWidth, height=imageHeight, fourcc='', id=wx.ID_ANY ):
+	def __init__( self, parent, usb=0, fps=30, width=imageWidth, height=imageHeight, fourcc='', availableCameraUsb=None, id=wx.ID_ANY ):
 		super().__init__( parent, id, title=_('CrossMgr Video Configuration') )
 		
 		fps = int( fps )
+		availableCameraUsb = availableCameraUsb or []
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.title = wx.StaticText( self, label='CrossMgr Video Configuration' )
 		self.title.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		self.explanation = [
-			'Check that the USB Webcam is plugged in.',
-			'Check the Camera USB (usually 0 but could be 1, 2, etc.).',
-		]
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera USB'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(8)] )
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(16)] )
 		self.usb.SetSelection( usb )
-		pfgs.Add( self.usb )
+		hs.Add( self.usb )
+		hs.Add( wx.StaticText(self, label='cameras detected on {}'.format(availableCameraUsb)), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		pfgs.Add( hs )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera Resolution'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		self.cameraResolution = wx.Choice( self, choices=cameraResolutionChoices )
@@ -187,17 +187,13 @@ class ConfigDialog( wx.Dialog ):
 		
 		pfgs.AddSpacer( 1 )
 		pfgs.Add( wx.StaticText(self, label='\n'.join([
-				'After pressing Apply, check the "Actual" frame rate above.',
-				'Your camera may not support the desired frame rate at the resolutions.',
-				'Cameras are known to drop the frame rate in low light.',
+				'After pressing Apply, check the "Actual" fps on the main screen.',
+				'The camera may not support the frame rate at the give resolution,',
+				'or may lower the frame rate in low light.',
 				"If your fps is low or your camera doesn't work, try FourCC=MJPG.",
 			])), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )
-		for i, e in enumerate(self.explanation):
-			sizer.Add( wx.StaticText( self, label='{}. {}'.format(i+1, e) ),
-				flag=wx.LEFT|wx.RIGHT|(wx.TOP if i == 0 else 0)|(wx.BOTTOM if i == len(self.explanation) else 0), border=4,
-			)
 		sizer.AddSpacer( 8 )
 		sizer.Add( pfgs, flag=wx.ALL, border=4 )
 		
@@ -409,6 +405,7 @@ class MainWin( wx.Frame ):
 		self.tsMax = None
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
+		self.availableCameraUsb = []
 		
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
@@ -723,6 +720,9 @@ class MainWin( wx.Frame ):
 
 	def updateActualFPS( self, actualFPS ):
 		self.actualFPS.SetLabel( '{:.1f} fps'.format(actualFPS) )
+		
+	def updateCameraUsb( self, availableCameraUsb ):
+		self.availableCameraUsb = availableCameraUsb
 
 	def updateAutoCaptureLabel( self ):
 		def f( n ):
@@ -1265,6 +1265,8 @@ class MainWin( wx.Frame ):
 			elif cmd == 'info':
 				vals = {name:update_value for name, property_index, call_status, update_value in msg['retvals']}
 				wx.CallAfter( self.setCameraResolution, int(vals['frame_width']), int(vals['frame_height']) )
+			elif cmd == 'cameraUsb':
+				wx.CallAfter( self.updateCameraUsb, msg['usb'] )
 			elif cmd == 'snapshot':
 				lastFrame = lastFrame if msg['frame'] is None else msg['frame']
 				wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
@@ -1328,7 +1330,7 @@ class MainWin( wx.Frame ):
 		status = False
 		while True:
 			width, height = self.getCameraResolution()
-			info = {'usb':self.getUsb(), 'fps':self.fps, 'width':width, 'height':height, 'fourcc':self.fourcc.GetLabel()}
+			info = {'usb':self.getUsb(), 'fps':self.fps, 'width':width, 'height':height, 'fourcc':self.fourcc.GetLabel(), 'availableCameraUsb':self.availableCameraUsb}
 			with ConfigDialog( self, **info ) as dlg:
 				ret = dlg.ShowModal()
 				if ret == wx.ID_CANCEL:
@@ -1369,14 +1371,14 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 	
 	def setUsb( self, num ):
-		self.usb.SetLabel( '{}'.format(num) )
+		self.usb.SetLabel( '{} {}'.format(num, self.availableCameraUsb) )
+		
+	def getUsb( self ):
+		return int(self.usb.GetLabel().split()[0])
 		
 	def setCameraResolution( self, width, height ):
 		self.cameraResolution.SetLabel( '{}x{}'.format(width if width < 5000 else 'MAX', height if height < 5000 else 'MAX') )
 			
-	def getUsb( self ):
-		return int(self.usb.GetLabel())
-		
 	def getCameraFPS( self ):
 		return int(float(self.targetFPS.GetLabel().split()[0]))
 		
@@ -1395,7 +1397,7 @@ class MainWin( wx.Frame ):
 		
 	def writeOptions( self ):
 		self.config.Write( 'DBName', self.db.fname )
-		self.config.Write( 'CameraDevice', self.usb.GetLabel() )
+		self.config.Write( 'CameraDevice', str(self.getUsb()) )
 		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
 		self.config.Write( 'FPS', self.targetFPS.GetLabel() )
 		self.config.Write( 'FourCC', self.fourcc.GetLabel() )
@@ -1405,7 +1407,7 @@ class MainWin( wx.Frame ):
 	
 	def readOptions( self ):
 		self.setDBName( self.config.Read('DBName', '') )
-		self.usb.SetLabel( self.config.Read('CameraDevice', '0') )
+		self.setUsb( self.config.Read('CameraDevice', '0') )
 		self.cameraResolution.SetLabel( self.config.Read('CameraResolution', '640x480') )
 		self.targetFPS.SetLabel( self.config.Read('FPS', '30.000') )
 		self.fourcc.SetLabel( self.config.Read('FourCC', FOURCC_DEFAULT) )
@@ -1485,7 +1487,7 @@ def MainLoop():
 
 	# Start processing events.
 	mainWin.Start()
-	wx.CallLater( 200, mainWin.resetCamera )
+	wx.CallLater( 1500, mainWin.resetCamera )
 	app.MainLoop()
 
 @atexit.register
