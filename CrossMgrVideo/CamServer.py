@@ -177,8 +177,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 						
 				# Send update messages.  If there was a backlog, don't send the frame as we can use the last frame sent.
 				updateFrame = None if backlog and backlog[-1][0] == ts else frame
-				for name, f in sendUpdates.items():
-					if frameCount % f == 0:
+				for name, freq in sendUpdates.items():
+					if frameCount % freq == 0:
 						pWriterSend( {'cmd':'update', 'name':name, 'frame':updateFrame} )
 				if doSnapshot:
 					if updateFrame is not None:
