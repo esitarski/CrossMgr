@@ -287,6 +287,9 @@ class FocusDialog( wx.Dialog ):
 			self.bitmapSz = sz
 			self.SetTitle( '{} {}x{}'.format( _('CrossMgr Video Focus'), *sz ) )
 		return self.bitmap.SetBitmap( bitmap )
+		
+	def SetTestBitmap( self ):
+		self.bitmap.SetTestBitmap()
 
 class TriggerDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY ):
@@ -1245,6 +1248,8 @@ class MainWin( wx.Frame ):
 				name, lastFrame = msg['name'], msg['frame']
 				if lastFrame is None:
 					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
+					if self.focusDialog.IsShown():
+						wx.CallAfter( self.focusDialog.SetTestBitmap )
 				else:
 					if name == 'primary':
 						wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
