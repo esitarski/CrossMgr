@@ -23,6 +23,7 @@ def getCameraUsb():
 
 def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 	cap = cv2.VideoCapture( usb )
+	retvals = []
 	
 	if cap.isOpened():
 		properties = []
@@ -33,7 +34,6 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 		properties.append( ('fps', cv2.CAP_PROP_FPS, fps) )
 		
 		# Set all the attributes.
-		retvals = []
 		for pname, pindex, pvalue in properties:
 			retvals.append( (pname, pindex, cap.set(pindex, pvalue)) )
 			
