@@ -23,6 +23,7 @@ def getCameraUsb():
 
 def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 	cap = cv2.VideoCapture( usb )
+	retvals = []
 	
 	if cap.isOpened():
 		properties = []
@@ -33,7 +34,6 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 		properties.append( ('fps', cv2.CAP_PROP_FPS, fps) )
 		
 		# Set all the attributes.
-		retvals = []
 		for pname, pindex, pvalue in properties:
 			retvals.append( (pname, pindex, cap.set(pindex, pvalue)) )
 			
@@ -177,11 +177,9 @@ def CamServer( qIn, pWriter, camInfo=None ):
 						
 				# Send update messages.  If there was a backlog, don't send the frame as we can use the last frame sent.
 				updateFrame = None if backlog and backlog[-1][0] == ts else frame
-				for name, f in sendUpdates.items():
-					#if frameCount % (f if backlog else 8) == 0:
-					if frameCount % f == 0:
+				for name, freq in sendUpdates.items():
+					if frameCount % freq == 0:
 						pWriterSend( {'cmd':'update', 'name':name, 'frame':updateFrame} )
-						updateFrame = None
 				if doSnapshot:
 					if updateFrame is not None:
 						pWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':updateFrame} )
