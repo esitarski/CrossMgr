@@ -49,7 +49,7 @@ class ScaledBitmap( wx.Panel ):
 		self.buttonDown = False
 		
 	def OnMotion( self, event ):
-		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
+		x, y = event.GetX(), event.GetY()
 		if not self.buttonDown:
 			return
 		self.xEnd, self.yEnd = x, y
@@ -88,7 +88,7 @@ class ScaledBitmap( wx.Panel ):
 			return
 			
 		sourceRect = wx.Rect( 0, 0, sourceWidth, sourceHeight )
-		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int(magnifyRect.GetY()-yTop)/ratio, magnifyRect.GetWidth()/ratio, magnifyRect.GetHeight()/ratio ) )
+		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int((magnifyRect.GetY()-yTop)/ratio), int(magnifyRect.GetWidth()/ratio), int(magnifyRect.GetHeight()/ratio) ) )
 		
 		if sourceRect.IsEmpty():
 			return
@@ -188,14 +188,14 @@ class ScaledBitmap( wx.Panel ):
 			wx.Colour(255,255,0), wx.Colour(255,0,255), wx.Colour(0,255,255), wx.Colour(0,0,0),
 		)
 		rWidth = int(float(width) / len(colours) + 0.5)
-		for row, (y, hCur) in enumerate(((0, height*0.75), (height*0.75, height*0.25))):
+		for row, (y, hCur) in enumerate(((0, int(height*0.75)), (int(height*0.75), int(height*0.25)))):
 			for col, c in enumerate(colours if row == 0 else reversed(colours)):
 				dc.SetBrush( wx.Brush(c, wx.SOLID) )
 				dc.DrawRectangle( rWidth * col, y, rWidth+1, hCur )
 		
-		s = min(width, height) / 1.5
-		x = (width-s) / 2
-		y = (height-s) / 2
+		s = int(min(width, height) / 1.5)
+		x = int((width-s) / 2)
+		y = int((height-s) / 2)
 		angle = 360.0 / len(colours)
 		for i, c in enumerate(colours):
 			dc.SetBrush( wx.Brush(c, wx.SOLID) )
@@ -209,8 +209,8 @@ if __name__ == '__main__':
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	bitmapWidth, bitmapHeight = 640*2, 480*2
 	if bitmapWidth*2 + 32 > displayWidth or bitmapHeight*2 + 32 > displayHeight:
-		bitmapWidth /= 2
-		bitmapHeight /= 2
+		bitmapWidth //= 2
+		bitmapHeight //= 2
 	
 	mainWin = wx.Frame(None,title="ScaledBitmap", size=(bitmapWidth,bitmapHeight))
 	scaledBitmap = ScaledBitmap( mainWin, size=(bitmapWidth, bitmapHeight), inset=True )

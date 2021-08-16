@@ -763,9 +763,8 @@ class MainWin( wx.Frame ):
 		with wx.DirDialog(self, 'Folder to write Photos') as dlg:
 			if dlg.ShowModal() == wx.ID_OK:				
 				def write_photos( dirname, infoList, dbFName, fps ):
-					db = Database( dbFName, initTables=False, fps=fps )
 					for info in infoList:
-						tsBest, jpgBest = db.getPhotoClosest( info['ts'] )
+						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
 						if jpgBest is None:
 							continue
 						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}

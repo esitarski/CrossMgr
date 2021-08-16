@@ -1,5 +1,5 @@
 import os
-import io
+from io import BytesIO
 import sys
 import getpass
 import datetime
@@ -9,20 +9,23 @@ import piexif.helper
 import Version
 import Utils
 
+zeroth_ifd_common = {
+	piexif.ImageIFD.Artist: 			getpass.getuser(),
+	piexif.ImageIFD.HostComputer:		os.uname()[1],
+	piexif.ImageIFD.Software:			Version.AppVerName,
+}
+
 def AddExifToJpeg( jpeg, ts, comment ):
-	zeroth_ifd = {
-		piexif.ImageIFD.Artist: 			getpass.getuser(),
-		piexif.ImageIFD.HostComputer:		os.uname()[1],
-		piexif.ImageIFD.Software:			Version.AppVerName,
-		piexif.ImageIFD.DateTime:			datetime.datetime.now().strftime('%Y:%m:%d %H:%M:%S'),
-	}
+	zeroth_ifd = zeroth_ifd_common.copy()
+	zeroth_ifd[piexif.ImageIFD.DateTime] = datetime.datetime.now().strftime('%Y:%m:%d %H:%M:%S')
+	
 	exif_ifd = {
 		piexif.ExifIFD.DateTimeOriginal:	ts.strftime('%Y:%m:%d %H:%M:%S'),
 		piexif.ExifIFD.UserComment:			piexif.helper.UserComment.dump(comment, 'unicode'),
 	}
 	exif_dict = {"0th":zeroth_ifd, "Exif":exif_ifd,}
 	
-	output = io.BytesIO()
+	output = BytesIO()
 	piexif.insert( piexif.dump(exif_dict), jpeg, output )
 	return output.getbuffer()
 
