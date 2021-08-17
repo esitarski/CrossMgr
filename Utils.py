@@ -547,6 +547,8 @@ reSpace = re.compile(r'\s')
 def approximateMatch( s1, s2 ):
 	s1 = removeDiacritic(reSpace.sub('', s1).lower())
 	s2 = removeDiacritic(reSpace.sub('', s2).lower())
+	if (s1.startswith('bib') and s2.startswith('plate')) or (s2.startswith('bib') and s1.startswith('plate')):
+		return 1.2
 	if s1[-1:].isdigit():
 		return 1.2 if s1 == s2 else 0.0
 	if s1.startswith(s2) or s2.startswith(s1):

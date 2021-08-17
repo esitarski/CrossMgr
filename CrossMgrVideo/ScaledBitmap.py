@@ -49,13 +49,11 @@ class ScaledBitmap( wx.Panel ):
 		self.buttonDown = False
 		
 	def OnMotion( self, event ):
-		x, y = event.GetX(), event.GetY()
-		if not self.buttonDown:
-			return
-		self.xEnd, self.yEnd = x, y
-		wx.CallAfter( self.Refresh )
+		if self.buttonDown:
+			self.xEnd, self.yEnd = event.GetX(), event.GetY()
+			wx.CallAfter( self.Refresh )
 	
-	def getInsetRect( self, dc, width, height, isWest, isNorth ):
+	def getInsetRect( self, width, height, isWest, isNorth ):
 		r = 0.75
 		insetWidth = int(width*r)
 		insetHeight = int(height*r)
@@ -97,7 +95,7 @@ class ScaledBitmap( wx.Panel ):
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2
 		isWest = xCenter < self.bitmap.GetWidth()//2
 		isNorth = yCenter < self.bitmap.GetHeight()//2
-		insetRect = self.getInsetRect( dc, width, height, isWest, isNorth )
+		insetRect = self.getInsetRect( width, height, isWest, isNorth )
 		
 		magRatio = GetScaleRatio( sourceRect.GetWidth(), sourceRect.GetHeight(), insetRect.GetWidth(), insetRect.GetHeight() )
 		iWidth, iHeight = int(sourceRect.GetWidth() * magRatio), int(sourceRect.GetHeight() * magRatio)
@@ -107,9 +105,9 @@ class ScaledBitmap( wx.Panel ):
 			iWidth, iHeight
 		)
 		
-		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
 		dc.StretchBlit( *(list(insetRect.Get()) + [sourceDC] + list(sourceRect.Get())) )
 		
+		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.DrawRectangle( insetRect )
 		dc.DrawRectangle( magnifyRect )

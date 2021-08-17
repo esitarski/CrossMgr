@@ -11,8 +11,10 @@ import json
 import threading
 import socket
 import atexit
+import base64
 import time
 import platform
+import tempfile
 import webbrowser
 from queue import Queue, Empty
 import CamServer
@@ -761,41 +763,91 @@ class MainWin( wx.Frame ):
 		
 	def onPublishPhotos( self, event ):
 		with wx.DirDialog(self, 'Folder to write Photos') as dlg:
-			if dlg.ShowModal() == wx.ID_OK:				
-				def write_photos( dirname, infoList, dbFName, fps ):
-					for info in infoList:
-						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
-						if jpgBest is None:
-							continue
-						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
-						try:
-							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
-						except Exception:
-							args['raceSeconds'] = None
-						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
-						fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
-								info['bib'],
-								info['ts'].strftime('%Y%m%dT%H%M%S'),
-								info['last_name'],
-								info['first_name'],
-							)
-						)
-						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
-						try:
-							with open(os.path.join(dirname, fname), 'wb') as f:
-								f.write( AddExifToJpeg(jpg, info['ts'], comment) )
-						except Exception:
-							pass
-				
-				# Start a thread so we don't slow down the main capture loop.
-				args = (
-					dlg.GetPath(),
-					list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
-					self.db.fname,
-					self.db.fps,
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			path = dlg.GetPath()
+		
+		def write_photos( dirname, infoList, dbFName, fps ):
+			for info in infoList:
+				tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
+				if jpgBest is None:
+					continue
+				args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+				try:
+					args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
+				except Exception:
+					args['raceSeconds'] = None
+				jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
+				fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
+						info['bib'],
+						info['ts'].strftime('%Y%m%dT%H%M%S'),
+						info['last_name'],
+						info['first_name'],
+					)
 				)
-				threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
-				
+				comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+				try:
+					with open(os.path.join(dirname, fname), 'wb') as f:
+						f.write( AddExifToJpeg(jpg, info['ts'], comment) )
+				except Exception:
+					pass
+		
+		# Start a thread so we don't slow down the main capture loop.
+		args = (
+			path,
+			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+			self.db.fname,
+			self.db.fps,
+		)
+		threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
+	
+	def onPublishWebPage( self, event ):
+		with wx.DirDialog(self, 'Folder to write Web Page') as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			path = dlg.GetPath()
+		
+		def write_photo_page( dirname, infoList, dbFName, fps ):
+			def copy( fpFrom, fpTo ):
+				while True:
+					buf = fpFrom.read( 8192 )
+					if not buf:
+						break
+					fpTo.write( buf )
+			
+			with tempfile.TemporaryFile('w+') as tmp:
+				tmp.write( 'var photo_info = [\n' )
+				first = True;
+				for info in infoList:
+					tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
+					if jpgBest is None:
+						continue
+					args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+					try:
+						args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
+					except Exception:
+						args['raceSeconds'] = None
+					comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+					jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
+					jpg = AddExifToJpeg( jpg, info['ts'], comment )
+					args['photo'] = 'data:image/jpeg;base64,{}'.format( base64.standard_b64encode(jpg).encode() )
+					if not first:
+						tmp.write( ',\n' )
+					json.dump( args, tmp )
+					first = False
+				tmp.write( '];\n' )
+				tmp.seek( 0 )
+		
+		# Start a thread so we don't slow down the main capture loop.
+		args = (
+			path,
+			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+			self.db.fname,
+			self.db.fps,
+		)
+		threading.Thread( target=write_photo_page, args=args, name='write_photo_page', daemon=True ).start()
+		
+	
 	def GetListCtrl( self ):
 		return self.triggerList
 	
