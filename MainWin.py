@@ -539,7 +539,7 @@ class MainWin( wx.Frame ):
 		self.redoMenuButton.Enable( False )
 		self.editMenu.AppendSeparator()
 		
-		item = self.editMenu.Append( wx.ID_FIND, _("&Find...\tCtrl+F"), _("Find a Rider") )
+		item = self.editMenu.Append( wx.ID_ANY, _("&Find..."), _("Find a Rider") )
 		self.Bind(wx.EVT_MENU, self.menuFind, item )
 		
 		self.editMenu.AppendSeparator()
@@ -1089,9 +1089,10 @@ class MainWin( wx.Frame ):
 		
 	def menuFind( self, event = None ):
 		if not getattr(self, 'findDialog', None):
-			self.findDialog = SearchDialog( self, wx.ID_ANY )
-		self.findDialog.refresh()
-		self.findDialog.Show()
+			self.findDialog = SearchDialog( self )
+		if not self.findDialog.IsShown():
+			self.findDialog.refresh()
+			self.findDialog.Show()
 		
 	def menuUndo( self, event ):
 		undo.doUndo()
@@ -2346,7 +2347,8 @@ class MainWin( wx.Frame ):
 			if not race.isTimeTrial:
 				Utils.MessageOK( self, _('You must set TimeTrial mode first.'), _('Race must be TimeTrial') )
 				return
-			
+		
+		self.commit()
 		ImportTTStartTimes( self )
 	
 	@logCall
@@ -2387,7 +2389,6 @@ class MainWin( wx.Frame ):
 				return
 				
 			geoTrack = race.geoTrack
-			
 		
 		fname = os.path.splitext(self.fileName)[0] + 'Course.gpx'
 		
@@ -2395,7 +2396,7 @@ class MainWin( wx.Frame ):
 		xml = doc.toprettyxml( indent = '', encoding = 'utf-8' )
 		doc.unlink()
 		try:
-			with io.open(fname, 'w') as f:
+			with open(fname, 'w') as f:
 				f.write( xml )
 			Utils.MessageOK(self, '{}\n\n    {}.'.format(_('Course written to GPX file'), fname), _('GPX Export'))
 		except Exception as e:

@@ -49,13 +49,11 @@ class ScaledBitmap( wx.Panel ):
 		self.buttonDown = False
 		
 	def OnMotion( self, event ):
-		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
-		if not self.buttonDown:
-			return
-		self.xEnd, self.yEnd = x, y
-		wx.CallAfter( self.Refresh )
+		if self.buttonDown:
+			self.xEnd, self.yEnd = event.GetX(), event.GetY()
+			wx.CallAfter( self.Refresh )
 	
-	def getInsetRect( self, dc, width, height, isWest, isNorth ):
+	def getInsetRect( self, width, height, isWest, isNorth ):
 		r = 0.75
 		insetWidth = int(width*r)
 		insetHeight = int(height*r)
@@ -88,7 +86,7 @@ class ScaledBitmap( wx.Panel ):
 			return
 			
 		sourceRect = wx.Rect( 0, 0, sourceWidth, sourceHeight )
-		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int(magnifyRect.GetY()-yTop)/ratio, magnifyRect.GetWidth()/ratio, magnifyRect.GetHeight()/ratio ) )
+		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int((magnifyRect.GetY()-yTop)/ratio), int(magnifyRect.GetWidth()/ratio), int(magnifyRect.GetHeight()/ratio) ) )
 		
 		if sourceRect.IsEmpty():
 			return
@@ -97,7 +95,7 @@ class ScaledBitmap( wx.Panel ):
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2
 		isWest = xCenter < self.bitmap.GetWidth()//2
 		isNorth = yCenter < self.bitmap.GetHeight()//2
-		insetRect = self.getInsetRect( dc, width, height, isWest, isNorth )
+		insetRect = self.getInsetRect( width, height, isWest, isNorth )
 		
 		magRatio = GetScaleRatio( sourceRect.GetWidth(), sourceRect.GetHeight(), insetRect.GetWidth(), insetRect.GetHeight() )
 		iWidth, iHeight = int(sourceRect.GetWidth() * magRatio), int(sourceRect.GetHeight() * magRatio)
@@ -107,9 +105,9 @@ class ScaledBitmap( wx.Panel ):
 			iWidth, iHeight
 		)
 		
-		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
 		dc.StretchBlit( *(list(insetRect.Get()) + [sourceDC] + list(sourceRect.Get())) )
 		
+		dc.SetPen( wx.Pen(wx.Colour(200,200,0), 2) )
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.DrawRectangle( insetRect )
 		dc.DrawRectangle( magnifyRect )
@@ -188,14 +186,14 @@ class ScaledBitmap( wx.Panel ):
 			wx.Colour(255,255,0), wx.Colour(255,0,255), wx.Colour(0,255,255), wx.Colour(0,0,0),
 		)
 		rWidth = int(float(width) / len(colours) + 0.5)
-		for row, (y, hCur) in enumerate(((0, height*0.75), (height*0.75, height*0.25))):
+		for row, (y, hCur) in enumerate(((0, int(height*0.75)), (int(height*0.75), int(height*0.25)))):
 			for col, c in enumerate(colours if row == 0 else reversed(colours)):
 				dc.SetBrush( wx.Brush(c, wx.SOLID) )
 				dc.DrawRectangle( rWidth * col, y, rWidth+1, hCur )
 		
-		s = min(width, height) / 1.5
-		x = (width-s) / 2
-		y = (height-s) / 2
+		s = int(min(width, height) / 1.5)
+		x = int((width-s) / 2)
+		y = int((height-s) / 2)
 		angle = 360.0 / len(colours)
 		for i, c in enumerate(colours):
 			dc.SetBrush( wx.Brush(c, wx.SOLID) )
@@ -209,8 +207,8 @@ if __name__ == '__main__':
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	bitmapWidth, bitmapHeight = 640*2, 480*2
 	if bitmapWidth*2 + 32 > displayWidth or bitmapHeight*2 + 32 > displayHeight:
-		bitmapWidth /= 2
-		bitmapHeight /= 2
+		bitmapWidth //= 2
+		bitmapHeight //= 2
 	
 	mainWin = wx.Frame(None,title="ScaledBitmap", size=(bitmapWidth,bitmapHeight))
 	scaledBitmap = ScaledBitmap( mainWin, size=(bitmapWidth, bitmapHeight), inset=True )

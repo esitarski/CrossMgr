@@ -87,6 +87,8 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, label = _('Both Bib and Start Time must be specified.')),
 				flag=wx.ALL, border = border )
 		vbs.AddSpacer( 8 )
+		
+		self.startTimesInTimeOfDay = wx.CheckBox( self, label=_('Start times are in Time of Day.  Fix them by subtracting the scheduled race start time.') )
 				
 		border = 4
 		# Create a map for the field names we are looking for
@@ -116,6 +118,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		self.sp = sp
 		self.gs = gs
 		vbs.Add( sp, flag=wx.ALL, border = border )
+		vbs.Add( self.startTimesInTimeOfDay, flag=wx.ALL, border = 8 )
 		
 		self.SetSizer( vbs )
 	
@@ -269,7 +272,7 @@ class GetExcelTTStartTimeLink:
 			self.excelLink.setFileName( self.fileNamePage.getFileName() )
 			self.excelLink.setSheetName( self.sheetNamePage.getSheetName() )
 			self.excelLink.setFieldCol( self.headerNamesPage.getFieldCol() )
-		return self.excelLink
+		return self.excelLink, self.headerNamesPage.startTimesInTimeOfDay.GetValue()
 	
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
@@ -367,7 +370,7 @@ class ExcelLink:
 		
 		return info
 
-def DoImportTTStartTimes( race, excelLink ):
+def DoImportTTStartTimes( race, excelLink, startTimesInTimeOfDay=False ):
 	startTimes = {}
 	errors = []
 	
@@ -376,6 +379,8 @@ def DoImportTTStartTimes( race, excelLink ):
 		return errors, startTimes, 0
 		
 	info = excelLink.read()
+	
+	scheduledStartSeconds = Utils.StrToSeconds( race.scheduledStart ) * 60.0	# race.scheduledStart has no seconds.
 	
 	for num, data in info.items():
 		try:
@@ -405,7 +410,10 @@ def DoImportTTStartTimes( race, excelLink ):
 		else:
 			errors.append( '{} {}:  {}'.format(_('Bib'), num, _('cannot read start time') ) )
 			continue
-			
+		
+		if startTimesInTimeOfDay and t >= scheduledStartSeconds:
+			t -= scheduledStartSeconds
+		
 		startTimes[num] = t
 	
 	changeCount = 0
@@ -422,7 +430,7 @@ def DoImportTTStartTimes( race, excelLink ):
 				
 			if rider.times:
 				# Convert the race times to time of day by adding the existing first time.
-				riderTimeOfDay = [firstTime + rt for rt in rider.times]
+				riderTimeOfDay = [(firstTime or 0.0) + rt for rt in rider.times]
 				
 				# Compute new lap times by subtracting the new start time.
 				rider.times = [rtod - startTime for rtod in riderTimeOfDay]
@@ -453,11 +461,11 @@ def ImportTTStartTimes( parent ):
 	if not race or not getattr(race, 'isTimeTrial', False):
 		return
 		
-	excelLink = GetExcelTTStartTimeLink( parent ).show()
+	excelLink, startTimesInTimeOfDay = GetExcelTTStartTimeLink( parent ).show()
 	if not excelLink:
 		return
 	
-	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
+	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink, startTimesInTimeOfDay)
 	if errors:
 		errorStr = '\n'.join( errors[:20] )
 		if len(errors) > 20:

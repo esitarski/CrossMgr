@@ -160,6 +160,7 @@ class Search( wx.Panel ):
 		colnames.extend( f for f in fields if f in next(iter(externalInfo.values())) )
 		colnames.append( _('In Race') )
 		data = [ [] for c in colnames ]
+		
 		for num, info in externalInfo.items():
 			if searchText:
 				matched = False
@@ -172,7 +173,7 @@ class Search( wx.Panel ):
 						pass
 				if not matched:
 					continue
-				
+			
 			for c, f in enumerate(colnames):
 				if f.startswith('Tag'):
 					try:
@@ -221,13 +222,14 @@ class Search( wx.Panel ):
 		sortPairs.sort()
 		for c, col in enumerate(data):
 			data[c] = [col[r] for v, n, r in sortPairs]
-		
+			
 		colnames[self.sortCol] = '<{}>'.format(colnames[self.sortCol])
 		self.grid.Set( data = data, colnames = colnames )
-		self.grid.SetLeftAlignCols( set(i for i in range(1, len(colnames)) if 'Tag' not in colnames[i]) )
+		self.grid.SetLeftAlignCols( set(i for i in range(0, len(colnames)) if not any(a in colnames[i] for a in ('StartTime','Tag', 'Bib'))) )
 		self.grid.AutoSizeColumns( True )
 		self.grid.Reset()
-			
+		self.grid.SetRowLabelSize( 32 )	
+		
 		# Fix the grid's scrollbars.
 		self.grid.FitInside()
 	

@@ -118,6 +118,7 @@ class ScaledBitmapVerticalLines( wx.Panel ):
 		for i, v in enumerate(self.verticalLines):
 			if v is None:
 				continue
+			v = int( v )
 			dc.SetPen( wx.Pen(self.colors[i%lenColors], 1) )
 			dc.DrawLine( v, 0, v, height )
 			x = v - self.controlHeight // 2
@@ -158,15 +159,15 @@ class ScaledBitmapVerticalLines( wx.Panel ):
 		
 		colours = [(255,255,255), (255,0,0), (0,255,0), (0,0,255), (255,255,0), (255,0,255), (0,255,255), (0,0,0) ]
 		rWidth = int(float(width) / len(colours) + 0.5)
-		for y, hCur in ((0, height*0.75), (height*0.75, height*0.25)):
+		for y, hCur in ((0, int(height*0.75)), (int(height*0.75), int(height*0.25))):
 			for i, c in enumerate(colours):
 				dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
 				dc.DrawRectangle( rWidth * i, y, rWidth+1, hCur )
 			colours.reverse()
 		
-		s = min(width, height) / 1.5
-		x = (width-s) / 2
-		y = (height-s) / 2
+		s = int(min(width, height) / 1.5)
+		x = int((width-s) / 2)
+		y = int((height-s) / 2)
 		angle = 360.0 / len(colours)
 		for i, c in enumerate(colours):
 			dc.SetBrush( wx.Brush(wx.Colour(*c), wx.SOLID) )
