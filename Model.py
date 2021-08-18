@@ -23,6 +23,7 @@ import LapStats
 import Version
 from BatchPublishAttrs import setDefaultRaceAttr
 import minimal_intervals
+import SetRangeMerge
 from InSortedIntervalList import InSortedIntervalList
 
 CurrentUser = getpass.getuser()
@@ -2014,7 +2015,7 @@ class Race:
 		categories = [c for c in self.categories.values() if c.active and c.catType != Category.CatCustom]
 		if not categories:
 			return None
-		categories.sort( lambda c: c.sequence )
+		categories.sort( key = operator.attrgetter('sequence') )
 		categoryWave = category[0]
 		for c in categories:
 			if c.catType == Category.CatWave:
@@ -2023,34 +2024,37 @@ class Race:
 				return categoryWave
 		return None
 		
-	def adjustCategoryWaveNumbers( self, category ):
-		if category.catType != Category.CatWave or not category.active:
-			return
-		if not self.hasCategoryCache():
-			self._buildCategoryCache()
-		
-		categories = [c for c in self.categories.values() if c.active and c.catType != Category.CatCustom and c.sequence > category.sequence]
-		categories.sort( key = operator.attrgetter('sequence') )
-		
-		unionNums = set()
-		for c in categories:
-			if c.catType == Category.CatWave:
-				break
-			unionNums |= c.getMatchSet()
-		
-		if unionNums:
-			category.setFromSet( unionNums )
-		
 	def adjustAllCategoryWaveNumbers( self ):
-		categories = [c for c in self.categories.values() if c.active and c.catType == Category.CatWave]
-		for c in categories:
-			self.adjustCategoryWaveNumbers( c )
-
-		'''
-		category_sets = [c.getMatchSet() for c in categories]		
-		for c, i in zip(categories, minimal_intervals.minimal_intervals(category_sets) ):
-			c.setFromSet( IntervalsToSet(i) )
-		'''
+		# Get all CatWave and CatComponent categories sorted by sequence.
+		categories = sorted( (c for c in self.categories.values() if c.active and c.catType in (Category.CatWave, Category.CatComponent)), key = operator.attrgetter('sequence') )
+		
+		# For all Wave categories, collect all the numbers of their Components.
+		waveSets = []
+		for iWave, cWave in enumerate(categories):
+			if cWave.catType == Category.CatWave:
+				waveSet = set()
+				for cComponent in categories[iWave+1:]:
+					if cComponent.catType == Category.CatComponent:
+						waveSet |= cComponent.getMatchSet()
+					else:
+						break
+				if waveSet:
+					waveSets.append( waveSet )
+				else:	# This wave has no components.  Don't merge it for ranges, however, the merge needs to know about it to prevent conflicts.
+					waveSets.append( frozenset(cWave.getMatchSet()) )
+					
+		# Compute the minimal ranges and put the results back into the Wave sets.
+		# Don't touch the CatWave categories with no Components.
+		waveRanges = SetRangeMerge.SetRangeMerge( waveSets )
+		
+		print( waveRanges )
+		
+		iWaveRange = 0
+		for cWave in categories:
+			if cWave.catType == Category.CatWave:
+				if not isinstance(waveSets[iWaveRange], frozenset):
+					cWave.setFromSet( SetRangeMerge.RangeToSet(waveRanges[iWaveRange]) )
+				iWaveRange += 1
 		
 		self.resetCategoryCache()
 	
