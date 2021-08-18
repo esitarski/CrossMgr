@@ -2,50 +2,48 @@ from random import randint
 
 def SetRangeMerge( sets ):
 	'''
-		The sets parameter is a list of either a python set (if mutable) or a frozenset (if immutable).
+		The sets parameter is a list of either a python set (if mutable) or a frozenset (if immutable).\
+		Immutable sets correspond to Wave categories with no Components.
 		Elements in the sets must be numbers.
 	'''
 	if not sets:
 		return []
 	
-	# Ensure that common elements match from the first set to the last set.
-	numberSets  = [sets[0] if isinstance(sets[0],frozenset) else set(sets[0])]
-	previousElements = set(numberSets[0])
-	for i in range(1, len(sets)):
-		numberSets.append( sets[i] - previousElements )
+	# Ensure that shared elements are matched in sequence from the first set to last set.
+	numberSets = []
+	previousElements = set()
+	for s in sets:
+		numberSets.append( s - previousElements )
 		previousElements |= numberSets[-1]
 	
-	# Convert the sets to sorted lists.
-	numberLists = []
-	for i, numberSet in enumerate(numberSets):
-		numberLists.append( sorted(sets[i] if isinstance(sets[i],frozenset) else numberSet) )
-	
 	def inConflict( first, last, i ):
-		rng = set( range(first, last+1) )
-		for j, numSet in enumerate(numberSets):
-			if j != i and rng & numSet:
-				return True
-		return False
+		''' Check if the proposed range is in conflict with any other set. '''
+		rngSet = set( range(first, last+1) )
+		return not all( j == i or rngSet.isdisjoint(numSet) for j, numSet in enumerate(numberSets) )
 	
-	numberRanges = [[] for s in sets]
-	for iNumberList, numberList in enumerate(numberLists):
-		if isinstance(sets[iNumberList], frozenset):
+	numberRanges = []
+	for iNumberSet, numberSet in enumerate(numberSets):
+		numberRange = []
+		if isinstance(sets[iNumberSet], frozenset):
+			# For frozen sets, just convert consecutive numbers to ranges.  Don't check between sets.
+			numberList = sorted( sets[iNumberSet] )
 			if numberList:
-				# For frozen sets, represent consecutive numbers as ranges.
-				numberRanges[iNumberList].append( (numberList[0], numberList[0]) )
+				numberRange.append( (numberList[0], numberList[0]) )
 				for n in numberList[1:]:
-					if n == numberRanges[iNumberList][-1][1] + 1:
-						numberRanges[iNumberList][-1] = (numberRanges[iNumberList][-1][0], n)
+					if n == numberRange[-1][1] + 1:
+						numberRange[-1] = (numberRange[-1][0], n)
 					else:
-						numberRanges[iNumberList].append( (n,n) )
+						numberRange.append( (n,n) )
 		else:
-			# Build the largest ranges that don't conflict with number in any other group.
+			# Build the largest ranges that don't conflict with any other set.
+			numberList = sorted( numberSet )
 			iFirst = iLast = 0
 			while iFirst < len(numberList):
-				while iLast < len(numberList) and not inConflict(numberList[iFirst], numberList[iLast], iNumberList):
+				while iLast < len(numberList) and not inConflict(numberList[iFirst], numberList[iLast], iNumberSet):
 					iLast += 1
-				numberRanges[iNumberList].append( (numberList[iFirst], numberList[iLast-1]) )
+				numberRange.append( (numberList[iFirst], numberList[iLast-1]) )
 				iFirst = iLast
+		numberRanges.append( numberRange )
 			
 	return numberRanges
 	
@@ -57,10 +55,11 @@ def RangeToSet( r ):
 	
 if __name__ == '__main__':
 	sets = [
-		[randint(101,200) for i in range(50)],
-		[randint(151,250) for i in range(50)],
-		[randint(201,300) for i in range(50)],
-		[randint(301,400) for i in range(50)],
+		set(randint(101,200) for i in range(50)),
+		set(randint(151,250) for i in range(50)),
+		set(randint(201,300) for i in range(50)),
+		set(randint(301,400) for i in range(50)),
+		set(randint(401,500) for i in range(50)),
 	]
 	for r in SetRangeMerge(sets) :
 		print( RangeToStr(r) )

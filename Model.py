@@ -2040,13 +2040,12 @@ class Race:
 						break
 				if waveSet:
 					waveSets.append( waveSet )
-				else:	# This wave has no components.  Don't merge it for ranges, however, the merge needs to know about it to prevent conflicts.
+				else:	# This wave has no components.  Pass a frozenset so the values won't be changed.
 					waveSets.append( frozenset(cWave.getMatchSet()) )
 					
-		# Compute the minimal ranges and put the results back into the Wave sets.
-		# Don't touch the CatWave categories with no Components.
-		waveRanges = SetRangeMerge.SetRangeMerge( waveSets )
-		
+		# Compute compressed ranges and put the results back into the Wave sets.
+		# Don't change CatWave categories with no CatComponents.
+		waveRanges = SetRangeMerge.SetRangeMerge( waveSets )		
 		iWaveRange = 0
 		for cWave in categories:
 			if cWave.catType == Category.CatWave:
