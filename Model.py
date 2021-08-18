@@ -2047,8 +2047,6 @@ class Race:
 		# Don't touch the CatWave categories with no Components.
 		waveRanges = SetRangeMerge.SetRangeMerge( waveSets )
 		
-		print( waveRanges )
-		
 		iWaveRange = 0
 		for cWave in categories:
 			if cWave.catType == Category.CatWave:

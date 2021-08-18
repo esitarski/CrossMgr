@@ -1,26 +1,24 @@
-import io
 from random import randint
 
 def SetRangeMerge( sets ):
 	'''
-		sets consists of a list of either a python set (if mutable) or a frozenset (if immutable).
+		The sets parameter is a list of either a python set (if mutable) or a frozenset (if immutable).
+		Elements in the sets must be numbers.
 	'''
 	if not sets:
 		return []
 	
-	# Ensure that common elements override from the first set to the last set.
-	numberSets  = [set(sets[0])]
-	if isinstance(sets[0], frozenset):
-		numberSets = frozenset( numberSets )
-	previousElements = set(sets[0])
+	# Ensure that common elements match from the first set to the last set.
+	numberSets  = [sets[0] if isinstance(sets[0],frozenset) else set(sets[0])]
+	previousElements = set(numberSets[0])
 	for i in range(1, len(sets)):
-		if isinstance(sets[i], frozenset):
-			numberSets.append( sets[i] )
-		else:
-			numberSets.append( set(sets[i]) - previousElements )
+		numberSets.append( sets[i] - previousElements )
 		previousElements |= numberSets[-1]
-		
-	numberLists = [sorted(s) for s in numberSets]
+	
+	# Convert the sets to sorted lists.
+	numberLists = []
+	for i, numberSet in enumerate(numberSets):
+		numberLists.append( sorted(sets[i] if isinstance(sets[i],frozenset) else numberSet) )
 	
 	def inConflict( first, last, i ):
 		rng = set( range(first, last+1) )
@@ -32,8 +30,8 @@ def SetRangeMerge( sets ):
 	numberRanges = [[] for s in sets]
 	for iNumberList, numberList in enumerate(numberLists):
 		if isinstance(sets[iNumberList], frozenset):
-			if sets[iNumberList]:
-				# Represent consecutive numbers as ranges.
+			if numberList:
+				# For frozen sets, represent consecutive numbers as ranges.
 				numberRanges[iNumberList].append( (numberList[0], numberList[0]) )
 				for n in numberList[1:]:
 					if n == numberRanges[iNumberList][-1][1] + 1:
