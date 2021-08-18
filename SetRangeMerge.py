@@ -56,7 +56,7 @@ def RangeToSet( r ):
 if __name__ == '__main__':
 	sets = [
 		set(randint(101,200) for i in range(50)),
-		set(randint(151,250) for i in range(50)),
+		frozenset(randint(151,250) for i in range(50)),
 		set(randint(201,300) for i in range(50)),
 		set(randint(301,400) for i in range(50)),
 		set(randint(401,500) for i in range(50)),
