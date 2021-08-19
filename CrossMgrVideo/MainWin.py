@@ -606,6 +606,11 @@ class MainWin( wx.Frame ):
 		self.publishPhotos.Bind( wx.EVT_BUTTON, self.onPublishPhotos )
 		hsDate.Add( self.publishPhotos, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
 		
+		self.publishWebPage = wx.Button( self, label="Photo Web Page" )
+		self.publishWebPage.SetToolTip( "Write a JPG for each Trigger and create a Web Page" )
+		self.publishWebPage.Bind( wx.EVT_BUTTON, self.onPublishWebPage )
+		hsDate.Add( self.publishWebPage, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
+		
 		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		self.bibQuery = None
@@ -762,7 +767,7 @@ class MainWin( wx.Frame ):
 		self.refreshTriggers( True )
 		
 	def onPublishPhotos( self, event ):
-		with wx.DirDialog(self, 'Folder to write Photos') as dlg:
+		with wx.DirDialog(self, 'Folder to write all Photos') as dlg:
 			if dlg.ShowModal() != wx.ID_OK:
 				return
 			path = dlg.GetPath()
@@ -792,7 +797,7 @@ class MainWin( wx.Frame ):
 				except Exception:
 					pass
 		
-		# Start a thread so we don't slow down the main capture loop.
+		# Write in a thread so we don't slow down the main capture loop.
 		args = (
 			path,
 			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
@@ -802,51 +807,86 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
 	
 	def onPublishWebPage( self, event ):
-		with wx.DirDialog(self, 'Folder to write Web Page') as dlg:
+		'''
+			Generate a web page to search and browse the photos.
+			Photos can be written as seperate .jpeg files, or embedded into the html page itself.
+		'''
+		with wx.DirDialog(self, 'Folder to write Photos and create Web Page') as dlg:
 			if dlg.ShowModal() != wx.ID_OK:
 				return
-			path = dlg.GetPath()
+			dirname = dlg.GetPath()
 		
-		def write_photo_page( dirname, infoList, dbFName, fps ):
-			def copy( fpFrom, fpTo ):
-				while True:
-					buf = fpFrom.read( 8192 )
-					if not buf:
-						break
-					fpTo.write( buf )
+		choices = (
+			'Recommended: .html page contains links to photos in seperate .jpeg files (requires uploading the .html and all .jpeg files to your web server)',
+			'Not Recommended: .html page contains embedded photos (everything will be in the single .html file, but the file will be huge and inefficient)',
+		)
+		with wx.SingleChoiceDialog(self, 'Web Page Generation Options:', 'Web Page Generation', choices=choices) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			singleFile = (dlg.GetSelection() == 1)		
 			
-			with tempfile.TemporaryFile('w+') as tmp:
-				tmp.write( 'var photo_info = [\n' )
-				first = True;
-				for info in infoList:
-					tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
-					if jpgBest is None:
+		class DateTimeEncoder( json.JSONEncoder ):
+			def default(self, o):
+				if isinstance(o, datetime):
+					return o.isoformat()
+				return json.JSONEncoder.default(self, o)
+				
+		def publish_web_photos( dirname, infoList, dbFName, fps, singleFile ):
+			if not infoList:
+				return
+			
+			dateStr = infoList[0]['ts'].strftime('%Y-%m-%d')
+			fname = os.path.join( dirname, '{}-index.html'.format(dateStr) )
+			ftemplate = os.path.join( Utils.getImageFolder(), 'PhotoPage.html' )
+			
+			with open(fname, 'w') as fOut, open(ftemplate) as fIn:
+				for line in fIn:
+					if not line.strip().startswith( 'var photo_info' ):
+						fOut.write( line )
 						continue
-					args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
-					try:
-						args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
-					except Exception:
-						args['raceSeconds'] = None
-					comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
-					jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
-					jpg = AddExifToJpeg( jpg, info['ts'], comment )
-					args['photo'] = 'data:image/jpeg;base64,{}'.format( base64.standard_b64encode(jpg).encode() )
-					if not first:
-						tmp.write( ',\n' )
-					json.dump( args, tmp )
-					first = False
-				tmp.write( '];\n' )
-				tmp.seek( 0 )
-		
-		# Start a thread so we don't slow down the main capture loop.
+						
+					# Write out all the photo info.
+					fOut.write( 'var photo_info = [\n' )
+					for iInfo, info in enumerate(infoList):
+						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
+						if jpgBest is None:
+							return
+						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						try:
+							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
+						except Exception:
+							args['raceSeconds'] = None
+						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
+						jpg = AddExifToJpeg( jpg, info['ts'], comment )
+
+						if iInfo:
+							fOut.write( ',\n' )
+						
+						if singleFile:
+							args['photo'] = 'data:image/jpeg;base64,{}'.format( base64.standard_b64encode(jpg).decode() )
+						else:
+							photo_fname = '{}-{:05d}.jpeg'.format(dateStr, iInfo)
+							with open(os.path.join(os.path.dirname(fname), photo_fname), 'wb') as fPhoto:
+								fPhoto.write( jpg )
+							args['photo'] = './{}'.format( photo_fname )
+						
+						json.dump( args, fOut, cls=DateTimeEncoder )
+					
+					fOut.write( '];\n' )
+					
+			webbrowser.open( fname, new=0, autoraise=1 )
+
+		# Write in a thread so we don't slow down the main capture loop.
 		args = (
-			path,
+			dirname,
 			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
 			self.db.fname,
 			self.db.fps,
+			singleFile,
 		)
-		threading.Thread( target=write_photo_page, args=args, name='write_photo_page', daemon=True ).start()
-		
+		threading.Thread( target=publish_web_photos, args=args, name='publish_web', daemon=True ).start()
+		# write_photos( *args )
 	
 	def GetListCtrl( self ):
 		return self.triggerList
