@@ -811,7 +811,17 @@ class MainWin( wx.Frame ):
 			Generate a web page to search and browse the photos.
 			Photos can be written as seperate .jpeg files, or embedded into the html page itself.
 		'''
-		with wx.DirDialog(self, 'Folder to write Photos and create Web Page') as dlg:
+		with wx.MessageDialog( self,
+				"This will write multiple photo files and an Html file to navigate the photos.\n"
+				"Make sure you have a seperate folder ready for all the files (create one if necessary).\n"
+				"\n"
+				"Continue?",
+				"Publish Web Page",
+				style=wx.OK|wx.CANCEL ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return		
+		
+		with wx.DirDialog(self, 'Folder to write Photos and Web Page') as dlg:
 			if dlg.ShowModal() != wx.ID_OK:
 				return
 			dirname = dlg.GetPath()
