@@ -36,7 +36,7 @@ class ScaledBitmapVerticalLines( wx.Panel ):
 		self.xCorrection = None
 		self.yCur = None
 		self.colors = colors or contrastColours
-		self.backgroundBrush = wx.Brush( wx.Colour(232,232,232), wx.SOLID )
+		self.backgroundBrush = wx.Brush( wx.Colour(0,0,0), wx.SOLID )
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_LEFT_DOWN, self.OnMouseDown )
