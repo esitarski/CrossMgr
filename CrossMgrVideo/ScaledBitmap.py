@@ -15,7 +15,7 @@ class ScaledBitmap( wx.Panel ):
 		self.bitmap = bitmap
 		self.drawFinishLine = drawFinishLine
 		self.buttonDown = False
-		self.backgroundBrush = wx.Brush( wx.Colour(232,232,232), wx.SOLID )
+		self.backgroundBrush = wx.Brush( wx.Colour(0,0,0), wx.SOLID )
 		self.resetMagRect()
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )

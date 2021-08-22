@@ -3,7 +3,7 @@ from io import BytesIO
 import sys
 import getpass
 import datetime
-import unicodedata
+import platform
 import piexif
 import piexif.helper
 import Version
@@ -11,9 +11,12 @@ import Utils
 
 zeroth_ifd_common = {
 	piexif.ImageIFD.Artist: 			getpass.getuser(),
-	piexif.ImageIFD.HostComputer:		os.uname()[1],
 	piexif.ImageIFD.Software:			Version.AppVerName,
 }
+try:
+	zeroth_ifd_common[piexif.ImageIFD.HostComputer] = platform.uname()[1]
+except Exception:
+	pass
 
 def AddExifToJpeg( jpeg, ts, comment ):
 	zeroth_ifd = zeroth_ifd_common.copy()
