@@ -807,6 +807,15 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
 	
 	def onPublishWebPage( self, event ):
+		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		if not infoList:
+			with wx.MessageDialog( self,
+					"Please select a date with videos.",
+					"Nothing to Publish",
+					style=wx.OK ) as dlg:
+				dlg.ShowModal()
+				return		
+		
 		'''
 			Generate a web page to search and browse the photos.
 			Photos can be written as seperate .jpeg files, or embedded into the html page itself.
@@ -860,7 +869,7 @@ class MainWin( wx.Frame ):
 					for iInfo, info in enumerate(infoList):
 						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
 						if jpgBest is None:
-							return
+							continue
 						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 						try:
 							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
@@ -890,7 +899,7 @@ class MainWin( wx.Frame ):
 		# Write in a thread so we don't slow down the main capture loop.
 		args = (
 			dirname,
-			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+			infoList,
 			self.db.fname,
 			self.db.fps,
 			singleFile,
