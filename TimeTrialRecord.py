@@ -74,8 +74,6 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.headerNames = [_('Time'), '   {}   '.format(_('Bib'))]
 		
-		self.maxRows = 10
-		
 		fontSize = 18
 		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.bigFont = wx.Font( (0,int(fontSize*1.30)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -115,7 +113,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.rowLabelSize = width
 		self.grid.SetRowLabelSize( self.rowLabelSize )
 		
-		self.grid.CreateGrid( self.maxRows, len(self.headerNames) )
+		self.grid.CreateGrid( 0, len(self.headerNames) )
 		self.grid.Bind( gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.doClickLabel )
 		for col, name in enumerate(self.headerNames):
 			self.grid.SetColLabelValue( col, name )
@@ -175,30 +173,9 @@ class TimeTrialRecord( wx.Panel ):
 			if race.enableUSBCamera:
 				race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
 	
-		# Find the last row without a time.
-		self.grid.SetGridCursor( 0, 0, )
-		
-		emptyRow = self.grid.GetNumberRows() + 1
-		success = False
-		for i in range(2):
-			for row in range(self.grid.GetNumberRows()):
-				if not self.grid.GetCellValue(row, 0):
-					emptyRow = row
-					break
-			if emptyRow >= self.grid.GetNumberRows():
-				self.doCommit( event )
-			else:
-				success = True
-				break
-		
-		if not success:
-			Utils.MessageOK( self, '\n'.join([
-                _('Insufficient space to Record Time.'),
-                _('Enter Bib numbers and press Commit.'),
-                _('Or delete some entries')]), _('Record Time Failed.') )
-			return
-			
-		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
+		# Grow the table to accomodate the next entry.
+		Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )			
+		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, formatTime(t) )
 		
 		# Set the edit cursor at the first empty bib position.
 		for row in range(self.grid.GetNumberRows()):
@@ -233,13 +210,6 @@ class TimeTrialRecord( wx.Panel ):
 			for column in range(self.grid.GetNumberCols()):
 				self.grid.SetCellValue(row, column, '' )
 		
-		'''
-		for row, tStr in enumerate(timesNoBibs):
-			self.grid.SetCellValue( row, 0, tStr )
-		'''
-			
-		self.grid.SetGridCursor( 0, 1 )
-			
 		if timesBibs and Model.race:
 			with Model.LockRace() as race:
 				bibRaceSeconds = []
@@ -251,8 +221,8 @@ class TimeTrialRecord( wx.Panel ):
 					bibRaceSeconds.append( (bib, raceSeconds) )
 				
 			wx.CallAfter( Utils.refresh )
-			
-		self.grid.SetGridCursor( 0, 1 )
+		
+		Utils.AdjustGridSize( self.grid, rowsRequired=0 )
 	
 	def refresh( self ):
 		self.grid.AutoSizeRows()
