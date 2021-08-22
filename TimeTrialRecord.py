@@ -210,13 +210,6 @@ class TimeTrialRecord( wx.Panel ):
 			for column in range(self.grid.GetNumberCols()):
 				self.grid.SetCellValue(row, column, '' )
 		
-		'''
-		for row, tStr in enumerate(timesNoBibs):
-			self.grid.SetCellValue( row, 0, tStr )
-		'''
-			
-		self.grid.SetGridCursor( 0, 1 )
-			
 		if timesBibs and Model.race:
 			with Model.LockRace() as race:
 				bibRaceSeconds = []
@@ -229,8 +222,7 @@ class TimeTrialRecord( wx.Panel ):
 				
 			wx.CallAfter( Utils.refresh )
 		
-		Utils.AdjustGridSize( self.grid, rowsRequired=1 )
-		self.grid.SetGridCursor( 0, 1 )
+		Utils.AdjustGridSize( self.grid, rowsRequired=0 )
 	
 	def refresh( self ):
 		self.grid.AutoSizeRows()
