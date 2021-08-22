@@ -74,7 +74,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.headerNames = [_('Time'), '   {}   '.format(_('Bib'))]
 		
-		self.maxRows = 10
+		self.maxRows = 1
 		
 		fontSize = 18
 		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -176,27 +176,17 @@ class TimeTrialRecord( wx.Panel ):
 				race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
 	
 		# Find the last row without a time.
-		self.grid.SetGridCursor( 0, 0, )
+		# If the grid is too small, make it larger so we don't lose any data.
+		self.grid.SetGridCursor( 0, 0 )
 		
-		emptyRow = self.grid.GetNumberRows() + 1
-		success = False
-		for i in range(2):
-			for row in range(self.grid.GetNumberRows()):
-				if not self.grid.GetCellValue(row, 0):
-					emptyRow = row
-					break
-			if emptyRow >= self.grid.GetNumberRows():
-				self.doCommit( event )
-			else:
-				success = True
+		emptyRow = None
+		for row in range(self.grid.GetNumberRows()):
+			if not self.grid.GetCellValue(row, 0):
+				emptyRow = row
 				break
-		
-		if not success:
-			Utils.MessageOK( self, '\n'.join([
-                _('Insufficient space to Record Time.'),
-                _('Enter Bib numbers and press Commit.'),
-                _('Or delete some entries')]), _('Record Time Failed.') )
-			return
+		else:
+			emptyRow = self.grid.GetNumberRows()
+			Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )
 			
 		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
 		
@@ -251,7 +241,8 @@ class TimeTrialRecord( wx.Panel ):
 					bibRaceSeconds.append( (bib, raceSeconds) )
 				
 			wx.CallAfter( Utils.refresh )
-			
+		
+		Utils.AdjustGridSize( self.grid, rowsRequired=1 )
 		self.grid.SetGridCursor( 0, 1 )
 	
 	def refresh( self ):
