@@ -767,6 +767,15 @@ class MainWin( wx.Frame ):
 		self.refreshTriggers( True )
 		
 	def onPublishPhotos( self, event ):
+		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		if not infoList:
+			with wx.MessageDialog( self,
+					"Please select a date with videos.",
+					"Nothing to Publish",
+					style=wx.OK ) as dlg:
+				dlg.ShowModal()
+				return		
+		
 		with wx.DirDialog(self, 'Folder to write all Photos') as dlg:
 			if dlg.ShowModal() != wx.ID_OK:
 				return
@@ -800,7 +809,7 @@ class MainWin( wx.Frame ):
 		# Write in a thread so we don't slow down the main capture loop.
 		args = (
 			path,
-			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+			infoList,
 			self.db.fname,
 			self.db.fps,
 		)
