@@ -74,8 +74,6 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.headerNames = [_('Time'), '   {}   '.format(_('Bib'))]
 		
-		self.maxRows = 1
-		
 		fontSize = 18
 		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.bigFont = wx.Font( (0,int(fontSize*1.30)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -115,7 +113,7 @@ class TimeTrialRecord( wx.Panel ):
 		self.rowLabelSize = width
 		self.grid.SetRowLabelSize( self.rowLabelSize )
 		
-		self.grid.CreateGrid( self.maxRows, len(self.headerNames) )
+		self.grid.CreateGrid( 0, len(self.headerNames) )
 		self.grid.Bind( gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.doClickLabel )
 		for col, name in enumerate(self.headerNames):
 			self.grid.SetColLabelValue( col, name )
@@ -175,20 +173,9 @@ class TimeTrialRecord( wx.Panel ):
 			if race.enableUSBCamera:
 				race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
 	
-		# Find the last row without a time.
-		# If the grid is too small, make it larger so we don't lose any data.
-		self.grid.SetGridCursor( 0, 0 )
-		
-		emptyRow = None
-		for row in range(self.grid.GetNumberRows()):
-			if not self.grid.GetCellValue(row, 0):
-				emptyRow = row
-				break
-		else:
-			emptyRow = self.grid.GetNumberRows()
-			Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )
-			
-		self.grid.SetCellValue( emptyRow, 0, formatTime(t) )
+		# Grow the table to accomodate the next entry.
+		Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )			
+		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, formatTime(t) )
 		
 		# Set the edit cursor at the first empty bib position.
 		for row in range(self.grid.GetNumberRows()):
