@@ -860,14 +860,6 @@ class MainWin( wx.Frame ):
 					return o.isoformat()
 				return json.JSONEncoder.default(self, o)
 		
-		# Create random numbers for photo ids to make it harder to guess photo ids and download them photos in bulk.
-		random.seed( 0xed )
-		random_ids = set( random.randint(0,0xFFFFFF) for i in range(len(infoList)) )
-		while len(random_ids) < len(infoList):
-			random_ids.add( random.randint(0,0xFFFFFF) )
-		random_ids = sorted( random_ids )
-		random.shuffle( random_ids )
-				
 		def publish_web_photos( dirname, infoList, dbFName, fps, singleFile ):
 			if not infoList:
 				return
@@ -903,7 +895,7 @@ class MainWin( wx.Frame ):
 						if singleFile:
 							args['photo'] = 'data:image/jpeg;base64,{}'.format( base64.standard_b64encode(jpg).decode() )
 						else:
-							photo_fname = '{}-{:06X}.jpeg'.format(dateStr, random_ids[iInfo])
+							photo_fname = '{}-{:06X}.jpeg'.format(dateStr, iInfo)
 							with open(os.path.join(os.path.dirname(fname), photo_fname), 'wb') as fPhoto:
 								fPhoto.write( jpg )
 							args['photo'] = './{}'.format( photo_fname )
