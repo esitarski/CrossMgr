@@ -241,13 +241,13 @@ class Database:
 				tsEarlier, jpgEarlier = ts, jpg
 				break
 			else:
-				tsEarlier,	jpgEarlier	= None, None
+				tsEarlier, jpgEarlier = None, None
 			
 			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts > ? ORDER BY ts ASC', (ts,) ):
 				tsLater, jpgLater = ts, jpg
 				break
 			else:
-				tsLater,	jpgLater	= None, None
+				tsLater, jpgLater = None, None
 				
 		return (tsEarlier, jpgEarlier) if (tsLater is None or abs((tsEarlier - ts).total_seconds()) < abs((tsLater - ts).total_seconds())) else (tsLater, jpgLater)
 	
