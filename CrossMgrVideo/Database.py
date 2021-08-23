@@ -236,16 +236,18 @@ class Database:
 		return count[0] if count else 0
 	
 	def getPhotoClosest( self, ts ):
-		tsEarlier,	jpgEarlier	= None, None
-		tsLater,	jpgLater	= None, None
-		
 		with self.dbLock, self.conn:
 			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts <= ? ORDER BY ts DESC', (ts,) ):
 				tsEarlier, jpgEarlier = ts, jpg
 				break
+			else:
+				tsEarlier,	jpgEarlier	= None, None
+			
 			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts > ? ORDER BY ts ASC', (ts,) ):
 				tsLater, jpgLater = ts, jpg
 				break
+			else:
+				tsLater,	jpgLater	= None, None
 				
 		return (tsEarlier, jpgEarlier) if (tsLater is None or abs((tsEarlier - ts).total_seconds()) < abs((tsLater - ts).total_seconds())) else (tsLater, jpgLater)
 	
