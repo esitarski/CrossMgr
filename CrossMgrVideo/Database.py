@@ -236,16 +236,20 @@ class Database:
 		return count[0] if count else 0
 	
 	def getPhotoClosest( self, ts ):
-		deltaSecondsBest = 1.0
-		tsBest = ts + timedelta(seconds=deltaSecondsBest)
-		jpgBest = None
-		for ts, jpg in self.getPhotos(ts - timedelta(seconds=0.1), ts + timedelta(seconds=0.1)):
-			deltaSecondsCur = abs((tsBest - ts).total_seconds())
-			if deltaSecondsCur < deltaSecondsBest:
-				deltaSecondsBest = deltaSecondsCur
-				tsBest = ts
-				jpgBest = jpg
-		return tsBest if jpgBest else None, jpgBest
+		with self.dbLock, self.conn:
+			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts <= ? ORDER BY ts DESC', (ts,) ):
+				tsEarlier, jpgEarlier = ts, jpg
+				break
+			else:
+				tsEarlier, jpgEarlier = None, None
+			
+			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts > ? ORDER BY ts ASC', (ts,) ):
+				tsLater, jpgLater = ts, jpg
+				break
+			else:
+				tsLater, jpgLater = None, None
+				
+		return (tsEarlier, jpgEarlier) if (tsLater is None or abs((tsEarlier - ts).total_seconds()) < abs((tsLater - ts).total_seconds())) else (tsLater, jpgLater)
 	
 	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
 		with self.dbLock, self.conn:

@@ -8,13 +8,14 @@ import re
 import time
 import math
 import json
-import threading
+import time
 import socket
 import atexit
 import base64
-import time
+import random
 import platform
 import tempfile
+import threading
 import webbrowser
 from queue import Queue, Empty
 import CamServer
@@ -767,6 +768,15 @@ class MainWin( wx.Frame ):
 		self.refreshTriggers( True )
 		
 	def onPublishPhotos( self, event ):
+		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		if not infoList:
+			with wx.MessageDialog( self,
+					"Please select a date with videos.",
+					"Nothing to Publish",
+					style=wx.OK ) as dlg:
+				dlg.ShowModal()
+				return		
+		
 		with wx.DirDialog(self, 'Folder to write all Photos') as dlg:
 			if dlg.ShowModal() != wx.ID_OK:
 				return
@@ -800,7 +810,7 @@ class MainWin( wx.Frame ):
 		# Write in a thread so we don't slow down the main capture loop.
 		args = (
 			path,
-			list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) ),
+			infoList,
 			self.db.fname,
 			self.db.fps,
 		)
@@ -849,7 +859,7 @@ class MainWin( wx.Frame ):
 				if isinstance(o, datetime):
 					return o.isoformat()
 				return json.JSONEncoder.default(self, o)
-				
+		
 		def publish_web_photos( dirname, infoList, dbFName, fps, singleFile ):
 			if not infoList:
 				return
@@ -885,7 +895,7 @@ class MainWin( wx.Frame ):
 						if singleFile:
 							args['photo'] = 'data:image/jpeg;base64,{}'.format( base64.standard_b64encode(jpg).decode() )
 						else:
-							photo_fname = '{}-{:05d}.jpeg'.format(dateStr, iInfo)
+							photo_fname = '{}-{:06X}.jpeg'.format(dateStr, iInfo)
 							with open(os.path.join(os.path.dirname(fname), photo_fname), 'wb') as fPhoto:
 								fPhoto.write( jpg )
 							args['photo'] = './{}'.format( photo_fname )
