@@ -1360,20 +1360,17 @@ class MainWin( wx.Frame ):
 				break
 			
 			cmd = msg['cmd']
+			
 			if cmd == 'response':
 				for t, f in msg['ts_frames']:
 					self.dbWriterQ.put( ('photo', t, f) )
-					lastFrame = f
 			elif cmd == 'update':
 				name, lastFrame = msg['name'], msg['frame']
-				if lastFrame is None:
-					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
-					if self.focusDialog.IsShown():
-						wx.CallAfter( self.focusDialog.SetTestBitmap )
-				else:
-					if name == 'primary':
+				if name == 'primary':
+					if lastFrame is None:
+						wx.CallAfter( self.primaryBitmap.SetTestBitmap )
+					else:
 						wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
-						
 						primaryCount += self.primaryFreq
 						primaryTime = now()
 						primaryDelta = (primaryTime - lastPrimaryTime).total_seconds()
@@ -1381,12 +1378,15 @@ class MainWin( wx.Frame ):
 							wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
 							lastPrimaryTime = primaryTime
 							primaryCount = 0
-							
-					elif name == 'focus':
-						if self.focusDialog.IsShown():
-							wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
+						
+				elif name == 'focus':
+					if self.focusDialog.IsShown():
+						if lastFrame is None:
+							wx.CallAfter( self.focusDialog.SetTestBitmap )
 						else:
-							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+							wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
+					else:
+						self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
 			elif cmd == 'info':
 				vals = {name:update_value for name, property_index, call_status, update_value in msg['retvals']}
 				wx.CallAfter( self.setCameraResolution, int(vals['frame_width']), int(vals['frame_height']) )
