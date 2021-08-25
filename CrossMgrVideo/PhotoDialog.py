@@ -113,7 +113,7 @@ class PhotoDialog( wx.Dialog ):
 		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
 		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B7' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
-				
+		
 		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		btnsizer.Add( self.playerReverse, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerForward, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)

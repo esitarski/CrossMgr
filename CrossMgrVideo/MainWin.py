@@ -1254,7 +1254,6 @@ class MainWin( wx.Frame ):
 			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			triggerInfo['frames'] = len(self.tsJpg)
 			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, triggerInfo )
-			wx.CallLater( 200, self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, triggerInfo )	# HACK - workaround to ensure the local background gets updated properly.
 			
 		#threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
 		updateFS( self.triggerInfo )
