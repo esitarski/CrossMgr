@@ -74,7 +74,7 @@ class FinishStrip( wx.Panel ):
 		self.tCursor = 0.0
 		self.tMax = 0.0
 		
-		self.bmSaveLast = self.bmSaveX = None
+		self.resetBmSave()
 		
 	def formatTime( self, t ):
 		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f')[:-3]
@@ -103,8 +103,12 @@ class FinishStrip( wx.Panel ):
 	def GetTimePhotos( self ):
 		return self.times
 		
+	def Clear( self ):
+		self.SetTsJpgs( [] )
+		
 	def SetTsJpgs( self, tsJpgs, triggerTime=None ):
-		self.restoreBmSave()
+		self.resetBmSave()
+		self.compositeBitmap = None
 		
 		self.tsJpgs = (tsJpgs or [])
 		self.times = []
@@ -114,7 +118,6 @@ class FinishStrip( wx.Panel ):
 		if not tsJpgs:
 			self.tsFirst = datetime.datetime.now()
 			self.triggerTime = 0.0
-			self.compositeBitmap = None
 			self.Refresh()
 			return
 		
@@ -165,23 +168,31 @@ class FinishStrip( wx.Panel ):
 		x = self.xFromT( t )
 		if self.compositeBitmap:
 			self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetClientSize()[0]))
-		self.restoreBmSave()
+		self.resetBmSave()
 		self.Refresh()
 		self.scrollCallback( self.bitmapLeft )
 	
-	def restoreBmSave( self ):
-		if self.bmSaveLast is not None:
+	def restoreBm( self ):
+		if self.bmSaveLast is None:
+			return
+			
+		if self.compositeBitmap:
 			memDC = wx.MemoryDC( self.bmSaveLast )
 			dc = wx.ClientDC( self )
 			dc.Blit( self.bmSaveX, 0, self.bmSaveLast.GetWidth(), self.bmSaveLast.GetHeight(), memDC, 0, 0 )
-			self.bmSaveLast = self.bmSaveX = None
+			
+		self.resetBmSave()
+		
+	def resetBmSave( self ):
+		self.bmSaveLast = self.bmSaveX = None
 	
 	def drawCurrentLine( self, x, y ):
-		if x is None or not self.times:
+		if x is None or not self.times or not self.compositeBitmap:
+			self.resetBmSave()
 			return
 		
 		# Restore the underlying bitmap.
-		self.restoreBmSave()
+		self.restoreBm()
 		
 		dc = wx.ClientDC( self )
 		dc.SetBrush(wx.TRANSPARENT_BRUSH)
@@ -288,34 +299,49 @@ class FinishStrip( wx.Panel ):
 		)
 		memDC.SelectObject( wx.NullBitmap )		
 		
-		# Display the time of the zoom photo.
-		text = self.formatTime( tbm )
+		# Display the times of the zoom photo.
 		fontHeight = max(5, viewHeight//20)
-		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
-		dc.SetFont( font )
-		tWidth, tHeight = dc.GetTextExtent( text )
-		
-		border = fontHeight // 3
-		xText = xViewPos + border if self.leftToRight else xViewPos + viewWidth - tWidth - border
-		
-		dc.SetPen( wx.TRANSPARENT_PEN )
-		dc.SetBrush( wx.BLUE_BRUSH )
-		dc.DrawRectangle( xText - border, yViewPos, tWidth + border*2, tHeight + border*2 )
+		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
-		dc.SetTextForeground( wx.WHITE )
-		dc.SetTextBackground( wx.BLACK )
-		dc.DrawText( text, xText, yViewPos + border )
+		text = []
+		text.append( self.formatTime(tbm) )
+		if self.triggerTime:
+			text.append( '{:+.3f} TRG'.format(tbm - self.triggerTime) )
 		
+		outlineColour = wx.Colour(255,255,51)
+		if text:
+			dc.SetFont( font )
+			tWidth = tHeight = 0
+			for t in text:
+				tWidthCur, tHeightCur = dc.GetTextExtent( t )
+				tWidth, tHeight = max( tWidth, tWidthCur ), max( tHeight, tHeightCur )
+			
+			border = fontHeight // 3
+			lineHeight = int( tHeight * 1.15 )
+			xText = xViewPos + border if self.leftToRight else xViewPos + viewWidth - tWidth - border
+			yText = yViewPos + border
+						
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			dc.SetBrush( wx.BLACK_BRUSH )
+			dc.DrawRectangle( xText - border, yText - border, tWidth + border*2, lineHeight * len(text) + border*2 )
+
+			dc.SetTextForeground( wx.WHITE )
+			dc.SetTextBackground( wx.BLACK )
+
+			for t in text:
+				dc.DrawText( t, xText, yText )	
+				yText += int( tHeight * 1.15 )
+			
 		# Draw a border around the zoom photo.
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
-		dc.SetPen( wx.Pen(wx.Colour(255,255,51), penWidth) )
+		dc.SetPen( wx.Pen(outlineColour, penWidth) )
 		dc.DrawRectangle( xViewPos, yViewPos, viewWidth, viewHeight-penWidthDiv2 )
 		
 	def OnEnterWindow( self, event ):
 		pass
 		
 	def OnSize( self, event ):
-		self.restoreBmSave()
+		self.restoreBm()
 		if self.jpgHeight is not None:
 			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
 			self.refreshCompositeBitmap()
@@ -324,7 +350,7 @@ class FinishStrip( wx.Panel ):
 		event.Skip()
 		
 	def OnLeftDown( self, event ):
-		self.restoreBmSave()
+		self.restoreBm()
 		self.xDragLast = event.GetX()
 		self.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 		event.Skip()
@@ -337,7 +363,7 @@ class FinishStrip( wx.Panel ):
 		event.Skip()
 		
 	def doZoom( self, dir, event=None ):
-		self.restoreBmSave()
+		self.restoreBm()
 		magnificationSave = self.magnification
 		magFactor = 0.90
 		if dir < 0:
@@ -361,7 +387,8 @@ class FinishStrip( wx.Panel ):
 			self.mouseWheelCallback( event )
 	
 	def OnMotion( self, event ):		
-		if not self.compositeBitmap:
+		if not self.compositeBitmap or not self.times:
+			self.resetBmSave()
 			return
 		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
 		
@@ -382,7 +409,7 @@ class FinishStrip( wx.Panel ):
 			wx.CallAfter( self.drawZoomPhoto, x, y )
 		
 	def OnLeaveWindow( self, event=None ):
-		self.restoreBmSave()
+		self.restoreBm()
 		self.xMotionLast = None
 		
 	def draw( self, dc, winWidth, winHeight ):
