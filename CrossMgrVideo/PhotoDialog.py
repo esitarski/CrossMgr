@@ -94,7 +94,7 @@ class PhotoDialog( wx.Dialog ):
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.timestamp = wx.StaticText(self, label='00:00:00.000')
+		self.timestamp = wx.StaticText(self, label='00:00:00.000\n00:00:00.000')
 		self.timestamp.SetFont( wx.Font( (0,18), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		
