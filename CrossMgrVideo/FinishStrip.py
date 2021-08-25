@@ -339,7 +339,7 @@ class FinishStrip( wx.Panel ):
 		pass
 		
 	def OnSize( self, event ):
-		self.restoreBm()
+		self.resetBmSave()
 		self.drawingIsSafe = False
 		if self.jpgHeight is not None:
 			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
