@@ -43,6 +43,7 @@ class FinishStrip( wx.Panel ):
 		self.magnification = 0.25
 		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
 		self.scrollCallback = scrollCallback or (lambda position: None)
+		self.drawingIsSafe = False	# True when it is safe to save the current window's background.
 		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
@@ -74,6 +75,8 @@ class FinishStrip( wx.Panel ):
 		self.tCursor = 0.0
 		self.tMax = 0.0
 		
+		self.resetBmSave()
+		
 	def formatTime( self, t ):
 		return (self.tsFirst + datetime.timedelta(seconds=t)).strftime('%H:%M:%S.%f')[:-3]
 		
@@ -101,7 +104,14 @@ class FinishStrip( wx.Panel ):
 	def GetTimePhotos( self ):
 		return self.times
 		
-	def SetTsJpgs( self, tsJpgs ):
+	def Clear( self ):
+		self.SetTsJpgs( [] )
+		
+	def SetTsJpgs( self, tsJpgs, triggerTime=None ):
+		self.resetBmSave()
+		self.compositeBitmap = None
+		self.drawingIsSafe = False
+		
 		self.tsJpgs = (tsJpgs or [])
 		self.times = []
 		self.jpg = {}
@@ -109,11 +119,12 @@ class FinishStrip( wx.Panel ):
 		
 		if not tsJpgs:
 			self.tsFirst = datetime.datetime.now()
-			self.compositeBitmap = None
+			self.triggerTime = 0.0
 			self.Refresh()
 			return
 		
 		self.tsFirst = tsJpgs[0][0]
+		self.triggerTime = (triggerTime - self.tsFirst).total_seconds() if triggerTime else None
 		for ts, jpg in tsJpgs:
 			t = (ts-self.tsFirst).total_seconds()
 			self.times.append( t )
@@ -128,9 +139,9 @@ class FinishStrip( wx.Panel ):
 			image.Rescale( int(image.GetWidth()*self.scale), int(image.GetHeight()*self.scale), wx.IMAGE_QUALITY_NORMAL )
 
 		self.refreshCompositeBitmap()
-	
+		
 	def refreshCompositeBitmap( self ):
-		wait = wx.BusyCursor()
+		self.drawingIsSafe = False
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
@@ -150,55 +161,81 @@ class FinishStrip( wx.Panel ):
 			t = self.tMax - t
 		return int(t * self.scale * self.pixelsPerSec) - self.bitmapLeft
 		
-	def SetT( self, t ):
+	def SetT( self, t = None ):
 		if not self.times:
 			return
+		if t is None:
+			 t = self.triggerTime
 		self.tCursor = t
 		x = self.xFromT( t )
 		if self.compositeBitmap:
 			self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetClientSize()[0]))
+		self.drawingIsSafe = False
 		self.Refresh()
 		self.scrollCallback( self.bitmapLeft )
 	
-	def drawXorLine( self, x, y ):
-		if x is None or not self.times:
+	def restoreBm( self ):
+		if self.drawingIsSafe and self.bmSaveLast is not None:
+			memDC = wx.MemoryDC( self.bmSaveLast )
+			dc = wx.ClientDC( self )
+			dc.Blit( self.bmSaveX, 0, self.bmSaveLast.GetWidth(), self.bmSaveLast.GetHeight(), memDC, 0, 0 )			
+		self.resetBmSave()
+		
+	def resetBmSave( self ):
+		self.bmSaveLast = self.bmSaveX = None
+	
+	def drawCurrentLine( self, x, y ):
+		if not self.drawingIsSafe or x is None:
+			self.resetBmSave()
 			return
+		
+		# Restore the underlying bitmap.
+		self.restoreBm()
 		
 		dc = wx.ClientDC( self )
 		dc.SetBrush(wx.TRANSPARENT_BRUSH)
 		
 		winWidth, winHeight = self.GetClientSize()
-		
-		text = self.formatTime( self.tFromX(x) )
-		fontHeight = max(5, winHeight//20)
-		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
-		dc.SetFont( font )
-		tWidth, tHeight = dc.GetTextExtent( text )
-		border = int(tHeight / 3)
-			
-		if platform.system() == 'Linux':
-			border //= 2
-			dc.SetPen( wx.TRANSPARENT_PEN )
-			dc.SetBrush( wx.BLACK_BRUSH )
-			dc.DrawRectangle( 0, 0, tWidth + border*2, tHeight + border*2 )
-			dc.SetTextForeground( wx.WHITE )
-			dc.SetTextBackground( wx.BLACK )
-			dc.DrawText( text, border, border )
-		else:
-			bm = wx.Bitmap( tWidth, tHeight )
-			memDC = wx.MemoryDC( bm )
-			memDC.SetBackground( wx.BLACK_BRUSH )
-			memDC.Clear()
-			memDC.SetFont( font )
-			memDC.SetTextForeground( wx.WHITE )
-			memDC.DrawText( text, 0, 0 )
-			bmMask = wx.Bitmap( bm.ConvertToImage() )
-			bm.SetMask( wx.Mask(bmMask, wx.BLACK) )
-			dc.Blit( x+border, y - tHeight, tWidth, tHeight, memDC, 0, 0, wx.XOR, True, 0, 0 )
 
-			dc.SetPen( wx.WHITE_PEN )
-			dc.SetLogicalFunction( wx.XOR )
-			dc.DrawLine( x, 0, x, winHeight )
+		# Get the text dimensions of the current time.
+		fontHeight = max(5, winHeight//20)
+		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		dc.SetFont( font )
+		
+		tX = self.tFromX(x)
+		
+		text = []		
+		text.append( self.formatTime(tX) )
+		if self.triggerTime:
+			text.append( '{:+.3f} TRG'.format(tX - self.triggerTime) )
+		if self.tCursor:
+			text.append( '{:+.3f} CUR'.format(tX - self.tCursor) )
+			
+		tWidth = tHeight = 0
+		for t in text:
+			tWidthCur, tHeightCur = dc.GetTextExtent( t )
+			tWidth, tHeight = max( tWidth, tWidthCur ), max( tHeight, tHeightCur )
+		
+		border = tHeight // 3
+
+		# Save the area under the time cursor before we draw.
+		bm = self.bmSaveLast = wx.Bitmap( min(winWidth, tWidth + border * 2), winHeight )		
+		overRightEdge = x + bm.GetWidth() > winWidth
+		self.bmSaveX = (x - bm.GetWidth() + border) if overRightEdge else x - border
+		
+		memDC = wx.MemoryDC( bm )
+		memDC.Blit( 0, 0, bm.GetWidth(), bm.GetHeight(), dc, self.bmSaveX, 0 )
+		
+		# Draw the time and delta information.
+		dc.SetTextForeground( wx.WHITE )
+		xText = x - tWidth - border if overRightEdge else x + border
+		yText = y
+		for t in text:
+			dc.DrawText( t, xText, yText )
+			yText += int(fontHeight*1.15)
+		
+		dc.SetPen( wx.WHITE_PEN )
+		dc.DrawLine( x, 0, x, winHeight )
 
 	def getIJpg( self, x ):
 		return bisect_left(self.times, self.tFromX(x), hi=len(self.times)-1) if self.times else None
@@ -207,7 +244,7 @@ class FinishStrip( wx.Panel ):
 		return self.tsJpgs[self.getIJpg(x)][1] if self.times else None
 	
 	def drawZoomPhoto( self, x, y ):
-		if not self.times or not self.jpgWidth:
+		if not self.drawingIsSafe or not self.jpgWidth:
 			return
 			
 		dc = wx.ClientDC( self )
@@ -258,16 +295,52 @@ class FinishStrip( wx.Panel ):
 			int(bmX/self.magnification), int(bmY/self.magnification),
 			int(viewWidth/self.magnification), int(viewHeight/self.magnification)
 		)
-		memDC.SelectObject( wx.NullBitmap )
+		memDC.SelectObject( wx.NullBitmap )		
 		
+		# Display the times of the zoom photo.
+		fontHeight = max(5, viewHeight//20)
+		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+
+		text = []
+		text.append( self.formatTime(tbm) )
+		if self.triggerTime:
+			text.append( '{:+.3f} TRG'.format(tbm - self.triggerTime) )
+		
+		outlineColour = wx.Colour(255,255,51)
+		if text:
+			dc.SetFont( font )
+			tWidth = tHeight = 0
+			for t in text:
+				tWidthCur, tHeightCur = dc.GetTextExtent( t )
+				tWidth, tHeight = max( tWidth, tWidthCur ), max( tHeight, tHeightCur )
+			
+			border = fontHeight // 3
+			lineHeight = int( tHeight * 1.15 )
+			xText = xViewPos + border if self.leftToRight else xViewPos + viewWidth - tWidth - border
+			yText = yViewPos + border
+						
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			dc.SetBrush( wx.BLACK_BRUSH )
+			dc.DrawRectangle( xText - border, yText - border, tWidth + border*2, lineHeight * len(text) + border*2 )
+
+			dc.SetTextForeground( wx.WHITE )
+			dc.SetTextBackground( wx.BLACK )
+
+			for t in text:
+				dc.DrawText( t, xText, yText )	
+				yText += int( tHeight * 1.15 )
+			
+		# Draw a border around the zoom photo.
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
-		dc.SetPen( wx.Pen(wx.Colour(255,255,51), penWidth) )
+		dc.SetPen( wx.Pen(outlineColour, penWidth) )
 		dc.DrawRectangle( xViewPos, yViewPos, viewWidth, viewHeight-penWidthDiv2 )
 		
 	def OnEnterWindow( self, event ):
 		pass
 		
 	def OnSize( self, event ):
+		self.restoreBm()
+		self.drawingIsSafe = False
 		if self.jpgHeight is not None:
 			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
 			self.refreshCompositeBitmap()
@@ -276,6 +349,7 @@ class FinishStrip( wx.Panel ):
 		event.Skip()
 		
 	def OnLeftDown( self, event ):
+		self.restoreBm()
 		self.xDragLast = event.GetX()
 		self.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 		event.Skip()
@@ -288,6 +362,7 @@ class FinishStrip( wx.Panel ):
 		event.Skip()
 		
 	def doZoom( self, dir, event=None ):
+		self.restoreBm()
 		magnificationSave = self.magnification
 		magFactor = 0.90
 		if dir < 0:
@@ -306,20 +381,19 @@ class FinishStrip( wx.Panel ):
 		
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():
-			self.doZoom( event.GetWheelRotation(), event )
+			self.doZoom( -event.GetWheelRotation(), event )
 		else:
 			self.mouseWheelCallback( event )
 	
 	def OnMotion( self, event ):		
-		if not self.compositeBitmap:
+		if not self.drawingIsSafe:
+			self.resetBmSave()
 			return
+		
 		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
 		
 		winWidth, winHeight = self.GetClientSize()
-		self.drawXorLine( self.xMotionLast, self.yMotionLast )
-		self.xMotionLast = x
-		self.yMotionLast = y
-		self.drawXorLine( self.xMotionLast, self.yMotionLast )
+		self.xMotionLast, self.yMotionLast  = x, y
 		
 		if dragging and hasattr(self, 'xDragLast'):
 			dx = -(x - self.xDragLast)
@@ -331,11 +405,11 @@ class FinishStrip( wx.Panel ):
 				wx.CallAfter( self.scrollCallback, self.bitmapLeft )
 				wx.CallAfter( self.Refresh )
 		else:
+			self.drawCurrentLine( x, y )
 			wx.CallAfter( self.drawZoomPhoto, x, y )
 		
 	def OnLeaveWindow( self, event=None ):
-		self.drawXorLine( self.xMotionLast, self.yMotionLast )
-		wx.CallAfter( self.Refresh )
+		self.restoreBm()
 		self.xMotionLast = None
 		
 	def draw( self, dc, winWidth, winHeight ):
@@ -355,8 +429,6 @@ class FinishStrip( wx.Panel ):
 		compositeDC.SelectObject( wx.NullBitmap )
 		
 		# Draw the photo under the cursor.
-		
-		
 		xCursor = self.xFromT( self.tCursor )
 		
 		# Draw the current time at the timeline.
@@ -370,17 +442,23 @@ class FinishStrip( wx.Panel ):
 		font = wx.Font( (0,fontHeight), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		gc.SetFont( font, wx.BLACK )
 		tWidth, tHeight = gc.GetTextExtent( text )
-		border = int(tHeight / 3)
+		border = tHeight // 4
 		
+		# Draw the rounded rectangles around the current time.
 		gc.SetPen( wx.Pen(wx.Colour(64,64,64), 1) )
 		gc.SetBrush( wx.Brush(wx.Colour(200,200,200)) )
 		rect = wx.Rect( xCursor - tWidth//2 - border, 0, tWidth + border*2, tHeight + border*2 )
-		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
+		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), int(border*1.5) )
 		rect.SetTop( winHeight - tHeight - border*2 )
-		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
+		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), int(border*1.5) )
 		
+		# Draw the text on the top and the bottom.
 		gc.DrawText( text, xCursor - tWidth//2, border )
+		if self.triggerTime:
+			text = '{:+.3f} TRG'.format( self.tCursor - self.triggerTime )
+			tWidth, tHeight = gc.GetTextExtent( text )
 		gc.DrawText( text, xCursor - tWidth//2, winHeight - tHeight - border )
+		self.drawingIsSafe = True
 	
 	def OnPaint( self, event=None ):
 		winWidth, winHeight = self.GetClientSize()
@@ -432,6 +510,10 @@ class FinishStripPanel( wx.Panel ):
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
+		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
+		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
+		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
+		
 		self.copyToClipboard = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		self.copyToClipboard.SetToolTip( wx.ToolTip('Copy Finish Strip to Clipboard') )
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
@@ -444,16 +526,17 @@ class FinishStripPanel( wx.Panel ):
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		hs.Add( self.recenter, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		hs.Add( wx.StaticText(self, label='\n'.join([
-					'To Pan: Click and Drag',
-					'To Stretch: Mousewheel',
+					'Pan: Click and Drag',
+					'Stretch: Mousewheel',
 				])
 			),
 			flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16
 		)
 		hs.Add( wx.StaticText(self, label='\n'.join([
-					'To Zoom In: Ctrl+Mousewheel',
+					'Zoom In: Ctrl+Mousewheel',
 					'Show Frame: Right-click',
 				])
 			),
@@ -566,7 +649,7 @@ class FinishStripPanel( wx.Panel ):
 		
 	def SetTsJpgs( self, tsJpgs, ts, info={} ):
 		self.info = info
-		self.finish.SetTsJpgs( tsJpgs )
+		self.finish.SetTsJpgs( tsJpgs, ts )
 		if ts and self.finish.tsFirst:
 			self.finish.SetT( (ts-self.finish.tsFirst).total_seconds() )
 		
@@ -580,6 +663,9 @@ class FinishStripPanel( wx.Panel ):
 	def Clear( self ):
 		self.info = {}
 		self.finish.SetTsJpgs( [] )
+		
+	def onRecenter( self, event ):
+		self.finish.SetT( None )
 
 class FinishStripDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,

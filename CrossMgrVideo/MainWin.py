@@ -967,6 +967,7 @@ class MainWin( wx.Frame ):
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
 		self.lastTriggerRefresh = tNow
+		self.finishStrip.SetTsJpgs( None, None )
 		
 		# replace = True
 		if replace:
@@ -977,7 +978,6 @@ class MainWin( wx.Frame ):
 			self.tsMax = None
 			self.iTriggerSelect = None
 			self.triggerInfo = {}
-			self.finishStrip.SetTsJpgs( None, None )
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
@@ -1042,6 +1042,8 @@ class MainWin( wx.Frame ):
 				self.triggerList.Select( iTriggerRow )
 			else:
 				self.triggerList.EnsureVisible( self.triggerList.GetItemCount()-1 )
+				
+		self.onTriggerSelected( self, iTriggerSelect=0 )
 
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
@@ -1219,7 +1221,7 @@ class MainWin( wx.Frame ):
 		
 		self.xFinish = event.GetX()
 		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
-			self.doTriggerEdit
+			self.doTriggerEdit,
 		)
 		self.photoDialog.CenterOnParent()
 		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
@@ -1231,12 +1233,14 @@ class MainWin( wx.Frame ):
 
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
+		
 		if self.iTriggerSelect >= self.triggerList.GetItemCount():
 			self.ts = None
 			self.tsJpg = []
 			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, {} )
 			return
 		
+		self.finishStrip.SetTsJpgs( None, None )	# Clear the current finish strip so nothing gets updated.
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
 		self.ts = self.triggerInfo['ts']
@@ -1249,9 +1253,10 @@ class MainWin( wx.Frame ):
 			self.ts = triggerInfo['ts']
 			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			triggerInfo['frames'] = len(self.tsJpg)
-			wx.CallAfter( self.finishStrip.SetTsJpgs, self.tsJpg, self.ts, triggerInfo )
+			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, triggerInfo )
 			
-		threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
+		#threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
+		updateFS( self.triggerInfo )
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
@@ -1350,53 +1355,88 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('flush',) )
 	
 	def processCamera( self ):
-		lastFrame = None
 		lastPrimaryTime = now()
 		primaryCount = 0
+		
+		#---------------------------------------------------------------
+		def responseHandler( msg ):
+			for t, f in msg['ts_frames']:
+				self.dbWriterQ.put( ('photo', t, f) )
+		
+		#---------------------------------------------------------------
+		def updateHandler( msg ):
+			nonlocal lastPrimaryTime, primaryCount
+			
+			name, lastFrame = msg['name'], msg['frame']
+			if name == 'primary':
+				if lastFrame is None:
+					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
+				else:
+					wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
+					primaryCount += self.primaryFreq
+					primaryTime = now()
+					primaryDelta = (primaryTime - lastPrimaryTime).total_seconds()
+					if primaryDelta > 2.5:
+						wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
+						lastPrimaryTime = primaryTime
+						primaryCount = 0
+					
+			elif name == 'focus':
+				if self.focusDialog.IsShown():
+					if lastFrame is None:
+						wx.CallAfter( self.focusDialog.SetTestBitmap )
+					else:
+						wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
+				else:
+					self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+
+		#---------------------------------------------------------------
+		def focusHandler( msg ):
+			if self.focusDialog.IsShown():
+				if lastFrame is None:
+					wx.CallAfter( self.focusDialog.SetTestBitmap )
+				else:
+					wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
+			else:
+				self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
+
+		#---------------------------------------------------------------
+		def infoHandler( msg ):
+			vals = {name:update_value for name, property_index, call_status, update_value in msg['retvals']}
+			wx.CallAfter( self.setCameraResolution, int(vals['frame_width']), int(vals['frame_height']) )
+			
+		#---------------------------------------------------------------
+		def cameraUsbHandler( msg ):
+			wx.CallAfter( self.updateCameraUsb, msg['usb'] )
+			
+		#---------------------------------------------------------------
+		def snapshotHandler( msg ):
+			lastFrame = lastFrame if msg['frame'] is None else msg['frame']
+			wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
+
+		handlers = {
+			'response':		responseHandler,
+			'update':		updateHandler,
+			'focus':		focusHandler,
+			'info':			infoHandler,
+			'cameraUsb':	cameraUsbHandler,
+			'snapshot':		snapshotHandler,
+		}
+		
 		while True:
 			try:
 				msg = self.camReader.recv()
 			except EOFError:
 				break
-			
-			cmd = msg['cmd']
-			if cmd == 'response':
-				for t, f in msg['ts_frames']:
-					self.dbWriterQ.put( ('photo', t, f) )
-					lastFrame = f
-			elif cmd == 'update':
-				name, lastFrame = msg['name'], msg['frame']
-				if lastFrame is None:
-					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
-					if self.focusDialog.IsShown():
-						wx.CallAfter( self.focusDialog.SetTestBitmap )
-				else:
-					if name == 'primary':
-						wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
-						
-						primaryCount += self.primaryFreq
-						primaryTime = now()
-						primaryDelta = (primaryTime - lastPrimaryTime).total_seconds()
-						if primaryDelta > 2.5:
-							wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
-							lastPrimaryTime = primaryTime
-							primaryCount = 0
-							
-					elif name == 'focus':
-						if self.focusDialog.IsShown():
-							wx.CallAfter( self.focusDialog.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
-						else:
-							self.camInQ.put( {'cmd':'cancel_update', 'name':'focus'} )
-			elif cmd == 'info':
-				vals = {name:update_value for name, property_index, call_status, update_value in msg['retvals']}
-				wx.CallAfter( self.setCameraResolution, int(vals['frame_width']), int(vals['frame_height']) )
-			elif cmd == 'cameraUsb':
-				wx.CallAfter( self.updateCameraUsb, msg['usb'] )
-			elif cmd == 'snapshot':
-				lastFrame = lastFrame if msg['frame'] is None else msg['frame']
-				wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
-			elif cmd == 'terminate':
-				break
+				
+			try:
+				handler = handlers[msg['cmd']]
+			except KeyError:
+				if msg['cmd'] == 'terminate':
+					break
+				continue
+				
+			handler( msg )
 		
 	def processRequests( self ):
 		def refresh():

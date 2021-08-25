@@ -94,8 +94,8 @@ class PhotoDialog( wx.Dialog ):
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.timestamp = wx.StaticText(self, label='00:00:00.000')
-		self.timestamp.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.timestamp = wx.StaticText(self, label='00:00:00.000\n00:00:00.000')
+		self.timestamp.SetFont( wx.Font( (0,18), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		
 		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EA' )
@@ -113,7 +113,7 @@ class PhotoDialog( wx.Dialog ):
 		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
 		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B7' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
-				
+		
 		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		btnsizer.Add( self.playerReverse, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerForward, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
@@ -217,7 +217,10 @@ class PhotoDialog( wx.Dialog ):
 		w, h = self.GetSize()
 		if w < wSize[0] or h < wSize[1]:
 			self.SetSize( wSize )
-		self.timestamp.SetLabel( self.ts.strftime('%H:%M:%S.%f')[:-3] )
+		label = self.ts.strftime('%H:%M:%S.%f')[:-3]
+		if self.triggerInfo:
+			label += '\n{:+.3f} TRG'.format( (triggerInfo['ts'] - self.ts).total_seconds() )
+		self.timestamp.SetLabel( label )
 	
 	def changeFrame( self, frameDir ):
 		if self.iJpg is None:
