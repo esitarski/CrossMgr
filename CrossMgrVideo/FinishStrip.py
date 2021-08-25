@@ -43,7 +43,7 @@ class FinishStrip( wx.Panel ):
 		self.magnification = 0.25
 		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
 		self.scrollCallback = scrollCallback or (lambda position: None)
-		self.drawingFinished = False	# True when it is safe to save the current window's background.
+		self.drawingIsSafe = False	# True when it is safe to save the current window's background.
 		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
@@ -110,7 +110,7 @@ class FinishStrip( wx.Panel ):
 	def SetTsJpgs( self, tsJpgs, triggerTime=None ):
 		self.resetBmSave()
 		self.compositeBitmap = None
-		self.drawingFinished = False
+		self.drawingIsSafe = False
 		
 		self.tsJpgs = (tsJpgs or [])
 		self.times = []
@@ -141,7 +141,7 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 		
 	def refreshCompositeBitmap( self ):
-		wait = wx.BusyCursor()
+		self.drawingIsSafe = False
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
@@ -170,12 +170,12 @@ class FinishStrip( wx.Panel ):
 		x = self.xFromT( t )
 		if self.compositeBitmap:
 			self.bitmapLeft = max(0, min(x, self.compositeBitmap.GetSize()[0] - self.GetClientSize()[0]))
-		self.drawingFinished = False
+		self.drawingIsSafe = False
 		self.Refresh()
 		self.scrollCallback( self.bitmapLeft )
 	
 	def restoreBm( self ):
-		if self.drawingFinished and self.bmSaveLast is not None and self.compositeBitmap:
+		if self.drawingIsSafe and self.bmSaveLast is not None:
 			memDC = wx.MemoryDC( self.bmSaveLast )
 			dc = wx.ClientDC( self )
 			dc.Blit( self.bmSaveX, 0, self.bmSaveLast.GetWidth(), self.bmSaveLast.GetHeight(), memDC, 0, 0 )			
@@ -185,7 +185,7 @@ class FinishStrip( wx.Panel ):
 		self.bmSaveLast = self.bmSaveX = None
 	
 	def drawCurrentLine( self, x, y ):
-		if not self.drawingFinished or x is None:
+		if not self.drawingIsSafe or x is None:
 			self.resetBmSave()
 			return
 		
@@ -244,7 +244,7 @@ class FinishStrip( wx.Panel ):
 		return self.tsJpgs[self.getIJpg(x)][1] if self.times else None
 	
 	def drawZoomPhoto( self, x, y ):
-		if not self.drawingFinished or not self.jpgWidth:
+		if not self.drawingIsSafe or not self.jpgWidth:
 			return
 			
 		dc = wx.ClientDC( self )
@@ -340,7 +340,7 @@ class FinishStrip( wx.Panel ):
 		
 	def OnSize( self, event ):
 		self.restoreBm()
-		self.drawingFinished = False
+		self.drawingIsSafe = False
 		if self.jpgHeight is not None:
 			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
 			self.refreshCompositeBitmap()
@@ -381,14 +381,15 @@ class FinishStrip( wx.Panel ):
 		
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():
-			self.doZoom( event.GetWheelRotation(), event )
+			self.doZoom( -event.GetWheelRotation(), event )
 		else:
 			self.mouseWheelCallback( event )
 	
 	def OnMotion( self, event ):		
-		if not self.compositeBitmap or not self.times:
+		if not self.drawingIsSafe:
 			self.resetBmSave()
 			return
+		
 		x, y, dragging = event.GetX(), event.GetY(), event.Dragging()
 		
 		winWidth, winHeight = self.GetClientSize()
@@ -457,7 +458,7 @@ class FinishStrip( wx.Panel ):
 			text = '{:+.3f} TRG'.format( self.tCursor - self.triggerTime )
 			tWidth, tHeight = gc.GetTextExtent( text )
 		gc.DrawText( text, xCursor - tWidth//2, winHeight - tHeight - border )
-		self.drawingFinished = True
+		self.drawingIsSafe = True
 	
 	def OnPaint( self, event=None ):
 		winWidth, winHeight = self.GetClientSize()
