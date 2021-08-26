@@ -319,10 +319,7 @@ class PhotoDialog( wx.Dialog ):
 			self.Refresh()
 			
 	def SetBitmap( self ):
-		if self.contrast.GetValue():
-			self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) )
-		else:
-			self.scaledBitmap.SetBitmap( self.getPhoto() )
+		self.scaledBitmap.SetBitmap( self.getPhoto() )
 		
 	def onBrightness( self, event ):
 		pass
@@ -351,7 +348,13 @@ class PhotoDialog( wx.Dialog ):
 	def getPhoto( self ):
 		if self.jpg is None:
 			return None
-		return self.addPhotoHeaderToBitmap( CVUtil.jpegToBitmap(self.jpg) )
+		
+		if self.contrast.GetValue():
+			bm = CVUtil.frameToBitmap( CVUtil.adjustContrastFrame( CVUtil.jpegToFrame(self.jpg) ) )
+		else:
+			bm = CVUtil.jpegToBitmap( self.jpg )
+			
+		return self.addPhotoHeaderToBitmap( bm )
 		
 	def onClose( self, event ):
 		self.playStop()
