@@ -134,8 +134,8 @@ class PhotoDialog( wx.Dialog ):
 		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
-		self.contrast = wx.Button( self, label='Contrast')
-		self.contrast.Bind( wx.EVT_BUTTON, self.onContrast )
+		self.contrast = wx.ToggleButton( self, label='Contrast')
+		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
@@ -206,7 +206,7 @@ class PhotoDialog( wx.Dialog ):
 		self.mph = self.kmh * 0.621371
 		self.pps = 2000.0
 		
-		self.scaledBitmap.SetBitmap( self.getPhoto() )
+		self.SetBitmap()
 		
 		sz = self.scaledBitmap.GetBitmap().GetSize()
 		iWidth, iHeight = sz
@@ -256,6 +256,9 @@ class PhotoDialog( wx.Dialog ):
 			self.iJpg = 0
 		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
 		self.Refresh()
+		
+	def onContrast( self, event ):
+		self.SetBitmap()
 	
 	def onMouseWheel( self, event ):
 		self.changeFrame( event.GetWheelRotation() )
@@ -314,17 +317,20 @@ class PhotoDialog( wx.Dialog ):
 		if self.editCB:
 			self.triggerInfo = self.editCB()
 			self.Refresh()
-	
-	def onContrast( self, event ):
-		self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) )
-	
+			
+	def SetBitmap( self ):
+		if self.contrast.GetValue():
+			self.scaledBitmap.SetBitmap( CVUtil.adjustContrastBitmap(self.getPhoto()) )
+		else:
+			self.scaledBitmap.SetBitmap( self.getPhoto() )
+		
 	def onBrightness( self, event ):
 		pass
 	
 	def onPhotoHeader( self, event=None ):
 		global photoHeaderState
 		photoHeaderState = self.photoHeader.GetValue()
-		self.scaledBitmap.SetBitmap(self.getPhoto())
+		self.SetBitmap()
 	
 	def addPhotoHeaderToBitmap( self, bitmap ):
 		if not photoHeaderState:
