@@ -18,7 +18,7 @@ if 'MAC' in wx.Platform:
 		topdirName = os.environ['RESOURCEPATH']
 	except Exception:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
-	if os.path.isdir( os.path.join(topdirName, 'CrossMgrImages') ):
+	if os.path.isdir( os.path.join(topdirName, 'SeriesMgrImages') ):
 		dirName = topdirName
 	else:
 		dirName = os.path.normpath(topdirName + '/../Resources/')
@@ -36,22 +36,22 @@ else:
 	except Exception:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 	
-	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgr.exe']:
+	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'SeriesMgr.exe']:
 		dirName = os.path.dirname(dirName)
-	if 'CrossMgr?' in os.path.basename(dirName):
+	if 'SeriesMgr?' in os.path.basename(dirName):
 		dirName = os.path.dirname(dirName)
-	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+	if not os.path.isdir( os.path.join(dirName, 'SeriesMgrImages') ):
 		dirName = os.path.dirname(dirName)
 
-	if os.path.isdir( os.path.join(dirName, 'CrossMgrImages') ):
+	if os.path.isdir( os.path.join(dirName, 'SeriesMgrImages') ):
 		pass
 	elif os.path.isdir( '/usr/local/CrossMgrImages' ):
 		dirName = '/usr/local'
 
-imageFolder = os.path.join(dirName, 'CrossMgrImages')
-htmlFolder = os.path.join(dirName, 'CrossMgrHtml')
-helpFolder = os.path.join(dirName, 'CrossMgrHtmlDoc')
-helpIndexFolder = os.path.join(dirName, 'CrossMgrHelpIndex')
+imageFolder = os.path.join(dirName, 'SeriesMgrImages')
+htmlFolder = os.path.join(dirName, 'SeriesMgrHtml')
+helpFolder = os.path.join(dirName, 'SeriesMgrHtmlDoc')
+helpIndexFolder = os.path.join(dirName, 'SeriesMgrHelpIndex')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
@@ -63,7 +63,7 @@ def getHelpIndexFolder(): return helpIndexFolder
 # Get the user's default language.
 #
 # First check enviroment variable.
-lang = os.environ.get('CrossMgrLanguage', None)
+lang = os.environ.get('SeriesMgrLanguage', None)
 
 # Then check default OS language.
 import locale
@@ -96,13 +96,13 @@ def initTranslation():
 		initTranslationCalled = True
 		
 		try:
-			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
+			gettext.install('messages', os.path.join(dirName,'SeriesMgrLocale'), unicode=1)
 		except Exception:
-			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'))
+			gettext.install('messages', os.path.join(dirName,'SeriesMgrLocale'))
 		
 		# Try to use a translation matching the user's language.
 		try:
-			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
+			translation = gettext.translation('messages', os.path.join(dirName,'SeriesMgrLocale'), languages=[lang[:2]])
 			translation.install()
 			builtins.__dict__['_'] = translate = translation.ugettext
 		except Exception:
@@ -494,7 +494,7 @@ def ordinal( value ):
 		'en': lambda v: "{}{}".format(v, ['th','st','nd','rd','th','th','th','th','th','th'][v%10]) if (v % 100)//10 != 1 else "{}{}".format(value, "th"),
 	}.get( lang[:2], lambda v: '{}.\u00B0'.format(v) )( value )	# Default: show with a degree sign.
 
-def getHomeDir( appName='CrossMgr' ):
+def getHomeDir( appName='SeriesMgr' ):
 	sp = wx.StandardPaths.Get()
 	homedir = sp.GetUserDataDir()
 	try:
@@ -547,6 +547,8 @@ reSpace = re.compile(r'\s')
 def approximateMatch( s1, s2 ):
 	s1 = removeDiacritic(reSpace.sub('', s1).lower())
 	s2 = removeDiacritic(reSpace.sub('', s2).lower())
+	if (s1.startswith('bib') and s2.startswith('plate')) or (s2.startswith('bib') and s1.startswith('plate')):
+		return 1.2
 	if s1[-1:].isdigit():
 		return 1.2 if s1 == s2 else 0.0
 	if s1.startswith(s2) or s2.startswith(s1):

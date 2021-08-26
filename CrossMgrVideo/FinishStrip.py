@@ -141,7 +141,7 @@ class FinishStrip( wx.Panel ):
 		self.refreshCompositeBitmap()
 		
 	def refreshCompositeBitmap( self ):
-		self.drawingIsSafe = False
+		self.drawingIsSafe = False		# Turn off the drawingIfSafe flag as we are changing the underlying bitmap.
 		self.photoWidth, self.photoHeight, self.compositeBitmap = MakeComposite(
 			self.tsJpgs, self.leftToRight, self.pixelsPerSec, self.scale
 		)
@@ -339,7 +339,7 @@ class FinishStrip( wx.Panel ):
 		pass
 		
 	def OnSize( self, event ):
-		self.restoreBm()
+		self.resetBmSave()
 		self.drawingIsSafe = False
 		if self.jpgHeight is not None:
 			self.scale = min( 1.0, float(event.GetSize()[1]) / float(self.jpgHeight) )
