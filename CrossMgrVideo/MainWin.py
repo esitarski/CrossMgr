@@ -18,8 +18,6 @@ import tempfile
 import threading
 import webbrowser
 from queue import Queue, Empty
-import CamServer
-from roundbutton import RoundButton
 
 from datetime import datetime, timedelta, time
 
@@ -38,6 +36,8 @@ from Clock import Clock
 from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
 from AddExifToJpeg import AddExifToJpeg
+import CamServer
+from roundbutton import RoundButton
 
 imageWidth, imageHeight = 640, 480
 
