@@ -1,6 +1,7 @@
 import wx
 import os
 import time
+import bisect
 import subprocess
 from AddPhotoHeader import AddPhotoHeader
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
@@ -98,6 +99,10 @@ class PhotoDialog( wx.Dialog ):
 		self.timestamp.SetFont( wx.Font( (0,18), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		
+		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
+		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
+		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
+		
 		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EA' )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
 		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C0' )
@@ -114,7 +119,8 @@ class PhotoDialog( wx.Dialog ):
 		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B7' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 		
-		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		btnsizer.Add( self.recenter, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		btnsizer.Add( self.playerReverse, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerForward, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerStop, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
@@ -221,6 +227,23 @@ class PhotoDialog( wx.Dialog ):
 		if self.triggerInfo:
 			label += '\n{:+.3f} TRG'.format( (triggerInfo['ts'] - self.ts).total_seconds() )
 		self.timestamp.SetLabel( label )
+	
+	def onRecenter( self, event ):
+		# Set to the photo closest to the trigger time.
+		if self.iJpg is None:
+			return
+		
+		# Clever way to bisect list of sorted tuples.
+		ts = self.triggerInfo['ts']
+		iJpgClosest = bisect.bisect_left( self.tsJpg, (ts, ), hi=len(self.tsJpg)-1 )
+		
+		# Find the closest photo to the trigger time.
+		for i in range(max(0, iJpgClosest-1), min(iJpgClosest+2, len(self.tsJpg)) ):
+			if abs((self.tsJpg[i][0] - ts).total_seconds()) < abs((self.tsJpg[iJpgClosest][0] - ts).total_seconds()):
+				iJpgClosest = i
+		
+		self.set( iJpgClosest, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
+		self.Refresh()
 	
 	def changeFrame( self, frameDir ):
 		if self.iJpg is None:
