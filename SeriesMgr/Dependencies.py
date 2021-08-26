@@ -5,6 +5,7 @@ import minimal_intervals
 import rsonlite
 import Checklist
 import GpxParse
+import SetRangeMerge
 import GeoAnimation
 import Animation
 import GanttChart
