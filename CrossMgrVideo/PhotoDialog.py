@@ -225,7 +225,7 @@ class PhotoDialog( wx.Dialog ):
 			self.SetSize( wSize )
 		label = self.ts.strftime('%H:%M:%S.%f')[:-3]
 		if self.triggerInfo:
-			label += '\n{:+.3f} TRG'.format( (triggerInfo['ts'] - self.ts).total_seconds() )
+			label += '\n{:+.3f} TRG'.format( (self.ts - triggerInfo['ts']).total_seconds() )
 		self.timestamp.SetLabel( label )
 	
 	def onRecenter( self, event ):

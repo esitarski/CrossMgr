@@ -4,7 +4,7 @@ import os
 import math
 import Utils
 
-class dotdict( object ):
+class dotdict:
 	pass
 
 def formatTime( secs ):
@@ -30,7 +30,7 @@ def setDrawResources( dc, w, h ):
 	fontHeight = int(h/36.0)
 	fontFace = Utils.FontFace
 	
-	drawResources.bibFontSize = fontHeight * 1.5
+	drawResources.bibFontSize = int(fontHeight * 1.5)
 	drawResources.bibFont = wx.Font(
 		(0, drawResources.bibFontSize),
 		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD,
@@ -38,9 +38,9 @@ def setDrawResources( dc, w, h ):
 	)
 	
 	dc.SetFont( drawResources.bibFont )
-	drawResources.bibWidth, drawResources.bibHeight = dc.GetTextExtent( u' 9999' )
+	drawResources.bibWidth, drawResources.bibHeight = dc.GetTextExtent( ' 9999' )
 	drawResources.bibTextColour = wx.Colour(0,0,200)
-	drawResources.bibSpaceWidth = dc.GetTextExtent( u'9999' )[0] / 4
+	drawResources.bibSpaceWidth = dc.GetTextExtent( '9999' )[0] // 4
 	
 	drawResources.nameFontSize = drawResources.bibFontSize
 	drawResources.nameFont = wx.Font(
@@ -50,16 +50,16 @@ def setDrawResources( dc, w, h ):
 	)
 	drawResources.nameTextColour = drawResources.bibTextColour
 	
-	drawResources.fontSize = fontHeight * 1.0
+	drawResources.fontSize = int(fontHeight * 1.0)
 	drawResources.font = wx.Font(
 		(0, drawResources.fontSize),
 		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL,
 		faceName=fontFace,
 	)
 	dc.SetFont( drawResources.font )
-	drawResources.spaceWidth = dc.GetTextExtent( u'9999' )[0] / 4
+	drawResources.spaceWidth = dc.GetTextExtent( '9999' )[0] // 4
 	
-	drawResources.smallFontSize = drawResources.fontSize * 0.9
+	drawResources.smallFontSize = int(drawResources.fontSize * 0.9)
 	drawResources.smallFont = wx.Font(
 		(0, drawResources.smallFontSize),
 		wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL,
@@ -67,9 +67,9 @@ def setDrawResources( dc, w, h ):
 	)
 	drawResources.fontColour = wx.BLACK
 	dc.SetFont( drawResources.font )
-	drawResources.fontHeight = dc.GetTextExtent( u'ATWgjjy' )[1]
+	drawResources.fontHeight = dc.GetTextExtent( 'ATWgjjy' )[1]
 	
-	bitmapHeight = drawResources.bibHeight * 2.8
+	bitmapHeight = int(drawResources.bibHeight * 2.8)
 	
 	bitmap = Utils.GetPngBitmap('CrossMgrHeader.png')
 	scaleMult = float(bitmapHeight) / float(bitmap.GetHeight())
@@ -86,7 +86,7 @@ def setDrawResources( dc, w, h ):
 	
 	drawResources.labelHeight = int(drawResources.bibHeight * 1.25 + 0.5) + int(drawResources.fontHeight * 1.25 + 0.5)
 
-def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name=u'', last_name=u'', team=u'', race_name=u'', kmh=None, mph=None ):
+def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', last_name='', team='', race_name='', kmh=None, mph=None ):
 	global drawResources
 	
 	w, h = bitmap.GetSize()
@@ -104,22 +104,22 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name=u'',
 	dc = wx.GCDC( dcMemoryNew )
 	bitmap = bitmap_new
 	
-	bibTxt = u'{}'.format(bib) if bib else u''
+	bibTxt = '{}'.format(bib) if bib else ''
 	if ts and raceSeconds:
-		tsTxt = u'{}  {}'.format( formatTime(raceSeconds), ts.strftime('%Y-%m-%d %H:%M:%S') )
+		tsTxt = '{}  {}'.format( formatTime(raceSeconds), ts.strftime('%Y-%m-%d %H:%M:%S') )
 	elif ts:
-		tsTxt = u'{}'.format( ts.strftime('%Y-%m-%d %H:%M:%S') )
+		tsTxt = '{}'.format( ts.strftime('%Y-%m-%d %H:%M:%S') )
 	elif raceSeconds:
-		tsTxt = u'{}'.format( formatTime(raceSeconds) )
+		tsTxt = '{}'.format( formatTime(raceSeconds) )
 	else:
-		tsTxt = u''
+		tsTxt = ''
 	if tsTxt.startswith('0'):
 		tsTxt = tsTxt[1:]
 	if kmh:
-		tsTxt += u', {:.2f}km/h'.format(kmh)
+		tsTxt += ', {:.2f}km/h'.format(kmh)
 	if mph:
-		tsTxt += u', {:.2f}mph'.format(mph)
-	nameTxt = u' '.join( n for n in [first_name, last_name] if n )
+		tsTxt += ', {:.2f}mph'.format(mph)
+	nameTxt = ' '.join( n for n in (first_name, last_name) if n )
 	
 	frameWidth = 4
 	borderWidth = 1

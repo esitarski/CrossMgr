@@ -28,9 +28,9 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		self.timestamp.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		footerSizer.Add( self.timestamp, flag=wx.LEFT, border=2)
 		
-		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25C0' )
+		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C0' )
 		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
-		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label=u'\u25B6' )
+		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B6' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
 		footerSizer.Add( self.frameLeft, flag=wx.LEFT, border=2)
@@ -116,7 +116,7 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		mps, kmh, mph, pps = self.getSpeed()
 		if mps is None:
 			mps = kmh = mph = pps = 0.0
-		s = u'{:.2f}km/h   {:.2f}m/s   {:.2f}mph'.format(kmh, mps, mph)
+		s = '{:.2f}km/h   {:.2f}m/s   {:.2f}mph'.format(kmh, mps, mph)
 		self.speed.SetLabel( s )
 		self.GetSizer().Layout()
 		
