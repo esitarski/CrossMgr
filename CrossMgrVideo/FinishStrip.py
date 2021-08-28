@@ -361,7 +361,9 @@ class FinishStrip( wx.Panel ):
 		self.SetCursor( wx.NullCursor )
 		event.Skip()
 		
-	def doZoom( self, dir, event=None, magnification=None ):
+	def doZoom( self, dir=None, event=None, magnification=None ):
+		assert dir is not None or magnification is not None
+
 		self.restoreBm()
 		magnificationSave = self.magnification
 		if magnification is not None:
@@ -379,7 +381,7 @@ class FinishStrip( wx.Panel ):
 				x, y = event.GetX(), event.GetY()
 			else:
 				x, y = self.GetClientSize()[0]-4, 4
-			for i in range(50):
+			for i in range(0,50,10):
 				wx.CallLater( i*5, self.drawZoomPhoto, x, y )
 	
 	def OnMouseWheel( self, event ):
