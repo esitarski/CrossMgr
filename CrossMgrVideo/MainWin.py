@@ -1557,6 +1557,7 @@ class MainWin( wx.Frame ):
 		return self.fourcc.GetLabel()
 	
 	def onCloseWindow( self, event ):
+		self.writeOptions()
 		self.shutdown()
 		wx.Exit()
 		
@@ -1568,6 +1569,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'FourCC', self.fourcc.GetLabel() )
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
+		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1586,6 +1588,7 @@ class MainWin( wx.Frame ):
 			self.tdCaptureAfter = timedelta(seconds=abs(float(s_after)))
 		except Exception:
 			pass
+		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.25) )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()

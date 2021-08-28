@@ -361,14 +361,17 @@ class FinishStrip( wx.Panel ):
 		self.SetCursor( wx.NullCursor )
 		event.Skip()
 		
-	def doZoom( self, dir, event=None ):
+	def doZoom( self, dir, event=None, magnification=None ):
 		self.restoreBm()
 		magnificationSave = self.magnification
-		magFactor = 0.90
-		if dir < 0:
-			self.magnification /= magFactor
+		if magnification is not None:
+			self.magnification = magnification
 		else:
-			self.magnification *= magFactor
+			magFactor = 0.90
+			if dir < 0:
+				self.magnification /= magFactor
+			else:
+				self.magnification *= magFactor
 		
 		self.magnification = min( 10.0, max(0.10, self.magnification) )
 		if self.magnification != magnificationSave:
@@ -378,7 +381,7 @@ class FinishStrip( wx.Panel ):
 				x, y = self.GetClientSize()[0]-4, 4
 			for i in range(50):
 				wx.CallLater( i*5, self.drawZoomPhoto, x, y )
-		
+	
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():
 			self.doZoom( -event.GetWheelRotation(), event )
@@ -466,6 +469,12 @@ class FinishStrip( wx.Panel ):
 		
 	def GetBitmap( self ):
 		return self.compositeBitmap if self.compositeBitmap else None
+		
+	def GetZoomMagnification( self ):
+		return self.magnification
+		
+	def SetZoomMagnification( self, magnification ):
+		self.doZoom( 0, magnification=magnification )
 
 class FinishStripPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
@@ -666,6 +675,13 @@ class FinishStripPanel( wx.Panel ):
 		
 	def onRecenter( self, event ):
 		self.finish.SetT( None )
+		
+	def GetZoomMagnification( self ):
+		return self.finish.GetZoomMagnification()
+		
+	def SetZoomMagnification( self, magnification ):
+		self.finish.SetZoomMagnification( magnification )
+
 
 class FinishStripDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
