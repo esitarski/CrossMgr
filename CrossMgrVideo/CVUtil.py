@@ -12,7 +12,7 @@ def frameToWidthHeight( frame ):
 	return frame.shape[:2]
 
 def frameToBitmap( frame, w_req=None, h_req=None ):
-	h_frame, w_frame, layers = frame.shape
+	h_frame, w_frame = frame.shape[0], frame.shape[1]
 	if w_req is not None:
 		w_fix, h_fix = rescaleToRect( w_frame, h_frame, w_req, h_req )
 		if w_fix != w_req or h_fix != h_req:
@@ -21,7 +21,7 @@ def frameToBitmap( frame, w_req=None, h_req=None ):
 	return wx.Bitmap.FromBuffer(w_frame, h_frame, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
 def frameToImage( frame, w_req=None, h_req=None ):
-	h_frame, w_frame, layers = frame.shape
+	h_frame, w_frame = frame.shape[0], frame.shape[1]
 	if w_req is not None:
 		w_fix, h_fix = rescaleToRect( w_frame, h_frame, w_req, h_req )
 		if w_fix != w_req or h_fix != h_req:
@@ -30,7 +30,7 @@ def frameToImage( frame, w_req=None, h_req=None ):
 	return wx.Image(w_frame, h_frame, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
 def resizeFrame( frame, w_req, h_req ):
-	h_frame, w_frame, layers = frame.shape
+	h_frame, w_frame = frame.shape[0], frame.shape[1]
 	w_fix, h_fix = rescaleToRect( w_frame, h_frame, w_req, h_req )
 	if w_fix != w_req or h_fix != h_req:
 		frame = cv2.resize( frame, w_fix, h_fix )
@@ -73,6 +73,12 @@ def adjustContrastFrame( frame ):
 	frame_yuv[:,:,0] = cv2.equalizeHist(frame_yuv[:,:,0])
 	# convert the YUV image back to RGB format
 	return cv2.cvtColor(frame_yuv, cv2.COLOR_YUV2BGR)
+
+def sharpenFrame( frame ):
+	return cv2.filter2D(frame,-1,np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]))
+	
+def grayscaleFrame( frame ):
+	return cv2.cvtColor( frame, cv2.COLOR_BGR2GRAY )
 
 def imageToFrame( image ):
 	s = io.BytesIO()

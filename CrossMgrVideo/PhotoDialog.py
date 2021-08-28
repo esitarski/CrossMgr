@@ -135,8 +135,16 @@ class PhotoDialog( wx.Dialog ):
 		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
 		self.contrast = wx.ToggleButton( self, label='Contrast')
-		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onContrast )
+		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
+
+		self.sharpen = wx.ToggleButton( self, label='Sharpen')
+		self.sharpen.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
+		btnsizer.Add(self.sharpen, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
+
+		self.grayscale = wx.ToggleButton( self, label='Grayscale')
+		self.grayscale.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
+		btnsizer.Add(self.grayscale, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
 
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
 		btn.SetToolTip( wx.ToolTip('Print Photo') )
@@ -257,7 +265,7 @@ class PhotoDialog( wx.Dialog ):
 		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
 		self.Refresh()
 		
-	def onContrast( self, event ):
+	def onFilter( self, event ):
 		self.SetBitmap()
 	
 	def onMouseWheel( self, event ):
@@ -348,13 +356,16 @@ class PhotoDialog( wx.Dialog ):
 	def getPhoto( self ):
 		if self.jpg is None:
 			return None
-		
+
+		frame = CVUtil.jpegToFrame(self.jpg)
 		if self.contrast.GetValue():
-			bm = CVUtil.frameToBitmap( CVUtil.adjustContrastFrame( CVUtil.jpegToFrame(self.jpg) ) )
-		else:
-			bm = CVUtil.jpegToBitmap( self.jpg )
-			
-		return self.addPhotoHeaderToBitmap( bm )
+			frame = CVUtil.adjustContrastFrame( frame )
+		if self.sharpen.GetValue():
+			frame = CVUtil.sharpenFrame( frame )
+		if self.grayscale.GetValue():
+			frame = CVUtil.grayscaleFrame( frame )
+		
+		return self.addPhotoHeaderToBitmap( CVUtil.frameToBitmap(frame) )
 		
 	def onClose( self, event ):
 		self.playStop()
