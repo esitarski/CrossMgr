@@ -106,18 +106,20 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		vbs.Add( self.sbvl, 1, wx.EXPAND|wx.ALL, border=border)
 		vbs.Add( wx.StaticText(self, label = _('Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
 					flag=wx.ALL, border = border )
-		self.speed = wx.StaticText( self )
+		self.speed = wx.StaticText( self, label=self.formatSpeed() )
 		bigFont = wx.Font( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.speed.SetFont( bigFont )
 		vbs.Add( self.speed, flag=wx.ALL, border = border )
 		self.SetSizer( vbs )
 		
+	def formatSpeed( self, kmh=0.0, mps=0.0, mph=0.0 ):
+		return '{:.2f}km/h   {:.2f}m/s   {:.2f}mph'.format(kmh, mps, mph)
+		
 	def onVerticalLines( self, event=None ):
 		mps, kmh, mph, pps = self.getSpeed()
 		if mps is None:
 			mps = kmh = mph = pps = 0.0
-		s = '{:.2f}km/h   {:.2f}m/s   {:.2f}mph'.format(kmh, mps, mph)
-		self.speed.SetLabel( s )
+		self.speed.SetLabel( self.formatSpeed(kmh, mps, mph) )
 		self.GetSizer().Layout()
 		
 	def Set( self, t, bitmap, wheelDiameter ):
@@ -142,7 +144,7 @@ class TimePage(adv.WizardPageSimple):
 			label = _("Drag the Purple Square to show the Time in the photo.")),
 			flag=wx.ALL, border = border
 		)
-		self.speed = wx.StaticText( self )
+		self.speed = wx.StaticText( self, label="00.000" )
 		bigFont = wx.Font( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.speed.SetFont( bigFont )
 		vbs.Add( self.speed, flag=wx.ALL, border = border )
