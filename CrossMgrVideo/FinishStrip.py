@@ -479,9 +479,10 @@ class FinishStrip( wx.Panel ):
 		self.doZoom( 0, magnification=magnification )
 
 class FinishStripPanel( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0, photoViewCB=None ):
 		super().__init__( parent, id, size=size, style=style )
 		
+		self.photoViewCB = photoViewCB
 		self.fps = fps
 		self.info = {}
 		
@@ -521,9 +522,13 @@ class FinishStripPanel( wx.Panel ):
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
-		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
+		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
 		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
+		
+		self.photoView = wx.BitmapButton( self, bitmap=Utils.getBitmap('outline_photo_library_black_24dp.png') )
+		self.photoView.SetToolTip( wx.ToolTip('Photo View') )
+		self.photoView.Bind( wx.EVT_BUTTON, self.onPhotoView )
 		
 		self.copyToClipboard = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		self.copyToClipboard.SetToolTip( wx.ToolTip('Copy Finish Strip to Clipboard') )
@@ -538,6 +543,7 @@ class FinishStripPanel( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction, flag=wx.ALIGN_CENTRE_VERTICAL )
 		hs.Add( self.recenter, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		hs.Add( self.photoView, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		hs.Add( wx.StaticText(self, label='\n'.join([
 					'Pan: Click and Drag',
@@ -677,6 +683,10 @@ class FinishStripPanel( wx.Panel ):
 		
 	def onRecenter( self, event ):
 		self.finish.SetT( None )
+		
+	def onPhotoView( self, event ):
+		if self.photoViewCB and self.finish.triggerTime is not None:
+			self.photoViewCB( self.finish.xFromT(self.finish.triggerTime) )
 		
 	def GetZoomMagnification( self ):
 		return self.finish.GetZoomMagnification()

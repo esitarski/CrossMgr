@@ -574,7 +574,7 @@ class MainWin( wx.Frame ):
 		mainSizer.Add( headerSizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
-		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2) )
+		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2), photoViewCB=self.photoViewCB )
 		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
 		
 		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
@@ -1215,11 +1215,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.Show()
 	
-	def onRightClick( self, event ):
-		if not self.triggerInfo:
-			return
-		
-		self.xFinish = event.GetX()
+	def showPhotoDialog( self ):
 		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
 			self.doTriggerEdit,
 		)
@@ -1229,7 +1225,17 @@ class MainWin( wx.Frame ):
 		if self.triggerInfo['kmh'] != (self.photoDialog.kmh or 0.0):
 			self.db.updateTriggerKMH( self.triggerInfo['id'], self.photoDialog.kmh or 0.0 )
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
-		self.photoDialog.clear()
+		self.photoDialog.clear()		
+	
+	def onRightClick( self, event ):
+		if self.triggerInfo:
+			self.xFinish = event.GetX()
+			self.showPhotoDialog()
+
+	def photoViewCB( self, x ):
+		if self.triggerInfo:
+			self.xFinish = x
+			self.showPhotoDialog()
 
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
