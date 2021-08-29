@@ -44,6 +44,7 @@ class FinishStrip( wx.Panel ):
 		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
 		self.scrollCallback = scrollCallback or (lambda position: None)
 		self.drawingIsSafe = False	# True when it is safe to save the current window's background.
+		self.xZoom = None
 		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
@@ -245,7 +246,9 @@ class FinishStrip( wx.Panel ):
 	
 	def drawZoomPhoto( self, x, y ):
 		if not self.drawingIsSafe or not self.jpgWidth:
+			self.xZoom = None
 			return
+		self.xZoom = x
 			
 		dc = wx.ClientDC( self )
 		winWidth, winHeight = self.GetClientSize()
@@ -685,8 +688,8 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetT( None )
 		
 	def onPhotoView( self, event ):
-		if self.photoViewCB and self.finish.triggerTime is not None:
-			self.photoViewCB( self.finish.xFromT(self.finish.triggerTime) )
+		if self.photoViewCB and self.finish.xZoom is not None:
+			self.photoViewCB( self.finish.xZoom )
 		
 	def GetZoomMagnification( self ):
 		return self.finish.GetZoomMagnification()
