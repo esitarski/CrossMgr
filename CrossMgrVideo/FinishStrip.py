@@ -688,8 +688,8 @@ class FinishStripPanel( wx.Panel ):
 		self.finish.SetT( None )
 		
 	def onPhotoView( self, event ):
-		if self.photoViewCB and self.finish.xZoom is not None:
-			self.photoViewCB( self.finish.xZoom )
+		if self.photoViewCB:
+			self.photoViewCB( self.finish.xZoom or 0 )
 		
 	def GetZoomMagnification( self ):
 		return self.finish.GetZoomMagnification()
