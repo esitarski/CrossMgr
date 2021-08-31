@@ -37,6 +37,7 @@ from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
 from AddExifToJpeg import AddExifToJpeg
 import CamServer
+from PublishPhotoOptions import PublishPhotoOptionsDialog
 from roundbutton import RoundButton
 
 imageWidth, imageHeight = 640, 480
@@ -767,6 +768,18 @@ class MainWin( wx.Frame ):
 		self.bibQuery = self.bib.GetValue()
 		self.refreshTriggers( True )
 		
+	def filterLastBibWave( self, infoList):
+		''' Filter out all photos but the last by bib and wave. '''
+		seen = set()
+		infoListNew = []
+		for info in reversed(infoList):
+			key = (info['bib'], info['wave'])
+			if key not in seen:
+				seen.add( key )
+				infoListNew.append( info )
+		infoListNew.reverse()
+		return infoListNew
+	
 	def onPublishPhotos( self, event ):
 		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
 		if not infoList:
@@ -775,13 +788,19 @@ class MainWin( wx.Frame ):
 					"Nothing to Publish",
 					style=wx.OK ) as dlg:
 				dlg.ShowModal()
-				return		
-		
-		with wx.DirDialog(self, 'Folder to write all Photos') as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
 				return
-			path = dlg.GetPath()
-		
+				
+		if not hasattr(self, 'publishPhotoOptionsPhotoDialog'):
+			self.publishPhotoOptionsPhotoDialog = PublishPhotoOptionsDialog( self, webPublish=False )
+		if self.publishPhotoOptionsPhotoDialog.ShowModal() != wx.ID_OK:
+			return
+		values = self.publishPhotoOptionsPhotoDialog.GetValues()
+		dirname = values['dirname']
+		if not dirname:
+			return
+		if values['lastBibWaveOnly']:
+			infoList = self.filterLastBibWave( infoList )
+			
 		def write_photos( dirname, infoList, dbFName, fps ):
 			for info in infoList:
 				tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
@@ -809,7 +828,7 @@ class MainWin( wx.Frame ):
 		
 		# Write in a thread so we don't slow down the main capture loop.
 		args = (
-			path,
+			dirname,
 			infoList,
 			self.db.fname,
 			self.db.fps,
@@ -824,35 +843,20 @@ class MainWin( wx.Frame ):
 					"Nothing to Publish",
 					style=wx.OK ) as dlg:
 				dlg.ShowModal()
-				return		
-		
-		'''
-			Generate a web page to search and browse the photos.
-			Photos can be written as seperate .jpeg files, or embedded into the html page itself.
-		'''
-		with wx.MessageDialog( self,
-				"This will write multiple photo files and an Html file to navigate the photos.\n"
-				"Make sure you have a seperate folder ready for all the files (create one if necessary).\n"
-				"\n"
-				"Continue?",
-				"Publish Web Page",
-				style=wx.OK|wx.CANCEL ) as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
-				return		
-		
-		with wx.DirDialog(self, 'Folder to write Photos and Web Page') as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
 				return
-			dirname = dlg.GetPath()
+				
+		if not hasattr(self, 'publishPhotoOptionsWebDialog'):
+			self.publishPhotoOptionsWebDialog = PublishPhotoOptionsDialog( self, webPublish=True )
+		if self.publishPhotoOptionsWebDialog.ShowModal() != wx.ID_OK:
+			return
+		values = self.publishPhotoOptionsWebDialog.GetValues()
+		dirname = values['dirname']
+		if not dirname:
+			return
+		singleFile = (values['htmlOption'] == 1)
 		
-		choices = (
-			'Recommended: .html page contains links to photos in seperate .jpeg files (requires uploading the .html and all .jpeg files to your web server)',
-			'Not Recommended: .html page contains embedded photos (everything will be in the single .html file, but the file will be huge and inefficient)',
-		)
-		with wx.SingleChoiceDialog(self, 'Web Page Generation Options:', 'Web Page Generation', choices=choices) as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
-				return
-			singleFile = (dlg.GetSelection() == 1)		
+		if values['lastBibWaveOnly']:
+			infoList = self.filterLastBibWave( infoList )
 			
 		class DateTimeEncoder( json.JSONEncoder ):
 			def default(self, o):
