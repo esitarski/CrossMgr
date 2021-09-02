@@ -72,7 +72,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.controller = controller
 
-		self.headerNames = [_('Time'), '   {}   '.format(_('Bib'))]
+		self.headerNames = (_('Time'), '   {}   '.format(_('Bib')))
 		
 		fontSize = 18
 		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
