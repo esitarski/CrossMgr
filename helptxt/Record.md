@@ -16,12 +16,14 @@ The screen is roughly divided into four parts:
 
 This is the section of the screen where data is entered manually.  Data from chip timing flows into CrossMgr directly.
 
-CrossMgr offers two "modes" to manually enter data: __Keypad__ and __Time Trial__.
-The different modes are switched by a pressing button at the top left of the screen which either shows a Keypad or a Stopwatch, depending on the mode you will switch to.
+CrossMgr offers three methods to manually enter data: __Bib__, __Time Trial__ and __BibTime__.
+Select the mode by changing the entry pane at the bottom on the first window on the screen.
 
-In Keypad mode, the number is timestamped when you press Enter.
+In __Bib__ mode, the bib number is timestamped as soon as you press Enter.
 
-In Time Trial mode, you can get accurate times first, then add the bib numbers afterwards.
+In __TimeTrial__ mode, you "Tap for time" to get the time(s) first, then you add the bib number(s) to each time.  Think pressing to get times on a printing stopwatch, then writing the bib numbers next to the time.
+
+In __Bib Time__ mode, you enter the bib number(s) first, then tap them to add the time.  As soon as you tap them, the bib numbers are timestamped and entered into the system.
 
 Each approach has pros and cons, and you can switch modes at any time.  Generally speaking you will use the modes for:
 
@@ -30,15 +32,17 @@ Race Format|Input Mode
 Cyclo Cross|Keypad
 MTB|Keypad
 Road|Keypad
-Time Trial|Time Trial
-Downhill|Time Trial
+Time Trial|TimeTrial or BibTime
+Downhill|TimeTrial or BibTime
 
-### Keypad Number Entry Mode
+### Bib Entry Mode
 
-When you enter a number in this mode, the number is "timestamped" when you press __Enter__ (or __Tab__ or __Space__).  This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession on their laps.
+When you enter a number in this mode, the number is "timestamped" immediately when you press __Enter__ (or __Tab__ or __Space__).
+This is the standard input mode for Road, Cyclo Cross and MTB races when you have number caller, and riders arrive in quick succession on their laps.
 
 When you hear the number caller, you type in the number on the keyboard and press __Enter__ (or __Tab__ or __Space__, whichever is most comvenient).
-After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.  To enter the number again, you can just click on th number in the __Expcted__ list rather than typing it in again.
+After the first lap of a race, CrossMgr will predict the arrival of each rider in the [Expected](MainScreen.html#expected) window.
+To enter the number again, you just click on th number in the __Expected__ list rather than typing it in again.
 
 Entering a number also triggers the [USB Webcam][] if it has been enabled.
 
@@ -78,7 +82,7 @@ Remember: if you change any rider's status here, you can always change it back a
 
 ### Time Trial Entry Mode
 
-This is the standard input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
+This is the traditional input mode for time trial finishes.  It follows a similar process to a manual stopwatch, except you use the computer.
 
 In time trial mode, you get times as the riders pass by pressing the __Tap for Time__ button (similar to using a recording stopwatch).  This also triggers the [USB Webcam][] to take a picture, if enabled.  Rather then using the mouse, pressing the 't' key is a shortcut to __Tap for Time__.
 
@@ -105,7 +109,40 @@ Shortcut Key|Description
 t|Equivalent to pressing the __Tap for Time__ button.
 s|Equivalent to pressing the __Save__ button.
 
-Warning: The Time Trial input mode only works when there are start gaps between the riders.  If you have a timed mass single-start event, you may need Keypad mode, or alternatively, consider a [ChipReader][].
+__Notes:__ The Time Trial input mode only works when there are start gaps between the riders and you have enough time to enter the bib numbers after tapping the times.
+For a mass-start event, __Bib__ mode would work better.
+If you have a large number riders, a [ChipReader][] is the way to go.
+Also, pressing the Save button erases all the times.  Only press it when you are satisfied with the bib numbers and times.
+
+If you know the bib numbers of the finishing time trial riders ahead of time, consider __Bib Time__ entry node described below.
+
+### Bib Time Entry Mode
+
+In __Bib Time__ mode, first you enter the Bib numbers, then you click on them to assign timestamps.
+This is the opposite of Time Trial entry mode (Bibs first then Times vs Times first, then Bibs).
+
+This method works best when you know the bib numbers of the riders approaching finish line with enough time to type them in.
+This can be done with a spotter (perhaps on radio).  Sometimes you can see them.
+
+After entering the Bib numbers, click on them exactly as the riders cross the finish line to give them the most accurate time.
+You don't have to click on them in the same order they were entered - just click on each bib number crossing the line.
+
+Right-clicking on bib numbers shows a menu allowing you to delete the entry or switch to other screens depending on the bib number.
+
+You can also mark riders as DNF, DNS, Pul or DQ from this screen.
+Remember: if you change any rider's status here, you can always change it back again from the [RiderDetail][] screen.
+
+This method works well when you can get the bib numbers in advance and have enough time to enter them.  It is then easy to accurately click on the bib numbers as the riders cross the line.
+
+__Notes:__ The Bib Time input mode relies on getting the bib numbers entered before the finish.  If you don't know the bib numbers until after the riders cross the line (for example, the rider's bib numbers are on their backs),
+the method won't work.  It also requires enough time to enter the bib numbers before the riders get to the finish.  If riders are arriving in large groups, or the bib numbers are hard to read then this method
+isn't going to work.  Consider chip timing.
+
+For multi-lap courses, the __Expected__ column offers the same functionality to __Bib Time__ mode as it also allows you to click on the bib numbers to timestamp them.
+Of course, this only works for multi-lap races because __Expected__ uses the previous lap times to predict when the rider is coming.
+For time trial courses that are not multi-lap (eg. out-and-back), the __Bib Time__ mode could work better depending on your setup.
+
+You can switch between __Time Trial__ mode and __Bib Time__ mode at any time.
 
 ## Race Information
 
