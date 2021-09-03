@@ -79,13 +79,8 @@ class TimeTrialRecord( wx.Panel ):
 		self.bigFont = wx.Font( (0,int(fontSize*1.30)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.vbs = wx.BoxSizer(wx.VERTICAL)
 		
-		tapForTimeLabel = _('Tap for Time')
-		if 'WXMAC' in wx.Platform:
-			self.recordTimeButton = wx.lib.buttons.ThemedGenButton( self, label=tapForTimeLabel )
-			self.recordTimeButton.Bind( wx.EVT_BUTTON, self.doRecordTime )
-		else:
-			self.recordTimeButton = wx.Button( self, label=tapForTimeLabel )
-			self.recordTimeButton.Bind( wx.EVT_LEFT_DOWN, self.doRecordTime )
+		self.recordTimeButton = (wx.lib.buttons.ThemedGenButton if 'WXMAC' in wx.Platform else wx.Button)( self, label=_('Tap for Time') )
+		self.recordTimeButton.Bind( wx.EVT_BUTTON if 'WXMAC' in wx.Platform else wx.EVT_LEFT_DOWN, self.doRecordTime )
 		
 		self.recordTimeButton.SetFont( self.bigFont )
 		
@@ -128,31 +123,35 @@ class TimeTrialRecord( wx.Panel ):
 				attr.SetEditor( GridCellNumberEditor() )
 			self.grid.SetColAttr( col, attr )
 		
+		self.saveButton = (wx.lib.buttons.ThemedGenButton if 'WXMAC' in wx.Platform else wx.Button)( self, label=_('Save') )
+		self.saveButton.Bind( wx.EVT_BUTTON, self.doSave )
+		self.saveButton.SetFont( self.bigFont )
+		self.saveButton.SetToolTip(wx.ToolTip(_('Save Entries (or press "s")')))
 		saveExplain = wx.StaticText( self, label=_('(or press "s")') )
 		saveExplain.SetFont( self.font )
-		saveLabel = _('Save')
-		if 'WXMAC' in wx.Platform:
-			self.commitButton = wx.lib.buttons.ThemedGenButton( self, label=saveLabel )
-		else:
-			self.commitButton = wx.Button( self, label=saveLabel )
-		self.commitButton.Bind( wx.EVT_BUTTON, self.doCommit )
-		self.commitButton.SetFont( self.bigFont )
-		self.commitButton.SetToolTip(wx.ToolTip(_('Save Entries (or press "s")')))
+		
+		self.cleanupButton = (wx.lib.buttons.ThemedGenButton if 'WXMAC' in wx.Platform else wx.Button)( self, label=_('Cleanup') )
+		self.cleanupButton.Bind( wx.EVT_BUTTON, self.doCleanup )
+		self.cleanupButton.SetFont( self.bigFont )
+		self.cleanupButton.SetToolTip(wx.ToolTip(_('Cleanup Empty Entries (or press "c")')))
 		
 		hbsCommit = wx.BoxSizer( wx.HORIZONTAL )
+		hbsCommit.Add( self.saveButton, 0 )
 		hbsCommit.Add( saveExplain, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=20 )
-		hbsCommit.Add( self.commitButton, 0 )
+		hbsCommit.Add( self.cleanupButton, 0 )
 		
 		self.vbs.Add( hbs, 0, flag=wx.ALL, border = 4 )
 		self.vbs.Add( self.grid, 1, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.vbs.Add( hbsCommit, 0, flag=wx.ALL|wx.ALIGN_RIGHT, border = 4 )
 		
-		idRecordAcceleratorId, idCommitAccelleratorId = wx.NewId(), wx.NewId()
+		idRecordAcceleratorId, idSaveAccelleratorId, idCleanupAccelleratorId = wx.NewIdRef(), wx.NewIdRef(), wx.NewIdRef()
 		self.Bind(wx.EVT_MENU, self.doRecordTime, id=idRecordAcceleratorId)
-		self.Bind(wx.EVT_MENU, self.doCommit, id=idCommitAccelleratorId)
+		self.Bind(wx.EVT_MENU, self.doSave, id=idSaveAccelleratorId)
+		self.Bind(wx.EVT_MENU, self.doCleanup, id=idCleanupAccelleratorId)
 		accel_tbl = wx.AcceleratorTable([
 			(wx.ACCEL_NORMAL,  ord('T'), idRecordAcceleratorId),
-			(wx.ACCEL_NORMAL,  ord('S'), idCommitAccelleratorId),
+			(wx.ACCEL_NORMAL,  ord('S'), idSaveAccelleratorId),
+			(wx.ACCEL_NORMAL,  ord('C'), idCleanupAccelleratorId),
 		])
 		self.SetAcceleratorTable(accel_tbl)
 		
@@ -183,13 +182,12 @@ class TimeTrialRecord( wx.Panel ):
 			if not text or text == '0':
 				self.grid.SetGridCursor( row, 1 )
 				break
-		
-	def doCommit( self, event ):
+	
+	def getTimesBibs( self ):
 		self.grid.SetGridCursor( 0, 0, )
 	
 		# Find the last row without a time.
-		timesBibs = []
-		timesNoBibs = []
+		timesBibs, timesNoBibs = [], []
 		for row in range(self.grid.GetNumberRows()):
 			tStr = self.grid.GetCellValue(row, 0).strip()
 			if not tStr:
@@ -206,10 +204,11 @@ class TimeTrialRecord( wx.Panel ):
 			else:
 				timesNoBibs.append( tStr )
 				
-		for row in range(self.grid.GetNumberRows()):
-			for column in range(self.grid.GetNumberCols()):
-				self.grid.SetCellValue(row, column, '' )
-		
+		return timesBibs, timesNoBibs
+	
+	def doSave( self, event ):
+		timesBibs, timesNoBibs = self.getTimesBibs()
+				
 		if timesBibs and Model.race:
 			with Model.LockRace() as race:
 				bibRaceSeconds = []
@@ -222,8 +221,25 @@ class TimeTrialRecord( wx.Panel ):
 				
 			wx.CallAfter( Utils.refresh )
 		
-		Utils.AdjustGridSize( self.grid, rowsRequired=0 )
+		for row, tStr in enumerate(timesNoBibs):
+			self.grid.SetCellValue(row, 0, tStr )
+			self.grid.SetCellValue(row, 1, '' )
+			
+		Utils.AdjustGridSize( self.grid, rowsRequired=len(timesNoBibs) )
+		if timesNoBibs:
+			self.grid.SetGridCursor( 0, 1, )
 	
+	def doCleanup( self, event ):
+		timesBibs, timesNoBibs = self.getTimesBibs()
+
+		for row, (tStr, bib) in enumerate(timesBibs):
+			self.grid.SetCellValue(row, 0, tStr )
+			self.grid.SetCellValue(row, 1, str(bib) )
+			
+		Utils.AdjustGridSize( self.grid, rowsRequired=len(timesBibs) )
+		if timesBibs:
+			self.grid.SetGridCursor( len(timesBibs)-1, 1 )
+			
 	def refresh( self ):
 		self.grid.AutoSizeRows()
 		
