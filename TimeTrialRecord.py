@@ -163,14 +163,15 @@ class TimeTrialRecord( wx.Panel ):
 			self.doRecordTime( event )
 	
 	def doRecordTime( self, event ):
-		t = Model.race.curRaceTime()
+		race = Model.race
+		if not race:
+			return
+			
+		t = race.curRaceTime()
 		
 		# Trigger the camera.
-		with Model.LockRace() as race:
-			if not race:
-				return
-			if race.enableUSBCamera:
-				race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
+		if race.enableUSBCamera:
+			race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
 	
 		# Grow the table to accomodate the next entry.
 		Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )			
@@ -241,6 +242,11 @@ class TimeTrialRecord( wx.Panel ):
 			self.grid.SetGridCursor( len(timesBibs)-1, 1 )
 			
 	def refresh( self ):
+		race = Model.race
+		if not race or not race.isRunning():
+			Utils.AdjustGridSize( self.grid, rowsRequired=0 )
+			return
+
 		self.grid.AutoSizeRows()
 		
 		dc = wx.WindowDC( self.grid )
