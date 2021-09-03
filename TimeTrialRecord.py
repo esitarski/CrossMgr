@@ -184,7 +184,7 @@ class TimeTrialRecord( wx.Panel ):
 				break
 	
 	def getTimesBibs( self ):
-		self.grid.SetGridCursor( 0, 0, )
+		self.grid.SetGridCursor( 0, 0, )	# Forces current edit cell to commit.
 	
 		# Find the last row without a time.
 		timesBibs, timesNoBibs = [], []

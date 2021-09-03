@@ -778,6 +778,8 @@ class NumKeypad( wx.Panel ):
 		
 		if self.isKeypadInputMode():
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
+		elif self.isBibTimeInputMode():
+			wx.CallLater( 100, self.bibTimeRecord.numEdit.SetFocus )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()

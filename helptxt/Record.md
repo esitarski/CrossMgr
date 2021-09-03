@@ -67,9 +67,10 @@ Pressing Esc, 'c' or 'C' will clear the input.  This can be a handy shortcut whe
 
 Tip: the most accurate way to enter numbers is to type in the number when you hear the number caller, then press an __Enter__ key just as the rider crosses the line.  This is primarily important in timetrials.  In bunch races, the objective is to get the passing order as the times are far less important.  When groups pass in bunch races, just enter the numbers as you hear them from the number caller.
 
-You can also enter multiple numbers separated by commas on the same line.  When you press an __Enter__ key, all the numbers be entered with exactly the same time.  This is useful for starting a team time trial, when youj want all riders on the team to get exactly the same start time.
+You can enter multiple numbers separated by a comma.  After __Enter__, all those numbers will get the same time.  This is convenient for manual Team TT starts when you want all the riders on the same team
+to get the same start time.
 
-There are a number of additional buttons:
+There are a number of buttons that apply to the Bib:
 
 Button|Description
 :-----|:----------
@@ -131,6 +132,8 @@ Right-clicking on bib numbers shows a menu allowing you to delete the entry or s
 
 You can also mark riders as DNF, DNS, Pul or DQ from this screen.
 Remember: if you change any rider's status here, you can always change it back again from the [RiderDetail][] screen.
+
+You can enter multiple numbers separated by a comma.  After __Enter__, all those numbers will be input.  This is convenient if you want a chance to review the numbers entered before you add them.
 
 This method works well when you can get the bib numbers in advance and have enough time to enter them.  It is then easy to accurately click on the bib numbers as the riders cross the line.
 
