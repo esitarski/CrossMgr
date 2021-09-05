@@ -59,7 +59,7 @@ def EpilogMatchingCategory():
 	
 	empty_categories = set()
 	for key, c in race.categories.items():
-		if c.intervals[-1] == EmptyInterval:
+		if c.intervals and c.intervals[-1] == EmptyInterval:
 			c.intervals.pop()
 		if not c.intervals:
 			empty_categories.add( key )
