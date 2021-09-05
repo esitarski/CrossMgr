@@ -72,7 +72,7 @@ class TimeTrialRecord( wx.Panel ):
 
 		self.controller = controller
 
-		self.headerNames = (_('Time'), '   {}   '.format(_('Bib')))
+		self.headerNames = ('       {}       '.format(_('Time')), '   {}   '.format(_('Bib')))
 		
 		fontSize = 18
 		self.font = wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -174,8 +174,10 @@ class TimeTrialRecord( wx.Panel ):
 			race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
 	
 		# Grow the table to accomodate the next entry.
-		Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )			
-		self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, formatTime(t) )
+		with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+			Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )			
+			self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, formatTime(t) )
+			self.grid.AutoSize()
 		
 		# Set the edit cursor at the first empty bib position.
 		for row in range(self.grid.GetNumberRows()):
@@ -183,7 +185,7 @@ class TimeTrialRecord( wx.Panel ):
 			if not text or text == '0':
 				self.grid.SetGridCursor( row, 1 )
 				break
-	
+				
 	def getTimesBibs( self ):
 		self.grid.SetGridCursor( 0, 0, )	# Forces current edit cell to commit.
 	
@@ -222,22 +224,24 @@ class TimeTrialRecord( wx.Panel ):
 				
 			wx.CallAfter( Utils.refresh )
 		
-		for row, tStr in enumerate(timesNoBibs):
-			self.grid.SetCellValue(row, 0, tStr )
-			self.grid.SetCellValue(row, 1, '' )
-			
-		Utils.AdjustGridSize( self.grid, rowsRequired=len(timesNoBibs) )
+		with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+			for row, tStr in enumerate(timesNoBibs):
+				self.grid.SetCellValue(row, 0, tStr )
+				self.grid.SetCellValue(row, 1, '' )
+			Utils.AdjustGridSize( self.grid, rowsRequired=len(timesNoBibs) )
+		
 		if timesNoBibs:
 			self.grid.SetGridCursor( 0, 1, )
 	
 	def doCleanup( self, event ):
 		timesBibs, timesNoBibs = self.getTimesBibs()
 
-		for row, (tStr, bib) in enumerate(timesBibs):
-			self.grid.SetCellValue(row, 0, tStr )
-			self.grid.SetCellValue(row, 1, str(bib) )
-			
-		Utils.AdjustGridSize( self.grid, rowsRequired=len(timesBibs) )
+		with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+			for row, (tStr, bib) in enumerate(timesBibs):
+				self.grid.SetCellValue(row, 0, tStr )
+				self.grid.SetCellValue(row, 1, str(bib) )
+			Utils.AdjustGridSize( self.grid, rowsRequired=len(timesBibs) )
+		
 		if timesBibs:
 			self.grid.SetGridCursor( len(timesBibs)-1, 1 )
 			

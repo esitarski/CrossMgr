@@ -129,9 +129,11 @@ class BibTimeRecord( wx.Panel ):
 		race = Model.race
 		if race and race.isRunning():
 			nums = getRiderNumsFromText( self.numEdit.GetValue() )
-			Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows() + len(nums) )
-			for iRow, num in enumerate(nums, self.grid.GetNumberRows() - len(nums)):
-				self.grid.SetCellValue( iRow, 0, str(num) )
+			with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+				Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows() + len(nums) )
+				for iRow, num in enumerate(nums, self.grid.GetNumberRows() - len(nums)):
+					self.grid.SetCellValue( iRow, 0, str(num) )
+				self.grid.AutoSize()
 		wx.CallAfter( self.numEdit.SetValue, '' )
 	
 	def doSetTime( self, event ):
@@ -179,9 +181,10 @@ class BibTimeRecord( wx.Panel ):
 			self.numEdit.SetValue( '' )
 				
 		if self.grid.GetNumberRows() != len(valuesToKeep):
-			Utils.AdjustGridSize( self.grid, rowsRequired=len(valuesToKeep) )
-			for row, value in enumerate(valuesToKeep):
-				self.grid.SetCellValue( row, 0, value )
+			with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+				Utils.AdjustGridSize( self.grid, rowsRequired=len(valuesToKeep) )
+				for row, value in enumerate(valuesToKeep):
+					self.grid.SetCellValue( row, 0, value )
 		
 	def commit( self ):
 		pass
