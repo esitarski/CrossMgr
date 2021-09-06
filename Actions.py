@@ -382,9 +382,8 @@ class Actions( wx.Panel ):
 	def onStartRaceTime( self, event ):
 		if Model.race is None:
 			return
-		dlg = StartRaceAtTime( self )
-		dlg.ShowModal()
-		dlg.Destroy()  
+		with StartRaceAtTime(self) as dlg:
+			dlg.ShowModal()
 	
 	def onFinishRace( self, event, confirm=True ):
 		if Model.race is None:

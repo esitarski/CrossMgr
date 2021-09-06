@@ -449,9 +449,8 @@ class RiderDetail( wx.Panel ):
 			if not getattr(race, 'isTimeTrial', False) or num not in race.riders:
 				return
 			rider = race.getRider( num )
-		dlg = AdjustTimeDialog( self, rider, self.riderName.GetLabel() )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with AdjustTimeDialog( self, rider, self.riderName.GetLabel() ) as dlg:
+			dlg.ShowModal()
 	
 	def onCategoryChoice( self, event ):
 		if self.num.GetValue() is None:
@@ -666,13 +665,11 @@ class RiderDetail( wx.Panel ):
 		rider = race.riders[num]
 			
 		race.lapNote = getattr(race, 'lapNote', {})
-		dlg = wx.TextEntryDialog( self, '{}: {}: {}: {}'.format(_("Bib"), num, _("Note on Lap"), lap), _("Lap Note"),
-					Model.race.lapNote.get( (num, lap), '' ) )
-		ret = dlg.ShowModal()
-		value = dlg.GetValue().strip()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.TextEntryDialog( self, '{}: {}: {}: {}'.format(_("Bib"), num, _("Note on Lap"), lap), _("Lap Note"),
+					Model.race.lapNote.get( (num, lap), '' ) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			value = dlg.GetValue().strip()
 		
 		undo.pushState()
 		if value:
@@ -726,12 +723,10 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, _("Rider's new number:"), _('New Number'), '{}'.format(self.num.GetValue()) )
-		ret = dlg.ShowModal()
-		newNum = dlg.GetValue()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.TextEntryDialog( self, _("Rider's new number:"), _('New Number'), '{}'.format(self.num.GetValue()) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			newNum = dlg.GetValue()
 			
 		try:
 			newNum = int(re.sub( '[^0-9]', '', newNum ))
@@ -773,12 +768,10 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog( self, _("Number to swap with:"), _('Swap Numbers'), '{}'.format(self.num.GetValue()) )
-		ret = dlg.ShowModal()
-		newNum = dlg.GetValue()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.TextEntryDialog( self, _("Number to swap with:"), _('Swap Numbers'), '{}'.format(self.num.GetValue()) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			newNum = dlg.GetValue()
 			
 		try:
 			newNum = int(re.sub( '[^0-9]', '', newNum))
@@ -820,7 +813,7 @@ class RiderDetail( wx.Panel ):
 			if not num in race:
 				return
 		
-		dlg = wx.TextEntryDialog(
+		with wx.TextEntryDialog(
 			self,
 			'{} {}: {}\n\n{}:'.format(
 				_('Bib'), num,
@@ -828,12 +821,10 @@ class RiderDetail( wx.Panel ):
 				_("New Bib Number")
 			),
 			_('Copy Rider Times'), '{}'.format(self.num.GetValue())
-		)
-		ret = dlg.ShowModal()
-		newNum = dlg.GetValue()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			newNum = dlg.GetValue()
 			
 		try:
 			newNum = int(re.sub( '[^0-9]', '', newNum))
@@ -889,12 +880,10 @@ class RiderDetail( wx.Panel ):
 			if num not in race.riders:
 				return
 			rider = race.getRider( num )
-		dlg = ChangeOffsetDialog( self, rider, self.riderName.GetLabel() )
-		ret = dlg.ShowModal()
-		dlg.Destroy()
-		if ret == wx.ID_OK:
-			wx.CallAfter( self.refresh )
-			wx.CallAfter( Utils.refresh )
+		with ChangeOffsetDialog( self, rider, self.riderName.GetLabel() ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				wx.CallAfter( self.refresh )
+				wx.CallAfter( Utils.refresh )
 	
 	def onNumChange( self, event = None ):
 		self.refresh()
@@ -977,14 +966,12 @@ class RiderDetail( wx.Panel ):
 		self.refresh()
 	
 	def doCustomSplitLap( self ):
-		dlg = NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
-									value = 1, min = 1, max = 500 )
-		splits = None
-		if dlg.ShowModal() == wx.ID_OK:
+		with NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
+									value = 1, min = 1, max = 500 ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			splits = dlg.GetValue() + 1
-		dlg.Destroy()
-		if splits is not None:
-			self.doSplitLap( splits )
+		self.doSplitLap( splits )
 	
 	def OnGanttPopupLapDetail( self, event ):
 		num, lap, times = self.getGanttChartPanelNumLapTimes()
@@ -1142,18 +1129,17 @@ class RiderDetail( wx.Panel ):
 			return
 		if not hasattr(Model.race, 'lapNote'):
 			Model.race.lapNote = {}
-		dlg = wx.TextEntryDialog( self,
+		with wx.TextEntryDialog( self,
 				"{}: {}  {}: {}".format(
 					_('Bib'), self.entry.num,
 					_('Note for lap'), self.entry.lap,
 				),
 				_("Lap Note"),
-				Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
-		ret = dlg.ShowModal()
-		value = dlg.GetValue().strip()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+				Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			value = dlg.GetValue().strip()
+		
 		undo.pushState()
 		with Model.LockRace() as race:
 			if value:

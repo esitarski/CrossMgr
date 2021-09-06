@@ -474,15 +474,14 @@ class RichTextFrame(wx.Frame):
 		# This gives us a string suitable for the file dialog based on
 		# the file handlers that are loaded
 		wildcard, types = rt.RichTextBuffer.GetExtWildcard(save=False)
-		dlg = wx.FileDialog(self, "Choose a filename",
+		with wx.FileDialog(self, "Choose a filename",
 							wildcard=wildcard,
-							style=wx.FD_OPEN)
-		if dlg.ShowModal() == wx.ID_OK:
-			path = dlg.GetPath()
-			if path:
-				fileType = types[dlg.GetFilterIndex()]
-				self.rtc.LoadFile(path, fileType)
-		dlg.Destroy()
+							style=wx.FD_OPEN) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				path = dlg.GetPath()
+				if path:
+					fileType = types[dlg.GetFilterIndex()]
+					self.rtc.LoadFile(path, fileType)
 
 		
 	def OnFileSave(self, evt):
@@ -497,18 +496,17 @@ class RichTextFrame(wx.Frame):
 	def OnFileSaveAs(self, evt):
 		wildcard, types = rt.RichTextBuffer.GetExtWildcard(save=True)
 
-		dlg = wx.FileDialog(self, "Choose a filename",
+		with wx.FileDialog(self, "Choose a filename",
 							wildcard=wildcard,
-							style=wx.FD_SAVE)
-		if dlg.ShowModal() == wx.ID_OK:
-			path = dlg.GetPath()
-			if path:
-				fileType = types[dlg.GetFilterIndex()]
-				ext = rt.RichTextBuffer.FindHandlerByType(fileType).GetExtension()
-				if not path.endswith(ext):
-					path += '.' + ext
-				self.rtc.SaveFile(path, fileType)
-		dlg.Destroy()
+							style=wx.FD_SAVE) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				path = dlg.GetPath()
+				if path:
+					fileType = types[dlg.GetFilterIndex()]
+					ext = rt.RichTextBuffer.FindHandlerByType(fileType).GetExtension()
+					if not path.endswith(ext):
+						path += '.' + ext
+					self.rtc.SaveFile(path, fileType)
 		
 	def GetValue( self ):
 		handler = rt.RichTextXMLHandler()
@@ -689,15 +687,14 @@ class RichTextFrame(wx.Frame):
 		if self.rtc.GetStyle(self.rtc.GetInsertionPoint(), attr):
 			fontData.SetInitialFont(attr.GetFont())
 
-		dlg = wx.FontDialog(self, fontData)
-		if dlg.ShowModal() == wx.ID_OK:
-			fontData = dlg.GetFontData()
-			font = fontData.GetChosenFont()
-			if font:
-				attr.SetFlags(rt.TEXT_ATTR_FONT)
-				attr.SetFont(font)
-				self.rtc.SetStyle(r, attr)
-		dlg.Destroy()
+		with wx.FontDialog(self, fontData) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				fontData = dlg.GetFontData()
+				font = fontData.GetChosenFont()
+				if font:
+					attr.SetFlags(rt.TEXT_ATTR_FONT)
+					attr.SetFont(font)
+					self.rtc.SetStyle(r, attr)
 
 
 	def OnColour(self, evt):
@@ -707,19 +704,18 @@ class RichTextFrame(wx.Frame):
 		if self.rtc.GetStyle(self.rtc.GetInsertionPoint(), attr):
 			colourData.SetColour(attr.GetTextColour())
 
-		dlg = wx.ColourDialog(self, colourData)
-		if dlg.ShowModal() == wx.ID_OK:
-			colourData = dlg.GetColourData()
-			colour = colourData.GetColour()
-			if colour:
-				if not self.rtc.HasSelection():
-					self.rtc.BeginTextColour(colour)
-				else:
-					r = self.rtc.GetSelectionRange()
-					attr.SetFlags(rt.TEXT_ATTR_TEXT_COLOUR)
-					attr.SetTextColour(colour)
-					self.rtc.SetStyle(r, attr)
-		dlg.Destroy()
+		with wx.ColourDialog(self, colourData) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				colourData = dlg.GetColourData()
+				colour = colourData.GetColour()
+				if colour:
+					if not self.rtc.HasSelection():
+						self.rtc.BeginTextColour(colour)
+					else:
+						r = self.rtc.GetSelectionRange()
+						attr.SetFlags(rt.TEXT_ATTR_TEXT_COLOUR)
+						attr.SetTextColour(colour)
+						self.rtc.SetStyle(r, attr)
 		
 
 

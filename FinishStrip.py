@@ -494,20 +494,19 @@ class FinishStripPanel( wx.Panel ):
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 
 	def onSave( self, event ):
-		dlg = wx.FileDialog(
+		with wx.FileDialog(
 			self,
 			message=_('Save Finish as'),
 			wildcard='PNG {} (*.png)|*.png'.format(_("files")),
 			defaultDir=Utils.getFileDir(),
 			defaultFile=os.path.splitext( os.path.basename(Utils.getFileName() or _('Default.cmn')) )[0] + '_Finish.png',
 			style=wx.FD_SAVE,
-		)
-		if dlg.ShowModal() == wx.ID_OK:
-			fname = dlg.GetPath()
-			bm = self.finish.GetBitmap()
-			image = wx.ImageFromBitmap( bm )
-			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
-		dlg.Destroy()
+		) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				fname = dlg.GetPath()
+				bm = self.finish.GetBitmap()
+				image = wx.ImageFromBitmap( bm )
+				image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
 
 	def onDirection( self, event ):
 		self.SetLeftToRight( event.GetInt() == 1 ) 
@@ -614,18 +613,17 @@ def ShowFinishStrip( parent, t=None ):
 	race = Model.race
 	if not race:
 		return
-	fsd = FinishStripDialog( parent,
+	with FinishStripDialog( parent,
 		photoFolder=getPhotoDirName( Utils.mainWin.fileName if Utils.mainWin and Utils.mainWin.fileName else 'Photos' ),
 		fps=getattr(race, 'fps', 25.0),
 		leftToRight=getattr(race, 'leftToRight', True),
 		pixelsPerSec=getattr(race, 'pixelsPerSec', None),
-	)
-	if t is not None:
-		fsd.SetT( t )
-	fsd.ShowModal()
-	for attr, value in fsd.GetAttrs().items():
-		setattr( race, attr, value )
-	fsd.Destroy()
+	) as fsd:
+		if t is not None:
+			fsd.SetT( t )
+		fsd.ShowModal()
+		for attr, value in fsd.GetAttrs().items():
+			setattr( race, attr, value )
 
 if __name__ == '__main__':
 	app = wx.App(False)
@@ -639,8 +637,7 @@ if __name__ == '__main__':
 	fs = FinishStripPanel( mainWin )
 	mainWin.Show()
 	
-	fsd = FinishStripDialog( mainWin )
-	fsd.ShowModal()
-	#fsd.Destroy()
+	with FinishStripDialog( mainWin ) as fsd:
+		fsd.ShowModal()
 	
 	app.MainLoop()

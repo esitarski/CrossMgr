@@ -47,19 +47,18 @@ class SetGraphicDialog( wx.Dialog ):
 	def onChoose( self, event ):
 		imgPath = self.GetValue()
 		set_dir = os.path.dirname(imgPath)
-		dlg = imagebrowser.ImageDialog( self, set_dir = set_dir )
-		dlg.ChangeFileTypes([
-			('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
-			('GIF (*.gif)', '*.gif'),
-			('PNG (*.png)', '*.png'),
-			('JPEG (*.jpg)', '*.jpg')
-		])
-		if os.path.isfile(imgPath):
-			dlg.SetFileName( imgPath )
-		if dlg.ShowModal() == wx.ID_OK:
-			imgPath = dlg.GetFile()
-			self.graphic.SetValue( imgPath )
-		dlg.Destroy()
+		with imagebrowser.ImageDialog( self, set_dir = set_dir ) as dlg:
+			dlg.ChangeFileTypes([
+				('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
+				('GIF (*.gif)', '*.gif'),
+				('PNG (*.png)', '*.png'),
+				('JPEG (*.jpg)', '*.jpg')
+			])
+			if os.path.isfile(imgPath):
+				dlg.SetFileName( imgPath )
+			if dlg.ShowModal() == wx.ID_OK:
+				imgPath = dlg.GetFile()
+				self.graphic.SetValue( imgPath )
 
 	def onOK( self, event ):
 		self.EndModal( wx.ID_OK )

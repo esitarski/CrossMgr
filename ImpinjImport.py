@@ -107,7 +107,6 @@ AAADDD,	  2016-10-11 23:15:34.305
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	mainWin.Show()
-	dlg = ImpinjImportDialog( mainWin )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with ImpinjImportDialog(mainWin) as dlg:
+		dlg.ShowModal()
 

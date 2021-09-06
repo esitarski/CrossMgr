@@ -54,15 +54,11 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		race = Model.race
 		if not race:
 			return
-		if race.isTimeTrial and race.hasRiderTimes():
-			Utils.MessageOKCancel( self,
-				_('Cannot change Time Trial Start Time') + '\n\n' + _('There are already recorded results.'),
-				_('Cannot change Start Time')
-			)
-			self.EndModal( wx.ID_OK )
 		
 		tOld = race.startTime
 		startTimeNew = tOld.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(seconds=self.timeMsEdit.GetSeconds())
+		# For earlier start times, dTime will be negative.
+		# For later start times, dTime will be positive.
 		dTime = (startTimeNew - race.startTime).total_seconds()
 		
 		if not dTime:
@@ -75,7 +71,12 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		undo.pushState()
 		
 		# Adjust all rider times to account for the new start time.
-		if not race.isTimeTrial:
+		if race.isTimeTrial:
+			for rider in race.riders.values():
+				# Don't change the start times relative to the old race start.
+				# Increase all the recorded times (if an earlier start), otherwise decrease all the recorded times (if a later start).
+				rider.times[:] = [max(0.0, v - dTime) for v in rider.times]
+		else:
 			for rider in race.riders.values():
 				try:
 					rider.firstTime = max( 0.0, rider.firstTime - dTime )
@@ -85,10 +86,10 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		
 			race.numTimeInfo.adjustAllTimes( -dTime )
 			
-			# Also fix any unread tags.
-			if race.unmatchedTags:
-				for times in race.unmatchedTags.values():
-					times[:] = [max(0.0, v - dTime) for v in times]
+		# Fix any unread tags.
+		if race.unmatchedTags:
+			for times in race.unmatchedTags.values():
+				times[:] = [max(0.0, v - dTime) for v in times]
 		
 		race.startTime = startTimeNew
 		race.setChanged()

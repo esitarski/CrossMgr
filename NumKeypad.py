@@ -387,9 +387,8 @@ class NumKeypad( wx.Panel ):
 		except IndexError:
 			return
 			
-		setLaps = SetLaps( self, category=category )
-		setLaps.ShowModal()
-		setLaps.Destroy()
+		with SetLaps( self, category=category ) as setLaps:
+			setLaps.ShowModal()
 	
 	def doClockUpdate( self ):
 		mainWin = Utils.getMainWin()

@@ -210,14 +210,11 @@ class Gantt( wx.Panel ):
 		wx.CallAfter( self.refresh )
 		
 	def doCustomSplitLap( self ):
-		dlg = NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
-									value = 1, min = 1, max = 500 )
-		splits = None
-		if dlg.ShowModal() == wx.ID_OK:
-			splits = dlg.GetValue() + 1
-		dlg.Destroy()
-		if splits is not None:
-			self.doSplitLap( splits )
+		with NumberEntryDialog( self, message = "", caption = _("Add Missing Splits"), prompt = _("Missing Splits to Add:"),
+									value = 1, min = 1, max = 500 ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				splits = dlg.GetValue() + 1
+				self.doSplitLap( splits )
 		
 	def swapEntries( self, num, numAdjacent ):
 		if not num or not numAdjacent:
@@ -353,15 +350,13 @@ class Gantt( wx.Panel ):
 		if not self.entry or not Model.race:
 			return
 		Model.race.lapNote = getattr(Model.race, 'lapNote', {})
-		dlg = wx.TextEntryDialog( self, '{} {}: {} {}: {}:'.format(
+		with wx.TextEntryDialog( self, '{} {}: {} {}: {}:'.format(
 						_('Bib'), self.entry.num, _('Lap'), self.entry.lap, _('Note'), 
 					), _("Lap Note"),
-					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) )
-		ret = dlg.ShowModal()
-		value = dlg.GetValue().strip()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+					Model.race.lapNote.get( (self.entry.num, self.entry.lap), '' ) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			value = dlg.GetValue().strip()
 		undo.pushState()
 		with Model.LockRace() as race:
 			if value:

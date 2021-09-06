@@ -35,7 +35,6 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	mainWin.Show()
-	dlg = OrionImportDialog( mainWin )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with OrionImportDialog(mainWin) as dlg:
+		dlg.ShowModal()
 
