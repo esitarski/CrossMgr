@@ -499,7 +499,10 @@ class Impinj:
 			self.handleTagGroup()
 				
 			tUpdateLast = tKeepaliveLast = getTimeNow()
-			tAntennaConnectedLast = tUpdateLast - datetime.timedelta( days=1 )	# Force the antenna status to be updated at start.
+			antennaCheckInterval = 10.0
+			with tAntennaConnectedLastLock:
+				tAntennaConnectedLast = tUpdateLast - datetime.timedelta( seconds=antennaCheckInterval-2.0 )	# Force the antenna status to be updated at start.
+			
 			self.tagCount = 0
 			lastDiscoveryTime = None
 			while self.checkKeepGoing():
@@ -513,7 +516,7 @@ class Impinj:
 				#------------------------------------------------------------
 				# Check on the antenna connection status.
 				#
-				if (t - tAntennaConnectedLast).total_seconds() >= 10:
+				if (t - tAntennaConnectedLast).total_seconds() >= antennaCheckInterval:
 					self.messageQ.put( ('Impinj', 'Checking Antenna Connections...') )
 					try:
 						GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties).send( self.readerSocket )
