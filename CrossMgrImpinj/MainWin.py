@@ -473,7 +473,7 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress = wx.RadioButton( self, label='IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.impinjHost = IpAddrCtrl( self, style=wx.TE_PROCESS_TAB )
+		self.impinjHost = IpAddrCtrl( self, style=wx.TE_PROCESS_TAB, size=(160,-1) )
 		hb.Add( self.impinjHost )
 		hb.Add( wx.StaticText(self, label=' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
