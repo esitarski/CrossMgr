@@ -587,6 +587,7 @@ class MainWin( wx.Frame ):
 			else:
 				c = self.antennaInactiveChar
 			wx.CallAfter( self.antennaConnected[i].SetLabel, c )
+		wx.CallAfter( self.connected.Enable, True )
 
 	def refreshMethodName( self ):
 		if Impinj.ProcessingMethod == 0 and QuadReg.samplesTotal:
@@ -676,6 +677,7 @@ class MainWin( wx.Frame ):
 		self.shutdownQ = None
 	
 	def doUpdateAntennaConnection( self, event ):
+		self.connected.Enable( False )
 		ResetAntennaConnectionsCheck()
 	
 	def doReset( self, event, confirm = True ):
@@ -704,11 +706,10 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.start )
 		
 	def doAutoDetect( self, event ):
-		wx.BeginBusyCursor()
-		self.gracefulShutdown()
-		self.shutdown()
-		impinjHost, crossMgrHost = AutoDetect(ImpinjInboundPort)[0], '127.0.0.1'
-		wx.EndBusyCursor()
+		with wx.BeginBusyCursor():
+			self.gracefulShutdown()
+			self.shutdown()
+			impinjHost, crossMgrHost = AutoDetect(ImpinjInboundPort)[0], '127.0.0.1'
 		
 		if impinjHost and crossMgrHost:
 			self.useStaticAddress.SetValue( True )
