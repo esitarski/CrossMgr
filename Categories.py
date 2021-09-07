@@ -123,22 +123,20 @@ def PrintCategories():
 	if not mainWin or not race:
 		return
 	
-	pdd = wx.PrintDialogData(mainWin.printData)
-	pdd.EnableSelection( False )
-	pdd.EnablePageNumbers( False )
-	pdd.EnableHelp( False )
-	pdd.EnablePrintToFile( False )
-	
-	printer = wx.Printer(pdd)
-	printout = CategoriesPrintout()
+	with wx.PrintDialogData(mainWin.printData) as pdd:
+		pdd.EnableSelection( False )
+		pdd.EnablePageNumbers( False )
+		pdd.EnableHelp( False )
+		pdd.EnablePrintToFile( False )
+		
+		printer = wx.Printer(pdd)
+		printout = CategoriesPrintout()
 
-	if not printer.Print(mainWin, printout, True):
-		if printer.GetLastError() == wx.PRINTER_ERROR:
-			Utils.MessageOK(mainWin, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
-	else:
-		mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
-
-	printout.Destroy()	
+		if not printer.Print(mainWin, printout, True):
+			if printer.GetLastError() == wx.PRINTER_ERROR:
+				Utils.MessageOK(mainWin, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+		else:
+			mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
 #--------------------------------------------------------------------------------
 class TimeEditor(gridlib.GridCellEditor):
@@ -512,9 +510,8 @@ class Categories( wx.Panel ):
 				except IndexError:
 					category = None
 				if category and category.catType == Model.Category.CatWave:
-					setLaps = SetLaps( self, category )
-					setLaps.ShowModal()
-					setLaps.Destroy()
+					with SetLaps( self, category ) as setLaps:
+						setLaps.ShowModal()
 					return
 		
 		event.Skip()
@@ -627,7 +624,7 @@ class Categories( wx.Panel ):
 			categories = race.getAllCategories()
 			category = categories[r]
 			
-		dlg = wx.TextEntryDialog(
+		with wx.TextEntryDialog(
 			self,
 			'{}: {}'.format(
 				category.name,
@@ -636,13 +633,10 @@ This will add the given list of Bibs to this category,
 and remove them from other categories.'''),
 			),
 			_('Add Bib Exceptions')
-		)
-		good = (dlg.ShowModal() == wx.ID_OK)
-		if good:
+		) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			response = dlg.GetValue()
-		dlg.Destroy()
-		if not good:
-			return
 
 		undo.pushState()
 		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )

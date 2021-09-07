@@ -251,15 +251,14 @@ class ChipImportDialog( wx.Dialog ):
 		else:
 			defaultPath, defaultFile = os.path.split(defaultPath)
 			
-		dlg = wx.FileDialog( self, '{} {}'.format( self.chipName, _('Import file') ),
+		with wx.FileDialog( self, '{} {}'.format( self.chipName, _('Import file') ),
 							style=wx.FD_OPEN | wx.FD_CHANGE_DIR,
 							wildcard='RFID (*.{})|*.{}'.format(self.fileSuffix, self.fileSuffix),
 							defaultDir=defaultPath if defaultPath else '',
 							defaultFile=defaultFile if defaultFile else '',
-							)
-		if dlg.ShowModal() == wx.ID_OK:
-			self.chipDataFile.SetValue( dlg.GetPath() )
-		dlg.Destroy()
+							) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				self.chipDataFile.SetValue( dlg.GetPath() )
 	
 	def onOK( self, event ):
 		fname = self.chipDataFile.GetValue()

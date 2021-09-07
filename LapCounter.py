@@ -186,13 +186,13 @@ class LapCounter( wx.Panel ):
 		}
 
 	def OnOptions( self, event ):
-		d = LapCounterOptions( self )
-		if d.ShowModal() == wx.ID_OK:
+		with LapCounterOptions( self ) as d:
+			if d.ShowModal() != wx.ID_OK:
+				return
 			wx.CallAfter( self.refresh )
 			mainWin = Utils.getMainWin()
 			if mainWin:
 				wx.CallAfter( mainWin.lapCounterDialog.refresh )
-		d.Destroy()
 	
 	def OnPopupLockLapsToGo( self, event ):
 		race = Model.race
@@ -221,9 +221,8 @@ class LapCounter( wx.Panel ):
 		
 		for (x, y, w, h), laps, category in zip(self.tessellate(len(self.labels)), categoryLaps, race.getCategories(startWaveOnly=True)):
 			if x <= self.xClick < x+w and y <= self.yClick < y+h:
-				setLaps = SetLaps( self, category=category )
-				setLaps.ShowModal()
-				setLaps.Destroy()
+				with SetLaps(self, category=category) as setLaps:
+					setLaps.ShowModal()
 				return		
 	
 	def OnRightClick( self, event ):

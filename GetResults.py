@@ -330,7 +330,7 @@ def _GetResultsCore( category ):
 		
 		if len(times) >= 2:
 			times[0] = min(riderCategory.getStartOffsetSecs() if riderCategory else 0, times[1])
-			if riderCategory and categoryWinningLaps.get(riderCategory, None) and riderCategory.lappedRidersMustContinue:
+			if isTimeTrial or riderCategory and categoryWinningLaps.get(riderCategory, None) and riderCategory.lappedRidersMustContinue:
 				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:
 				laps = bisect_left( times, cutoffTime, hi=len(times)-1 )

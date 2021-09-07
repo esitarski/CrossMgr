@@ -43,13 +43,11 @@ class UnmatchedTagsGantt( wx.Panel ):
 
 		fileName = Utils.getFileName() or 'test.cmn'
 		xlFName = os.path.splitext(fileName)[0] + '-Unmatched-RFID-Tags.xls'
-		dlg = wx.DirDialog( self, '{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.DirDialog( self, '{} "{}"'.format(_('Folder to write'), os.path.basename(xlFName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlFName) ) as dlg:
+			if dlg.ShowModal()!= wx.ID_OK:
+				return
+			dName = dlg.GetPath()
 
 		xlFName = os.path.join( dName, os.path.basename(xlFName) )
 		

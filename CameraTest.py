@@ -121,20 +121,16 @@ class CameraTestDialog( wx.Dialog ):
 		race = Model.race
 		fname = Utils.RemoveDisallowedFilenameChars('{} {}.png'.format( tNow.strftime('%Y-%m-%d %H-%M-%S'), Utils.toAscii(race.name if race else 'CameraTest')) )
 		
-		fd = wx.FileDialog( self,
+		with wx.FileDialog( self,
 			message=_("Save Photo as PNG File:"),
 			wildcard="PNG files (*.png)| *.png",
 			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
 			defaultDir = Utils.getFileDir(),
-		)
-		fd.SetFilename( fname )
-		
-		ret = fd.ShowModal()
-		if ret != wx.ID_OK:
-			fd.Destroy()
-			return
-		fname = fd.GetPath()
-		fd.Destroy()
+		) as fd:
+			fd.SetFilename( fname )		
+			if fd.ShowModal() != wx.ID_OK:
+				return
+			fname = fd.GetPath()
 		
 		try:
 			image.SaveFile( fname, wx.BITMAP_TYPE_PNG )
@@ -151,8 +147,7 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None, title="CrossMan", size=(100,100))
 	mainWin.Show()
-	cameraTestDialog = CameraTestDialog( mainWin )
-	cameraTestDialog.ShowModal()
-	cameraTestDialog.Destroy()
+	with CameraTestDialog(mainWin) as cameraTestDialog:
+		cameraTestDialog.ShowModal()
 	app.MainLoop()
 		

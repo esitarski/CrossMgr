@@ -49,6 +49,14 @@ ProcessingMethod = ProcessingMethodDefault
 AntennaChoice    = AntennaChoiceDefault
 RemoveOutliers   = RemoveOutliersDefault
 
+tAntennaConnectedLast = getTimeNow() - datetime.timedelta( days=200 )
+tAntennaConnectedLastLock = threading.Lock()
+
+def ResetAntennaConnectionsCheck():
+	global tAntennaConnectedLast, tAntennaConnectedLastLock
+	with tAntennaConnectedLastLock:
+		tAntennaConnectedLast -= datetime.timedelta( days=200 )
+
 #------------------------------------------------------
 
 ImpinjDebug = False
@@ -426,13 +434,15 @@ class Impinj:
 			time.sleep( 0.1 )
 	
 	def runServer( self ):
+		global tAntennaConnectedLast, tAntennaConnectedLastLock
+		
 		self.messageQ.put( ('BackupFile', self.fname) )
 		
 		self.messageQ.put( ('Impinj', '*****************************************' ) )
 		self.messageQ.put( ('Impinj', 'Reader Server Started: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
 			
 		# Create an old default time for last tag read.
-		tOld = getTimeNow() - datetime.timedelta( days = 100 )
+		tOld = getTimeNow() - datetime.timedelta( days = 200 )
 		utcfromtimestamp = datetime.datetime.utcfromtimestamp
 		
 		while self.checkKeepGoing():
@@ -488,7 +498,8 @@ class Impinj:
 			self.tagGroup = TagGroup()
 			self.handleTagGroup()
 				
-			tUpdateLast = tKeepaliveLast = tAntennaConnectedLast = getTimeNow()
+			tUpdateLast = tKeepaliveLast = getTimeNow()
+			tAntennaConnectedLast = tUpdateLast - datetime.timedelta( days=1 )	# Force the antenna status to be updated at start.
 			self.tagCount = 0
 			lastDiscoveryTime = None
 			while self.checkKeepGoing():
@@ -503,9 +514,11 @@ class Impinj:
 				# Check on the antenna connection status.
 				#
 				if (t - tAntennaConnectedLast).total_seconds() >= 10:
+					# print( 'checking antenna connections...' )
 					try:
 						GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties).send( self.readerSocket )
-						tAntennaConnectedLast = t
+						with tAntennaConnectedLastLock:
+							tAntennaConnectedLast = t
 					except Exception as e:
 						self.messageQ.put( ('Impinj', 'GET_READER_CONFIG send fails: {}'.format(e)) )
 						self.readerSocket.close()
@@ -565,7 +578,7 @@ class Impinj:
 				if isinstance(response, GET_READER_CONFIG_RESPONSE_Message):
 					self.connectedAntennas = sorted( p.AntennaID for p in response.Parameters
 						if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4 )
-					self.messageQ.put( ('Impinj', 'Connected antennas: {}'.format(','.join(str(a) for a in self.connectedAntennas)) ) )
+					# self.messageQ.put( ('Impinj', 'Connected antennas: {}'.format(','.join(str(a) for a in self.connectedAntennas)) ) )
 					self.statusCB(
 						connectedAntennas = self.connectedAntennas,
 						timeCorrection = self.timeCorrection,
@@ -653,6 +666,8 @@ class Impinj:
 			except Empty:
 				break
 
+impinj = None
 def ImpinjServer( dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None ):
+	global impinj
 	impinj = Impinj(dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB)
 	impinj.runServer()

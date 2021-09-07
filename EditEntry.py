@@ -362,30 +362,26 @@ class SplitNumberDialog( wx.Dialog ):
 
 @logCall
 def CorrectNumber( parent, entry ):
-	dlg = CorrectNumberDialog( parent, entry )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with CorrectNumberDialog(parent, entry) as dlg:
+		dlg.ShowModal()
 		
 @logCall
 def ShiftNumber( parent, entry ):
-	dlg = ShiftNumberDialog( parent, entry )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with ShiftNumberDialog(parent, entry) as dlg:
+		dlg.ShowModal()
 		
 @logCall
 def InsertNumber( parent, entry ):
-	dlg = InsertNumberDialog( parent, entry )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with InsertNumberDialog(parent, entry) as dlg:
+		dlg.ShowModal()
 		
 @logCall
 def SplitNumber( parent, entry ):
 	if (entry.lap or 0) == 0:
 		return
 		
-	dlg = SplitNumberDialog( parent, entry )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with SplitNumberDialog(parent, entry) as dlg:
+		dlg.ShowModal()
 		
 @logCall
 def DeleteEntry( parent, entry ):
@@ -395,23 +391,23 @@ def DeleteEntry( parent, entry ):
 	race = Model.race
 	raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else None
 		
-	dlg = wx.MessageDialog(parent,
+	with wx.MessageDialog(parent,
 						   '{}: {}\n{}: {}\n{}: {}\n{}: {}\n\n{}?'.format(
 								_('Bib'), entry.num,
 								_('Lap'), entry.lap,
 								_('Race Time'), Utils.formatTime(entry.t, True),
 								_('Clock Time'), Utils.formatTime(entry.t + raceStartTimeOfDay, True) if raceStartTimeOfDay is not None else '',
 								_('Confirm Delete')), _('Delete Entry'),
-							wx.OK | wx.CANCEL | wx.ICON_QUESTION )
-	# dlg.CentreOnParent(wx.BOTH)
-	if dlg.ShowModal() == wx.ID_OK:
+							wx.OK | wx.CANCEL | wx.ICON_QUESTION ) as dlg:
+		if dlg.ShowModal() != wx.ID_OK:
+			return
+		
 		undo.pushState()
 		with Model.LockRace() as race:
 			if race:
 				race.numTimeInfo.delete( entry.num, entry.t )
 				race.deleteTime( entry.num, entry.t )
 		Utils.refresh()
-	dlg.Destroy()
 	
 @logCall
 def SwapEntry( a, b ):
@@ -520,12 +516,10 @@ def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 	except Exception:
 		externalData = None
 	
-	d = StatusChangeDialog(parent, message=message.format(num), title=title, externalData=externalData, t=lapTime)
-	ret = d.ShowModal()
-	lapTime = lapTime if d.getSetEntryTime() else None
-	d.Destroy()
-	if ret != wx.ID_OK:
-		return False
+	with StatusChangeDialog(parent, message=message.format(num), title=title, externalData=externalData, t=lapTime) as d:
+		if d.ShowModal() != wx.ID_OK:
+			return False
+		lapTime = lapTime if d.getSetEntryTime() else None
 	
 	undo.pushState()
 	with Model.LockRace() as race:

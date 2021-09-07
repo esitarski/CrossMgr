@@ -950,17 +950,18 @@ class MainWin( wx.Frame ):
 		if not race:
 			return None
 
-		while 1:
-			dlg = wx.TextEntryDialog(self, message, message, style=wx.OK|wx.CANCEL)
-			ret = dlg.ShowModal()
-			num = dlg.GetValue()
-			dlg.Destroy()
+		while True:
+			with wx.TextEntryDialog(self, message, message, style=wx.OK|wx.CANCEL) as dlg:
+				if dlg.ShowModal() != wx.ID_OK:
+					return
+				num = dlg.GetValue()
+			
 			try:
 				num = int(re.sub( '[^0-9]', '', num ))
 			except ValueError:
 				num = None
 				
-			if ret != wx.ID_OK or not num:
+			if not num:
 				return None
 				
 			if num in exclude:
@@ -1068,9 +1069,8 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.refresh )
 		
 	def menuDNS( self, event ):
-		dns = DNSManagerDialog( self )
-		dns.ShowModal()
-		dns.Destroy()
+		with DNSManagerDialog(self) as dns:
+			dns.ShowModal()
 		
 	def menuOpenExcelSheet( self, event ):
 		if not Model.race:
@@ -1131,13 +1131,8 @@ class MainWin( wx.Frame ):
 		if race.isUnstarted():
 			Utils.MessageOK( self, _('Cannot change Start Time of unstarted race.  Start the race from Actions.'), _('Race Not Started') )
 			return
-		if race.isTimeTrial and race.hasRiderTimes():
-			Utils.MessageOK( self, _('Cannot change Start Time of a Time Trial with recorded times'), _('Cannot Change Start Time') )
-			return
-			
-		dlg = ChangeRaceStartTime.ChangeRaceStartTimeDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with ChangeRaceStartTime.ChangeRaceStartTimeDialog(self) as dlg:
+			dlg.ShowModal()
 	
 	@logCall
 	def menuRestartRace( self, event ):
@@ -1164,10 +1159,9 @@ class MainWin( wx.Frame ):
 			self.actions.onFinishRace( event, False )
 			self.showPage( self.iHistoryPage )			
 			
-		dlg = Restart( self )
-		dlg.refresh()
-		dlg.ShowModal()
-		dlg.Destroy()
+		with Restart(self) as dlg:
+			dlg.refresh()
+			dlg.ShowModal()
 		
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
@@ -1240,9 +1234,8 @@ class MainWin( wx.Frame ):
 		if Model.race.isRunning():
 			Utils.MessageOK( self, _('Cannot perform RFID setup while race is running.'), _('Cannot Perform RFID Setup'), iconMask=wx.ICON_ERROR )
 			return
-		dlg = JChipSetup.JChipSetupDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with JChipSetup.JChipSetupDialog(self) as dlg:
+			dlg.ShowModal()
 
 	def menuJChipImport( self, event ):
 		correct, reason = JChipSetup.CheckExcelLink()
@@ -1255,9 +1248,8 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = JChipImport.JChipImportDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with JChipImport.JChipImportDialog(self) as dlg:
+			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
 	def menuAlienImport( self, event ):
@@ -1271,9 +1263,8 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = AlienImport.AlienImportDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with AlienImport.AlienImportDialog(self) as dlg:
+			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
 	def menuIpicoImport( self, event ):
@@ -1287,9 +1278,8 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = IpicoImport.IpicoImportDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with IpicoImport.IpicoImportDialog(self) as dlg:
+			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
 	def menuImpinjImport( self, event ):
@@ -1303,9 +1293,8 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = ImpinjImport.ImpinjImportDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with ImpinjImport.ImpinjImportDialog(self) as dlg:
+			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
 	def menuOrionImport( self, event ):
@@ -1319,9 +1308,8 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = OrionImport.OrionImportDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with OrionImport.OrionImportDialog(self) as dlg:
+			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
 	def menuRaceResultImport( self, event ):
@@ -1335,9 +1323,8 @@ class MainWin( wx.Frame ):
 									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
 			return
 			
-		dlg = RaceResultImport.RaceResultImportDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with RaceResultImport.RaceResultImportDialog(self) as dlg:
+			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
 	def menuShowPage( self, event ):
@@ -1356,19 +1343,19 @@ class MainWin( wx.Frame ):
 			email = Model.race.email
 		else:
 			email = self.config.Read( 'email', 'results_name@results_address' )
-		dlg = wx.TextEntryDialog( self, message=_('Results Contact Email'), caption=_('Results Contact Email'), value=email )
-		result = dlg.ShowModal()
-		if result == wx.ID_OK:
+		with wx.TextEntryDialog( self, message=_('Results Contact Email'), caption=_('Results Contact Email'), value=email ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			value = dlg.GetValue()
 			if Model.race:
 				Model.race.email = value
 				Model.race.setChanged()
-		dlg.Destroy()
 	
 	def menuSetGraphic( self, event ):
 		imgPath = self.getGraphicFName()
-		dlg = SetGraphicDialog( self, graphic = imgPath )
-		if dlg.ShowModal() == wx.ID_OK:
+		with SetGraphicDialog( self, graphic = imgPath ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			imgPath = dlg.GetValue()
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
@@ -1377,24 +1364,23 @@ class MainWin( wx.Frame ):
 					Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
 				except Exception as e:
 					pass
-		dlg.Destroy()
 	
 	def menuSetDefaultContactEmail( self, event = None ):
 		email = self.config.Read( 'email', 'my_name@my_address' )
-		dlg = wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output - New Races'), value=email )
-		result = dlg.ShowModal()
-		if result == wx.ID_OK:
+		with wx.TextEntryDialog( self, message=_('Default Contact Email:'), caption=_('Default Contact Email for HTML output - New Races'), value=email ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			value = dlg.GetValue()
 			self.config.Write( 'email', value )
 			self.config.Flush()
 			if Model.race:
 				Model.race.email = email
-		dlg.Destroy()
 
 	def menuSetDefaultGraphic( self, event ):
 		imgPath = self.getGraphicFName()
-		dlg = SetGraphicDialog( self, graphic = imgPath )
-		if dlg.ShowModal() == wx.ID_OK:
+		with SetGraphicDialog( self, graphic = imgPath ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			imgPath = dlg.GetValue()
 			self.config.Write( 'graphic', imgPath )
 			self.config.Flush()
@@ -1403,7 +1389,6 @@ class MainWin( wx.Frame ):
 					Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
 				except Exception as e:
 					pass
-		dlg.Destroy()
 	
 	#--------------------------------------------------------------------------------------------
 	
@@ -1492,14 +1477,13 @@ class MainWin( wx.Frame ):
 	
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		dlg = wx.PageSetupDialog(self, psdd)
-		dlg.ShowModal()
+		with wx.PageSetupDialog(self, psdd) as dlg:
+			dlg.ShowModal()
 
-		# this makes a copy of the wx.PrintData instead of just saving
-		# a reference to the one inside the PrintDialogData that will
-		# be destroyed when the dialog is destroyed
-		self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
-		dlg.Destroy()
+			# this makes a copy of the wx.PrintData instead of just saving
+			# a reference to the one inside the PrintDialogData that will
+			# be destroyed when the dialog is destroyed
+			self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
 
 	PrintCategoriesDialogSize = (450, 400)
 	def menuPrintPreview( self, event ):
@@ -1507,17 +1491,17 @@ class MainWin( wx.Frame ):
 			return
 		self.commit()
 	
-		cpcd = ChoosePrintCategoriesDialog( self )
-		x, y = self.GetPosition().Get()
-		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
-		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
-		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( self.PrintCategoriesDialogSize )
-		result = cpcd.ShowModal()
-		categories = cpcd.categories
-		cpcd.Destroy()
-		if not categories or result != wx.ID_OK:
-			return
+		with ChoosePrintCategoriesDialog( self ) as cpcd:
+			x, y = self.GetPosition().Get()
+			x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+			y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+			cpcd.SetPosition( (x, y) )
+			cpcd.SetSize( self.PrintCategoriesDialogSize )
+			if cpcd.ShowModal() != wx.ID_OK:
+				return
+			categories = cpcd.categories
+			if not categories:
+				return
 	
 		data = wx.PrintDialogData(self.printData)
 		printout = CrossMgrPrintout( categories )
@@ -1541,16 +1525,17 @@ class MainWin( wx.Frame ):
 			return
 		self.commit()
 
-		cpcd = ChoosePrintCategoriesDialog( self )
-		x, y = self.GetPosition().Get()
-		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
-		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
-		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( self.PrintCategoriesDialogSize )
-		result = cpcd.ShowModal()
-		categories = cpcd.categories
-		cpcd.Destroy()
-		if not categories or result != wx.ID_OK:
+		with ChoosePrintCategoriesDialog( self ) as cpcd:
+			x, y = self.GetPosition().Get()
+			x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+			y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+			cpcd.SetPosition( (x, y) )
+			cpcd.SetSize( self.PrintCategoriesDialogSize )
+			if cpcd.ShowModal() != wx.ID_OK:
+				return
+			categories = cpcd.categories
+		
+		if not categories:
 			return
 	
 		self.printData.SetFilename( os.path.splitext(self.fileName)[0] + '.pdf' if self.fileName else 'Results.pdf' )
@@ -1584,17 +1569,17 @@ class MainWin( wx.Frame ):
 			return
 		self.commit()
 
-		cpcd = ChoosePrintCategoriesPodiumDialog( self )
-		x, y = self.GetPosition().Get()
-		x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
-		y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
-		cpcd.SetPosition( (x, y) )
-		cpcd.SetSize( self.PrintCategoriesDialogSize )
-		result = cpcd.ShowModal()
-		categories, positions = cpcd.categories, cpcd.positions
-		cpcd.Destroy()
-		if not categories or result != wx.ID_OK:
-			return
+		with ChoosePrintCategoriesPodiumDialog( self ) as cpcd:
+			x, y = self.GetPosition().Get()
+			x += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_X, self)
+			y += wx.SystemSettings.GetMetric(wx.SYS_FRAMESIZE_Y, self)
+			cpcd.SetPosition( (x, y) )
+			cpcd.SetSize( self.PrintCategoriesDialogSize )
+			if cpcd.ShowModal() != wx.ID_OK:
+				return
+			categories, positions = cpcd.categories, cpcd.positions
+			if not categories:
+				return
 	
 		self.printData.SetFilename( self.fileName if self.fileName else '' )
 		pdd = wx.PrintDialogData(self.printData)
@@ -2191,11 +2176,9 @@ class MainWin( wx.Frame ):
 			)
 			return
 	
-		dlg = FtpWriteFile.FtpPublishDialog( self )
-		ret = dlg.ShowModal()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with FtpWriteFile.FtpPublishDialog( self ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 	
 		FtpWriteFile.FtpUploadNow( self )
 	
@@ -2761,20 +2744,17 @@ class MainWin( wx.Frame ):
 		race = None
 		
 		# Configure the next race.
-		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
-		dlg.properties.refresh()
-		dlg.properties.incNext()
-		dlg.properties.setEditable( True )
-		dlg.folder.SetValue(os.path.dirname(self.fileName))
-		dlg.properties.updateFileName()
-		ret = dlg.ShowModal()
-		fileName = dlg.GetPath()
-		categoriesFile = dlg.GetCategoriesFile()
-		properties = dlg.properties
-
-		# Check if user cancelled.
-		if ret != wx.ID_OK:
-			return
+		with PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE ) as dlg:
+			dlg.properties.refresh()
+			dlg.properties.incNext()
+			dlg.properties.setEditable( True )
+			dlg.folder.SetValue(os.path.dirname(self.fileName))
+			dlg.properties.updateFileName()
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			fileName = dlg.GetPath()
+			categoriesFile = dlg.GetCategoriesFile()
+			properties = dlg.properties
 
 		# Check for existing file.
 		if os.path.exists(fileName) and \
@@ -2884,22 +2864,22 @@ class MainWin( wx.Frame ):
 		AutoImportTTStartTimes()
 		
 		# Show the Properties screen for the user to review.
-		dlg = PropertiesDialog(self, title=_("Configure Race"), style=wx.DEFAULT_DIALOG_STYLE )
-		dlg.properties.refresh()
-		dlg.properties.setEditable( True )
-		dlg.folder.SetValue(os.path.dirname(fname))
-		dlg.properties.updateFileName()
-		
-		if not overwriteExisting and os.path.isfile(dlg.GetPath()):
-			Model.race = raceSave
-			self.openRace( dlg.GetPath() )
-			Model.race.excelLink = excelLink
-			return
-		
-		ret = dlg.ShowModal()
-		fileName = dlg.GetPath()
-		categoriesFile = dlg.GetCategoriesFile()
-		properties = dlg.properties
+		with PropertiesDialog(self, title=_("Configure Race"), style=wx.DEFAULT_DIALOG_STYLE ) as dlg:
+			dlg.properties.refresh()
+			dlg.properties.setEditable( True )
+			dlg.folder.SetValue(os.path.dirname(fname))
+			dlg.properties.updateFileName()
+			
+			if not overwriteExisting and os.path.isfile(dlg.GetPath()):
+				Model.race = raceSave
+				self.openRace( dlg.GetPath() )
+				Model.race.excelLink = excelLink
+				return
+			
+			ret = dlg.ShowModal()
+			fileName = dlg.GetPath()
+			categoriesFile = dlg.GetCategoriesFile()
+			properties = dlg.properties
 
 		# Check if user cancelled.
 		if ret != wx.ID_OK:
@@ -2956,13 +2936,15 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuNewRaceDB( self, event ):
 		# Get the RaceDB Excel sheet.
-		dlg = wx.FileDialog( self, message=_("Choose a RaceDB Excel file"),
+		with wx.FileDialog( self, message=_("Choose a RaceDB Excel file"),
 					defaultFile = '',
 					defaultDir = Utils.getFileDir(),
 					wildcard = _('RaceDB Excel files (*.xlsx)|*.xlsx'),
-					style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
-		fname = dlg.GetPath() if dlg.ShowModal() == wx.ID_OK else None
-		dlg.Destroy()
+					style=wx.FD_OPEN | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			fname = dlg.GetPath()
+		
 		if not fname:
 			return
 			
@@ -3206,13 +3188,12 @@ class MainWin( wx.Frame ):
 		
 		fName = os.path.join( simulationDir, race.getFileName() )
 		if userConfirm:
-			dlg = SimulateDialog( self, fName )
-			ret = dlg.ShowModal()
-			rfidResetStartClockOnFirstTag = dlg.rfidResetStartClockOnFirstTag.GetValue()
-			dlg.Destroy()
-			if ret == wx.ID_CANCEL:
-				return
-			isTimeTrial = (ret == SimulateDialog.ID_TIME_TRIAL)
+			with SimulateDialog( self, fName ) as dlg:
+				ret = dlg.ShowModal()
+				if ret == wx.ID_CANCEL:
+					return
+				rfidResetStartClockOnFirstTag = dlg.rfidResetStartClockOnFirstTag.GetValue()
+				isTimeTrial = (ret == SimulateDialog.ID_TIME_TRIAL)
 		else:
 			rfidResetStartClockOnFirstTag = False
 			isTimeTrial = isTimeTrial
@@ -3446,26 +3427,26 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK( self, _("A race must be loaded first."), _("Import Categories"), iconMask=wx.ICON_ERROR)
 			return
 			
-		dlg = wx.FileDialog( self, message=_("Choose Race Categories File"),
+		with wx.FileDialog( self, message=_("Choose Race Categories File"),
 							defaultFile="",
 							defaultDir=Utils.getFileDir(),
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
-							style=wx.FD_OPEN )
-		if dlg.ShowModal() == wx.ID_OK:
-			self.showResultsPage()
+							style=wx.FD_OPEN ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			categoriesFile = dlg.GetPath()
-			try:
-				with io.open(categoriesFile, 'r') as fp, Model.LockRace() as race:
-					race.importCategories( fp )
-			except IOError:
-				Utils.MessageOK( self, '{}:\n\n{}'.format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
-			except (ValueError, IndexError):
-				Utils.MessageOK( self, '{}:\n\n{}'.format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
-			else:
-				self.refresh()
-			self.showPage( self.iCategoriesPage )
-				
-		dlg.Destroy()
+			
+		self.showResultsPage()
+		try:
+			with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
+				race.importCategories( fp )
+		except IOError:
+			Utils.MessageOK( self, '{}:\n\n{}'.format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)
+		except (ValueError, IndexError):
+			Utils.MessageOK( self, '{}:\n\n{}'.format(_('Bad file format'), categoriesFile), _("File Read Error"), iconMask=wx.ICON_ERROR)
+		else:
+			self.refresh()
+		self.showPage( self.iCategoriesPage )
 	
 	@logCall
 	def menuExportCategories( self, event ):
@@ -3475,21 +3456,21 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK( self, _("A race must be loaded first."), _("Export Categories"), iconMask=wx.ICON_ERROR)
 			return
 			
-		dlg = wx.FileDialog( self, message=_("Choose Race Categories File"),
+		with wx.FileDialog( self, message=_("Choose Race Categories File"),
 							defaultFile='',
 							defaultDir=Utils.getFileDir(), 
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
-							style=wx.FD_SAVE )
+							style=wx.FD_SAVE ) as dlg:
 							
-		if dlg.ShowModal() == wx.ID_OK:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			fname = dlg.GetPath()
-			try:
-				with io.open(fname, 'w') as fp, Model.LockRace() as race:
-					race.exportCategories( fp )
-			except IOError:
-				Utils.MessageOK( self, '{}:\n{}'.format(_('Cannot open file'), fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
 				
-		dlg.Destroy()	
+		try:
+			with open(fname, 'w') as fp, Model.LockRace() as race:
+				race.exportCategories( fp )
+		except IOError:
+			Utils.MessageOK( self, '{}:\n{}'.format(_('Cannot open file'), fname), _("File Open Error"), iconMask=wx.ICON_ERROR)
 		
 	@logCall
 	def menuExportHistory( self, event ):

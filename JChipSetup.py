@@ -400,7 +400,6 @@ if __name__ == '__main__':
 	Model.race.finishRaceNow()
 	Model.race.enableUSBCamera = True
 	mainWin.Show()
-	dlg = JChipSetupDialog( mainWin )
-	dlg.ShowModal()
-	dlg.Destroy()
+	with JChipSetupDialog( mainWin ) as dlg:
+		dlg.ShowModal()
 

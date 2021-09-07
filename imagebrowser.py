@@ -588,14 +588,11 @@ class ImageDialog(wx.Dialog):
         self.ResetFiles()
         
     def OnChooseDirectory(self, event):     # set the new directory
-        dlg = wx.DirDialog(self)
-        dlg.SetPath(self.set_dir)
-
-        if dlg.ShowModal() == wx.ID_OK:
-            self.set_dir = dlg.GetPath()
-            self.ResetFiles()
-
-        dlg.Destroy()
+        with wx.DirDialog(self) as dlg:
+            dlg.SetPath(self.set_dir)
+            if dlg.ShowModal() == wx.ID_OK:
+                self.set_dir = dlg.GetPath()
+                self.ResetFiles()
 
     def ResetFiles(self):   # refresh the display with files and initial image
         self.DisplayDir()

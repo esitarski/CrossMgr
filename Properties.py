@@ -367,9 +367,8 @@ class RfidProperties( wx.Panel ):
 		if Model.race.isRunning():
 			Utils.MessageOK( self, _('Cannot perform RFID setup while race is running.'), _('Cannot Perform RFID Setup'), iconMask=wx.ICON_ERROR )
 			return
-		dlg = JChipSetup.JChipSetupDialog( self )
-		dlg.ShowModal()
-		dlg.Destroy()
+		with JChipSetup.JChipSetupDialog(self) as dlg:
+			dlg.ShowModal()
 		self.refresh()
 		
 	def refresh( self ):
@@ -470,15 +469,16 @@ class WebProperties( wx.Panel ):
 		return os.path.join(Utils.getImageFolder(), 'CrossMgrHeader.png'), wx.BITMAP_TYPE_PNG
 		
 	def onSetGraphic( self, event ):
-		dlg = SetGraphicDialog( self, graphic = self.graphicFName )
-		if dlg.ShowModal() == wx.ID_OK:
+		with SetGraphicDialog( self, graphic = self.graphicFName ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return				
 			self.graphicFName = dlg.GetValue().strip() or self.getDefaultGraphicFNameType()[0]
-			self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
-			self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
-			self.setGraphicStats()
-			self.GetSizer().Layout()
-			self.Refresh()
-		dlg.Destroy()
+		
+		self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
+		self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
+		self.setGraphicStats()
+		self.GetSizer().Layout()
+		self.Refresh()
 	
 	def setGraphicStats( self ):
 		bitmap = self.headerImageBitmap.GetBitmap()
@@ -1078,9 +1078,8 @@ def doBatchPublish( iAttr=None, silent=True, cmdline=False ):
 					'{}\n\n{}'.format( _('Ftp is Not Configured'), _('Configure it now?')), 
 					('Ftp is Not Configured')
 				)):
-			dlg = FtpPublishDialog( mainWin )
-			ret = dlg.ShowModal()
-			dlg.Destroy()
+			with FtpPublishDialog( mainWin ) as dlg:
+				ret = dlg.ShowModal()
 		
 		if not silent:
 			class FtpThread( threading.Thread ):
@@ -1680,11 +1679,10 @@ class PropertiesDialog( wx.Dialog ):
 		if not defaultPath:
 			defaultPath = Utils.getDocumentsDir()
 			
-		dlg = wx.DirDialog( self, _("Choose a Folder for the Race"),
-							style=wx.DD_DEFAULT_STYLE, defaultPath=defaultPath )
-		if dlg.ShowModal() == wx.ID_OK:
-			self.folder.SetValue( dlg.GetPath() )
-		dlg.Destroy()		
+		with wx.DirDialog( self, _("Choose a Folder for the Race"),
+							style=wx.DD_DEFAULT_STYLE, defaultPath=defaultPath ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				self.folder.SetValue( dlg.GetPath() )
 	
 	def onBrowseCategories( self, event ):
 		defaultFile = self.categoriesFile.GetValue()
@@ -1697,14 +1695,13 @@ class PropertiesDialog( wx.Dialog ):
 			if not dirName:
 				dirName = self.folder.GetValue()
 		
-		dlg = wx.FileDialog( self, message=_("Choose Race Categories File"),
+		with wx.FileDialog( self, message=_("Choose Race Categories File"),
 							defaultDir=dirName, 
 							defaultFile=fileName,
 							wildcard=_("Bicycle Race Categories (*.brc)|*.brc"),
-							style=wx.FD_OPEN )
-		if dlg.ShowModal() == wx.ID_OK:
-			self.categoriesFile.SetValue( dlg.GetPath() )
-		dlg.Destroy()
+							style=wx.FD_OPEN ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				self.categoriesFile.SetValue( dlg.GetPath() )
 		
 	def GetPath( self ):
 		self.properties.updateFileName()
@@ -1753,28 +1750,26 @@ def SetNewFilename( parent, properties ):
 	return success
 
 def ChangeProperties( parent ):
-	propertiesDialog = PropertiesDialog( parent, showFileFields=False, updateProperties=True, size=(600,400) )
-	propertiesDialog.properties.setEditable( True )
-	try:
-		if propertiesDialog.ShowModal() != wx.ID_OK:
-			raise NameError('User Cancel')
+	with PropertiesDialog( parent, showFileFields=False, updateProperties=True, size=(600,400) ) as propertiesDialog:
+		propertiesDialog.properties.setEditable( True )
+		try:
+			if propertiesDialog.ShowModal() != wx.ID_OK:
+				raise NameError('User Cancel')
+				
+			if not SetNewFilename( propertiesDialog, propertiesDialog.properties ):
+				raise NameError('User Cancel')
+				
+			mainWin = Utils.getMainWin()
+			dir = os.path.dirname( mainWin.fileName )
 			
-		if not SetNewFilename( propertiesDialog, propertiesDialog.properties ):
-			raise NameError('User Cancel')
-			
-		mainWin = Utils.getMainWin()
-		dir = os.path.dirname( mainWin.fileName )
-		
-		propertiesDialog.properties.refresh()
-		Model.resetCache()
-		mainWin.writeRace()
-		Utils.refresh()
-		wx.CallAfter( Utils.refreshForecastHistory )
-			
-	except (NameError, AttributeError, TypeError):
-		pass
-	
-	propertiesDialog.Destroy()
+			propertiesDialog.properties.refresh()
+			Model.resetCache()
+			mainWin.writeRace()
+			Utils.refresh()
+			wx.CallAfter( Utils.refreshForecastHistory )
+				
+		except (NameError, AttributeError, TypeError):
+			pass
 	
 def ApplyDefaultTemplate( race ):
 	if not race:
@@ -1794,8 +1789,8 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,660))
 	
-	propertiesDialog = PropertiesDialog( mainWin, title=_("Properties Dialog Test"), showFileFields=True, updateProperties=True )
-	propertiesDialog.Show()
+	with PropertiesDialog( mainWin, title=_("Properties Dialog Test"), showFileFields=True, updateProperties=True ) as propertiesDialog:
+		propertiesDialog.Show()
 	
 	properties = Properties( mainWin )
 	properties.setEditable( True )

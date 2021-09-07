@@ -18,8 +18,6 @@ import tempfile
 import threading
 import webbrowser
 from queue import Queue, Empty
-import CamServer
-from roundbutton import RoundButton
 
 from datetime import datetime, timedelta, time
 
@@ -38,6 +36,9 @@ from Clock import Clock
 from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
 from AddExifToJpeg import AddExifToJpeg
+import CamServer
+from PublishPhotoOptions import PublishPhotoOptionsDialog
+from roundbutton import RoundButton
 
 imageWidth, imageHeight = 640, 480
 
@@ -574,7 +575,7 @@ class MainWin( wx.Frame ):
 		mainSizer.Add( headerSizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
-		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2) )
+		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2), photoViewCB=self.photoViewCB )
 		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
 		
 		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
@@ -767,6 +768,18 @@ class MainWin( wx.Frame ):
 		self.bibQuery = self.bib.GetValue()
 		self.refreshTriggers( True )
 		
+	def filterLastBibWave( self, infoList):
+		''' Filter out all photos but the last by bib and wave. '''
+		seen = set()
+		infoListNew = []
+		for info in reversed(infoList):
+			key = (info['bib'], info['wave'])
+			if key not in seen:
+				seen.add( key )
+				infoListNew.append( info )
+		infoListNew.reverse()
+		return infoListNew
+	
 	def onPublishPhotos( self, event ):
 		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
 		if not infoList:
@@ -775,13 +788,19 @@ class MainWin( wx.Frame ):
 					"Nothing to Publish",
 					style=wx.OK ) as dlg:
 				dlg.ShowModal()
-				return		
-		
-		with wx.DirDialog(self, 'Folder to write all Photos') as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
 				return
-			path = dlg.GetPath()
-		
+				
+		if not hasattr(self, 'publishPhotoOptionsPhotoDialog'):
+			self.publishPhotoOptionsPhotoDialog = PublishPhotoOptionsDialog( self, webPublish=False )
+		if self.publishPhotoOptionsPhotoDialog.ShowModal() != wx.ID_OK:
+			return
+		values = self.publishPhotoOptionsPhotoDialog.GetValues()
+		dirname = values['dirname']
+		if not dirname:
+			return
+		if values['lastBibWaveOnly']:
+			infoList = self.filterLastBibWave( infoList )
+			
 		def write_photos( dirname, infoList, dbFName, fps ):
 			for info in infoList:
 				tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
@@ -809,7 +828,7 @@ class MainWin( wx.Frame ):
 		
 		# Write in a thread so we don't slow down the main capture loop.
 		args = (
-			path,
+			dirname,
 			infoList,
 			self.db.fname,
 			self.db.fps,
@@ -824,35 +843,20 @@ class MainWin( wx.Frame ):
 					"Nothing to Publish",
 					style=wx.OK ) as dlg:
 				dlg.ShowModal()
-				return		
-		
-		'''
-			Generate a web page to search and browse the photos.
-			Photos can be written as seperate .jpeg files, or embedded into the html page itself.
-		'''
-		with wx.MessageDialog( self,
-				"This will write multiple photo files and an Html file to navigate the photos.\n"
-				"Make sure you have a seperate folder ready for all the files (create one if necessary).\n"
-				"\n"
-				"Continue?",
-				"Publish Web Page",
-				style=wx.OK|wx.CANCEL ) as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
-				return		
-		
-		with wx.DirDialog(self, 'Folder to write Photos and Web Page') as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
 				return
-			dirname = dlg.GetPath()
+				
+		if not hasattr(self, 'publishPhotoOptionsWebDialog'):
+			self.publishPhotoOptionsWebDialog = PublishPhotoOptionsDialog( self, webPublish=True )
+		if self.publishPhotoOptionsWebDialog.ShowModal() != wx.ID_OK:
+			return
+		values = self.publishPhotoOptionsWebDialog.GetValues()
+		dirname = values['dirname']
+		if not dirname:
+			return
+		singleFile = (values['htmlOption'] == 1)
 		
-		choices = (
-			'Recommended: .html page contains links to photos in seperate .jpeg files (requires uploading the .html and all .jpeg files to your web server)',
-			'Not Recommended: .html page contains embedded photos (everything will be in the single .html file, but the file will be huge and inefficient)',
-		)
-		with wx.SingleChoiceDialog(self, 'Web Page Generation Options:', 'Web Page Generation', choices=choices) as dlg:
-			if dlg.ShowModal() != wx.ID_OK:
-				return
-			singleFile = (dlg.GetSelection() == 1)		
+		if values['lastBibWaveOnly']:
+			infoList = self.filterLastBibWave( infoList )
 			
 		class DateTimeEncoder( json.JSONEncoder ):
 			def default(self, o):
@@ -1215,11 +1219,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.Show()
 	
-	def onRightClick( self, event ):
-		if not self.triggerInfo:
-			return
-		
-		self.xFinish = event.GetX()
+	def showPhotoDialog( self ):
 		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
 			self.doTriggerEdit,
 		)
@@ -1229,7 +1229,17 @@ class MainWin( wx.Frame ):
 		if self.triggerInfo['kmh'] != (self.photoDialog.kmh or 0.0):
 			self.db.updateTriggerKMH( self.triggerInfo['id'], self.photoDialog.kmh or 0.0 )
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
-		self.photoDialog.clear()
+		self.photoDialog.clear()		
+	
+	def onRightClick( self, event ):
+		if self.triggerInfo:
+			self.xFinish = event.GetX()
+			self.showPhotoDialog()
+
+	def photoViewCB( self, x ):
+		if self.triggerInfo:
+			self.xFinish = x
+			self.showPhotoDialog()
 
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
@@ -1557,6 +1567,7 @@ class MainWin( wx.Frame ):
 		return self.fourcc.GetLabel()
 	
 	def onCloseWindow( self, event ):
+		self.writeOptions()
 		self.shutdown()
 		wx.Exit()
 		
@@ -1568,6 +1579,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'FourCC', self.fourcc.GetLabel() )
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
+		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1586,6 +1598,7 @@ class MainWin( wx.Frame ):
 			self.tdCaptureAfter = timedelta(seconds=abs(float(s_after)))
 		except Exception:
 			pass
+		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.25) )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()

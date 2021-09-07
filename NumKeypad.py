@@ -14,70 +14,17 @@ import Utils
 from Utils import SetLabel
 from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult, IsRiderOnCourse
 import Model
-from keybutton import KeyButton
 from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from TimeTrialRecord import TimeTrialRecord
+from BibTimeRecord import BibTimeRecord
 from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
 from SetLaps import SetLaps
-
-# key codes recognized as Enter.
-enterCodes = {
-	wx.WXK_RETURN,
-	wx.WXK_SPACE,
-	wx.WXK_TAB,
-	wx.WXK_NUMPAD_ENTER,
-	wx.WXK_NUMPAD_SPACE,
-	wx.WXK_NUMPAD_TAB,
-	
-	 9,     # \h vertical tab
-	10,		# \r linefeed
-	11,	    # \t horizontal tab
-	12,     # \r formfeed
-	13,		# \n newline
-}
-if sys.platform == 'darwin':
-	enterCodes.add( 370 )		# Mac's numeric keypad enter code (exceeds 255, but whatever).
-
-# backspace, delete, comma, digits
-validKeyCodes = set( [8, 127, 44] + list(range(48, 48+10)) )
-
-# Codes to clear the entry.
-clearCodes = { 0x2327, 27, ord('c'), ord('C') }
-
-# Codes to do actions.
-# / - DNF
-# * - DNS
-# - - PUL
-# + - DQ
-actionCodes = { ord('/'), ord('*'), ord('-'), ord('+') }
+from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
-
-def MakeKeypadButton( parent, id=wx.ID_ANY, label='', style = 0, size=(-1,-1), font = None ):
-	label = label.replace('&','')
-	btn = KeyButton( parent, label=label, style=style|wx.NO_BORDER, size=size )
-	if font:
-		btn.SetFont( font )
-	return btn
-
-def getRiderNumsFromText( txt ):
-	nums = []
-	mask = Model.race.getCategoryMask() if Model.race else None
-	for num in txt.split( ',' ):
-		if not num:
-			continue
-		if mask:	# Add common prefix numbers to the entry.
-			s = num
-			dLen = len(mask) - len(s)
-			if dLen > 0:
-				sAdjust = mask[:dLen] + s
-				sAdjust = sAdjust.replace( '.', '0' )
-				num = sAdjust
-		nums.append( int(num) )
-	return nums
 
 class Keypad( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
@@ -104,7 +51,7 @@ class Keypad( wx.Panel ):
 		
 		editWidth = 140
 		self.numEdit = wx.TextCtrl( self, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER,
-							size=(editWidth, fontPixels*1.2) if 'WXMAC' in wx.Platform else (editWidth,-1) )
+							size=(editWidth, int(fontPixels*1.2)) if 'WXMAC' in wx.Platform else (editWidth,-1) )
 		self.numEdit.Bind( wx.EVT_CHAR, self.handleNumKeypress )
 		self.numEdit.SetFont( font )
 		
@@ -291,9 +238,12 @@ class NumKeypad( wx.Panel ):
 		
 		self.keypad = Keypad( self.notebook, self )
 		self.timeTrialRecord = TimeTrialRecord( self.notebook, self )
+		self.bibTimeRecord = BibTimeRecord( self.notebook, self )
 		
 		self.notebook.AddPage( self.keypad, _("Bib"), select=True )
 		self.notebook.AddPage( self.timeTrialRecord, _("TimeTrial") )
+		self.notebook.AddPage( self.bibTimeRecord, _("BibTime") )
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanged )
 		horizontalMainSizer.Add( self.notebook, 0, flag=wx.TOP|wx.LEFT|wx.EXPAND, border = 4 )
 		
 		self.horizontalMainSizer = horizontalMainSizer
@@ -427,7 +377,7 @@ class NumKeypad( wx.Panel ):
 		self.firstTimeDraw = True
 		
 		self.refreshRaceTime()
-		
+
 	def doLeftClickHUD( self, iWave ):
 		race = Model.race
 		if not race:
@@ -437,9 +387,8 @@ class NumKeypad( wx.Panel ):
 		except IndexError:
 			return
 			
-		setLaps = SetLaps( self, category=category )
-		setLaps.ShowModal()
-		setLaps.Destroy()
+		with SetLaps( self, category=category ) as setLaps:
+			setLaps.ShowModal()
 	
 	def doClockUpdate( self ):
 		mainWin = Utils.getMainWin()
@@ -451,12 +400,19 @@ class NumKeypad( wx.Panel ):
 	def isTimeTrialInputMode( self ):
 		return self.notebook.GetSelection() == 1
 	
+	def isBibTimeInputMode( self ):
+		return self.notebook.GetSelection() == 2
+	
 	def setTimeTrialInput( self, isTimeTrial=True ):
 		page = 1 if isTimeTrial else 0
 		if self.notebook.GetSelection() != page:
 			self.notebook.SetSelection( page )
 			self.timeTrialRecord.refresh()
 		
+	def onPageChanged( self, event ):
+		if self.isBibTimeInputMode():
+			self.bibTimeRecord.refresh()
+
 	def swapKeypadTimeTrialRecord( self ):
 		self.notebook.SetSelection( 1 - self.notebook.GetSelection() )
 	
@@ -792,8 +748,11 @@ class NumKeypad( wx.Panel ):
 		enable = bool(race and race.isRunning())
 		if self.isEnabled != enable:
 			self.isEnabled = enable
-		if not enable and self.isKeypadInputMode():
-			self.keypad.numEdit.SetValue( '' )
+		if not enable:
+			if self.isKeypadInputMode():
+				self.keypad.numEdit.SetValue( '' )
+		if self.isBibTimeInputMode():
+			self.bibTimeRecord.refresh()
 			
 		self.photoCount.Show( bool(race and race.enableUSBCamera) )
 		self.photoButton.Show( bool(race and race.enableUSBCamera) )
@@ -818,6 +777,8 @@ class NumKeypad( wx.Panel ):
 		
 		if self.isKeypadInputMode():
 			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
+		elif self.isBibTimeInputMode():
+			wx.CallLater( 100, self.bibTimeRecord.numEdit.SetFocus )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()

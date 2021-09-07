@@ -8,7 +8,7 @@ import Utils
 from queue import Queue, Empty
 from threading import Thread as Process
 import Impinj
-from Impinj import ImpinjServer
+from Impinj import ImpinjServer, ResetAntennaConnectionsCheck
 from Impinj2JChip import CrossMgrServer
 from pyllrp.AutoDetect import AutoDetect
 import QuadReg
@@ -19,6 +19,7 @@ import wx
 import wx.lib.masked			as masked
 import wx.lib.intctrl			as intctrl
 import wx.adv
+import wx.lib.agw.hyperlink as hl
 import sys
 import os
 import io
@@ -404,28 +405,45 @@ class MainWin( wx.Frame ):
 		
 		iRow += 1
 		
-		gs = wx.GridSizer( rows=0, cols=4, vgap=0, hgap=2 )
+		gs = wx.FlexGridSizer( rows=0, cols=5, vgap=0, hgap=2 )
 		self.antennaLabels = []
 		self.antennas = []
+		self.antennaConnected = []
+
+		gs.Add( wx.StaticText(self, label=''), flag=wx.EXPAND )
 		for i in range(4):
-			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTER) )
-			gs.Add( self.antennaLabels[-1], wx.EXPAND )
+			self.antennaLabels.append( wx.StaticText(self, label='{}'.format(i+1), style=wx.ALIGN_CENTRE) )
+			gs.Add( self.antennaLabels[-1], flag=wx.EXPAND )
+
+		gs.Add( wx.StaticText(self, label='Antenna Ports:'), flag=wx.ALIGN_RIGHT )
 		for i in range(4):
-			cb = wx.CheckBox( self, wx.ID_ANY, '')
+			cb = wx.CheckBox( self, label='')
 			if i < 2:
 				cb.SetValue( True )
 			cb.Bind( wx.EVT_CHECKBOX, lambda x: self.getAntennaStr() )
 			gs.Add( cb, flag=wx.ALIGN_CENTER )
 			self.antennas.append( cb )
+
+		self.antennaConnectedChar = '\u2795'
+		self.antennaUnconnectedChar = '\u274C'
+		self.antennaInactiveChar = ' '
+		self.connected = hl.HyperLinkCtrl( self, label='Connected:', style=wx.ALIGN_RIGHT )
+		self.connected.AutoBrowse( False )
+		self.connected.EnableRollover( True )
+		self.connected.SetToolTip( wx.ToolTip("Check Antenna Connections") )
+		self.connected.Bind( hl.EVT_HYPERLINK_LEFT, self.doUpdateAntennaConnection )
+		gs.Add( self.connected, flag=wx.EXPAND )
+		for i in range(4):
+			self.antennaConnected.append( wx.StaticText(self, label=self.antennaInactiveChar, style=wx.ALIGN_CENTRE) )
+			gs.Add( self.antennaConnected[-1], flag=wx.EXPAND )
 		
 		hb = wx.BoxSizer()
 		hb.Add( gs )
 		self.methodName = wx.StaticText( self )
 		self.refreshMethodName()
-		hb.Add( self.methodName, flag=wx.ALIGN_BOTTOM|wx.LEFT, border=8 )
+		hb.Add( self.methodName, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=20 )
 				
-		gbs.Add( wx.StaticText(self, label='ANT Ports:'), pos=(iRow,0), span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_BOTTOM )
-		gbs.Add( hb, pos=(iRow,1), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
+		gbs.Add( hb, pos=(iRow,0), span=(1,2), flag=wx.ALIGN_CENTER_VERTICAL )
 		
 		iRow += 1
 		
@@ -564,7 +582,11 @@ class MainWin( wx.Frame ):
 		# As this is called from another thread, make sure all UI updates are done from CallAfter.
 		connectedAntennas = set(kwargs.get( 'connectedAntennas', [] ))
 		for i in range(4):
-			wx.CallAfter( self.antennaLabels[i].SetBackgroundColour, self.LightGreen if (i+1) in connectedAntennas else wx.NullColour  )
+			if self.antennas[i].GetValue():
+				c = self.antennaConnectedChar if (i+1) in connectedAntennas else self.antennaUnconnectedChar
+			else:
+				c = self.antennaInactiveChar
+			wx.CallAfter( self.antennaConnected[i].SetLabel, c )
 
 	def refreshMethodName( self ):
 		if Impinj.ProcessingMethod == 0 and QuadReg.samplesTotal:
@@ -652,6 +674,9 @@ class MainWin( wx.Frame ):
 		self.dataQ = None
 		self.strayQ = None
 		self.shutdownQ = None
+	
+	def doUpdateAntennaConnection( self, event ):
+		ResetAntennaConnectionsCheck()
 	
 	def doReset( self, event, confirm = True ):
 		if confirm:

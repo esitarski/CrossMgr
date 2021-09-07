@@ -44,6 +44,7 @@ class FinishStrip( wx.Panel ):
 		self.mouseWheelCallback = mouseWheelCallback or (lambda event: None)
 		self.scrollCallback = scrollCallback or (lambda position: None)
 		self.drawingIsSafe = False	# True when it is safe to save the current window's background.
+		self.xZoom = None
 		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
@@ -245,7 +246,9 @@ class FinishStrip( wx.Panel ):
 	
 	def drawZoomPhoto( self, x, y ):
 		if not self.drawingIsSafe or not self.jpgWidth:
+			self.xZoom = None
 			return
+		self.xZoom = x
 			
 		dc = wx.ClientDC( self )
 		winWidth, winHeight = self.GetClientSize()
@@ -361,14 +364,19 @@ class FinishStrip( wx.Panel ):
 		self.SetCursor( wx.NullCursor )
 		event.Skip()
 		
-	def doZoom( self, dir, event=None ):
+	def doZoom( self, dir=None, event=None, magnification=None ):
+		assert dir is not None or magnification is not None
+
 		self.restoreBm()
 		magnificationSave = self.magnification
-		magFactor = 0.90
-		if dir < 0:
-			self.magnification /= magFactor
+		if magnification is not None:
+			self.magnification = magnification
 		else:
-			self.magnification *= magFactor
+			magFactor = 0.90
+			if dir < 0:
+				self.magnification /= magFactor
+			else:
+				self.magnification *= magFactor
 		
 		self.magnification = min( 10.0, max(0.10, self.magnification) )
 		if self.magnification != magnificationSave:
@@ -376,9 +384,9 @@ class FinishStrip( wx.Panel ):
 				x, y = event.GetX(), event.GetY()
 			else:
 				x, y = self.GetClientSize()[0]-4, 4
-			for i in range(50):
+			for i in range(0,50,10):
 				wx.CallLater( i*5, self.drawZoomPhoto, x, y )
-		
+	
 	def OnMouseWheel( self, event ):
 		if event.ControlDown() and not event.ShiftDown():
 			self.doZoom( -event.GetWheelRotation(), event )
@@ -466,11 +474,18 @@ class FinishStrip( wx.Panel ):
 		
 	def GetBitmap( self ):
 		return self.compositeBitmap if self.compositeBitmap else None
+		
+	def GetZoomMagnification( self ):
+		return self.magnification
+		
+	def SetZoomMagnification( self, magnification ):
+		self.doZoom( 0, magnification=magnification )
 
 class FinishStripPanel( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0 ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, fps=25.0, photoViewCB=None ):
 		super().__init__( parent, id, size=size, style=style )
 		
+		self.photoViewCB = photoViewCB
 		self.fps = fps
 		self.info = {}
 		
@@ -510,9 +525,13 @@ class FinishStripPanel( wx.Panel ):
 		self.direction.SetSelection( 1 if self.leftToRight else 0 )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
-		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
+		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
 		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
+		
+		self.photoView = wx.BitmapButton( self, bitmap=Utils.getBitmap('outline_photo_library_black_24dp.png') )
+		self.photoView.SetToolTip( wx.ToolTip('Photo View') )
+		self.photoView.Bind( wx.EVT_BUTTON, self.onPhotoView )
 		
 		self.copyToClipboard = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		self.copyToClipboard.SetToolTip( wx.ToolTip('Copy Finish Strip to Clipboard') )
@@ -527,6 +546,7 @@ class FinishStripPanel( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.direction, flag=wx.ALIGN_CENTRE_VERTICAL )
 		hs.Add( self.recenter, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=16 )
+		hs.Add( self.photoView, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		hs.Add( self.copyToClipboard, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
 		hs.Add( wx.StaticText(self, label='\n'.join([
 					'Pan: Click and Drag',
@@ -666,6 +686,17 @@ class FinishStripPanel( wx.Panel ):
 		
 	def onRecenter( self, event ):
 		self.finish.SetT( None )
+		
+	def onPhotoView( self, event ):
+		if self.photoViewCB:
+			self.photoViewCB( self.finish.xZoom or 0 )
+		
+	def GetZoomMagnification( self ):
+		return self.finish.GetZoomMagnification()
+		
+	def SetZoomMagnification( self, magnification ):
+		self.finish.SetZoomMagnification( magnification )
+
 
 class FinishStripDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
