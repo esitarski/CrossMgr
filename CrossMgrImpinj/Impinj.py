@@ -49,6 +49,14 @@ ProcessingMethod = ProcessingMethodDefault
 AntennaChoice    = AntennaChoiceDefault
 RemoveOutliers   = RemoveOutliersDefault
 
+tAntennaConnectedLast = getTimeNow() - datetime.timedelta( days=200 )
+tAntennaConnectedLastLock = threading.Lock()
+
+def ResetAntennaConnectionsCheck():
+	global tAntennaConnectedLast, tAntennaConnectedLastLock
+	with tAntennaConnectedLastLock:
+		tAntennaConnectedLast -= datetime.timedelta( days=200 )
+
 #------------------------------------------------------
 
 ImpinjDebug = False
@@ -426,13 +434,15 @@ class Impinj:
 			time.sleep( 0.1 )
 	
 	def runServer( self ):
+		global tAntennaConnectedLast, tAntennaConnectedLastLock
+		
 		self.messageQ.put( ('BackupFile', self.fname) )
 		
 		self.messageQ.put( ('Impinj', '*****************************************' ) )
 		self.messageQ.put( ('Impinj', 'Reader Server Started: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
 			
 		# Create an old default time for last tag read.
-		tOld = getTimeNow() - datetime.timedelta( days = 100 )
+		tOld = getTimeNow() - datetime.timedelta( days = 200 )
 		utcfromtimestamp = datetime.datetime.utcfromtimestamp
 		
 		while self.checkKeepGoing():
@@ -506,7 +516,8 @@ class Impinj:
 				if (t - tAntennaConnectedLast).total_seconds() >= 10:
 					try:
 						GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties).send( self.readerSocket )
-						tAntennaConnectedLast = t
+						with tAntennaConnectedLastLock:
+							tAntennaConnectedLast = t
 					except Exception as e:
 						self.messageQ.put( ('Impinj', 'GET_READER_CONFIG send fails: {}'.format(e)) )
 						self.readerSocket.close()
@@ -654,6 +665,8 @@ class Impinj:
 			except Empty:
 				break
 
+impinj = None
 def ImpinjServer( dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB=None ):
+	global impinj
 	impinj = Impinj(dataQ, messageQ, strayQ, shutdownQ, impinjHost, impinjPort, antennaStr, statusCB)
 	impinj.runServer()

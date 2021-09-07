@@ -8,7 +8,7 @@ import Utils
 from queue import Queue, Empty
 from threading import Thread as Process
 import Impinj
-from Impinj import ImpinjServer
+from Impinj import ImpinjServer, ResetAntennaConnectionsCheck
 from Impinj2JChip import CrossMgrServer
 from pyllrp.AutoDetect import AutoDetect
 import QuadReg
@@ -19,6 +19,7 @@ import wx
 import wx.lib.masked			as masked
 import wx.lib.intctrl			as intctrl
 import wx.adv
+import wx.lib.agw.hyperlink as hl
 import sys
 import os
 import io
@@ -426,7 +427,12 @@ class MainWin( wx.Frame ):
 		self.antennaConnectedChar = '\u2795'
 		self.antennaUnconnectedChar = '\u274C'
 		self.antennaInactiveChar = ' '
-		gs.Add( wx.StaticText(self, label='Connected:', style=wx.ALIGN_RIGHT), flag=wx.EXPAND )
+		self.connected = hl.HyperLinkCtrl( self, label='Connected:', style=wx.ALIGN_RIGHT )
+		self.connected.AutoBrowse( False )
+		self.connected.EnableRollover( True )
+		self.connected.SetToolTip( wx.ToolTip("Update Antenna Connection Status") )
+		self.connected.Bind( hl.EVT_HYPERLINK_LEFT, self.doUpdateAntennaConnection )
+		gs.Add( self.connected, flag=wx.EXPAND )
 		for i in range(4):
 			self.antennaConnected.append( wx.StaticText(self, label=self.antennaInactiveChar, style=wx.ALIGN_CENTRE) )
 			gs.Add( self.antennaConnected[-1], flag=wx.EXPAND )
@@ -668,6 +674,9 @@ class MainWin( wx.Frame ):
 		self.dataQ = None
 		self.strayQ = None
 		self.shutdownQ = None
+	
+	def doUpdateAntennaConnection( self, event ):
+		ResetAntennaConnectionsCheck()
 	
 	def doReset( self, event, confirm = True ):
 		if confirm:
