@@ -208,13 +208,11 @@ class Results( wx.Panel ):
 		bs.SetSizeHints(self)
 	
 	def onScroll(self, evt): 
-		grid = evt.GetEventObject()
-		orientation = evt.GetOrientation()
-		if orientation == wx.SB_VERTICAL:
-			if grid == self.lapGrid:
-				wx.CallAfter( lambda: Utils.AlignVerticalScroll(self.lapGrid, self.labelGrid) ) 
+		if evt.GetOrientation() == wx.SB_VERTICAL:
+			if evt.GetEventObject() == self.lapGrid:
+				wx.CallAfter( Utils.AlignVerticalScroll, self.lapGrid, self.labelGrid ) 
 			else:
-				wx.CallAfter( lambda: Utils.AlignVerticalScroll(self.labelGrid, self.lapGrid) )
+				wx.CallAfter( Utils.AlignVerticalScroll, self.labelGrid, self.lapGrid )
 		evt.Skip() 
 	
 	def onMouseOver( self, event ):
@@ -271,6 +269,8 @@ class Results( wx.Panel ):
 			self.refresh()
 			if Utils.isMainWin():
 				Utils.getMainWin().setNumSelect( n )
+				
+			self.ensureVisibleNumSelect()
 
 	def onZoomOut( self, event ):
 		self.labelGrid.Zoom( False )
@@ -447,7 +447,24 @@ class Results( wx.Panel ):
 			return
 		mainWin.photoDialog.Show( True )
 		mainWin.photoDialog.setNumSelect( int(self.numSelect) )
-		
+	
+	def ensureVisibleNumSelect( self ):
+		try:
+			numSelectSearch = int(self.numSelect)
+		except (TypeError, ValueError):
+			return
+			
+		for r in range(self.labelGrid.GetNumberRows()-1, -1, -1):
+			try:
+				cellNum = int(self.labelGrid.GetCellValue(r,1))
+			except Exception:
+				continue
+			
+			if cellNum == numSelectSearch:
+				self.labelGrid.MakeCellVisible( r, 1 )
+				wx.CallAfter( Utils.AlignVerticalScroll, self.labelGrid, self.lapGrid )
+				break
+	
 	def showNumSelect( self ):
 		race = Model.race
 		if race is None:
@@ -459,8 +476,8 @@ class Results( wx.Panel ):
 			numSelectSearch = None
 		
 		textColourLap = {}
-		backgroundColourLap = dict( ((rc, self.yellowColour) for rc in self.rcInterp) )
-		backgroundColourLap.update( dict( ((rc, self.orangeColour) for rc in self.rcNumTime) ) )
+		backgroundColourLap = { rc:self.yellowColour for rc in self.rcInterp }
+		backgroundColourLap.update( { rc:self.orangeColour for rc in self.rcNumTime } )
 		if self.fastestLapRC is not None:
 			backgroundColourLap[self.fastestLapRC] = self.greenColour
 		
@@ -473,7 +490,7 @@ class Results( wx.Panel ):
 				timeCol = c
 				break
 		
-		for r in range(self.lapGrid.GetNumberRows()):		
+		for r in range(self.lapGrid.GetNumberRows()):
 			try:
 				cellNum = int(self.labelGrid.GetCellValue(r,1))
 			except Exception:

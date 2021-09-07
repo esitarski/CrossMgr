@@ -73,7 +73,7 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		# Adjust all rider times to account for the new start time.
 		if race.isTimeTrial:
 			for rider in race.riders.values():
-				# Don't change the start times relative to the old race start.
+				# Don't change the start times as they are relative to the old race start.
 				# Increase all the recorded times (if an earlier start), otherwise decrease all the recorded times (if a later start).
 				rider.times[:] = [max(0.0, v - dTime) for v in rider.times]
 		else:
@@ -87,8 +87,9 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			race.numTimeInfo.adjustAllTimes( -dTime )
 			
 		# Fix unmatched tags too.
-		for times in race.unmatchedTags.values():
-			times[:] = [max(0.0, v - dTime) for v in times]
+		if race.unmatchedTags:
+			for times in race.unmatchedTags.values():
+				times[:] = [max(0.0, v - dTime) for v in times]
 		
 		race.startTime = startTimeNew
 		race.setChanged()

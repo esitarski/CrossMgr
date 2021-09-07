@@ -140,6 +140,8 @@ class History( wx.Panel ):
 			if Utils.isMainWin():
 				Utils.getMainWin().setNumSelect( n )
 
+			self.ensureVisibleNumSelect()
+
 	def onZoomOut( self, event ):
 		self.grid.Zoom( False )
 			
@@ -346,6 +348,16 @@ class History( wx.Panel ):
 			except StopIteration:
 				pass
 		
+	def ensureVisibleNumSelect( self ):
+		if not self.numSelect:
+			return
+			
+		for c in range(self.grid.GetNumberCols()-1, -1, -1):
+			for r in range(self.grid.GetNumberRows()-1, -1, -1):
+				if self.getCellNum(r,c) == self.numSelect:
+					self.grid.MakeCellVisible( r, c )
+					return
+	
 	def showNumSelect( self ):
 		self.updateColours()
 		self.grid.Set( textColour = self.textColour, backgroundColour = self.backgroundColour )

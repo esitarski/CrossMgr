@@ -733,8 +733,7 @@ class RiderDetail( wx.Panel ):
 		except ValueError:
 			return
 			
-		with Model.LockRace() as race:
-			inRace = (newNum in race.riders)
+		inRace = (newNum in race.riders)
 		if inRace:
 			Utils.MessageOK(
 				self,
