@@ -430,7 +430,7 @@ class MainWin( wx.Frame ):
 		self.connected = hl.HyperLinkCtrl( self, label='Connected:', style=wx.ALIGN_RIGHT )
 		self.connected.AutoBrowse( False )
 		self.connected.EnableRollover( True )
-		self.connected.SetToolTip( wx.ToolTip("Update Antenna Connection Status") )
+		self.connected.SetToolTip( wx.ToolTip("Check Antenna Connections") )
 		self.connected.Bind( hl.EVT_HYPERLINK_LEFT, self.doUpdateAntennaConnection )
 		gs.Add( self.connected, flag=wx.EXPAND )
 		for i in range(4):
