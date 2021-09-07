@@ -514,7 +514,7 @@ class Impinj:
 				# Check on the antenna connection status.
 				#
 				if (t - tAntennaConnectedLast).total_seconds() >= 10:
-					print( 'checking antenna connections...' )
+					# print( 'checking antenna connections...' )
 					try:
 						GET_READER_CONFIG_Message(RequestedData=GetReaderConfigRequestedData.AntennaProperties).send( self.readerSocket )
 						with tAntennaConnectedLastLock:
