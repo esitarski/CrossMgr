@@ -488,7 +488,8 @@ class Impinj:
 			self.tagGroup = TagGroup()
 			self.handleTagGroup()
 				
-			tUpdateLast = tKeepaliveLast = tAntennaConnectedLast = getTimeNow()
+			tUpdateLast = tKeepaliveLast = getTimeNow()
+			tAntennaConnectedLast = tUpdateLast - datetime.timedelta( days=1 )	# Force the antenna status to be updated at start.
 			self.tagCount = 0
 			lastDiscoveryTime = None
 			while self.checkKeepGoing():
@@ -565,7 +566,7 @@ class Impinj:
 				if isinstance(response, GET_READER_CONFIG_RESPONSE_Message):
 					self.connectedAntennas = sorted( p.AntennaID for p in response.Parameters
 						if isinstance(p, AntennaProperties_Parameter) and p.AntennaConnected and p.AntennaID <= 4 )
-					self.messageQ.put( ('Impinj', 'Connected antennas: {}'.format(','.join(str(a) for a in self.connectedAntennas)) ) )
+					# self.messageQ.put( ('Impinj', 'Connected antennas: {}'.format(','.join(str(a) for a in self.connectedAntennas)) ) )
 					self.statusCB(
 						connectedAntennas = self.connectedAntennas,
 						timeCorrection = self.timeCorrection,
