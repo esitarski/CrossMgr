@@ -6,7 +6,10 @@ import bisect
 import Utils
 from PhotoFinish import hasPhoto
 
-def SetScrollbarParameters( sb, thumbSize, rng, pageSize  ):
+def SetScrollbarParameters( sb, thumbSize, rng, pageSize ):
+	thumbSize = int(thumbSize)
+	rng = int(rng)
+	pageSize = int(pageSize)
 	sb.SetScrollbar( min(sb.GetThumbPosition(), rng - thumbSize), thumbSize, rng, pageSize )
 
 def makeColourGradient(frequency1, frequency2, frequency3,
@@ -409,8 +412,8 @@ class GanttChartPanel(wx.Panel):
 			self.horizontalSB.SetPosition( (labelsWidthLeft, height) )
 			self.horizontalSB.SetSize( (xRight - xLeft, self.scrollbarWidth) )
 		
-		fontLegend = wx.Font( (0,barHeight*.75), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		fontNote = wx.Font( (0,barHeight*.8), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontLegend = wx.Font( (0,int(barHeight*.75)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		fontNote = wx.Font( (0,int(barHeight*.8)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
@@ -450,7 +453,7 @@ class GanttChartPanel(wx.Panel):
 					continue
 				if x > xRight:
 					return
-				yield x, t
+				yield int(x), t
 
 		def overlaps( d ):
 			wSpace = dc.GetTextExtent(' ')[0] * 1.25
@@ -478,7 +481,7 @@ class GanttChartPanel(wx.Panel):
 		for x, t in getXT( self.intervals[iInterval] ):
 			s = getTickLabel( t )
 			w, h = dc.GetTextExtent(s)
-			xText = x - w/2
+			xText = int(x - w/2)
 			dc.DrawText( s, xText, 0 + 4 )
 			dc.DrawText( s, xText, yBottom + 4)
 			dc.DrawLine( x, yBottom+3, x, yTop-3 )
@@ -726,16 +729,16 @@ class GanttChartPanel(wx.Panel):
 			
 			dc.SetBrush( wx.Brush(ntColour) )
 			dc.SetPen( wx.Pen(ntColour,1) )
-			rect = wx.Rect( x - labelWidth/2-2, 0, labelWidth+4, labelHeight )
+			rect = wx.Rect( x - labelWidth//2-2, 0, labelWidth+4, labelHeight )
 			dc.DrawRectangle( rect )
 			if not self.minimizeLabels:
 				rect.SetY( yLast+2 )
 				dc.DrawRectangle( rect )
 
 			dc.SetTextForeground( wx.WHITE )
-			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
+			dc.DrawText( nowTimeStr, x - labelWidth // 2, 0 )
 			if not self.minimizeLabels:
-				dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
+				dc.DrawText( nowTimeStr, x - labelWidth // 2, yLast + 2 )
 		
 		# Store the drawing scale parameters.
 		self.xFactor = xFactor
