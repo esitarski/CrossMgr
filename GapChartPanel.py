@@ -236,7 +236,7 @@ class GapChartPanel(wx.Panel):
 
 		yDelta = yBottom - yTop
 		points = []
-		labelXY = []
+		xytLabel = []
 		for iData, times in enumerate(data):
 			points.clear()
 			iLap = 0
@@ -250,57 +250,53 @@ class GapChartPanel(wx.Panel):
 			dc.SetPen( wx.Pen(self.colours[iData % len(self.colours)], 4) )
 			dc.DrawLines( points )
 			
-			# Record the label and connect it to the gap line.
-			labelXY.append( (labels[iData], *points[-1]) )
+			# Record the gap position, the label position, and the label.
+			xytLabel.append( [*points[-1], points[-1][1], labels[iData]] )
 
-		# Sort by the finish gaps.
-		labelXY.sort( key=operator.itemgetter(2) )
+		# Sort by the finish gaps positions.
+		xytLabel.sort( key=operator.itemgetter(1) )
 		dc.SetPen( greyPen )
 
 		# Construct a list of rectangles for each label so we can check for overlaps.
 		# Default to putting the label next to the corresponding gap.
 		labelLineHeight = int(labelFontSize*1.15)
-		xyRects = [[x, y, wx.Rect(x, y, 10, labelLineHeight), label] for label, x, y in labelXY]
-		del labelXY
 		
 		# Check the labels and reposition to remove overlaps.
-		for p in range(len(xyRects)):
+		for p in range(len(xytLabel)):
 			# Check if two adjacent labels overlap each other.
 			foundConflict = False
-			for b in range(len(xyRects)-1):
-				if xyRects[b][2].Bottom > xyRects[b+1][2].Top:
+			for b in range(len(xytLabel)-1):
+				if xytLabel[b][2] + labelLineHeight > xytLabel[b+1][2]:
 					foundConflict = True
 					
 					# Find the top of the conflict group
 					for a in range(b, 0, -1):
-						if xyRects[a][2].Top > xyRects[a-1][2].Bottom:
+						if xytLabel[a][2] > xytLabel[a-1][2] + labelLineHeight:
 							break
 					else:
 						a = 0
 						
 					# Find the bottom of the conflict group
-					for c in range(b, len(xyRects)-1):
-						if xyRects[c][2].Bottom < xyRects[c+1][2].Top:
+					for c in range(b, len(xytLabel)-1):
+						if xytLabel[c][2] + labelLineHeight < xytLabel[c+1][2]:
 							break
 					else:
-						c = len(xyRects) - 1
+						c = len(xytLabel) - 1
 					
-					xyRectsConflict = xyRects[a:c+1]
-						
 					# Compute the least-squares error for the non-overlapping position for the conflict labels.
-					tCentroid = sum( xyr[1] for xyr in xyRectsConflict ) / len(xyRectsConflict)
-					y = tCentroid - labelLineHeight*(len(xyRectsConflict) - 1) / 2
+					tCentroid = sum( xytLabel[i][1] for i in range(a,c+1) ) / (c-a+1)
+					y = tCentroid - labelLineHeight*(c-a) / 2
 					
 					# Ensure we don't go off the drawing area.
-					if y < yTop:
-						y = yTop
-					elif y + labelLineHeight*(len(xyRectsConflict)-1) > yBottom:
-						y = yBottom - labelLineHeight*(len(xyRectsConflict)-1)
+					if y < labelLineHeight:
+						y = labelLineHeight
+					elif y + labelLineHeight*(c-a) > height - labelLineHeight:
+						y = height - labelLineHeight*(c-a+1)
 
 					# Reposition the labels so they don't overlap.
 					y = int(y)			
-					for xyr in xyRectsConflict:
-						xyr[2].SetY( y )
+					for i in range(a,c+1):
+						xytLabel[i][2] = y
 						y += labelLineHeight
 			
 			if not foundConflict:
@@ -310,11 +306,12 @@ class GapChartPanel(wx.Panel):
 		border2 = border//2
 		border4 = border//4
 		labelFontSize2 = labelFontSize//2
-		for x, y, r, label in xyRects:
-			yText = r.GetY() - labelFontSize2
+		for x, y, t, label in xytLabel:
+			yText = t - labelFontSize2
 			dc.DrawLines( ((x, y), (x + border4, y), (xText - border2, yText + labelFontSize2), (xText - border4, yText + labelFontSize2)) )
 			dc.DrawText( label, xText, yText )
 		
+		# Drawn the dynamic move line.
 		if self.yTop <= self.yMove <= self.yBottom and self.xLeft <= self.xMove <= self.xRight:
 			gap = self.maximumGap * (self.yMove - self.yTop) / (self.yBottom - self.yTop)
 			text = Utils.formatTimeGap( gap )
@@ -324,10 +321,7 @@ class GapChartPanel(wx.Panel):
 			dc.SetBrush( wx.YELLOW_BRUSH )
 			dc.DrawLine( self.xLeft - border2, self.yMove, self.xRight + border2, self.yMove )
 			dc.DrawRoundedRectangle( xText - border4, self.yMove - labelFontSize2 - border4, tWidth + border2, tHeight + border2, border4 )
-			dc.DrawText( text, xText, self.yMove - labelFontSize2 )
-			
-		# Draw outlines around the groups separated by less than a second.
-		
+			dc.DrawText( text, xText, self.yMove - labelFontSize2 )			
 			
 	def OnEraseBackground(self, event):
 		pass
