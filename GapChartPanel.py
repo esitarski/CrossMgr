@@ -8,6 +8,43 @@ import Utils
 from GanttChartPanel import makeColourGradient, makePastelColours, lighterColour
 from GetResults import GetResults
 
+from math import atan2, sin, cos, pi
+def DrawArrowLine( dc, x0, y0, x1, y1, arrowFrom=True, arrowTo=True, arrowLength=16, arrowWidth=8 ):
+	'''
+		Draws a line with arrows in a regular wxPython DC.
+		The line is drawn with the dc's wx.Pen.  The arrows are filled with the current Pen's colour.
+		Edward Sitarski 2021.
+	'''
+	dc.DrawLine( x0, y0, x1, y1 )
+	if x0 == x1 and y0 == y1:
+		return
+	
+	# Set up the dc for drawing the arrows.
+	penSave, brushSave = dc.GetPen(), dc.GetBrush()
+	dc.SetPen( wx.TRANSPARENT_PEN )
+	dc.SetBrush( wx.Brush(penSave.GetColour()) )
+	
+	# Compute the "to" arrow polygon.
+	angle = atan2( y1 - y0, x1 - x0 )
+	toCosAngle, toSinAngle = -cos(angle), -sin(angle)
+	toArrowPoly = [
+		(int(xp*toCosAngle - yp*toSinAngle), int(yp*toCosAngle + xp*toSinAngle)) for xp, yp in (
+			(0,0),
+			(arrowLength, arrowWidth/2),
+			(arrowLength, -arrowWidth/2),
+		)
+	]
+	
+	# Draw the arrows.
+	if arrowTo:
+		dc.DrawPolygon( toArrowPoly, x1, y1 )
+	if arrowFrom:
+		dc.DrawPolygon( [(-x,-y) for x,y in toArrowPoly], x0, y0 )
+	
+	# Restore the dc.
+	dc.SetPen( penSave )
+	dc.SetBrush( brushSave )
+		
 class GapChartPanel(wx.Panel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
@@ -27,6 +64,8 @@ class GapChartPanel(wx.Panel):
 		self.yTop = self.yBottom = 0
 		self.xLeft = self.xRight = 0
 		self.xMove = self.yMove = 0
+		self.xDrag = self.yDrag = 0
+		self.isDrag = False
 		
 		class MoveTimer( wx.Timer ):
 			def __init__( self, cb ):
@@ -45,6 +84,9 @@ class GapChartPanel(wx.Panel):
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
 		self.Bind(wx.EVT_MOTION, self.OnMove)
+		self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+		self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+		self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
 
 	def DoGetBestSize(self):
 		return wx.Size(128, 100)
@@ -115,17 +157,31 @@ class GapChartPanel(wx.Panel):
 		self.Draw(dc)
 
 	def OnSize(self, event):
-		self.xMove = self.yMove = 0
-		if self.moveTimer.IsRunning():
-			self.moveTimer.Stop()
+		self.OnLeave( event )
 		self.Refresh()
 		event.Skip()
 		
+	def OnLeave(self, event):
+		self.xMove = self.yMove = self.xDrag = self.yDrag = 0
+		self.isDrag = False
+		if self.moveTimer.IsRunning():
+			self.moveTimer.Stop()
+		event.Skip()
+		
+	def OnLeftDown( self, event ):
+		self.isDrag = True
+		
+	def OnLeftUp( self, event ):
+		self.isDrag = False
+		self.xDrag = self.yDrag = 0
+		
 	def OnMove( self, event ):
-		self.xMove, self.yMove = event.GetPosition()
-		if self.yTop <= self.yMove <= self.yBottom and self.xLeft <= self.xMove <= self.xRight:
-			if not self.moveTimer.IsRunning():
-				self.moveTimer.StartOnce( 50 )
+		if self.isDrag:
+			self.xDrag, self.yDrag = event.GetPosition()
+		else:
+			self.xMove, self.yMove = event.GetPosition()
+		if not self.moveTimer.IsRunning():
+			self.moveTimer.StartOnce( 50 )
 			
 	intervals = (1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60) + tuple(24*60*60*k for k in range(1,200))
 	def Draw( self, dc ):
@@ -311,7 +367,7 @@ class GapChartPanel(wx.Panel):
 			dc.DrawLines( ((x, y), (x + border4, y), (xText - border2, yText + labelFontSize2), (xText - border4, yText + labelFontSize2)) )
 			dc.DrawText( label, xText, yText )
 		
-		# Drawn the dynamic move line.
+		# Drawn the dynamic move lines.
 		if self.yTop <= self.yMove <= self.yBottom and self.xLeft <= self.xMove <= self.xRight:
 			gap = self.maximumGap * (self.yMove - self.yTop) / (self.yBottom - self.yTop)
 			text = Utils.formatTimeGap( gap )
@@ -321,7 +377,22 @@ class GapChartPanel(wx.Panel):
 			dc.SetBrush( wx.YELLOW_BRUSH )
 			dc.DrawLine( self.xLeft - border2, self.yMove, self.xRight + border2, self.yMove )
 			dc.DrawRoundedRectangle( xText - border4, self.yMove - labelFontSize2 - border4, tWidth + border2, tHeight + border2, border4 )
-			dc.DrawText( text, xText, self.yMove - labelFontSize2 )			
+			dc.DrawText( text, xText, self.yMove - labelFontSize2 )
+			
+			if not (self.yTop <= self.yDrag <= self.yBottom and self.xLeft <= self.xDrag <= self.xRight):
+				return
+				
+			gapDiff = abs( gap - self.maximumGap * (self.yDrag - self.yTop) / (self.yBottom - self.yTop) )
+			text = Utils.formatTimeGap( gapDiff )
+			tWidth, tHeight = dc.GetTextExtent( text )
+			xText = border + scaleTextHeight + border2 + tickTextWidth - tWidth
+			dc.SetBrush( wx.GREEN_BRUSH )
+			dc.DrawLine( self.xLeft - border2, self.yDrag, self.xRight + border2, self.yDrag )
+			dc.DrawRoundedRectangle( xText - border4, self.yDrag - labelFontSize2 - border4, tWidth + border2, tHeight + border2, border4 )
+			dc.DrawText( text, xText, self.yDrag - labelFontSize2 )
+			
+			dc.SetPen( wx.Pen(wx.BLACK, 2) )
+			DrawArrowLine( dc, self.xDrag, self.yMove, self.xDrag, self.yDrag, arrowWidth=12 )
 			
 	def OnEraseBackground(self, event):
 		pass
