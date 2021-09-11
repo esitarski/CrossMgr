@@ -28,7 +28,7 @@ def DrawArrowLine( dc, x0, y0, x1, y1, arrowFrom=True, arrowTo=True, arrowLength
 	angle = atan2( y1 - y0, x1 - x0 )
 	toCosAngle, toSinAngle = -cos(angle), -sin(angle)
 	toArrowPoly = [
-		(int(xp*toCosAngle - yp*toSinAngle), int(yp*toCosAngle + xp*toSinAngle)) for xp, yp in (
+		(int(xp*toCosAngle - yp*toSinAngle + 0.5), int(yp*toCosAngle + xp*toSinAngle + 0.5)) for xp, yp in (
 			(0,0),
 			(arrowLength, arrowWidth/2),
 			(arrowLength, -arrowWidth/2),
