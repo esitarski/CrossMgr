@@ -55,9 +55,9 @@ class GapChartPanel(wx.Panel):
 		self.SetBackgroundColour(wx.WHITE)
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
-		self.data = None
-		self.labels = None
-		self.status = None
+		self.data = []
+		self.labels = []
+		self.interp = []
 		self.maxLaps = 0
 		self.earliestLapTimes = []
 		self.maximumGap = 0.0
@@ -78,7 +78,6 @@ class GapChartPanel(wx.Panel):
 		self.moveTimer = MoveTimer( self.Refresh )
 		
 		self.colours = makeColourGradient(2.4,2.4,2.4,0,2,4,128,127,500)
-		self.lighterColours = [lighterColour(c) for c in self.colours]
 		
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -118,8 +117,7 @@ class GapChartPanel(wx.Panel):
 		* data is a list of lists.  Each a list of race times.
 		* labels are the names of the series.  Optional.
 		"""
-		self.data = None
-		self.labels = None
+		self.data = data or []
 		if data and any( s for s in data ):
 			self.data = data
 			if labels:
@@ -130,6 +128,7 @@ class GapChartPanel(wx.Panel):
 					self.labels = self.labels[:len(self.data)]
 			else:
 				self.labels = [''] * len(data)
+		self.interp = interp or []
 			
 		# Find the first lap times.
 		self.earliestLapTimes = []
@@ -137,12 +136,13 @@ class GapChartPanel(wx.Panel):
 			self.maxLaps = max( len(times) for times in data )
 			self.earliestLapTimes = [min( times[iLap] for times in data if len(times) > iLap ) for iLap in range(self.maxLaps)]
 		
+		self.maxLaps = max( self.maxLaps, 2 )
 		# Add a sentinal to avoid edge cases.
 		self.earliestLapTimes.append( sys.float_info.max )
 		
 		# Find the maximum gap.
 		self.maximumGap = 0.0
-		for times in data:
+		for times in self.data:
 			iLap = 0
 			for t in times:
 				while not (self.earliestLapTimes[iLap] <= t < self.earliestLapTimes[iLap+1]):
@@ -195,6 +195,8 @@ class GapChartPanel(wx.Panel):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
+		lappedText = '(L) '
+		
 		tooSmall = (width < 50 or height < 24)
 		
 		if not self.data or tooSmall:
@@ -220,7 +222,7 @@ class GapChartPanel(wx.Panel):
 		labelFont = wx.Font( (0, labelFontSize), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		
 		dc.SetFont( labelFont )
-		maxLabelWidth = max( dc.GetTextExtent(label)[0] for label in self.labels )
+		maxLabelWidth = max( dc.GetTextExtent(lappedText + label)[0] for label in self.labels )
 		
 		dc.SetFont( scaleFont )
 
@@ -232,21 +234,21 @@ class GapChartPanel(wx.Panel):
 				break
 		
 		tickText = []
-		tickTextWidth = scaleTextHeight = 0
+		tickTextWidth = scaleTextHeight = 1
 		tVertMax = 1
-		for i in range(len(self.intervals)):
+		for i in range(max(2,len(self.intervals))):
 			t = scaleTick * i
 			tVertMax = max( t, tVertMax )
 			tickText.append( Utils.formatTimeGap(t) )
 			tWidth, scaleTextHeight = dc.GetTextExtent( tickText[-1] )
 			tickTextWidth = max( tickTextWidth, tWidth )
-			if t >= self.maximumGap:
+			if i >= 1 and t >= self.maximumGap:
 				break
 		
 		# Width of the drawing field.		
 		self.xLeft = xLeft = border + scaleTextHeight + border//2 + tickTextWidth + border//2
-		self.xRight = xRight = width - border - maxLabelWidth - border//2
-		xMost = xRight - int((xRight - xLeft) / (self.maxLaps))
+		self.xRight = xRight = width - 3*border - maxLabelWidth
+		xMost = xRight - int((xRight - xLeft) / (self.maxLaps-1))
 
 		# Vertical axis label.
 		tWidth, tHeight = dc.GetTextExtent( _('Gap') )
@@ -260,9 +262,9 @@ class GapChartPanel(wx.Panel):
 		for i, text in enumerate(tickText):
 			tWidth, tHeight = dc.GetTextExtent( text )
 			xText = border + scaleTextHeight + border//2 + tickTextWidth - tWidth
-			yText = yTop + i * (yBottom - yTop) // (len(tickText)-1)
+			yText = yTop + i * (yBottom - yTop) // max(1,len(tickText)-1)
 			dc.DrawText( text, xText, yText - labelFontSize//2 )
-			dc.DrawLine( xLeft - 3, yText, xMost, yText )
+			dc.DrawLine( xLeft - 3, yText, xRight, yText )
 		
 		# Horizontal axis label.
 		tWidth, tHeight = dc.GetTextExtent( _('Lap') )
@@ -276,7 +278,7 @@ class GapChartPanel(wx.Panel):
 		for lap in range(self.maxLaps):
 			text = str(lap)
 			tWidth, tHeight = dc.GetTextExtent( text )
-			xText = xLeft + lap * (xRight - xLeft)//self.maxLaps - tWidth//2
+			xText = xLeft + lap * (xRight - xLeft)//(self.maxLaps-1) - tWidth//2
 			dc.DrawLine( xText + tWidth//2, yTop, xText + tWidth//2, yBottom+3 )
 			if xText > xTextRightLast:
 				dc.DrawText( text, xText, yText )
@@ -284,30 +286,58 @@ class GapChartPanel(wx.Panel):
 				xTextRightLast = xText + tWidth + border
 		
 		# Border
-		dc.DrawLines( ((xMost, yTop), (xLeft, yTop), (xLeft, yBottom), (xMost, yBottom)) )
+		dc.DrawLines( ((xRight, yTop), (xLeft, yTop), (xLeft, yBottom), (xRight, yBottom)) )
 		
 		# Draw the gap lines and labels.
 		dc.SetFont( labelFont )
-		xText = xRight + border//2
+		xText = xRight + border*2
 
 		yDelta = yBottom - yTop
 		points = []
+		pointsLapped = []
 		xytLabel = []
-		for iData, times in enumerate(data):
+		for iData, times in enumerate(self.data):
 			points.clear()
+			pointsLapped.clear()
+			wasLapped = False
 			iLap = 0
+			iLapLast = None
 			for t in times:
 				while not (self.earliestLapTimes[iLap] <= t < self.earliestLapTimes[iLap+1]):
 					iLap += 1
+				if iLapLast is not None and iLap != iLapLast + 1:
+					wasLapped = True
+					pointsLapped.append( len(points) )
+				iLapLast = iLap
+					
 				gap = t - self.earliestLapTimes[iLap]
 				y = int(yTop + yDelta * (gap / tVertMax))
-				x = int(xLeft + iLap * (xRight - xLeft) / self.maxLaps)
+				x = int(xLeft + iLap * (xRight - xLeft) / (self.maxLaps-1))
 				points.append( (x, y) )
-			dc.SetPen( wx.Pen(self.colours[iData % len(self.colours)], 4) )
-			dc.DrawLines( points )
+				
+			colour = self.colours[iData % len(self.colours)]
+			lineWidth = 3
+			penSolid = wx.Pen( colour, lineWidth, wx.PENSTYLE_SOLID )
+			penDashed = wx.Pen( colour, lineWidth, wx.PENSTYLE_SHORT_DASH )
+			if len(points) > 1:
+				if not pointsLapped:
+					dc.SetPen( penSolid )
+					dc.DrawLines( points )
+				else:
+					pLast = 0
+					for p in pointsLapped:
+						drawPoints = points[pLast:p]
+						if len(drawPoints) >= 2:
+							dc.SetPen( penSolid )
+							dc.DrawLines( drawPoints )
+						drawPoints = points[p-1:p+1]
+						if len(drawPoints) >= 2:
+							dc.SetPen( penDashed )
+							dc.DrawLines( drawPoints )
+						pLast = p + 1
 			
 			# Record the gap position, the label position, and the label.
-			xytLabel.append( [*points[-1], points[-1][1], labels[iData]] )
+			xytLabel.append( [*points[-1], points[-1][1], (lappedText if wasLapped else '') + self.labels[iData]] )
 
 		# Sort by the finish gaps positions.
 		xytLabel.sort( key=operator.itemgetter(1) )
@@ -383,7 +413,7 @@ class GapChartPanel(wx.Panel):
 				return
 				
 			gapDiff = abs( gap - self.maximumGap * (self.yDrag - self.yTop) / (self.yBottom - self.yTop) )
-			text = Utils.formatTimeGap( gapDiff )
+			text = Utils.formatTimeGap( gapDiff, highPrecision=True )
 			tWidth, tHeight = dc.GetTextExtent( text )
 			xText = border + scaleTextHeight + border2 + tickTextWidth - tWidth
 			dc.SetBrush( wx.GREEN_BRUSH )

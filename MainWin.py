@@ -52,7 +52,8 @@ from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDe
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation
 from Search				import SearchDialog
-from Situation			import Situation
+#from Situation			import Situation
+from GapChart			import GapChart
 from LapCounter			import LapCounter
 from Announcer			import Announcer
 from Primes				import Primes, GetGrid
@@ -680,13 +681,14 @@ class MainWin( wx.Frame ):
 			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'primes',			Primes,				_('Primes') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
-			[ 'situation',		Situation,			_('Situation') ],
+			#[ 'situation',		Situation,			_('Situation') ],
+			[ 'gapChart',		GapChart,			_('GapChart') ],
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 			[ 'announcer',		Announcer,			_('Announcer') ],
 			[ 'histogram',		HistogramPanel,		_('Histogram') ],
 			[ 'teamResults',	TeamResults,		_('Team Results') ],
 		]
-		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'announcer', 'lapCounter', 'teamResults'}
+		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'gapChart', 'announcer', 'lapCounter', 'teamResults'}
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
