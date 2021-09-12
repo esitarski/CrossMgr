@@ -903,8 +903,6 @@ class MainWin( wx.Frame ):
 		self.Bind(JChip.EVT_CHIP_READER, self.handleChipReaderEvent)
 		self.lastPhotoTime = now()
 		
-		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
-		
 	@property
 	def chipReader( self ):
 		return ChipReader.chipReaderCur
@@ -3954,8 +3952,6 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		self.menuItemSyncCategories.Check( bool(race and race.syncCategories) )
 		
 		self.updateRaceClock()
-		if self.photoDialog.IsShown():
-			self.photoDialog.refresh()
 
 	def refreshTTStart( self ):
 		if self.notebook.GetSelection() in (self.iHistoryPage, self.iRecordPage):
@@ -4000,8 +3996,6 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.riderDetail.setNumSelect( num )
 			self.gantt.setNumSelect( num )
 			self.raceAnimation.setNumSelect( num )
-			if self.photoDialog.IsShown():
-				self.photoDialog.setNumSelect( num )
 			self.numSelect = num
 
 	#-------------------------------------------------------------

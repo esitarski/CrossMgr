@@ -50,7 +50,7 @@ class GapChart( wx.Panel ):
 	
 	def refresh( self ):
 		race = Model.race
-		if not race:
+		if not race or race.isUnstarted():
 			self.gapChart.SetData( None )
 			return
 		
@@ -76,9 +76,10 @@ class GapChart( wx.Panel ):
 				except Exception:
 					continue
 			
-			data.append( rr.raceTimes[:lapMax] )
-			labels.append( str(rr.num) )
-			interp.append( rr.interp[:lapMax] )
+			if lapMax:			
+				data.append( rr.raceTimes[:lapMax] )
+				labels.append( str(rr.num) )
+				interp.append( rr.interp[:lapMax] )
 		
 		self.gapChart.SetData( data, labels, interp )
 	

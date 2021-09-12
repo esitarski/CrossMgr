@@ -335,14 +335,14 @@ class GapChartPanel(wx.Panel):
 				iLapLast = iLap
 					
 				gap = t - self.earliestLapTimes[iLap]
-				y = int(yTop + yDelta * (gap / tVertMax))
-				x = int(xLeft + iLap * (xRight - xLeft) / (self.maxLaps-1))
-				points.append( (x, y) )
+				y = yTop + yDelta * (gap / tVertMax)
+				x = xLeft + iLap * (xRight - xLeft) / (self.maxLaps-1)
+				points.append( (int(x+0.5), int(y+0.5)) )
 				
 				if len(points) >= 2:
-					p, q, d = pqd( *points[-2], *points[-1], self.xCur, self.yCur )
+					p, q, d = pqd( *points[-2], x, y, self.xCur, self.yCur )
 					if p is not None and (dClosest is None or d < dClosest):
-						pClosest, qClosest, dClosest, iClosest, pointClosest, gapClosest = p, q, d, iData, points[-1], gap
+						pClosest, qClosest, dClosest, iClosest, pointClosest, gapClosest = p, q, d, iData, (x,y), gap
 				
 			colour = self.colours[(2713*hash(self.labels[iData])) % len(self.colours)]
 			lineWidth = 3
@@ -434,12 +434,12 @@ class GapChartPanel(wx.Panel):
 			# Draw the bib and gap detail.
 			text = '{}: {}'.format(self.labels[iClosest], Utils.formatTimeGap(gapClosest, highPrecision=True) )
 			tWidth, tHeight = dc.GetTextExtent( text )
-			xText = pointClosest[0] + int(tHeight*1.5)
-			yText = pointClosest[1] + int(tHeight*3)
+			xText = int( pointClosest[0] + tHeight*1.5 + 0.5 )
+			yText = int( pointClosest[1] + tHeight*3 + 0.5 )
 			if xText + tWidth + border2 >= width:
 				xText = width - tWidth - border2 - 1
 			dc.SetPen( wx.Pen(wx.BLACK, 2) )
-			DrawArrowLine( dc, *pointClosest, xText-border4, yText, arrowTo=False, arrowFrom=True )
+			DrawArrowLine( dc, int(pointClosest[0]+0.5), int(pointClosest[1]+0.5), xText-border4, yText, arrowTo=False, arrowFrom=True )
 			dc.SetPen( wx.BLACK_PEN )
 			dc.SetBrush( wx.CYAN_BRUSH )
 			dc.DrawRoundedRectangle( xText - border4, yText - tHeight//2 - border4, tWidth + border2, tHeight + border2, border4 )
