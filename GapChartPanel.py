@@ -45,7 +45,17 @@ def DrawArrowLine( dc, x0, y0, x1, y1, arrowFrom=True, arrowTo=True, arrowLength
 	# Restore the dc.
 	dc.SetPen( penSave )
 	dc.SetBrush( brushSave )
-		
+
+def pqd( x0, y0, x1, y1, x, y ):
+	'''
+		Return the closest point on the line of the given point and the distance squared.
+	'''
+	if not min(x0,x1) <= x < max(x0,x1):
+		return None, None, None
+	# Do this by vertical position only.
+	q = y0 + ((x-x0) / (x1-x0)) * (y1-y0)
+	return x, q, abs(q-y)
+
 class GapChartPanel(wx.Panel):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER,
@@ -66,6 +76,7 @@ class GapChartPanel(wx.Panel):
 		self.xLeft = self.xRight = 0
 		self.xMove = self.yMove = 0
 		self.xDrag = self.yDrag = 0
+		self.xCur = self.yCur = 0
 		self.isDrag = False
 		
 		class MoveTimer( wx.Timer ):
@@ -164,6 +175,11 @@ class GapChartPanel(wx.Panel):
 		
 	def OnLeave(self, event):
 		self.xMove = self.yMove = self.xDrag = self.yDrag = 0
+		
+		# Setting xyCur to the lower right means that the detail will follow the last entry automaticaly when the pointer leaves the screen.
+		self.xCur = self.xRight - 2
+		self.yCur = self.yBottom - 2
+		
 		self.isDrag = False
 		if self.moveTimer.IsRunning():
 			self.moveTimer.Stop()
@@ -181,6 +197,7 @@ class GapChartPanel(wx.Panel):
 			self.xDrag, self.yDrag = event.GetPosition()
 		else:
 			self.xMove, self.yMove = event.GetPosition()
+		self.xCur, self.yCur = event.GetPosition()
 		if not self.moveTimer.IsRunning():
 			self.moveTimer.StartOnce( 50 )
 			
@@ -221,6 +238,11 @@ class GapChartPanel(wx.Panel):
 		# Labels
 		labelFontSize = min( scaleFontSize, max(1, int( 1.0/1.15 * (yBottom - yTop) / len(self.labels) )) )
 		labelFont = wx.Font( (0, labelFontSize), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		
+		# Format dimensions
+		border2 = border//2
+		border4 = border//4
+		labelFontSize2 = labelFontSize//2
 		
 		dc.SetFont( labelFont )
 		maxLabelWidth = max( dc.GetTextExtent(lappedText + label)[0] for label in self.labels )
@@ -291,13 +313,13 @@ class GapChartPanel(wx.Panel):
 		
 		# Draw the gap lines and labels.
 		dc.SetFont( labelFont )
-		xText = xRight + border*2
 
 		yDelta = yBottom - yTop
 		points = []
 		pointsLapped = []
 		xytLabel = []
 		lapsDown = defaultdict( int )
+		iClosest = pClosest = qClosest = dClosest = pointClosest = gapClosest = None
 		for iData, times in enumerate(self.data):
 			points.clear()
 			pointsLapped.clear()
@@ -317,11 +339,17 @@ class GapChartPanel(wx.Panel):
 				x = int(xLeft + iLap * (xRight - xLeft) / (self.maxLaps-1))
 				points.append( (x, y) )
 				
+				if len(points) >= 2:
+					p, q, d = pqd( *points[-2], *points[-1], self.xCur, self.yCur )
+					if p is not None and (dClosest is None or d < dClosest):
+						pClosest, qClosest, dClosest, iClosest, pointClosest, gapClosest = p, q, d, iData, points[-1], gap
+				
 			colour = self.colours[(2713*hash(self.labels[iData])) % len(self.colours)]
 			lineWidth = 3
 			penSolid = wx.Pen( colour, lineWidth, wx.PENSTYLE_SOLID )
 			penDashed = wx.Pen( colour, lineWidth, wx.PENSTYLE_SHORT_DASH )
 			if len(points) > 1:
+				
 				if not pointsLapped:
 					dc.SetPen( penSolid )
 					dc.DrawLines( points )
@@ -396,13 +424,26 @@ class GapChartPanel(wx.Panel):
 				break
 			
 		# Draw the labels in their optimal non-overlapping positions.
-		border2 = border//2
-		border4 = border//4
-		labelFontSize2 = labelFontSize//2
+		xText = xRight + border*2
 		for x, y, t, label in xytLabel:
 			yText = t - labelFontSize2
 			dc.DrawLines( ((x, y), (x + border4, y), (xText - border2, yText + labelFontSize2), (xText - border4, yText + labelFontSize2)) )
 			dc.DrawText( label, xText, yText )
+		
+		if pointClosest is not None:
+			# Draw the bib and gap detail.
+			text = '{}: {}'.format(self.labels[iClosest], Utils.formatTimeGap(gapClosest, highPrecision=True) )
+			tWidth, tHeight = dc.GetTextExtent( text )
+			xText = pointClosest[0] + int(tHeight*1.5)
+			yText = pointClosest[1] + int(tHeight*3)
+			if xText + tWidth + border2 >= width:
+				xText = width - tWidth - border2 - 1
+			dc.SetPen( wx.Pen(wx.BLACK, 2) )
+			DrawArrowLine( dc, *pointClosest, xText-border4, yText, arrowTo=False, arrowFrom=True )
+			dc.SetPen( wx.BLACK_PEN )
+			dc.SetBrush( wx.CYAN_BRUSH )
+			dc.DrawRoundedRectangle( xText - border4, yText - tHeight//2 - border4, tWidth + border2, tHeight + border2, border4 )
+			dc.DrawText( text, xText, yText - tHeight//2 )
 		
 		# Drawn the dynamic move lines.
 		if self.yTop <= self.yMove <= self.yBottom and self.xLeft <= self.xMove <= self.xRight:
