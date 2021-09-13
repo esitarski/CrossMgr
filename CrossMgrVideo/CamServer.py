@@ -101,7 +101,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			secondsPerFrame = 1.0/30.0
 			
 			while keepCapturing:
-				# Capture frame-by-frame
+				# Read the frame.
 				if not cap.isOpened():		# Handle the case if the camera cannot open.
 					ret, frame = True, None
 					time.sleep( secondsPerFrame )
@@ -111,14 +111,15 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					except KeyboardInterrupt:
 						return
 				
+				# Add the frame to the circular buffer.
 				ts = now()
 				if not ret:
 					break
 				if frame is not None:
 					fcb.append( ts, frame )
 				
-				# Process all the available requests we can.
-				# We have to do this quickly so we don't miss the next frame.
+				# Process all pending requests.
+				# Do this as quickly as possible so we can keep up with the camera's frame rate.
 				while True:
 					try:
 						m = qIn.get_nowait()
@@ -129,7 +130,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					
 					if cmd == 'query':
 						if m['tStart'] > ts:
-							# Reschedule requests in the future to the past when the buffer has the frames..
+							# Reschedule requests in the future to the past when the buffer has the frames.
 							Timer( (m['tStart'] - ts).total_seconds(), qIn.put, (m,) ).start()
 							continue
 						
@@ -144,8 +145,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					elif cmd == 'query_closest':
 						if (ts - m['t']).total_seconds() < secondsPerFrame:
 							# Reschedule requests earlier than secondsPerFrame.
-							# This ensures that the buffer has a frame after the time which might be the closest one.
-							Timer( secondsPerFrame*2.0, qIn.put, (m,) ).start()
+							# This ensures that the buffer has a frame after the time, which might be the closest one.
+							Timer( secondsPerFrame*2.0 - (ts - m['t']).total_seconds(), qIn.put, (m,) ).start()
 							continue
 						
 						if (ts - tsQuery).total_seconds() > bufferSeconds or len(tsSeen) > 5000:
@@ -196,12 +197,12 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					backlog.append( (ts, frame) )
 					tsSeen.add( ts )
 
-				# Don't send too many frames at a time.  We don't want to overwhelm the pipe and lose frames.
+				# Don't send too many frames at a time.  We don't want to overwhelm the queue and lose frames.
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
 					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )
 						
-				# Send update messages.
+				# Send status messages.
 				for name, freq in sendUpdates.items():
 					if frameCount % freq == 0:
 						pWriterSend( {'cmd':'update', 'name':name, 'frame':frame} )
