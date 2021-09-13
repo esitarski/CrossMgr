@@ -98,12 +98,13 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			tsQuery = tsMax = now()
 			keepCapturing = True
+			secondsPerFrame = 1.0/30.0
 			
 			while keepCapturing:
 				# Capture frame-by-frame
 				if not cap.isOpened():		# Handle the case if the camera cannot open.
 					ret, frame = True, None
-					time.sleep( 1.0/30.0 )
+					time.sleep( secondsPerFrame )
 				else:						
 					try:
 						ret, frame = cap.read()
@@ -116,52 +117,77 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				if frame is not None:
 					fcb.append( ts, frame )
 				
-				try:
-					m = qIn.get_nowait()
-					while True:
-						cmd = m['cmd']
-						if cmd == 'query':
-							if m['tStart'] > ts:
-								# Reschedule future requests for later.
-								Timer( (m['tStart'] - ts).total_seconds(), qIn.put, m ).start()
-								continue
-							
-							if (ts - tsQuery).total_seconds() > bufferSeconds or len(tsSeen) > 5000:
-								tsSeen.clear()
-							tsQuery = ts
-
-							backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], m['tEnd'], tsSeen)) )
-							
-							if m['tEnd'] > tsMax:
-								tsMax = m['tEnd']
-						elif cmd == 'start_capture':
-							if 'tStart' in m:
-								backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], ts, tsSeen)) )
-								inCapture = True
-						elif cmd == 'stop_capture':
-							inCapture = False
-						elif cmd == 'snapshot':
-							doSnapshot = True
-						elif cmd == 'send_update':
-							sendUpdates[m['name']] = m['freq']
-						elif cmd == 'cancel_update':
-							if 'name' not in m:
-								sendUpdates.clear()
-							else:
-								sendUpdates.pop(m['name'], None)
-						elif cmd == 'cam_info':
-							camInfo = m['info'] or {}
-							keepCapturing = False
-							break
-						elif cmd == 'terminate':
-							pWriterSend( {'cmd':'terminate'} )
-							return
-						else:
-							assert False, 'Unknown Command'
-						m = qIn.get_nowait()						
-				except Empty:
-					pass
+				# Process all the available requests we can.
+				# We have to do this quickly so we don't miss the next frame.
+				while True:
+					try:
+						m = qIn.get_nowait()
+					except Empty:
+						break
 					
+					cmd = m['cmd']
+					
+					if cmd == 'query':
+						if m['tStart'] > ts:
+							# Reschedule requests in the future to the past when the buffer has the frames..
+							Timer( (m['tStart'] - ts).total_seconds(), qIn.put, (m,) ).start()
+							continue
+						
+						if (ts - tsQuery).total_seconds() > bufferSeconds or len(tsSeen) > 5000:
+							tsSeen.clear()
+							
+						tsQuery = ts
+						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], m['tEnd'], tsSeen)) )
+						if m['tEnd'] > tsMax:
+							tsMax = m['tEnd']
+					
+					elif cmd == 'query_closest':
+						if (ts - m['t']).total_seconds() < secondsPerFrame:
+							# Reschedule requests earlier than secondsPerFrame.
+							# This ensures that the buffer has a frame after the time which might be the closest one.
+							Timer( secondsPerFrame*2.0, qIn.put, (m,) ).start()
+							continue
+						
+						if (ts - tsQuery).total_seconds() > bufferSeconds or len(tsSeen) > 5000:
+							tsSeen.clear()
+							
+						tsQuery = ts
+						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFramesClosest(m['t'], m['closest_frames'], tsSeen)) )
+						if m['t'] > tsMax:
+							tsMax = m['t']
+					
+					elif cmd == 'start_capture':
+						if 'tStart' in m:
+							backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], ts, tsSeen)) )
+							inCapture = True
+					
+					elif cmd == 'stop_capture':
+						inCapture = False
+					
+					elif cmd == 'snapshot':
+						doSnapshot = True
+					
+					elif cmd == 'send_update':
+						sendUpdates[m['name']] = m['freq']
+					
+					elif cmd == 'cancel_update':
+						if 'name' not in m:
+							sendUpdates.clear()
+						else:
+							sendUpdates.pop(m['name'], None)
+					
+					elif cmd == 'cam_info':
+						camInfo = m['info'] or {}
+						keepCapturing = False
+						break
+					
+					elif cmd == 'terminate':
+						pWriterSend( {'cmd':'terminate'} )
+						return
+					
+					else:
+						assert False, 'Unknown Command'
+				
 				if retvals:
 					pWriterSend( {'cmd':'info', 'retvals':retvals} )
 					retvals = None
@@ -227,7 +253,7 @@ if __name__ == '__main__':
 	time.sleep( 2 )
 	callCamServer( qIn, 'query', tStart=now()-timedelta(seconds=1), tEnd=now() )
 	time.sleep( 2 )
-	callCamServer( qIn, 'query', tStart=now()-timedelta(seconds=1), tEnd=now() )
+	callCamServer( qIn, 'query_closest', tStart=now()-timedelta(seconds=1), tEnd=now() )
 	time.sleep( 2 )
 	callCamServer( qIn, 'terminate' )
 	

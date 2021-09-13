@@ -19,10 +19,38 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False )
 			interpolation=cv2.INTER_AREA if highQuality else cv2.INTER_LINEAR
 		)
 		return widthPhoto, heightPhoto, frameToBitmap(imgComposite)
+
+	'''
+	if False and len(tsJpgs) == 2:
+		imgComposite = np.full((heightPhoto,widthPhoto*2,3), 0xd3, np.uint8)
+		if leftToRight:
+			for i in range(2):
+				xLeft = i*widthPhoto
+				imgComposite[:,xLeft:xLeft+widthPhoto] = imgCur
+				try:
+					imgCur = jpegToFrame(tsJpgs[i+1][1])
+				except IndexError:
+					break
+		else:
+			for i in range(2):
+				xRight = (2-i)*widthPhoto
+				imgComposite[:,xRight-widthPhoto:xRight] = imgCur
+				try:
+					imgCur = jpegToFrame(tsJpgs[i+1][1])
+				except IndexError:
+					break
+		
+		if scale != 1.0:
+			imgComposite = cv2.resize(
+				imgComposite, (0,0), fx=scale, fy=scale,
+				interpolation=cv2.INTER_AREA if highQuality else cv2.INTER_LINEAR
+			)
+		return widthPhoto, heightPhoto, frameToBitmap(imgComposite)
+	'''
 	
 	widthPhotoHalf = widthPhoto // 2
 	extraSlice = int((times[1] - times[0]) if leftToRight else (times[-1] - times[-2]))
-	widthComposite = int((times[-1] + extraSlice)* pixelsPerSec) + 1
+	widthComposite = int((times[-1] + extraSlice) * pixelsPerSec) + 1
 
 	imgComposite = np.full((heightPhoto,widthComposite,3), 0xd3, np.uint8)
 	

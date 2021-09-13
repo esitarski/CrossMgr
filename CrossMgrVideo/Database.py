@@ -36,7 +36,7 @@ class Database:
 
 	triggerFieldsAll = (
 		'id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name',
-		'note','kmh','frames',
+		'note','kmh','frames','closest_frames',
 	)
 	triggerFieldsInput = triggerFieldsAll[1:-3]	# ignore note, mph and frames
 	triggerFieldsUpdate = ('wave','race_name',)
@@ -59,7 +59,7 @@ class Database:
 		
 		if initTables:
 			with self.dbLock, self.conn:
-				# Add kmh, ts_start, sBefore and sAfter to the trigger table if missing.
+				# Add missing database fields.
 				cur = self.conn.cursor()
 				cur.execute( 'PRAGMA table_info(trigger)' )
 				cols = cur.fetchall()
@@ -79,6 +79,9 @@ class Database:
 					# Cache of number of frames.
 					if 'frames' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN frames INTEGER DEFAULT 0' )
+					# Closest frames queries.
+					if 'closest_frames' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN closest_frames INTEGER DEFAULT 0' )
 		
 				_createTable( self.conn, 'photo', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
@@ -101,6 +104,7 @@ class Database:
 						('note', 'TEXT', False, None),
 						('kmh', 'DOUBLE', False, 0.0),
 						('frames', 'INTEGER', False, 0),			# Number of frames with this trigger.		
+						('closest_frames', 'INTEGER', False, 0),	# Number of frames if Closest Frames trigger.
 					)
 				)
 				self.photoTsCache = set( row[0] for row in self.conn.execute(
@@ -143,7 +147,7 @@ class Database:
 		return tsTriggersUnique
 	
 	def write( self, tsTriggers=None, tsJpgs=None ):
-		with self.dbLock:
+		with self.dbLock, self.conn:
 			tsTriggers = self._purgeTriggerWriteDuplicates( tsTriggers )
 			if not tsTriggers and not tsJpgs:
 				return
@@ -158,14 +162,13 @@ class Database:
 						tsJpgsUnique.append( ts_jpg )
 				tsJpgs = tsJpgsUnique
 			
-			with self.conn:
-				if tsTriggers:
-					self.conn.executemany(
-						'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(self.triggerFieldsInput), ','.join('?'*len(self.triggerFieldsInput))),
-						tsTriggers )
-				if tsJpgs:
-					assert not any(ts is None for ts, jpg in tsJpgs)
-					self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
+			if tsTriggers:
+				self.conn.executemany(
+					'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(self.triggerFieldsInput), ','.join('?'*len(self.triggerFieldsInput))),
+					tsTriggers )
+			if tsJpgs:
+				assert not any(ts is None for ts, jpg in tsJpgs)
+				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
 		
 			if tsJpgs:
 				self.photoTsCache.update( ts for ts, jpg in tsJpgs )
@@ -235,7 +238,12 @@ class Database:
 		count = self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()
 		return count[0] if count else 0
 	
-	def getPhotoClosest( self, ts ):
+	def getPhotosClosest( self, ts, closestFrames ):
+		# Cache the results of the last query.
+		key = (ts, closestFrames)
+		if key == self.tsJpgsKeyLast:
+			return self.tsJpgsLast
+			
 		with self.dbLock, self.conn:
 			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts <= ? ORDER BY ts DESC', (ts,) ):
 				tsEarlier, jpgEarlier = ts, jpg
@@ -248,8 +256,19 @@ class Database:
 				break
 			else:
 				tsLater, jpgLater = None, None
-				
-		return (tsEarlier, jpgEarlier) if (tsLater is None or abs((tsEarlier - ts).total_seconds()) < abs((tsLater - ts).total_seconds())) else (tsLater, jpgLater)
+
+		# Only works for closestFrames == 1 and closestFrames == 2
+		if closestFrames == 1:
+			tsJpgs = [(tsEarlier, jpgEarlier) if (tsLater is None or abs((tsEarlier - ts).total_seconds()) < abs((tsLater - ts).total_seconds())) else (tsLater, jpgLater)]
+		else:
+			tsJpgs = [p for p in [(tsEarlier,jpgEarlier), (tsLater,jpgLater)] if p[1]]
+		
+		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
+		return tsJpgs
+	
+	def getPhotoClosest( self, ts ):
+		tsJpgs = self.getPhotosClosest( ts, 1 )
+		return tsJpgs[0] if tsJpgs else (None, None)
 	
 	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
 		with self.dbLock, self.conn:
@@ -382,55 +401,70 @@ class Database:
 			self.conn.execute( 'DELETE from trigger WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
 	
 	def deleteTrigger( self, id, s_before_default=0.5,  s_after_default=2.0 ):
-		with self.dbLock:
-			with self.conn:
-				rows = list( self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE id=?', (id,) ) )
-				if not rows:
-					return
+		def getClosestBeforeAfter( ts, closest_frames ):
+			tsJpgs = self.getPhotosClosest( ts, closest_frames )
+			if not tsJpgs:
+				return 0.0, 0.0
+			s_before = (ts - tsJpgs[0][0]).total_seconds()
+			s_after = (tsJpgs[-1][0] - ts).total_seconds()
+			return s_before, s_after
+		
+		with self.dbLock, self.conn:
+			rows = list( self.conn.execute( 'SELECT ts,s_before,s_after,closest_frames FROM trigger WHERE id=?', (id,) ) )
+			if not rows:
+				return
 			
-			ts, s_before, s_after = rows[0]
-			with self.conn:
-				self.conn.execute( 'DELETE FROM trigger WHERE id=?', (id,) )
+			ts, s_before, s_after, closest_frames = rows[0]
+			self.conn.execute( 'DELETE FROM trigger WHERE id=?', (id,) )
+			
+		if closest_frames:
+			s_before, s_after = getClosestBeforeAfter( ts, closest_frames )
+		
+		tsLower, tsUpper = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
 				
-			tsLower, tsUpper = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
-				
+		with self.dbLock, self.conn:
 			# Get all other intervals that intersect this one.
-			intervals = []
-			with self.conn:
-				for ts,s_before,s_after in self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE ts BETWEEN ? AND ?',
-						(tsLower - timedelta(minutes=15),tsUpper + timedelta(minutes=15)) ):
-					if s_before == 0.0 and s_after == 0.0:
-						s_before, s_after = s_before_default, s_after_default
-					tsStart, tsEnd = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
-					if tsEnd <= tsLower or tsUpper <= tsStart:
-						continue
-					intervals.append( (max(tsLower,tsStart), min(tsUpper,tsEnd)) )
+			triggers = list( self.conn.execute( 'SELECT ts,s_before,s_after,closest_frames FROM trigger WHERE ts BETWEEN ? AND ?',
+					(tsLower - timedelta(minutes=15),tsUpper + timedelta(minutes=15)) )
+			)
 			
-			# Merge overlapping and adjacent intervals together.
-			if intervals:
-				intervals.sort()
-				intervalsNormal = [intervals[0]]
-				for a, b in intervals[1:]:
-					if a <= intervalsNormal[-1][1]:
-						if b > intervalsNormal[-1][1]:
-							intervalsNormal[-1] = (intervalsNormal[-1][0], b)
-					elif a != b:
-						intervalsNormal.append( (a, b) )
-				intervals = intervalsNormal
+		intervals = []
+		for ts,s_before,s_after,closest_frames in triggers:
+			if closest_frames:
+				s_before, s_after = getClosestBeforeAfter( ts, closest_frames )
+			elif s_before == 0.0 and s_after == 0.0:
+				s_before, s_after = s_before_default, s_after_default
+			
+			tsStart, tsEnd = ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after)
+			if tsEnd <= tsLower or tsUpper <= tsStart:
+				continue
+			intervals.append( (max(tsLower,tsStart), min(tsUpper,tsEnd)) )
+		
+		# Merge overlapping and adjacent intervals together.
+		if intervals:
+			intervals.sort()
+			intervalsNormal = [intervals[0]]
+			for a, b in intervals[1:]:
+				if a <= intervalsNormal[-1][1]:
+					if b > intervalsNormal[-1][1]:
+						intervalsNormal[-1] = (intervalsNormal[-1][0], b)
+				elif a != b:
+					intervalsNormal.append( (a, b) )
+			intervals = intervalsNormal
 
-			toRemove = [(tsLower, tsUpper)]
-			for a, b in intervals:
-				# Split the last interval to accommodate the interval.
-				u, v = toRemove.pop()
-				if u != a:
-					toRemove.append( (u, a) )
-				if b != v:
-					toRemove.append( (b, v) )
+		toRemove = [(tsLower, tsUpper)]
+		for a, b in intervals:
+			# Split the last interval to accommodate the interval.
+			u, v = toRemove.pop()
+			if u != a:
+				toRemove.append( (u, a) )
+			if b != v:
+				toRemove.append( (b, v) )
 
-			if toRemove:
-				with self.conn:
-					for a, b in toRemove:
-						self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (a,b) )
+		if toRemove:
+			with self.dbLock, self.conn:
+				for a, b in toRemove:
+					self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (a,b) )
 			
 	def vacuum( self ):
 		with self.dbLock, self.conn:

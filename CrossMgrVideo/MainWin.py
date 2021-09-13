@@ -356,9 +356,17 @@ class AutoCaptureDialog( wx.Dialog ):
 		super().__init__( parent, id, title=_('CrossMgr Video Auto Capture') )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
+		
+		sizer.Add( wx.StaticText(self, label="Configure what to Capture on each Trigger"), flag=wx.ALL, border=8 )
+
 		gs = wx.FlexGridSizer( 2, 2, 4 )
 		gs.AddGrowableCol( 1 )
-		fieldNames = ['Seconds Before', 'Seconds After']
+		
+		gs.Add( wx.StaticText(self, label="Capture"), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		self.closestFrames = wx.Choice( self, choices=('by Seconds', 'Closest Frame to Trigger', 'Closest 2 Frames to Trigger') )
+		gs.Add( self.closestFrames )
+		
+		fieldNames = ['Capture Seconds Before Trigger', 'Capture Seconds After Trigger']
 		self.editFields = []
 		for f in fieldNames:
 			gs.Add( wx.StaticText(self, label=f), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
@@ -376,9 +384,10 @@ class AutoCaptureDialog( wx.Dialog ):
 		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
 		self.SetSizerAndFit( sizer )
 	
-	def set( self, s_before, s_after ):
+	def set( self, s_before, s_after, closestFrames=0 ):
 		self.editFields[0].SetValue( '{:.2f}'.format(s_before) )
 		self.editFields[1].SetValue( '{:.2f}'.format(s_after) )
+		self.closestFrames.SetSelection( closestFrames )
 	
 	def get( self ):
 		def fixValue( v ):
@@ -386,7 +395,7 @@ class AutoCaptureDialog( wx.Dialog ):
 				return abs(float(v))
 			except Exception:
 				return None
-		return [fixValue(e.GetValue()) for e in self.editFields]
+		return [fixValue(e.GetValue()) for e in self.editFields] + [self.closestFrames.GetSelection()]
 		
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
@@ -416,6 +425,7 @@ class MainWin( wx.Frame ):
 		
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
+		self.closestFrames = 0
 
 		dataDir = Utils.getHomeDir()
 		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
@@ -630,10 +640,11 @@ class MainWin( wx.Frame ):
 		
 		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name note kmh mph frames'.split())}
 		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph', 'Frames']
+		formatRightHeaders = {'Bib','km/h','mph','Frames'}
 		for i, h in enumerate(headers):
 			self.triggerList.InsertColumn(
 				i, h,
-				wx.LIST_FORMAT_RIGHT if h in ('Bib','km/h','mph','Frames') else wx.LIST_FORMAT_LEFT
+				wx.LIST_FORMAT_RIGHT if h in formatRightHeaders else wx.LIST_FORMAT_LEFT
 			)
 		self.iNoteCol = self.fieldCol['note']
 		self.itemDataMap = {}
@@ -741,7 +752,10 @@ class MainWin( wx.Frame ):
 			s = '{:0.1f}'.format( n )
 			return s[:-2] if s.endswith('.0') else s
 		
-		label = '\n'.join( ['AUTO','CAPTURE','{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
+		if self.closestFrames:
+			label = '\n'.join( ['AUTO','CAPTURE','CLOSEST {}'.format(self.closestFrames)] )
+		else:
+			label = '\n'.join( ['AUTO','CAPTURE','{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
 		for btn in (self.autoCapture, self.focusDialog.autoCapture):
 			btn.SetLabel( label )
 			btn.SetFontToFitLabel()
@@ -965,7 +979,7 @@ class MainWin( wx.Frame ):
 			a:data[i] for i, a in enumerate((
 				'id','ts','s_before','s_after','ts_start',
 				'bib','name','team','wave','race_name',
-				'first_name','last_name','note','kmh','frames'))
+				'first_name','last_name','note','kmh','frames','closest_frames'))
 		}
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
@@ -990,10 +1004,10 @@ class MainWin( wx.Frame ):
 			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		if triggers:
-			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames
+			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames,closest_frames
 		
 		zeroFrames, tsLower, tsUpper = [], datetime.max, datetime.min
-		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames) in enumerate(triggers):
+		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames,closest_frames) in enumerate(triggers):
 			if s_before == 0.0 and s_after == 0.0:
 				s_before,s_after = tdCaptureBeforeDefault.total_seconds(),tdCaptureAfterDefault.total_seconds()
 			
@@ -1018,16 +1032,16 @@ class MainWin( wx.Frame ):
 				'note':			note,
 				'kmh':			kmh_text,
 				'mph':			mph_text,
-				'frames':		frames,
+				'frames':		max(frames, closest_frames),
 			}
 			self.updateTriggerRow( row, fields )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,fields['name'],team,wave,race_name,first_name,last_name,note,kmh,frames)
+			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,fields['name'],team,wave,race_name,first_name,last_name,note,kmh,frames,closest_frames)
 			tsPrev = ts
 		
 		if zeroFrames:
-			counts = self.db.getTriggerPhotoCounts( tsLower, tsUpper )
+			counts = GlobalDatabase().getTriggerPhotoCounts( tsLower, tsUpper )
 			values = {'frames':0}
 			for row, id, tsU in zeroFrames:
 				values['frames'] = counts[id]
@@ -1035,7 +1049,7 @@ class MainWin( wx.Frame ):
 				# Don't update the trigger if the number of frames is possibly not known yet.
 				if (tNow - tsU).total_seconds() < 5.0*60.0:
 					del counts[id]
-			self.db.updateTriggerPhotoCounts( counts )
+			GlobalDatabase().updateTriggerPhotoCounts( counts )
 		
 		self.updateTriggerColumnWidths()
 
@@ -1060,15 +1074,16 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( (
 			'trigger',
 			t,
-			0.00001,		# s_before
-			0.00001,		# s_after
+			0.0,		# s_before
+			0.0,		# s_after
 			t,
 			self.snapshotCount,	# bib
-			'', 			# first_name
+			'', 		# first_name
 			'Snapshot',	# last_name
 			'',			# team
 			'',			# save
 			'',			# race_name
+			1,			# closest_frames
 		) )
 		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
 		
@@ -1110,6 +1125,7 @@ class MainWin( wx.Frame ):
 				'ts_start':tNow,
 				'bib':self.autoCaptureCount,
 				'last_name':'Auto',
+				'closest_frames':self.closestFrames,
 			}
 		)
 		
@@ -1162,6 +1178,7 @@ class MainWin( wx.Frame ):
 				'ts_start':tNow,
 				'bib':self.captureCount,
 				'last_name':'Capture',
+				'closest_frames':self.closestFrames,
 			}
 		)
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-self.tdCaptureBefore} )
@@ -1204,11 +1221,12 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=updateFS ).start()
 
 	def autoCaptureConfig( self, event ):
-		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds(), self.closestFrames )
 		if self.autoCaptureDialog.ShowModal() == wx.ID_OK:
-			s_before, s_after = self.autoCaptureDialog.get()
+			s_before, s_after, closestFrames = self.autoCaptureDialog.get()
 			self.tdCaptureBefore = timedelta(seconds=s_before) if s_before is not None else tdCaptureBeforeDefault
 			self.tdCaptureAfter  = timedelta(seconds=s_after)  if s_after  is not None else tdCaptureAfterDefault
+			self.closestFrames = closestFrames
 			self.writeOptions()
 			self.updateAutoCaptureLabel()
  		
@@ -1261,7 +1279,10 @@ class MainWin( wx.Frame ):
 		# Update the screen in the background so we don't freeze the UI.
 		def updateFS( triggerInfo ):
 			self.ts = triggerInfo['ts']
-			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
+			if triggerInfo['closest_frames']:
+				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closestFrames'] )
+			else:
+				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			triggerInfo['frames'] = len(self.tsJpg)
 			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, triggerInfo )
 			
@@ -1472,10 +1493,14 @@ class MainWin( wx.Frame ):
 				msg.get('team',''),
 				msg.get('wave',''),
 				msg.get('race_name','') or msg.get('raceName',''),
+				msg.get('closest_frames',self.closestFrames),
 			) )
 			# Record the video frames for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter
-			self.camInQ.put( { 'cmd':'query', 'tStart':tStart, 'tEnd':tEnd,} )
+			if self.closestFrames:
+				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':self.closestFrames} )
+			else:
+				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
 			wx.CallAfter( wx.CallLater, max(100, int(100+1000*(tEnd-now()).total_seconds())), refresh )
 	
 	def shutdown( self ):
@@ -1580,6 +1605,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
+		self.config.WriteInt( 'ClosestFrames', self.closestFrames )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1599,6 +1625,7 @@ class MainWin( wx.Frame ):
 		except Exception:
 			pass
 		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.25) )
+		self.closestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()
