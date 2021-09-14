@@ -322,13 +322,12 @@ class TriggerDialog( wx.Dialog ):
 	def set( self, db, triggerId ):
 		self.db = db
 		self.triggerId = triggerId
-		ef = db.getTriggerEditFields( self.triggerId )
-		ef = ef or ['' for f in Database.triggerEditFields]
-		for e, v in zip(self.editFields, ef):
-			e.SetValue( '{}'.format(v) if v is not None else '' )
+		ef = db.getTriggerEditFields( triggerId )
+		for e, f in zip(self.editFields, Database.triggerEditFields):
+			e.SetValue( '{}'.format(ef.get(f,'') or '') )
 	
 	def get( self ):
-		values = []
+		values = {}
 		for f, e in zip(Database.triggerEditFields, self.editFields):
 			v = e.GetValue()
 			if f == 'bib':
@@ -336,11 +335,11 @@ class TriggerDialog( wx.Dialog ):
 					v = int(v)
 				except Exception:
 					v = 99999
-			values.append( v )
+			values[f] = v
 		return values
 	
 	def commit( self ):
-		self.db.setTriggerEditFields( self.triggerId, *self.get() )
+		self.db.setTriggerEditFields( self.triggerId, **self.get() )
 	
 	def onOK( self, event ):
 		self.commit()
@@ -788,7 +787,7 @@ class MainWin( wx.Frame ):
 		return infoListNew
 	
 	def onPublishPhotos( self, event ):
-		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]
 		if not infoList:
 			with wx.MessageDialog( self,
 					"Please select a date with videos.",
@@ -843,7 +842,7 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
 	
 	def onPublishWebPage( self, event ):
-		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]
 		if not infoList:
 			with wx.MessageDialog( self,
 					"Please select a date with videos.",
@@ -967,14 +966,7 @@ class MainWin( wx.Frame ):
 			self.updateTriggerRow( row, fields )
 	
 	def getTriggerInfo( self, row ):
-		data = self.itemDataMap[self.triggerList.GetItemData(row)]
-		return {
-			a:data[i] for i, a in enumerate((
-				'id','ts','s_before','s_after','ts_start',
-				'bib','name','team','wave','race_name',
-				'first_name','last_name','note','kmh',
-				'frames','closest_frames'))
-		}
+		return self.itemDataMap[self.triggerList.GetItemData(row)]
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
@@ -994,45 +986,35 @@ class MainWin( wx.Frame ):
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
 
-		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )
-			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
+		
+		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )			
 		if triggers:
-			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames,closest_frames
+			self.tsMax = triggers[-1].ts
 		
 		zeroFrames, tsLower, tsUpper = [], datetime.max, datetime.min
-		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames,closest_frames) in enumerate(triggers):
-			if s_before == 0.0 and s_after == 0.0:
-				s_before,s_after = tdCaptureBeforeDefault.total_seconds(),tdCaptureAfterDefault.total_seconds()
+		for i, trig in enumerate(triggers):
+			if not trig.closest_frames and trig.s_before == 0.0 and trig.s_after == 0.0:
+				trig = trig._replace( s_before=tdCaptureBeforeDefault.total_seconds(), s_after=tdCaptureAfterDefault.total_seconds() )
 			
-			dtFinish = (ts-tsPrev).total_seconds()
+			dtFinish = (trig.ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
-			row = self.triggerList.InsertItem( 999999, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
+			row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
 			
-			if not frames:
-				tsLower = min( tsLower, ts-timedelta(seconds=s_before) )
-				tsU = ts + timedelta(seconds=s_after)
-				tsUpper = max( tsUpper,tsU )
-				zeroFrames.append( (row, id, tsU) )
+			if not trig.closest_frames and not trig.frames:
+				tsLower = min( tsLower, trig.ts-timedelta(seconds=trig.s_before) )
+				tsU = trig.ts + timedelta(seconds=trig.s_after)
+				tsUpper = max( tsUpper, tsU )
+				zeroFrames.append( (row, trig.id, tsU) )
 			
-			kmh_text, mph_text = ('{:.2f}'.format(kmh), '{:.2f}'.format(kmh * 0.621371)) if kmh else ('', '')
-			fields = {
-				'bib':			bib,
-				'last_name':	last_name,
-				'first_name':	first_name,
-				'team':			team,
-				'wave':			wave,
-				'race_name':	race_name,
-				'note':			note,
-				'kmh':			kmh_text,
-				'mph':			mph_text,
-				'frames':		max(frames, closest_frames),
-			}
+			fields = trig._asdict()
+			fields['kmh'], fields['mph'] = ('{:.2f}'.format(trig.kmh), '{:.2f}'.format(trig.kmh * 0.621371)) if trig.kmh else ('', '')
+			fields['frames'] = max(trig.frames, trig.closest_frames)
 			self.updateTriggerRow( row, fields )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,fields['name'],team,wave,race_name,first_name,last_name,note,kmh,frames,closest_frames)
-			tsPrev = ts
+			self.itemDataMap[row] = fields
+			tsPrev = trig.ts
 		
 		if zeroFrames:
 			counts = GlobalDatabase().getTriggerPhotoCounts( tsLower, tsUpper )
@@ -1067,17 +1049,19 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('photo', t, f) )
 		self.dbWriterQ.put( (
 			'trigger',
-			t,
-			0.0,		# s_before
-			0.0,		# s_after
-			t,
-			self.snapshotCount,	# bib
-			'', 		# first_name
-			'Snapshot',	# last_name
-			'',			# team
-			'',			# save
-			'',			# race_name
-			1,			# closest_frames
+			{
+				'ts':				t,
+				's_before':			0.0,
+				's_after':			0.0,
+				'closest_frames':	1,
+				'ts_start':			t,
+				'bib':				self.snapshotCount,
+				'first_name':		'',
+				'last_name':		'Snapshot',
+				'team':				'',
+				'wave':				'',
+				'race_name':		'',
+			}
 		) )
 		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
 		
@@ -1091,7 +1075,7 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.join()
 		triggers = self.db.getTriggers( tStartCapture, tStartCapture, count )
 		if triggers:
-			id = triggers[0][0]
+			id = triggers[0].id
 			self.db.initCaptureTriggerData( id )
 			self.refreshTriggers( iTriggerRow=999999, replace=True )
 			self.showLastTrigger()
@@ -1113,13 +1097,13 @@ class MainWin( wx.Frame ):
 		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
 		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
 		self.requestQ.put( {
-				'time':tNow,
-				's_before':s_before,
-				's_after':s_after,
-				'ts_start':tNow,
-				'bib':self.autoCaptureCount,
-				'last_name':'Auto',
-				'closest_frames':self.closestFrames,
+				'time':				tNow,
+				's_before':			s_before,
+				's_after':			s_after,
+				'closest_frames':	self.closestFrames,
+				'ts_start':			tNow,
+				'bib':				self.autoCaptureCount,
+				'last_name':		'Auto',
 			}
 		)
 		
@@ -1158,21 +1142,21 @@ class MainWin( wx.Frame ):
 			self.onStartAutoCapture( event )
 	
 	def onStartCapture( self, event ):
+		wx.BeginBusyCursor()
 		tNow = self.tStartCapture = now()
 		
 		event.GetEventObject().SetForegroundColour( captureDisableColour )
 		wx.CallAfter( event.GetEventObject().Refresh )
-		wx.BeginBusyCursor()
 		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		self.requestQ.put( {
-				'time':tNow,
-				's_before':0.0,
-				's_after':self.tdCaptureAfter.total_seconds(),
-				'ts_start':tNow,
-				'bib':self.captureCount,
-				'last_name':'Capture',
-				'closest_frames':self.closestFrames,
+				'time':				tNow,
+				's_before':			0.0,
+				's_after':			self.tdCaptureAfter.total_seconds(),
+				'closest_frames':	0,
+				'ts_start':			tNow,
+				'bib':				self.captureCount,
+				'last_name':		'Capture',
 			}
 		)
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-self.tdCaptureBefore} )
@@ -1190,7 +1174,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
 		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
 		if triggers:
-			id = triggers[0][0]
+			id = triggers[0].id
 			self.db.updateTriggerBeforeAfter(
 				id,
 				0.0,
@@ -1201,9 +1185,9 @@ class MainWin( wx.Frame ):
 		
 		self.showLastTrigger()
 		
-		wx.EndBusyCursor()
 		event.GetEventObject().SetForegroundColour( captureEnableColour )
 		wx.CallAfter( event.GetEventObject().Refresh )
+		wx.EndBusyCursor()
 		
 		def updateFS():
 			# Wait for all the photos to be written.
@@ -1319,11 +1303,11 @@ class MainWin( wx.Frame ):
 		
 	def doTriggerEdit( self ):
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.triggerDialog.set( self.db, data[0] )
+		self.triggerDialog.set( self.db, data['id'] )
 		self.triggerDialog.CenterOnParent()
 		if self.triggerDialog.ShowModal() == wx.ID_OK:
 			row = self.iTriggerSelect
-			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
+			fields = self.triggerDialog.get()
 			self.updateTriggerRow( row, fields )
 			self.updateTriggerColumnWidths()
 			self.triggerInfo.update( fields )
@@ -1482,19 +1466,22 @@ class MainWin( wx.Frame ):
 			
 			# Record this trigger.
 			self.dbWriterQ.put( (
-				'trigger',
-				tSearch - timedelta(seconds=advanceSeconds),
-				msg.get('s_before', self.tdCaptureBefore.total_seconds()),	# Use the configured capture interval, not the default.
-				msg.get('s_after', self.tdCaptureAfter.total_seconds()),
-				msg.get('ts_start', None) or now(),
-				msg.get('bib', 99999),
-				msg.get('first_name','') or msg.get('firstName',''),
-				msg.get('last_name','') or msg.get('lastName',''),
-				msg.get('team',''),
-				msg.get('wave',''),
-				msg.get('race_name','') or msg.get('raceName',''),
-				msg.get('closest_frames', self.closestFrames),
-			) )
+					'trigger',
+					{
+						'ts':				tSearch - timedelta(seconds=advanceSeconds),
+						's_before':			msg.get('s_before', self.tdCaptureBefore.total_seconds()),	# Use the configured capture interval, not the default.
+						's_after':			msg.get('s_after', self.tdCaptureAfter.total_seconds()),
+						'ts_start':			msg.get('ts_start', None) or now(),
+						'closest_frames':	msg.get('closest_frames', self.closestFrames),
+						'bib':				msg.get('bib', 99999),
+						'first_name':		msg.get('first_name','') or msg.get('firstName',''),
+						'last_name':		msg.get('last_name','') or msg.get('lastName',''),
+						'team':				msg.get('team',''),
+						'wave':				msg.get('wave',''),
+						'race_name':		msg.get('race_name','') or msg.get('raceName',''),
+					}
+				)
+			)
 			# Record the video frames for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter
 			if self.closestFrames:

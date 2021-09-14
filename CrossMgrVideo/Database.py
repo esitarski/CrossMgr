@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 import sqlite3
 import CVUtil
-from collections import defaultdict
+from collections import namedtuple, defaultdict
 from threading import RLock
 
 from queue import Queue, Empty
@@ -35,10 +35,11 @@ class Database:
 	UpdateSeconds = 10*60*60
 
 	triggerFieldsAll = (
-		'id','ts','s_before','s_after','ts_start','bib','first_name','last_name','team','wave','race_name',
-		'note','kmh','frames','closest_frames',
+		'id','ts','s_before','s_after','ts_start','closest_frames','bib','first_name','last_name','team','wave','race_name',
+		'note','kmh','frames',
 	)
-	triggerFieldsInput = triggerFieldsAll[1:-3]	# ignore note, mph and frames
+	TriggerRecord = namedtuple( 'TriggerRecord', triggerFieldsAll )
+	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames'}	# Fields to compare for equality of triggers.
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 	
@@ -92,9 +93,10 @@ class Database:
 				_createTable( self.conn, 'trigger', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
 						('ts', 'timestamp', 'ASC', None),			# Capture timestamp.
+						('ts_start', 'timestamp', False, None),		# race timestamp.
 						('s_before', 'DOUBLE', False, None),		# Seconds before ts of capture.
 						('s_after', 'DOUBLE', False, None),			# Seconds after ts of capture.
-						('ts_start', 'timestamp', False, None),		# race timestamp.
+						('closest_frames', 'INTEGER', False, 0),	# Number of frames if a closest Frames trigger.
 						('bib', 'INTEGER', 'ASC', None),
 						('first_name', 'TEXT', 'ASC', None),
 						('last_name', 'TEXT', 'ASC', None),
@@ -104,7 +106,6 @@ class Database:
 						('note', 'TEXT', False, None),
 						('kmh', 'DOUBLE', False, 0.0),
 						('frames', 'INTEGER', False, 0),			# Number of frames with this trigger.		
-						('closest_frames', 'INTEGER', False, 0),	# Number of frames if Closest Frames trigger.
 					)
 				)
 				self.photoTsCache = set( row[0] for row in self.conn.execute(
@@ -136,15 +137,12 @@ class Database:
 	
 	def _purgeTriggerWriteDuplicates( self, tsTriggers ):
 		""" Remove all triggers that are already in the database. """
-		if not tsTriggers:
-			return tsTriggers
-		
-		tsTriggersUnique = []
-		for t in tsTriggers:
+		return [trig for trig in tsTriggers
 			if self.conn.execute(
-				'SELECT id FROM trigger WHERE {}'.format(' AND '.join('{}=?'.format(f) for f in self.triggerFieldsInput)), t).fetchone() is None:
-				tsTriggersUnique.append( t )
-		return tsTriggersUnique
+						'SELECT id FROM trigger WHERE {}'.format(' AND '.join('{}=?'.format(f) for f in self.triggerFieldsInput)),
+						[trig[f] for f in self.triggerFieldsInput]
+					).fetchone() is None
+		]
 	
 	def write( self, tsTriggers=None, tsJpgs=None ):
 		with self.dbLock, self.conn:
@@ -152,6 +150,9 @@ class Database:
 			if not tsTriggers and not tsJpgs:
 				return
 		
+			for trig in tsTriggers:
+				self.conn.execute( 'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(trig.keys()), ','.join('?'*len(trig))), list(trig.values()) )
+
 			if tsJpgs:
 				# Purge duplicate photos and photos with the same timestamp.
 				jpgSeen = set()
@@ -162,21 +163,15 @@ class Database:
 						tsJpgsUnique.append( ts_jpg )
 				tsJpgs = tsJpgsUnique
 			
-			if tsTriggers:
-				self.conn.executemany(
-					'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(self.triggerFieldsInput), ','.join('?'*len(self.triggerFieldsInput))),
-					tsTriggers )
 			if tsJpgs:
 				assert not any(ts is None for ts, jpg in tsJpgs)
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
-		
-			if tsJpgs:
 				self.photoTsCache.update( ts for ts, jpg in tsJpgs )
-			
-			if (now() - self.lastUpdate).total_seconds() > self.UpdateSeconds:
-				expired = now() - timedelta(seconds=self.UpdateSeconds)
-				self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
-				self.lastUpdate = now()
+		
+		if (now() - self.lastUpdate).total_seconds() > self.UpdateSeconds:
+			expired = now() - timedelta(seconds=self.UpdateSeconds)
+			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
+			self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
 		with self.dbLock, self.conn:
@@ -212,15 +207,17 @@ class Database:
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.dbLock, self.conn:
 			if not bib:
-				return list( self.conn.execute(
+				triggers = self.conn.execute(
 					'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(self.triggerFieldsAll)),
 					(tsLower, tsUpper)
-				))
+				)
 			else:
-				return list( self.conn.execute(
+				triggers = self.conn.execute(
 					'SELECT {} FROM trigger WHERE bib=? AND ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(self.triggerFieldsAll)),
 					(bib, tsLower, tsUpper)
-				))
+				)
+				
+			return [self.TriggerRecord(*trig) for trig in triggers]
 			
 	def getPhotos( self, tsLower, tsUpper ):
 		# Cache the results of the last query.
@@ -361,13 +358,13 @@ class Database:
 	def getTriggerEditFields( self, id ):
 		with self.dbLock, self.conn:
 			rows = list( self.conn.execute('SELECT {} FROM trigger WHERE id=?'.format(','.join(self.triggerEditFields)), (id,) ) )
-		return rows[0] if rows else []
+		return {k:v for k, v in zip(self.triggerEditFields, rows[0])} if rows else {}
 		
-	def setTriggerEditFields( self, id, *args ):
+	def setTriggerEditFields( self, id, **kwargs ):
 		with self.dbLock, self.conn:
 			self.conn.execute(
-				'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in self.triggerEditFields)),
-				args + (id,)
+				'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in kwargs.keys())),
+				list(kwargs.values()) + [id]
 			)
 	
 	def isDup( self, ts ):
@@ -505,8 +502,7 @@ def DBWriter( q, triggerWriteCB=None, fname=None ):
 			if not db.isDup( v[1] ):
 				tsJpgs.append( (v[1], sqlite3.Binary(CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
-			fieldLen = len(Database.triggerFieldsInput)
-			tsTriggers.append( (list(v[1:]) + [''] * fieldLen)[:fieldLen] )
+			tsTriggers.append( v[1] )
 		elif v[0] == 'kmh':
 			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
 		elif v[0] == 'flush':
