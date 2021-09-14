@@ -393,7 +393,7 @@ class Impinj:
 			self.antennaReadCount,
 			)
 		)
-		Bell()
+		Utils.Beep()
 		return True
 	
 	def handleTagGroup( self ):

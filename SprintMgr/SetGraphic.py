@@ -27,18 +27,9 @@ class SetGraphicDialog( wx.Dialog ):
 		
 		mainSizer.Add( bhh )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		bh = wx.StdDialogButtonSizer()
-		bh.AddButton( self.okBtn )
-		bh.AddButton( self.cancelBtn )
-		bh.Realize()
-		
-		mainSizer.Add( bh, flag = wx.ALIGN_RIGHT | wx.ALL, border = 4 )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		if btnSizer:
+			mainSizer.Add( btnSizer, flag = wx.EXPAND|wx.ALL, border = 4 )
 		self.SetSizerAndFit( mainSizer )
 
 	def GetValue( self ):
@@ -47,25 +38,18 @@ class SetGraphicDialog( wx.Dialog ):
 	def onChoose( self, event ):
 		imgPath = self.GetValue()
 		set_dir = os.path.dirname(imgPath)
-		dlg = imagebrowser.ImageDialog( self, set_dir = set_dir )
-		dlg.ChangeFileTypes([
-			('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
-			('GIF (*.gif)', '*.gif'),
-			('PNG (*.png)', '*.png'),
-			('JPEG (*.jpg)', '*.jpg')
-		])
-		if os.path.isfile(imgPath):
-			dlg.SetFileName( imgPath )
-		if dlg.ShowModal() == wx.ID_OK:
-			imgPath = dlg.GetFile()
-			self.graphic.SetValue( imgPath )
-		dlg.Destroy()
-
-	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
+		with imagebrowser.ImageDialog( self, set_dir = set_dir ) as dlg:
+			dlg.ChangeFileTypes([
+				('All Formats (GIF, PNG, JPEG)', '*.gif|*.png|*.jpg'),
+				('GIF (*.gif)', '*.gif'),
+				('PNG (*.png)', '*.png'),
+				('JPEG (*.jpg)', '*.jpg')
+			])
+			if os.path.isfile(imgPath):
+				dlg.SetFileName( imgPath )
+			if dlg.ShowModal() == wx.ID_OK:
+				imgPath = dlg.GetFile()
+				self.graphic.SetValue( imgPath )
 		
 if __name__ == '__main__':
 	app = wx.App(False)

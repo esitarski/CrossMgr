@@ -70,20 +70,12 @@ class ManageDatabase( wx.Dialog ):
 
 		vs.Add( wx.StaticText(self, label='Be Careful!  There is no undo.'), flag=wx.ALL, border=4 )
 		
-		btnsizer = wx.StdDialogButtonSizer()
-        
-		btn = wx.Button(self, wx.ID_OK)
-		btn.SetDefault()
-		btnsizer.AddButton(btn)
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		if btnSizer:
+			vs.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=5 )
 
-		btn = wx.Button(self, wx.ID_CANCEL)
-		btnsizer.AddButton(btn)
-		btnsizer.Realize()
-
-		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
-
-		self.SetSizer(vs)
-		vs.Fit(self)
+		self.SetSizer( vs )
+		vs.Fit( self )
 	
 	def setDbSize( self, dbSize ):
 		self.dbSizeText.SetLabel( 'Database Size: {:.1f} meg'.format(dbSize/1048576.0) )

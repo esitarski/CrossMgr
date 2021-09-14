@@ -153,7 +153,7 @@ class Database:
 				return
 		
 			if tsJpgs:
-				# Purge duplicate photos, or with the same timestamp.
+				# Purge duplicate photos and photos with the same timestamp.
 				jpgSeen = set()
 				tsJpgsUnique = []
 				for ts_jpg in tsJpgs:

@@ -96,14 +96,12 @@ class DateSelectDialog( wx.Dialog ):
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelect )
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivate )
 		
-		btns = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
-		self.ok = wx.FindWindowById(wx.ID_OK, self)
-		self.cancel = wx.FindWindowById(wx.ID_CANCEL, self )		
+		btnSizer = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
 		
 		sizer.Add( self.chm, flag=wx.ALL, border=4 )
 		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
-		
-		sizer.Add( btns, flag=wx.EXPAND|wx.ALL, border=4 )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizer( sizer )
 		wx.CallAfter( self.Fit )
@@ -202,11 +200,11 @@ class ConfigDialog( wx.Dialog ):
 		sizer.Add( pfgs, flag=wx.ALL, border=4 )
 		
 		btnSizer = self.CreateButtonSizer( wx.OK|wx.APPLY|wx.CANCEL|wx.HELP )
-		wx.FindWindowById( wx.ID_APPLY , self ).Bind( wx.EVT_BUTTON, lambda event: self.EndModal(wx.ID_APPLY) )
-		wx.FindWindowById( wx.ID_HELP, self ).Bind( wx.EVT_BUTTON, lambda event: OpenHelp() )
-		wx.FindWindowById( wx.ID_OK, self ).SetDefault()
+		self.Bind( wx.EVT_BUTTON, lambda event: self.EndModal(wx.ID_APPLY), id=wx.ID_APPLY )
+		self.Bind( wx.EVT_BUTTON, lambda event: OpenHelp(), id=wx.ID_HELP )
 		
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
 		
 		self.SetSizerAndFit( sizer )
 		
@@ -312,16 +310,13 @@ class TriggerDialog( wx.Dialog ):
 			e = wx.TextCtrl(self, size=(500,-1) )
 			gs.Add( e )
 			self.editFields.append(e)
-		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.ok = wx.Button( self, wx.ID_OK )
-		self.ok.Bind( wx.EVT_BUTTON, self.onOK )
-		self.cancel = wx.Button( self, wx.ID_CANCEL )
-		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
-		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
+		
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
 		
 		sizer.Add( gs, flag=wx.ALL, border=4 )
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
 		self.SetSizerAndFit( sizer )
 	
 	def set( self, db, triggerId ):
@@ -373,15 +368,13 @@ class AutoCaptureDialog( wx.Dialog ):
 			e = wx.TextCtrl(self, size=(60,-1) )
 			gs.Add( e )
 			self.editFields.append(e)
-		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.ok = wx.Button( self, wx.ID_OK )
-		self.cancel = wx.Button( self, wx.ID_CANCEL )
-		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
-		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
-		
+			
 		sizer.Add( gs, flag=wx.ALL, border=4 )
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )		
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		
 		self.SetSizerAndFit( sizer )
 	
 	def set( self, s_before, s_after, closestFrames=0 ):
@@ -979,7 +972,8 @@ class MainWin( wx.Frame ):
 			a:data[i] for i, a in enumerate((
 				'id','ts','s_before','s_after','ts_start',
 				'bib','name','team','wave','race_name',
-				'first_name','last_name','note','kmh','frames','closest_frames'))
+				'first_name','last_name','note','kmh',
+				'frames','closest_frames'))
 		}
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
@@ -1291,6 +1285,12 @@ class MainWin( wx.Frame ):
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
+		if self.iTriggerSelect < 0:
+			self.iTriggerSelect = 0
+			return
+		
+		self.triggerList.Select( self.iTriggerSelect )
+		
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewIdRef()
 			self.triggerEditID = wx.NewIdRef()
@@ -1493,7 +1493,7 @@ class MainWin( wx.Frame ):
 				msg.get('team',''),
 				msg.get('wave',''),
 				msg.get('race_name','') or msg.get('raceName',''),
-				msg.get('closest_frames',self.closestFrames),
+				msg.get('closest_frames', self.closestFrames),
 			) )
 			# Record the video frames for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter

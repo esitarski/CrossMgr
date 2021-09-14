@@ -68,15 +68,6 @@ class JChipSetupDialog( wx.Dialog ):
 		self.testList = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
 		self.testList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		self.helpBtn = wx.Button( self, wx.ID_HELP )
-		self.Bind( wx.EVT_BUTTON, lambda evt: HelpSearch.showHelp('Menu-ChipReader.html#chip-reader-setup'), self.helpBtn )
-		
 		self.Bind(EVT_CHIP_READER, self.handleChipReaderEvent)
 		
 		bs = wx.BoxSizer( wx.VERTICAL )
@@ -146,13 +137,12 @@ class JChipSetupDialog( wx.Dialog ):
 		bs.Add( wx.StaticText(self, label = _('Messages:')), 0, wx.EXPAND|wx.ALL, border=border )
 		bs.Add( self.testList, 1, wx.EXPAND|wx.ALL, border )
 		
-		buttonBox = wx.BoxSizer( wx.HORIZONTAL )
-		buttonBox.AddStretchSpacer()
-		buttonBox.Add( self.okBtn, flag = wx.RIGHT, border=border )
-		self.okBtn.SetDefault()
-		buttonBox.Add( self.cancelBtn )
-		buttonBox.Add( self.helpBtn )
-		bs.Add( buttonBox, 0, wx.EXPAND | wx.ALL, border )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL|wx.HELP )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, id=wx.ID_CANCEL )
+		self.Bind( wx.EVT_BUTTON, lambda evt: HelpSearch.showHelp('Menu-ChipReader.html#chip-reader-setup'), id=wx.ID_HELP )
+		if btnSizer:
+			bs.Add( btnSizer, 0, wx.EXPAND | wx.ALL, border )
 		
 		self.stopTest()
 		self.SetSizerAndFit(bs)

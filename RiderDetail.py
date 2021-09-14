@@ -52,12 +52,6 @@ class AdjustTimeDialog( wx.Dialog ):
 		self.note = wx.TextCtrl( self, size=(400, -1), value=getattr(self.rider, 'ttNote', '') )
 		self.updateRideTime( None )
 				
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
 		fgs.Add( wx.StaticText( self ) )
 		fgs.Add( wx.StaticText( self, label=((riderName + ': ') if riderName else '') + '{}'.format(rider.num) ), flag=wx.ALIGN_LEFT )
 			
@@ -79,11 +73,10 @@ class AdjustTimeDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		sizer.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, border=4, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		hs.Add( self.cancelBtn, border=4, flag=wx.ALL )
-		sizer.Add( hs, flag=wx.ALIGN_RIGHT|wx.ALL, border=4 )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizerAndFit(sizer)
 		sizer.Fit( self )
@@ -143,9 +136,6 @@ class AdjustTimeDialog( wx.Dialog ):
 		Model.race.setChanged()
 		Utils.refresh()
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 class ChangeOffsetDialog( wx.Dialog ):
 	def __init__( self, parent, rider, riderName, id=wx.ID_ANY ):
@@ -161,12 +151,6 @@ class ChangeOffsetDialog( wx.Dialog ):
 		self.earlyLate.SetSelection( 0 )
 		self.adjustTime = HighPrecisionTimeEdit( self, allow_none=False, seconds=0.0, size=(128,-1) )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
 		fgs.Add( wx.StaticText( self ) )
 		fgs.Add( wx.StaticText( self, label=((riderName + ': ') if riderName else '') + '{}'.format(rider.num) ), flag=wx.ALIGN_LEFT )
 			
@@ -179,11 +163,10 @@ class ChangeOffsetDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		sizer.Add( fgs, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, border=4, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		hs.Add( self.cancelBtn, border=4, flag=wx.ALL )
-		sizer.Add( hs, flag=wx.ALIGN_RIGHT|wx.ALL, border=4 )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizerAndFit(sizer)
 		sizer.Fit( self )
@@ -210,9 +193,6 @@ class ChangeOffsetDialog( wx.Dialog ):
 		self.rider.times = [t + adjustTime for t in self.rider.times]
 		Model.race.setChanged()
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 class RiderDetail( wx.Panel ):
 	yellowColour = wx.Colour( 255, 255, 0 )

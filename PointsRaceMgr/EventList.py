@@ -28,7 +28,7 @@ class EventDialog( wx.Dialog ):
 		
 		bigFont = wx.Font( (0,20), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
-		self.hbs = wx.BoxSizer(wx.VERTICAL)
+		hbs = wx.BoxSizer(wx.VERTICAL)
 
 		hs = wx.BoxSizer(wx.HORIZONTAL)
 		bibTextLabel = wx.StaticText(self, label="Bibs:")
@@ -41,7 +41,7 @@ class EventDialog( wx.Dialog ):
 		hs.Add( bibTextLabel, flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.bibText, 1, flag=wx.EXPAND|wx.LEFT, border=2 )
 
-		self.hbs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
+		hbs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		ws = wx.GridSizer(2, 4, 2, 2)
 		self.choiceButtons = []
 		self.idToButton = {}
@@ -54,7 +54,7 @@ class EventDialog( wx.Dialog ):
 			self.choiceButtons[-1].Bind( wx.EVT_BUTTON, lambda event, idEvent=idEvent: self.onVerb(event, idEvent) )
 			self.idToButton[idEvent] = self.choiceButtons[-1]
 			ws.Add( self.choiceButtons[-1], flag=wx.LEFT, border=2 )
-		self.hbs.Add( ws, flag=wx.ALL, border=4 )
+		hbs.Add( ws, flag=wx.ALL, border=4 )
 				
 		ws = wx.GridSizer(1, 4, 2, 2)
 		for name, idEvent in Model.RaceEvent.States:
@@ -63,17 +63,12 @@ class EventDialog( wx.Dialog ):
 			self.idToButton[idEvent] = self.choiceButtons[-1]
 			ws.Add( self.choiceButtons[-1], flag=wx.LEFT, border=2 )
 		
-		self.hbs.Add( ws, flag=wx.ALL|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
+		hbs.Add( ws, flag=wx.ALL|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		
-		dbs = wx.StdDialogButtonSizer()
-		self.ok = wx.Button( self, wx.ID_OK )
-		self.ok.SetDefault()
-		self.cancel = wx.Button( self, wx.ID_CANCEL )
-		dbs.Add( self.ok, flag=wx.ALL, border=16 )
-		dbs.Add( self.cancel, flag=wx.ALL, border=16 )
-		
-		self.hbs.Add( dbs, flag=wx.EXPAND )
-		self.SetSizerAndFit( self.hbs )
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+		if btnSizer:
+			hbs.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
+		self.SetSizerAndFit( hbs )
 	
 	def refresh( self, event=None ):
 		self.e = event or self.e
@@ -140,7 +135,7 @@ class EventList( wx.Panel ):
 		
 		bigFont = wx.Font( (0,20), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
-		self.hbs = wx.BoxSizer(wx.VERTICAL)
+		hbs = wx.BoxSizer(wx.VERTICAL)
 
 		hs = wx.BoxSizer(wx.HORIZONTAL)
 		bibTextLabel = wx.StaticText(self, label="Bibs:")
@@ -153,7 +148,7 @@ class EventList( wx.Panel ):
 		hs.Add( bibTextLabel, flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.bibText, 1, flag=wx.EXPAND|wx.LEFT, border=2 )
 
-		self.hbs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
+		hbs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		ws = wx.GridSizer(2, 4, 2, 2)
 		self.choiceButtons = []
 		for name, idEvent in Model.RaceEvent.Events:
@@ -164,14 +159,14 @@ class EventList( wx.Panel ):
 			self.choiceButtons.append( wx.Button(self, label=name) )
 			self.choiceButtons[-1].Bind( wx.EVT_BUTTON, lambda event, idEvent=idEvent: self.onVerb(event, idEvent) )
 			ws.Add( self.choiceButtons[-1] )
-		self.hbs.Add( ws, flag=wx.ALL, border=4 )
+		hbs.Add( ws, flag=wx.ALL, border=4 )
 
 		ws = wx.GridSizer(1, 4, 2, 2)
 		for name, idEvent in Model.RaceEvent.States:
 			self.choiceButtons.append( wx.Button(self, label=name) )
 			self.choiceButtons[-1].Bind( wx.EVT_BUTTON, lambda event, idEvent=idEvent: self.onVerb(event, idEvent) )
 			ws.Add( self.choiceButtons[-1], flag=wx.LEFT, border=2 )
-		self.hbs.Add( ws, flag=wx.ALL, border=4 )
+		hbs.Add( ws, flag=wx.ALL, border=4 )
 
 		self.grid = EventListGrid( self )
 		self.grid.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onLeftClick )
@@ -182,8 +177,8 @@ class EventList( wx.Panel ):
 		self.grid.SetSelectionBackground( wx.Colour(255,255,0) )
 		self.grid.SetSelectionForeground( wx.Colour(80,80,80) )		
 	
-		self.hbs.Add( self.grid, 1, wx.EXPAND )
-		self.SetSizer(self.hbs)
+		hbs.Add( self.grid, 1, wx.EXPAND )
+		self.SetSizer( hbs )
 
 	def addNewEvent( self, e ):
 		race = Model.race

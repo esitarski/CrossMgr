@@ -197,7 +197,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					backlog.append( (ts, frame) )
 					tsSeen.add( ts )
 
-				# Don't send too many frames at a time.  We don't want to overwhelm the queue and lose frames.
+				# Don't send too many frames at a time.  We don't want to overwhelm the queue and lose frame rate.
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
 					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )

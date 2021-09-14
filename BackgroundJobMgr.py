@@ -33,16 +33,13 @@ class BackgroundJobMgr( wx.Dialog ):
 			self.jobList.AppendColumn( name, align )
 			setattr( self, k + 'Col', col )
 		
-		self.okButton = wx.Button( self, id=wx.ID_OK )
-		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
-		
-		buttonSizer = wx.StdDialogButtonSizer()
-		buttonSizer.AddButton( self.okButton )
-		buttonSizer.Realize()
-		
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+
 		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( self.jobList, 1, flag=wx.ALL|wx.EXPAND, border=8 )
-		vs.Add( buttonSizer, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=8 )
+		if btnSizer:
+			vs.Add( btnSizer, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=8 )
 		
 		self.jobs = {}
 		
