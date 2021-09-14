@@ -200,7 +200,7 @@ class Database:
 			)
 			if rows:
 				self.conn.execute(
-					'UPDATE trigger SET {} WHERE id = ?'.format(','.join('{}=?'.format(f) for f in self.triggerFieldsUpdate)),
+					'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in self.triggerFieldsUpdate)),
 						rows[0] + (id,)
 				)
 	
