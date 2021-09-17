@@ -263,6 +263,26 @@ class Database:
 		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
 		return tsJpgs
 	
+	def _getPhotosClosestIds( self, ts, closestFrames ):
+		for ts, id in self.conn.execute( 'SELECT ts,id FROM photo WHERE ts <= ? ORDER BY ts DESC', (ts,) ):
+			tsEarlier, idEarlier = ts, id
+			break
+		else:
+			tsEarlier, idEarlier = None, None
+		
+		for ts, id in self.conn.execute( 'SELECT ts,id FROM photo WHERE ts > ? ORDER BY ts ASC', (ts,) ):
+			tsLater, idLater = ts, id
+			break
+		else:
+			tsLater, idLater = None, None
+
+		# Only works for closestFrames == 1 and closestFrames == 2
+		if closestFrames == 1:
+			tsJpgIds = [(tsEarlier, idEarlier) if (tsLater is None or abs((tsEarlier - ts).total_seconds()) < abs((tsLater - ts).total_seconds())) else (tsLater, idLater)]
+		else:
+			tsJpgIds = [p for p in [(tsEarlier,idEarlier), (tsLater,idLater)] if p[1]]
+		return tsJpgIds
+	
 	def getPhotoClosest( self, ts ):
 		tsJpgs = self.getPhotosClosest( ts, 1 )
 		return tsJpgs[0] if tsJpgs else (None, None)
@@ -283,6 +303,28 @@ class Database:
 			frames = frames or self.getTriggerPhotoCount( id )
 			self.conn.execute( 'UPDATE trigger SET frames=? WHERE id=? AND frames!=?', (frames, id, frames) )
 			return frames
+	
+	def getPhotoById( self, id ):
+		with self.dbLock, self.conn:
+			row = self.conn.execute( 'SELECT jpg FROM photo WHERE id=?', (id,) ).fetchone()
+		if row is None:
+			raise ValueError( 'Nonexistent photo id={}'.format(id) )
+		return row[0]		
+		
+	def queryTriggers( self, tsLower, tsUpper, bib=None ):
+		triggers = self.getTriggers( tsLower, tsUpper, bib )
+		trigs = []
+		with self.dbLock, self.conn:
+			for trig in triggers:
+				trigCur = trig._asdict()
+				if trig.closest_frames:
+					trigCur['tsJpgIds'] = self._getPhotosClosestIds( trig.ts, trig.closest_frames )
+				else:
+					trigCur['tsJpgIds'] = list( self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? and ?',
+						(trig.ts - timedelta(seconds=trig.s_before), trig.ts + timedelta(seconds=trig.s_after)) )
+					)
+				trigs.append( trigCur )
+		return trigs
 	
 	def getTriggerPhotoCounts( self, tsLower, tsUpper ):
 		counts = defaultdict( int )

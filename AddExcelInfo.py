@@ -10,11 +10,11 @@ def getInfo():
 	info = {
 		'{}_AppVersion'.format(app):	Version.AppVerName,
 		'{}_Timestamp'.format(app):		datetime.datetime.now(),
-		'{}_User'.format(app):			os.getlogin(),
+		'{}_User'.format(app):			os.path.basename(os.path.expanduser("~")),
 		'{}_Python'.format(app):		sys.version.replace('\n', ' '),
 	}
-	info.update( {'{}_{}'.format(app, a.capitalize()): getattr(uname, a, '')
-		for a in ('system', 'release', 'version', 'machine', 'processor') } )
+	info.update( {'{}_{}'.format(app, a.capitalize()): getattr(uname, a)
+		for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '') } )
 	return info
 
 def AddExcelInfo( wb ):

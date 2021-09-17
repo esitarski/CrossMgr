@@ -1,0 +1,754 @@
+<html>
+<head>
+	
+<style type="text/css">
+body { font-family: sans-serif; }
+
+#idRaceName {
+	font-size: 200%;
+	font-weight: bold;
+}
+
+#idImgHeader {
+	box-shadow: 4px 4px 4px #888888;
+}
+
+#detailTitle {
+	font-size: 110%;
+	font-weight: bold;
+}
+
+.smallfont	{ font-size: 75%; }
+.bigfont	{ font-size: 120%; }
+.biggerFont	{ font-size: 130%; }
+
+.hidden { display: none; }
+
+div label input {
+   margin-right:220px;
+}
+
+#buttongroup {
+	margin:4px;   
+	float:left;
+}
+
+#buttongroup label {
+	float:left;
+	margin:4px;
+	background-color:#EFEFEF;
+	border-radius:4px;
+	border:1px solid #D0D0D0;
+	overflow:auto;
+	cursor: pointer;
+}
+
+#buttongroup label span {
+	text-align:center;
+	padding:8px 8px;
+	display:block;
+}
+
+#buttongroup label input {
+	position:absolute;
+	top:-20px;
+}
+
+#buttongroup input:checked + span {
+	background-color:#404040;
+	color:#F7F7F7;
+}
+
+#buttongroup .green {
+	background-color:#7FE57F;
+	color:#333;
+}
+
+table {
+	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+	border-collapse:collapse;
+}
+table td, table th {
+	font-size:1em;
+	padding:3px 7px 2px 7px;
+}
+table th {
+	font-size:1.1em;
+	text-align:right;
+	padding-top:5px;
+	padding-bottom:4px;
+	background-color:#7FE57F;
+	color:#000000;
+}
+table tr.odd {
+	color:#000000;
+	background-color:#EAF2D3;
+}
+table tr:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+table tr.odd:hover {
+	color:#000000;
+	background-color:#FFFFCC;
+}
+
+table tr.highlight {
+	font-weight: bold;
+	background-color:#00FFFF;
+}
+
+table td {
+	border-top:1px solid #98BF21;
+}
+
+table td.noborder {
+	border-top:0px solid #98BF21;
+}
+
+table td.numeric, table th.numeric {
+	text-align:right;
+}
+
+table tr td.same-value {
+	text-align:center;
+}
+
+.flag {
+    border: 1px solid #CCC;
+}
+
+hr { clear: both; }
+hr.invisible { clear: both; visibility: hidden; }
+
+@media print { .noprint { display: none; } }
+
+</style>
+
+
+<script>
+	
+//----------------------------------------------------------------------
+
+const contrastColour = 'rgb( 255, 130, 0 )';
+
+function GetScaleRatio( wBitmap, hBitmap, width, height ) {
+	return Math.min( width / wBitmap, height / hBitmap );
+}
+
+function intervalsOverlap( a0, a1, b0, b1 ) {
+	return a0 <= b1 && b0 <= a1;
+}
+
+// A rectangle is an array [x, y, width, height].
+// These convenience routines get the rectangle corners.
+function topRight( r )		{ return [r[0] + r[2], r[1]]; }
+function topLeft( r )		{ return [r[0], r[1]]; }
+function bottomLeft( r ) 	{ return [r[0], r[1] + r[3]]; }
+function bottomRight( r )	{ return [r[0] + r[2], r[1] + r[3]]; }
+
+function intersectRect( a, b ) {
+	// Return the intersection rectangle between the two given rectangles.
+	// Returns an empty rectangle if there is no intersection.
+	const x = Math.max(a[0], b[0]);
+	const num1 = Math.min(a[0] + a[2], b[0] + b[2]);
+	const y = Math.max(a[1], b[1]);
+	const num2 = Math.min(a[1] + a[3], b[1] + b[3]);
+	if (num1 >= x && num2 >= y)
+		return [x, y, num1 - x, num2 - y];
+	else
+		return [0,0,0,0];
+}
+
+class ScaledBitmap {
+	constructor( canvas, image=null, drawFinishLine=false, inset=true, drawCallback=null ) {
+		this.canvas = canvas;
+		this.SetImage( image );
+		this.mouseButtonDown = false;
+		this.background = 'rgb(232,232,232)';
+		this.resetMagRect();
+		canvas.addEventListener('resize', this.OnSize.bind(this) );
+
+		this.drawFinishLine = drawFinishLine;
+		
+		this.eventCache = [];
+		if( inset ) {
+			canvas.addEventListener('pointerdown', this.OnPointerDown.bind(this), false);
+			canvas.addEventListener('pointermove', this.OnPointerMove.bind(this), false);
+			canvas.addEventListener('pointerup', this.OnPointerUp.bind(this), false);
+			canvas.addEventListener('pointercancel', this.OnPointerUp.bind(this), false);
+			canvas.addEventListener('pointerleave', this.OnPointerUp.bind(this), false);
+		}
+		this.drawCallback = drawCallback;
+		this.Refresh();
+	}
+	
+	resetMagRect() {
+		this.beginX = 0;
+		this.beginY = 0;
+		this.endX = 0;
+		this.endY = 0;
+	}
+	
+	getMagRect() {
+		return [Math.min(this.beginX, this.endX), Math.min(this.beginY, this.endY), Math.abs(this.endX-this.beginX), Math.abs(this.endY-this.beginY)];
+	}
+	
+	OnSize( event ) {
+		this.resetMagRect();
+		this.Refresh();
+	}
+	
+	OnPointerDown( event ) {
+		if( event.pointerType == 'mouse' && (event.buttons != 1) )	// Ignore all mouse events except for left button.
+			return;
+		
+		this.eventCache.push( event );
+		if( this.eventCache.length == 1 ) {
+			//console.log( 'OnPointerDown: initializing zoom' );
+			this.beginX = this.endX = this.eventCache[0].offsetX;
+			this.beginY = this.endY = this.eventCache[0].offsetY;
+			this.Refresh();
+			
+			this.mouseButtonDown = (event.pointerType == 'mouse' && (event.buttons == 1));
+			this.canvas.style.cursor = 'zoom-in';
+		}
+		else {
+			//console.log( 'OnPointerDown: pinch zoom point' );
+			this.OnPointerMove( event );
+		}
+	}
+	
+	OnPointerMove( event ) {
+		const i = this.eventCache.findIndex( e => e.pointerId == event.pointerId );
+		if( i >= 0 )
+			this.eventCache[i] = event;
+		
+		if( this.eventCache.length == 1 ) {
+			if( this.mouseButtonDown ) {
+				//console.log( 'OnPointerMove: mouse expand zoom' );
+				this.endX   = this.eventCache[0].offsetX;
+				this.endY   = this.eventCache[0].offsetY;
+				this.Refresh();
+			}
+		}
+		else if( this.eventCache.length >= 2 ) {
+			//console.log( 'OnPointerMove: pinch expand zoom' );
+			this.beginX = this.beginY = Number.POSITIVE_INFINITY;
+			this.endX   = this.endY   = Number.NEGATIVE_INFINITY;
+			for( let i = 0; i < this.eventCache.length; ++i ) {
+				const offsetX = this.eventCache[i].offsetX, offsetY = this.eventCache[i].offsetY;
+				this.beginX  = Math.min( this.beginX, offsetX );
+				this.beginY  = Math.min( this.beginY, offsetY );
+				this.endX    = Math.max( this.endX,   offsetX );
+				this.endY    = Math.max( this.endY,   offsetY );
+			}
+			this.Refresh();
+		}
+	}
+	
+	OnPointerUp( event ) {
+		const i = this.eventCache.findIndex( e => e.pointerId == event.pointerId );
+		if( i >= 0 )
+			this.eventCache.splice(i, 1);
+			
+		if( this.eventCache.length == 0 ) {
+			this.canvas.style.cursor = 'auto';
+			this.mouseButtonDown = false;
+		}
+		else
+			this.OnPointerMove( this.eventCache[0] );
+	}
+	
+	getInsetRect( width, height, isWest, isNorth ) {
+		const r = 0.75;
+		const insetWidth = width*r, insetHeight = height*r;
+		return [!isWest ? 0 : width - insetWidth, !isNorth ? 0 : height - insetHeight, insetWidth, insetHeight];
+	}
+	
+	draw( dc, width, height ) {
+		// Clear the canvas.
+		dc.beginPath();
+		dc.rect( 0, 0, width, height );
+		dc.fillStyle = 'rgb(0,0,0)';
+		dc.fill();
+		
+		if( !this.bitmap )
+			return;
+		
+		// Draw the image in the canvas.
+		let sourceBM = this.bitmap;
+		const sourceWidth = sourceBM.width, sourceHeight = sourceBM.height;
+		const ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height );
+		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
+
+		const xLeft = Math.max(0, (width - destWidth)/2);
+		const yTop = Math.max(0, (height - destHeight)/2);
+		if( sourceWidth > 0 && sourceHeight > 0 && destWidth > 0 && destHeight > 0 )
+			dc.drawImage( sourceBM, 0, 0, sourceWidth, sourceHeight, xLeft, yTop, destWidth, destHeight );
+		
+		if( this.drawFinishLine ) {
+			dc.strokeStyle = contrastColour;
+			dc.lineWidth = 1;
+			dc.beginPath();
+			dc.moveTo( width/2, 0 );
+			dc.lineTo( width/2, height );
+			dc.stroke();
+		}
+		
+		const magnifyRect = this.getMagRect();
+		if( magnifyRect[2] <= 0 || magnifyRect[3] <= 0 )
+			return;
+			
+		const sourceRect = intersectRect(
+			[0, 0, sourceWidth, sourceHeight],
+			[(magnifyRect[0] - xLeft)/ratio, (magnifyRect[1]-yTop)/ratio, magnifyRect[2]/ratio, magnifyRect[3]/ratio]
+		);
+		
+		if( sourceRect[2] <= 0 || sourceRect[3] <= 0 )
+			return;
+			
+		const xCenter = sourceRect[0] + sourceRect[2] / 2, yCenter = sourceRect[1] + sourceRect[3] / 2;
+		const isWest = xCenter < this.bitmap.width/2, isNorth = yCenter < this.bitmap.width/2;
+		let insetRect = this.getInsetRect( width, height, isWest, isNorth );
+		
+		const magRatio = GetScaleRatio( sourceRect[2], sourceRect[3], insetRect[2], insetRect[3] );
+		const iWidth = sourceRect[2] * magRatio, iHeight = sourceRect[3] * magRatio;
+		insetRect = [
+			insetRect[0] != 0 ? insetRect[0] + insetRect[2] - iWidth : 0,
+			insetRect[1] != 0 ? insetRect[1] + insetRect[3] - iHeight : 0,
+			iWidth, iHeight
+		];
+		
+		dc.drawImage( sourceBM, ...sourceRect, ...insetRect );
+
+		// Draw the outlines.
+		dc.strokeStyle = 'rgb(200,200,0)';
+		dc.lineWidth = 2;
+
+		dc.beginPath();
+		dc.rect( ...insetRect );
+		dc.rect( ...magnifyRect );
+		dc.stroke();
+		
+		// Draw the direction lines.
+		function drawLine( p1, p2 ) {
+			dc.moveTo( ...p1 );
+			dc.lineTo( ...p2 );
+		}
+				
+		if( intervalsOverlap(magnifyRect[0], magnifyRect[0] + magnifyRect[2], insetRect[0], insetRect[0] + insetRect[2]) ) {
+			if( !(intervalsOverlap(magnifyRect[1], magnifyRect[1] + magnifyRect[3], insetRect[1], insetRect[1] + insetRect[3])) ) {
+				dc.beginPath();
+				if( isNorth ) {
+					drawLine( bottomLeft(magnifyRect), topLeft(insetRect) );				
+					drawLine( bottomRight(magnifyRect), topRight(insetRect) );
+				}
+				else {
+					drawLine( topLeft(magnifyRect), bottomLeft(insetRect) );
+					drawLine( topRight(magnifyRect), bottomRight(insetRect) );
+				}
+				dc.stroke();
+			}
+		}
+		else {
+			dc.beginPath();
+			if( isWest ) {
+				drawLine( topRight(magnifyRect), topLeft(insetRect) );
+				drawLine( bottomRight(magnifyRect), bottomLeft(insetRect) );
+			}
+			else {
+				drawLine( topLeft(magnifyRect), topRight(insetRect) );
+				drawLine( bottomLeft(magnifyRect), bottomRight(insetRect) );
+			}
+			dc.stroke();
+		}
+	}
+	
+	SetImage( image ) {
+		this.bitmap = null;
+		if( image ) {
+			this.bitmap = new OffscreenCanvas( image.width, image.height );
+			let dc = this.bitmap.getContext('2d');
+			dc.drawImage( image, 0, 0, image.width, image.height, 0, 0, image.width, image.height );
+			this.Refresh()
+		}
+	}
+	
+	SetToEmpty() {
+		const width = this.canvas.width, height = this.canvas.height;
+		this.bitmap = new OffscreenCanvas( width, height );
+		let ctx = this.bitmap.getContext('2d');
+		ctx.beginPath();
+		ctx.rect( 0, 0, width, height );
+		ctx.fillStyle = 'rgb(255,255,255)';
+		ctx.fill();
+		this.Refresh()
+	}
+		
+	SetTestBitmap() {
+		// Draw a test pattern into the offscreen bitmap.
+		const width = this.canvas.width, height = this.canvas.height;
+		this.bitmap = new OffscreenCanvas( width, height );
+		let dc = this.bitmap.getContext('2d');
+		
+		let colours = [
+			'rgb(255,255,255)', 'rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)',
+			'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)', 'rgb(0,0,0)'
+		];
+		let x, y;
+		const rWidth = width / colours.length;
+		for( let row = 0; row < 2; ++row ) {
+			y = (row == 0 ? 0 : height * 0.75);
+			let hCur = (row == 0 ? height * 0.75 : height * 0.25);
+			for( let col = 0; col < colours.length; ++col ) {
+				dc.beginPath();
+				dc.rect( rWidth * col, y, rWidth+1, hCur );
+				dc.fillStyle = colours[col];
+				dc.fill();
+			}
+			colours.reverse();
+		}
+		
+		const r = Math.min(width, height) / 3;
+		x = width / 2;
+		y = height / 2;
+		const angle = 2.0*Math.PI / colours.length;
+		for( let i = 0; i < colours.length; ++i ) {
+			dc.beginPath();
+			dc.moveTo( x, y );
+			dc.lineTo( x + r * Math.cos(angle*i), y + r * Math.sin(angle*i) );
+			dc.arc( x, y, r, angle*i, angle*(i+1), false);
+			dc.closePath();
+			dc.fillStyle = colours[i];
+			dc.fill();
+		}
+		
+		this.Refresh();
+	}
+	
+	Refresh() {
+		this.draw( this.canvas.getContext('2d'), this.canvas.width, this.canvas.height );
+		if( this.drawCallback )
+			this.drawCallback( this.canvas );
+	}
+};
+
+//----------------------------------------------------------------------
+	
+function getJSON( url, handler ) {
+	let xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (this.readyState === XMLHttpRequest.DONE && this.status == 200) {
+			handler( JSON.parse(this.responseText) );
+		}
+	};
+	xhr.onerror = function( e ) {
+		console.log( 'XMLHttpRequest Error: ' + e );
+	};
+	xhr.open("GET", url, true);
+	xhr.send();
+}
+
+function showTriggerDates( triggerdates ) {
+	playStop();
+
+	let select = document.getElementById( 'id_trigger_date' );
+	select.length = 0;
+	for( let i = 0; i < triggerdates.length; ++i ) {
+		const d = triggerdates[i][0], c = triggerdates[i][1];
+		let option = document.createElement("option");
+		option.text = d + ': ' + c;
+		option.value = d;
+		select.add( option );
+	}
+	if( triggerdates.length != 0 )
+		select.selectedIndex = 0;
+}
+
+function leftFillNum(num, targetLength) {
+    return num.toString().padStart(targetLength, 0);
+}
+
+function formatEpoch( secsEpoch ) {
+	d = new Date( secsEpoch * 1000.0 );
+	hh = d.getHours();
+	mm = d.getMinutes();
+	ss = d.getSeconds();
+	ms = d.getMilliseconds();
+	return leftFillNum(hh,2) + ':' + leftFillNum(mm,2) + ':' + leftFillNum(ss,2) + '.' + leftFillNum(ms,3);
+}
+
+function formatTimeDelta( secs ) {
+	let sign = '+';
+	if( secs < 0 ) {
+		sign = '-';
+		secs *= -1;
+	}
+	const ss = Math.trunc(secs);
+	const ms = Math.round(secs*1000);
+	return sign + ss + '.' + leftFillNum(ms,3);
+}
+
+//----------------------------------------------------------------------
+
+var triggersCur = [];
+
+//----------------------------------------------------------------------
+
+var iTriggerCur = 0;
+var imagesCur = [];
+var loadedImageCount = 0;
+var iImageCur = 0;
+
+function getClosestImage() {
+	// Find the image closest to the trigger time.
+	let ts = triggersCur[iTriggerCur].ts;
+	let tsJpgIds = triggersCur[iTriggerCur].tsJpgIds;
+	let iLeft = 0, iRight = tsJpgIds.length;
+	while ( iRight - iLeft > 1 ) {
+		let iMid = (iRight + iLeft) >> 1;
+		if( ts < tsJpgIds[iMid][0] )
+			iRight = iMid;
+		else
+			iLeft = iMid + 1;
+	}
+	iImageCur = Math.max(0, iLeft-1);
+	const iMax = Math.min(tsJpgIds.length, iLeft+2);
+	let dtBest = Math.abs( ts - tsJpgIds[iImageCur] );
+	for( let i = iImageCur; i < iMax; ++i ) {
+		const dtCur = Math.abs( ts - tsJpgIds[i] );
+		if( dtCur < dtBest ) {
+			dtBest = dtCur;
+			iImageCur = i;
+		}
+	}
+	return iImageCur;
+}
+
+function showImages() {
+	showImage( getClosestImage() );
+}
+
+function onLoadImage() {
+	// If all images have been loaded, show them.
+	if( ++loadedImageCount >= imagesCur.length )
+		showImages();
+}
+
+function updateImages( iTrigger ) {
+	// Load all the images in parallel.
+	// When the last image has loaded, the screen will update.
+	// Since the browser caches the images, subsequent accesses will be faster.
+	playStop();
+	
+	iTriggerCur = iTrigger;
+	
+	const mods = (
+		(document.getElementById('id_contrast').checked		? 'c' : '') +
+		(document.getElementById('id_sharpen').checked		? 's' : '') +
+		(document.getElementById('id_grayscale').checked	? 'g' : '')
+	);
+	
+	loadedImageCount = imagesCur.length = 0;
+	iImageCur = 0;
+	const tsJpgIds = triggersCur[iTrigger].tsJpgIds;
+	for( let i = 0; i < tsJpgIds.length; ++i ) {
+		let img = document.createElement( 'img' );
+		img.onload = onLoadImage;
+		img.src = 'img' + tsJpgIds[i][1] + mods + '.jpeg';
+		imagesCur.push( img );
+	}
+	
+	// Update the selected row.
+	let rows = document.getElementById('id_trigger_table').rows;
+	for( let i = 1; i < rows.length; ++i ) {
+		rows[i].classList.toggle('highlight', i-1==iTrigger);	// account for the header row.
+	}
+}
+
+//----------------------------------------------------------------------
+	
+function showTriggers( triggers ) {
+	playStop();
+	let trigger_div = document.getElementById( 'id_triggers' );
+	trigger_div.innerHTML = '';
+	
+	const headers = ['Time', 'Bib', 'Last',       'First',      'Team', 'Note',	'Wave', 'Race',      'Frames'];
+	const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team', 'note',	'wave', 'race_name', 'frames'];
+	const numeric = [true,   true,   false,       false,        false,  false,	false,  false,        true];
+	
+	let table = document.createElement( 'table' );
+	table.id = 'id_trigger_table';
+	table.className = 'table';
+	trigger_div.appendChild( table );
+	
+	let thead = document.createElement( 'thead' );
+	table.appendChild( thead );
+	
+	let tr = document.createElement( 'tr' );
+	thead.appendChild( tr );
+	for( let col = 0; col < headers.length; ++col ) {
+		let th = document.createElement( 'th' );
+		tr.appendChild( th );
+		th.innerHTML = headers[col];
+		if( numeric[col] )
+			th.classList.add( 'numeric' );
+	}
+	
+	let tbody = document.createElement( 'tbody' );
+	table.appendChild( tbody );
+	
+	for( let i = 0; i < triggers.length; ++i ) {
+		let trig = triggers[i];
+		
+		let tr = document.createElement( 'tr' );
+		if( i & 1 )
+			tr.classList.add( 'odd' );
+		tr.addEventListener( 'click', function( iTrigger ) { return function(){ updateImages(iTrigger); }; }( i ), false );
+		tbody.appendChild( tr );
+		
+		trig.frames = trig.tsJpgIds.length;
+		for( let col = 0; col < headers.length; ++col ) {
+			let td = document.createElement( 'td' );
+			tr.appendChild( td );
+			td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+			if( numeric[col] )
+				td.classList.add( 'numeric' );
+		}
+	}
+	triggersCur = triggers;
+}
+
+//----------------------------------------------------------------------
+
+var scaledBitmap = null;
+
+function drawCallback( canvas ) {
+	if( triggersCur.length == 0 )
+		return;
+	
+	// Add text showing the offset from the trigger time.
+	let ctx = canvas.getContext('2d');	
+	const ts = triggersCur[iTriggerCur].ts;
+	const tsImage = triggersCur[iTriggerCur].tsJpgIds[iImageCur][0];
+	const fontSize = canvas.height / 20;
+	ctx.font = fontSize + 'px Arial';
+	ctx.textBaseline = 'top';
+	ctx.fillStyle = 'rgb(255,255,0)';
+	
+	ctx.fillText( formatTimeDelta(tsImage - ts) + ' TRG', fontSize, fontSize );
+	ctx.fillText( formatEpoch(tsImage), fontSize, fontSize*2.15 );
+}
+
+function showImage( iImage ) {
+	let img = imagesCur[iImage];
+	iImageCur = iImage;
+	if( !scaledBitmap )
+		scaledBitmap = new ScaledBitmap( document.getElementById('id_canvas'), img, false, true, drawCallback );
+	else
+		scaledBitmap.SetImage( img );
+}
+
+//----------------------------------------------------------------------
+
+var playTimer = null;
+function play( dir ) {
+	const tsJpgIds = triggersCur[iTriggerCur].tsJpgIds;
+	const iImageNext = (iImageCur + dir + tsJpgIds.length) % tsJpgIds.length;
+	let dt = tsJpgIds[iImageNext][0] - tsJpgIds[iImageCur][0];
+	if( (dir > 0 && dt < 0) || (dir < 0 && dt > 0) )
+		dt = 0.75;
+	
+	showImage( iImageCur );
+	iImageCur = iImageNext;
+	if( dt != 0 )
+		playTimer = setTimeout( () => play(dir), Math.abs(dt * 1000.0) );
+}
+
+function playStop() {
+	if( playTimer != null ) {
+		clearTimeout( playTimer );
+		playTimer = null;
+	}
+}
+	
+function goImage( iImage ) {
+	playStop();
+	if( !triggersCur.length )
+		return;
+	iImageCur = Math.max(0, Math.min(triggersCur[iTriggerCur].tsJpgIds.length-1, iImage) );
+	showImage( iImageCur );
+}
+function goTrigger() {
+	playStop();
+	showImage( getClosestImage() );
+}
+	
+function onWheel( e ) {
+	playStop();
+	if( e )
+		iImageCur += (event.deltaY < 0) ? -1 : 1;
+	iImageCur = Math.max( 0, Math.min(iImageCur, imagesCur.length-1) );
+	if( imagesCur.length )
+		showImage( iImageCur );
+	e.returnValue = false;
+}
+
+//----------------------------------------------------------------------
+
+function updateTriggers() {
+	let select = document.getElementById( 'id_trigger_date' );
+	const date = select.options[select.selectedIndex].value;
+	getJSON( 'triggers.js' + '?' + 'day=' + date, showTriggers )
+}
+
+//----------------------------------------------------------------------
+	
+function OnLoad() {
+	let canvas = document.getElementById( 'id_canvas' );
+	canvas.addEventListener( 'wheel', onWheel, false );
+	canvas.addEventListener( 'click', playStop, false );
+
+	getJSON( 'triggerdates.js', function( data ) { showTriggerDates(data); updateTriggers(); } );
+	
+}
+</script>
+
+</head>
+
+<body onload="OnLoad()">
+	
+<label for="trigger_date">Date:</label>
+<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
+</select>
+<p></p>
+<div id="id_triggers"></div>
+<div>
+	<canvas id="id_canvas" width="1000" height="600"></canvas>
+	<p>
+		<button title="Frame closest to Trigger" onclick="goTrigger();">&#x2295;</button>
+		<button title="-1 Frame" onclick="goImage(iImageCur-1);">-1</button>
+		<button title="+1 Frame" onclick="goImage(iImageCur+1);">+1</button>
+		<button title="First Frame" onclick="goImage(0);">&#x23EE;</button>
+		<button title="Play Reverse" onclick="playStop();play(-1);">&#x23F4;</button>
+		<button title="Stop Play" onclick="playStop();">&#x23F8;</button>
+		<button title="Play Forward" onclick="playStop();play(1);">&#x23F5;</button>
+		<button title="Last Frame" onclick="goImage(1e10);">&#x23ED;</button>
+		mouse-wheel to scroll by frame | click-and-drag to zoom
+	</p>
+	<p>
+		Filters:
+		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
+		<label for="id_contrast">Contrast</label>
+		
+		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
+		<label for="id_sharpen">Sharpen</label>
+		
+		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
+		<label for="id_grayscale">Grayscale</label>
+	</p>
+</div>
+</body>
+
+</html>

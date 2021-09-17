@@ -876,7 +876,7 @@ class MainWin( wx.Frame ):
 			
 			dateStr = infoList[0]['ts'].strftime('%Y-%m-%d')
 			fname = os.path.join( dirname, '{}-index.html'.format(dateStr) )
-			ftemplate = os.path.join( Utils.getImageFolder(), 'PhotoPage.html' )
+			ftemplate = os.path.join( Utils.getHtmlFolder(), 'PhotoPage.html' )
 			
 			with open(fname, 'w') as fOut, open(ftemplate) as fIn:
 				for line in fIn:
@@ -1458,7 +1458,7 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( ('flush',) )
 	
 		while True:
-			msg = self.requestQ.get()
+			msg = self.requestQ.get()	# Blocking get.
 			
 			tSearch = msg['time']
 			advanceSeconds = msg.get('advanceSeconds', 0.0)
