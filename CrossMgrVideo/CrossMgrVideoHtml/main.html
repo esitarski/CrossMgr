@@ -496,6 +496,7 @@ class ScaledBitmap {
 	}
 };
 
+
 //----------------------------------------------------------------------
 	
 function getJSON( url, handler ) {
@@ -562,6 +563,76 @@ var iTriggerCur = 0;
 var imagesCur = [];
 var loadedImageCount = 0;
 var iImageCur = 0;
+
+//----------------------------------------------------------------------
+	
+function MakeComposite( leftToRight=true, pixelsPerSec=1.0 ) {
+	// Creates a composite image at full size.
+	if( imagesCur.length == 0 )
+		return null;
+	
+	// Create a composite at full size, then rescale at the end.
+	let imageFirst = imagesCur[0];
+	const widthPhoto = imgFirst.height, heightPhoto = imgFirst.height;
+	
+	// if there are 1,2 photos, show them all.
+	if( imagesCur.length <= 2 ) {
+		imgComposite = new OffscreenCanvas( widthPhoto*len(tsJpgs), heightPhoto );
+		let dc = imgComposite.getContext('2d');
+		for( let i = 0; i < imagesCur.length; ++i ) {
+			const iImg = (leftToRight ? i : imagesCur.length - 1 - i);
+			const xLeft = i*widthPhoto;
+			dc.drawImage( imagesCur[iImg], 0, 0, image.width, image.height, xLeft, 0, image.width, image.height );
+		}
+		return imgComposite;
+	}
+	
+	function times( i ) {
+		const tsJpsIds = triggersCur[iTriggerCur].tsJpgIds;
+		if( i < 0 )
+			return tsJpgIds[tsJpgIds.length+i][0];
+		else
+			return tsJpgIds[i][0];
+	}
+	
+	// Create a composite image from the photos.
+	const widthPhotoHalf = Math.floor(widthPhoto / 2);
+	const extraSlice = leftToRight ? (times(1) - times(0)) : (times(-1) - times(-2));
+	const widthComposite = Math.floor((times(-1) + extraSlice) * pixelsPerSec) + 1;
+
+	let imgComposite = new OffscreenCanvas( widthComposite, heightPhoto );
+	let dc = canvas.getContext('2d');
+		
+	if( leftToRight ) {
+		let xLeftLast = widthComposite;
+		for( let i = 0; i <  imagesCur.length; ++i ) {
+			const t = times(i);
+			const xLeft = widthComposite - Math.floor((extraSlice - t) * pixelsPerSec);
+			const dx = Math.min( xLeftLast - xLeft, widthPhotoHalf )
+			dc.drawImage( imagesCur[i],
+				widthPhotoHalf, 0, dx, photoHeight,
+				xLeft,          0, dx, photoHeight
+			);
+			xLeftLast = xLeft;
+		}
+	}
+	else {
+		let xRightLast = 0;
+		for( let i = 0; i <  imagesCur.length; ++i ) {
+			const t = times(i);
+			const xRight = Math.floor((extraSlice + t) * pixelsPerSec);
+			const dx = Math.min( xRight - xRightLast, widthPhotoHalf )
+			dc.drawImage( imagesCur[i],
+				widthPhotoHalf-dx, 0, dx, photoHeight,
+				xRight-dx,         0, dx, photoHeight
+			);
+			xRightLast = xRight;
+		}
+	}
+	return imgComposite;
+}
+
+//----------------------------------------------------------------------
 
 function getClosestImage() {
 	// Find the image closest to the trigger time.
@@ -739,8 +810,7 @@ function play( dir ) {
 	
 	showImage( iImageCur );
 	iImageCur = iImageNext;
-	if( dt != 0 )
-		playTimer = setTimeout( () => play(dir), Math.abs(dt * 1000.0) );
+	playTimer = setTimeout( () => play(dir), Math.abs(dt * 1000.0) );
 }
 
 function playStop() {

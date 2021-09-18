@@ -13,12 +13,16 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False )
 	imgCur = jpegToFrame(tsJpgs[0][1])
 	heightPhoto, widthPhoto, layers = imgCur.shape
 	
+	if heightPhoto == 0 or widthPhoto == 0:
+		return None, None, None,
+	
 	# if there are 1,2 photos, show them all.
 	if len(tsJpgs) <= 2:
 		imgComposite = np.full((heightPhoto,widthPhoto*len(tsJpgs),3), 0xd3, np.uint8)
-		for i in (range(len(tsJpgs)) if leftToRight else range(len(tsJpgs)-1, -1, -1)):
+		for i in range(len(tsJpgs)):
+			iImg = i if leftToRight else len(tsJpgs)-1-i
 			xLeft = i*widthPhoto
-			imgComposite[:,xLeft:xLeft+widthPhoto] = imgCur if i == 0 else jpegToFrame(tsJpgs[i][1])
+			imgComposite[:,xLeft:xLeft+widthPhoto] = imgCur if iImg == 0 else jpegToFrame(tsJpgs[iImg][1])
 		
 		if scale != 1.0:
 			imgComposite = cv2.resize(
@@ -29,7 +33,7 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False )
 	
 	# Create a composite image from the photos.
 	widthPhotoHalf = widthPhoto // 2
-	extraSlice = int((times[1] - times[0]) if leftToRight else (times[-1] - times[-2]))
+	extraSlice = (times[1] - times[0]) if leftToRight else (times[-1] - times[-2])
 	widthComposite = int((times[-1] + extraSlice) * pixelsPerSec) + 1
 
 	imgComposite = np.full((heightPhoto,widthComposite,3), 0xd3, np.uint8)
@@ -37,9 +41,13 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False )
 	if leftToRight:
 		xLeftLast = widthComposite
 		for i, t in enumerate(times):
-			xLeft = widthComposite - extraSlice - int(t * pixelsPerSec)
+			xLeft = widthComposite - int((t - extraSlice) * pixelsPerSec)
 			dx = min( xLeftLast - xLeft, widthPhotoHalf )
-			imgComposite[:,xLeft:xLeft+dx] = imgCur[:,widthPhotoHalf:widthPhotoHalf+dx]
+			heightPhoto, widthPhoto, layers = imgCur.shape
+			try:
+				imgComposite[:,xLeft:xLeft+dx] = imgCur[:,widthPhotoHalf:widthPhotoHalf+dx]
+			except ValueError as e:
+				pass
 			try:
 				imgCur = jpegToFrame(tsJpgs[i+1][1])
 			except IndexError:
@@ -48,9 +56,12 @@ def MakeComposite( tsJpgs, leftToRight, pixelsPerSec, scale, highQuality=False )
 	else:
 		xRightLast = 0
 		for i, t in enumerate(times):
-			xRight = extraSlice + int(t * pixelsPerSec)
+			xRight = int((extraSlice + t) * pixelsPerSec)
 			dx = min( xRight - xRightLast, widthPhotoHalf )
-			imgComposite[:,xRight-dx:xRight] = imgCur[:,widthPhotoHalf-dx:widthPhotoHalf]
+			try:
+				imgComposite[:,xRight-dx:xRight] = imgCur[:,widthPhotoHalf-dx:widthPhotoHalf]
+			except ValueError as e:
+				pass
 			try:
 				imgCur = jpegToFrame(tsJpgs[i+1][1])
 			except IndexError:
