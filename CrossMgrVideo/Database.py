@@ -178,6 +178,7 @@ class Database:
 			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in data.keys())),
 				list(data.values()) + [id]
 			)
+		return True
 	
 	def updateTriggerKMH( self, id, kmh ):
 		self.updateTriggerRecord(id, {'kmh':kmh})

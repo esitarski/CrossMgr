@@ -877,6 +877,85 @@ function updateTriggers() {
 }
 
 //----------------------------------------------------------------------
+
+function updateForm() {
+	const trig = triggersCur[iTriggerCur];
+	
+	let form_div = document.getElementById( 'id_form_div' );
+	form_div.innerHTML = '';
+	
+	function add_field( i, hidden ) {
+		const id = 'id_form_' + fields[i];
+		
+		if( !hidden ) {
+			let label = document.createElement("label");
+			label.innerHTML = headers[i] + ':';
+			label.htmlFor = id;
+			label.style.marginLeft = "1.5em;"
+			form_div.appendChild( label );
+		}
+		
+		let input = document.createElement("input");
+		input.type = fields[i] == 'bib' ? "number" : "text";
+		if( trig )
+			input.value = trig[fields[i]];
+		else
+			input.disabled = true;
+		if( hidden )
+			input.hidden = true;
+		input.name = fields[i];
+		input.id = id;
+		form_div.appendChild( input );
+		return input;
+	}
+	
+	// Trigger fields.
+	for( let i = 0; i < fields.length; ++i ) {
+		if( fields[i] == 'ts' || fields[i] == 'frames' || fields[i] == 'note' )
+			continue;
+		add_field( i );
+		if( fields[i] == 'team' )
+			form_div.appendChild( document.createElement("br") );
+	}
+	// Note.
+	form_div.appendChild( document.createElement("br") );
+	input = add_field( fields.indexOf('note') );
+	input.size = "80";
+}
+
+function submitForm( e ) {
+	e.preventDefault();
+	let trig = triggersCur[iTriggerCur];
+	if( !trig )
+		return;
+	
+	let form_div = document.getElementById( 'id_form_div' );
+	let params = ['id=' + trig.id];
+	
+	for( let i = 0; i < form_div.childNodes.length; i++) {
+		let inp = form_div.childNodes[i];
+		if( inp instanceof HTMLInputElement ) {
+			let value = ('' + inp.value).trim();
+			if( inp.name == 'bib' )
+				value = parseInt('0' + value, 10);
+			trig[inp.name] = value;
+			params.push( inp.name + '=' + encodeURIComponent(''+value) );
+		}
+	}
+	
+	// Update the new trigger values in the table.
+	let row = document.getElementById('id_trigger_table').rows[iTriggerCur+1];	// Allow one for the header.
+	for( let i = 0; i < fields.length; ++i ) {
+		if( fields[i] == 'ts' || fields[i] == 'frames' )
+			continue;
+		row.cells[i].innerHTML = trig[fields[i]];
+	}
+	
+	// Switch to the images screen.
+	getJSON( 'trigger_update.js?' + params.join('&'), function(data) { document.getElementById("id_images_tab_button").click(); } );
+}
+
+//----------------------------------------------------------------------
 	
 function OnLoad() {
 	let imageCanvas = document.getElementById( 'id_image_canvas' );
@@ -897,6 +976,7 @@ function OnLoad() {
 		trigger_div.style.height = Math.max( 32, window.innerHeight - 160 ) + 'px';
 
 		//--------------------------------------------------------------
+		/*
 		const fHeight = Math.round((window.innerHeight - 160) / 2);
 		let finishstrip_canvas_div = document.getElementById( 'id_finishstrip_canvas_div' );
 		finishstrip_canvas_div.style.width = Math.max( 32, window.innerWidth - 48 ) + 'px';
@@ -908,9 +988,10 @@ function OnLoad() {
 		
 		let stretch = document.getElementById( 'id_stretch' );
 		stretch.style.width = Math.max( 32, window.innerWidth - 120 ) + 'px';
+		*/
 	}
 	do_resize( null );
-	window.addEventListener('resize', do_resize );
+	window.addEventListener( 'resize', do_resize );
 
 	getJSON( 'triggerdates.js', function( data ) { showTriggerDates(data); updateTriggers(); } );
 	document.getElementById("id_trigger_tab_button").click();
@@ -925,7 +1006,10 @@ function OnLoad() {
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'id_trigger_tab')" id="id_trigger_tab_button">Triggers</button>
   <button class="tablinks" onclick="openTab(event, 'id_images_tab')" id="id_images_tab_button">Images</button>
+  <button class="tablinks" onclick="updateForm(); openTab(event, 'id_form_tab')" id="id_form_tab_button">Form</button>
+  <!--
   <button class="tablinks" onclick="openTab(event, 'id_finishstrip_tab')" id="id_finishstrip_tab_button">Finish Strip</button>
+  -->
 </div>
 
 <!-- Tab content -->
@@ -933,6 +1017,7 @@ function OnLoad() {
 	<label for="trigger_date">Date:</label>
 	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
 	</select>
+	<button onclick="updateTriggers();">&#x21bb; Refresh</button>
 	<p></p>
 	<div id="id_triggers" class="scroll"></div>
 </div>
@@ -964,6 +1049,15 @@ function OnLoad() {
 	</div>
 </div>
 
+<div id="id_form_tab" class="tabcontent">
+	<form action="." id="id_form" method="post">
+		<div id="id_form_div"></div>
+		<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event)">Save</button>
+		<button onclick="openTab(event, 'id_images_tab')" style="margin-left: 2.5em;">Cancel</button>
+	</form>
+</div>
+
+<!--
 <div id="id_finishstrip_tab" class="tabcontent">
 	<canvas id="id_finishstrip_image_canvas" width="500" height="600"></canvas>
 	<div id="id_finishstrip_canvas_div" class="scroll">
@@ -971,6 +1065,7 @@ function OnLoad() {
 	</div>
 	<label for="id_stretch">Stretch</label><input type="range" id="id_stretch" min="0" max="1000" value="100" step="1">
 </div>
+-->
 
 </body>
 

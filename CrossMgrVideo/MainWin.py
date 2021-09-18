@@ -39,6 +39,8 @@ from AddExifToJpeg import AddExifToJpeg
 import CamServer
 from PublishPhotoOptions import PublishPhotoOptionsDialog
 from roundbutton import RoundButton
+from GetMyIP import GetMyIP
+import WebServer
 
 imageWidth, imageHeight = 640, 480
 
@@ -542,6 +544,9 @@ class MainWin( wx.Frame ):
 		self.autoCaptureBtn = wx.Button( self, label="Config Auto Capture" )
 		self.autoCaptureBtn.Bind( wx.EVT_BUTTON, self.autoCaptureConfig )
 		
+		self.webBtn = wx.Button( self, label="Web Page" )
+		self.webBtn.Bind( wx.EVT_BUTTON, self.onWeb )
+		
 		self.help = wx.Button( self, wx.ID_HELP )
 		self.help.Bind( wx.EVT_BUTTON, self.onHelp )
 		
@@ -564,6 +569,7 @@ class MainWin( wx.Frame ):
 		fgs.Add( self.reset, flag=wx.EXPAND )
 		fgs.Add( self.manage, flag=wx.EXPAND )
 		fgs.Add( self.autoCaptureBtn, flag=wx.EXPAND )
+		fgs.Add( self.webBtn, flag=wx.EXPAND )
 		fgs.Add( self.help, flag=wx.EXPAND )
 		
 		headerSizer.Add( fgs, flag=wx.ALIGN_CENTRE|wx.LEFT, border=4 )
@@ -723,6 +729,10 @@ class MainWin( wx.Frame ):
 
 	def onHelp( self, event ):
 		OpenHelp()
+		
+	def onWeb( self, event ):
+		url = '{}:{}'.format( GetMyIP(), WebServer.PORT_NUMBER )
+		webbrowser.open( url, new=0, autoraise=1 )
 	
 	def setFPS( self, fps ):
 		self.fps = int(fps if fps > 0 else 30)

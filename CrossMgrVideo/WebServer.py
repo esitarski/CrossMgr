@@ -13,6 +13,7 @@ import datetime
 import traceback
 import threading
 from urllib.parse import quote, urlparse, parse_qs
+from cgi import parse_header, parse_multipart
 
 from queue import Queue, Empty
 from socketserver import ThreadingMixIn
@@ -49,9 +50,25 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 	jpeg_content = 'image/jpeg'
 	re_jpeg_request = re.compile( r'^\/img([0-9]+)c?s?g?\.jpeg$' )
 	
-	def do_POST( self ):
-		return super().do_POST()
-	
+	def parse_POST( self ):
+		ctype, pdict = parse_header(self.headers['content-type'])
+		if ctype == 'multipart/form-data':
+			postvars = parse_multipart(self.rfile, pdict)
+		elif ctype == 'application/x-www-form-urlencoded':
+			length = int(self.headers['content-length'])
+			postvars = parse_qs(
+					self.rfile.read(length), 
+					keep_blank_values=1)
+		else:
+			postvars = {}
+		return postvars
+
+	def do_POST(self):
+		postvars = self.parse_POST()
+		if 'id' in postvars:
+			id = postvars.pop('id')
+			GlobalDatabase().updateTriggerRecord( id, postvars )
+
 	def do_GET(self):
 		up = urlparse( self.path )
 		content, gzip_content = None,  None
@@ -77,10 +94,10 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				
 			elif up.path=='/triggers.js':
 				# Get all triggers for a given day.  Also support seaching for a bib.
-				query = parse_qs( up.query )
+				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
 				
 				if 'day' in query:
-					tsLower = datetime.datetime( *[int(v) for v in query['day'][0].split('-')] )	# Expected in YYYY-MM-DD format.
+					tsLower = datetime.datetime( *[int(v) for v in query['day'].split('-')] )	# Expected in YYYY-MM-DD format.
 					tsUpper = tsLower + datetime.timedelta( hours=24 )
 				else:
 					# Default to today.
@@ -97,6 +114,26 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 					trig['tsJpgIds'] = [(ts.timestamp(), id) for ts,id in trig['tsJpgIds']]
 				
 				content = json.dumps( triggers ).encode()
+				content_type = self.json_content
+				
+			elif up.path=='/trigger_update.js':
+				# Update trigger values.
+				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				if 'id' in query:
+					id = query.pop('id')
+					try:
+						id = int(id)
+					except:
+						id = 0
+					if 'bib' in query:
+						try:
+							query['bib'] = int(query['bib'])
+						except:
+							query['bib'] = 0
+					success = GlobalDatabase().updateTriggerRecord( id, query )
+				else:
+					success = False
+				content = json.dumps( [success] ).encode()
 				content_type = self.json_content
 				
 			elif up.path=='/triggerdates.js':
