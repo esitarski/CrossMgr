@@ -121,12 +121,73 @@ table tr td.same-value {
 hr { clear: both; }
 hr.invisible { clear: both; visibility: hidden; }
 
+div.scroll {
+	overflow:scroll;
+	overflow-x: auto;
+	overflow-y: auto;
+}
+
+/*--------------------------------------------------------------------*/
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+overflow:scroll;
+/*--------------------------------------------------------------------*/
+
 @media print { .noprint { display: none; } }
 
 </style>
 
 
 <script>
+	
+function openTab(evt, id_tab) {
+  // Get all elements with class="tabcontent" and hide them
+  let tabcontent = document.getElementsByClassName("tabcontent");
+  for ( let i = 0; i < tabcontent.length; i++)
+    tabcontent[i].style.display = "none";
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  let tablinks = document.getElementsByClassName("tablinks");
+  for ( let i = 0; i < tablinks.length; i++)
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(id_tab).style.display = "block";
+  evt.currentTarget.className += " active";
+}
 	
 //----------------------------------------------------------------------
 
@@ -170,6 +231,7 @@ class ScaledBitmap {
 		canvas.addEventListener('resize', this.OnSize.bind(this) );
 
 		this.drawFinishLine = drawFinishLine;
+		this.drawCallback = drawCallback
 		
 		this.eventCache = [];
 		if( inset ) {
@@ -179,7 +241,6 @@ class ScaledBitmap {
 			canvas.addEventListener('pointercancel', this.OnPointerUp.bind(this), false);
 			canvas.addEventListener('pointerleave', this.OnPointerUp.bind(this), false);
 		}
-		this.drawCallback = drawCallback;
 		this.Refresh();
 	}
 	
@@ -196,7 +257,7 @@ class ScaledBitmap {
 	
 	OnSize( event ) {
 		this.resetMagRect();
-		this.Refresh();
+		this.Refresh();overflow:scroll;
 	}
 	
 	OnPointerDown( event ) {
@@ -338,18 +399,19 @@ class ScaledBitmap {
 		}
 				
 		if( intervalsOverlap(magnifyRect[0], magnifyRect[0] + magnifyRect[2], insetRect[0], insetRect[0] + insetRect[2]) ) {
-			if( !(intervalsOverlap(magnifyRect[1], magnifyRect[1] + magnifyRect[3], insetRect[1], insetRect[1] + insetRect[3])) ) {
-				dc.beginPath();
-				if( isNorth ) {
-					drawLine( bottomLeft(magnifyRect), topLeft(insetRect) );				
-					drawLine( bottomRight(magnifyRect), topRight(insetRect) );
-				}
-				else {
-					drawLine( topLeft(magnifyRect), bottomLeft(insetRect) );
-					drawLine( topRight(magnifyRect), bottomRight(insetRect) );
-				}
-				dc.stroke();
+			if( intervalsOverlap(magnifyRect[1], magnifyRect[1] + magnifyRect[3], insetRect[1], insetRect[1] + insetRect[3]) )
+				return;
+				
+			dc.beginPath();
+			if( isNorth ) {
+				drawLine( bottomLeft(magnifyRect), topLeft(insetRect) );				
+				drawLine( bottomRight(magnifyRect), topRight(insetRect) );
 			}
+			else {
+				drawLine( topLeft(magnifyRect), bottomLeft(insetRect) );
+				drawLine( topRight(magnifyRect), bottomRight(insetRect) );
+			}
+			dc.stroke();
 		}
 		else {
 			dc.beginPath();
@@ -550,9 +612,10 @@ function updateImages( iTrigger ) {
 		(document.getElementById('id_grayscale').checked	? 'g' : '')
 	);
 	
+	let trig = triggersCur[iTrigger];
 	loadedImageCount = imagesCur.length = 0;
 	iImageCur = 0;
-	const tsJpgIds = triggersCur[iTrigger].tsJpgIds;
+	const tsJpgIds = trig.tsJpgIds;
 	for( let i = 0; i < tsJpgIds.length; ++i ) {
 		let img = document.createElement( 'img' );
 		img.onload = onLoadImage;
@@ -565,18 +628,36 @@ function updateImages( iTrigger ) {
 	for( let i = 1; i < rows.length; ++i ) {
 		rows[i].classList.toggle('highlight', i-1==iTrigger);	// account for the header row.
 	}
+	
+	// Upate the image info.
+	let info = [];
+	for( f of fields ) {
+		if( f == 'frames' )
+			continue;
+		if( trig[f] ) {
+			if( f == 'ts' )
+				info.push( formatEpoch(trig[f]) );
+			else
+				info.push( trig[f] );
+		}
+	}
+	let imageTitle = document.getElementById( 'id_image_title' );
+	imageTitle.innerHTML = ( '<span style="font-size: 120%;">' + info.join(', ') + '</>');
+	
+	// Switch to the image view.
+	document.getElementById("id_images_tab_button").click();
 }
 
 //----------------------------------------------------------------------
 	
+const headers = ['Time', 'Bib', 'Last',       'First',      'Team', 'Note',	'Wave', 'Race',      'Frames'];
+const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team', 'note',	'wave', 'race_name', 'frames'];
+const numeric = [true,   true,   false,       false,        false,  false,	false,  false,        true];
+
 function showTriggers( triggers ) {
 	playStop();
 	let trigger_div = document.getElementById( 'id_triggers' );
 	trigger_div.innerHTML = '';
-	
-	const headers = ['Time', 'Bib', 'Last',       'First',      'Team', 'Note',	'Wave', 'Race',      'Frames'];
-	const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team', 'note',	'wave', 'race_name', 'frames'];
-	const numeric = [true,   true,   false,       false,        false,  false,	false,  false,        true];
 	
 	let table = document.createElement( 'table' );
 	table.id = 'id_trigger_table';
@@ -642,12 +723,8 @@ function drawCallback( canvas ) {
 }
 
 function showImage( iImage ) {
-	let img = imagesCur[iImage];
 	iImageCur = iImage;
-	if( !scaledBitmap )
-		scaledBitmap = new ScaledBitmap( document.getElementById('id_canvas'), img, false, true, drawCallback );
-	else
-		scaledBitmap.SetImage( img );
+	scaledBitmap.SetImage( imagesCur[iImage] );
 }
 
 //----------------------------------------------------------------------
@@ -709,74 +786,49 @@ function OnLoad() {
 	let canvas = document.getElementById( 'id_canvas' );
 	canvas.addEventListener( 'wheel', onWheel, false );
 	canvas.addEventListener( 'click', playStop, false );
+	
+	scaledBitmap = new ScaledBitmap( canvas, null, false, true, drawCallback );
+	
+	let trigger_div = document.getElementById( 'id_triggers' );
+	function do_resize( event ) {
+		canvas.width = Math.max( 32, window.innerWidth - 32 );
+		canvas.height = Math.max( 32, window.innerHeight - 160 );
+		scaledBitmap.OnSize();
+		
+		trigger_div.style.width = Math.max( 32, window.innerWidth - 48 ) + 'px';
+		trigger_div.style.height = Math.max( 32, window.innerHeight - 160 ) + 'px';
+	}
+	do_resize( null );
+	window.addEventListener('resize', do_resize );
 
 	getJSON( 'triggerdates.js', function( data ) { showTriggerDates(data); updateTriggers(); } );
-	
+	document.getElementById("id_trigger_tab_button").click();
 }
 </script>
 
 </head>
 
 <body onload="OnLoad()">
-	
-<!--
-	
-<label for="trigger_date">Date:</label>
-<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
-</select>
-<p></p>
-<div id="id_triggers"></div>
-<div>
-	<canvas id="id_canvas" width="1000" height="600"></canvas>
-	<p>
-		<button title="Frame closest to Trigger" onclick="goTrigger();">&#x2295;</button>
-		<button title="-1 Frame" onclick="goImage(iImageCur-1);">-1</button>
-		<button title="+1 Frame" onclick="goImage(iImageCur+1);">+1</button>
-		<button title="First Frame" onclick="goImage(0);">&#x23EE;</button>
-		<button title="Play Reverse" onclick="playStop();play(-1);">&#x23F4;</button>
-		<button title="Stop Play" onclick="playStop();">&#x23F8;</button>
-		<button title="Play Forward" onclick="playStop();play(1);">&#x23F5;</button>
-		<button title="Last Frame" onclick="goImage(1e10);">&#x23ED;</button>
-		mouse-wheel to scroll by frame | click-and-drag to zoom
-	</p>
-	<p>
-		Filters:
-		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
-		<label for="id_contrast">Contrast</label>
-		
-		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
-		<label for="id_sharpen">Sharpen</label>
-		
-		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
-		<label for="id_grayscale">Grayscale</label>
-	</p>
-</div>
-
--->
-
-<!-- *************************************************************** -->
 
 <!-- Tab links -->
 <div class="tab">
-  <button class="tablinks" onclick="openTab(event, 'id_trigger_tab')">Triggers</button>
-  <button class="tablinks" onclick="openTab(event, 'id_image_tab')">Image</button>
+  <button class="tablinks" onclick="openTab(event, 'id_trigger_tab')" id="id_trigger_tab_button">Triggers</button>
+  <button class="tablinks" onclick="openTab(event, 'id_images_tab')" id="id_images_tab_button">Images</button>
 </div>
 
 <!-- Tab content -->
 <div id="id_trigger_tab" class="tabcontent">
-  <h3>Triggers</h3>
-<label for="trigger_date">Date:</label>
-<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
-</select>
-<p></p>
-<div id="id_triggers"></div>
+	<label for="trigger_date">Date:</label>
+	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
+	</select>
+	<p></p>
+	<div id="id_triggers" class="scroll"></div>
 </div>
 
-<div id="id_image_tab" class="tabcontent">
-  <h3>Images</h3>
-
+<div id="id_images_tab" class="tabcontent">
+	<div id="id_image_title"></div>
 	<canvas id="id_canvas" width="1000" height="600"></canvas>
-	<p>
+	<div style="margin-top: 0.25em;">
 		<button title="Frame closest to Trigger" onclick="goTrigger();">&#x2295;</button>
 		<button title="-1 Frame" onclick="goImage(iImageCur-1);">-1</button>
 		<button title="+1 Frame" onclick="goImage(iImageCur+1);">+1</button>
@@ -786,8 +838,8 @@ function OnLoad() {
 		<button title="Play Forward" onclick="playStop();play(1);">&#x23F5;</button>
 		<button title="Last Frame" onclick="goImage(1e10);">&#x23ED;</button>
 		mouse-wheel to scroll by frame | click-and-drag to zoom
-	</p>
-	<p>
+	</div>
+	<div style="margin-top: 0.25em;">
 		Filters:
 		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
 		<label for="id_contrast">Contrast</label>
@@ -797,7 +849,7 @@ function OnLoad() {
 		
 		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
 		<label for="id_grayscale">Grayscale</label>
-	</p>
+	</div>
 </div>
 
 </body>
