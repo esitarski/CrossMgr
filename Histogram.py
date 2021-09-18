@@ -8,7 +8,7 @@ def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
                         center = 128, width = 127, len = 50 ):
 	fp = [(frequency1,phase1), (frequency2,phase2), (frequency3,phase3)]	
-	grad = [wx.Colour(*[int(math.sin(f*i + p) * width + center) for f, p in fp]) for i in range(len+1)]
+	grad = [wx.Colour(*[round(math.sin(f*i + p) * width + center) for f, p in fp]) for i in range(len+1)]
 	return grad[1:]
 	
 def makePastelColours( len = 50 ):
@@ -16,7 +16,7 @@ def makePastelColours( len = 50 ):
 
 def lighterColour( c ):
 	rgb = c.Get( False )
-	return wx.Colour( *[int(v + (255 - v) * 0.6) for v in rgb] )
+	return wx.Colour( *[round(v + (255 - v) * 0.6) for v in rgb] )
 
 def ShimazakiMethod( data, minN = 2, maxN = None ):
 	# From shimazaki@brain.riken.jp
@@ -208,7 +208,7 @@ class Histogram(wx.Control):
 			tStart += d
 		dc.SetPen(wx.Pen('light gray', 1))
 		for t in range(tStart, int(self.dataMax), d):
-			x = xLeft + (t - self.dataMin) * dFactor
+			x = round(xLeft + (t - self.dataMin) * dFactor)
 			if x < xLeft:
 				continue
 			if t < 60*60:
@@ -216,8 +216,8 @@ class Histogram(wx.Control):
 			else:
 				s = '{}:{:02d}:{:02d}'.format(t//(60*60), (t // 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, x - w/2, yBottom + 4)
-			dc.DrawText( s, x - w/2, 0 + 4 )
+			dc.DrawText( s, round(x - w/2), yBottom + 4)
+			dc.DrawText( s, round(x - w/2), 0 + 4 )
 			dc.DrawLine( x, yBottom+2, x, yTop )
 		
 		# Find some reasonable tickmarks for the y axis.
@@ -229,9 +229,9 @@ class Histogram(wx.Control):
 		dc.SetPen(wx.Pen('light gray', 1))
 		for i in range(0, self.barMax+1, d):
 			s = '{}'.format(i)
-			y = yBottom - int(i * dFactor)
+			y = yBottom - round(i * dFactor)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, xLeft - w - 2 - tickBorder, y-textHeight/2 - 1)
+			dc.DrawText( s, xLeft - w - 2 - tickBorder, round(y-textHeight/2) - 1)
 			dc.DrawLine( xLeft, y, xRight + tickBorder, y )
 
 		# Draw the data rectangles.
