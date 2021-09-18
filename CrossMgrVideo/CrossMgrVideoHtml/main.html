@@ -565,6 +565,32 @@ var loadedImageCount = 0;
 var iImageCur = 0;
 
 //----------------------------------------------------------------------
+
+function getFrameTime() {
+	const tsJpsIds = triggersCur[iTriggerCur].tsJpgIds;
+	let dt = [];
+	for( let i = 1; i < tsJpsIds.length; ++i )
+		dt.push( tsJpsIds[i] - tsJpsIds[i-1] );
+	if( dt.length < 1 )
+		return 1.0;
+	dt.sort( (a,b) => a-b );
+	return dt[Math.round(dt.length/2)];
+}
+
+function getSpeedPixelsPerSecond( self, imageWidth, speedKMH ) {
+	const frameTime = getFrameTime();
+	const fps = 1.0 / frameTime;
+	
+	const viewWidth = 4.0;							// estimated meters seen in the finish line with the finish camera
+	const widthPix = self.finish.jpgWidth;			// width of a frame
+	
+	const speedMPS = speedKMH / 3.6;				// Convert to m/s
+	const d = speedMPS * frameTime;					// Distance the target moves between each frame at speed.
+	const pixels = imageWidth * d / viewWidth;		// Pixels the target moves between each frame at that speed.
+	const pixelsPerSecond = Math.max(300, pixels * fps);
+	return pixelsPerSecond;
+}
+
 	
 function MakeComposite( leftToRight=true, pixelsPerSec=1.0 ) {
 	// Creates a composite image at full size.
@@ -774,7 +800,7 @@ function showTriggers( triggers ) {
 
 //----------------------------------------------------------------------
 
-var scaledBitmap = null;
+var imageScaledBitmap = null;
 
 function drawCallback( canvas ) {
 	if( triggersCur.length == 0 )
@@ -795,7 +821,7 @@ function drawCallback( canvas ) {
 
 function showImage( iImage ) {
 	iImageCur = iImage;
-	scaledBitmap.SetImage( imagesCur[iImage] );
+	imageScaledBitmap.SetImage( imagesCur[iImage] );
 }
 
 //----------------------------------------------------------------------
@@ -853,20 +879,35 @@ function updateTriggers() {
 //----------------------------------------------------------------------
 	
 function OnLoad() {
-	let canvas = document.getElementById( 'id_canvas' );
-	canvas.addEventListener( 'wheel', onWheel, false );
-	canvas.addEventListener( 'click', playStop, false );
+	let imageCanvas = document.getElementById( 'id_image_canvas' );
+	imageCanvas.addEventListener( 'wheel', onWheel, false );
+	imageCanvas.addEventListener( 'click', playStop, false );
 	
-	scaledBitmap = new ScaledBitmap( canvas, null, false, true, drawCallback );
+	imageScaledBitmap = new ScaledBitmap( imageCanvas, null, false, true, drawCallback );
 	
 	let trigger_div = document.getElementById( 'id_triggers' );
 	function do_resize( event ) {
-		canvas.width = Math.max( 32, window.innerWidth - 32 );
-		canvas.height = Math.max( 32, window.innerHeight - 160 );
-		scaledBitmap.OnSize();
+		//--------------------------------------------------------------
+		imageCanvas.width = Math.max( 32, window.innerWidth - 32 );
+		imageCanvas.height = Math.max( 32, window.innerHeight - 160 );
+		imageScaledBitmap.OnSize();
 		
+		//--------------------------------------------------------------
 		trigger_div.style.width = Math.max( 32, window.innerWidth - 48 ) + 'px';
 		trigger_div.style.height = Math.max( 32, window.innerHeight - 160 ) + 'px';
+
+		//--------------------------------------------------------------
+		const fHeight = Math.round((window.innerHeight - 160) / 2);
+		let finishstrip_canvas_div = document.getElementById( 'id_finishstrip_canvas_div' );
+		finishstrip_canvas_div.style.width = Math.max( 32, window.innerWidth - 48 ) + 'px';
+		finishstrip_canvas_div.style.height = fHeight + 'px';
+
+		let finishstrip_image_canvas = document.getElementById( 'id_finishstrip_image_canvas' );
+		finishstrip_image_canvas.width = Math.max( 32, window.innerWidth - 32 );
+		finishstrip_image_canvas.height = fHeight;
+		
+		let stretch = document.getElementById( 'id_stretch' );
+		stretch.style.width = Math.max( 32, window.innerWidth - 120 ) + 'px';
 	}
 	do_resize( null );
 	window.addEventListener('resize', do_resize );
@@ -884,6 +925,7 @@ function OnLoad() {
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'id_trigger_tab')" id="id_trigger_tab_button">Triggers</button>
   <button class="tablinks" onclick="openTab(event, 'id_images_tab')" id="id_images_tab_button">Images</button>
+  <button class="tablinks" onclick="openTab(event, 'id_finishstrip_tab')" id="id_finishstrip_tab_button">Finish Strip</button>
 </div>
 
 <!-- Tab content -->
@@ -897,7 +939,7 @@ function OnLoad() {
 
 <div id="id_images_tab" class="tabcontent">
 	<div id="id_image_title"></div>
-	<canvas id="id_canvas" width="1000" height="600"></canvas>
+	<canvas id="id_image_canvas" width="500" height="600"></canvas>
 	<div style="margin-top: 0.25em;">
 		<button title="Frame closest to Trigger" onclick="goTrigger();">&#x2295;</button>
 		<button title="-1 Frame" onclick="goImage(iImageCur-1);">-1</button>
@@ -920,6 +962,14 @@ function OnLoad() {
 		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
 		<label for="id_grayscale">Grayscale</label>
 	</div>
+</div>
+
+<div id="id_finishstrip_tab" class="tabcontent">
+	<canvas id="id_finishstrip_image_canvas" width="500" height="600"></canvas>
+	<div id="id_finishstrip_canvas_div" class="scroll">
+		<canvas id="id_finishstrip_canvas" width="500" height="600"></canvas>
+	</div>
+	<label for="id_stretch">Stretch</label><input type="range" id="id_stretch" min="0" max="1000" value="100" step="1">
 </div>
 
 </body>
