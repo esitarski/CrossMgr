@@ -252,7 +252,7 @@ class AdvancedSetup( wx.Dialog ):
 		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
 		if btnSizer:
 			row += 1
-			bs.Add( btnSizer, pos=(row, 0), span=(1,3), flag=wx.EXPAND|wx.ALL, border )
+			bs.Add( btnSizer, pos=(row, 0), span=(1,3), flag=wx.EXPAND|wx.ALL, border = border )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
