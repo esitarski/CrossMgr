@@ -28,6 +28,18 @@ div label input {
    margin-right:220px;
 }
 
+label {
+	margin-left:1em;
+	margin-top:0.5em;
+	margin-bottom:0.5em;
+}
+
+input {
+	margin-left:0.25em;
+	margin-top:0.5em;
+	margin-bottom:0.5em;
+}
+
 #buttongroup {
 	margin:4px;   
 	float:left;
@@ -891,7 +903,6 @@ function updateForm() {
 			let label = document.createElement("label");
 			label.innerHTML = headers[i] + ':';
 			label.htmlFor = id;
-			label.style.marginLeft = "1.5em;"
 			form_div.appendChild( label );
 		}
 		
@@ -923,8 +934,14 @@ function updateForm() {
 	input.size = "80";
 }
 
-function submitForm( e ) {
+function submitForm( e, submit ) {
 	e.preventDefault();
+	
+	if( !submit ) {
+		document.getElementById("id_images_tab_button").click();
+		return;
+	}
+	
 	let trig = triggersCur[iTriggerCur];
 	if( !trig )
 		return;
@@ -1051,9 +1068,13 @@ function OnLoad() {
 
 <div id="id_form_tab" class="tabcontent">
 	<form action="." id="id_form" method="post">
+		<p>
 		<div id="id_form_div"></div>
-		<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event)">Save</button>
-		<button onclick="openTab(event, 'id_images_tab')" style="margin-left: 2.5em;">Cancel</button>
+		</p>
+		<p>
+			<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event, true)">OK</button>
+			<button onclick="submitForm(event, true)" style="margin-left: 2.5em;">Cancel</button>
+		</p>
 	</form>
 </div>
 
