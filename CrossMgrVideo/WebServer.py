@@ -40,14 +40,20 @@ def getMainPage():
 	# Make sure to return bytes.
 	with open( os.path.join(Utils.getHtmlFolder(), 'main.html') ) as f:
 		return f.read().encode()
+		
+def getPNG( fname ):
+	print( os.path.join(Utils.getImageFolder(), fname) )
+	with open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
+		return f.read()
 
 #---------------------------------------------------------------------------
 
 class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
-	html_content = 'text/html; charset=utf-8'
-	ico_content = 'image/x-icon'
-	json_content = 'application/json'
-	jpeg_content = 'image/jpeg'
+	html_content	= 'text/html; charset=utf-8'
+	ico_content		= 'image/x-icon'
+	json_content	= 'application/json'
+	jpeg_content	= 'image/jpeg'
+	png_content		= 'image/png'
 	re_jpeg_request = re.compile( r'^\/img([0-9]+)c?s?g?\.jpeg$' )
 	
 	def parse_POST( self ):
@@ -148,6 +154,10 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				content = favicon
 				content_type = self.ico_content
 				
+			elif up.path.endswith('.png'):
+				content = getPNG( up.path[1:] )
+				content_type = self.png_content
+				
 			elif up.path=='/identity.js':
 				# Return the identify of this CrossMgrVideo instance.
 				content = json.dumps( {
@@ -171,7 +181,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				content = gzip_content
 				self.send_header( 'Content-Encoding', 'gzip' )
 		
-		# Set no caching for html and json content.  We want everything else to cache.
+		# Set no caching for html and json content.  Cache everything else.
 		if content_type == self.html_content or content_type == self.json_content:
 			self.send_header( 'Cache-Control', 'no-cache, no-store, must-revalidate' )
 			self.send_header( 'Pragma', 'no-cache' )

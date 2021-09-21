@@ -86,7 +86,7 @@ table td, table th {
 }
 table th {
 	font-size:1.1em;
-	text-align:right;
+	text-align:left;
 	padding-top:5px;
 	padding-bottom:4px;
 	background-color:#7FE57F;
@@ -186,14 +186,16 @@ overflow:scroll;
 <script>
 	
 function openTab(evt, id_tab) {
+  playStop();	// Stop any playback.
+	
   // Get all elements with class="tabcontent" and hide them
   let tabcontent = document.getElementsByClassName("tabcontent");
-  for ( let i = 0; i < tabcontent.length; i++)
+  for( let i = 0; i < tabcontent.length; i++)
     tabcontent[i].style.display = "none";
 
   // Get all elements with class="tablinks" and remove the class "active"
   let tablinks = document.getElementsByClassName("tablinks");
-  for ( let i = 0; i < tablinks.length; i++)
+  for( let i = 0; i < tablinks.length; i++)
     tablinks[i].className = tablinks[i].className.replace(" active", "");
 
   // Show the current tab, and add an "active" class to the button that opened the tab
@@ -844,7 +846,7 @@ function play( dir ) {
 	const iImageNext = (iImageCur + dir + tsJpgIds.length) % tsJpgIds.length;
 	let dt = tsJpgIds[iImageNext][0] - tsJpgIds[iImageCur][0];
 	if( (dir > 0 && dt < 0) || (dir < 0 && dt > 0) )
-		dt = 0.75;
+		dt = 0.7;
 	
 	showImage( iImageCur );
 	iImageCur = iImageNext;
@@ -1031,10 +1033,11 @@ function OnLoad() {
 
 <!-- Tab content -->
 <div id="id_trigger_tab" class="tabcontent">
+    <img src="CrossMgrHeader.png" height="40px"/>
 	<label for="trigger_date">Date:</label>
 	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
 	</select>
-	<button onclick="updateTriggers();">&#x21bb; Refresh</button>
+	<button onclick="updateTriggers();" style="margin-left: 2.5em;">&#x21bb; Refresh</button>
 	<p></p>
 	<div id="id_triggers" class="scroll"></div>
 </div>
@@ -1043,14 +1046,14 @@ function OnLoad() {
 	<div id="id_image_title"></div>
 	<canvas id="id_image_canvas" width="500" height="600"></canvas>
 	<div style="margin-top: 0.25em;">
-		<button title="Frame closest to Trigger" onclick="goTrigger();">&#x2295;</button>
-		<button title="-1 Frame" onclick="goImage(iImageCur-1);">-1</button>
-		<button title="+1 Frame" onclick="goImage(iImageCur+1);">+1</button>
-		<button title="First Frame" onclick="goImage(0);">&#x23EE;</button>
-		<button title="Play Reverse" onclick="playStop();play(-1);">&#x23F4;</button>
-		<button title="Stop Play" onclick="playStop();">&#x23F8;</button>
-		<button title="Play Forward" onclick="playStop();play(1);">&#x23F5;</button>
-		<button title="Last Frame" onclick="goImage(1e10);">&#x23ED;</button>
+		<button title="Frame closest to Trigger"	onclick="goTrigger();"			>&#x2295;</button>
+		<button title="-1 Frame"					onclick="goImage(iImageCur-1);"	>-1</button>
+		<button title="+1 Frame"					onclick="goImage(iImageCur+1);"	>+1</button>
+		<button title="First Frame"					onclick="goImage(0);"			>&#x23EE;</button>
+		<button title="Play Reverse"				onclick="playStop();play(-1);"	>&#x23F4;</button>
+		<button title="Stop Play"					onclick="playStop();"			>&#x23F8;</button>
+		<button title="Play Forward"				onclick="playStop();play(1);"	>&#x23F5;</button>
+		<button title="Last Frame"					onclick="goImage(1e10);"		>&#x23ED;</button>
 		mouse-wheel to scroll by frame | click-and-drag to zoom
 	</div>
 	<div style="margin-top: 0.25em;">

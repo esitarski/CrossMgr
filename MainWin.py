@@ -82,6 +82,7 @@ from Pulled				import Pulled
 from TeamResults		import TeamResults
 from BibEnter			import BibEnter
 from Restart			import Restart
+from ReissueBibs	 	import ReissueBibsDialog
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -559,6 +560,10 @@ class MainWin( wx.Frame ):
 		self.editMenu.AppendSeparator()
 		item = self.editMenu.Append( wx.ID_ANY, _('&Change "Autocorrect"...'), _('Change "Autocorrect"...') )
 		self.Bind( wx.EVT_MENU, self.menuAutocorrect, item )
+		
+		self.editMenu.AppendSeparator()
+		item = self.editMenu.Append( wx.ID_ANY, _('&Reissue Bibs...'), _('Reissue Bibs...') )
+		self.Bind( wx.EVT_MENU, self.menuReissueBibs, item )
 		
 		self.editMenuItem = self.menuBar.Append( self.editMenu, _("&Edit") )
 
@@ -1061,10 +1066,12 @@ class MainWin( wx.Frame ):
 				numTimeInfo.add( newNum, t )
 			wx.CallAfter( self.refresh )
 		
+	@logCall
 	def menuDNS( self, event ):
 		with DNSManagerDialog(self) as dns:
 			dns.ShowModal()
 		
+	@logCall
 	def menuOpenExcelSheet( self, event ):
 		if not Model.race:
 			Utils.MessageOK(self, _("You must have a valid race."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
@@ -1080,6 +1087,7 @@ class MainWin( wx.Frame ):
 		except Exception as e:
 			pass
 		
+	@logCall
 	def menuFind( self, event = None ):
 		if not getattr(self, 'findDialog', None):
 			self.findDialog = SearchDialog( self )
@@ -1095,6 +1103,7 @@ class MainWin( wx.Frame ):
 		undo.doRedo()
 		self.refresh()
 		
+	@logCall
 	def menuAutocorrect( self, event ):
 		undo.pushState()
 		with Model.LockRace() as race:
@@ -1104,6 +1113,17 @@ class MainWin( wx.Frame ):
 			if not categories:
 				return
 		SetAutoCorrectDialog( self, categories ).ShowModal()
+	
+	@logCall
+	def menuReissueBibs( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			categories = race.getCategoriesInUse()
+			if not categories:
+				return
+		with ReissueBibsDialog(self) as dlg:
+			dlg.ShowModal()
 	
 	def menuShowHighPrecisionTimes( self, event ):
 		with Model.LockRace() as race:
