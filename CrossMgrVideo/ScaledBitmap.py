@@ -52,7 +52,7 @@ class ScaledBitmap( wx.Panel ):
 	def OnMotion( self, event ):
 		if self.buttonDown:
 			self.xEnd, self.yEnd = event.GetX(), event.GetY()
-			wx.CallAfter( self.Refresh )
+			self.Refresh()
 	
 	def getInsetRect( self, width, height, isWest, isNorth ):
 		r = 0.75
