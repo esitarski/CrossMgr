@@ -36,7 +36,7 @@ class ScaledBitmap( wx.Panel ):
 		return wx.Rect( min(self.xBegin, self.xEnd), min(self.yBegin, self.yEnd), abs(self.xEnd-self.xBegin), abs(self.yEnd-self.yBegin) )
 	
 	def OnSize( self, event ):
-		wx.CallAfter( self.Refresh )
+		self.Refresh()
 	
 	def OnLeftDown( self, event ):
 		self.buttonDown = True
