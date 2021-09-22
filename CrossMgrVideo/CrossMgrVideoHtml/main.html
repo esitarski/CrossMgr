@@ -29,7 +29,7 @@ div label input {
 }
 
 label {
-	margin-left:1em;
+	margin-left:0.05em;
 	margin-top:0.5em;
 	margin-bottom:0.5em;
 }
@@ -348,19 +348,21 @@ class ScaledBitmap {
 		dc.fillStyle = 'rgb(0,0,0)';
 		dc.fill();
 		
-		if( !this.bitmap )
+		if( !this.image ) {
+			this.drawTestImage( dc, width, height );
 			return;
+		}
 		
 		// Draw the image in the canvas.
-		let sourceBM = this.bitmap;
-		const sourceWidth = sourceBM.width, sourceHeight = sourceBM.height;
+		let sourceImage = this.image;
+		const sourceWidth = sourceImage.width, sourceHeight = sourceImage.height;
 		const ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height );
 		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
 
 		const xLeft = Math.max(0, (width - destWidth)/2);
 		const yTop = Math.max(0, (height - destHeight)/2);
 		if( sourceWidth > 0 && sourceHeight > 0 && destWidth > 0 && destHeight > 0 )
-			dc.drawImage( sourceBM, 0, 0, sourceWidth, sourceHeight, xLeft, yTop, destWidth, destHeight );
+			dc.drawImage( sourceImage, 0, 0, sourceWidth, sourceHeight, xLeft, yTop, destWidth, destHeight );
 		
 		if( this.drawFinishLine ) {
 			dc.strokeStyle = contrastColour;
@@ -371,6 +373,7 @@ class ScaledBitmap {
 			dc.stroke();
 		}
 		
+		// Draw the magnifying rectangle.
 		const magnifyRect = this.getMagRect();
 		if( magnifyRect[2] <= 0 || magnifyRect[3] <= 0 )
 			return;
@@ -384,7 +387,7 @@ class ScaledBitmap {
 			return;
 			
 		const xCenter = sourceRect[0] + sourceRect[2] / 2, yCenter = sourceRect[1] + sourceRect[3] / 2;
-		const isWest = xCenter < this.bitmap.width/2, isNorth = yCenter < this.bitmap.width/2;
+		const isWest = xCenter < this.image.width/2, isNorth = yCenter < this.image.width/2;
 		let insetRect = this.getInsetRect( width, height, isWest, isNorth );
 		
 		const magRatio = GetScaleRatio( sourceRect[2], sourceRect[3], insetRect[2], insetRect[3] );
@@ -395,7 +398,7 @@ class ScaledBitmap {
 			iWidth, iHeight
 		];
 		
-		dc.drawImage( sourceBM, ...sourceRect, ...insetRect );
+		dc.drawImage( sourceImage, ...sourceRect, ...insetRect );
 
 		// Draw the outlines.
 		dc.strokeStyle = 'rgb(200,200,0)';
@@ -441,33 +444,7 @@ class ScaledBitmap {
 		}
 	}
 	
-	SetImage( image ) {
-		this.bitmap = null;
-		if( image ) {
-			this.bitmap = new OffscreenCanvas( image.width, image.height );
-			let dc = this.bitmap.getContext('2d');
-			dc.drawImage( image, 0, 0, image.width, image.height, 0, 0, image.width, image.height );
-			this.Refresh()
-		}
-	}
-	
-	SetToEmpty() {
-		const width = this.canvas.width, height = this.canvas.height;
-		this.bitmap = new OffscreenCanvas( width, height );
-		let ctx = this.bitmap.getContext('2d');
-		ctx.beginPath();
-		ctx.rect( 0, 0, width, height );
-		ctx.fillStyle = 'rgb(255,255,255)';
-		ctx.fill();
-		this.Refresh()
-	}
-		
-	SetTestBitmap() {
-		// Draw a test pattern into the offscreen bitmap.
-		const width = this.canvas.width, height = this.canvas.height;
-		this.bitmap = new OffscreenCanvas( width, height );
-		let dc = this.bitmap.getContext('2d');
-		
+	drawTestImage( dc, width, height ) {
 		let colours = [
 			'rgb(255,255,255)', 'rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)',
 			'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)', 'rgb(0,0,0)'
@@ -499,10 +476,17 @@ class ScaledBitmap {
 			dc.fillStyle = colours[i];
 			dc.fill();
 		}
-		
-		this.Refresh();
 	}
 	
+	SetImage( image ) {
+		this.image = image;
+		this.Refresh()
+	}
+	
+	SetToEmpty() {
+		this.SetImage( null );
+	}
+		
 	Refresh() {
 		this.draw( this.canvas.getContext('2d'), this.canvas.width, this.canvas.height );
 		if( this.drawCallback )
@@ -559,12 +543,10 @@ function formatEpoch( secsEpoch ) {
 function formatTimeDelta( secs ) {
 	let sign = '+';
 	if( secs < 0 ) {
-		sign = '-';
+		sign = '';
 		secs *= -1;
 	}
-	const ss = Math.trunc(secs);
-	const ms = Math.round(secs*1000);
-	return sign + ss + '.' + leftFillNum(ms,3);
+	return sign + secs.toFixed(3);
 }
 
 //----------------------------------------------------------------------
@@ -674,6 +656,9 @@ function MakeComposite( leftToRight=true, pixelsPerSec=1.0 ) {
 
 //----------------------------------------------------------------------
 
+var imageScaledBitmap = null;
+var imageWait = null;
+
 function getClosestImage() {
 	// Find the image closest to the trigger time.
 	let ts = triggersCur[iTriggerCur].ts;
@@ -756,6 +741,7 @@ function updateImages( iTrigger ) {
 	imageTitle.innerHTML = ( '<span style="font-size: 120%;">' + info.join(', ') + '</>');
 	
 	// Switch to the image view.
+	imageScaledBitmap.SetImage( imageWait );
 	document.getElementById("id_images_tab_button").click();
 }
 
@@ -813,8 +799,6 @@ function showTriggers( triggers ) {
 }
 
 //----------------------------------------------------------------------
-
-var imageScaledBitmap = null;
 
 function drawCallback( canvas ) {
 	if( triggersCur.length == 0 )
@@ -975,19 +959,22 @@ function submitForm( e, submit ) {
 }
 
 //----------------------------------------------------------------------
-	
+
 function OnLoad() {
 	let imageCanvas = document.getElementById( 'id_image_canvas' );
 	imageCanvas.addEventListener( 'wheel', onWheel, false );
 	imageCanvas.addEventListener( 'click', playStop, false );
 	
 	imageScaledBitmap = new ScaledBitmap( imageCanvas, null, false, true, drawCallback );
+	imageWait = document.createElement( 'img' );
+	imageWait.onload = () => imageScaledBitmap.SetImage(imageWait);
+	imageWait.src = 'hourglass-wait.png';
 	
 	let trigger_div = document.getElementById( 'id_triggers' );
 	function do_resize( event ) {
 		//--------------------------------------------------------------
 		imageCanvas.width = Math.max( 32, window.innerWidth - 32 );
-		imageCanvas.height = Math.max( 32, window.innerHeight - 160 );
+		imageCanvas.height = Math.max( 32, window.innerHeight - 170 );
 		imageScaledBitmap.OnSize();
 		
 		//--------------------------------------------------------------
@@ -1034,10 +1021,11 @@ function OnLoad() {
 <!-- Tab content -->
 <div id="id_trigger_tab" class="tabcontent">
     <img src="CrossMgrHeader.png" height="40px"/>
-	<label for="trigger_date">Date:</label>
-	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()">
+	<label for="trigger_date" style="font-size:150%">Date:</label>
+	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()" style="font-size:150%">
 	</select>
-	<button onclick="updateTriggers();" style="margin-left: 2.5em;">&#x21bb; Refresh</button>
+	<button onclick="updateTriggers();" style="margin-left: 2.5em; font-size:150%">&#x21bb; Refresh</button>
+	<a href="qrcode.html" style="margin-left: 2.5em;" title="QR Code"><img src="Ecommerce-Qr-Code-icon.png"/></a>	
 	<p></p>
 	<div id="id_triggers" class="scroll"></div>
 </div>
@@ -1046,6 +1034,7 @@ function OnLoad() {
 	<div id="id_image_title"></div>
 	<canvas id="id_image_canvas" width="500" height="600"></canvas>
 	<div style="margin-top: 0.25em;">
+		<span style=" font-size:200%">
 		<button title="Frame closest to Trigger"	onclick="goTrigger();"			>&#x2295;</button>
 		<button title="-1 Frame"					onclick="goImage(iImageCur-1);"	>-1</button>
 		<button title="+1 Frame"					onclick="goImage(iImageCur+1);"	>+1</button>
@@ -1054,17 +1043,15 @@ function OnLoad() {
 		<button title="Stop Play"					onclick="playStop();"			>&#x23F8;</button>
 		<button title="Play Forward"				onclick="playStop();play(1);"	>&#x23F5;</button>
 		<button title="Last Frame"					onclick="goImage(1e10);"		>&#x23ED;</button>
-		mouse-wheel to scroll by frame | click-and-drag to zoom
-	</div>
-	<div style="margin-top: 0.25em;">
-		Filters:
-		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
+		</span>
+		mouse-wheel to scroll by frame | click-and-drag to zoom |
+		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_contrast">Contrast</label>
 		
-		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
+		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_sharpen">Sharpen</label>
 		
-		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 2.5em;">
+		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_grayscale">Grayscale</label>
 	</div>
 </div>

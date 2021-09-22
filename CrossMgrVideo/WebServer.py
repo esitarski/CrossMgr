@@ -12,6 +12,10 @@ import socket
 import datetime
 import traceback
 import threading
+import functools
+from qrcode import QRCode
+from io import StringIO
+
 from urllib.parse import quote, urlparse, parse_qs
 from cgi import parse_header, parse_multipart
 
@@ -19,33 +23,87 @@ from queue import Queue, Empty
 from socketserver import ThreadingMixIn
 
 from http.server import BaseHTTPRequestHandler, HTTPServer, HTTPStatus
-from io import StringIO
+
 import Utils
 import CVUtil
 from Database import GlobalDatabase
 import Version
+from GetMyIP import GetMyIP
 
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrVideoServer(ThreadPoolMixIn, HTTPServer):
 	pass
     
+PORT_NUMBER = 8775
+
 now = datetime.datetime.now
 
 with open( os.path.join(Utils.getImageFolder(), 'CrossMgrVideo.ico'), 'rb' ) as f:
 	favicon = f.read()
 
-PORT_NUMBER = 8775
-
+mainPage = None
 def getMainPage():
-	# Make sure to return bytes.
-	with open( os.path.join(Utils.getHtmlFolder(), 'main.html') ) as f:
-		return f.read().encode()
-		
+	global mainPage
+	
+	if True or not mainPage:
+		with open( os.path.join(Utils.getHtmlFolder(), 'main.html') ) as f:
+			mainPage = f.read().encode()	# Make sure to return bytes.
+	
+	return mainPage
+
+@functools.lru_cache(maxsize=8)
 def getPNG( fname ):
-	print( os.path.join(Utils.getImageFolder(), fname) )
 	with open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
 		return f.read()
 
+def getQRCodePage( urlPage ):
+	qr = QRCode()
+	qr.add_data( urlPage )
+	qr.make()
+	qrcode = '["' + '",\n"'.join(
+		[''.join( '1' if v else '0' for v in qr.modules[row] ) for row in range(qr.modules_count)]
+	) + '"]'
+	
+	result = StringIO()
+	def w( s ):
+		result.write( s )
+		result.write( '\n' )
+	
+	w( '<html>' )
+	w( '<head>' )
+	w( '''<style type="text/css">
+body {
+  font-family: sans-serif;
+  text-align: center;
+  }
+</style>''' )
+	w( '''<script>
+function Draw() {
+	const qrcode={qrcode};
+	let c = document.getElementById("idqrcode");
+	let ctx = c.getContext("2d");
+	ctx.fillStyle = '#000';
+	const s = Math.floor( c.width / qrcode.length );
+	for( let y = 0; y < qrcode.length; ++y ) {
+		let row = qrcode[y];
+		for( let x = 0; x < row.length; ++x ) {
+			if( row.charAt(x) == '1' )
+				ctx.fillRect( x*s, y*s, s, s );
+		}
+	}
+}
+'''.replace('{qrcode}', qrcode) )
+	w( '</script>' )
+	w( '</head>' )
+	w( '<body onload="Draw();">' )
+	w( '<h1 style="margin-top: 32px;">Share CrossMgrVideo Access</h1>' )
+	w( '<canvas id="idqrcode" width="360" height="360"></canvas>' )
+	w( '<h2>Scan the QRCode.<br/>Follow it to the CrossMgrVideo page.</h2>' )
+	w( '<h2>{}</h2>'.format(urlPage) )
+	w( 'Powered by <a href="http://www.sites.google.com/site/crossmgrsoftware">CrossMgr</a>.' )
+	w( '</body>' )
+	w( '</html>' )
+	return result.getvalue().encode()
 #---------------------------------------------------------------------------
 
 class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
@@ -153,7 +211,11 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/favicon.ico':
 				content = favicon
 				content_type = self.ico_content
-				
+			
+			elif up.path=='/qrcode.html':
+				content = getQRCodePage( '{}:{}'.format(GetMyIP(), PORT_NUMBER) )
+				content_type = self.html_content
+			
 			elif up.path.endswith('.png'):
 				content = getPNG( up.path[1:] )
 				content_type = self.png_content
@@ -214,7 +276,7 @@ webThread.start()
 			
 #-------------------------------------------------------------------
 if __name__ == '__main__':
-	print( 'Started CrossMgrVideoWebServer on http://127.0.0.1:{} '.format(PORT_NUMBER) )
+	print( 'Started CrossMgrVideoWebServer on http://{}:{} '.format(GetMyIP(), PORT_NUMBER) )
 	try:
 		time.sleep( 10000 )
 	except KeyboardInterrupt:

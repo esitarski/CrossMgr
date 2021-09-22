@@ -31,7 +31,7 @@ from Database import GlobalDatabase, DBWriter, Database
 from ScaledBitmap import ScaledBitmap
 from FinishStrip import FinishStripPanel
 from ManageDatabase import ManageDatabase
-from PhotoDialog import PhotoDialog
+from PhotoDialog import PhotoPanel
 from Clock import Clock
 from AddPhotoHeader import AddPhotoHeader
 from Version import AppVerName
@@ -482,7 +482,6 @@ class MainWin( wx.Frame ):
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
 		self.focusDialog = FocusDialog( self )
-		self.photoDialog = PhotoDialog( self )
 		self.autoCaptureDialog = AutoCaptureDialog( self )
 		self.triggerDialog = TriggerDialog( self )
 				
@@ -583,10 +582,16 @@ class MainWin( wx.Frame ):
 		mainSizer.Add( headerSizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
-		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2), photoViewCB=self.photoViewCB )
-		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
+		self.notebook = wx.Notebook( self, size=(-1,wx.GetDisplaySize()[1]//2) )
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onNotebook )
 		
-		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
+		self.finishStrip = FinishStripPanel( self.notebook, photoViewCB=self.photoViewCB )		
+		self.photoPanel = PhotoPanel( self.notebook )
+		
+		self.notebook.AddPage(self.photoPanel, "Images")
+		self.notebook.AddPage(self.finishStrip, "Finish Strip")
+		
+		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.4), int(imageHeight*0.4)) )
 		self.primaryBitmap.SetTestBitmap()
 		self.primaryBitmap.Bind( wx.EVT_LEFT_UP, self.onFocus )
 		self.primaryBitmap.Bind( wx.EVT_RIGHT_UP, self.onFocus )
@@ -657,7 +662,7 @@ class MainWin( wx.Frame ):
 		vsTriggers.Add( self.triggerList, 1, flag=wx.EXPAND|wx.TOP, border=2)
 		
 		#------------------------------------------------------------------------------------------------
-		mainSizer.Add( self.finishStrip, 1, flag=wx.EXPAND )
+		mainSizer.Add( self.notebook, 1, flag=wx.EXPAND )
 		
 		border=2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -795,7 +800,14 @@ class MainWin( wx.Frame ):
 				infoListNew.append( info )
 		infoListNew.reverse()
 		return infoListNew
-	
+		
+	def refreshPhotoPanel( self ):
+		self.photoPanel.playStop()
+		self.photoPanel.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
+		
+	def onNotebook( self, event ):
+		self.refreshPhotoPanel()
+		
 	def onPublishPhotos( self, event ):
 		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]
 		if not infoList:
@@ -1226,7 +1238,7 @@ class MainWin( wx.Frame ):
 		self.focusDialog.Show()
 	
 	def showPhotoDialog( self ):
-		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
+		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
 			self.doTriggerEdit,
 		)
 		self.photoDialog.CenterOnParent()
@@ -1237,11 +1249,6 @@ class MainWin( wx.Frame ):
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
 		self.photoDialog.clear()		
 	
-	def onRightClick( self, event ):
-		if self.triggerInfo:
-			self.xFinish = event.GetX()
-			self.showPhotoDialog()
-
 	def photoViewCB( self, x ):
 		if self.triggerInfo:
 			self.xFinish = x
@@ -1254,9 +1261,11 @@ class MainWin( wx.Frame ):
 			self.ts = None
 			self.tsJpg = []
 			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, {} )
+			self.refreshPhotoPanel()
 			return
 		
 		self.finishStrip.SetTsJpgs( None, None )	# Clear the current finish strip so nothing gets updated.
+		self.refreshPhotoPanel()
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
 		self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
 		self.ts = self.triggerInfo['ts']
@@ -1273,6 +1282,7 @@ class MainWin( wx.Frame ):
 				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			triggerInfo['frames'] = len(self.tsJpg)
 			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, triggerInfo )
+			self.refreshPhotoPanel()
 			
 		#threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
 		updateFS( self.triggerInfo )

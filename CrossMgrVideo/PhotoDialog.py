@@ -78,11 +78,10 @@ def PrintPhoto( parent, bitmap ):
 	printout.Destroy()	
 
 photoHeaderState = True
-class PhotoDialog( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
-		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
+class PhotoPanel( wx.Panel ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, isDialog=False ):
 			
-		super().__init__( parent, id, size=size, style=style, title=_('Photo: *** Left-click and Drag in the Photo to Zoom In ***') )
+		super().__init__( parent, id, size=size, style=style )
 		
 		self.clear()
 		
@@ -102,7 +101,12 @@ class PhotoDialog( wx.Dialog ):
 		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
 		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
-		
+
+		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label='-1' )
+		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
+		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='+1' )
+		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
+				
 		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EA' )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
 		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C0' )
@@ -114,19 +118,14 @@ class PhotoDialog( wx.Dialog ):
 		self.playerForwardToEnd = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23E9' )
 		self.playerForwardToEnd.Bind( wx.EVT_BUTTON, lambda e: self.playForwardToEnd() )
 		
-		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C1' )
-		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
-		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B7' )
-		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
-		
 		btnsizer.Add( self.recenter, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
+		btnsizer.Add( self.frameLeft, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+		btnsizer.Add( self.frameRight, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		btnsizer.Add( self.playerReverse, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerForward, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerStop, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerForwardToEnd, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
-		btnsizer.Add( self.frameLeft, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
-		btnsizer.Add( self.frameRight, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
         
 		self.photoHeader = wx.CheckBox(self, label='Header')
@@ -184,10 +183,11 @@ class PhotoDialog( wx.Dialog ):
 		
 		btnsizer.AddStretchSpacer()
 
-		btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
-		btn.SetToolTip( wx.ToolTip('Close') )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
-		btn.Bind( wx.EVT_BUTTON, self.onClose )
+		if isDialog:
+			btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
+			btn.SetToolTip( wx.ToolTip('Close') )
+			btnsizer.Add(btn, flag=wx.LEFT, border=4)
+			btn.Bind( wx.EVT_BUTTON, self.onClose )
 
 		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
 
@@ -209,7 +209,7 @@ class PhotoDialog( wx.Dialog ):
 		self.fps = fps
 		self.editCB = editCB
 		
-		self.kmh = triggerInfo.get('kmh',0.0) or 0.0
+		self.kmh = (triggerInfo.get('kmh',0.0) or 0.0) if triggerInfo else 0.0
 		self.mps = self.kmh / 3.6
 		self.mph = self.kmh * 0.621371
 		self.pps = 2000.0
@@ -231,9 +231,9 @@ class PhotoDialog( wx.Dialog ):
 		w, h = self.GetSize()
 		if w < wSize[0] or h < wSize[1]:
 			self.SetSize( wSize )
-		label = self.ts.strftime('%H:%M:%S.%f')[:-3]
-		if self.triggerInfo:
-			label += '\n{:+.3f} TRG'.format( (self.ts - triggerInfo['ts']).total_seconds() )
+		label = self.ts.strftime('%H:%M:%S.%f')[:-3] if self.ts else ''
+		if self.ts and self.triggerInfo:
+			label += '\n{:+.3f} TRG'.format( (self.ts - self.triggerInfo['ts']).total_seconds() )
 		self.timestamp.SetLabel( label )
 	
 	def onRecenter( self, event ):
@@ -269,7 +269,8 @@ class PhotoDialog( wx.Dialog ):
 		self.SetBitmap()
 	
 	def onMouseWheel( self, event ):
-		self.changeFrame( event.GetWheelRotation() )
+		self.changeFrame( -event.GetWheelRotation() )
+		event.Skip()
 	
 	def onKeyDown( self, event ):
 		self.changeFrame( -1 if event.ShiftDown() else 1 )
@@ -279,6 +280,9 @@ class PhotoDialog( wx.Dialog ):
 			self.changeFrame( 1 )
 			if self.iJpg < len(self.tsJpg)-1:
 				wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
+			else:
+				self.iJpg = 0
+				wx.CallLater( 700, self.playNextFrame )
 	
 	def play( self ):
 		self.playStop()
@@ -292,6 +296,9 @@ class PhotoDialog( wx.Dialog ):
 			self.changeFrame( -1 )
 			if self.iJpg > 0:
 				wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
+			else:
+				self.iJpg = len(self.tsJpg)
+				wx.CallLater( 700, self.playPrevFrame )
 	
 	def playReverse( self ):
 		self.playStop()
@@ -474,3 +481,20 @@ class PhotoDialog( wx.Dialog ):
 			except Exception as e:
 				wx.MessageBox( _('Gif Save Failed:\n\n{}').format(e), _('Save Failed') )
 		fd.Destroy()
+
+class PhotoDialog( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(500,500),
+		style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.MAXIMIZE_BOX ):
+			
+		super().__init__( parent, id, size=size, style=style, title=_('Photo: *** Left-click and Drag in the Photo to Zoom In ***') )
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+
+		self.panel = PhotoPanel( self, isDialog=True )
+		vs.Add( self.panel, 1, flag=wx.ALL|wx.EXPAND )
+		
+		self.SetSizer( vs )
+		
+	def set( self, *args, **kwargs ):
+		self.panel.set( *args, **kwargs )
+

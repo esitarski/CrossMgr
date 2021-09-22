@@ -117,7 +117,7 @@ function intersectRect( a, b ) {
 }
 
 class ScaledBitmap {
-	constructor( canvas, image=null, drawFinishLine=false, inset=true ) {
+	constructor( canvas, image=null, drawFinishLine=false, inset=true, drawCallback=null ) {
 		this.canvas = canvas;
 		this.SetImage( image );
 		this.mouseButtonDown = false;
@@ -126,6 +126,7 @@ class ScaledBitmap {
 		canvas.addEventListener('resize', this.OnSize.bind(this) );
 
 		this.drawFinishLine = drawFinishLine;
+		this.drawCallback = drawCallback
 		
 		this.eventCache = [];
 		if( inset ) {
@@ -151,7 +152,7 @@ class ScaledBitmap {
 	
 	OnSize( event ) {
 		this.resetMagRect();
-		this.Refresh();
+		this.Refresh();overflow:scroll;
 	}
 	
 	OnPointerDown( event ) {
@@ -228,19 +229,21 @@ class ScaledBitmap {
 		dc.fillStyle = 'rgb(0,0,0)';
 		dc.fill();
 		
-		if( !this.bitmap )
+		if( !this.image ) {
+			this.drawTestImage( dc, width, height );
 			return;
+		}
 		
 		// Draw the image in the canvas.
-		let sourceBM = this.bitmap;
-		const sourceWidth = sourceBM.width, sourceHeight = sourceBM.height;
+		let sourceImage = this.image;
+		const sourceWidth = sourceImage.width, sourceHeight = sourceImage.height;
 		const ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height );
 		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
 
 		const xLeft = Math.max(0, (width - destWidth)/2);
 		const yTop = Math.max(0, (height - destHeight)/2);
 		if( sourceWidth > 0 && sourceHeight > 0 && destWidth > 0 && destHeight > 0 )
-			dc.drawImage( sourceBM, 0, 0, sourceWidth, sourceHeight, xLeft, yTop, destWidth, destHeight );
+			dc.drawImage( sourceImage, 0, 0, sourceWidth, sourceHeight, xLeft, yTop, destWidth, destHeight );
 		
 		if( this.drawFinishLine ) {
 			dc.strokeStyle = contrastColour;
@@ -251,6 +254,7 @@ class ScaledBitmap {
 			dc.stroke();
 		}
 		
+		// Draw the magnifying rectangle.
 		const magnifyRect = this.getMagRect();
 		if( magnifyRect[2] <= 0 || magnifyRect[3] <= 0 )
 			return;
@@ -264,7 +268,7 @@ class ScaledBitmap {
 			return;
 			
 		const xCenter = sourceRect[0] + sourceRect[2] / 2, yCenter = sourceRect[1] + sourceRect[3] / 2;
-		const isWest = xCenter < this.bitmap.width/2, isNorth = yCenter < this.bitmap.width/2;
+		const isWest = xCenter < this.image.width/2, isNorth = yCenter < this.image.width/2;
 		let insetRect = this.getInsetRect( width, height, isWest, isNorth );
 		
 		const magRatio = GetScaleRatio( sourceRect[2], sourceRect[3], insetRect[2], insetRect[3] );
@@ -275,7 +279,7 @@ class ScaledBitmap {
 			iWidth, iHeight
 		];
 		
-		dc.drawImage( sourceBM, ...sourceRect, ...insetRect );
+		dc.drawImage( sourceImage, ...sourceRect, ...insetRect );
 
 		// Draw the outlines.
 		dc.strokeStyle = 'rgb(200,200,0)';
@@ -321,33 +325,7 @@ class ScaledBitmap {
 		}
 	}
 	
-	SetImage( image ) {
-		this.bitmap = null;
-		if( image ) {
-			this.bitmap = new OffscreenCanvas( image.width, image.height );
-			let dc = this.bitmap.getContext('2d');
-			dc.drawImage( image, 0, 0, image.width, image.height, 0, 0, image.width, image.height );
-			this.Refresh()
-		}
-	}
-	
-	SetToEmpty() {
-		const width = this.canvas.width, height = this.canvas.height;
-		this.bitmap = new OffscreenCanvas( width, height );
-		let ctx = this.bitmap.getContext('2d');
-		ctx.beginPath();
-		ctx.rect( 0, 0, width, height );
-		ctx.fillStyle = 'rgb(255,255,255)';
-		ctx.fill();
-		this.Refresh()
-	}
-		
-	SetTestBitmap() {
-		// Draw a test pattern into the offscreen bitmap.
-		const width = this.canvas.width, height = this.canvas.height;
-		this.bitmap = new OffscreenCanvas( width, height );
-		let dc = this.bitmap.getContext('2d');
-		
+	drawTestImage( dc, width, height ) {
 		let colours = [
 			'rgb(255,255,255)', 'rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)',
 			'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)', 'rgb(0,0,0)'
@@ -379,12 +357,21 @@ class ScaledBitmap {
 			dc.fillStyle = colours[i];
 			dc.fill();
 		}
-		
-		this.Refresh();
 	}
 	
+	SetImage( image ) {
+		this.image = image;
+		this.Refresh()
+	}
+	
+	SetToEmpty() {
+		this.SetImage( null );
+	}
+		
 	Refresh() {
 		this.draw( this.canvas.getContext('2d'), this.canvas.width, this.canvas.height );
+		if( this.drawCallback )
+			this.drawCallback( this.canvas );
 	}
 };
 

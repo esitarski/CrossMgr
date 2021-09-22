@@ -1,4 +1,5 @@
 import wx
+import traceback
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -25,6 +26,7 @@ class ScaledBitmap( wx.Panel ):
 			self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
 	
 	def resetMagRect( self ):
+		# traceback.print_stack()
 		self.xBegin = 0
 		self.yBegin = 0
 		self.xEnd = 0
@@ -34,7 +36,6 @@ class ScaledBitmap( wx.Panel ):
 		return wx.Rect( min(self.xBegin, self.xEnd), min(self.yBegin, self.yEnd), abs(self.xEnd-self.xBegin), abs(self.yEnd-self.yBegin) )
 	
 	def OnSize( self, event ):
-		self.resetMagRect()
 		wx.CallAfter( self.Refresh )
 	
 	def OnLeftDown( self, event ):
@@ -55,8 +56,8 @@ class ScaledBitmap( wx.Panel ):
 	
 	def getInsetRect( self, width, height, isWest, isNorth ):
 		r = 0.75
-		insetWidth = int(width*r)
-		insetHeight = int(height*r)
+		insetWidth = round(width*r)
+		insetHeight = round(height*r)
 		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight,
 			insetWidth, insetHeight
 		)
@@ -135,6 +136,11 @@ class ScaledBitmap( wx.Panel ):
 		self.draw( wx.AutoBufferedPaintDC(self), width, height )
 		
 	def SetBitmap( self, bitmap ):
+		if not bitmap:
+			self.resetMagRect()
+			self.SetTestBitmap()
+			return
+		
 		assert isinstance(bitmap, wx.Bitmap)
 		self.bitmap = bitmap
 		self.Refresh()
@@ -162,19 +168,6 @@ class ScaledBitmap( wx.Panel ):
 		self.bitmap = wx.Bitmap( width, height )
 		self.Refresh()
 		
-	def SetTile( self, tile ):
-		width, height = self.GetSize()
-		self.bitmap = wx.Bitmap( width, height )
-		dc = wx.MemoryDC()
-		dc.SelectObject( self.bitmap )
-		
-		wTile = tile.GetWidth()
-		hTile = tile.GetHeight()
-		for y in range( 0, height, hTile ):
-			for x in range( 0, width, wTile ):
-				dc.DrawBitmap( tile, x, y )
-		self.Refresh()
-		
 	def SetTestBitmap( self ):
 		width, height = self.GetSize()
 		self.bitmap = wx.Bitmap( width, height )
@@ -185,15 +178,15 @@ class ScaledBitmap( wx.Panel ):
 			wx.Colour(255,255,255), wx.Colour(255,0,0), wx.Colour(0,255,0), wx.Colour(0,0,255),
 			wx.Colour(255,255,0), wx.Colour(255,0,255), wx.Colour(0,255,255), wx.Colour(0,0,0),
 		)
-		rWidth = int(float(width) / len(colours) + 0.5)
+		rWidth = round(float(width) / len(colours))
 		for row, (y, hCur) in enumerate(((0, int(height*0.75)), (int(height*0.75), int(height*0.25)))):
 			for col, c in enumerate(colours if row == 0 else reversed(colours)):
 				dc.SetBrush( wx.Brush(c, wx.SOLID) )
 				dc.DrawRectangle( rWidth * col, y, rWidth+1, hCur )
 		
-		s = int(min(width, height) / 1.5)
-		x = int((width-s) / 2)
-		y = int((height-s) / 2)
+		s = round(min(width, height) / 1.5)
+		x = round((width-s) / 2)
+		y = round((height-s) / 2)
 		angle = 360.0 / len(colours)
 		for i, c in enumerate(colours):
 			dc.SetBrush( wx.Brush(c, wx.SOLID) )
