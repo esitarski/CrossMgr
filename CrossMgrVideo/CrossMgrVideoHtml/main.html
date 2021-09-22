@@ -911,8 +911,7 @@ function updateForm() {
 		if( fields[i] == 'ts' || fields[i] == 'frames' || fields[i] == 'note' )
 			continue;
 		add_field( i );
-		if( fields[i] == 'team' )
-			form_div.appendChild( document.createElement("br") );
+		form_div.appendChild( document.createElement("br") );
 	}
 	// Note.
 	form_div.appendChild( document.createElement("br") );
