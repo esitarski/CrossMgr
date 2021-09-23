@@ -349,7 +349,7 @@ class ScaledBitmap {
 	
 	SetSourceRect( rect ) {
 		// Sets the zoom rectangle, given in photo pixel coordinates.
-		if( !rect || rect[2] == 0 || rect[3] == 0 || !this.image )
+		if( rect[2] == 0 || rect[3] == 0 || !this.image )
 			return;
 			
 		let sourceImage = this.image;
@@ -357,8 +357,8 @@ class ScaledBitmap {
 		const ratio = GetScaleRatio( sourceWidth, sourceHeight, this.canvas.width, this.canvas.height );
 		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
 
-		const xLeft = Math.max(0, (sourceWidth - destWidth)/2);
-		const yTop = Math.max(0, (sourceHeight - destHeight)/2);
+		const xLeft = Math.max(0, (this.canvas.width - destWidth)/2);
+		const yTop = Math.max(0, (this.canvas.height - destHeight)/2);
 
 		this.beginX = xLeft + rect[0] * ratio;
 		this.beginY = yTop + rect[1] * ratio;
