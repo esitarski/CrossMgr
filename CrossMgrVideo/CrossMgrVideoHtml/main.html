@@ -263,6 +263,7 @@ class ScaledBitmap {
 		this.beginY = 0;
 		this.endX = 0;
 		this.endY = 0;
+		this.sourceRect = [0,0,0,0];
 	}
 	
 	getMagRect() {
@@ -341,11 +342,38 @@ class ScaledBitmap {
 		return [!isWest ? 0 : width - insetWidth, !isNorth ? 0 : height - insetHeight, insetWidth, insetHeight];
 	}
 	
+	GetSourceRect() {
+		// Returns the zoom rectangle in photo pixel coordinates.
+		return this.sourceRect;
+	}
+	
+	SetSourceRect( rect ) {
+		// Sets the zoom rectangle, given in photo pixel coordinates.
+		if( !rect || rect[2] == 0 || rect[3] == 0 || !this.image )
+			return;
+			
+		let sourceImage = this.image;
+		const sourceWidth = sourceImage.width, sourceHeight = sourceImage.height;
+		const ratio = GetScaleRatio( sourceWidth, sourceHeight, this.canvas.width, this.canvas.height );
+		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
+
+		const xLeft = Math.max(0, (sourceWidth - destWidth)/2);
+		const yTop = Math.max(0, (sourceHeight - destHeight)/2);
+
+		this.beginX = xLeft + rect[0] * ratio;
+		this.beginY = yTop + rect[1] * ratio;
+		this.endX = this.beginX + rect[2] * ratio;
+		this.endY = this.beginY + rect[3] * ratio;
+		
+		console.log( [this.beginX, this.beginY, this.endX, this.endY] );
+		this.Refresh();
+	}
+	
 	draw( dc, width, height ) {
 		// Clear the canvas.
 		dc.beginPath();
 		dc.rect( 0, 0, width, height );
-		dc.fillStyle = 'rgb(0,0,0)';
+		dc.fillStyle = '#000';
 		dc.fill();
 		
 		if( !this.image ) {
@@ -378,13 +406,15 @@ class ScaledBitmap {
 		if( magnifyRect[2] <= 0 || magnifyRect[3] <= 0 )
 			return;
 			
-		const sourceRect = intersectRect(
+		let sourceRect = intersectRect(
 			[0, 0, sourceWidth, sourceHeight],
 			[(magnifyRect[0] - xLeft)/ratio, (magnifyRect[1]-yTop)/ratio, magnifyRect[2]/ratio, magnifyRect[3]/ratio]
 		);
 		
 		if( sourceRect[2] <= 0 || sourceRect[3] <= 0 )
 			return;
+			
+		this.sourceRect = sourceRect;
 			
 		const xCenter = sourceRect[0] + sourceRect[2] / 2, yCenter = sourceRect[1] + sourceRect[3] / 2;
 		const isWest = xCenter < this.image.width/2, isNorth = yCenter < this.image.width/2;
@@ -573,12 +603,12 @@ function getFrameTime() {
 	return dt[Math.round(dt.length/2)];
 }
 
-function getSpeedPixelsPerSecond( self, imageWidth, speedKMH ) {
+function getSpeedPixelsPerSecond( imageWidth, speedKMH ) {
 	const frameTime = getFrameTime();
 	const fps = 1.0 / frameTime;
 	
 	const viewWidth = 4.0;							// estimated meters seen in the finish line with the finish camera
-	const widthPix = self.finish.jpgWidth;			// width of a frame
+	const widthPix = imagesCur[iImageCur].width;	// width of a frame
 	
 	const speedMPS = speedKMH / 3.6;				// Convert to m/s
 	const d = speedMPS * frameTime;					// Distance the target moves between each frame at speed.
@@ -685,7 +715,7 @@ function getClosestImage() {
 }
 
 function showImages() {
-	showImage( getClosestImage() );
+	restoreView();
 }
 
 function onLoadImage() {
@@ -959,6 +989,40 @@ function submitForm( e, submit ) {
 
 //----------------------------------------------------------------------
 
+function restoreView() {
+	let trig = triggersCur[iTriggerCur];
+	if( !trig )
+		return;
+	
+	const frame = trig.zoom_frame < 0 ? getClosestImage() : trig.zoom_frame;
+	showImage( frame );
+	if( trig.zoom_width > 0 && trig.zoom_height > 0 ) {
+		console.log( ['restoreView', trig.zoom_x, trig.zoom_y, trig.zoom_width, trig.zoom_height] );
+		imageScaledBitmap.SetSourceRect(
+			[trig.zoom_x, trig.zoom_y, trig.zoom_width, trig.zoom_height]
+		);
+	}
+}
+
+function saveView() {
+	let trig = triggersCur[iTriggerCur];
+	if( !trig )
+		return;
+
+	const r = imageScaledBitmap.GetSourceRect();
+	let params = [
+		'id='			+ trig.id,
+		'zoom_frame=' 	+ iImageCur,
+		'zoom_x=' 		+ r[0],
+		'zoom_y=' 		+ r[1],
+		'zoom_width=' 	+ r[2],
+		'zoom_height='	+ r[3]
+	];
+	getJSON( 'trigger_update.js?' + params.join('&'), function(data) { return; } );
+}
+
+//----------------------------------------------------------------------
+
 function OnLoad() {
 	let imageCanvas = document.getElementById( 'id_image_canvas' );
 	imageCanvas.addEventListener( 'wheel', onWheel, false );
@@ -1042,6 +1106,8 @@ function OnLoad() {
 		<button title="Stop Play"					onclick="playStop();"			>&#x23F8;</button>
 		<button title="Play Forward"				onclick="playStop();play(1);"	>&#x23F5;</button>
 		<button title="Last Frame"					onclick="goImage(1e10);"		>&#x23ED;</button>
+		<button 									onClick="restoreView();"		>Restore View</button>
+		<button 									onClick="saveView();"			>Save View</button>
 		</span>
 		mouse-wheel to scroll by frame | click-and-drag to zoom |
 		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
