@@ -714,13 +714,31 @@ function getClosestImage() {
 }
 
 function showImages() {
-	restoreView();
+	restoreView( false );
 }
 
 function onLoadImage() {
 	// If all images have been loaded, show them.
 	if( ++loadedImageCount >= imagesCur.length )
 		showImages();
+}
+
+function updateImageTitle() {
+	let trig = triggersCur[iTriggerCur];
+	
+	let info = [];
+	for( f of fields ) {
+		if( f == 'frames' )
+			continue;
+		if( trig[f] ) {
+			if( f == 'ts' )
+				info.push( formatEpoch(trig[f]) );
+			else
+				info.push( trig[f] );
+		}
+	}
+	let imageTitle = document.getElementById( 'id_image_title' );
+	imageTitle.innerHTML = ( '<span style="font-size: 120%;">' + info.join(', ') + '</>');
 }
 
 function updateImages( iTrigger ) {
@@ -737,7 +755,7 @@ function updateImages( iTrigger ) {
 		(document.getElementById('id_grayscale').checked	? 'g' : '')
 	);
 	
-	let trig = triggersCur[iTrigger];
+	let trig = triggersCur[iTriggerCur];
 	loadedImageCount = imagesCur.length = 0;
 	iImageCur = 0;
 	const tsJpgIds = trig.tsJpgIds;
@@ -748,26 +766,14 @@ function updateImages( iTrigger ) {
 		imagesCur.push( img );
 	}
 	
-	// Update the selected row.
+	// Update the trigger table row.
 	let rows = document.getElementById('id_trigger_table').rows;
 	for( let i = 1; i < rows.length; ++i ) {
 		rows[i].classList.toggle('highlight', i-1==iTrigger);	// account for the header row.
 	}
-	
-	// Upate the image info.
-	let info = [];
-	for( f of fields ) {
-		if( f == 'frames' )
-			continue;
-		if( trig[f] ) {
-			if( f == 'ts' )
-				info.push( formatEpoch(trig[f]) );
-			else
-				info.push( trig[f] );
-		}
-	}
-	let imageTitle = document.getElementById( 'id_image_title' );
-	imageTitle.innerHTML = ( '<span style="font-size: 120%;">' + info.join(', ') + '</>');
+
+	// Update the page title.
+	updateImageTitle();
 	
 	// Switch to the image view.
 	imageScaledBitmap.SetImage( imageWait );
@@ -905,6 +911,22 @@ function updateTriggers() {
 
 //----------------------------------------------------------------------
 
+function updateOnScreenTriggerData() {
+	let trig = triggersCur[iTriggerCur];
+				
+	// Update the table with the new trigger info.
+	let rows = document.getElementById('id_trigger_table').rows;
+	let tr = rows[iTriggerCur+1];	// Allow for the title row.
+	for( let col = 0; col < headers.length; ++col ) {
+		tr.childNodes[col].innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+	}
+	
+	// Update the images page title.
+	updateImageTitle();
+}
+
+//----------------------------------------------------------------------
+
 function updateForm() {
 	const trig = triggersCur[iTriggerCur];
 	
@@ -974,33 +996,40 @@ function submitForm( e, submit ) {
 		}
 	}
 	
-	// Update the new trigger values in the table.
-	let row = document.getElementById('id_trigger_table').rows[iTriggerCur+1];	// Allow one for the header.
-	for( let i = 0; i < fields.length; ++i ) {
-		if( fields[i] == 'ts' || fields[i] == 'frames' )
-			continue;
-		row.cells[i].innerHTML = trig[fields[i]];
-	}
+	// Update the screen.
+	updateOnScreenTriggerData();
 	
-	// Switch to the images screen.
+	// Commit to the database then switch to the images screen.
 	getJSON( 'trigger_update.js?' + params.join('&'), function(data) { document.getElementById("id_images_tab_button").click(); } );
 }
 
 //----------------------------------------------------------------------
 
-function restoreView() {
+function restoreView( do_refresh ) {
 	let trig = triggersCur[iTriggerCur];
 	if( !trig )
 		return;
-	
-	const frame = trig.zoom_frame < 0 ? getClosestImage() : trig.zoom_frame;
-	showImage( frame );
-	if( trig.zoom_width > 0 && trig.zoom_height > 0 ) {
-		console.log( ['restoreView', trig.zoom_x, trig.zoom_y, trig.zoom_width, trig.zoom_height] );
-		imageScaledBitmap.SetSourceRect(
-			[trig.zoom_x, trig.zoom_y, trig.zoom_width, trig.zoom_height]
+
+	function restore() {
+		showImage( trig.zoom_frame < 0 ? getClosestImage() : trig.zoom_frame );
+		if( trig.zoom_width > 0 && trig.zoom_height > 0 ) {
+			imageScaledBitmap.SetSourceRect(
+				[trig.zoom_x, trig.zoom_y, trig.zoom_width, trig.zoom_height]
+			);
+		}
+	}
+
+	if( do_refresh ) {
+		// Refresh the trigger before we do the restore in case it changed in the database.
+		getJSON( 'trigger.js?id=' + trig.id, function( data ) {
+				Object.assign( triggersCur[iTriggerCur], data );
+				updateOnScreenTriggerData();
+				restore();
+			}
 		);
 	}
+	else
+		restore();
 }
 
 function saveView() {
@@ -1014,10 +1043,10 @@ function saveView() {
 	const r = imageScaledBitmap.GetSourceRect();
 
 	trig.zoom_frame =	iImageCur;
-	trig.zoom_x =		r[0];
-	trig.zoom_y =		r[1];
-	trig.zoom_width =	r[2];
-	trig.zoom_height =	r[3];
+	trig.zoom_x =		~~r[0];
+	trig.zoom_y =		~~r[1];
+	trig.zoom_width =	~~r[2];
+	trig.zoom_height =	~~r[3];
 
 	let params = [
 		'id='			+ trig.id,
@@ -1115,7 +1144,7 @@ function OnLoad() {
 		<button title="Stop Play"					onclick="playStop();"			>&#x23F8;</button>
 		<button title="Play Forward"				onclick="playStop();play(1);"	>&#x23F5;</button>
 		<button title="Last Frame"					onclick="goImage(1e10);"		>&#x23ED;</button>
-		<button 									onClick="restoreView();"		>Restore View</button>
+		<button 									onClick="restoreView(true);"	>Restore View</button>
 		<button 									onClick="saveView();"			>Save View</button>
 		</span>
 		mouse-wheel to scroll by frame | click-and-drag to zoom |

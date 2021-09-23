@@ -200,6 +200,24 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				content = json.dumps( [success] ).encode()
 				content_type = self.json_content
 				
+			elif up.path=='/trigger.js':
+				# Update trigger values.
+				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				fields = {}
+				if 'id' in query:
+					id = query.pop('id')
+					try:
+						id = int(id)
+					except:
+						id = 0
+					if id:
+						fields = GlobalDatabase().getTriggerFields( id )
+						fields['ts'] = fields['ts'].timestamp()
+						fields['ts_start'] = fields['ts_start'].timestamp()
+
+				content = json.dumps( fields ).encode()
+				content_type = self.json_content
+				
 			elif up.path=='/triggerdates.js':
 				# Get all dates that have triggers, and the image count.
 				# Most recent first.

@@ -194,6 +194,13 @@ class Database:
 					list(data.values()) + [id]
 				)
 		return True
+		
+	def getTriggerFields( self, id, fieldNames=None ):
+		if not fieldNames:
+			fieldNames = self.triggerFieldsAll
+		with self.dbLock, self.conn:
+			row = self.conn.execute( 'SELECT {} FROM trigger WHERE id=?'.format(','.join(fieldNames)), (id,) ).fetchone()
+		return { f:row[i] for i, f in enumerate(fieldNames) }
 	
 	def updateTriggerKMH( self, id, kmh ):
 		self.updateTriggerRecord(id, {'kmh':kmh})

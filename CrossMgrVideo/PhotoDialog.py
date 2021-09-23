@@ -365,6 +365,12 @@ class PhotoPanel( wx.Panel ):
 		self.scaledBitmap.SetSourceRect( wx.Rect( *[zinfo.get(f, 0) for f in ('zoom_x','zoom_y','zoom_width','zoom_height')] ) )
 		self.SetBitmap()
 			
+	def doRestoreView( self, event=None ):
+		if self.triggerInfo:
+			# Refresh the record from the database.
+			self.triggerInfo.update( GlobalDatabase().getTriggerFields(self.triggerInfo['id'], ('zoom_frame','zoom_x','zoom_y','zoom_width','zoom_height')) )
+			self.SetZoomInfo( self.triggerInfo )
+		
 	def onSaveView( self, event ):
 		if self.triggerInfo:
 			zinfo = self.GetZoomInfo() 
@@ -372,10 +378,6 @@ class PhotoPanel( wx.Panel ):
 				self.triggerInfo.update( zinfo )
 				GlobalDatabase().updateTriggerRecord( self.triggerInfo['id'], zinfo )
 
-	def doRestoreView( self, event=None ):
-		if self.triggerInfo:
-			self.SetZoomInfo( self.triggerInfo )
-		
 	def SetBitmap( self ):
 		self.scaledBitmap.SetBitmap( self.getPhoto() )
 		
