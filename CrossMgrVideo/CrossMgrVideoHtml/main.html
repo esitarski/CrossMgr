@@ -365,7 +365,6 @@ class ScaledBitmap {
 		this.endX = this.beginX + rect[2] * ratio;
 		this.endY = this.beginY + rect[3] * ratio;
 		
-		console.log( [this.beginX, this.beginY, this.endX, this.endY] );
 		this.Refresh();
 	}
 	
@@ -1008,15 +1007,25 @@ function saveView() {
 	let trig = triggersCur[iTriggerCur];
 	if( !trig )
 		return;
+		
+	if( !confirm("Save this View to the Database?") )
+		return;
 
 	const r = imageScaledBitmap.GetSourceRect();
+
+	trig.zoom_frame =	iImageCur;
+	trig.zoom_x =		r[0];
+	trig.zoom_y =		r[1];
+	trig.zoom_width =	r[2];
+	trig.zoom_height =	r[3];
+
 	let params = [
 		'id='			+ trig.id,
-		'zoom_frame=' 	+ iImageCur,
-		'zoom_x=' 		+ r[0],
-		'zoom_y=' 		+ r[1],
-		'zoom_width=' 	+ r[2],
-		'zoom_height='	+ r[3]
+		'zoom_frame=' 	+ trig.zoom_frame,
+		'zoom_x=' 		+ trig.zoom_x,
+		'zoom_y=' 		+ trig.zoom_y,
+		'zoom_width=' 	+ trig.zoom_width,
+		'zoom_height='	+ trig.zoom_height
 	];
 	getJSON( 'trigger_update.js?' + params.join('&'), function(data) { return; } );
 }
