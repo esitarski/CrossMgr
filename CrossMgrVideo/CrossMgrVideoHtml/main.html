@@ -818,7 +818,7 @@ function showTriggers( triggers ) {
 		let tr = document.createElement( 'tr' );
 		if( i & 1 )
 			tr.classList.add( 'odd' );
-		tr.addEventListener( 'click', function( iTrigger ) { return function(){ updateImages(iTrigger); }; }( i ), false );
+		tr.addEventListener( 'click', function( iTrigger ) { return function(){ updateImages(iTrigger); refreshTriggerFromDatabaseThen(function(){}); }; }( i ), false );
 		tbody.appendChild( tr );
 		
 		trig.frames = trig.tsJpgIds.length;
@@ -927,7 +927,7 @@ function updateOnScreenTriggerData() {
 
 //----------------------------------------------------------------------
 
-function updateForm() {
+function updateFormFields() {
 	const trig = triggersCur[iTriggerCur];
 	
 	let form_div = document.getElementById( 'id_form_div' );
@@ -970,6 +970,10 @@ function updateForm() {
 	input.size = "80";
 }
 
+function updateForm() {
+	refreshTriggerFromDatabaseThen( updateFormFields );
+}
+
 function submitForm( e, submit ) {
 	e.preventDefault();
 	
@@ -1005,6 +1009,16 @@ function submitForm( e, submit ) {
 
 //----------------------------------------------------------------------
 
+function refreshTriggerFromDatabaseThen( func ) {
+	let trig = triggersCur[iTriggerCur];
+	getJSON( 'trigger.js?id=' + trig.id, function( data ) {
+			Object.assign( triggersCur[iTriggerCur], data );
+			updateOnScreenTriggerData();
+			func();
+		}
+	);
+}
+
 function restoreView( do_refresh ) {
 	let trig = triggersCur[iTriggerCur];
 	if( !trig )
@@ -1019,15 +1033,8 @@ function restoreView( do_refresh ) {
 		}
 	}
 
-	if( do_refresh ) {
-		// Refresh the trigger before we do the restore in case it changed in the database.
-		getJSON( 'trigger.js?id=' + trig.id, function( data ) {
-				Object.assign( triggersCur[iTriggerCur], data );
-				updateOnScreenTriggerData();
-				restore();
-			}
-		);
-	}
+	if( do_refresh )
+		refreshTriggerFromDatabaseThen( restore );
 	else
 		restore();
 }
@@ -1113,7 +1120,7 @@ function OnLoad() {
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'id_trigger_tab')" id="id_trigger_tab_button">Triggers</button>
   <button class="tablinks" onclick="openTab(event, 'id_images_tab')" id="id_images_tab_button">Images</button>
-  <button class="tablinks" onclick="updateForm(); openTab(event, 'id_form_tab')" id="id_form_tab_button">Form</button>
+  <button class="tablinks" onclick="updateForm(); openTab(event, 'id_form_tab');" id="id_form_tab_button">Form</button>
   <!--
   <button class="tablinks" onclick="openTab(event, 'id_finishstrip_tab')" id="id_finishstrip_tab_button">Finish Strip</button>
   -->
