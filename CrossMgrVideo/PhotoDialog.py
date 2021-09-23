@@ -6,6 +6,7 @@ import subprocess
 from AddPhotoHeader import AddPhotoHeader
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
 from ComputeSpeed import ComputeSpeed
+from Database import GlobalDatabase
 import Utils
 import CVUtil
 
@@ -181,9 +182,16 @@ class PhotoPanel( wx.Panel ):
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		
-		btnsizer.AddStretchSpacer()
-
+		btn = wx.Button( self, label="Restore View" )
+		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
+		btnsizer.Add(btn, flag=wx.LEFT, border=8)
+		
+		btn = wx.Button( self, label="Save View" )
+		btn.Bind( wx.EVT_BUTTON, self.onSaveView )
+		btnsizer.Add(btn, flag=wx.LEFT, border=8)
+		
 		if isDialog:
+			btnsizer.AddStretchSpacer()
 			btn = wx.BitmapButton(self, wx.ID_CLOSE, bitmap=Utils.getBitmap('close-window.png'))
 			btn.SetToolTip( wx.ToolTip('Close') )
 			btnsizer.Add(btn, flag=wx.LEFT, border=4)
@@ -235,12 +243,8 @@ class PhotoPanel( wx.Panel ):
 		if self.ts and self.triggerInfo:
 			label += '\n{:+.3f} TRG'.format( (self.ts - self.triggerInfo['ts']).total_seconds() )
 		self.timestamp.SetLabel( label )
-	
-	def onRecenter( self, event ):
-		# Set to the photo closest to the trigger time.
-		if self.iJpg is None:
-			return
 		
+	def findFrameClosestToTrigger( self ):
 		# Clever way to bisect list of sorted tuples.
 		ts = self.triggerInfo['ts']
 		iJpgClosest = bisect.bisect_left( self.tsJpg, (ts, ), hi=len(self.tsJpg)-1 )
@@ -250,7 +254,14 @@ class PhotoPanel( wx.Panel ):
 			if abs((self.tsJpg[i][0] - ts).total_seconds()) < abs((self.tsJpg[iJpgClosest][0] - ts).total_seconds()):
 				iJpgClosest = i
 		
-		self.set( iJpgClosest, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
+		return iJpgClosest
+	
+	def onRecenter( self, event=None ):
+		# Set to the photo closest to the trigger time.
+		if self.iJpg is None:
+			return
+		
+		self.set( self.findFrameClosestToTrigger(), self.triggerInfo, self.tsJpg, self.fps, self.editCB )
 		self.Refresh()
 	
 	def changeFrame( self, frameDir ):
@@ -333,6 +344,38 @@ class PhotoPanel( wx.Panel ):
 			self.triggerInfo = self.editCB()
 			self.Refresh()
 			
+	def GetZoomInfo( self ):
+		r = self.scaledBitmap.GetSourceRect()
+		if not r:
+			return {}
+		return {
+			'zoom_frame':	self.iJpg,
+			'zoom_x':		r.GetX(),
+			'zoom_y':		r.GetY(),
+			'zoom_width':	r.GetWidth(),
+			'zoom_height':	r.GetHeight(),
+		}
+		
+	def SetZoomInfo( self, zinfo ):
+		if not self.tsJpg:
+			return
+		if 'zoom_frame' in zinfo:
+			frame = zinfo['zoom_frame']
+			self.iJpg = min( max(0, self.findFrameClosestToTrigger() if frame < 0 else frame), len(self.tsJpg)-1 )
+		self.scaledBitmap.SetSourceRect( wx.Rect( *[zinfo.get(f, 0) for f in ('zoom_x','zoom_y','zoom_width','zoom_height')] ) )
+		self.SetBitmap()
+			
+	def onSaveView( self, event ):
+		if self.triggerInfo:
+			zinfo = self.GetZoomInfo() 
+			if zinfo:
+				self.triggerInfo.update( zinfo )
+				GlobalDatabase().updateTriggerRecord( self.triggerInfo['id'], zinfo )
+
+	def doRestoreView( self, event=None ):
+		if self.triggerInfo:
+			self.SetZoomInfo( self.triggerInfo )
+		
 	def SetBitmap( self ):
 		self.scaledBitmap.SetBitmap( self.getPhoto() )
 		

@@ -24,6 +24,7 @@ class ScaledBitmap( wx.Panel ):
 			self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
 			self.Bind( wx.EVT_MOTION, self.OnMotion )
 			self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
+			self.Bind( wx.EVT_LEAVE_WINDOW, self.OnLeave )
 	
 	def resetMagRect( self ):
 		# traceback.print_stack()
@@ -31,9 +32,30 @@ class ScaledBitmap( wx.Panel ):
 		self.yBegin = 0
 		self.xEnd = 0
 		self.yEnd = 0		
+		self.sourceRect = None
 	
 	def getMagRect( self ):
 		return wx.Rect( min(self.xBegin, self.xEnd), min(self.yBegin, self.yEnd), abs(self.xEnd-self.xBegin), abs(self.yEnd-self.yBegin) )
+	
+	def GetSourceRect( self ):
+		''' Returns the zoom rectangle in photo pixel coordinates. '''
+		return self.sourceRect
+		
+	def SetSourceRect( self, rect ):
+		''' Sets the zoom rectangle, given in photo pixel coordinates. '''
+		if not rect or rect.IsEmpty() or not self.bitmap:
+			return
+		sourceBM = self.bitmap
+		sourceWidth, sourceHeight = sourceBM.GetSize()
+		width, height = self.GetSize()
+		ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height )
+		destWidth, destHeight = int(sourceWidth * ratio), int(sourceHeight * ratio)
+		xLeft, yTop = max(0, (width - destWidth)//2), max(0, (height - destHeight)//2)
+		self.xBegin = xLeft + int(rect.GetX() * ratio)
+		self.yBegin = yTop + int(rect.GetY() * ratio)
+		self.xEnd = self.xBegin + int(rect.GetWidth() * ratio)
+		self.yEnd = self.yBegin + int(rect.GetHeight() * ratio)
+		self.Refresh()
 	
 	def OnSize( self, event ):
 		self.Refresh()
@@ -45,14 +67,19 @@ class ScaledBitmap( wx.Panel ):
 		self.SetCursor( wx.Cursor(wx.CURSOR_MAGNIFIER) )
 		wx.CallAfter( self.Refresh )
 		
-	def OnLeftUp( self, event ):
-		self.SetCursor( wx.NullCursor )
-		self.buttonDown = False
-		
 	def OnMotion( self, event ):
 		if self.buttonDown:
 			self.xEnd, self.yEnd = event.GetX(), event.GetY()
 			self.Refresh()
+	
+	def OnLeftUp( self, event ):
+		self.SetCursor( wx.NullCursor )
+		self.buttonDown = False
+	
+	def OnLeave( self, event ):
+		if self.buttonDown:
+			self.buttonDown = False
+			self.SetCursor( wx.NullCursor )
 	
 	def getInsetRect( self, width, height, isWest, isNorth ):
 		r = 0.75
@@ -66,6 +93,7 @@ class ScaledBitmap( wx.Panel ):
 		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
 		
+		self.sourceRect = None
 		if not self.bitmap:
 			return
 		
@@ -91,6 +119,7 @@ class ScaledBitmap( wx.Panel ):
 		
 		if sourceRect.IsEmpty():
 			return
+		self.sourceRect = sourceRect
 			
 		xCenter = sourceRect.GetX() + sourceRect.GetWidth() // 2
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2

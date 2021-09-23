@@ -37,9 +37,10 @@ class Database:
 	triggerFieldsAll = (
 		'id','ts','s_before','s_after','ts_start','closest_frames','bib','first_name','last_name','team','wave','race_name',
 		'note','kmh','frames',
+		'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',
 	)
 	TriggerRecord = namedtuple( 'TriggerRecord', triggerFieldsAll )
-	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames'}	# Fields to compare for equality of triggers.
+	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',}	# Fields to compare for equality of triggers.
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 	
@@ -65,7 +66,7 @@ class Database:
 				cur.execute( 'PRAGMA table_info(trigger)' )
 				cols = cur.fetchall()
 				if cols:
-					col_names = [col[1] for col in cols]
+					col_names = {col[1] for col in cols}
 					if 'note' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN note TEXT DEFAULT ""' )
 					if 'kmh' not in col_names:
@@ -83,6 +84,13 @@ class Database:
 					# Closest frames queries.
 					if 'closest_frames' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN closest_frames INTEGER DEFAULT 0' )
+					# Zoom window.
+					if 'zoom_frame' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN zoom_frame  INTEGER DEFAULT -1' )
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN zoom_x      INTEGER DEFAULT 0' )
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN zoom_y      INTEGER DEFAULT 0' )
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN zoom_width  INTEGER DEFAULT 0' )
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN zoom_height INTEGER DEFAULT 0' )
 		
 				_createTable( self.conn, 'photo', (
 						('id', 'INTEGER PRIMARY KEY', False, None),
@@ -105,7 +113,13 @@ class Database:
 						('race_name', 'TEXT', 'ASC', None),
 						('note', 'TEXT', False, None),
 						('kmh', 'DOUBLE', False, 0.0),
-						('frames', 'INTEGER', False, 0),			# Number of frames with this trigger.		
+						('frames', 'INTEGER', False, 0),			# Number of frames with this trigger.
+						
+						('zoom_frame',	'INTEGER', False, -1),		# Frame of the best zoom image.  -1 means the Trigger frame.
+						('zoom_x', 		'INTEGER', False, 0),		# Zoom x coord
+						('zoom_y', 		'INTEGER', False, 0),		# Zoom y coord
+						('zoom_width',	'INTEGER', False, 0),		# Zoom width
+						('zoom_height', 'INTEGER', False, 0),		# Zoom height
 					)
 				)
 				self.photoTsCache = set( row[0] for row in self.conn.execute(
@@ -174,10 +188,11 @@ class Database:
 			self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
-		with self.dbLock, self.conn:
-			self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in data.keys())),
-				list(data.values()) + [id]
-			)
+		if data:
+			with self.dbLock, self.conn:
+				self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in data.keys())),
+					list(data.values()) + [id]
+				)
 		return True
 	
 	def updateTriggerKMH( self, id, kmh ):
