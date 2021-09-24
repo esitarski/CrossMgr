@@ -177,11 +177,58 @@ div.scroll {
 }
 overflow:scroll;
 /*--------------------------------------------------------------------*/
+/* style the form */
 
+  * {
+    box-sizing: border-box;
+  }
+  .grid_form {
+    display: grid;
+    grid-template-areas: 
+      "info note"
+	  "... button";
+  	grid-template-rows: 12em 2em;  
+  	grid-template-columns: 12em 1fr;
+    grid-gap: .8em;
+    background: #eee;
+    padding: 1.2em;
+    height: 30em;
+  }
+  .grid_form label  {
+    grid-area: labels;
+  }
+  .grid_form input {
+    grid-area: info;
+   	width: 100%;
+    padding: 1.1em;
+    border: none;
+    margin-bottom: 1em;
+  }
+  .grid_form textarea {
+   min-height: calc(100% - 2em);
+   width: 100%;
+   border: none;
+  }
+  #id_form_info {
+   grid-area: info;
+   width:fit-content;
+   height:fit-content;
+  }
+  #id_form_note {
+   grid-area: note;
+  }
+  .grid_form button {
+    grid-area: button;
+    //border: 0;
+    //background: gray;
+    //color: white;
+  }
+  
 @media print { .noprint { display: none; } }
 
 </style>
 
+<script src="ScaledBitmap.js"></script>
 
 <script>
 	
@@ -202,327 +249,6 @@ function openTab(evt, id_tab) {
   document.getElementById(id_tab).style.display = "block";
   evt.currentTarget.className += " active";
 }
-	
-//----------------------------------------------------------------------
-
-const contrastColour = 'rgb( 255, 130, 0 )';
-
-function GetScaleRatio( wBitmap, hBitmap, width, height ) {
-	return Math.min( width / wBitmap, height / hBitmap );
-}
-
-function intervalsOverlap( a0, a1, b0, b1 ) {
-	return a0 <= b1 && b0 <= a1;
-}
-
-// A rectangle is an array [x, y, width, height].
-// These convenience routines get the rectangle corners.
-function topRight( r )		{ return [r[0] + r[2], r[1]]; }
-function topLeft( r )		{ return [r[0], r[1]]; }
-function bottomLeft( r ) 	{ return [r[0], r[1] + r[3]]; }
-function bottomRight( r )	{ return [r[0] + r[2], r[1] + r[3]]; }
-
-function intersectRect( a, b ) {
-	// Return the intersection rectangle between the two given rectangles.
-	// Returns an empty rectangle if there is no intersection.
-	const x = Math.max(a[0], b[0]);
-	const num1 = Math.min(a[0] + a[2], b[0] + b[2]);
-	const y = Math.max(a[1], b[1]);
-	const num2 = Math.min(a[1] + a[3], b[1] + b[3]);
-	if (num1 >= x && num2 >= y)
-		return [x, y, num1 - x, num2 - y];
-	else
-		return [0,0,0,0];
-}
-
-class ScaledBitmap {
-	constructor( canvas, image=null, drawFinishLine=false, inset=true, drawCallback=null ) {
-		this.canvas = canvas;
-		this.SetImage( image );
-		this.mouseButtonDown = false;
-		this.background = 'rgb(232,232,232)';
-		this.resetMagRect();
-		canvas.addEventListener('resize', this.OnSize.bind(this) );
-
-		this.drawFinishLine = drawFinishLine;
-		this.drawCallback = drawCallback
-		
-		this.eventCache = [];
-		if( inset ) {
-			canvas.addEventListener('pointerdown', this.OnPointerDown.bind(this), false);
-			canvas.addEventListener('pointermove', this.OnPointerMove.bind(this), false);
-			canvas.addEventListener('pointerup', this.OnPointerUp.bind(this), false);
-			canvas.addEventListener('pointercancel', this.OnPointerUp.bind(this), false);
-			canvas.addEventListener('pointerleave', this.OnPointerUp.bind(this), false);
-		}
-		this.Refresh();
-	}
-	
-	resetMagRect() {
-		this.beginX = 0;
-		this.beginY = 0;
-		this.endX = 0;
-		this.endY = 0;
-		this.sourceRect = [0,0,0,0];
-	}
-	
-	getMagRect() {
-		return [Math.min(this.beginX, this.endX), Math.min(this.beginY, this.endY), Math.abs(this.endX-this.beginX), Math.abs(this.endY-this.beginY)];
-	}
-	
-	OnSize( event ) {
-		this.resetMagRect();
-		this.Refresh();overflow:scroll;
-	}
-	
-	OnPointerDown( event ) {
-		if( event.pointerType == 'mouse' && (event.buttons != 1) )	// Ignore all mouse events except for left button.
-			return;
-		
-		this.eventCache.push( event );
-		if( this.eventCache.length == 1 ) {
-			//console.log( 'OnPointerDown: initializing zoom' );
-			this.beginX = this.endX = this.eventCache[0].offsetX;
-			this.beginY = this.endY = this.eventCache[0].offsetY;
-			this.Refresh();
-			
-			this.mouseButtonDown = (event.pointerType == 'mouse' && (event.buttons == 1));
-			this.canvas.style.cursor = 'zoom-in';
-		}
-		else {
-			//console.log( 'OnPointerDown: pinch zoom point' );
-			this.OnPointerMove( event );
-		}
-	}
-	
-	OnPointerMove( event ) {
-		const i = this.eventCache.findIndex( e => e.pointerId == event.pointerId );
-		if( i >= 0 )
-			this.eventCache[i] = event;
-		
-		if( this.eventCache.length == 1 ) {
-			if( this.mouseButtonDown ) {
-				//console.log( 'OnPointerMove: mouse expand zoom' );
-				this.endX   = this.eventCache[0].offsetX;
-				this.endY   = this.eventCache[0].offsetY;
-				this.Refresh();
-			}
-		}
-		else if( this.eventCache.length >= 2 ) {
-			//console.log( 'OnPointerMove: pinch expand zoom' );
-			this.beginX = this.beginY = Number.POSITIVE_INFINITY;
-			this.endX   = this.endY   = Number.NEGATIVE_INFINITY;
-			for( let i = 0; i < this.eventCache.length; ++i ) {
-				const offsetX = this.eventCache[i].offsetX, offsetY = this.eventCache[i].offsetY;
-				this.beginX  = Math.min( this.beginX, offsetX );
-				this.beginY  = Math.min( this.beginY, offsetY );
-				this.endX    = Math.max( this.endX,   offsetX );
-				this.endY    = Math.max( this.endY,   offsetY );
-			}
-			this.Refresh();
-		}
-	}
-	
-	OnPointerUp( event ) {
-		const i = this.eventCache.findIndex( e => e.pointerId == event.pointerId );
-		if( i >= 0 )
-			this.eventCache.splice(i, 1);
-			
-		if( this.eventCache.length == 0 ) {
-			this.canvas.style.cursor = 'auto';
-			this.mouseButtonDown = false;
-		}
-		else
-			this.OnPointerMove( this.eventCache[0] );
-	}
-	
-	getInsetRect( width, height, isWest, isNorth ) {
-		const r = 0.75;
-		const insetWidth = width*r, insetHeight = height*r;
-		return [!isWest ? 0 : width - insetWidth, !isNorth ? 0 : height - insetHeight, insetWidth, insetHeight];
-	}
-	
-	GetSourceRect() {
-		// Returns the zoom rectangle in photo pixel coordinates.
-		return this.sourceRect;
-	}
-	
-	SetSourceRect( rect ) {
-		// Sets the zoom rectangle, given in photo pixel coordinates.
-		if( rect[2] == 0 || rect[3] == 0 || !this.image )
-			return;
-			
-		let sourceImage = this.image;
-		const sourceWidth = sourceImage.width, sourceHeight = sourceImage.height;
-		const ratio = GetScaleRatio( sourceWidth, sourceHeight, this.canvas.width, this.canvas.height );
-		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
-
-		const xLeft = Math.max(0, (this.canvas.width - destWidth)/2);
-		const yTop = Math.max(0, (this.canvas.height - destHeight)/2);
-
-		this.beginX = xLeft + rect[0] * ratio;
-		this.beginY = yTop + rect[1] * ratio;
-		this.endX = this.beginX + rect[2] * ratio;
-		this.endY = this.beginY + rect[3] * ratio;
-		
-		this.Refresh();
-	}
-	
-	draw( dc, width, height ) {
-		// Clear the canvas.
-		dc.beginPath();
-		dc.rect( 0, 0, width, height );
-		dc.fillStyle = '#000';
-		dc.fill();
-		
-		if( !this.image ) {
-			this.drawTestImage( dc, width, height );
-			return;
-		}
-		
-		// Draw the image in the canvas.
-		let sourceImage = this.image;
-		const sourceWidth = sourceImage.width, sourceHeight = sourceImage.height;
-		const ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height );
-		const destWidth = sourceWidth * ratio, destHeight = sourceHeight * ratio;
-
-		const xLeft = Math.max(0, (width - destWidth)/2);
-		const yTop = Math.max(0, (height - destHeight)/2);
-		if( sourceWidth > 0 && sourceHeight > 0 && destWidth > 0 && destHeight > 0 )
-			dc.drawImage( sourceImage, 0, 0, sourceWidth, sourceHeight, xLeft, yTop, destWidth, destHeight );
-		
-		if( this.drawFinishLine ) {
-			dc.strokeStyle = contrastColour;
-			dc.lineWidth = 1;
-			dc.beginPath();
-			dc.moveTo( width/2, 0 );
-			dc.lineTo( width/2, height );
-			dc.stroke();
-		}
-		
-		// Draw the magnifying rectangle.
-		const magnifyRect = this.getMagRect();
-		if( magnifyRect[2] <= 0 || magnifyRect[3] <= 0 )
-			return;
-			
-		let sourceRect = intersectRect(
-			[0, 0, sourceWidth, sourceHeight],
-			[(magnifyRect[0] - xLeft)/ratio, (magnifyRect[1]-yTop)/ratio, magnifyRect[2]/ratio, magnifyRect[3]/ratio]
-		);
-		
-		if( sourceRect[2] <= 0 || sourceRect[3] <= 0 )
-			return;
-			
-		this.sourceRect = sourceRect;
-			
-		const xCenter = sourceRect[0] + sourceRect[2] / 2, yCenter = sourceRect[1] + sourceRect[3] / 2;
-		const isWest = xCenter < this.image.width/2, isNorth = yCenter < this.image.width/2;
-		let insetRect = this.getInsetRect( width, height, isWest, isNorth );
-		
-		const magRatio = GetScaleRatio( sourceRect[2], sourceRect[3], insetRect[2], insetRect[3] );
-		const iWidth = sourceRect[2] * magRatio, iHeight = sourceRect[3] * magRatio;
-		insetRect = [
-			insetRect[0] != 0 ? insetRect[0] + insetRect[2] - iWidth : 0,
-			insetRect[1] != 0 ? insetRect[1] + insetRect[3] - iHeight : 0,
-			iWidth, iHeight
-		];
-		
-		dc.drawImage( sourceImage, ...sourceRect, ...insetRect );
-
-		// Draw the outlines.
-		dc.strokeStyle = 'rgb(200,200,0)';
-		dc.lineWidth = 2;
-
-		dc.beginPath();
-		dc.rect( ...insetRect );
-		dc.rect( ...magnifyRect );
-		dc.stroke();
-		
-		// Draw the direction lines.
-		function drawLine( p1, p2 ) {
-			dc.moveTo( ...p1 );
-			dc.lineTo( ...p2 );
-		}
-				
-		if( intervalsOverlap(magnifyRect[0], magnifyRect[0] + magnifyRect[2], insetRect[0], insetRect[0] + insetRect[2]) ) {
-			if( intervalsOverlap(magnifyRect[1], magnifyRect[1] + magnifyRect[3], insetRect[1], insetRect[1] + insetRect[3]) )
-				return;
-				
-			dc.beginPath();
-			if( isNorth ) {
-				drawLine( bottomLeft(magnifyRect), topLeft(insetRect) );				
-				drawLine( bottomRight(magnifyRect), topRight(insetRect) );
-			}
-			else {
-				drawLine( topLeft(magnifyRect), bottomLeft(insetRect) );
-				drawLine( topRight(magnifyRect), bottomRight(insetRect) );
-			}
-			dc.stroke();
-		}
-		else {
-			dc.beginPath();
-			if( isWest ) {
-				drawLine( topRight(magnifyRect), topLeft(insetRect) );
-				drawLine( bottomRight(magnifyRect), bottomLeft(insetRect) );
-			}
-			else {
-				drawLine( topLeft(magnifyRect), topRight(insetRect) );
-				drawLine( bottomLeft(magnifyRect), bottomRight(insetRect) );
-			}
-			dc.stroke();
-		}
-	}
-	
-	drawTestImage( dc, width, height ) {
-		let colours = [
-			'rgb(255,255,255)', 'rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)',
-			'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)', 'rgb(0,0,0)'
-		];
-		let x, y;
-		const rWidth = width / colours.length;
-		for( let row = 0; row < 2; ++row ) {
-			y = (row == 0 ? 0 : height * 0.75);
-			let hCur = (row == 0 ? height * 0.75 : height * 0.25);
-			for( let col = 0; col < colours.length; ++col ) {
-				dc.beginPath();
-				dc.rect( rWidth * col, y, rWidth+1, hCur );
-				dc.fillStyle = colours[col];
-				dc.fill();
-			}
-			colours.reverse();
-		}
-		
-		const r = Math.min(width, height) / 3;
-		x = width / 2;
-		y = height / 2;
-		const angle = 2.0*Math.PI / colours.length;
-		for( let i = 0; i < colours.length; ++i ) {
-			dc.beginPath();
-			dc.moveTo( x, y );
-			dc.lineTo( x + r * Math.cos(angle*i), y + r * Math.sin(angle*i) );
-			dc.arc( x, y, r, angle*i, angle*(i+1), false);
-			dc.closePath();
-			dc.fillStyle = colours[i];
-			dc.fill();
-		}
-	}
-	
-	SetImage( image ) {
-		this.image = image;
-		this.Refresh()
-	}
-	
-	SetToEmpty() {
-		this.SetImage( null );
-	}
-		
-	Refresh() {
-		this.draw( this.canvas.getContext('2d'), this.canvas.width, this.canvas.height );
-		if( this.drawCallback )
-			this.drawCallback( this.canvas );
-	}
-};
-
 
 //----------------------------------------------------------------------
 	
@@ -581,18 +307,18 @@ function formatTimeDelta( secs ) {
 //----------------------------------------------------------------------
 
 var triggersCur = [];
-
-//----------------------------------------------------------------------
-
 var iTriggerCur = 0;
 var imagesCur = [];
 var loadedImageCount = 0;
 var iImageCur = 0;
 
+function getTriggerCur()	{ return triggersCur[iTriggerCur]; }
+function getImageCur()		{ return imagesCur[iImageCur]; }
+
 //----------------------------------------------------------------------
 
 function getFrameTime() {
-	const tsJpsIds = triggersCur[iTriggerCur].tsJpgIds;
+	const tsJpsIds = getTriggerCur().tsJpgIds;
 	let dt = [];
 	for( let i = 1; i < tsJpsIds.length; ++i )
 		dt.push( tsJpsIds[i] - tsJpsIds[i-1] );
@@ -607,7 +333,7 @@ function getSpeedPixelsPerSecond( imageWidth, speedKMH ) {
 	const fps = 1.0 / frameTime;
 	
 	const viewWidth = 4.0;							// estimated meters seen in the finish line with the finish camera
-	const widthPix = imagesCur[iImageCur].width;	// width of a frame
+	const widthPix = getImageCur().width;			// width of a frame
 	
 	const speedMPS = speedKMH / 3.6;				// Convert to m/s
 	const d = speedMPS * frameTime;					// Distance the target moves between each frame at speed.
@@ -615,7 +341,6 @@ function getSpeedPixelsPerSecond( imageWidth, speedKMH ) {
 	const pixelsPerSecond = Math.max(300, pixels * fps);
 	return pixelsPerSecond;
 }
-
 	
 function MakeComposite( leftToRight=true, pixelsPerSec=1.0 ) {
 	// Creates a composite image at full size.
@@ -639,7 +364,7 @@ function MakeComposite( leftToRight=true, pixelsPerSec=1.0 ) {
 	}
 	
 	function times( i ) {
-		const tsJpsIds = triggersCur[iTriggerCur].tsJpgIds;
+		const tsJpsIds = getTriggerCur().tsJpgIds;
 		if( i < 0 )
 			return tsJpgIds[tsJpgIds.length+i][0];
 		else
@@ -690,8 +415,8 @@ var imageWait = null;
 
 function getClosestImage() {
 	// Find the image closest to the trigger time.
-	let ts = triggersCur[iTriggerCur].ts;
-	let tsJpgIds = triggersCur[iTriggerCur].tsJpgIds;
+	let ts = getTriggerCur().ts;
+	let tsJpgIds = getTriggerCur().tsJpgIds;
 	let iLeft = 0, iRight = tsJpgIds.length;
 	while ( iRight - iLeft > 1 ) {
 		let iMid = (iRight + iLeft) >> 1;
@@ -724,7 +449,7 @@ function onLoadImage() {
 }
 
 function updateImageTitle() {
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 	
 	let info = [];
 	for( f of fields ) {
@@ -755,7 +480,7 @@ function updateImages( iTrigger ) {
 		(document.getElementById('id_grayscale').checked	? 'g' : '')
 	);
 	
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 	loadedImageCount = imagesCur.length = 0;
 	iImageCur = 0;
 	const tsJpgIds = trig.tsJpgIds;
@@ -841,8 +566,8 @@ function drawCallback( canvas ) {
 	
 	// Add text showing the offset from the trigger time.
 	let ctx = canvas.getContext('2d');	
-	const ts = triggersCur[iTriggerCur].ts;
-	const tsImage = triggersCur[iTriggerCur].tsJpgIds[iImageCur][0];
+	const ts = getTriggerCur().ts;
+	const tsImage = getTriggerCur().tsJpgIds[iImageCur][0];
 	const fontSize = canvas.height / 20;
 	ctx.font = fontSize + 'px Arial';
 	ctx.textBaseline = 'top';
@@ -861,7 +586,7 @@ function showImage( iImage ) {
 
 var playTimer = null;
 function play( dir ) {
-	const tsJpgIds = triggersCur[iTriggerCur].tsJpgIds;
+	const tsJpgIds = getTriggerCur().tsJpgIds;
 	const iImageNext = (iImageCur + dir + tsJpgIds.length) % tsJpgIds.length;
 	let dt = tsJpgIds[iImageNext][0] - tsJpgIds[iImageCur][0];
 	if( (dir > 0 && dt < 0) || (dir < 0 && dt > 0) )
@@ -883,7 +608,7 @@ function goImage( iImage ) {
 	playStop();
 	if( !triggersCur.length )
 		return;
-	iImageCur = Math.max(0, Math.min(triggersCur[iTriggerCur].tsJpgIds.length-1, iImage) );
+	iImageCur = Math.max(0, Math.min(getTriggerCur().tsJpgIds.length-1, iImage) );
 	showImage( iImageCur );
 }
 function goTrigger() {
@@ -912,7 +637,7 @@ function updateTriggers() {
 //----------------------------------------------------------------------
 
 function updateOnScreenTriggerData() {
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 				
 	// Update the table with the new trigger info.
 	let rows = document.getElementById('id_trigger_table').rows;
@@ -928,23 +653,30 @@ function updateOnScreenTriggerData() {
 //----------------------------------------------------------------------
 
 function updateFormFields() {
-	const trig = triggersCur[iTriggerCur];
+	const trig = getTriggerCur();
 	
-	let form_div = document.getElementById( 'id_form_div' );
-	form_div.innerHTML = '';
+	let form_info_div = document.getElementById( 'id_form_info' );
+	let form_note_div = document.getElementById( 'id_form_note' );
+	form_info_div.innerHTML = '';
+	form_note_div.innerHTML = '';
 	
-	function add_field( i, hidden ) {
-		const id = 'id_form_' + fields[i];
+	function add_field( div, i, hidden ) {
+		const id = 'id_form_field_' + fields[i];
 		
 		if( !hidden ) {
 			let label = document.createElement("label");
 			label.innerHTML = headers[i] + ':';
 			label.htmlFor = id;
-			form_div.appendChild( label );
+			div.appendChild( label );
 		}
 		
-		let input = document.createElement("input");
-		input.type = fields[i] == 'bib' ? "number" : "text";
+		let input;
+		if( fields[i] == 'note' )
+			input = document.createElement("textarea");
+		else {
+			input = document.createElement("input");
+			input.type = fields[i] == 'bib' ? "number" : "text";
+		}
 		if( trig )
 			input.value = trig[fields[i]];
 		else
@@ -953,7 +685,7 @@ function updateFormFields() {
 			input.hidden = true;
 		input.name = fields[i];
 		input.id = id;
-		form_div.appendChild( input );
+		div.appendChild( input );
 		return input;
 	}
 	
@@ -961,12 +693,10 @@ function updateFormFields() {
 	for( let i = 0; i < fields.length; ++i ) {
 		if( fields[i] == 'ts' || fields[i] == 'frames' || fields[i] == 'note' )
 			continue;
-		add_field( i );
-		form_div.appendChild( document.createElement("br") );
+		add_field( form_info_div, i, false );
 	}
 	// Note.
-	form_div.appendChild( document.createElement("br") );
-	input = add_field( fields.indexOf('note') );
+	input = add_field( form_note_div, fields.indexOf('note'), false );
 	input.size = "80";
 }
 
@@ -982,22 +712,21 @@ function submitForm( e, submit ) {
 		return;
 	}
 	
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 	if( !trig )
 		return;
 	
-	let form_div = document.getElementById( 'id_form_div' );
 	let params = ['id=' + trig.id];
 	
-	for( let i = 0; i < form_div.childNodes.length; i++) {
-		let inp = form_div.childNodes[i];
-		if( inp instanceof HTMLInputElement ) {
-			let value = ('' + inp.value).trim();
-			if( inp.name == 'bib' )
-				value = parseInt('0' + value, 10);
-			trig[inp.name] = value;
-			params.push( inp.name + '=' + encodeURIComponent(''+value) );
-		}
+	for( let i = 0; i < fields.length; ++i ) {
+		let e = document.getElementById( 'id_form_field_' + fields[i] );
+		if( !e )
+			continue;
+		value = e.value.trim();
+		if( fields[i] == 'bib' )
+			value = parseInt('0' + value, 10);
+		trig[fields[i]] = value
+		params.push( fields[i] + '=' + encodeURIComponent(''+value) );
 	}
 	
 	// Update the screen.
@@ -1010,9 +739,9 @@ function submitForm( e, submit ) {
 //----------------------------------------------------------------------
 
 function refreshTriggerFromDatabaseThen( func ) {
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 	getJSON( 'trigger.js?id=' + trig.id, function( data ) {
-			Object.assign( triggersCur[iTriggerCur], data );
+			Object.assign( getTriggerCur(), data );
 			updateOnScreenTriggerData();
 			func();
 		}
@@ -1020,7 +749,7 @@ function refreshTriggerFromDatabaseThen( func ) {
 }
 
 function restoreView( do_refresh ) {
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 	if( !trig )
 		return;
 
@@ -1040,7 +769,7 @@ function restoreView( do_refresh ) {
 }
 
 function saveView() {
-	let trig = triggersCur[iTriggerCur];
+	let trig = getTriggerCur();
 	if( !trig )
 		return;
 		
@@ -1167,14 +896,16 @@ function OnLoad() {
 </div>
 
 <div id="id_form_tab" class="tabcontent">
-	<form action="." id="id_form" method="post">
+	<form action="." id="id_form" class="grid_form" method="post">
 		<p>
-		<div id="id_form_div"></div>
-		</p>
-		<p>
+		<div id="id_form_info">
+		</div>
+		<div id="id_form_note">
+		</div>
+		<div id="id_form_buttons">
 			<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event, true)">OK</button>
 			<button onclick="submitForm(event, true)" style="margin-left: 2.5em;">Cancel</button>
-		</p>
+		</div>
 	</form>
 </div>
 

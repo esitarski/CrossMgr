@@ -56,6 +56,11 @@ def getPNG( fname ):
 	with open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
 		return f.read()
 
+@functools.lru_cache(maxsize=8)
+def getJS( fname ):
+	with open( os.path.join(Utils.getHtmlFolder(), fname), 'rb' ) as f:
+		return f.read()
+
 def getQRCodePage( urlPage ):
 	qr = QRCode()
 	qr.add_data( urlPage )
@@ -108,6 +113,7 @@ function Draw() {
 
 class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 	html_content	= 'text/html; charset=utf-8'
+	js_content		= 'text/javascript';
 	ico_content		= 'image/x-icon'
 	json_content	= 'application/json'
 	jpeg_content	= 'image/jpeg'
@@ -247,6 +253,10 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 					}
 				).encode()
 				content_type = self.json_content
+				
+			elif up.path.endswith('.js'):
+				content = getJS( up.path[1:] )
+				content_type = self.js_content
 				
 		except Exception as e:
 			self.send_error(404,'Error: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
