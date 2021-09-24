@@ -835,11 +835,14 @@ class MainWin( wx.Frame ):
 				tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
 				if jpgBest is None:
 					continue
-				args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 				try:
 					args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 				except Exception:
 					args['raceSeconds'] = None
+				if isinstance(args['kmh'], str):
+					args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
+					
 				jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 				fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
 						info['bib'],
@@ -903,7 +906,16 @@ class MainWin( wx.Frame ):
 			
 			with open(fname, 'w') as fOut, open(ftemplate) as fIn:
 				for line in fIn:
-					if not line.strip().startswith( 'var photo_info' ):
+					
+					lineStrip = line.strip()
+					if lineStrip == '<script src="ScaledBitmap.js"></script>':
+						fOut.write( '<script>\n' )
+						with open( os.path.join(Utils.getHtmlFolder(), 'ScaledBitmap.js') ) as fsb:
+							fOut.write( fsb.read() )
+						fOut.write( '\n</script>\n' )
+						continue
+					
+					if not lineStrip.startswith( 'var photo_info' ):
 						fOut.write( line )
 						continue
 						
@@ -913,11 +925,14 @@ class MainWin( wx.Frame ):
 						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
 						if jpgBest is None:
 							continue
-						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 						try:
 							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 						except Exception:
 							args['raceSeconds'] = None
+						if isinstance(args['kmh'], str):
+							args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
+
 						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
 						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 						jpg = AddExifToJpeg( jpg, info['ts'], comment )
