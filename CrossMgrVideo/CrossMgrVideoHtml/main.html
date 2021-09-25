@@ -122,6 +122,10 @@ table td.numeric, table th.numeric {
 	text-align:right;
 }
 
+table tr td.close-finish {
+	background-color:rgb(255, 213, 128);
+}
+
 table tr td.same-value {
 	text-align:center;
 }
@@ -266,10 +270,14 @@ function getJSON( url, handler ) {
 	xhr.send();
 }
 
+// Don't touch the following line.  It is set by WebServer.py
+var dateStrInitial = null;
+
 function showTriggerDates( triggerdates ) {
 	playStop();
 
 	let select = document.getElementById( 'id_trigger_date' );
+	select.selectedIndex = 0;
 	select.length = 0;
 	for( let i = 0; i < triggerdates.length; ++i ) {
 		const d = triggerdates[i][0], c = triggerdates[i][1];
@@ -277,9 +285,10 @@ function showTriggerDates( triggerdates ) {
 		option.text = d + ': ' + c;
 		option.value = d;
 		select.add( option );
+		if( dateStrInitial == option.value )
+			select.selectedIndex = i;
 	}
-	if( triggerdates.length != 0 )
-		select.selectedIndex = 0;
+	dateStrInitial = null;
 }
 
 function leftFillNum(num, targetLength) {
@@ -506,6 +515,11 @@ function updateImages( iTrigger ) {
 }
 
 //----------------------------------------------------------------------
+
+function triggerScrollToEnd() {
+	let trigger_div = document.getElementById( 'id_triggers' );
+	trigger_div.scrollTop = trigger_div.scrollHeight;
+}
 	
 const headers = ['Time', 'Bib', 'Last',       'First',      'Team', 'Note',	'Wave', 'Race',      'Frames'];
 const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team', 'note',	'wave', 'race_name', 'frames'];
@@ -536,14 +550,28 @@ function showTriggers( triggers ) {
 	
 	let tbody = document.createElement( 'tbody' );
 	table.appendChild( tbody );
-	
+
+	// Close finishes.
+	let closeFinishes = new Set();
+	if( triggers.length > 1 ) {
+		const closeFinishThreshold = 3.0/30.0;
+		for( let i = triggers.length-1; i >= 0; --i ) {
+			const j = (i > 0 ? i-1 : i+1);
+			if( Math.abs(triggers[i].ts - triggers[j].ts) < closeFinishThreshold ) {
+				closeFinishes.add( i );
+				closeFinishes.add( J );
+			}
+		}
+	}
+
+	// Populate the table.
 	for( let i = 0; i < triggers.length; ++i ) {
 		let trig = triggers[i];
 		
 		let tr = document.createElement( 'tr' );
 		if( i & 1 )
 			tr.classList.add( 'odd' );
-		tr.addEventListener( 'click', function( iTrigger ) { return function(){ updateImages(iTrigger); refreshTriggerFromDatabaseThen(function(){}); }; }( i ), false );
+		tr.addEventListener( 'click', function( iTrigger ) { return function(){ updateImages(iTrigger); refreshTriggerFromDatabaseThen(function(){}); }; }(i), false );
 		tbody.appendChild( tr );
 		
 		trig.frames = trig.tsJpgIds.length;
@@ -553,6 +581,8 @@ function showTriggers( triggers ) {
 			td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
 			if( numeric[col] )
 				td.classList.add( 'numeric' );
+			if( col == 0 && closeFinishes.has(i) )
+				td.classList.add( 'close-finish' );
 		}
 	}
 	triggersCur = triggers;
@@ -631,7 +661,7 @@ function onWheel( e ) {
 function updateTriggers() {
 	let select = document.getElementById( 'id_trigger_date' );
 	const date = select.options[select.selectedIndex].value;
-	getJSON( 'triggers.js' + '?' + 'day=' + date, showTriggers )
+	getJSON( 'triggers.js' + '?' + 'day=' + date, function(data) { showTriggers(data); triggerScrollToEnd(); } );
 }
 
 //----------------------------------------------------------------------
@@ -797,6 +827,12 @@ function saveView() {
 
 //----------------------------------------------------------------------
 
+function showQRCode() {
+	const url = 'qrcode.html?url=' + encodeURIComponent(window.location.href);
+	window.location.href = url;
+}
+
+//----------------------------------------------------------------------
 function OnLoad() {
 	let imageCanvas = document.getElementById( 'id_image_canvas' );
 	imageCanvas.addEventListener( 'wheel', onWheel, false );
@@ -862,7 +898,7 @@ function OnLoad() {
 	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()" style="font-size:150%">
 	</select>
 	<button onclick="updateTriggers();" style="margin-left: 2.5em; font-size:150%">&#x21bb; Refresh</button>
-	<a href="qrcode.html" style="margin-left: 2.5em;" title="QR Code"><img src="Ecommerce-Qr-Code-icon.png"/></a>	
+	<a onclick="showQRCode();" style="margin-left: 2.5em;" title="QR Code"><img src="Ecommerce-Qr-Code-icon.png"/></a>	
 	<p></p>
 	<div id="id_triggers" class="scroll"></div>
 </div>

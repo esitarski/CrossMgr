@@ -736,7 +736,8 @@ class MainWin( wx.Frame ):
 		OpenHelp()
 		
 	def onWeb( self, event ):
-		url = '{}:{}'.format( GetMyIP(), WebServer.PORT_NUMBER )
+		dateStrInitial = self.date.GetValue().Format('%Y-%m-%d')
+		url = '{}:{}?date={}'.format( GetMyIP(), WebServer.PORT_NUMBER, dateStrInitial )
 		webbrowser.open( url, new=0, autoraise=1 )
 	
 	def setFPS( self, fps ):

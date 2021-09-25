@@ -42,14 +42,17 @@ with open( os.path.join(Utils.getImageFolder(), 'CrossMgrVideo.ico'), 'rb' ) as 
 	favicon = f.read()
 
 mainPage = None
-def getMainPage():
+def getMainPage( dateStr=None ):
 	global mainPage
 	
 	if True or not mainPage:
 		with open( os.path.join(Utils.getHtmlFolder(), 'main.html') ) as f:
-			mainPage = f.read().encode()	# Make sure to return bytes.
+			mainPage = f.read()
 	
-	return mainPage
+	if dateStr:
+		mainPage = mainPage.replace( 'var dateStrInitial = null;', 'var dateStrInitial = "{}";'.format(dateStr) )
+	
+	return mainPage.encode()	# Make sure to return bytes.
 
 @functools.lru_cache(maxsize=8)
 def getPNG( fname ):
@@ -141,10 +144,11 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 
 	def do_GET(self):
 		up = urlparse( self.path )
-		content, gzip_content = None,  None
+		content, gzip_content = None, None
 		try:
 			if up.path=='/':
-				content = getMainPage()
+				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				content = getMainPage( query.get('date') )
 				content_type = self.html_content
 				
 			elif self.re_jpeg_request.match( up.path ):		# Images.
@@ -237,7 +241,12 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				content_type = self.ico_content
 			
 			elif up.path=='/qrcode.html':
-				content = getQRCodePage( '{}:{}'.format(GetMyIP(), PORT_NUMBER) )
+				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				if 'url' in query:
+					url = query['url']
+				else:
+					url = '{}:{}'.format(GetMyIP(), PORT_NUMBER)
+				content = getQRCodePage( url )
 				content_type = self.html_content
 			
 			elif up.path.endswith('.png'):
@@ -257,6 +266,9 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			elif up.path.endswith('.js'):
 				content = getJS( up.path[1:] )
 				content_type = self.js_content
+				
+			else:
+				raise ValueError( 'Unknown url="{}"'.format(up) )
 				
 		except Exception as e:
 			self.send_error(404,'Error: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
