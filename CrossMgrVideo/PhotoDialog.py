@@ -395,14 +395,14 @@ class PhotoPanel( wx.Panel ):
 		
 		return AddPhotoHeader(
 			bitmap,
-			ts=self.triggerInfo['ts'],
-			bib=self.triggerInfo['bib'],
-			first_name=self.triggerInfo['first_name'],
-			last_name=self.triggerInfo['last_name'],
-			team=self.triggerInfo['team'],
-			race_name=self.triggerInfo['race_name'],
-			kmh=self.kmh,
-			mph=self.mph,
+			ts				= self.triggerInfo['ts'],
+			bib				= self.triggerInfo['bib'],
+			first_name		= self.triggerInfo['first_name'],
+			last_name		= self.triggerInfo['last_name'],
+			team			= self.triggerInfo['team'],
+			race_name		= self.triggerInfo['race_name'],
+			kmh				= self.kmh,
+			mph				= self.mph,
 		)
 		
 	def getPhoto( self ):
