@@ -64,6 +64,9 @@ class CompositeCtrl( wx.Control ):
 	def SetXLeft( self, xLeft ):
 		self.xLeft = xLeft
 		self.Refresh()
+		
+	def SetTLeft( self, ts ):
+		self.SetXLeft( xFromT(ts) )
 
 	def xFromT( self, t ):
 		''' Returns x in image coordinates (not screen coordinates). '''
