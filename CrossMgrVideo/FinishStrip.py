@@ -741,8 +741,8 @@ if __name__ == '__main__':
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	
-	width = int(displayWidth * 0.8)
-	height = int(displayHeight * 0.8)
+	width = round(displayWidth * 0.8)
+	height = round(displayHeight * 0.8)
 	
 	mainWin = wx.Frame(None,title="FinishStrip", size=(width, height))
 	fs = FinishStripPanel( mainWin )

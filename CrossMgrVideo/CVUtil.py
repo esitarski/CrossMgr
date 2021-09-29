@@ -9,7 +9,14 @@ def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	return int(w_src * scale), int(h_src * scale)
 
 def frameToWidthHeight( frame ):
-	return frame.shape[:2]
+	return frame.shape[:2][::-1]
+	
+def getWidthHeight( o ):
+	if isinstance(o, (wx.Image, wx.Bitmap)):
+		return o.GetWidth(), o.GetHeight()
+	if isinstance(o, bytes):			# Assume a jpg.
+		return frameToWidthHeight( jpegToFrame(o) )
+	return frameToWidthHeight( o )		# Assume a frame.
 
 def frameToBitmap( frame, w_req=None, h_req=None ):
 	h_frame, w_frame = frame.shape[0], frame.shape[1]
