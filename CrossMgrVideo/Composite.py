@@ -17,7 +17,7 @@ class CompositeCtrl( wx.Control ):
 		self.leftToRight = True
 		self.imageToScreenFactor = 1.0
 		self.imageHeight = self.imageWidth = 600
-		self.xLeft = 0
+		self.xLeftV = 0
 		self.compositeBitmap = None
 		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
@@ -26,6 +26,7 @@ class CompositeCtrl( wx.Control ):
 
 	def OnSize( self, event ):
 		self.makeComposite()
+		self.adjustScrollbar()
 		self.Refresh()
 		
 	def OnErase( self, event ):
@@ -41,32 +42,56 @@ class CompositeCtrl( wx.Control ):
 		self.imageWidth, self.imageHeight = CVUtil.getWidthHeight( self.tsJpgs[0][1] )
 		
 		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond + self.imageWidth)
-		self.imageToScreenFactor = self.GetSize()[1] / self.imageHeight		
+		self.imageToScreenFactor = self.GetSize()[1] / self.imageHeight
+		self.compositeBitmap = None	
 		
 		return self.compositeVBitmapWidth
 
-	def set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True ):
+	def Set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True ):
 		self.tsJpgs = tsJpgs
 		self.imagePixelsPerSecond = imagePixelsPerSecond
 		self.leftToRight = leftToRight
 		self.calculateCompositeBitmapWidth()
 		
-		self.xLeft = 0
+		self.xLeftV = 0
 		self.makeComposite()
+		self.adjustScrollbar()
 		self.Refresh()
 		
-	def setPixelsPerSecond( self, imagePixelsPerSecond ):
+	def SetPixelsPerSecond( self, imagePixelsPerSecond ):
 		self.imagePixelsPerSecond = imagePixelsPerSecond
 		self.calculateCompositeBitmapWidth()
 		self.makeComposite()
+		self.adjustScrollbar()
 		self.Refresh()
+		
+	def SetScrollbar( self, scrollbar ):
+		self.scrollbar = scrollbar
+		self.scrollbar.Bind( wx.EVT_SCROLL, self.onScroll )
+		
+	def onScroll( self, event ):
+		self.SetXLeftV( event.GetPosition() / (self.imageToScreenFactor or 1.0) )
 
-	def SetXLeft( self, xLeft ):
-		self.xLeft = xLeft
+	def adjustScrollbar( self ):
+		''' Set up a scrollbar in milliseconds. '''
+		if not self.scrollbar or not self.compositeBitmap:
+			return
+			
+		screenWidth, screenHeight = self.GetSize()
+		compositeWidth, compositeHeight = self.compositeBitmap.GetSize()
+		
+		pixRange = compositeWidth - screenWidth
+		prevPositionRatio = self.scrollbar.GetThumbPosition() / (self.scrollbar.GetRange() or 1)
+		
+		self.scrollbar.SetScrollbar( round(prevPositionRatio * pixRange), screenWidth, pixRange, screenWidth )
+		self.SetXLeftV( self.scrollbar.GetThumbPosition()  / (self.imageToScreenFactor or 1.0) )
+
+	def SetXLeftV( self, xLeftV ):
+		self.xLeftV = max( 0, xLeftV )
 		self.Refresh()
 		
 	def SetTLeft( self, ts ):
-		self.SetXLeft( xFromT(ts) )
+		self.SetXLeftV( xFromT(ts) )
 
 	def xFromT( self, t ):
 		''' Returns x in image coordinates (not screen coordinates). '''
@@ -84,8 +109,9 @@ class CompositeCtrl( wx.Control ):
 
 	def makeComposite( self ):
 		'''
-			Make a composite bitmap in screen height coordinates.
+			Make a composite bitmap.  This is scaled to screen height coordinates.
 		'''
+		self.calculateCompositeBitmapWidth()
 		width, height = self.GetSize()
 		f = self.imageToScreenFactor
 		self.compositeBitmap = wx.Bitmap( round(self.compositeVBitmapWidth * f)+1, height )
@@ -163,7 +189,7 @@ class CompositeCtrl( wx.Control ):
 		sourceDC = wx.MemoryDC( self.compositeBitmap )
 
 		width, height = self.GetSize()
-		dc.Blit( 0, 0, width, height, sourceDC, round(self.xLeft * self.imageToScreenFactor), 0 )
+		dc.Blit( 0, 0, width, height, sourceDC, round(self.xLeftV * self.imageToScreenFactor), 0 )
 
 def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
 	'''
@@ -193,46 +219,35 @@ class CompositePanel( wx.Panel):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		self.composite = CompositeCtrl( self )
 		hs.Add( self.composite, 1, flag=wx.EXPAND )
-		self.speedScrollBar = wx.ScrollBar( self, style=wx.SB_VERTICAL )
-		self.speedScrollBar.Bind( wx.EVT_SCROLL, self.onScrollSpeed )
-		speedMax = 100
+		self.speedScrollbar = wx.ScrollBar( self, style=wx.SB_VERTICAL )
+		self.speedScrollbar.Bind( wx.EVT_SCROLL, self.onScrollSpeed )
+		speedMax = 110
 		thumbSize = 10
-		self.speedScrollBar.SetScrollbar( 50, thumbSize, speedMax, thumbSize )
-		hs.Add( self.speedScrollBar, flag=wx.EXPAND )
+		self.speedScrollbar.SetScrollbar( 50, thumbSize, speedMax, thumbSize )
+		hs.Add( self.speedScrollbar, flag=wx.EXPAND )
 		
 		vs.Add( hs, 1, flag=wx.EXPAND )
 		
-		self.timeScrollBar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
-		self.timeScrollBar.Bind( wx.EVT_SCROLL, self.onScrollTime )
-		vs.Add( self.timeScrollBar, 0, flag=wx.EXPAND )
+		self.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
+		self.composite.SetScrollbar( self.timeScrollbar )
+		vs.Add( self.timeScrollbar, 0, flag=wx.EXPAND )
 		self.SetSizer(vs)
 		
-	def onScrollTime( self, event ):
-		self.composite.SetXLeft( event.GetPosition() )
-	
-	def fixTimeScollbar( self, position=0 ):
-		width, height = self.GetSize()
-		widthComposite = self.composite.compositeVBitmapWidth
-		thumbSize = round(width * width/widthComposite)
-		self.timeScrollBar.SetScrollbar( position, thumbSize, widthComposite - self.composite.imageWidth*2, thumbSize )
-	
 	def onScrollSpeed( self, event ):
 		if self.composite.tsJpgs:
-			self.composite.setPixelsPerSecond( getPixelsPerSecond(
+			self.composite.SetPixelsPerSecond( getPixelsPerSecond(
 					frameWidthPixels=self.composite.imageWidth,
-					speedKMH=self.speedScrollBar.GetThumbPosition()
+					speedKMH=self.speedScrollbar.GetThumbPosition()
 				)
 			)
-			self.fixTimeScollbar( self.timeScrollBar.GetThumbPosition() )
-		
-	def set( self, *args, **kwargs ):
-		self.composite.set( *args, **kwargs )
-		self.fixTimeScollbar()
+
+	def Set( self, *args, **kwargs ):
+		self.composite.Set( *args, **kwargs )
 
 if __name__ == '__main__':
 	app = wx.App(False)
 
-	leftToRight = True
+	leftToRight = False
 	now = datetime.now()
 	fps = 30.0
 	spf = 1.0 / fps
@@ -259,7 +274,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="Composite", size=(width, height))
 	cp = CompositePanel( mainWin )
 	
-	cp.set( tsJpgs, pixelsPerSecond, leftToRight=leftToRight )
+	cp.Set( tsJpgs, pixelsPerSecond, leftToRight=leftToRight )
 	mainWin.Show()
 	
 	app.MainLoop()
