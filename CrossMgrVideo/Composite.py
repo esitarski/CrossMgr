@@ -80,7 +80,7 @@ class CompositeCtrl( wx.Control ):
 		pixRange = compositeWidth
 		prevPositionRatio = self.scrollbar.GetThumbPosition() / (self.scrollbar.GetRange() or 1)
 		
-		self.scrollbar.SetScrollbar( min(pixRange, round(prevPositionRatio * pixRange)), screenWidth, pixRange, screenWidth )
+		self.scrollbar.SetScrollbar( round(prevPositionRatio * pixRange), screenWidth, pixRange, screenWidth )
 		self.SetXVLeft( self.scrollbar.GetThumbPosition()  / (self.imageToScreenFactor or 1.0) )
 
 	def SetXLeft( self, xLeft ):
@@ -89,10 +89,12 @@ class CompositeCtrl( wx.Control ):
 		self.Refresh()
 
 	def SetXVLeft( self, xVLeft ):
+		# Set scroll in image coordinates.
 		self.xVLeft = max( 0, xVLeft )
 		self.Refresh()
 		
 	def SetTLeft( self, ts ):
+		# Set scroll position by time.
 		self.SetXVLeft( xVFromT(ts) )
 
 	def xVFromT( self, t ):
@@ -191,9 +193,12 @@ class CompositeCtrl( wx.Control ):
 			return
 		
 		dc = wx.PaintDC( self )
-		sourceDC = wx.MemoryDC( self.compositeBitmap )
-
 		width, height = self.GetClientSize()
+		if self.compositeBitmap.GetSize()[0] < width:
+			dc.SetBackground( wx.BLACK_BRUSH )
+			dc.Clear()
+		
+		sourceDC = wx.MemoryDC( self.compositeBitmap )
 		dc.Blit( 0, 0, width, height, sourceDC, round(self.xVLeft * self.imageToScreenFactor), 0 )
 
 def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
