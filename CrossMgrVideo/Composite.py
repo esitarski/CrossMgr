@@ -228,6 +228,7 @@ class CompositePanel( wx.Panel):
 		self.composite = CompositeCtrl( self )		
 		self.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
 		self.composite.SetScrollbar( self.timeScrollbar )
+		self.composite.Bind( wx.EVT_MOUSEWHEEL, self.onCompositeWheel )
 		
 		self.speedScrollbar = wx.ScrollBar( self, style=wx.SB_VERTICAL )		
 		speedMax = 110	# km/h
@@ -244,6 +245,15 @@ class CompositePanel( wx.Panel):
 		vs.Add( self.timeScrollbar, 0, flag=wx.EXPAND )
 				
 		self.SetSizer( vs )
+		
+	def onCompositeWheel( self, event ):
+		rot = event.GetWheelRotation()
+		ssb = self.speedScrollbar
+		if rot < 0:
+			ssb.SetThumbPosition( max(0, ssb.GetThumbPosition() - 1) )
+		else:
+			ssb.SetThumbPosition( min(ssb.GetRange() - ssb.GetThumbSize(), ssb.GetThumbPosition() + 1) )
+		wx.CallAfter( self.onScrollSpeed )
 		
 	def onScrollSpeed( self, event=None ):
 		if self.composite.tsJpgs:
@@ -270,9 +280,7 @@ if __name__ == '__main__':
 			jpg = pf.read()
 		
 		if not leftToRight:
-			frame = CVUtil.jpegToFrame( jpg )
-			frame = cv2.flip( frame, 1 )
-			jpg = CVUtil.frameToJPeg( frame )
+			jpg = CVUtil.frameToJPeg( cv2.flip( CVUtil.jpegToFrame(jpg), 1 ) )
 			
 		tsJpgs.append( (ts, jpg) )
 	
