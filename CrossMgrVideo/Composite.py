@@ -41,7 +41,7 @@ class CompositeCtrl( wx.Control ):
 		
 		self.imageWidth, self.imageHeight = CVUtil.getWidthHeight( self.tsJpgs[0][1] )
 		
-		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond + self.imageWidth)
+		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond + self.imageWidth * 2.5)
 		self.imageToScreenFactor = self.GetSize()[1] / self.imageHeight
 		self.compositeBitmap = None	
 		
@@ -73,7 +73,7 @@ class CompositeCtrl( wx.Control ):
 		self.SetXVLeft( event.GetPosition() / (self.imageToScreenFactor or 1.0) )
 
 	def adjustScrollbar( self ):
-		''' Set up a scrollbar in milliseconds. '''
+		''' Set up a scrollbar in screen coordinates. '''
 		if not self.scrollbar or not self.compositeBitmap:
 			return
 			
@@ -91,7 +91,7 @@ class CompositeCtrl( wx.Control ):
 		self.Refresh()
 		
 	def SetTLeft( self, ts ):
-		self.SetXVLeft( xFromT(ts) )
+		self.SetXVLeft( xVFromT(ts) )
 
 	def xVFromT( self, t ):
 		''' Returns x in image coordinates (not screen coordinates). '''
@@ -141,11 +141,15 @@ class CompositeCtrl( wx.Control ):
 		sourceDC = wx.MemoryDC()
 		PS = self.imagePixelsPerSecond
 		widthDiv2 = self.imageWidth // 2
-		xFromT = self.xFromT
+		xVFromT = self.xVFromT
+
+		xImages = [round(xVFromT(ts)) for ts, jpg in reversed(self.tsJpgs)]
 
 		first = True
 		if self.leftToRight:
-			for ts, jpg in reversed( self.tsJpgs ):
+			xImages.append( round(xImages[-1] + widthDiv2) )	# Write a sentinel.
+
+			for i, (ts, jpg) in enumerate(reversed(self.tsJpgs)):
 				try:
 					sourceDC.SelectObject(CVUtil.jpegToBitmap(jpg))
 				except Exception as e:
@@ -157,8 +161,9 @@ class CompositeCtrl( wx.Control ):
 						0, 0, self.imageWidth, self.imageHeight,
 						0, 0,
 					)
-					
-				x, w = xFromT( ts ), widthDiv2
+				
+				x = xImages[i]
+				w = xImages[i+1] - xImages[i] + 1
 				
 				copyImage( sourceDC,
 					self.imageWidth - w, 0, w, self.imageHeight,
@@ -166,7 +171,9 @@ class CompositeCtrl( wx.Control ):
 				)
 				sourceDC.SelectObject(wx.NullBitmap)
 		else:
-			for ts, jpg in reversed( self.tsJpgs ):
+			xImages.append( round(xImages[-1] - widthDiv2) )	# Write a sentinel.
+
+			for i, (ts, jpg) in enumerate(reversed(self.tsJpgs)):
 				try:
 					sourceDC.SelectObject(CVUtil.jpegToBitmap(jpg))
 				except Exception as e:
@@ -179,11 +186,12 @@ class CompositeCtrl( wx.Control ):
 						0, 0,
 					)
 
-				x, w = xFromT( ts ), widthDiv2
-				
+				x = xImages[i]
+				w = xImages[i] - xImages[i+1] + 1
+								
 				copyImage( sourceDC,
-					0, 0, self.imageWidth, self.imageHeight,
-					x - widthDiv2, 0,
+					0, 0, w, self.imageHeight,
+					x - w, 0,
 				)
 				sourceDC.SelectObject(wx.NullBitmap)
 
@@ -253,7 +261,7 @@ class CompositePanel( wx.Panel):
 if __name__ == '__main__':
 	app = wx.App(False)
 
-	leftToRight = False
+	leftToRight = True
 	now = datetime.now()
 	fps = 30.0
 	spf = 1.0 / fps
