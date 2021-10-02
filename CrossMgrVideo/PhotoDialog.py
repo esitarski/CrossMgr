@@ -96,7 +96,7 @@ class PhotoPanel( wx.Panel ):
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.timestamp = wx.StaticText(self, label='00:00:00.000\n00:00:00.000')
-		self.timestamp.SetFont( wx.Font( wx.FontInfo(9) ) )
+		self.timestamp.SetFont( wx.Font(wx.FontInfo(9)) )
 		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
 		
 		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
