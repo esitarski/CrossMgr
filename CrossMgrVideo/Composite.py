@@ -289,7 +289,7 @@ class CompositeCtrl( wx.Control ):
 			drawIndicatorLine( x, wx.Colour(255,255,0), text, True )
 			
 		if self.triggerTS:
-			text = ['TRG']
+			text = ['TRG {}'.format(formatTime(self.triggerTS))]
 			x = round( (self.xVFromTS( self.triggerTS ) - self.xVLeft) * self.imageToScreenFactor )
 			drawIndicatorLine( x, wx.Colour(0,0,255), text, False )
 		
