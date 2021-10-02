@@ -806,6 +806,7 @@ class MainWin( wx.Frame ):
 		self.photoPanel.playStop()
 		self.photoPanel.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
 		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
+		wx.CallAfter( self.GetSizer().Layout )
 		
 	def onNotebook( self, event ):
 		self.refreshPhotoPanel()
