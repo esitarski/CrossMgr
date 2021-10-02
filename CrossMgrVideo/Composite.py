@@ -97,6 +97,10 @@ class CompositeCtrl( wx.Control ):
 		self.makeComposite()
 		self.SetTriggerTS( triggerTS )	# Also does a Refresh.
 		
+	def SetLeftToRight( self, leftToRight=True ):
+		self.leftToRight = leftToRight
+		self.makeComposite()	
+		
 	def SetTriggerTS( self, triggerTS ):
 		self.triggerTS = triggerTS
 		if triggerTS and self.compositeBitmap:
@@ -270,12 +274,11 @@ class CompositeCtrl( wx.Control ):
 			dc.DrawLine( x, 0, x, height )
 			
 			dc.SetTextForeground( colour )
+			xText = x + fontSize // 2
 			yText = fontSize//2 if textAtTop else round( height - (len(text)+1) * lineHeight)
-			xTextRight = x - fontSize // 2
 			for textCur in text:
 				if textCur:
 					tWidth, tHeight = dc.GetTextExtent( textCur )
-					xText = xTextRight - tWidth
 					dc.DrawText( textCur, xText, yText )
 				yText += lineHeight
 		
@@ -325,7 +328,12 @@ class CompositePanel( wx.Panel):
 	def __init__( self, parent ):
 		super().__init__( parent )
 		
-		self.composite = CompositeCtrl( self )		
+		self.composite = CompositeCtrl( self )
+		
+		self.leftToRight = wx.Choice( self, choices=('\u27F6 Left to Right', '\u27F5 Right to Left') )
+		self.leftToRight.SetSelection( 0 )
+		self.leftToRight.Bind( wx.EVT_CHOICE, self.onLeftToRight )
+		
 		self.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
 		self.composite.SetScrollbar( self.timeScrollbar )
 		self.composite.Bind( wx.EVT_MOUSEWHEEL, self.onCompositeWheel )
@@ -336,15 +344,24 @@ class CompositePanel( wx.Panel):
 		self.speedScrollbar.SetScrollbar( 50, thumbSize, speedMax, thumbSize )
 		self.speedScrollbar.Bind( wx.EVT_SCROLL, self.onScrollSpeed )
 		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( self.composite, 1, flag=wx.EXPAND )
 		hs.Add( self.speedScrollbar, 0, flag=wx.EXPAND )
 		
-		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( hs, 1, flag=wx.EXPAND )
-		vs.Add( self.timeScrollbar, 0, flag=wx.EXPAND )
+		
+		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( self.leftToRight, flag=wx.ALL, border=4 )
+		hs.Add( self.timeScrollbar, 1, wx.EXPAND )
+		
+		vs.Add( hs, 0, flag=wx.EXPAND )
 				
 		self.SetSizer( vs )
+		
+	def onLeftToRight( self, event ):
+		self.composite.SetLeftToRight( self.leftToRight.GetSelection() == 0 )
 		
 	def onCompositeWheel( self, event ):
 		rot = event.GetWheelRotation()
