@@ -491,8 +491,6 @@ class FinishStripPanel( wx.Panel ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		displayWidth, displayHeight = wx.GetDisplaySize()
-	
 		self.leftToRight = True
 		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
 		self.finish = FinishStrip(

@@ -200,7 +200,6 @@ class PhotoPanel( wx.Panel ):
 		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
 
 		self.SetSizer(vs)
-		vs.Fit(self)
 
 	@property
 	def jpg( self ):

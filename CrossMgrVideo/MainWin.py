@@ -809,6 +809,7 @@ class MainWin( wx.Frame ):
 		
 	def onNotebook( self, event ):
 		self.refreshPhotoPanel()
+		wx.CallAfter( self.GetSizer().Layout )
 		
 	def onPublishPhotos( self, event ):
 		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]
