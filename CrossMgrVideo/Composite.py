@@ -9,20 +9,33 @@ from datetime import datetime, timedelta
 
 import CVUtil
 
+def formatTime( ts ):
+	return ts.strftime('%H:%M:%S.%f')[:-3]
+	
+def formatSeconds( secs ):
+	return '{:+.3f}'.format( secs )
+
 class CompositeCtrl( wx.Control ):
 	def __init__( self, parent, size=(600,600) ):
 		super().__init__( parent, size=size )
 		self.tsJpgs = []
-		self.imagePixelsPerSeconds = 100
+		self.imagePixelsPerSecond = 100
 		self.leftToRight = True
 		self.imageToScreenFactor = 1.0				# convert image coordinates to screen coordinates
 		self.imageHeight = self.imageWidth = 600
 		self.xVLeft = 0								# left side to show composite image (in image coordinates).
 		self.compositeBitmap = None
 		
+		self.pointerTS = None
+		self.currentTS = None
+		self.triggerTS = None
+		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
+		
+		self.Bind( wx.EVT_MOTION, self.OnMotion )
+		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeft )
 
 	def OnSize( self, event ):
 		self.makeComposite()
@@ -31,6 +44,23 @@ class CompositeCtrl( wx.Control ):
 	def OnErase( self, event ):
 		pass
 		
+	def tsFromPointer( self, xPointer ):
+		xV = self.xVLeft + xPointer / self.imageToScreenFactor
+		return self.tsFromXV( xV )
+		
+	def OnLeft( self, event ):
+		if not self.compositeBitmap:
+			return
+		self.currentTS = self.tsFromPointer( event.GetX() )
+		self.Refresh()
+		event.Skip()
+		
+	def OnMotion( self, event ):
+		if not self.compositeBitmap:
+			return
+		self.pointerTS = self.tsFromPointer( event.GetX() )
+		self.Refresh()
+				
 	def calculateCompositeBitmapWidth( self ):
 		if not self.tsJpgs:
 			self.imageToScreenFactor = 1.0
@@ -43,17 +73,39 @@ class CompositeCtrl( wx.Control ):
 		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond)
 		self.imageToScreenFactor = self.GetClientSize()[1] / self.imageHeight
 		self.compositeBitmap = None	
+		self.pointerTS = None		# On-screen reference
 		
 		return self.compositeVBitmapWidth
 
-	def Set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True ):
+	def Set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True, triggerTS=None ):
+		if not tsJpgs:
+			self.pointerTS = None
+			self.triggerTS = None
+			self.currentTS = None
+			self.compositeBitmap = None
+		
 		self.tsJpgs = tsJpgs
 		self.imagePixelsPerSecond = imagePixelsPerSecond
 		self.leftToRight = leftToRight
+		
+		self.pointerTS = None		# timestamp of the current pointer
+		self.currentTS = None		# timestamp of the current set position
+		
 		self.calculateCompositeBitmapWidth()
 		
 		self.xVLeft = 0
 		self.makeComposite()
+		self.SetTriggerTS( triggerTS )	# Also does a Refresh.
+		
+	def SetTriggerTS( self, triggerTS ):
+		self.triggerTS = triggerTS
+		if triggerTS and self.compositeBitmap:
+			# Center the composite view on the trigger.
+			self.currentTS = triggerTS
+			screenWidth, screenHeight = self.GetClientSize()
+			self.xVLeft = max( 0, self.xVFromTS( triggerTS ) - screenWidth / self.imageToScreenFactor )
+			if self.scrollbar:
+				self.scrollbar.SetThumbPosition( round(self.xVLeft * self.imageToScreenFactor) )
 		self.Refresh()
 		
 	def SetPixelsPerSecond( self, imagePixelsPerSecond ):
@@ -95,24 +147,23 @@ class CompositeCtrl( wx.Control ):
 		
 	def SetTLeft( self, ts ):
 		# Set scroll position by time.
-		self.SetXVLeft( xVFromT(ts) )
+		self.SetXVLeft( xVFromTS(ts) )
 
-	def xVFromT( self, t ):
+	def xVFromTS( self, t ):
 		''' Returns x in image coordinates (not screen coordinates). '''
 		if self.leftToRight:
 			return (self.tsJpgs[-1][0] - t).total_seconds() * self.imagePixelsPerSecond
 		else:
 			return (t - self.tsJpgs[0][0]).total_seconds() * self.imagePixelsPerSecond
 			
-	def tFromXV( self, x ):
+	def tsFromXV( self, xv ):
 		''' Returns t from image coordinates (not screen coordinates). '''
-		x /= self.imageToScreenFactor	# Convert from screen to image coordinates.
 		if self.leftToRight:
-			return self.tsJpgs[-1][0] - timedelta( seconds=x/self.imagePixelsPerSecond )
+			return self.tsJpgs[-1][0] - timedelta( seconds=xv/self.imagePixelsPerSecond )
 		else:
-			return self.tsJpgs[0][0] + timedelta( seconds=x/self.imagePixelsPerSecond )
+			return self.tsJpgs[0][0] + timedelta( seconds=xv/self.imagePixelsPerSecond )
 
-	def makeComposite( self ):
+	def makeComposite( self ):		
 		'''
 			Make a composite bitmap.
 			The idea here is to create a composite bitmap that can be simply blit'ed to the screen (fast).
@@ -146,10 +197,10 @@ class CompositeCtrl( wx.Control ):
 		sourceDC = wx.MemoryDC()
 		PS = self.imagePixelsPerSecond
 		widthDiv2 = self.imageWidth // 2
-		xVFromT = self.xVFromT
+		xVFromTS = self.xVFromTS
 
 		# Precompute the x offsets of the images.
-		xImages = [round(xVFromT(ts)) for ts, jpg in reversed(self.tsJpgs)]
+		xImages = [round(xVFromTS(ts)) for ts, jpg in reversed(self.tsJpgs)]
 
 		if self.leftToRight:
 			xImages.append( round(xImages[-1] + widthDiv2) )	# Write a sentinel.
@@ -189,17 +240,70 @@ class CompositeCtrl( wx.Control ):
 		self.adjustScrollbar()
 
 	def OnPaint( self, event ):
+		dc = wx.PaintDC( self )
+
 		if not self.compositeBitmap:
+			dc.SetBackground( wx.BLACK_BRUSH )
+			dc.Clear()
 			return
 		
-		dc = wx.PaintDC( self )
 		width, height = self.GetClientSize()
 		if self.compositeBitmap.GetSize()[0] < width:
 			dc.SetBackground( wx.BLACK_BRUSH )
 			dc.Clear()
 		
-		sourceDC = wx.MemoryDC( self.compositeBitmap )
-		dc.Blit( 0, 0, width, height, sourceDC, round(self.xVLeft * self.imageToScreenFactor), 0 )
+		dc.Blit( 0, 0, width, height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
+		
+		# Draw the indicator lines.
+		fontSize = max( 16, height//40 )
+		lineHeight = round( fontSize * 1.2 )
+		dc.SetFont( wx.Font(wx.FontInfo(fontSize)) )
+		
+		tsLeft = self.tsFromXV( self.xVLeft )
+		tsRight = self.tsFromXV( self.xVLeft + width / self.imageToScreenFactor )
+		
+		def drawIndicatorLine( x, colour, text, textAtTop=True ):
+			if not 0 <= x < width:
+				return
+			
+			dc.SetPen( wx.Pen(colour) )
+			dc.DrawLine( x, 0, x, height )
+			
+			dc.SetTextForeground( colour )
+			yText = fontSize if textAtTop else round( height - (len(text)+1) * lineHeight)
+			xTextRight = x - fontSize // 2
+			for textCur in text:
+				tWidth, tHeight = dc.GetTextExtent( textCur )
+				xText = xTextRight - tWidth
+				dc.DrawText( textCur, xText, yText )
+				yText += lineHeight
+		
+		if self.pointerTS:
+			text = [formatTime( self.pointerTS )]
+			if self.triggerTS:
+				text.append( '{} TRG'.format( formatSeconds( (self.pointerTS - self.triggerTS).total_seconds()) ) )
+			if self.currentTS:
+				text.append( '{} CUR'.format( formatSeconds( (self.pointerTS - self.currentTS).total_seconds()) ) )
+			
+			x = round( (self.xVFromTS( self.pointerTS ) - self.xVLeft) * self.imageToScreenFactor )
+			colour = wx.Colour(255,255,0)
+			drawIndicatorLine( x, colour, text, True )
+			
+		if self.triggerTS:
+			text = ['TRG']
+			x = round( (self.xVFromTS( self.triggerTS ) - self.xVLeft) * self.imageToScreenFactor )
+			colour = wx.Colour(0,0,255)
+			drawIndicatorLine( x, colour, text, False )
+		
+		if self.currentTS:
+			text = [formatTime( self.currentTS )]
+			if self.triggerTS:
+				text.append( '{} TRG'.format( formatSeconds( (self.currentTS - self.triggerTS).total_seconds()) ) )
+			text.append( '' )	# Blank line at the bottom to give room for the trigger line.
+			
+			x = round( (self.xVFromTS( self.currentTS ) - self.xVLeft) * self.imageToScreenFactor )
+			colour = wx.Colour(255,0,0)
+			drawIndicatorLine( x, colour, text, False )
 
 def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
 	'''
@@ -294,7 +398,10 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="Composite", size=(width, height))
 	cp = CompositePanel( mainWin )
 	
-	cp.Set( tsJpgs, pixelsPerSecond, leftToRight=leftToRight )
+	triggerTS = tsJpgs[0][0] + timedelta( seconds=(tsJpgs[-1][0] - tsJpgs[0][0]).total_seconds()/2)
+	assert tsJpgs[0][0] <= triggerTS < tsJpgs[-1][0]
+	print( tsJpgs[0][0], triggerTS, tsJpgs[-1][0] )
+	cp.Set( tsJpgs, pixelsPerSecond, leftToRight=leftToRight, triggerTS = triggerTS )
 	mainWin.Show()
 	
 	app.MainLoop()
