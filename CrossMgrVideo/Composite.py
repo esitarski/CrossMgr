@@ -30,6 +30,10 @@ class CompositeCtrl( wx.Control ):
 		self.currentTS = None
 		self.triggerTS = None
 		
+		self.filterContrast = False
+		self.filterSharpen = False
+		self.filterGrayscale = False
+		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
@@ -88,10 +92,10 @@ class CompositeCtrl( wx.Control ):
 		self.imagePixelsPerSecond = imagePixelsPerSecond
 		self.leftToRight = leftToRight
 		
+		self.calculateCompositeBitmapWidth()
+		
 		self.pointerTS = None		# timestamp of the current pointer
 		self.currentTS = None		# timestamp of the current set position
-		
-		self.calculateCompositeBitmapWidth()
 		
 		self.xVLeft = 0
 		self.makeComposite()
@@ -99,7 +103,18 @@ class CompositeCtrl( wx.Control ):
 		
 	def SetLeftToRight( self, leftToRight=True ):
 		self.leftToRight = leftToRight
-		self.makeComposite()	
+		self.makeComposite()
+		self.Refresh()
+		
+	def SetFilters( self, contrast=None, sharpen=None, grayscale=None ):
+		if contrast is not None:
+			self.filterContrast = contrast
+		if sharpen is not None:
+			self.filterSharpen = sharpen
+		if grayscale is not None:
+			self.filterGrayscale = grayscale
+		self.makeComposite()		
+		self.Refresh()
 		
 	def SetTriggerTS( self, triggerTS ):
 		self.triggerTS = triggerTS
@@ -107,9 +122,9 @@ class CompositeCtrl( wx.Control ):
 			# Center the composite view on the trigger.
 			self.currentTS = triggerTS
 			screenWidth, screenHeight = self.GetClientSize()
-			self.xVLeft = max( 0, self.xVFromTS( triggerTS ) - screenWidth / self.imageToScreenFactor )
+			self.xVLeft = max( 0, self.xVFromTS( triggerTS ) - (screenWidth/2) / self.imageToScreenFactor )
 			if self.scrollbar:
-				self.scrollbar.SetThumbPosition( round(self.xVLeft * self.imageToScreenFactor) )
+				wx.CallAfter( self.scrollbar.SetThumbPosition, round(self.xVLeft * self.imageToScreenFactor) )
 		self.Refresh()
 		
 	def SetPixelsPerSecond( self, imagePixelsPerSecond ):
@@ -241,6 +256,16 @@ class CompositeCtrl( wx.Control ):
 				)
 				sourceDC.SelectObject(wx.NullBitmap)
 
+		if self.filterContrast or self.filterSharpen or self.filterGrayscale:
+			frame = CVUtil.bitmapToFrame( self.compositeBitmap )
+			if self.filterContrast:
+				frame = CVUtil.adjustContrastFrame( frame )
+			if self.filterSharpen:
+				frame = CVUtil.sharpenFrame( frame )
+			if self.filterGrayscale:
+				frame = CVUtil.grayscaleFrame( frame )
+			self.compositeBitmap = CVUtil.frameToBitmap( frame )
+
 		self.adjustScrollbar()
 
 	def OnPaint( self, event ):
@@ -334,6 +359,17 @@ class CompositePanel( wx.Panel):
 		self.leftToRight.SetSelection( 0 )
 		self.leftToRight.Bind( wx.EVT_CHOICE, self.onLeftToRight )
 		
+		self.trig = wx.Button( self, label=('\u29BF TRG') )
+		self.trig.Bind( wx.EVT_BUTTON, lambda e: self.composite.SetTriggerTS(self.composite.triggerTS) )
+		
+		self.contrast = wx.ToggleButton( self, label=('Contrast') )
+		self.sharpen = wx.ToggleButton( self, label=('Sharpen') )
+		self.grayscale = wx.ToggleButton( self, label=('Grayscale') )
+		
+		self.contrast.Bind(		wx.EVT_TOGGLEBUTTON, lambda e: self.composite.SetFilters(contrast=e.IsChecked()) )
+		self.sharpen.Bind(		wx.EVT_TOGGLEBUTTON, lambda e: self.composite.SetFilters(sharpen=e.IsChecked()) )
+		self.grayscale.Bind(	wx.EVT_TOGGLEBUTTON, lambda e: self.composite.SetFilters(grayscale=e.IsChecked()) )
+		
 		self.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
 		self.composite.SetScrollbar( self.timeScrollbar )
 		self.composite.Bind( wx.EVT_MOUSEWHEEL, self.onCompositeWheel )
@@ -353,10 +389,14 @@ class CompositePanel( wx.Panel):
 		vs.Add( hs, 1, flag=wx.EXPAND )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.leftToRight, flag=wx.ALL, border=4 )
-		hs.Add( self.timeScrollbar, 1, wx.EXPAND )
+		hs.Add( self.leftToRight, flag=wx.LEFT, border=2 )
+		hs.Add( self.trig, flag=wx.LEFT, border=2 )
+		hs.Add( self.contrast, flag=wx.LEFT, border=6 )
+		hs.Add( self.sharpen, flag=wx.LEFT, border=2 )
+		hs.Add( self.grayscale, flag=wx.LEFT, border=2 )
+		hs.Add( self.timeScrollbar, 1, flag=wx.EXPAND, border=2 )
 		
-		vs.Add( hs, 0, flag=wx.EXPAND )
+		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=2 )
 				
 		self.SetSizer( vs )
 		
@@ -386,7 +426,7 @@ class CompositePanel( wx.Panel):
 if __name__ == '__main__':
 	app = wx.App(False)
 
-	leftToRight = True
+	leftToRight = False
 	now = datetime.now()
 	fps = 30.0
 	spf = 1.0 / fps
@@ -412,7 +452,7 @@ if __name__ == '__main__':
 	cp = CompositePanel( mainWin )
 	
 	triggerTS = tsJpgs[0][0] + timedelta( seconds=(tsJpgs[-1][0] - tsJpgs[0][0]).total_seconds()/2)
-	cp.Set( tsJpgs, pixelsPerSecond, leftToRight=leftToRight, triggerTS = triggerTS )
+	cp.Set( tsJpgs, pixelsPerSecond, leftToRight=True, triggerTS = triggerTS )
 	mainWin.Show()
 	
 	app.MainLoop()
