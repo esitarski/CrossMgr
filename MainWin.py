@@ -541,6 +541,7 @@ class MainWin( wx.Frame ):
 		self.editMenu.AppendSeparator()
 		
 		item = self.editMenu.Append( wx.ID_ANY, _("&Find..."), _("Find a Rider") )
+		self.menuFindID = item.GetId()
 		self.Bind(wx.EVT_MENU, self.menuFind, item )
 		
 		self.editMenu.AppendSeparator()
@@ -896,10 +897,11 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
 		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in range(min(11,len(jumpToIds)))]
-		self.contextHelp = wx.ID_HELP
-		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
-		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
-		accTable.append( (wx.ACCEL_SHIFT, wx.WXK_F1, self.contextHelp) )
+		self.contextHelpID = wx.ID_HELP
+		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelpID )
+		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelpID) )
+		accTable.append( (wx.ACCEL_SHIFT, wx.WXK_F1, self.contextHelpID) )
+		accTable.append( (wx.ACCEL_CTRL, ord('F'), self.menuFindID) )
 		aTable = wx.AcceleratorTable( accTable )
 		self.SetAcceleratorTable(aTable)
 		
