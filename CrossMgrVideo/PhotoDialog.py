@@ -242,6 +242,7 @@ class PhotoPanel( wx.Panel ):
 		if self.ts and self.triggerInfo:
 			label += '\n{:+.3f} TRG'.format( (self.ts - self.triggerInfo['ts']).total_seconds() )
 		self.timestamp.SetLabel( label )
+		wx.CallAfter( self.GetSizer().Layout )
 		
 	def findFrameClosestToTrigger( self ):
 		# Clever way to bisect list of sorted tuples.
