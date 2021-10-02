@@ -270,12 +270,13 @@ class CompositeCtrl( wx.Control ):
 			dc.DrawLine( x, 0, x, height )
 			
 			dc.SetTextForeground( colour )
-			yText = fontSize if textAtTop else round( height - (len(text)+1) * lineHeight)
+			yText = fontSize//2 if textAtTop else round( height - (len(text)+1) * lineHeight)
 			xTextRight = x - fontSize // 2
 			for textCur in text:
-				tWidth, tHeight = dc.GetTextExtent( textCur )
-				xText = xTextRight - tWidth
-				dc.DrawText( textCur, xText, yText )
+				if textCur:
+					tWidth, tHeight = dc.GetTextExtent( textCur )
+					xText = xTextRight - tWidth
+					dc.DrawText( textCur, xText, yText )
 				yText += lineHeight
 		
 		if self.pointerTS:
@@ -284,26 +285,21 @@ class CompositeCtrl( wx.Control ):
 				text.append( '{} TRG'.format( formatSeconds( (self.pointerTS - self.triggerTS).total_seconds()) ) )
 			if self.currentTS:
 				text.append( '{} CUR'.format( formatSeconds( (self.pointerTS - self.currentTS).total_seconds()) ) )
-			
 			x = round( (self.xVFromTS( self.pointerTS ) - self.xVLeft) * self.imageToScreenFactor )
-			colour = wx.Colour(255,255,0)
-			drawIndicatorLine( x, colour, text, True )
+			drawIndicatorLine( x, wx.Colour(255,255,0), text, True )
 			
 		if self.triggerTS:
 			text = ['TRG']
 			x = round( (self.xVFromTS( self.triggerTS ) - self.xVLeft) * self.imageToScreenFactor )
-			colour = wx.Colour(0,0,255)
-			drawIndicatorLine( x, colour, text, False )
+			drawIndicatorLine( x, wx.Colour(0,0,255), text, False )
 		
 		if self.currentTS:
 			text = [formatTime( self.currentTS )]
 			if self.triggerTS:
 				text.append( '{} TRG'.format( formatSeconds( (self.currentTS - self.triggerTS).total_seconds()) ) )
-			text.append( '' )	# Blank line at the bottom to give room for the trigger line.
-			
+			text.append( '' )	# Blank line to give room for triggerTS line.
 			x = round( (self.xVFromTS( self.currentTS ) - self.xVLeft) * self.imageToScreenFactor )
-			colour = wx.Colour(255,0,0)
-			drawIndicatorLine( x, colour, text, False )
+			drawIndicatorLine( x, wx.Colour(255,0,0), text, False )
 
 def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
 	'''
@@ -399,8 +395,6 @@ if __name__ == '__main__':
 	cp = CompositePanel( mainWin )
 	
 	triggerTS = tsJpgs[0][0] + timedelta( seconds=(tsJpgs[-1][0] - tsJpgs[0][0]).total_seconds()/2)
-	assert tsJpgs[0][0] <= triggerTS < tsJpgs[-1][0]
-	print( tsJpgs[0][0], triggerTS, tsJpgs[-1][0] )
 	cp.Set( tsJpgs, pixelsPerSecond, leftToRight=leftToRight, triggerTS = triggerTS )
 	mainWin.Show()
 	
