@@ -103,10 +103,10 @@ class PhotoPanel( wx.Panel ):
 		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
 
-		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label='-1' )
-		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
-		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='+1' )
-		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
+		self.frameBackward = wx.Button( self, style=wx.BU_EXACTFIT, label='-1' )
+		self.frameBackward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
+		self.frameForward = wx.Button( self, style=wx.BU_EXACTFIT, label='+1' )
+		self.frameForward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
 		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EE' )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
@@ -120,8 +120,8 @@ class PhotoPanel( wx.Panel ):
 		self.playerForwardToEnd.Bind( wx.EVT_BUTTON, lambda e: self.playForwardToEnd() )
 		
 		btnsizer.Add( self.recenter, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
-		btnsizer.Add( self.frameLeft, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
-		btnsizer.Add( self.frameRight, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
+		btnsizer.Add( self.frameBackward, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+		btnsizer.Add( self.frameForward, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerRewind, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		btnsizer.Add( self.playerReverse, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( self.playerStop, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
