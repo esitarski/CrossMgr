@@ -10,10 +10,11 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 	return a0 <= b1 and b0 <= a1
 
 class ScaledBitmap( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, bitmap=None, drawFinishLine=False, inset=False ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, bitmap=None, drawFinishLine=False, inset=False, drawCallback=None ):
 		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		self.bitmap = bitmap
+		self.drawCallback = drawCallback
 		self.drawFinishLine = drawFinishLine
 		self.buttonDown = False
 		self.backgroundBrush = wx.Brush( wx.Colour(0,0,0), wx.SOLID )
@@ -112,12 +113,16 @@ class ScaledBitmap( wx.Panel ):
 		
 		magnifyRect = self.getMagRect()
 		if magnifyRect.IsEmpty():
+			if self.drawCallback:
+				self.drawCallback( dc, width, height )
 			return
 			
 		sourceRect = wx.Rect( 0, 0, sourceWidth, sourceHeight )
 		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int((magnifyRect.GetY()-yTop)/ratio), int(magnifyRect.GetWidth()/ratio), int(magnifyRect.GetHeight()/ratio) ) )
 		
 		if sourceRect.IsEmpty():
+			if self.drawCallback:
+				self.drawCallback( dc, width, height )
 			return
 		self.sourceRect = sourceRect
 			
@@ -143,15 +148,13 @@ class ScaledBitmap( wx.Panel ):
 		dc.DrawRectangle( magnifyRect )
 
 		if intervalsOverlap(magnifyRect.GetLeft(), magnifyRect.GetRight(), insetRect.GetLeft(), insetRect.GetRight()):
-			if intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom()):
-				return
-			
-			if isNorth:
-				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetTopLeft() )
-				dc.DrawLine( magnifyRect.GetBottomRight(),insetRect.GetTopRight() )
-			else:
-				dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetBottomLeft() )
-				dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetBottomRight() )
+			if not intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom() ):
+				if isNorth:
+					dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetTopLeft() )
+					dc.DrawLine( magnifyRect.GetBottomRight(),insetRect.GetTopRight() )
+				else:
+					dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetBottomLeft() )
+					dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetBottomRight() )
 		else:
 			if isWest:
 				dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetTopLeft() )
@@ -159,6 +162,9 @@ class ScaledBitmap( wx.Panel ):
 			else:
 				dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetTopRight() )
 				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetBottomRight() )
+
+		if self.drawCallback:
+			self.drawCallback( dc, width, height )
 	
 	def OnPaint( self, event=None ):
 		width, height = self.GetSize()

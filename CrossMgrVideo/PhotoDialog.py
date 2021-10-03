@@ -84,10 +84,10 @@ class PhotoPanel( wx.Panel ):
 			
 		super().__init__( parent, id, size=size, style=style )
 		
-		self.clear()
+		self.clear( False )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
-		self.scaledBitmap = ScaledBitmap( self, inset=True )
+		self.scaledBitmap = ScaledBitmap( self, inset=True, drawCallback=self.drawCallback )
 		vs.Add( self.scaledBitmap, 1, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.scaledBitmap.Bind( wx.EVT_MOUSEWHEEL, self.onMouseWheel )
@@ -95,29 +95,24 @@ class PhotoPanel( wx.Panel ):
 		
 		btnsizer = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.timestamp = wx.StaticText(self, label='00:00:00.000\n00:00:00.000')
-		self.timestamp.SetFont( wx.Font(wx.FontInfo(9)) )
-		btnsizer.Add( self.timestamp, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
-		
 		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png'))
 		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
 
-		self.frameBackward = wx.Button( self, style=wx.BU_EXACTFIT, label='-1' )
+		self.frameBackward = wx.BitmapButton( self, bitmap=Utils.getBitmap('minus.png') )
 		self.frameBackward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
-		self.frameForward = wx.Button( self, style=wx.BU_EXACTFIT, label='+1' )
+		self.frameForward = wx.BitmapButton( self, bitmap=Utils.getBitmap('plus.png') )
 		self.frameForward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
-		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EA' )
-#		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EE' )
+		self.playerRewind = wx.BitmapButton( self, bitmap=Utils.getBitmap('fast-backward.png') )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
-		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23F4' )
+		self.playerReverse = wx.BitmapButton( self, bitmap=Utils.getBitmap('play-reverse.png') )
 		self.playerReverse.Bind( wx.EVT_BUTTON, lambda e: self.playReverse() )
-		self.playerStop = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23F8' )
+		self.playerStop = wx.BitmapButton( self, bitmap=Utils.getBitmap('stop.png') )
 		self.playerStop.Bind( wx.EVT_BUTTON, lambda e: self.playStop() )		
-		self.playerForward = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23F5' )
+		self.playerForward = wx.BitmapButton( self, bitmap=Utils.getBitmap('play.png') )
 		self.playerForward.Bind( wx.EVT_BUTTON, lambda e: self.play() )
-		self.playerForwardToEnd = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23ED' )
+		self.playerForwardToEnd = wx.BitmapButton( self, bitmap=Utils.getBitmap('fast-forward.png') )
 		self.playerForwardToEnd.Bind( wx.EVT_BUTTON, lambda e: self.playForwardToEnd() )
 		
 		btnsizer.Add( self.recenter, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
@@ -152,17 +147,17 @@ class PhotoPanel( wx.Panel ):
 		btn.Bind( wx.EVT_BUTTON, self.onEdit )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('clipboard-bw.png'))
+		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
+		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
 		btn.SetToolTip( wx.ToolTip('Print Photo') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
-		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
-		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
-		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
-
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('png.png'))
 		btn.SetToolTip( wx.ToolTip('Save Photo as PNG file') )
 		btn.Bind( wx.EVT_BUTTON, self.onSavePng )
@@ -184,10 +179,12 @@ class PhotoPanel( wx.Panel ):
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		
 		btn = wx.Button( self, label="Restore View" )
+		btn.SetToolTip( wx.ToolTip('Restore Zoom and Frame') )
 		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
 		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
 		
 		btn = wx.Button( self, label="Save View" )
+		btn.SetToolTip( wx.ToolTip('Save Zoom and Frame') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveView )
 		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
 		
@@ -199,7 +196,7 @@ class PhotoPanel( wx.Panel ):
 			btn.Bind( wx.EVT_BUTTON, self.onClose )
 
 		vs.Add( btnsizer, flag=wx.ALL|wx.EXPAND, border=5 )
-
+		
 		self.SetSizer(vs)
 
 	@property
@@ -209,7 +206,7 @@ class PhotoPanel( wx.Panel ):
 	@property
 	def ts( self ):
 		return None if self.iJpg is None else self.tsJpg[self.iJpg][0]
-
+		
 	def set( self, iJpg, triggerInfo, tsJpg, fps=25, editCB=None ):
 		self.iJpg = iJpg
 		self.triggerInfo = triggerInfo
@@ -223,17 +220,10 @@ class PhotoPanel( wx.Panel ):
 		self.pps = 2000.0
 		
 		self.SetBitmap()
-		
-		label = self.ts.strftime('%H:%M:%S.%f')[:-3] if self.ts else ''
-		if self.ts and self.triggerInfo:
-			label += '\n{:+.3f} TRG'.format( (self.ts - self.triggerInfo['ts']).total_seconds() )
-		self.timestamp.SetLabel( label )
-		self.GetSizer().Layout()
 	
 	def setFrameIndex( self, i ):
 		self.iJpg = max( 0, min(i, len(self.tsJpg)-1) )
 		self.SetBitmap()
-		self.Refresh()
 		
 	def findFrameClosestToTrigger( self ):
 		# Clever way to bisect list of sorted tuples.
@@ -249,20 +239,15 @@ class PhotoPanel( wx.Panel ):
 	
 	def onRecenter( self, event=None ):
 		# Set to the photo closest to the trigger time.
-		if self.iJpg is None:
-			return
-		
-		self.setFrameIndex( self.findFrameClosestToTrigger() )
+		if self.iJpg is not None:
+			self.setFrameIndex( self.findFrameClosestToTrigger(), True )
 	
 	def changeFrame( self, frameDir ):
-		if self.iJpg is None:
-			return
-		if frameDir < 0:
-			self.setFrameIndex( self.iJpg-1 )
-		elif frameDir > 0:
-			self.setFrameIndex( self.iJpg+1 )
-		else:
-			self.setFrameIndex( 0 )
+		if self.tsJpg and self.iJpg is not None:
+			if frameDir == 0:
+				self.setFrameIndex( 0 )
+			else:
+				self.setFrameIndex( self.iJpg + (1 if frameDir > 0 else -1) )
 		
 	def onFilter( self, event ):
 		self.SetBitmap()
@@ -319,8 +304,9 @@ class PhotoPanel( wx.Panel ):
 			self.iJpg = len(self.tsJpg)
 			self.changeFrame( 1 )
 		
-	def clear( self ):
-		self.playStop()
+	def clear( self, playStop=True ):
+		if playStop:
+			self.playStop()
 		self.iJpg = None
 		self.triggerInfo = None
 		self.tsJpg = None
@@ -407,7 +393,32 @@ class PhotoPanel( wx.Panel ):
 			frame = CVUtil.grayscaleFrame( frame )
 		
 		return self.addPhotoHeaderToBitmap( CVUtil.frameToBitmap(frame) )
+	
+	def drawCallback( self, dc, width, height ):
+		if self.jpg is None:
+			return None
+
+		# Add the frame timestamps and offset into.
+		text = []
+		tsCur = self.tsJpg[self.iJpg][0]
+		try:
+			tsTrigger = self.triggerInfo['ts']
+			text.append( '{:+.3f} TRG'.format( (tsCur - tsTrigger).total_seconds() ) )
+		except Exception as e:
+			pass
 		
+		text.append( tsCur.strftime('%H:%M:%S.%f')[:-3] )
+
+		fontHeight = max( 8, height // 25 )
+		dc.SetFont( wx.Font( wx.FontInfo(fontHeight) ) )
+		dc.SetTextForeground( wx.Colour(255,255,0) )
+		lineHeight = round(fontHeight * 1.5)
+		xText = fontHeight
+		yText = fontHeight
+		for textCur in text:
+			dc.DrawText( textCur, xText, yText )
+			yText += lineHeight
+	
 	def onClose( self, event ):
 		self.playStop()
 		self.EndModal( wx.ID_OK )

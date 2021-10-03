@@ -520,10 +520,10 @@ class MainWin( wx.Frame ):
 		fgs.Add( self.usb )
 		
 		fgs.Add( wx.StaticText(self, label='Resolution:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.cameraResolution )
+		fgs.Add( self.cameraResolution, flag=wx.ALIGN_RIGHT )
 		
 		fgs.Add( wx.StaticText(self, label='FourCC:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.fourcc )
+		fgs.Add( self.fourcc, flag=wx.ALIGN_RIGHT )
 		
 		fgs.Add( wx.StaticText(self, label='Target:'), flag=wx.ALIGN_RIGHT )
 		fgs.Add( self.targetFPS, flag=wx.ALIGN_RIGHT )
