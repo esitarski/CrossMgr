@@ -342,7 +342,8 @@ class PhotoPanel( wx.Panel ):
 	def onEdit( self, event ):
 		if self.editCB:
 			self.triggerInfo = self.editCB()
-			self.Refresh()
+			wx.CallAfter( self.SetBitmap )
+			wx.CallAfter( self.Refresh )
 			
 	def GetZoomInfo( self ):
 		r = self.scaledBitmap.GetSourceRect()

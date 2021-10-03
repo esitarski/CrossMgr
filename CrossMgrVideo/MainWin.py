@@ -804,7 +804,7 @@ class MainWin( wx.Frame ):
 		
 	def refreshPhotoPanel( self ):
 		self.photoPanel.playStop()
-		self.photoPanel.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps )
+		self.photoPanel.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps, editCB=self.doTriggerEdit )
 		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
 		wx.CallAfter( self.GetSizer().Layout )
 		
