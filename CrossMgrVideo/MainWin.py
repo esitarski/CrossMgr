@@ -582,7 +582,7 @@ class MainWin( wx.Frame ):
 		mainSizer.Add( headerSizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
-		self.notebook = wx.Notebook( self, size=(-1,wx.GetDisplaySize()[1]//2) )
+		self.notebook = wx.Notebook( self, size=(-1,wx.GetDisplaySize()[1]//2), style=wx.NB_BOTTOM )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onNotebook )
 		
 		self.finishStrip = FinishStripPanel( self.notebook, photoViewCB=self.photoViewCB )		
@@ -806,11 +806,9 @@ class MainWin( wx.Frame ):
 		self.photoPanel.playStop()
 		self.photoPanel.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps, editCB=self.doTriggerEdit )
 		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
-		wx.CallAfter( self.GetSizer().Layout )
 		
 	def onNotebook( self, event ):
 		self.refreshPhotoPanel()
-		wx.CallAfter( self.GetSizer().Layout )
 		
 	def onPublishPhotos( self, event ):
 		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]

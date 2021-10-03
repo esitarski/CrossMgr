@@ -108,7 +108,8 @@ class PhotoPanel( wx.Panel ):
 		self.frameForward = wx.Button( self, style=wx.BU_EXACTFIT, label='+1' )
 		self.frameForward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
-		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EE' )
+		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EA' )
+#		self.playerRewind = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23EE' )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
 		self.playerReverse = wx.Button( self, style=wx.BU_EXACTFIT, label='\u23F4' )
 		self.playerReverse.Bind( wx.EVT_BUTTON, lambda e: self.playReverse() )
@@ -146,17 +147,17 @@ class PhotoPanel( wx.Panel ):
 		self.grayscale.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.grayscale, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
 
+		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
+		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
+		btn.Bind( wx.EVT_BUTTON, self.onEdit )
+		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+
 		btn = wx.BitmapButton(self, wx.ID_PRINT, bitmap=Utils.getBitmap('print.png'))
 		btn.SetToolTip( wx.ToolTip('Print Photo') )
 		btn.SetDefault()
 		btn.Bind( wx.EVT_BUTTON, self.onPrint )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
 		
-		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
-		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
-		btn.Bind( wx.EVT_BUTTON, self.onEdit )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
-
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('copy-to-clipboard.png'))
 		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
@@ -184,11 +185,11 @@ class PhotoPanel( wx.Panel ):
 		
 		btn = wx.Button( self, label="Restore View" )
 		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
-		btnsizer.Add(btn, flag=wx.LEFT, border=8)
+		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
 		
 		btn = wx.Button( self, label="Save View" )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveView )
-		btnsizer.Add(btn, flag=wx.LEFT, border=8)
+		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
 		
 		if isDialog:
 			btnsizer.AddStretchSpacer()
@@ -223,26 +224,16 @@ class PhotoPanel( wx.Panel ):
 		
 		self.SetBitmap()
 		
-		sz = self.scaledBitmap.GetBitmap().GetSize()
-		iWidth, iHeight = sz
-		r = wx.GetClientDisplayRect()
-		dWidth, dHeight = r.GetWidth(), r.GetHeight()
-		if iWidth > dWidth or iHeight > dHeight:
-			if float(iHeight)/float(iWidth) < float(dHeight)/float(dWidth):
-				wSize = (dWidth, int(iHeight * float(dWidth)/float(iWidth)))
-			else:
-				wSize = (int(iWidth * float(dHeight)/float(iHeight)), dHeight)
-		else:
-			wSize = sz
-		
-		w, h = self.GetSize()
-		if w < wSize[0] or h < wSize[1]:
-			self.SetSize( wSize )
 		label = self.ts.strftime('%H:%M:%S.%f')[:-3] if self.ts else ''
 		if self.ts and self.triggerInfo:
 			label += '\n{:+.3f} TRG'.format( (self.ts - self.triggerInfo['ts']).total_seconds() )
 		self.timestamp.SetLabel( label )
-		wx.CallAfter( self.GetSizer().Layout )
+		self.GetSizer().Layout()
+	
+	def setFrameIndex( self, i ):
+		self.iJpg = max( 0, min(i, len(self.tsJpg)-1) )
+		self.SetBitmap()
+		self.Refresh()
 		
 	def findFrameClosestToTrigger( self ):
 		# Clever way to bisect list of sorted tuples.
@@ -261,20 +252,17 @@ class PhotoPanel( wx.Panel ):
 		if self.iJpg is None:
 			return
 		
-		self.set( self.findFrameClosestToTrigger(), self.triggerInfo, self.tsJpg, self.fps, self.editCB )
-		self.Refresh()
+		self.setFrameIndex( self.findFrameClosestToTrigger() )
 	
 	def changeFrame( self, frameDir ):
 		if self.iJpg is None:
 			return
 		if frameDir < 0:
-			self.iJpg = max(0, self.iJpg-1 )
+			self.setFrameIndex( self.iJpg-1 )
 		elif frameDir > 0:
-			self.iJpg = min(len(self.tsJpg)-1, self.iJpg+1 )
+			self.setFrameIndex( self.iJpg+1 )
 		else:
-			self.iJpg = 0
-		self.set( self.iJpg, self.triggerInfo, self.tsJpg, self.fps, self.editCB )
-		self.Refresh()
+			self.setFrameIndex( 0 )
 		
 	def onFilter( self, event ):
 		self.SetBitmap()
