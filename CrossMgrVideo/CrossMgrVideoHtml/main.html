@@ -505,7 +505,7 @@ function drawCallback( canvas ) {
 	let ctx = canvas.getContext('2d');	
 	const ts = getTriggerCur().ts;
 	const tsImage = getTriggerCur().tsJpgIds[iImageCur][0];
-	const fontSize = canvas.height / 20;
+	const fontSize = Math.max( 8, canvas.height / 25 );
 	ctx.font = fontSize + 'px Arial';
 	ctx.textBaseline = 'top';
 	ctx.fillStyle = 'rgb(255,255,0)';

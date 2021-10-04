@@ -265,15 +265,10 @@ class PhotoPanel( wx.Panel ):
 	def playNextFrame( self ):
 		if self.keepPlayingForward:
 			if self.iJpg < len(self.tsJpg)-1:
-				self.changeFrame( 1 )
-				try:
-					wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
-					return
-				except IndexError:
-					pass
-			
-			self.iJpg = 0
-			wx.CallLater( 700, self.playNextFrame )
+				wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), lambda: (self.changeFrame(1) or self.playNextFrame()) )
+			else:
+				self.setFrameIndex( 0 )
+				wx.CallLater( 700, self.playNextFrame )
 	
 	def play( self ):
 		self.playStop()
@@ -285,15 +280,10 @@ class PhotoPanel( wx.Panel ):
 	def playPrevFrame( self ):
 		if self.keepPlayingReverse:
 			if self.iJpg > 0:
-				self.changeFrame( -1 )
-				try:
-					wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
-					return
-				except IndexError:
-					pass
-			
-			self.iJpg = len(self.tsJpg) - 1
-			wx.CallLater( 700, self.playPrevFrame )
+				wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), lambda: (self.changeFrame(-1) or self.playPrevFrame()) )
+			else:
+				self.setFrameIndex( len(self.tsJpg)-1 )
+				wx.CallLater( 700, self.playPrevFrame )
 	
 	def playReverse( self ):
 		self.playStop()
