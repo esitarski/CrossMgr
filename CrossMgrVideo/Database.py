@@ -37,10 +37,11 @@ class Database:
 	triggerFieldsAll = (
 		'id','ts','s_before','s_after','ts_start','closest_frames','bib','first_name','last_name','team','wave','race_name',
 		'note','kmh','frames',
+		'finish_direction',
 		'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',
 	)
 	TriggerRecord = namedtuple( 'TriggerRecord', triggerFieldsAll )
-	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',}	# Fields to compare for equality of triggers.
+	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames', 'finish_direction', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',}	# Fields to compare for equality of triggers.
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 	
@@ -84,6 +85,8 @@ class Database:
 					# Closest frames queries.
 					if 'closest_frames' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN closest_frames INTEGER DEFAULT 0' )
+					if 'finish_direction' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN finish_direction INTEGER DEFAULT 0' )
 					# Zoom window.
 					if 'zoom_frame' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN zoom_frame  INTEGER DEFAULT -1' )
@@ -115,6 +118,8 @@ class Database:
 						('kmh', 'DOUBLE', False, 0.0),
 						('frames', 'INTEGER', False, 0),			# Number of frames with this trigger.
 						
+						('finish_direction', 'INTEGER', False, 0),	# 0 == unspecified, 1 == left to right, 2 == right to left.
+						
 						('zoom_frame',	'INTEGER', False, -1),		# Frame of the best zoom image.  -1 means the Trigger frame.
 						('zoom_x', 		'INTEGER', False, 0),		# Zoom x coord
 						('zoom_y', 		'INTEGER', False, 0),		# Zoom y coord
@@ -122,14 +127,15 @@ class Database:
 						('zoom_height', 'INTEGER', False, 0),		# Zoom height
 					)
 				)
-				self.photoTsCache = set( row[0] for row in self.conn.execute(
+				self.lastTsPhotos = set( row[0] for row in self.conn.execute(
 						'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (now() - timedelta(seconds=self.UpdateSeconds), now())
 					)
 				)
 				
 			self.deleteExistingTriggerDuplicates()
+			self.deleteDuplicatePhotos()
 		else:
-			self.photoTsCache = set()
+			self.lastTsPhotos = set()
 		
 		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
 		
@@ -171,20 +177,20 @@ class Database:
 				# Purge duplicate photos and photos with the same timestamp.
 				jpgSeen = set()
 				tsJpgsUnique = []
-				for ts_jpg in tsJpgs:
-					if ts_jpg[1] and ts_jpg[0] not in self.photoTsCache and ts_jpg[1] not in jpgSeen:
-						jpgSeen.add( ts_jpg[1] )
-						tsJpgsUnique.append( ts_jpg )
+				for ts, jpg in tsJpgs:
+					if ts and jpg and ts not in self.lastTsPhotos and jpg not in jpgSeen:
+						self.lastTsPhotos.add( ts )
+						jpgSeen.add( jpg )
+						tsJpgsUnique.append( (ts, jpg) )
+						
 				tsJpgs = tsJpgsUnique
 			
 			if tsJpgs:
-				assert not any(ts is None for ts, jpg in tsJpgs)
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
-				self.photoTsCache.update( ts for ts, jpg in tsJpgs )
 		
 		if (now() - self.lastUpdate).total_seconds() > self.UpdateSeconds:
 			expired = now() - timedelta(seconds=self.UpdateSeconds)
-			self.photoTsCache = set( ts for ts in self.photoTsCache if ts > expired )
+			self.lastTsPhotos = set( ts for ts in self.lastTsPhotos if ts > expired )
 			self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
@@ -241,7 +247,41 @@ class Database:
 				)
 				
 			return [self.TriggerRecord(*trig) for trig in triggers]
-			
+	
+	def _deleteIds( self, table, ids ):
+		chunk_size = 500
+		while ids:
+			to_delete = ids[-chunk_size:]
+			self.conn.execute( 'DELETE FROM {} WHERE id IN ({})'.format(table, ','.join('?'*len(to_delete))), to_delete )
+			del ids[-chunk_size:]
+	
+	def _purgeDuplicateTS( self, tsJpgIdIter ):
+		tsSeen = set()
+		duplicateIds = []
+		for ts, jpgId in tsJpgIdIter:
+			if ts not in tsSeen:
+				tsSeen.add( ts )
+				yield ts, jpgId
+			else:
+				duplicateIds.append( jpgId )
+		self._deleteIds( 'photo', duplicateIds )
+		
+	def _getPhotosPurgeDuplicateTS( self, tsLower, tsUpper ):
+		tsJpgs = []
+		tsSeen = set()
+		duplicateIds = []
+		for jpgId, ts, jpg in self.conn.execute( 'SELECT id,ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) ):
+			if ts and jpg and ts not in tsSeen:
+				tsSeen.add( ts )
+				tsJpgs.append( (ts, jpg) )
+			else:
+				duplicateIds.append( jpgId )
+		self._deleteIds( 'photo', duplicateIds )
+		return tsJpgs
+		
+	def _getPhotoCount( self, tsLower, tsUpper ):
+		return sum( 1 for ts,jpgId in self._purgeDuplicateTS(self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper))) )
+	
 	def getPhotos( self, tsLower, tsUpper ):
 		# Cache the results of the last query.
 		key = (tsLower, tsUpper)
@@ -249,14 +289,10 @@ class Database:
 			return self.tsJpgsLast
 		
 		with self.dbLock, self.conn:
-			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper)) )
+			tsJpgs = self._getPhotosPurgeDuplicateTS( *key )
+		
 		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
 		return tsJpgs
-	
-	def _getPhotoCount( self, tsLower, tsUpper ):
-		key = (tsLower, tsUpper)
-		count = self.conn.execute( 'SELECT COUNT(id) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()
-		return count[0] if count else 0
 	
 	def getPhotosClosest( self, ts, closestFrames ):
 		# Cache the results of the last query.
@@ -333,7 +369,8 @@ class Database:
 		if row is None:
 			raise ValueError( 'Nonexistent photo id={}'.format(id) )
 		return row[0]		
-		
+	
+	
 	def queryTriggers( self, tsLower, tsUpper, bib=None ):
 		triggers = self.getTriggers( tsLower, tsUpper, bib )
 		trigs = []
@@ -343,8 +380,10 @@ class Database:
 				if trig.closest_frames:
 					trigCur['tsJpgIds'] = self._getPhotosClosestIds( trig.ts, trig.closest_frames )
 				else:
-					trigCur['tsJpgIds'] = list( self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? and ?',
-						(trig.ts - timedelta(seconds=trig.s_before), trig.ts + timedelta(seconds=trig.s_after)) )
+					trigCur['tsJpgIds'] = list( self._purgeDuplicateTS(
+						self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? and ?',
+							(trig.ts - timedelta(seconds=trig.s_before), trig.ts + timedelta(seconds=trig.s_after)) ) 
+						)
 					)
 				trigs.append( trigCur )
 		return trigs
@@ -433,7 +472,7 @@ class Database:
 			)
 	
 	def isDup( self, ts ):
-		return ts in self.photoTsCache
+		return ts in self.lastTsPhotos
 		
 	def deleteExistingTriggerDuplicates( self ):
 		with self.dbLock, self.conn:
@@ -445,12 +484,19 @@ class Database:
 				else:
 					rowPrev = row
 		
-			chunkSize = 500
-			while duplicateIds:
-				ids = duplicateIds[:chunkSize]
-				self.conn.execute( 'DELETE FROM trigger WHERE id IN ({})'.format( ','.join('?'*len(ids)) ), ids )
-				del duplicateIds[:chunkSize]
+			self._deleteIds( 'trigger', duplicateIds )
 		
+	def deleteDuplicatePhotos( self ):
+		tsSeen = set()
+		duplicateIds = []
+		with self.dbLock, self.conn:
+			for jpgId, ts in self.conn.execute( 'SELECT id,ts FROM photo ORDER BY ts DESC' ):
+				if ts and ts not in tsSeen:
+					tsSeen.add( ts )
+				else:
+					duplicateIds.append( jpgId )
+			self._deleteIds( 'photo', duplicateIds )
+	
 	def cleanBetween( self, tsLower, tsUpper ):
 		if not tsLower and not tsUpper:
 			return
@@ -599,7 +645,7 @@ if __name__ == '__main__':
 		for row in d.conn.execute(qTriggers):
 			print( removeDiacritic(','.join( '{}'.format(v) for v in row )) )
 	
-	# Create existing duplicates all the triggers.
+	# Create existing duplicateIds all the triggers.
 	tsTriggers = d.conn.execute('SELECT {} FROM trigger'.format(','.join(d.triggerFieldsInput))).fetchall()
 	d.conn.executemany(
 		'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(d.triggerFieldsInput), ','.join('?'*len(d.triggerFieldsInput))),

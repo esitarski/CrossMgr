@@ -77,7 +77,7 @@ class CompositeCtrl( wx.Control ):
 		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond)
 		self.imageToScreenFactor = self.GetClientSize()[1] / self.imageHeight
 		self.compositeBitmap = None	
-		self.pointerTS = None		# On-screen reference
+		self.pointerTS = None		# On-screen reference line
 		
 		return self.compositeVBitmapWidth
 

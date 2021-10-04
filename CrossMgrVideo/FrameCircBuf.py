@@ -2,7 +2,7 @@ import types
 import datetime
 from bisect import bisect_left
 
-class CircAsFlat( object ):
+class CircAsFlat:
 	__slots__ = ('arr', 'iStart', 'iMax')
 
 	def __init__( self, arr, iStart, iMax ):
@@ -16,7 +16,7 @@ class CircAsFlat( object ):
 	def __len__( self ):
 		return self.iMax
 
-class FrameCircBuf( object ):
+class FrameCircBuf:
 	def __init__( self, bufSize = 75 ):
 		self.bufSize = bufSize
 		self.reset( bufSize )
@@ -32,11 +32,12 @@ class FrameCircBuf( object ):
 			t += dt
 		self.iStart = 0
 		self.times = times
-		self.frames = [None for i in range(bufSize)]
 		self.bufSize = bufSize
+		self.clear()
 
 	def clear( self ):
 		self.frames = [None for i in range(self.bufSize)]
+		self.tSet = set()	# Set of times in the circular buffer.
 		
 	def getT( self, i ):
 		return self.times[(i+self.iStart)%self.bufSize]
@@ -46,9 +47,12 @@ class FrameCircBuf( object ):
 
 	def append( self, t, frame ):
 		''' Replace the oldest frame and time. '''
-		if frame is not None:
+		if frame is not None and t not in self.tSet:
 			iStart = self.iStart
+			self.tSet.discard( self.times[iStart] )
 			self.times[iStart] = t
+			self.tSet.add( t )
+			
 			self.frames[iStart] = frame
 			self.iStart = (iStart + 1) % self.bufSize
 

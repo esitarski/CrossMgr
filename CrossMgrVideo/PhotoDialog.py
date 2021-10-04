@@ -201,14 +201,17 @@ class PhotoPanel( wx.Panel ):
 
 	@property
 	def jpg( self ):
-		return None if self.iJpg is None else self.tsJpg[self.iJpg][1]
+		if self.iJpg is None or not self.tsJpg:
+			return None
+		self.iJpg = max( 0, min( len(self.tsJpg)-1, self.iJpg ) )
+		return self.tsJpg[self.iJpg][1]
 
 	@property
 	def ts( self ):
 		return None if self.iJpg is None else self.tsJpg[self.iJpg][0]
 		
 	def set( self, iJpg, triggerInfo, tsJpg, fps=25, editCB=None ):
-		self.iJpg = iJpg
+		self.iJpg = max( 0, min(iJpg or 0, (len(tsJpg)-1) if tsJpg else 0) )
 		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
 		self.fps = fps
@@ -261,12 +264,16 @@ class PhotoPanel( wx.Panel ):
 	
 	def playNextFrame( self ):
 		if self.keepPlayingForward:
-			self.changeFrame( 1 )
 			if self.iJpg < len(self.tsJpg)-1:
-				wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
-			else:
-				self.iJpg = 0
-				wx.CallLater( 700, self.playNextFrame )
+				self.changeFrame( 1 )
+				try:
+					wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
+					return
+				except IndexError:
+					pass
+			
+			self.iJpg = 0
+			wx.CallLater( 700, self.playNextFrame )
 	
 	def play( self ):
 		self.playStop()
@@ -277,12 +284,16 @@ class PhotoPanel( wx.Panel ):
 		
 	def playPrevFrame( self ):
 		if self.keepPlayingReverse:
-			self.changeFrame( -1 )
 			if self.iJpg > 0:
-				wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
-			else:
-				self.iJpg = len(self.tsJpg)
-				wx.CallLater( 700, self.playPrevFrame )
+				self.changeFrame( -1 )
+				try:
+					wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
+					return
+				except IndexError:
+					pass
+			
+			self.iJpg = len(self.tsJpg) - 1
+			wx.CallLater( 700, self.playPrevFrame )
 	
 	def playReverse( self ):
 		self.playStop()
@@ -301,7 +312,7 @@ class PhotoPanel( wx.Panel ):
 	def playForwardToEnd( self ):
 		self.playStop()
 		if self.tsJpg:
-			self.iJpg = len(self.tsJpg)
+			self.iJpg = len(self.tsJpg) - 1
 			self.changeFrame( 1 )
 		
 	def clear( self, playStop=True ):

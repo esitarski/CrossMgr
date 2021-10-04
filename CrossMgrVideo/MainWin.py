@@ -1589,7 +1589,7 @@ class MainWin( wx.Frame ):
 				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
 			self.db.cleanBetween( tsLower, tsUpper )
 			if vacuum:
-				self.db.vacuum()
+				GlobalDatabase().vacuum()
 			wx.CallAfter( self.finishStrip.Clear )
 			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()

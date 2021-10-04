@@ -609,7 +609,7 @@ class FinishStripPanel( wx.Panel ):
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 
 	def onDirection( self, event ):
-		self.SetLeftToRight( event.GetInt() == 1 ) 
+		self.SetLeftToRight( event.GetInt() == 1 )		
 		event.Skip()
 		
 	def onChangeSpeed( self, event=None ):
