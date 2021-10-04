@@ -133,7 +133,7 @@ class Database:
 				)
 				
 			self.deleteExistingTriggerDuplicates()
-			self.deleteDuplicatePhotos()
+			# self.deleteDuplicatePhotos()
 		else:
 			self.lastTsPhotos = set()
 		

@@ -274,8 +274,7 @@ class PhotoPanel( wx.Panel ):
 		self.playStop()
 		if self.tsJpg:
 			self.keepPlayingForward = True
-			if self.iJpg < len(self.tsJpg)-1:
-				wx.CallLater( int((self.tsJpg[self.iJpg+1][0] - self.tsJpg[self.iJpg][0]).total_seconds()*1000.0), self.playNextFrame )
+			self.playNextFrame()
 		
 	def playPrevFrame( self ):
 		if self.keepPlayingReverse:
@@ -289,8 +288,7 @@ class PhotoPanel( wx.Panel ):
 		self.playStop()
 		if self.tsJpg:
 			self.keepPlayingReverse = True
-			if self.iJpg > 0:
-				wx.CallLater( int((self.tsJpg[self.iJpg][0] - self.tsJpg[self.iJpg-1][0]).total_seconds()*1000.0), self.playPrevFrame )
+			self.playPrevFrame()
 		
 	def playStop( self ):
 		self.keepPlayingForward = self.keepPlayingReverse = False
