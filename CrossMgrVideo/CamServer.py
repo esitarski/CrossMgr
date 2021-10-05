@@ -8,6 +8,7 @@ from multiprocessing import Process, Pipe, Queue
 from threading import Thread, Timer
 from datetime import datetime, timedelta
 from FrameCircBuf import FrameCircBuf
+from FIFOCache import FIFOCacheSet
 
 now = datetime.now
 
@@ -51,7 +52,7 @@ class VideoCaptureManager:
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
-transmitFramesMax = 10
+transmitFramesMax = 16
 bufferSeconds = 8
 
 def EstimateQuerySeconds( ts, s_before, s_after, fps ):
@@ -76,7 +77,7 @@ def EstimateQuerySeconds( ts, s_before, s_after, fps ):
 
 def CamServer( qIn, pWriter, camInfo=None ):
 	sendUpdates = {}
-	tsSeen = set()
+	tsSeen = FIFOCacheSet( 60*60 )		# Cache of times that have already been written to the database.
 	camInfo = camInfo or {}
 	backlog = []
 	
@@ -94,9 +95,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			frameCount = 0
 			inCapture = False
 			doSnapshot = False
-			tsSeen.clear()
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
-			tsQuery = tsMax = now()
+			tsMax = now()
 			keepCapturing = True
 			secondsPerFrame = 1.0/30.0
 			
@@ -115,12 +115,12 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				ts = now()
 				if not ret:
 					break
-				if frame is not None:
-					fcb.append( ts, frame )
+				fcb.append( ts, frame )
 				
 				# Process all pending requests.
 				# Do this as quickly as possible so we can keep up with the camera's frame rate.
 				while True:
+					#-------- start of message processing loop --------#
 					try:
 						m = qIn.get_nowait()
 					except Empty:
@@ -134,10 +134,6 @@ def CamServer( qIn, pWriter, camInfo=None ):
 							Timer( (m['tStart'] - ts).total_seconds(), qIn.put, (m,) ).start()
 							continue
 						
-						if (ts - tsQuery).total_seconds() > bufferSeconds or len(tsSeen) > 5000:
-							tsSeen.clear()
-							
-						tsQuery = ts
 						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], m['tEnd'], tsSeen)) )
 						if m['tEnd'] > tsMax:
 							tsMax = m['tEnd']
@@ -149,10 +145,6 @@ def CamServer( qIn, pWriter, camInfo=None ):
 							Timer( secondsPerFrame*2.0 - (ts - m['t']).total_seconds(), qIn.put, (m,) ).start()
 							continue
 						
-						if (ts - tsQuery).total_seconds() > bufferSeconds or len(tsSeen) > 5000:
-							tsSeen.clear()
-							
-						tsQuery = ts
 						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFramesClosest(m['t'], m['closest_frames'], tsSeen)) )
 						if m['t'] > tsMax:
 							tsMax = m['t']
@@ -188,30 +180,37 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					
 					else:
 						assert False, 'Unknown Command'
+						
+					#--------- end of message processing loop ---------#
 				
+				# Camera info.
 				if retvals:
 					pWriterSend( {'cmd':'info', 'retvals':retvals} )
 					retvals = None
 				
-				if (tsMax > ts or inCapture) and frame is not None:
-					backlog.append( (ts, frame) )
+				# If inCapture, or the capture time is in the future, add the frame to the backlog.
+				if (tsMax > ts or inCapture) and ts not in tsSeen and frame is not None :
 					tsSeen.add( ts )
+					backlog.append( (ts, frame) )
 
-				# Don't send too many frames at a time.  We don't want to overwhelm the queue and lose frame rate.
+				# Send the frames to the database for writing.
+				# Don't send too many frames at a time so we don't overwhelm the queue and lose frame rate.
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
 					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )
+					del backlog[-transmitFramesMax:]
 						
 				# Send status messages.
 				for name, freq in sendUpdates.items():
 					if frameCount % freq == 0:
 						pWriterSend( {'cmd':'update', 'name':name, 'frame':frame} )
+						
+				# Send snapshot message.
 				if doSnapshot:
 					if frame is not None:
 						pWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':frame} )
 					doSnapshot = False
 						
-				del backlog[-transmitFramesMax:]
 				frameCount += 1
 				
 def getCamServer( camInfo=None ):

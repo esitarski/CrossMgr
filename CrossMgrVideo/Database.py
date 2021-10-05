@@ -4,9 +4,11 @@ import sys
 import time
 from datetime import datetime, timedelta
 import sqlite3
-import CVUtil
 from collections import namedtuple, defaultdict
 from threading import RLock
+
+import CVUtil
+from FIFOCache import FIFOCacheSet
 
 from queue import Queue, Empty
 
@@ -32,8 +34,6 @@ def _createTable( c, table, fields ):
 
 class Database:
 
-	UpdateSeconds = 10*60*60
-
 	triggerFieldsAll = (
 		'id','ts','s_before','s_after','ts_start','closest_frames','bib','first_name','last_name','team','wave','race_name',
 		'note','kmh','frames',
@@ -55,6 +55,9 @@ class Database:
 		except Exception:
 			pass
 		'''
+		
+		UpdateSeconds = 10	# Seconds into the past to track duplicate times.
+		self.lastTsPhotos = FIFOCacheSet( UpdateSeconds*60 )
 		
 		# Use the RLock so that we serialize writes ourselves.  This allows use to share the same sqlite3 instance between threads.
 		self.dbLock = RLock()
@@ -127,17 +130,13 @@ class Database:
 						('zoom_height', 'INTEGER', False, 0),		# Zoom height
 					)
 				)
-				self.lastTsPhotos = set( row[0] for row in self.conn.execute(
-						'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (now() - timedelta(seconds=self.UpdateSeconds), now())
-					)
-				)
+				
+				# Initialize the duplicate time cache.
+				for row in self.conn.execute( 'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (now() - timedelta(seconds=UpdateSeconds), now()) ):
+					self.lastTsPhotos.add( row[0] )
 				
 			self.deleteExistingTriggerDuplicates()
 			# self.deleteDuplicatePhotos()
-		else:
-			self.lastTsPhotos = set()
-		
-		self.lastUpdate = now() - timedelta(seconds=self.UpdateSeconds)
 		
 		self.tsJpgsKeyLast = None
 		self.tsJpgsLast = None
@@ -175,23 +174,16 @@ class Database:
 
 			if tsJpgs:
 				# Purge duplicate photos and photos with the same timestamp.
-				jpgSeen = set()
 				tsJpgsUnique = []
 				for ts, jpg in tsJpgs:
-					if ts and jpg and ts not in self.lastTsPhotos and jpg not in jpgSeen:
+					if ts and jpg and ts not in self.lastTsPhotos:
 						self.lastTsPhotos.add( ts )
-						jpgSeen.add( jpg )
 						tsJpgsUnique.append( (ts, jpg) )
 						
 				tsJpgs = tsJpgsUnique
 			
 			if tsJpgs:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
-		
-		if (now() - self.lastUpdate).total_seconds() > self.UpdateSeconds:
-			expired = now() - timedelta(seconds=self.UpdateSeconds)
-			self.lastTsPhotos = set( ts for ts in self.lastTsPhotos if ts > expired )
-			self.lastUpdate = now()
 	
 	def updateTriggerRecord( self, id, data ):
 		if data:
@@ -291,7 +283,8 @@ class Database:
 		with self.dbLock, self.conn:
 			tsJpgs = self._getPhotosPurgeDuplicateTS( *key )
 		
-		self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
+		if tsJpgs:
+			self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
 		return tsJpgs
 	
 	def getPhotosClosest( self, ts, closestFrames ):
@@ -585,13 +578,15 @@ def GlobalDatabase( fname=None ):
 		dbGlobal = Database( fname=fname )
 	return dbGlobal
 
-tsJpgs = []
-tsTriggers = []
+# Global write buffers.
+tsJpgs, tsTriggers = [], []
 def flush( db, triggerWriteCB = None ):
+	# Write the triggers and photos to the database.
 	if db:
 		db.write( tsTriggers, tsJpgs )
 		if tsTriggers and triggerWriteCB:
 			triggerWriteCB()
+	# Cleanup the buffers.
 	del tsTriggers[:]
 	del tsJpgs[:]
 		
