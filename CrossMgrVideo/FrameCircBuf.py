@@ -1,20 +1,5 @@
 import types
 import datetime
-from bisect import bisect_left
-
-class CircAsFlat:
-	__slots__ = ('arr', 'iStart', 'iMax')
-
-	def __init__( self, arr, iStart, iMax ):
-		self.arr = arr
-		self.iStart = iStart
-		self.iMax = iMax
-		
-	def __getitem__( self, i ):
-		return self.arr[(i + self.iStart) % self.iMax]
-		
-	def __len__( self ):
-		return self.iMax
 
 class FrameCircBuf:
 	def __init__( self, bufSize = 75 ):
@@ -53,30 +38,61 @@ class FrameCircBuf:
 			
 			self.iStart = (iStart + 1) % self.bufSize
 
-	def getTimeFrames( self, tStart, tEnd, tsSeen ):
+	def bisect_left( self, t ):
 		iStart = self.iStart
 		bufSize = self.bufSize
+		iLeft, iRight = 0, bufSize
+		times = self.times
+		while iRight - iLeft > 1:
+			iMid = (iRight + iLeft) >> 1
+			if t < times[(iMid+iStart) % bufSize]:
+				iRight = iMid
+			else:
+				iLeft = iMid
+		return iLeft
 		
-		i = bisect_left( CircAsFlat(self.times, iStart, bufSize), tStart )
-		if i >= bufSize:
-			return [], []
+	def getTimeFrames( self, tStart, tEnd, tsSeen ):
+		bufSize = self.bufSize
+		iStart = self.iStart
+		
 		times, frames = [], []
-		for j in range(i, bufSize):
-			k = (j+iStart)%bufSize
-			t = self.times[k]
-			if t > tEnd:
-				break
-			if t not in tsSeen:
-				times.append( t )
-				frames.append( self.frames[k] )
-				tsSeen.add( t )
+		if self.times[(iStart + bufSize-1) % bufSize] <= tEnd:
+			# The last time in the circular buffer is within the time range.
+			# Collect the buffer elements in reverse order.
+			for j in range(bufSize-1, -1, -1):
+				k = (j+iStart)%bufSize
+				t = self.times[k]
+				if t < tStart:
+					break
+				if t not in tsSeen:
+					times.append( t )
+					frames.append( self.frames[k] )
+					tsSeen.add( t )
+			
+			times.reverse()		
+			frames.reverse()
+		else:	
+			# Use binary search to find the start of the time range.
+			# Collect the buffer elements in forward order.
+			i = self.bisect_left( tStart )
+			if i < bufSize:
+				for j in range(i, bufSize):
+					k = (j+iStart)%bufSize
+					t = self.times[k]
+					if t > tEnd:
+						break
+					if t not in tsSeen:
+						times.append( t )
+						frames.append( self.frames[k] )
+						tsSeen.add( t )
+		
 		return times, frames
 		
 	def getTimeFramesClosest( self, t, closestFrames, tsSeen ):
+		i = self.bisect_left( t )
+		
 		iStart = self.iStart
 		bufSize = self.bufSize
-		
-		i = bisect_left( CircAsFlat(self.times, iStart, bufSize), t )
 		times, frames = [], []
 		for j in range(max(0, i-2), min(bufSize, i+2)):
 			k = (j+iStart)%bufSize
