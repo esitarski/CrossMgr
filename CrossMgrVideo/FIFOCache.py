@@ -1,30 +1,38 @@
-from collections import deque
+from collections import OrderedDict
 
-class FIFOCacheSet:
-	'''
-		Cache that only keeps the most recent maxlen entries.
-	'''
+class FIFOCacheSet(OrderedDict):
 	def __init__( self, maxlen=64 ):
+		super().__init__()
 		self.maxlen = maxlen
-		self.c = set()
-		self.d = deque()
-	
-	def __contains__( self, e ):
-		return e in self.c
 		
-	def clear( self ):
-		self.c.clear()
-		self.d.clear()
+	def add(self, key):
+		self[key] = True
+		self.move_to_end( key )		# Do this in case this item was already in the cache.
+		while len(self) > self.maxlen:
+			self.popitem( False )	# Pop from the front.
+
+	def remove(self, key):
+		del self[key]
 		
-	def add( self, e ):
-		if len(self.d) == self.maxlen:
-			self.c.discard( self.d.popleft() )
-		self.c.add( e )
-		self.d.append( e )
-		
+	def discard(self, key):
+		if key in self:
+			del self[key]
+
+class FIFOCacheDict( OrderedDict ):
+	def __init__(self, maxlen):
+		super().__init__()
+		self.maxlen = maxlen
+
+	def __setitem__(self, key, value):
+		super().__setitem__( key, value )
+		self.move_to_end( key )		# Do this in case this item was already in the cache.
+		while len(self) > self.maxlen:
+			self.popitem( False )	# Pop from the front.
+
 if __name__ == '__main__':
-	s = FIFOCacheSet( 5 )
+	s = FIFOCacheSet( 3 )
 	for i in range(20):
+		print( s )
 		s.add( i )
 		assert i in s
-		print( s.d, s.c )
+		print( s )

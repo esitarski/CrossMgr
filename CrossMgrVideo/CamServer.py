@@ -19,7 +19,6 @@ def getCameraUsb():
 		if cap.isOpened():
 			cameraUsb.append( usb )
 		cap.release()
-	
 	return cameraUsb
 
 def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
@@ -40,7 +39,7 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 		for pname, pindex, pvalue in properties:
 			retvals.append( (pname, pindex, cap.set(pindex, pvalue)) )
 			
-		# Then, get all the attribute values.
+		# Then, get all the attribute values from the capture object.
 		for i, (pname, pindex, pvalue) in enumerate(properties):
 			retvals[i] += tuple( [cap.get(pindex)] )
 	

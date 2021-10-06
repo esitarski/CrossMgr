@@ -11,7 +11,7 @@ Video can be triggered manually, or automatically by CrossMgr.
 __CrossMgrVideo__ should work with any USB camera that supports [MJPEG](https://en.wikipedia.org/wiki/Motion_JPEG).
 MJPEG is a broadly supported by webcams, security cameras and other digital cameras.
 
-The camera must be a USB camera and plug in with a USB cable (the built-in camera in the computer works too).
+The camera must be a USB camera that plugs in with a USB cable (the built-in camera in the computer works too).
 __CrossMgrVideo__ does not currently support IP cameras, that is, cameras without a USB cable that are connected to the network via a cable or wifi.
 
 ## Overview
@@ -61,11 +61,11 @@ You are also prompted for the resolution and frames per second of your camera (s
 
 #### Focus
 
-Opens a big window suitable for focusing the camera.  Also useful in the __Live Feed__ scenario to allow the camera operator to follow the action.
+Opens a big window suitable for focusing the camera.
 
 #### Reset Camera
 
-Allows the camera to be reset including the USB port, resolution and frames per second.
+Allows the camera to be reset including the USB port as well as other parameters:
 
 * __Camera USB__: The USB port of the camera.  CrossMgrVideo shows all the ports that have a camera connect to them.  Choose the port/camera you wish to use.  The computer's built-in camera (if present) is usually port 0.
 * __Camera Resolution__:  The resolution of the camera to use.  Use MAXxMAX for maximum resolution.  Check your camera specs for details on which resolutions are supported - some cameras can only support lower frame rates at the highest resolutions.
@@ -74,23 +74,25 @@ Allows the camera to be reset including the USB port, resolution and frames per 
 
 __Notes:__
 
-__Camera Resolution__ and __Frames per second__ are more like "hints".
+__Camera Resolution__ and __Frames per second__ often work like "hints" rather than specifications.
 
-For example, if you set __Camera Resolution__ to a value that exceeds your cameras capabilities, it will simply use highest resolution it has - not the one you set.
-Similarly, of you set __Frames per second__ to an unsupported value (or a value unsupported at that resolution), your camera will just perform as best as it can.
+For example, if you set __Camera Resolution__ to a value that exceeds your cameras capabilities, it may use the highest resolution it has - not the one you set.
+Similarly, of you set __Frames per second__ to an unsupported value (or a value unsupported at that resolution), your camera may use a fps lower than what you specified.
 
+In low light conditions, some cameras drop their frame rate.  This allows for a higher exposure time per frame, however, it can also lead to out-of-focus objects.  If you camera drops the frame rate, consider additional lighting.
 
+You can see the actual camera parameters and frames per second (fps) at the top of the screen.
 
 #### Manage Database
 
 Opens a dialog to manage the database including:
 
-* Location and size of the database
+* File location and size of the database
 * Deleting Triggers and Photos from the database
-* "Vacuuming" the database to reduce the database file size
+* "Vacuuming" the database to reduce the file size after deleting records.
 
 Deleting items from the database will not reduce the file size.  However,
-"holes" in the database will be reused by future database activity.
+"holes" in the file will be reused by future database records.
 
 To actually reduce the database size, select the "Vacuum" option.
 Warning - this can take a few minutes.
@@ -118,11 +120,11 @@ __CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it ke
 
 #### Snapshot
 
-Takes a single snapshot and save it to the database.
+Takes a single snapshot and saves it to the database.
 
 #### Auto Capture
 
-When pressed, captures frames as specified by the __Auto Capture__ dialog described above.
+Captures frames as specified by the __Auto Capture__ dialog described above.
 
 #### Capture
 

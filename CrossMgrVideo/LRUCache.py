@@ -1,42 +1,44 @@
-import collections
+from collections import OrderedDict
 
-class LRUCache( object ):
-	def __init__(self, capacity):
-		self.capacity = capacity
-		self.cache = collections.OrderedDict()
+class LRUCache( OrderedDict ):
+	def __init__(self, maxlen):
+		super().__init__()
+		self.maxlen = maxlen
 
 	def __getitem__(self, key):
-		# Reinsert to reset the insert order.
-		value = self.cache.pop(key)
-		self.cache[key] = value
-		return value
+		# Move the item to the end to reset the MRU (most recently used).
+		self.move_to_end( key )
+		return super().__getitem__(key)
+
+	def get( self, key, default=None ):
+		if key in self:
+			# Call our own getitem to reset the MRU.
+			return self.__getitem__(key)
+		return default
 
 	def __setitem__(self, key, value):
-		if key in self.cache:
-			self.cache.pop(key)
-		elif len(self.cache) >= self.capacity:
-			self.cache.popitem(False)
-		self.cache[key] = value
+		if key not in self:
+			# Add this key:value to the dict.
+			# Reset the MRU.
+			super().__setitem__( key, value )
+			
+			# If we are full, remove the LRU elements.
+			while len(self) > self.maxlen:
+				# Delete LRU items from the front.
+				# We can't call popitem().
+				# It calls __getitem__, and that calls move_to_end(), which messes up popitem().
+				# So we use next(iter(self.keys())).
+				del self[next(iter(self.keys()))]
+		else:
+			# Replace the existing value with the new one and MRU it.
+			super().__setitem__( key, value )
+			self.move_to_end( key )
 		
-	def __contains__( self, key ):
-		return key in self.cache
-		
-	def __delitem__( self, key ):
-		del self.cache[key]
-		
-	def __len__( self ):
-		return len( self.cache )
-		
-	def __getattr__( self, name ):
-		return getattr(self.cache, name)
-
 if __name__ == '__main__':
-	lru = LRUCache( 20 )
-	for i in range(30):
-		lru[i] = i
-	assert len(lru) == 20
-	assert sorted( lru.values() ) == list( v for v in range(10,30))
-	keys = list( lru.keys() )
-	print( keys )
-	values = list( lru.values() )
-	print( values )
+	s = LRUCache( 3 )
+	for i in range(20):
+		print( i, s )
+		s[i] = i
+		assert i in s
+		print( s, s.get(i) )
+
