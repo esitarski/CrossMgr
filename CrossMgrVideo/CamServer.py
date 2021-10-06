@@ -36,7 +36,7 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 		properties.append( ('frame_height', cv2.CAP_PROP_FRAME_HEIGHT, height) )
 		properties.append( ('fps', cv2.CAP_PROP_FPS, fps) )
 		
-		# Set all the attributes.
+		# Set all the camera attributes.
 		for pname, pindex, pvalue in properties:
 			retvals.append( (pname, pindex, cap.set(pindex, pvalue)) )
 			

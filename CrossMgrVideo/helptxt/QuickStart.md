@@ -6,6 +6,14 @@ Welcome to __CrossMgrVideo!__
 __CrossMgrVideo__ makes it easy to capture and analyze finish line video taken from inexpensive USB webcams.
 Video can be triggered manually, or automatically by CrossMgr.
 
+## Camera Compatability
+
+__CrossMgrVideo__ should work with any USB camera that supports [MJPEG](https://en.wikipedia.org/wiki/Motion_JPEG).
+MJPEG is a broadly supported by webcams, security cameras and other digital cameras.
+
+The camera must be a USB camera and plug in with a USB cable (the built-in camera in the computer works too).
+__CrossMgrVideo__ does not currently support IP cameras, that is, cameras without a USB cable that are connected to the network via a cable or wifi.
+
 ## Overview
 
 __CrossMgrVideo__ has two primary panes:
@@ -45,7 +53,7 @@ Check the __Trigger List__ for close finishes marked in red and make corrections
 When __CrossMgrVideo__ starts, you are prompted for the USB port and camera resolution.
 Device 0 is usually the built-in camera, Device 1 is usually the first USB camera available.
 
-You are also prompted for the resolution and frames per second of your camera.  Check your camera for its details.
+You are also prompted for the resolution and frames per second of your camera (see the Reset Camera section for details).
 
 ## Main Screen
 
@@ -58,6 +66,20 @@ Opens a big window suitable for focusing the camera.  Also useful in the __Live 
 #### Reset Camera
 
 Allows the camera to be reset including the USB port, resolution and frames per second.
+
+* __Camera USB__: The USB port of the camera.  CrossMgrVideo shows all the ports that have a camera connect to them.  Choose the port/camera you wish to use.  The computer's built-in camera (if present) is usually port 0.
+* __Camera Resolution__:  The resolution of the camera to use.  Use MAXxMAX for maximum resolution.  Check your camera specs for details on which resolutions are supported - some cameras can only support lower frame rates at the highest resolutions.
+* __Frames per second__:  The frames per second.  See notes below for more details.
+* __FourCC__:  The image encoding.  For maximum performance, set this to MJPG (the default).  If your camera is the rare one that doesn't support MJPG, set it to blank.
+
+__Notes:__
+
+__Camera Resolution__ and __Frames per second__ are more like "hints".
+
+For example, if you set __Camera Resolution__ to a value that exceeds your cameras capabilities, it will simply use highest resolution it has - not the one you set.
+Similarly, of you set __Frames per second__ to an unsupported value (or a value unsupported at that resolution), your camera will just perform as best as it can.
+
+
 
 #### Manage Database
 
@@ -75,14 +97,24 @@ Warning - this can take a few minutes.
 
 #### Config Auto Capture
 
-Opens a dialog to configure the __Auto Capture Time Interval__ defined by __Seconds Before__ and __Seconds After__.
+Opens a dialog to configure the how Auto Capture works.
+When the __AUTO CAPTURE__ button is pressed (or when __CrossMgrVideo__ is externally triggerd by __CrossMGr__), video frames are captured as follows:
 
-When the __AUTO CAPTURE__ button is pressed, it captures video during the __Auto Capture Time Interval__, then stops automatically.
+__Capture__:
 
-For example, say __Seconds Before__=0.5 and __Seconds After=2.0 and the __AUTO CAPTURE__ button is pressed at 14:07:21.0.
+* __by Seconds__:  specify the number of seconds before and after the trigger to capture (see below)
+* __Closest Frame to Trigger__:  capture the closest video frame to the trigger
+* __Closest 2 Frames to Trigger__:  capture the closest video two frames, before and after the trigger
+
+If Capture is __by Seconds__:
+
+* __Capture Seconds before Trigger__: seconds to capture before the trigger was pressed
+* __Capture Seconds after Trigger__: seconds to capture after the trigger was pressed
+
+For example, say __Capture Seconds before Trigger__=0.5 and __Capture Seconds after Trigger__=2.0 and the __AUTO CAPTURE__ button is pressed at 14:07:21.0.
 __CrossMgrVideo__ will capture video from 14:07:20.5 to 14:07:22.
 
-__CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it keeps a 10-second circular buffer 
+__CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it keeps a 10-second buffer 
 
 #### Snapshot
 
@@ -90,19 +122,14 @@ Takes a single snapshot and save it to the database.
 
 #### Auto Capture
 
-When pressed, captures frames for the time interval __Seconds Before__ to __Seconds After__ as configured in the dialog above.
-
-This is primarily intended when using CrossMgrVideo to follow live-action track racing.
-When you see potential inteference, pressing the __AUTO CAPTURE__ button will save the frames before and after the incident for review.
-
-This is much faster than searching through video.
+When pressed, captures frames as specified by the __Auto Capture__ dialog described above.
 
 #### Capture
 
 Captures video frames as long as the __CAPTURE__ button is pressed.
-Useful for capturing traditional finishes.
+Useful for capturing finishes.
 
-Capture can also be triggered by a joystick button.  Capture starts when the joystick button is pressed and stops when it is released.
+Capture can also be triggered by a joystick.  Capture starts when the top joystick button is pressed and stops when it is released.
 
 #### Images
 
