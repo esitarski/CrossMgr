@@ -25,7 +25,7 @@ class FIFOCacheDict( OrderedDict ):
 
 	def __setitem__(self, key, value):
 		super().__setitem__( key, value )
-		self.move_to_end( key )		# Do this in case this item was already in the cache.
+		self.move_to_end( key )		# Set this item to MRU.
 		while len(self) > self.maxlen:
 			self.popitem( False )	# Pop from the front.
 
