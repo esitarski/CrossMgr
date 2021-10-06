@@ -30,6 +30,8 @@ def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
 		properties = []
 		if fourcc and len(fourcc) == 4:
 			properties.append( ('fourcc', cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fourcc) ) )
+			if fourcc.upper() == 'MJPG':
+				properties.append( ('convert_rgb', cv2.CAP_PROP_CONVERT_RGB, 0) )
 		properties.append( ('frame_width', cv2.CAP_PROP_FRAME_WIDTH, width) )
 		properties.append( ('frame_height', cv2.CAP_PROP_FRAME_HEIGHT, height) )
 		properties.append( ('fps', cv2.CAP_PROP_FPS, fps) )
@@ -99,6 +101,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 			tsMax = now()
 			keepCapturing = True
 			secondsPerFrame = 1.0/30.0
+			convert_rgb = True
 			
 			while keepCapturing:
 				# Read the frame.
@@ -115,6 +118,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				ts = now()
 				if not ret:
 					break
+					
 				fcb.append( ts, frame )
 				
 				# Process all pending requests.
@@ -186,6 +190,11 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Camera info.
 				if retvals:
 					pWriterSend( {'cmd':'info', 'retvals':retvals} )
+					convert_rgb = True
+					for name, property_index, call_status, update_value in retvals:
+						if name == 'convert_rgb' and call_status and update_value == 0:
+							convert_rgb = False
+							break
 					retvals = None
 				
 				# If inCapture, or the capture time is in the future, add the frame to the backlog.
@@ -197,8 +206,9 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Don't send too many frames at a time so we don't overwhelm the queue and lose frame rate.
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
-					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-transmitFramesMax:] } )
-					del backlog[-transmitFramesMax:]
+					backlogTransmitFrames = transmitFramesMax * (5 if not convert_rgb else 1)	# If we are sending jpeg frames we can send more at a time.
+					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-backlogTransmitFrames:] } )
+					del backlog[-backlogTransmitFrames:]
 						
 				# Send status messages.
 				for name, freq in sendUpdates.items():

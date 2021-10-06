@@ -2,9 +2,10 @@ import wx
 import wx.adv
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
-import sys
 import os
 import re
+import cv2
+import sys
 import time
 import math
 import json
@@ -17,6 +18,7 @@ import platform
 import tempfile
 import threading
 import webbrowser
+import numpy as np
 from queue import Queue, Empty
 
 from datetime import datetime, timedelta, time
@@ -1420,6 +1422,9 @@ class MainWin( wx.Frame ):
 			nonlocal lastPrimaryTime, primaryCount
 			
 			name, lastFrame = msg['name'], msg['frame']
+			if lastFrame is not None and lastFrame.shape[0] == 1:
+				lastFrame = cv2.imdecode( lastFrame, 1 )
+			
 			if name == 'primary':
 				if lastFrame is None:
 					wx.CallAfter( self.primaryBitmap.SetTestBitmap )

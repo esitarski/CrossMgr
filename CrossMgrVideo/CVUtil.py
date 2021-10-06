@@ -4,6 +4,9 @@ import cv2
 import numpy as np
 from LRUCache import LRUCache
 
+jpegFramesCacheMax = 30*60
+jpegFramesCache = LRUCache( jpegFramesCacheMax )
+
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
 	return int(w_src * scale), int(h_src * scale)
@@ -17,6 +20,21 @@ def getWidthHeight( o ):
 	if isinstance(o, bytes):			# Assume a jpg.
 		return frameToWidthHeight( jpegToFrame(o) )
 	return frameToWidthHeight( o )		# Assume a frame.
+	
+def toFrame( o ):
+	if isinstance(o, np.ndarray):
+		if o.shape[0] >= 2:
+			return o
+		frame = cv2.imdecode( o, cv2.IMREAD_COLOR )
+		jpegFramesCache[o.tobytes()] = frame
+		return frame
+	elif isinstance( o, bytes ):
+		return jpegToFrame( o )
+	elif isinstance( o, wx.Bitmap ):
+		return bitmapToFrame( o )
+	elif isinstance( o, wx.Image ):
+		return imageToFrame( o )
+	assert False, 'Unknown object type'
 
 def frameToBitmap( frame, w_req=None, h_req=None ):
 	h_frame, w_frame = frame.shape[0], frame.shape[1]
@@ -43,18 +61,18 @@ def resizeFrame( frame, w_req, h_req ):
 		frame = cv2.resize( frame, w_fix, h_fix )
 	return frame
 
-jpegFramesCacheMax = 30*60
-jpegFramesCache = LRUCache( jpegFramesCacheMax )
 def frameToJPeg( frame ):
-	jpeg = cv2.imencode('.jpg', frame)[1].tostring()
-	jpegFramesCache[bytes(jpeg)] = frame
+	if frame.shape[0] == 1:		# If this is already encoded, just convert to bytes.
+		return frame.tobytes()
+	jpeg = cv2.imencode('.jpg', frame)[1].tobytes()
+	jpegFramesCache[jpeg] = frame
 	return jpeg
 
 def jpegToFrame( jpeg ):
 	key = bytes( jpeg )
 	if key in jpegFramesCache:
 		return jpegFramesCache[key]
-	frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), 1)
+	frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
 	jpegFramesCache[key] = frame
 	return frame
 
@@ -90,7 +108,7 @@ def grayscaleFrame( frame ):
 def imageToFrame( image ):
 	s = io.BytesIO()
 	image.SaveFile( s, wx.BITMAP_TYPE_BMP )
-	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), 1 )
+	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), cv2.IMREAD_COLOR )
 
 def bitmapToFrame( bitmap ):
 	return imageToFrame( bitmap.ConvertToImage() )
