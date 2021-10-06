@@ -27,8 +27,8 @@ class LRUCache( OrderedDict ):
 				# Delete LRU items from the front.
 				# We can't call popitem().
 				# It calls __getitem__, and that calls move_to_end(), which messes up popitem().
-				# So we use next(iter(self.keys())).
-				del self[next(iter(self.keys()))]
+				# So we use next(iter(self)).
+				del self[next(iter(self))]
 		else:
 			# Replace the existing value with the new one and MRU it.
 			super().__setitem__( key, value )
@@ -37,8 +37,8 @@ class LRUCache( OrderedDict ):
 if __name__ == '__main__':
 	s = LRUCache( 3 )
 	for i in range(20):
-		print( i, s )
+		print( i, s, s.get(i) )
 		s[i] = i
 		assert i in s
-		print( s, s.get(i) )
+		print( i, s, s.get(i) )
 
