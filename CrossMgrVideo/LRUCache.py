@@ -4,6 +4,7 @@ class LRUCache( OrderedDict ):
 	'''
 		Items are set to MRU (Most Recently Used) on __setitem__ and __getitem__.
 		A __contains__ call does not reset the item to MRU.
+		__setitem__ is called by update() so this works correctly.
 	'''
 	def __init__(self, maxlen):
 		super().__init__()
@@ -31,14 +32,6 @@ class LRUCache( OrderedDict ):
 		# Use next(iter(self)) as it is safe.
 		if len(self) > self.maxlen:
 			del self[next(iter(self))]
-
-	def update( self, o ):
-		try:
-			for k,v in o.items():
-				self[k] = v
-		except AttributeError:
-			for k,v in o:
-				self[k] = v
 
 if __name__ == '__main__':
 	s = LRUCache( 3 )
