@@ -2,9 +2,8 @@ from collections import OrderedDict
 
 class LRUCache( OrderedDict ):
 	'''
-		An item is set to MRU (Most Recently Used) when it is inserted,
-		or when its value is changed.
-		Notes: __contains__ does not reset to MRU.
+		Items are set to MRU (Most Recently Used) on __setitem__ and __getitem__.
+		A __contains__ call does not reset the item to MRU.
 	'''
 	def __init__(self, maxlen):
 		super().__init__()
@@ -24,16 +23,23 @@ class LRUCache( OrderedDict ):
 	def __setitem__(self, key, value):
 		# Add this key:value to the dict.
 		super().__setitem__( key, value )
-		self.move_to_end( key )			# Set MRU if item already in the cache.
+		self.move_to_end( key )			# Set MRU if item is already in the cache.
 		
-		# If we are full, remove the LRU elements.
-		while len(self) > self.maxlen:
-			# Delete LRU items from the front.
-			# We can't call popitem().
-			# It calls __getitem__, and that calls move_to_end(), which messes up popitem().
-			# So we use next(iter(self)).
+		# If we are full, remove the LRU elements (the items on the front).
+		# We can't call popitem().
+		# It calls __getitem__, and that calls move_to_end(), which messes up popitem().
+		# Use next(iter(self)) as it is safe.
+		if len(self) > self.maxlen:
 			del self[next(iter(self))]
-		
+
+	def update( self, o ):
+		try:
+			for k,v in o.items():
+				self[k] = v
+		except AttributeError:
+			for k,v in o:
+				self[k] = v
+
 if __name__ == '__main__':
 	s = LRUCache( 3 )
 	for i in range(20):
@@ -42,5 +48,5 @@ if __name__ == '__main__':
 		assert i in s
 		print( i, s, s.get(i) )
 
-	print( '************' )
-	s[21] = 21
+	s.update( {i:i for i in range(30,40)} )
+	print( s )
