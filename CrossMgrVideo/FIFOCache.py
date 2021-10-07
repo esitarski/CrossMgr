@@ -23,8 +23,10 @@ class FIFOCacheSet(OrderedDict):
 		del self[key]
 		
 	def discard(self, key):
-		if key in self:
+		try:
 			del self[key]
+		except KeyError:
+			pass
 			
 	def __ior__( self, s ):
 		super().update( ((e,True) for e in s) )
