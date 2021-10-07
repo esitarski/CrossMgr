@@ -120,7 +120,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				if not ret:
 					break
 					
-				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than on each photo.
+				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
+				# we send a group of photos for a capture.
 				if frame.shape[0] != 1:
 					frame = simplejpeg.encode_jpeg( image=frame, colorspace='BGR' )
 				

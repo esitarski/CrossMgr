@@ -3,7 +3,6 @@ import os
 import time
 import bisect
 import subprocess
-from AddPhotoHeader import AddPhotoHeader
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
 from ComputeSpeed import ComputeSpeed
 from Database import GlobalDatabase
@@ -78,7 +77,6 @@ def PrintPhoto( parent, bitmap ):
 
 	printout.Destroy()	
 
-photoHeaderState = True
 class PhotoPanel( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, isDialog=False ):
 			
@@ -125,11 +123,6 @@ class PhotoPanel( wx.Panel ):
 		btnsizer.Add( self.playerForwardToEnd, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=0)
 		btnsizer.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
         
-		self.photoHeader = wx.CheckBox(self, label='Header')
-		self.photoHeader.SetValue( photoHeaderState )
-		self.photoHeader.Bind( wx.EVT_CHECKBOX, self.onPhotoHeader )
-		btnsizer.Add(self.photoHeader, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8)
-		
 		self.contrast = wx.ToggleButton( self, label='Contrast')
 		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
@@ -358,27 +351,6 @@ class PhotoPanel( wx.Panel ):
 	def onBrightness( self, event ):
 		pass
 	
-	def onPhotoHeader( self, event=None ):
-		global photoHeaderState
-		photoHeaderState = self.photoHeader.GetValue()
-		self.SetBitmap()
-	
-	def addPhotoHeaderToBitmap( self, bitmap ):
-		if not photoHeaderState:
-			return bitmap
-		
-		return AddPhotoHeader(
-			bitmap,
-			ts				= self.triggerInfo['ts'],
-			bib				= self.triggerInfo['bib'],
-			first_name		= self.triggerInfo['first_name'],
-			last_name		= self.triggerInfo['last_name'],
-			team			= self.triggerInfo['team'],
-			race_name		= self.triggerInfo['race_name'],
-			kmh				= self.kmh,
-			mph				= self.mph,
-		)
-		
 	def getPhoto( self ):
 		if self.jpg is None:
 			return None
@@ -391,7 +363,7 @@ class PhotoPanel( wx.Panel ):
 		if self.grayscale.GetValue():
 			frame = CVUtil.grayscaleFrame( frame )
 		
-		return self.addPhotoHeaderToBitmap( CVUtil.frameToBitmap(frame) )
+		return CVUtil.frameToBitmap(frame)
 	
 	def drawCallback( self, dc, width, height ):
 		if self.jpg is None:
@@ -440,7 +412,6 @@ class PhotoPanel( wx.Panel ):
 		
 		computeSpeed = ComputeSpeed( self, size=self.GetSize() )
 		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( self.tsJpg, i1, i2, self.triggerInfo['ts_start'] )
-		self.onPhotoHeader()
 	
 	def onPrint( self, event ):
 		self.playStop()

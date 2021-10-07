@@ -183,7 +183,7 @@ class Database:
 				tsJpgs = tsJpgsUnique
 			
 			if tsJpgs:
-				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgs )
+				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgsUnique )
 	
 	def updateTriggerRecord( self, id, data ):
 		if data:
@@ -609,7 +609,7 @@ def DBWriter( q, triggerWriteCB=None, fname=None ):
 			doFlush = False
 			if not db.isDup( v[1] ):
 				# If the photo is "bytes" it is already in jpeg encoding.
-				# If it is a numpy array, it needs to be encoded before writing to the database.
+				# Otherwise it is a numpy array and needs to be encoded before writing to the database.
 				tsJpgs.append( (v[1], sqlite3.Binary(v[2] if isinstance(v[2], bytes) else CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
 			tsTriggers.append( v[1] )
