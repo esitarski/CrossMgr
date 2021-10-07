@@ -583,7 +583,7 @@ def GlobalDatabase( fname=None ):
 # Global write buffers.
 tsJpgs, tsTriggers = [], []
 def flush( db, triggerWriteCB = None ):
-	# Write the triggers and photos to the database.
+	# Write all outstanding triggers and photos to the database.
 	if db:
 		db.write( tsTriggers, tsJpgs )
 		if tsTriggers and triggerWriteCB:
@@ -608,7 +608,9 @@ def DBWriter( q, triggerWriteCB=None, fname=None ):
 		if v[0] == 'photo':
 			doFlush = False
 			if not db.isDup( v[1] ):
-				tsJpgs.append( (v[1], sqlite3.Binary(CVUtil.frameToJPeg(v[2]))) )
+				# If the photo is "bytes" it is already in jpeg encoding.
+				# If it is a numpy array, it needs to be encoded before writing to the database.
+				tsJpgs.append( (v[1], sqlite3.Binary(v[2] if isinstance(v[2], bytes) else CVUtil.frameToJPeg(v[2]))) )
 		elif v[0] == 'trigger':
 			tsTriggers.append( v[1] )
 		elif v[0] == 'kmh':

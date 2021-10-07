@@ -3,6 +3,7 @@ import cv2
 import sys
 import time
 import platform
+import simplejpeg
 from queue import Empty
 from multiprocessing import Process, Pipe, Queue
 from threading import Thread, Timer
@@ -113,11 +114,17 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					except KeyboardInterrupt:
 						return
 				
-				# Add the frame to the circular buffer.
+				# Get the closest time to the read.
 				ts = now()
+				
 				if not ret:
 					break
 					
+				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than on each photo.
+				if frame.shape[0] != 1:
+					frame = simplejpeg.encode_jpeg( image=frame, colorspace='BGR' )
+				
+				# Add the frame to the circular buffer.
 				fcb.append( ts, frame )
 				
 				# Process all pending requests.

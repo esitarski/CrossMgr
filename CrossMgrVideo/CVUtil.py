@@ -2,6 +2,7 @@ import wx
 import io
 import cv2
 import numpy as np
+import simplejpeg
 from LRUCache import LRUCache
 
 jpegFramesCacheMax = 30*60
@@ -25,7 +26,9 @@ def toFrame( o ):
 	if isinstance(o, np.ndarray):
 		if o.shape[0] >= 2:
 			return o
-		frame = cv2.imdecode( o, cv2.IMREAD_COLOR )
+		#frame = cv2.imdecode( o, cv2.IMREAD_COLOR )
+		frame = simplejpeg.decode_jpeg( data, colorspace='BGR' )
+
 		jpegFramesCache[o.tobytes()] = frame
 		return frame
 	elif isinstance( o, bytes ):
@@ -64,16 +67,17 @@ def resizeFrame( frame, w_req, h_req ):
 def frameToJPeg( frame ):
 	if frame.shape[0] == 1:		# If this is already encoded, just convert to bytes.
 		return frame.tobytes()
-	jpeg = cv2.imencode('.jpg', frame)[1].tobytes()
+	# jpeg = cv2.imencode('.jpg', frame)[1].tobytes()
+	jpeg = simplejpeg.encode_jpeg( image=frame, colorspace='BGR' )
 	jpegFramesCache[jpeg] = frame
 	return jpeg
 
 def jpegToFrame( jpeg ):
-	key = bytes( jpeg )
-	if key in jpegFramesCache:
-		return jpegFramesCache[key]
-	frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
-	jpegFramesCache[key] = frame
+	if jpeg in jpegFramesCache:
+		return jpegFramesCache[jpeg]
+	# frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
+	frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
+	jpegFramesCache[jpeg] = frame
 	return frame
 
 def jpegToImage( jpeg ):
@@ -82,21 +86,11 @@ def jpegToImage( jpeg ):
 def jpegToBitmap( jpeg ):
 	return frameToBitmap(jpegToFrame(jpeg))
 	
-def adjustGammaFrame( frame, gamma=1.0 ):
-	# build a lookup table mapping the pixel values [0, 255] to
-	# their adjusted gamma values
-	invGamma = 1.0 / gamma
-	table = np.array([((i / 255.0) ** invGamma) * 255
-		for i in np.arange(0, 256)]).astype("uint8")
-
-	# apply gamma correction using the lookup table
-	return cv2.LUT(frame, table)
-
 def adjustContrastFrame( frame ):
 	frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
 	# equalize the histogram of the Y channel
 	frame_yuv[:,:,0] = cv2.equalizeHist(frame_yuv[:,:,0])
-	# convert the YUV image back to RGB format
+	# convert the YUV image back to BGR format
 	return cv2.cvtColor(frame_yuv, cv2.COLOR_YUV2BGR)
 
 def sharpenFrame( frame ):
@@ -108,7 +102,7 @@ def grayscaleFrame( frame ):
 def imageToFrame( image ):
 	s = io.BytesIO()
 	image.SaveFile( s, wx.BITMAP_TYPE_BMP )
-	return cv2.imdecode( np.fromstring(s.getvalue(), dtype='B'), cv2.IMREAD_COLOR )
+	return cv2.imdecode( np.frombuffer(s.getvalue(), dtype='B'), cv2.IMREAD_COLOR )
 
 def bitmapToFrame( bitmap ):
 	return imageToFrame( bitmap.ConvertToImage() )
@@ -116,9 +110,6 @@ def bitmapToFrame( bitmap ):
 def bitmapToJPeg( bitmap ):
 	return frameToJPeg(bitmapToFrame(bitmap))
 	
-def adjustGammaImage( image, gamma=1.0 ):
-	return frameToImage( adjustGammaFrame(imageToFrame(image), gamma) )
-
 def adjustContrastImage( image ):
 	return frameToImage( adjustContrastFrame(imageToFrame(image)) )
 
