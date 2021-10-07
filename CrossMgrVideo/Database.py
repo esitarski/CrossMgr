@@ -131,12 +131,12 @@ class Database:
 					)
 				)
 				
-				# Initialize the duplicate time cache.
+				# Initialize the duplicate time cache to the last photos.
 				for row in self.conn.execute( 'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (now() - timedelta(seconds=UpdateSeconds), now()) ):
 					self.lastTsPhotos.add( row[0] )
 				
 			self.deleteExistingTriggerDuplicates()
-			# self.deleteDuplicatePhotos()
+			# self.deleteAllDuplicatePhotos()
 		
 		self.tsJpgsKeyLast = None
 		self.tsJpgsLast = None
@@ -256,7 +256,8 @@ class Database:
 				yield ts, jpgId
 			else:
 				duplicateIds.append( jpgId )
-		self._deleteIds( 'photo', duplicateIds )
+		# For now, just filter out duplicates without removing them from the database.
+		# self._deleteIds( 'photo', duplicateIds )
 		
 	def _getPhotosPurgeDuplicateTS( self, tsLower, tsUpper ):
 		tsJpgs = []
@@ -268,7 +269,8 @@ class Database:
 				tsJpgs.append( (ts, jpg) )
 			else:
 				duplicateIds.append( jpgId )
-		self._deleteIds( 'photo', duplicateIds )
+		# For now, just filter out duplicates without removing them from the database.
+		# self._deleteIds( 'photo', duplicateIds )
 		return tsJpgs
 		
 	def _getPhotoCount( self, tsLower, tsUpper ):
@@ -479,7 +481,7 @@ class Database:
 		
 			self._deleteIds( 'trigger', duplicateIds )
 		
-	def deleteDuplicatePhotos( self ):
+	def deleteAllDuplicatePhotos( self ):
 		tsSeen = set()
 		duplicateIds = []
 		with self.dbLock, self.conn:

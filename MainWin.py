@@ -1409,7 +1409,8 @@ class MainWin( wx.Frame ):
 	
 	def menuCopyLogFileToClipboard( self, event ):
 		try:
-			logData = open(redirectFileName).read()
+			with open(redirectFileName) as f:
+				logData = f.read()
 		except IOError:
 			Utils.MessageOK(self, _("Unable to open log file."), _("Error"), wx.ICON_ERROR )
 			return

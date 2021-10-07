@@ -433,53 +433,55 @@ class MainWin( wx.Frame ):
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
+		
+		#-------------------------------------------
 
-		ID_MENU_RESETCAMERA = wx.NewIdRef()
-		ID_MENU_FOCUS = wx.NewIdRef()
-		ID_MENU_CONFIGAUTOCAPTURE = wx.NewIdRef()
-		ID_MENU_MANAGEDATABASE = wx.NewIdRef()
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
 		if 'WXMAC' in wx.Platform:
 			self.appleMenu = self.menuBar.OSXGetAppleMenu()
 			self.appleMenu.SetTitle("CrossMgrVideo")
-
 			self.appleMenu.Insert(0, wx.ID_ABOUT, "&About")
-
 			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
-
-			self.editMenu = wx.Menu()
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_RESETCAMERA,"R&eset Camera"))
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_FOCUS,"&Focus"))
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_CONFIGAUTOCAPTURE,"&Configure Autocapture"))
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_MANAGEDATABASE,"&Manage Database"))
-
-			self.Bind(wx.EVT_MENU, self.resetCamera, id=ID_MENU_RESETCAMERA)
-			self.Bind(wx.EVT_MENU, self.onFocus, id=ID_MENU_FOCUS)
-			self.Bind(wx.EVT_MENU, self.autoCaptureConfig, id=ID_MENU_CONFIGAUTOCAPTURE)
-			self.Bind(wx.EVT_MENU, self.manageDatabase, id=ID_MENU_MANAGEDATABASE)
-			self.menuBar.Append(self.editMenu, "&Edit")
-
 		else:
 			self.fileMenu = wx.Menu()
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_RESETCAMERA,"R&eset Camera"))
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_FOCUS,"&Focus"))
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_CONFIGAUTOCAPTURE,"&Configure Autocapture"))
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_MANAGEDATABASE,"&Manage Database"))
-			self.fileMenu.Append(wx.ID_EXIT)
-			self.Bind(wx.EVT_MENU, self.resetCamera, id=ID_MENU_RESETCAMERA)
-			self.Bind(wx.EVT_MENU, self.onFocus, id=ID_MENU_FOCUS)
-			self.Bind(wx.EVT_MENU, self.autoCaptureConfig, id=ID_MENU_CONFIGAUTOCAPTURE)
-			self.Bind(wx.EVT_MENU, self.manageDatabase, id=ID_MENU_MANAGEDATABASE)
+			item = self.fileMenu.Append( wx.ID_EXIT, "Exit", "Exit CrossMgrVideo" )
 			self.Bind(wx.EVT_MENU, self.onCloseWindow, id=wx.ID_EXIT)
 			self.menuBar.Append(self.fileMenu, "&File")
-			self.helpMenu = wx.Menu()
-			self.helpMenu.Insert(0, wx.ID_ABOUT, "&About")
-			self.helpMenu.Insert(1, wx.ID_HELP, "&Help")
-			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
-			self.Bind(wx.EVT_MENU, self.onHelp, id=wx.ID_HELP)
-			self.menuBar.Append(self.helpMenu, "&Help")
 
-		self.SetMenuBar(self.menuBar)
+		#-------------------------------------------
+		self.toolsMenu = wx.Menu()
+		
+		item = self.toolsMenu.Append( wx.ID_ANY, "R&eset Camera", "Reset the camera configuration" )
+		self.Bind(wx.EVT_MENU, self.resetCamera, item )
+		
+		item = self.toolsMenu.Append( wx.ID_ANY, "&Focus", "Large window to focus the camera" )
+		self.Bind(wx.EVT_MENU, self.onFocus, item )
+
+		item = self.toolsMenu.Append( wx.ID_ANY, "&Configure Autocapture", "Configure Autocapture parameters" )
+		self.Bind(wx.EVT_MENU, self.autoCaptureConfig, item )
+
+		item = self.toolsMenu.Append( wx.ID_ANY, "&Manage Database", "Manage the database" )
+		self.Bind(wx.EVT_MENU, self.manageDatabase, item )
+		
+		self.toolsMenu.AppendSeparator()
+		item = self.toolsMenu.Append( wx.ID_ANY, "Copy &Log File to Clipboard", "Copy Log File to Clipboard" )
+		self.Bind(wx.EVT_MENU, self.copyLogFileToClipboard, item )
+
+		self.menuBar.Append(self.toolsMenu, "&Tools")
+
+		#-------------------------------------------
+		if 'WXMAC' not in wx.Platform:
+			self.helpMenu = wx.Menu()
+			item = self.helpMenu.Append( wx.ID_ABOUT, "&About", "About CrossMgrVideo" )
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, item )
+			
+			item = self.helpMenu.Append( wx.ID_HELP, "&Help", "CrossMgrVideo QuickHelp" )
+			self.Bind(wx.EVT_MENU, self.onHelp, item )
+
+			self.menuBar.Append(self.helpMenu, "Help")
+		#-------------------------------------------
+
+		self.SetMenuBar( self.menuBar )
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
@@ -783,7 +785,32 @@ class MainWin( wx.Frame ):
 		with DateSelectDialog( self, triggerDates ) as dlg:
 			if dlg.ShowModal() == wx.ID_OK and dlg.GetDate():
 				self.setQueryDate( dlg.GetDate() )
+
+	def copyLogFileToClipboard( self, event ):
+		logFileName = getLogFileName()
+		try:
+			with open(logFileName) as f:
+				logData = f.read()
+		except IOError:
+			with wx.MessageDialog(self, "Unable to open log file.", "Error", style=wx.OK|wx.ICON_ERROR) as dlg:
+				dlg.ShowModal()
+			return
 			
+		logData = logData.split( '\n' )
+		logData = logData[-1000:]
+		logData = '\n'.join( logData )
+		
+		dataObj = wx.TextDataObject()
+		dataObj.SetText( logData )
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( dataObj )
+			wx.TheClipboard.Close()
+			with wx.MessageDialog(self, '\n\n'.join( ("Log file copied to clipboard.", "You can now paste it into an email.") ), "Success", style=wx.OK) as dlg:
+				dlg.ShowModal()
+		else:
+			with wx.MessageDialog(self, "Unable to open the clipboard.", "Error", style=wx.OK|wx.ICON_ERROR) as dlg:
+				dlg.ShowModal()
+
 	def onQueryDateChanged( self, event ):
 		v = self.date.GetValue()
 		self.setQueryDate( datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) )
@@ -1667,6 +1694,9 @@ def disable_stdout_buffering():
 	os.dup2(temp_fd, fileno)
 	os.close(temp_fd)
 	sys.stdout = os.fdopen(fileno, "w", 0)
+	
+def getLogFileName():
+	return os.path.join(Utils.getHomeDir(), 'CrossMgrVideo.log')
 
 redirectFileName = None
 mainWin = None
@@ -1684,7 +1714,7 @@ def MainLoop():
 	mainWin = MainWin( None, title=AppVerName, size=(1000,500) )
 	
 	dataDir = Utils.getHomeDir()
-	redirectFileName = os.path.join(dataDir, 'CrossMgrVideo.log')
+	redirectFileName = getLogFileName()
 	
 	# Set up the log file.  Otherwise, show errors on the screen.
 	if __name__ == '__main__':
