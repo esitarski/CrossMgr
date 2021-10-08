@@ -8,6 +8,7 @@ from math import tan, radians
 from datetime import datetime, timedelta
 from bisect import bisect_left
 
+import Utils
 import CVUtil
 
 def formatTime( ts ):
@@ -290,20 +291,19 @@ class CompositeCtrl( wx.Control ):
 		if self.pointerTS is not None:
 			# Find the closest photo centered on the time.
 			ts = self.pointerTS + timedelta( seconds = (-1.0 if self.leftToRight else 1.0) * (self.imageWidth / (2 * self.imagePixelsPerSecond) ) )
-			i = bisect_left( tsJpgs, (ts, bytes()), 0, len(tsJpgs)-1 )
+			# Do a binary search to get us close to the required photo.
+			i = bisect_left( tsJpgs, (ts, b''), 0, len(tsJpgs)-1 )
 			tBest = sys.float_info.max
 			jpgBest = None
-			for j in range( max(0, i-2), min(len(tsJpgs), i+2) ):
+			# Do a small linear search to find the closest photo to the time.
+			for j in range( max(0, i-1), min(len(tsJpgs), i+1) ):
 				tCur = abs( (self.pointerTS - tsJpgs[j][0]).total_seconds() )
 				if tCur < tBest:
 					tBest = tCur
 					jpgBest = tsJpgs[j][1]
 					
 			if jpgBest is not None:
-				if self.filterContrast or self.filterSharpen or self.filterGrayscale:
-					bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
-				else:
-					bm = CVUtil.jpegToBitmap( jpgBest )
+				bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
 				lineWidth = 2
 				destHeight = round(height * 0.5)
 				destWidth = round((destHeight / bm.GetHeight()) * bm.GetWidth())
@@ -392,11 +392,12 @@ class CompositePanel( wx.Panel):
 		self.leftToRight.SetSelection( 0 )
 		self.leftToRight.Bind( wx.EVT_CHOICE, self.onLeftToRight )
 		
-		self.trig = wx.Button( self, label=('\u29BF TRG') )
+		self.trig = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
+		self.trig.SetToolTip( wx.ToolTip('Recenter on Trigger Time') )
 		self.trig.Bind( wx.EVT_BUTTON, lambda e: self.composite.SetTriggerTS(self.composite.triggerTS) )
 		
-		self.contrast = wx.ToggleButton( self, label=('Contrast') )
-		self.sharpen = wx.ToggleButton( self, label=('Sharpen') )
+		self.contrast  = wx.ToggleButton( self, label=('Contrast') )
+		self.sharpen   = wx.ToggleButton( self, label=('Sharpen') )
 		self.grayscale = wx.ToggleButton( self, label=('Grayscale') )
 		
 		self.contrast.Bind(		wx.EVT_TOGGLEBUTTON, lambda e: self.composite.SetFilters(contrast=e.IsChecked()) )

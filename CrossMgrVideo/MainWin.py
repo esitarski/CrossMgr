@@ -362,15 +362,17 @@ class AutoCaptureDialog( wx.Dialog ):
 		
 		gs.Add( wx.StaticText(self, label="Capture"), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
 		self.closestFrames = wx.Choice( self, choices=('by Seconds', 'Closest Frame to Trigger', 'Closest 2 Frames to Trigger') )
+		self.closestFrames.Bind( wx.EVT_CHOICE, self.onChoice )
 		gs.Add( self.closestFrames )
 		
-		fieldNames = ['Capture Seconds Before Trigger', 'Capture Seconds After Trigger']
+		fieldNames = ('Capture Seconds Before Trigger', 'Capture Seconds After Trigger')
+		self.labelFields = []
 		self.editFields = []
 		for f in fieldNames:
-			gs.Add( wx.StaticText(self, label=f), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-			e = wx.TextCtrl(self, size=(60,-1) )
-			gs.Add( e )
-			self.editFields.append(e)
+			self.labelFields.append( wx.StaticText(self, label=f) )
+			gs.Add( self.labelFields[-1], flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			self.editFields.append( wx.TextCtrl(self, size=(60,-1) ) )
+			gs.Add( self.editFields[-1] )
 			
 		sizer.Add( gs, flag=wx.ALL, border=4 )
 		
@@ -380,10 +382,18 @@ class AutoCaptureDialog( wx.Dialog ):
 		
 		self.SetSizerAndFit( sizer )
 	
+	def onChoice( self, event=None ):
+		enable = (self.closestFrames.GetSelection() == 0)
+		for w in self.labelFields:
+			w.Enable( enable )
+		for w in self.editFields:
+			w.Enable( enable )
+	
 	def set( self, s_before, s_after, closestFrames=0 ):
 		self.editFields[0].SetValue( '{:.2f}'.format(s_before) )
 		self.editFields[1].SetValue( '{:.2f}'.format(s_after) )
 		self.closestFrames.SetSelection( closestFrames )
+		self.onChoice()
 	
 	def get( self ):
 		def fixValue( v ):

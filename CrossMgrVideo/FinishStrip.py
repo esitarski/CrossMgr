@@ -521,7 +521,7 @@ class FinishStripPanel( wx.Panel ):
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
 		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
-		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
+		self.recenter.SetToolTip( wx.ToolTip('Recenter on Trigger Time') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
 		
 		self.photoView = wx.BitmapButton( self, bitmap=Utils.getBitmap('outline_photo_library_black_24dp.png') )
