@@ -58,6 +58,8 @@ class CompositeCtrl( wx.Control ):
 		if not self.compositeBitmap:
 			return
 		self.currentTS = self.tsFromPointer( event.GetX() )
+		self.xVLeftClick = self.xVLeft
+		self.xClickLeft = event.GetX()
 		self.Refresh()
 		event.Skip()
 		
@@ -65,6 +67,13 @@ class CompositeCtrl( wx.Control ):
 		if not self.compositeBitmap:
 			return
 		self.pointerTS = self.tsFromPointer( event.GetX() )
+		if self.scrollbar and event.Dragging():
+			dx = self.xClickLeft - event.GetX()
+			xV = self.xVLeftClick + dx / self.imageToScreenFactor
+			xS = round(xV * self.imageToScreenFactor)
+			if 0 <= xS < (self.scrollbar.GetRange() - self.scrollbar.GetThumbSize()):
+				self.scrollbar.SetThumbPosition( xS )
+				self.xVLeft = round(xV)
 		self.Refresh()
 				
 	def calculateCompositeBitmapWidth( self ):
