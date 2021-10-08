@@ -26,11 +26,8 @@ def toFrame( o ):
 	if isinstance(o, np.ndarray):
 		if o.shape[0] >= 2:
 			return o
-		# frame = cv2.imdecode( o, cv2.IMREAD_COLOR )
-		jpeg = data=o.tobytes()
-		frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
-		jpegFramesCache[jpeg] = frame
-		return frame
+		# return cv2.imdecode( o, cv2.IMREAD_COLOR )
+		return jpegToFrame( o.tobytes() )
 	elif isinstance( o, bytes ):
 		return jpegToFrame( o )
 	elif isinstance( o, wx.Bitmap ):
