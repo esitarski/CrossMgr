@@ -26,10 +26,10 @@ def toFrame( o ):
 	if isinstance(o, np.ndarray):
 		if o.shape[0] >= 2:
 			return o
-		#frame = cv2.imdecode( o, cv2.IMREAD_COLOR )
-		frame = simplejpeg.decode_jpeg( data, colorspace='BGR' )
-
-		jpegFramesCache[o.tobytes()] = frame
+		# frame = cv2.imdecode( o, cv2.IMREAD_COLOR )
+		jpeg = data=o.tobytes()
+		frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
+		jpegFramesCache[jpeg] = frame
 		return frame
 	elif isinstance( o, bytes ):
 		return jpegToFrame( o )
@@ -37,6 +37,8 @@ def toFrame( o ):
 		return bitmapToFrame( o )
 	elif isinstance( o, wx.Image ):
 		return imageToFrame( o )
+	elif o is None:
+		return o
 	assert False, 'Unknown object type'
 
 def frameToBitmap( frame, w_req=None, h_req=None ):

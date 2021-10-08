@@ -1448,10 +1448,7 @@ class MainWin( wx.Frame ):
 		def updateHandler( msg ):
 			nonlocal lastPrimaryTime, primaryCount
 			
-			name, lastFrame = msg['name'], msg['frame']
-			if lastFrame is not None and lastFrame.shape[0] == 1:
-				lastFrame = cv2.imdecode( lastFrame, 1 )
-			
+			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
 			if name == 'primary':
 				if lastFrame is None:
 					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
