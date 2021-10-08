@@ -28,6 +28,8 @@ class CompositeCtrl( wx.Control ):
 		self.xVLeft = 0								# left side to show composite image (in image coordinates).
 		self.compositeBitmap = None
 		
+		self.insetRatio = 0.5
+		
 		self.pointerTS = None
 		self.currentTS = None
 		self.triggerTS = None
@@ -42,6 +44,7 @@ class CompositeCtrl( wx.Control ):
 		
 		self.Bind( wx.EVT_MOTION, self.OnMotion )
 		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeft )
+		self.Bind( wx.EVT_RIGHT_DOWN, self.OnRight )
 
 	def OnSize( self, event ):
 		self.makeComposite()
@@ -63,17 +66,26 @@ class CompositeCtrl( wx.Control ):
 		self.Refresh()
 		event.Skip()
 		
+	def OnRight( self, event ):
+		if not self.compositeBitmap:
+			return
+		self.insetRatio = max( 0.1, event.GetY()/self.GetClientSize()[1] )
+		self.Refresh()
+		
 	def OnMotion( self, event ):
 		if not self.compositeBitmap:
 			return
 		self.pointerTS = self.tsFromPointer( event.GetX() )
-		if self.scrollbar and event.Dragging():
-			dx = self.xClickLeft - event.GetX()
-			xV = self.xVLeftClick + dx / self.imageToScreenFactor
-			xS = round(xV * self.imageToScreenFactor)
-			if 0 <= xS < (self.scrollbar.GetRange() - self.scrollbar.GetThumbSize()):
-				self.scrollbar.SetThumbPosition( xS )
-				self.xVLeft = round(xV)
+		if event.Dragging() :
+			if event.LeftIsDown() and self.scrollbar:
+				dx = self.xClickLeft - event.GetX()
+				xV = self.xVLeftClick + dx / self.imageToScreenFactor
+				xS = round(xV * self.imageToScreenFactor)
+				if 0 <= xS < (self.scrollbar.GetRange() - self.scrollbar.GetThumbSize()):
+					self.scrollbar.SetThumbPosition( xS )
+					self.xVLeft = round(xV)
+			elif event.RightIsDown():
+				self.insetRatio = min( 1.0, max(0.1, event.GetY()/self.GetClientSize()[1]) )
 		self.Refresh()
 				
 	def calculateCompositeBitmapWidth( self ):
@@ -314,7 +326,7 @@ class CompositeCtrl( wx.Control ):
 			if jpgBest is not None:
 				bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
 				lineWidth = 2
-				destHeight = round(height * 0.5)
+				destHeight = round(height * self.insetRatio)
 				destWidth = round((destHeight / bm.GetHeight()) * bm.GetWidth())
 				destX = width - destWidth - lineWidth*2
 				destY = 0
@@ -327,7 +339,7 @@ class CompositeCtrl( wx.Control ):
 		
 		# Draw the indicator lines.
 		fontSize = max( 16, height//40 )
-		lineHeight = round( fontSize * 1.2 )
+		lineHeight = round( fontSize * 1.25 )
 		dc.SetFont( wx.Font(wx.FontInfo(fontSize)) )
 		
 		tsLeft = self.tsFromXV( self.xVLeft )
@@ -360,7 +372,7 @@ class CompositeCtrl( wx.Control ):
 			
 		if self.triggerTS:
 			text = ['TRG {}'.format(formatTime(self.triggerTS))]
-			x = round( (self.xVFromTS( self.triggerTS ) - self.xVLeft) * self.imageToScreenFactor )
+			x = round( (self.xVFromTS(self.triggerTS) - self.xVLeft) * self.imageToScreenFactor )
 			drawIndicatorLine( x, wx.Colour(0,0,255), text, False )
 		
 		if self.currentTS:
@@ -368,7 +380,7 @@ class CompositeCtrl( wx.Control ):
 			if self.triggerTS:
 				text.append( '{} TRG'.format( formatSeconds( (self.currentTS - self.triggerTS).total_seconds()) ) )
 			text.append( '' )	# Blank line to give room for triggerTS line.
-			x = round( (self.xVFromTS( self.currentTS ) - self.xVLeft) * self.imageToScreenFactor )
+			x = round( (self.xVFromTS(self.currentTS) - self.xVLeft) * self.imageToScreenFactor )
 			drawIndicatorLine( x, wx.Colour(255,0,0), text, False )
 
 def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
