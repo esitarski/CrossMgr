@@ -384,14 +384,12 @@ class AutoCaptureDialog( wx.Dialog ):
 	
 	def onChoice( self, event=None ):
 		enable = (self.closestFrames.GetSelection() == 0)
-		for w in self.labelFields:
-			w.Enable( enable )
-		for w in self.editFields:
+		for w in (self.labelFields + self.editFields):
 			w.Enable( enable )
 	
 	def set( self, s_before, s_after, closestFrames=0 ):
-		self.editFields[0].SetValue( '{:.2f}'.format(s_before) )
-		self.editFields[1].SetValue( '{:.2f}'.format(s_after) )
+		for w, v in zip( self.editFields, (s_before, s_after) ):
+			w.SetValue( '{:.3f}'.format(v) )
 		self.closestFrames.SetSelection( closestFrames )
 		self.onChoice()
 	
