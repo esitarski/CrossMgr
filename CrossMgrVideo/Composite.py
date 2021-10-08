@@ -69,7 +69,7 @@ class CompositeCtrl( wx.Control ):
 	def OnRight( self, event ):
 		if not self.compositeBitmap:
 			return
-		self.insetRatio = max( 0.1, event.GetY()/self.GetClientSize()[1] )
+		self.insetRatio = min( 1.0, max( 0.1, event.GetY()/self.GetClientSize()[1] ) )
 		self.Refresh()
 		
 	def OnMotion( self, event ):
