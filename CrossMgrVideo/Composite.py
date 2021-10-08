@@ -6,6 +6,7 @@ import cv2
 import glob
 from math import tan, radians
 from datetime import datetime, timedelta
+from bisect import bisect_left
 
 import CVUtil
 
@@ -257,16 +258,18 @@ class CompositeCtrl( wx.Control ):
 				sourceDC.SelectObject(wx.NullBitmap)
 
 		if self.filterContrast or self.filterSharpen or self.filterGrayscale:
-			frame = CVUtil.bitmapToFrame( self.compositeBitmap )
-			if self.filterContrast:
-				frame = CVUtil.adjustContrastFrame( frame )
-			if self.filterSharpen:
-				frame = CVUtil.sharpenFrame( frame )
-			if self.filterGrayscale:
-				frame = CVUtil.grayscaleFrame( frame )
-			self.compositeBitmap = CVUtil.frameToBitmap( frame )
+			self.compositeBitmap = CVUtil.frameToBitmap( self.filterFrame(CVUtil.bitmapToFrame( self.compositeBitmap )) )
 
 		self.adjustScrollbar()
+		
+	def filterFrame( self, frame ):
+		if self.filterContrast:
+			frame = CVUtil.adjustContrastFrame( frame )
+		if self.filterSharpen:
+			frame = CVUtil.sharpenFrame( frame )
+		if self.filterGrayscale:
+			frame = CVUtil.grayscaleFrame( frame )
+		return frame
 
 	def OnPaint( self, event ):
 		dc = wx.PaintDC( self )
@@ -282,6 +285,36 @@ class CompositeCtrl( wx.Control ):
 			dc.Clear()
 		
 		dc.Blit( 0, 0, width, height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
+		
+		# Draw the photo inset.
+		if self.pointerTS is not None:
+			# Find the closest photo centered on the time.
+			ts = self.pointerTS + timedelta( seconds = (-1.0 if self.leftToRight else 1.0) * (self.imageWidth / (2 * self.imagePixelsPerSecond) ) )
+			i = bisect_left( tsJpgs, (ts, bytes()), 0, len(tsJpgs)-1 )
+			tBest = sys.float_info.max
+			jpgBest = None
+			for j in range( max(0, i-2), min(len(tsJpgs), i+2) ):
+				tCur = abs( (self.pointerTS - tsJpgs[j][0]).total_seconds() )
+				if tCur < tBest:
+					tBest = tCur
+					jpgBest = tsJpgs[j][1]
+					
+			if jpgBest is not None:
+				if self.filterContrast or self.filterSharpen or self.filterGrayscale:
+					bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
+				else:
+					bm = CVUtil.jpegToBitmap( jpgBest )
+				lineWidth = 2
+				destHeight = round(height * 0.5)
+				destWidth = round((destHeight / bm.GetHeight()) * bm.GetWidth())
+				destX = width - destWidth - lineWidth*2
+				destY = 0
+				dc.SetPen( wx.Pen(wx.Colour(255,255,0)) )
+				dc.SetBrush( wx.TRANSPARENT_BRUSH )
+				dc.DrawRectangle( destX, destY, destWidth+lineWidth*2, destHeight+lineWidth*2 )
+				dc.StretchBlit( destX+lineWidth, destY+lineWidth, destWidth, destHeight,
+					wx.MemoryDC(bm), 0, 0, bm.GetWidth(), bm.GetHeight()
+				)
 		
 		# Draw the indicator lines.
 		fontSize = max( 16, height//40 )
@@ -426,7 +459,7 @@ class CompositePanel( wx.Panel):
 if __name__ == '__main__':
 	app = wx.App(False)
 
-	leftToRight = False
+	leftToRight = True
 	now = datetime.now()
 	fps = 30.0
 	spf = 1.0 / fps
