@@ -515,7 +515,7 @@ class FinishStripPanel( wx.Panel ):
 		zs.Add( self.zoomOutButton )
 		
 		self.direction = wx.Choice( self,
-			choices=['\u2192 ' + _('Finish Left to Right'), '\u2190 ' + _('Finish Right to Left')],
+			choices=['\u27F6 ' + _('Finish Left to Right'), '\u27F5 ' + _('Finish Right to Left')],
 		)
 		self.direction.SetSelection( 1 - int(self.leftToRight) )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
