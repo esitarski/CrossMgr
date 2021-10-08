@@ -514,13 +514,10 @@ class FinishStripPanel( wx.Panel ):
 		zs.Add( self.zoomInButton )
 		zs.Add( self.zoomOutButton )
 		
-		self.direction = wx.RadioBox( self,
-			label=_(''),
-			choices=[_('Finish Right to Left'), _('Finish Left to Right')],
-			majorDimension=1,
-			style=wx.RA_SPECIFY_ROWS
+		self.direction = wx.Choice( self,
+			choices=['\u2192 ' + _('Finish Left to Right'), '\u2190 ' + _('Finish Right to Left')],
 		)
-		self.direction.SetSelection( 1 if self.leftToRight else 0 )
+		self.direction.SetSelection( 1 - int(self.leftToRight) )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
 		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
@@ -609,7 +606,7 @@ class FinishStripPanel( wx.Panel ):
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 
 	def onDirection( self, event ):
-		self.SetLeftToRight( event.GetInt() == 1 )		
+		self.SetLeftToRight( event.GetSelection() == 0 )		
 		event.Skip()
 		
 	def onChangeSpeed( self, event=None ):

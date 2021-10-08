@@ -54,12 +54,12 @@ def getMainPage( dateStr=None ):
 	
 	return mainPage.encode()	# Make sure to return bytes.
 
-@functools.lru_cache(maxsize=8)
+@functools.lru_cache(maxsize=16)
 def getPNG( fname ):
 	with open( os.path.join(Utils.getImageFolder(), fname), 'rb' ) as f:
 		return f.read()
 
-@functools.lru_cache(maxsize=8)
+@functools.lru_cache(maxsize=16)
 def getJS( fname ):
 	with open( os.path.join(Utils.getHtmlFolder(), fname), 'rb' ) as f:
 		return f.read()
