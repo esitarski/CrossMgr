@@ -5,8 +5,7 @@ import numpy as np
 import simplejpeg
 from LRUCache import LRUCache
 
-jpegFramesCacheMax = 30*60
-jpegFramesCache = LRUCache( jpegFramesCacheMax )
+jpegFramesCache = LRUCache( 2*30*60 )		# For performance, cache the last two minutes of jpegs to frame conversions.
 
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
@@ -18,25 +17,33 @@ def frameToWidthHeight( frame ):
 def getWidthHeight( o ):
 	if isinstance(o, (wx.Image, wx.Bitmap)):
 		return o.GetWidth(), o.GetHeight()
+	if isinstance(o, np.ndarray):
+		if o.shape[0] >= 2:
+			return frameToWidthHeight( o )
+		return frameToWidthHeight( jpegToFrame(o.tobytes()) )	# Assume single-dimension np is encoded as jpeg.
 	if isinstance(o, bytes):			# Assume a jpg.
 		return frameToWidthHeight( jpegToFrame(o) )
-	return frameToWidthHeight( o )		# Assume a frame.
+	raise TypeError( 'Unknown object type' )
 	
 def toFrame( o ):
+	'''
+		Transform the given object into an opencv numpy frame.
+		Specifically, a numpy ndarray of dimension 2 in BGR format.
+	'''
 	if isinstance(o, np.ndarray):
 		if o.shape[0] >= 2:
 			return o
 		# return cv2.imdecode( o, cv2.IMREAD_COLOR )
-		return jpegToFrame( o.tobytes() )
-	elif isinstance( o, bytes ):
+		return jpegToFrame( o.tobytes() )	# Assume single-dimension np is encoded as jpeg.
+	if isinstance( o, bytes ):
 		return jpegToFrame( o )
-	elif isinstance( o, wx.Bitmap ):
+	if isinstance( o, wx.Bitmap ):
 		return bitmapToFrame( o )
-	elif isinstance( o, wx.Image ):
+	if isinstance( o, wx.Image ):
 		return imageToFrame( o )
-	elif o is None:
+	if o is None:
 		return o
-	assert False, 'Unknown object type'
+	raise TypeError( 'Unknown object type' )
 
 def frameToBitmap( frame, w_req=None, h_req=None ):
 	h_frame, w_frame = frame.shape[0], frame.shape[1]
