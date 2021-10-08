@@ -564,7 +564,7 @@ class FinishStripPanel( wx.Panel ):
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
 		vs.Add( self.timeScrollbar, flag=wx.EXPAND )
 		vs.Add( szs, flag=wx.EXPAND|wx.ALL, border=0 )
-		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=0 )
+		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizer( vs )
 		wx.CallAfter( self.initUI )
