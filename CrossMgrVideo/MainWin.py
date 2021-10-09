@@ -31,7 +31,7 @@ from SocketListener import SocketListener
 from MultiCast import multicast_group, multicast_port
 from Database import GlobalDatabase, DBWriter, Database
 from ScaledBitmap import ScaledBitmap
-from FinishStrip import FinishStripPanel
+from Composite import CompositePanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoPanel
 from Clock import Clock
@@ -597,8 +597,8 @@ class MainWin( wx.Frame ):
 		self.notebook = wx.Notebook( self, size=(-1,wx.GetDisplaySize()[1]//2), style=wx.NB_BOTTOM )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onNotebook )
 		
-		self.finishStrip = FinishStripPanel( self.notebook, photoViewCB=self.photoViewCB )		
 		self.photoPanel = PhotoPanel( self.notebook )
+		self.finishStrip = CompositePanel( self.notebook )
 		
 		self.notebook.AddPage(self.photoPanel, "Images")
 		self.notebook.AddPage(self.finishStrip, "Finish Strip")
@@ -841,7 +841,7 @@ class MainWin( wx.Frame ):
 		
 	def refreshPhotoPanel( self ):
 		self.photoPanel.playStop()
-		self.photoPanel.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps, editCB=self.doTriggerEdit )
+		self.photoPanel.set( self.finishStrip.getIJpg(), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps, editCB=self.doTriggerEdit )
 		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
 		
 	def onNotebook( self, event ):
@@ -1047,7 +1047,7 @@ class MainWin( wx.Frame ):
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
 		self.lastTriggerRefresh = tNow
-		self.finishStrip.SetTsJpgs( None, None )
+		self.finishStrip.Set( None )
 		
 		# replace = True
 		if replace:
@@ -1291,55 +1291,32 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.Show()
 	
-	def showPhotoDialog( self ):
-		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish or 0), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
-			self.doTriggerEdit,
-		)
-		self.photoDialog.CenterOnParent()
-		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
-		self.photoDialog.ShowModal()
-		if self.triggerInfo['kmh'] != (self.photoDialog.kmh or 0.0):
-			self.db.updateTriggerKMH( self.triggerInfo['id'], self.photoDialog.kmh or 0.0 )
-			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
-		self.photoDialog.clear()		
-	
-	def photoViewCB( self, x ):
-		if self.triggerInfo:
-			self.xFinish = x
-			self.showPhotoDialog()
-
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
 		
 		if self.iTriggerSelect >= self.triggerList.GetItemCount():
 			self.ts = None
 			self.tsJpg = []
-			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, {} )
+			self.finishStrip.Set( self.tsJpg )
 			self.refreshPhotoPanel()
 			return
 		
-		self.finishStrip.SetTsJpgs( None, None )	# Clear the current finish strip so nothing gets updated.
+		self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
 		self.refreshPhotoPanel()
-		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
+		triggerInfo = self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
 		self.ts = self.triggerInfo['ts']
 		s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
 		if s_before == 0.0 and s_after == 0.0:
 			s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
 		
-		# Update the screen in the background so we don't freeze the UI.
-		def updateFS( triggerInfo ):
-			self.ts = triggerInfo['ts']
-			if triggerInfo['closest_frames']:
-				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closestFrames'] )
-			else:
-				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
-			triggerInfo['frames'] = len(self.tsJpg)
-			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, triggerInfo )
-			self.refreshPhotoPanel()
-			
-		#threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
-		updateFS( self.triggerInfo )
+		self.ts = triggerInfo['ts']
+		if triggerInfo['closest_frames']:
+			self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closestFrames'] )
+		else:
+			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
+		triggerInfo['frames'] = len(self.tsJpg)
+		self.finishStrip.Set( self.tsJpg, leftToRight=True, triggerTS=triggerInfo['ts'] )
+		self.refreshPhotoPanel()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
@@ -1685,7 +1662,7 @@ class MainWin( wx.Frame ):
 			self.tdCaptureAfter = timedelta(seconds=abs(float(s_after)))
 		except Exception:
 			pass
-		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.25) )
+		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
 		self.closestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
 		
 	def getCameraInfo( self ):

@@ -175,8 +175,8 @@ The frame time, and the +/- offset from the Trigger time is shown on the left.
 Shows all the frames recorded around the trigger event.
 
 * Move the mouse across the Finish Strip to seen the current frame in the Zoom window.
-* Shift-mouse-wheel to change magnification in the zoom window.
-* Mouse-wheel, or use the Stretch slider to space the frames so that the objects between frames line up.
+* Ctrl-mouse-wheel to change Magnification in the Photo window.
+* Mouse-wheel, or use the Stretch slider on the right to change the frame spacing so that the frame content lines up.
 * Left-click and Drag (or Scroll Bar) to move sideways.
 * Left-click move the current time line.
 
@@ -184,7 +184,7 @@ Shows all the frames recorded around the trigger event.
 
 __Finish Direction__
 
-Controls the direction of the Finish Strip.  Ensure that it matches the direction of the finishers.
+Controls the direction of the Finish Strip.  Set it to matche the direction of the finishers.
 
 ### Panes on Bottom
 

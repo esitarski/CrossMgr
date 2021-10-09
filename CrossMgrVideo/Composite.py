@@ -16,6 +16,26 @@ def formatTime( ts ):
 	
 def formatSeconds( secs ):
 	return '{:+.3f}'.format( secs )
+	
+def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
+	'''
+		Calculate pixels per second given:
+		
+			frameWidthPixels:			width of photo image (pixels).  default=1920 pixels
+			finishWidthM:				width of finish (m).			default=8 meters
+			cameraDistanceFromEdgeM:	distance from edge of road (m)	default=1 meters
+			lensAngle:					angle of webcam lens			default=84 degrees
+			speedKMH:					speed of passing object (kmh)	default=50 km/h
+	'''
+	speedMPS = speedKMH / 3.6											# convert to meters/second
+	
+	finishCenterM = finishWidthM/2.0 + cameraDistanceFromEdgeM			# Distance camera from center of finish line.
+	fieldOfViewM = 2.0 * finishCenterM * tan( radians(lensAngle/2.0) )	# Horizontal distance of camera field of view (distance to enter and exit the frame).
+	
+	viewS = fieldOfViewM / (speedMPS or 1.0)							# Seconds for object to pass through field of view at given speed.
+	pixelsPerSecond = frameWidthPixels / viewS							# Speed expressed in pixels/second.
+	
+	return pixelsPerSecond
 
 class CompositeCtrl( wx.Control ):
 	def __init__( self, parent, size=(600,600) ):
@@ -31,7 +51,7 @@ class CompositeCtrl( wx.Control ):
 		
 		self.Set( None )
 		
-		self.insetRatio = 0.5
+		self.insetMagnification = 0.5
 		
 		self.filterContrast  = False
 		self.filterSharpen   = False
@@ -68,8 +88,7 @@ class CompositeCtrl( wx.Control ):
 	def OnRight( self, event ):
 		if not self.compositeBitmap:
 			return
-		self.insetRatio = min( 1.0, max( 0.1, event.GetY()/self.GetClientSize()[1] ) )
-		self.Refresh()
+		self.SetInsetMagnification( event.GetY()/self.GetClientSize()[1] )
 		
 	def OnMotion( self, event ):
 		if not self.compositeBitmap:
@@ -79,12 +98,13 @@ class CompositeCtrl( wx.Control ):
 			if event.LeftIsDown() and self.scrollbar:
 				dx = self.xClickLeft - event.GetX()
 				xV = self.xVLeftClick + dx / self.imageToScreenFactor
-				xS = round(xV * self.imageToScreenFactor)
-				if 0 <= xS < (self.scrollbar.GetRange() - self.scrollbar.GetThumbSize()):
+				xSMax = self.scrollbar.GetRange() - self.scrollbar.GetThumbSize()
+				xS = min( xSMax, round(xV * self.imageToScreenFactor) )
+				if 0 <= xS < xSMax:
 					self.scrollbar.SetThumbPosition( xS )
 					self.xVLeft = round(xV)
 			elif event.RightIsDown():
-				self.insetRatio = min( 1.0, max(0.1, event.GetY()/self.GetClientSize()[1]) )
+				self.insetMagnification = min( 1.0, max(0.1, event.GetY()/self.GetClientSize()[1]) )
 		self.Refresh()
 				
 	def calculateCompositeBitmapWidth( self ):
@@ -103,7 +123,7 @@ class CompositeCtrl( wx.Control ):
 		
 		return self.compositeVBitmapWidth
 
-	def Set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True, triggerTS=None ):
+	def Set( self, tsJpgs, imagePixelsPerSecond=None, leftToRight=True, triggerTS=None, insetMagnification=None ):
 		if not tsJpgs:
 			self.tsJpgs = []
 			self.iJpg = 0
@@ -117,7 +137,9 @@ class CompositeCtrl( wx.Control ):
 		self.tsJpgs = tsJpgs
 		self.iJpg = 0
 		
-		self.imagePixelsPerSecond = imagePixelsPerSecond
+		self.imagePixelsPerSecond = (imagePixelsPerSecond if imagePixelsPerSecond is not None
+			else getPixelsPerSecond( frameWidthPixels=CVUtil.getWidthHeight(tsJpgs[0][1])[0], speedKMH=50 )
+		)
 		self.leftToRight = leftToRight
 		
 		self.calculateCompositeBitmapWidth()
@@ -125,6 +147,8 @@ class CompositeCtrl( wx.Control ):
 		self.pointerTS = None		# timestamp of the pointer
 		self.currentTS = None		# timestamp of the set position
 		self.insetTS   = triggerTS or tsJpgs[-1][0]	# timestamp of the photo inset
+		if insetMagnification is not None:
+			self.SetInsetMagnification( insetMagnification )
 		
 		self.xVLeft = 0
 		self.makeComposite()
@@ -151,7 +175,12 @@ class CompositeCtrl( wx.Control ):
 			# Center the composite view on the trigger.
 			self.currentTS = triggerTS
 			screenWidth, screenHeight = self.GetClientSize()
-			self.xVLeft = max( 0, self.xVFromTS( triggerTS ) - (screenWidth/2) / self.imageToScreenFactor )
+			self.xVLeft = round(
+				min(
+					max( 0, self.xVFromTS( triggerTS ) - (screenWidth/2) / self.imageToScreenFactor ),
+					(self.compositeBitmap.GetWidth() - screenWidth) / self.imageToScreenFactor
+				)
+			)
 			if self.scrollbar:
 				wx.CallAfter( self.scrollbar.SetThumbPosition, round(self.xVLeft * self.imageToScreenFactor) )
 		self.Refresh()
@@ -168,6 +197,13 @@ class CompositeCtrl( wx.Control ):
 		
 	def onScroll( self, event ):
 		self.SetXLeft( event.GetPosition() )
+		
+	def GetInsetMagnification( self ):
+		return self.insetMagnification
+
+	def SetInsetMagnification( self, insetMagnification ):
+		self.insetMagnification = max( 0.1, min(1.0, insetMagnification) )
+		self.Refresh()
 
 	def adjustScrollbar( self ):
 		''' Set up a scrollbar in screen coordinates. '''
@@ -319,23 +355,23 @@ class CompositeCtrl( wx.Control ):
 			# Find the closest photo centered on the time.
 			ts = self.insetTS + timedelta( seconds = (-1.0 if self.leftToRight else 1.0) * (self.imageWidth / (2 * self.imagePixelsPerSecond) ) )
 			# Do a binary search to get us close to the required photo.
-			i = bisect_left( tsJpgs, (ts, b''), 0, len(tsJpgs)-1 )
+			i = bisect_left( self.tsJpgs, (ts, b''), 0, len(self.tsJpgs)-1 )
 
 			# Do a small linear search to find the closest photo to the time.
 			tBest = sys.float_info.max
 			jpgBest = None
 			self.iJpg = 0
-			for j in range( max(0, i-1), min(len(tsJpgs), i+1) ):
-				tCur = abs( (self.insetTS - tsJpgs[j][0]).total_seconds() )
+			for j in range( max(0, i-1), min(len(self.tsJpgs), i+1) ):
+				tCur = abs( (self.insetTS - self.tsJpgs[j][0]).total_seconds() )
 				if tCur < tBest:
 					tBest = tCur
-					jpgBest = tsJpgs[j][1]
+					jpgBest = self.tsJpgs[j][1]
 					self.iJpg = j
 					
 			if jpgBest is not None:
 				bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
 				lineWidth = 2
-				destHeight = round(height * self.insetRatio)
+				destHeight = round(height * self.insetMagnification)
 				destWidth = round((destHeight / bm.GetHeight()) * bm.GetWidth())
 				destX = width - destWidth - lineWidth*2
 				destY = 0
@@ -391,26 +427,6 @@ class CompositeCtrl( wx.Control ):
 			text.append( '' )	# Blank line to give room for triggerTS line.
 			x = round( (self.xVFromTS(self.currentTS) - self.xVLeft) * self.imageToScreenFactor )
 			drawIndicatorLine( x, wx.Colour(255,0,0), text, False )
-
-def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFromEdgeM=1, lensAngle=84, speedKMH=50 ):
-	'''
-		Calculate pixels per second given:
-		
-			frameWidthPixels:			width of photo image (pixels).  default=1920 pixels
-			finishWidthM:				width of finish (m).			default=8 meters
-			cameraDistanceFromEdgeM:	distance from edge of road (m)	default=1 meters
-			lensAngle:					angle of webcam lens			default=84 degrees
-			speedKMH:					speed of passing object (kmh)	default=50 km/h
-	'''
-	speedMPS = speedKMH / 3.6											# convert to meters/second
-	
-	finishCenterM = finishWidthM/2.0 + cameraDistanceFromEdgeM			# Distance camera from center of finish line.
-	fieldOfViewM = 2.0 * finishCenterM * tan( radians(lensAngle/2.0) )	# Horizontal distance of camera field of view (distance to enter and exit the frame).
-	
-	viewS = fieldOfViewM / (speedMPS or 1.0)							# Seconds for object to pass through field of view at given speed.
-	pixelsPerSecond = frameWidthPixels / viewS							# Speed expressed in pixels/second.
-	
-	return pixelsPerSecond
 
 class CompositePanel( wx.Panel):
 	def __init__( self, parent ):
@@ -469,12 +485,18 @@ class CompositePanel( wx.Panel):
 		
 	def onCompositeWheel( self, event ):
 		rot = event.GetWheelRotation()
-		ssb = self.speedScrollbar
-		if rot < 0:
-			ssb.SetThumbPosition( max(0, ssb.GetThumbPosition() - 1) )
-		else:
-			ssb.SetThumbPosition( min(ssb.GetRange() - ssb.GetThumbSize(), ssb.GetThumbPosition() + 1) )
-		wx.CallAfter( self.onScrollSpeed )
+		
+		if event.ControlDown():
+			self.composite.SetInsetMagnification( self.composite.GetInsetMagnification() + (0.1 if rot > 0 else -0.1) )
+		elif event.ShiftDown():
+			pass
+		else:		
+			ssb = self.speedScrollbar
+			if rot < 0:
+				ssb.SetThumbPosition( max(0, ssb.GetThumbPosition() - 1) )
+			else:
+				ssb.SetThumbPosition( min(ssb.GetRange() - ssb.GetThumbSize(), ssb.GetThumbPosition() + 1) )
+			wx.CallAfter( self.onScrollSpeed )
 		
 	def onScrollSpeed( self, event=None ):
 		if self.composite.tsJpgs:
@@ -495,6 +517,12 @@ class CompositePanel( wx.Panel):
 		
 	def Clear( self ):
 		self.composite.Set( None )
+		
+	def GetZoomMagnification( self ):
+		return self.composite.GetInsetMagnification()
+		
+	def SetZoomMagnification( self, magnification ):
+		self.composite.SetInsetMagnification( magnification )
 
 if __name__ == '__main__':
 	app = wx.App(False)
