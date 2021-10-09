@@ -105,6 +105,8 @@ class CompositeCtrl( wx.Control ):
 
 	def Set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True, triggerTS=None ):
 		if not tsJpgs:
+			self.tsJpgs = []
+			self.iJpg = 0
 			self.pointerTS = None
 			self.insetTS   = None
 			self.triggerTS = None
@@ -113,6 +115,8 @@ class CompositeCtrl( wx.Control ):
 			return
 		
 		self.tsJpgs = tsJpgs
+		self.iJpg = 0
+		
 		self.imagePixelsPerSecond = imagePixelsPerSecond
 		self.leftToRight = leftToRight
 		
@@ -488,6 +492,9 @@ class CompositePanel( wx.Panel):
 		
 	def getIJpg( self ):
 		return self.composite.iJpg
+		
+	def Clear( self ):
+		self.composite.Set( None )
 
 if __name__ == '__main__':
 	app = wx.App(False)
