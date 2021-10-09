@@ -21,21 +21,20 @@ class CompositeCtrl( wx.Control ):
 	def __init__( self, parent, size=(600,600) ):
 		super().__init__( parent, size=size )
 		self.tsJpgs = []
+		self.iJpg = 0								# Index of the inset image.
+		
 		self.imagePixelsPerSecond = 100
 		self.leftToRight = True
 		self.imageToScreenFactor = 1.0				# convert image coordinates to screen coordinates
 		self.imageHeight = self.imageWidth = 600
 		self.xVLeft = 0								# left side to show composite image (in image coordinates).
-		self.compositeBitmap = None
+		
+		self.Set( None )
 		
 		self.insetRatio = 0.5
 		
-		self.pointerTS = None
-		self.currentTS = None
-		self.triggerTS = None
-		
-		self.filterContrast = False
-		self.filterSharpen = False
+		self.filterContrast  = False
+		self.filterSharpen   = False
 		self.filterGrayscale = False
 		
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
@@ -75,7 +74,7 @@ class CompositeCtrl( wx.Control ):
 	def OnMotion( self, event ):
 		if not self.compositeBitmap:
 			return
-		self.pointerTS = self.tsFromPointer( event.GetX() )
+		self.pointerTS = self.insetTS = self.tsFromPointer( event.GetX() )
 		if event.Dragging() :
 			if event.LeftIsDown() and self.scrollbar:
 				dx = self.xClickLeft - event.GetX()
@@ -107,9 +106,11 @@ class CompositeCtrl( wx.Control ):
 	def Set( self, tsJpgs, imagePixelsPerSecond=100, leftToRight=True, triggerTS=None ):
 		if not tsJpgs:
 			self.pointerTS = None
+			self.insetTS   = None
 			self.triggerTS = None
 			self.currentTS = None
 			self.compositeBitmap = None
+			return
 		
 		self.tsJpgs = tsJpgs
 		self.imagePixelsPerSecond = imagePixelsPerSecond
@@ -117,8 +118,9 @@ class CompositeCtrl( wx.Control ):
 		
 		self.calculateCompositeBitmapWidth()
 		
-		self.pointerTS = None		# timestamp of the current pointer
-		self.currentTS = None		# timestamp of the current set position
+		self.pointerTS = None		# timestamp of the pointer
+		self.currentTS = None		# timestamp of the set position
+		self.insetTS   = triggerTS or tsJpgs[-1][0]	# timestamp of the photo inset
 		
 		self.xVLeft = 0
 		self.makeComposite()
@@ -309,19 +311,22 @@ class CompositeCtrl( wx.Control ):
 		dc.Blit( 0, 0, width, height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
 		
 		# Draw the photo inset.
-		if self.pointerTS is not None:
+		if self.insetTS is not None:
 			# Find the closest photo centered on the time.
-			ts = self.pointerTS + timedelta( seconds = (-1.0 if self.leftToRight else 1.0) * (self.imageWidth / (2 * self.imagePixelsPerSecond) ) )
+			ts = self.insetTS + timedelta( seconds = (-1.0 if self.leftToRight else 1.0) * (self.imageWidth / (2 * self.imagePixelsPerSecond) ) )
 			# Do a binary search to get us close to the required photo.
 			i = bisect_left( tsJpgs, (ts, b''), 0, len(tsJpgs)-1 )
+
+			# Do a small linear search to find the closest photo to the time.
 			tBest = sys.float_info.max
 			jpgBest = None
-			# Do a small linear search to find the closest photo to the time.
+			self.iJpg = 0
 			for j in range( max(0, i-1), min(len(tsJpgs), i+1) ):
-				tCur = abs( (self.pointerTS - tsJpgs[j][0]).total_seconds() )
+				tCur = abs( (self.insetTS - tsJpgs[j][0]).total_seconds() )
 				if tCur < tBest:
 					tBest = tCur
 					jpgBest = tsJpgs[j][1]
+					self.iJpg = j
 					
 			if jpgBest is not None:
 				bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
@@ -477,6 +482,12 @@ class CompositePanel( wx.Panel):
 
 	def Set( self, *args, **kwargs ):
 		self.composite.Set( *args, **kwargs )
+		
+	def GetTsJpgs( self ):
+		return self.composite.tsJpgs
+		
+	def getIJpg( self ):
+		return self.composite.iJpg
 
 if __name__ == '__main__':
 	app = wx.App(False)
