@@ -106,6 +106,7 @@ class FrameCircBuf:
 				timesRet.append( time )
 				framesRet.append( frame )
 				tsSeen.add( time )
+		
 		return timesRet, framesRet
 		
 if __name__ == '__main__':

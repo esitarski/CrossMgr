@@ -780,6 +780,14 @@ class MainWin( wx.Frame ):
 		
 	def exportDB( self, event ):
 		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
+		with wx.MessageDialog( self,
+				'Export all photos for this day.\n\n\tPhotos will be exported to:\n\n"{}"'.format(fname),
+				'Photo Export',
+				style=wx.OK|wx.CANCEL|wx.ICON_INFORMATION ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return		
+		
+		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
 		if os.path.exists(fname):
 			os.remove( fname )
 
@@ -856,7 +864,7 @@ class MainWin( wx.Frame ):
 				key = '{}_AppVersion'.format(app)
 				assert key in info
 		except Exception as e:
-			with wx.MessageDialog( self, 'Improper File Error', 'Exception: {}'.format(e), style=wx.OK|wx.ICON_ERROR ) as dlg:
+			with wx.MessageDialog( self, 'Exception: {}'.format(e), 'Improper File', style=wx.OK|wx.ICON_ERROR ) as dlg:
 				dlg.ShowModal()
 				return
 	
@@ -880,6 +888,11 @@ class MainWin( wx.Frame ):
 			triggerFields = pickle.load( f )
 			photoFields = pickle.load( f )
 			
+			# For compatability, ensure there are no unexpected import fields.
+			triggerFieldsSet = set( f for f in db.triggerFieldsAll if f != 'id' )
+			triggerFields = [f for f in triggerFields if f in triggerFieldsSet]
+
+			
 			#-----------------------------------------------------------
 			triggerTS = pickle.load( f )
 			
@@ -897,7 +910,7 @@ class MainWin( wx.Frame ):
 					obj = pickle.load( f )
 					bid.append( [obj[f] for f in triggerFields] )
 					if count % 25 == 0:
-						progress.Update( count, 'Importing Triggers ({}/{} {:.2f}%)...'.format(count, len(triggerTS)) )
+						progress.Update( count, 'Importing Triggers ({}/{} {:.1f}%)...'.format(count, len(triggerTS)) )
 						wx.Yield()
 		
 			#-----------------------------------------------------------
@@ -919,7 +932,7 @@ class MainWin( wx.Frame ):
 					obj['jpg'] = sqlite3.Binary( obj['jpg'] )
 					bid.append( [obj[f] for f in photoFields] )
 					if count % 25 == 0:
-						progress.Update( count, 'Importing Photos ({}/{} {:.2f}%) ...'.format(count, len(photoTS)) )
+						progress.Update( count, 'Importing Photos ({}/{} {:.1f}%) ...'.format(count, len(photoTS)) )
 						wx.Yield()
 				
 		progress.Destroy()
@@ -1484,11 +1497,11 @@ class MainWin( wx.Frame ):
 		
 		self.ts = triggerInfo['ts']
 		if triggerInfo['closest_frames']:
-			self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closestFrames'] )
+			self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
 		else:
 			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 		triggerInfo['frames'] = len(self.tsJpg)
-		self.finishStrip.Set( self.tsJpg, leftToRight=True, triggerTS=triggerInfo['ts'] )
+		self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
 		self.refreshPhotoPanel()
 	
 	def onTriggerRightClick( self, event ):

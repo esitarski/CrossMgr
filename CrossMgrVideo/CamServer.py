@@ -122,7 +122,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 					break
 				
 				# Skip empty frames.
-				if not frame:
+				if frame is None:
 					continue
 					
 				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when

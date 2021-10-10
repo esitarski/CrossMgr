@@ -143,8 +143,6 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			GlobalDatabase().updateTriggerRecord( id, postvars )
 
 	def do_GET(self):
-		import pdb; pdb.set_trace()
-		
 		up = urlparse( self.path )
 		content, gzip_content = None, None
 		try:
@@ -308,20 +306,21 @@ def WebServer():
 			server = CrossMgrVideoServer(('', PORT_NUMBER), CrossMgrVideoHandler)
 			server.init_thread_pool()
 			server.serve_forever( poll_interval = 2 )
+		except KeyboardInterrupt:
+			break
 		except Exception as e:
 			print( e )
 			server = None
 			time.sleep( 5 )
 
-webThread = threading.Thread( target=WebServer, name='CrossMgrVideoWebServer' )
-webThread.daemon = True
-webThread.start()
-			
 #-------------------------------------------------------------------
 if __name__ == '__main__':
-	print( 'Started CrossMgrVideoWebServer on http://{}:{} '.format(GetMyIP(), PORT_NUMBER) )
-	try:
-		time.sleep( 10000 )
-	except KeyboardInterrupt:
-		pass
+	print( 'Starting CrossMgrVideoWebServer on http://{}:{} '.format(GetMyIP(), PORT_NUMBER) )
+	WebServer()
+else:
+	# Run the web server as a thread.
+	webThread = threading.Thread( target=WebServer, name='CrossMgrVideoWebServer' )
+	webThread.daemon = True
+	webThread.start()
+			
 

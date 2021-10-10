@@ -103,8 +103,6 @@ class CompositeCtrl( wx.Control ):
 				if 0 <= xS < xSMax:
 					self.scrollbar.SetThumbPosition( xS )
 					self.xVLeft = round(xV)
-			elif event.RightIsDown():
-				self.insetMagnification = min( 1.0, max(0.1, event.GetY()/self.GetClientSize()[1]) )
 		self.Refresh()
 				
 	def calculateCompositeBitmapWidth( self ):
@@ -130,10 +128,11 @@ class CompositeCtrl( wx.Control ):
 		
 		return self.compositeVBitmapWidth
 
-	def Set( self, tsJpgs, imagePixelsPerSecond=None, leftToRight=True, triggerTS=None, insetMagnification=None ):
-		if not tsJpgs or len(tsJpgs) < 2:
-			self.tsJpgs = []
-			self.iJpg = 0
+	def Set( self, tsJpgs, imagePixelsPerSecond=None, leftToRight=None, triggerTS=None, insetMagnification=None ):
+		self.tsJpgs = tsJpgs or []
+		self.iJpg = 0
+		
+		if len(self.tsJpgs) < 2:
 			self.pointerTS = None
 			self.insetTS   = None
 			self.triggerTS = None
@@ -141,13 +140,11 @@ class CompositeCtrl( wx.Control ):
 			self.compositeBitmap = None
 			return
 		
-		self.tsJpgs = tsJpgs
-		self.iJpg = 0
-		
 		self.imagePixelsPerSecond = (imagePixelsPerSecond if imagePixelsPerSecond is not None
 			else getPixelsPerSecond( frameWidthPixels=CVUtil.getWidthHeight(tsJpgs[0][1])[0], speedKMH=50 )
 		)
-		self.leftToRight = leftToRight
+		if leftToRight is not None:
+			self.leftToRight = leftToRight
 		
 		self.calculateCompositeBitmapWidth()
 		
