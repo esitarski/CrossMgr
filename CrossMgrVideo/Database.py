@@ -303,6 +303,8 @@ class Database:
 		tss = tss[:]	# Make a local copy as we destroy this as we go.
 		tssTotal = len(tss)
 		chunk_size = 250
+		if callback:
+			callback( 0, tssTotal )
 		while tss:
 			to_delete = tss[-chunk_size:]
 			with self.dbLock, self.conn:

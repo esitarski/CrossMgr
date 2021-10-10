@@ -794,7 +794,13 @@ class MainWin( wx.Frame ):
 		progress = wx.ProgressDialog( 'Export Progress', 'Initializing...' )
 		progress.SetRange( 1 )
 		progress.Show()
-		wx.Yield()
+		
+		def getUpdateCB( msg ):
+			msg += ' ({}/{})'
+			def updateCB( count, total ):
+				progress.Update( count, msg.format(count, total) )
+				wx.Yield()
+			return updateCB
 
 		db = GlobalDatabase()
 		
@@ -813,27 +819,24 @@ class MainWin( wx.Frame ):
 			triggerTS = [row[0] for row in db.runQuery( 'SELECT ts FROM trigger WHERE ts BETWEEN ? and ? ORDER BY ts', (self.tsQueryLower, self.tsQueryUpper))]
 			
 			progress.SetRange( len(triggerTS) )
-			progress.Update( 0, 'Exporting triggers...' )
-			wx.Yield()
 			
 			pickle.dump( triggerTS, f, -1 )
+			showUpdate = getUpdateCB( 'Exporting triggers' )
 			with db.dbLock, db.conn:
 				for count, row in enumerate(db.conn.execute( 'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(triggerFields)), (self.tsQueryLower, self.tsQueryUpper) )):
 					obj = {f:v for f,v in zip(triggerFields, row)}
 					pickle.dump( obj, f, -1 )
 					if count % 25 == 0:
-						progress.Update( count, 'Exporting triggers ({}/{} {:.1f}%)...'.format(count, len(triggerTS), 100*count/max(1,len(photoTS))) )
-						wx.Yield()
+						showUpdate( count, len(triggerTS) )
 		
 			#-----------------------------------------------------------
 			# Purge duplicates.
 			photoTS = sorted(set(row[0] for row in db.runQuery( 'SELECT ts FROM photo WHERE ts BETWEEN ? and ?', (self.tsQueryLower, self.tsQueryUpper))))
 			
 			progress.SetRange( len(photoTS) )
-			progress.Update( 0, 'Exporting Photos...' )
-			wx.Yield()
 			
 			pickle.dump( photoTS, f, -1 )
+			showUpdate = getUpdateCB( 'Exporting photos' )
 			with db.dbLock, db.conn:
 				tsSeen = set()
 				count = 0
@@ -843,8 +846,7 @@ class MainWin( wx.Frame ):
 						obj = {f:v for f,v in zip(photoFields, row)}
 						pickle.dump( obj, f, -1 )
 						if count % 25 == 0:
-							progress.Update( count, 'Exporting Photos ({}/{} {:.1f}%) ...'.format(count, len(photoTS), 100*count/max(1,len(photoTS)) ) )
-							wx.Yield()
+							showUpdate( count, len(photoTS) )
 						count += 1
 				
 		progress.Destroy()
@@ -874,8 +876,9 @@ class MainWin( wx.Frame ):
 		wx.Yield()
 		
 		def getUpdateCB( msg ):
+			msg += ' ({}/{})'
 			def updateCB( count, total ):
-				progress.Update( count, msg.format(count, total, 100*count/max(1,total)) )
+				progress.Update( count, msg.format(count, total) )
 				wx.Yield()
 			return updateCB
 
@@ -892,48 +895,34 @@ class MainWin( wx.Frame ):
 			triggerFieldsSet = set( f for f in db.triggerFieldsAll if f != 'id' )
 			triggerFields = [f for f in triggerFields if f in triggerFieldsSet]
 
-			
 			#-----------------------------------------------------------
 			triggerTS = pickle.load( f )
 			
 			progress.SetRange( len(triggerTS) )
-			progress.Update( 0, 'Removing exisiting triggers...' )
-			wx.Yield()
+			db.deleteTss( 'trigger', triggerTS, getUpdateCB('Removing exisiting triggers') )
 			
-			db.deleteTss( 'trigger', triggerTS, getUpdateCB('Removing exisiting triggers ({}/{})...') )
-			
-			progress.Update( 0, 'Importing triggers...' )
-			wx.Yield()
-			
+			showUpdate = getUpdateCB( 'Importing Triggers' )
 			with BulkInsertDBRows( 'trigger', triggerFields, db ) as bid:
 				for count in range(len(triggerTS)):
 					obj = pickle.load( f )
 					bid.append( [obj[f] for f in triggerFields] )
 					if count % 25 == 0:
-						progress.Update( count, 'Importing Triggers ({}/{} {:.1f}%)...'.format(count, len(triggerTS)) )
-						wx.Yield()
+						showUpdate(count, len(triggerTS) )
 		
 			#-----------------------------------------------------------
 			photoTS = pickle.load( f )
-			print( photoTS )
 			
 			progress.SetRange( len(photoTS) )
-			progress.Update( 0, 'Removing exisiting photos...' )
-			wx.Yield()
+			db.deleteTss( 'photo', photoTS, getUpdateCB('Removing exisiting photos')  )
 			
-			db.deleteTss( 'photo', photoTS, getUpdateCB('Removing exisiting photos ({}/{})...')  )
-			
-			progress.Update( 0, 'Importing photos...' )
-			wx.Yield()
-
+			showUpdate = getUpdateCB( 'Importing Photos' )
 			with BulkInsertDBRows( 'photo', photoFields, db ) as bid:
 				for count in range(len(photoTS)):
 					obj = pickle.load( f )
 					obj['jpg'] = sqlite3.Binary( obj['jpg'] )
 					bid.append( [obj[f] for f in photoFields] )
 					if count % 25 == 0:
-						progress.Update( count, 'Importing Photos ({}/{} {:.1f}%) ...'.format(count, len(photoTS)) )
-						wx.Yield()
+						showUpdate(count, len(photoTS))
 				
 		progress.Destroy()
 		self.refreshTriggers( replace=True )
