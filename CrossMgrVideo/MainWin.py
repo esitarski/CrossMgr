@@ -818,7 +818,7 @@ class MainWin( wx.Frame ):
 			#-----------------------------------------------------------
 			triggerTS = [row[0] for row in db.runQuery( 'SELECT ts FROM trigger WHERE ts BETWEEN ? and ? ORDER BY ts', (self.tsQueryLower, self.tsQueryUpper))]
 			
-			progress.SetRange( len(triggerTS) )
+			progress.SetRange( max(1,len(triggerTS)) )
 			
 			pickle.dump( triggerTS, f, -1 )
 			showUpdate = getUpdateCB( 'Exporting triggers' )
@@ -833,7 +833,7 @@ class MainWin( wx.Frame ):
 			# Purge duplicates.
 			photoTS = sorted(set(row[0] for row in db.runQuery( 'SELECT ts FROM photo WHERE ts BETWEEN ? and ?', (self.tsQueryLower, self.tsQueryUpper))))
 			
-			progress.SetRange( len(photoTS) )
+			progress.SetRange( max(1,len(photoTS)) )
 			
 			pickle.dump( photoTS, f, -1 )
 			showUpdate = getUpdateCB( 'Exporting photos' )
@@ -898,7 +898,7 @@ class MainWin( wx.Frame ):
 			#-----------------------------------------------------------
 			triggerTS = pickle.load( f )
 			
-			progress.SetRange( len(triggerTS) )
+			progress.SetRange( max(1,len(triggerTS)) )
 			db.deleteTss( 'trigger', triggerTS, getUpdateCB('Removing exisiting triggers') )
 			
 			showUpdate = getUpdateCB( 'Importing Triggers' )
@@ -912,7 +912,7 @@ class MainWin( wx.Frame ):
 			#-----------------------------------------------------------
 			photoTS = pickle.load( f )
 			
-			progress.SetRange( len(photoTS) )
+			progress.SetRange( max(1,len(photoTS)) )
 			db.deleteTss( 'photo', photoTS, getUpdateCB('Removing exisiting photos')  )
 			
 			showUpdate = getUpdateCB( 'Importing Photos' )
