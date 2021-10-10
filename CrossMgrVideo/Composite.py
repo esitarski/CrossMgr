@@ -65,9 +65,13 @@ class CompositeCtrl( wx.Control ):
 		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeft )
 		self.Bind( wx.EVT_RIGHT_DOWN, self.OnRight )
 
+	def isValid( self ):
+		return len(self.tsJpgs) >= 2
+
 	def OnSize( self, event ):
-		self.makeComposite()
-		self.Refresh()
+		if self.isValid():
+			self.makeComposite()
+			self.Refresh()
 		
 	def OnErase( self, event ):
 		pass
@@ -77,22 +81,23 @@ class CompositeCtrl( wx.Control ):
 		return self.tsFromXV( xV )
 		
 	def OnLeft( self, event ):
-		if not self.compositeBitmap:
-			return
-		self.currentTS = self.tsFromPointer( event.GetX() )
-		self.xVLeftClick = self.xVLeft
-		self.xClickLeft = event.GetX()
-		self.Refresh()
-		event.Skip()
+		if not self.isValid():
+			self.currentTS = self.tsFromPointer( event.GetX() )
+			self.xVLeftClick = self.xVLeft
+			self.xClickLeft = event.GetX()
+			self.Refresh()
+			event.Skip()
 		
 	def OnRight( self, event ):
-		if not self.compositeBitmap:
+		if not self.isValid():
 			return
+
 		self.SetInsetMagnification( event.GetY()/self.GetClientSize()[1] )
 		
 	def OnMotion( self, event ):
-		if not self.compositeBitmap:
+		if not self.isValid():
 			return
+
 		self.pointerTS = self.insetTS = self.tsFromPointer( event.GetX() )
 		if event.Dragging() :
 			if event.LeftIsDown() and self.scrollbar:
@@ -106,9 +111,13 @@ class CompositeCtrl( wx.Control ):
 		self.Refresh()
 				
 	def calculateCompositeBitmapWidth( self ):
-		if not self.tsJpgs:
+		self.compositeBitmap = None	
+		self.pointerTS = None		# On-screen reference line
+
+		if not self.isValid():
 			self.imageToScreenFactor = 1.0
-			return 128
+			self.compositeVBitmapWidth = 1024
+			self.imageWidth, self.imageHeight = 1024, 1024
 			
 		dt = max( 1.0/30.0, (self.tsJpgs[-1][0] - self.tsJpgs[0][0]).total_seconds() )
 		
@@ -116,15 +125,6 @@ class CompositeCtrl( wx.Control ):
 		self.imageToScreenFactor = self.GetClientSize()[1] / self.imageHeight
 		
 		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond)
-		
-		# Make sure we don't exceed the maximum bitmap size.
-		MaxBitmapSize = 32768
-		if self.compositeVBitmapWidth * self.imageToScreenFactor > MaxBitmapSize:
-			self.compositeVBitmapWidth = int(MaxBitmapSize / self.imageToScreenFactor)
-			self.imagePixelsPerSecond = self.compositeVBitmapWidth / dt
-		
-		self.compositeBitmap = None	
-		self.pointerTS = None		# On-screen reference line
 		
 		return self.compositeVBitmapWidth
 
@@ -261,15 +261,28 @@ class CompositeCtrl( wx.Control ):
 			Images coordinates have a "V" and are in image coordinates.
 			Image coordinates are converted to screen coordinates by multipying by self.imageToScreenFactor.
 		'''
+		if not self.isValid():
+			self.compositeBitmap = None
+			return
+		
 		self.calculateCompositeBitmapWidth()
 		width, height = self.GetClientSize()
 		f = self.imageToScreenFactor
-		self.compositeBitmap = wx.Bitmap( round(self.compositeVBitmapWidth * f), height )
-		dc = wx.MemoryDC( self.compositeBitmap )
 		
-		if not self.tsJpgs:
-			dc.SetBackground( wx.Brush(wx.Colour(200,200,200)) )
-			dc.Clear()
+		# Make sure we don't exceed the maximum bitmap size.
+		MaxBitmapSize = 32768
+		bitmapWidth = round(self.compositeVBitmapWidth * f)
+		if bitmapWidth > MaxBitmapSize:
+			dt = max( 1.0/30.0, (self.tsJpgs[-1][0] - self.tsJpgs[0][0]).total_seconds() )
+			bitmapWidth = MaxBitmapSize
+			self.imagePixelsPerSecond = bitmapWidth / dt
+			self.compositeVBitmapWidth = round( bitmapWidth / f )
+		
+		try:
+			self.compositeBitmap = wx.Bitmap( bitmapWidth, height )
+			dc = wx.MemoryDC( self.compositeBitmap )
+		except Exception as e:
+			print( e )
 			return
 		
 		def copyImage(	sourceDC,
@@ -342,7 +355,7 @@ class CompositeCtrl( wx.Control ):
 	def OnPaint( self, event ):
 		dc = wx.PaintDC( self )
 
-		if not self.compositeBitmap:
+		if not self.isValid():
 			dc.SetBackground( wx.BLACK_BRUSH )
 			dc.Clear()
 			return
@@ -352,7 +365,11 @@ class CompositeCtrl( wx.Control ):
 			dc.SetBackground( wx.BLACK_BRUSH )
 			dc.Clear()
 		
-		dc.Blit( 0, 0, width, height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
+		try:
+			dc.Blit( 0, 0, width, height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
+		except Exception as e:
+			# print( e )
+			pass
 		
 		# Draw the photo inset.
 		if self.insetTS is not None:
