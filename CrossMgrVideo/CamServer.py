@@ -117,8 +117,13 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Get the closest time to the read.
 				ts = now()
 				
+				# If the cam read failed, break out and reconnect.
 				if not ret:
 					break
+				
+				# Skip empty frames.
+				if not frame:
+					continue
 					
 				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
 				# we send a group of photos for a capture.

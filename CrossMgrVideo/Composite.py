@@ -112,19 +112,26 @@ class CompositeCtrl( wx.Control ):
 			self.imageToScreenFactor = 1.0
 			return 128
 			
-		dt = (self.tsJpgs[-1][0] - self.tsJpgs[0][0]).total_seconds()
+		dt = max( 1.0/30.0, (self.tsJpgs[-1][0] - self.tsJpgs[0][0]).total_seconds() )
 		
 		self.imageWidth, self.imageHeight = CVUtil.getWidthHeight( self.tsJpgs[0][1] )
+		self.imageToScreenFactor = self.GetClientSize()[1] / self.imageHeight
 		
 		self.compositeVBitmapWidth = round(dt * self.imagePixelsPerSecond)
-		self.imageToScreenFactor = self.GetClientSize()[1] / self.imageHeight
+		
+		# Make sure we don't exceed the maximum bitmap size.
+		MaxBitmapSize = 32768
+		if self.compositeVBitmapWidth * self.imageToScreenFactor > MaxBitmapSize:
+			self.compositeVBitmapWidth = int(MaxBitmapSize / self.imageToScreenFactor)
+			self.imagePixelsPerSecond = self.compositeVBitmapWidth / dt
+		
 		self.compositeBitmap = None	
 		self.pointerTS = None		# On-screen reference line
 		
 		return self.compositeVBitmapWidth
 
 	def Set( self, tsJpgs, imagePixelsPerSecond=None, leftToRight=True, triggerTS=None, insetMagnification=None ):
-		if not tsJpgs:
+		if not tsJpgs or len(tsJpgs) < 2:
 			self.tsJpgs = []
 			self.iJpg = 0
 			self.pointerTS = None

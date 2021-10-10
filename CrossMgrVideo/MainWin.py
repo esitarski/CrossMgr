@@ -4,6 +4,7 @@ import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
 import os
 import re
+import sys
 import cv2
 import sys
 import time
@@ -18,6 +19,10 @@ import platform
 import tempfile
 import threading
 import webbrowser
+import platform
+import pickle
+import gzip
+import sqlite3
 import numpy as np
 from queue import Queue, Empty
 
@@ -27,21 +32,22 @@ now = datetime.now
 
 import Utils
 import CVUtil
+import CamServer
+from Clock import Clock
 from SocketListener import SocketListener
 from MultiCast import multicast_group, multicast_port
-from Database import GlobalDatabase, DBWriter, Database
+from Database import GlobalDatabase, DBWriter, Database, BulkInsertDBRows
 from ScaledBitmap import ScaledBitmap
 from Composite import CompositePanel
 from ManageDatabase import ManageDatabase
 from PhotoDialog import PhotoPanel
-from Clock import Clock
 from AddPhotoHeader import AddPhotoHeader
-from Version import AppVerName
 from AddExifToJpeg import AddExifToJpeg
-import CamServer
 from PublishPhotoOptions import PublishPhotoOptionsDialog
 from roundbutton import RoundButton
 from GetMyIP import GetMyIP
+from FIFOCache import FIFOCacheSet
+from Version import AppVerName
 import WebServer
 
 imageWidth, imageHeight = 640, 480
@@ -71,6 +77,19 @@ def setFont( font, w ):
 def OpenHelp():
 	webbrowser.open( os.path.join(Utils.getHelpFolder(), 'QuickStart.html'), new=0, autoraise=1 )
 	
+def getInfo():
+	app = AppVerName.split()[0]
+	uname = platform.uname()
+	info = {
+		'{}_AppVersion'.format(app):	AppVerName,
+		'{}_Timestamp'.format(app):		datetime.now(),
+		'{}_User'.format(app):			os.path.basename(os.path.expanduser("~")),
+		'{}_Python'.format(app):		sys.version.replace('\n', ' '),
+	}
+	info.update( {'{}_{}'.format(app, a.capitalize()): getattr(uname, a)
+		for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '') } )
+	return info
+
 from CalendarHeatmap import CalendarHeatmap
 class DateSelectDialog( wx.Dialog ):
 	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
@@ -475,6 +494,13 @@ class MainWin( wx.Frame ):
 		item = self.toolsMenu.Append( wx.ID_ANY, "Copy &Log File to Clipboard", "Copy Log File to Clipboard" )
 		self.Bind(wx.EVT_MENU, self.copyLogFileToClipboard, item )
 
+		self.toolsMenu.AppendSeparator()
+		item = self.toolsMenu.Append( wx.ID_ANY, "Export Photos...", "Export all photos and triggers for the current day." )
+		self.Bind(wx.EVT_MENU, self.exportDB, item )
+
+		item = self.toolsMenu.Append( wx.ID_ANY, "Import Photos...", "Import all photos and triggers for a day." )
+		self.Bind(wx.EVT_MENU, self.importDB, item )
+
 		self.menuBar.Append(self.toolsMenu, "&Tools")
 
 		#-------------------------------------------
@@ -751,6 +777,153 @@ class MainWin( wx.Frame ):
 		dateStrInitial = self.date.GetValue().Format('%Y-%m-%d')
 		url = '{}:{}?date={}'.format( GetMyIP(), WebServer.PORT_NUMBER, dateStrInitial )
 		webbrowser.open( url, new=0, autoraise=1 )
+		
+	def exportDB( self, event ):
+		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
+		if os.path.exists(fname):
+			os.remove( fname )
+
+		progress = wx.ProgressDialog( 'Export Progress', 'Initializing...' )
+		progress.SetRange( 1 )
+		progress.Show()
+		wx.Yield()
+
+		db = GlobalDatabase()
+		
+		triggerFields = [f for f in db.triggerFieldsAll if f != 'id']
+		photoFields = ['ts', 'jpg']
+
+		with gzip.open( fname, 'wb' ) as f:
+			# Write out some info as a file header.
+			pickle.dump( getInfo(), f, -1 )
+			
+			# Write out the fields we are using.
+			pickle.dump( triggerFields, f, -1 )
+			pickle.dump( photoFields, f, -1 )
+			
+			#-----------------------------------------------------------
+			triggerTS = [row[0] for row in db.runQuery( 'SELECT ts FROM trigger WHERE ts BETWEEN ? and ? ORDER BY ts', (self.tsQueryLower, self.tsQueryUpper))]
+			
+			progress.SetRange( len(triggerTS) )
+			progress.Update( 0, 'Exporting triggers...' )
+			wx.Yield()
+			
+			pickle.dump( triggerTS, f, -1 )
+			with db.dbLock, db.conn:
+				for count, row in enumerate(db.conn.execute( 'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(triggerFields)), (self.tsQueryLower, self.tsQueryUpper) )):
+					obj = {f:v for f,v in zip(triggerFields, row)}
+					pickle.dump( obj, f, -1 )
+					if count % 25 == 0:
+						progress.Update( count, 'Exporting triggers ({}/{} {:.1f}%)...'.format(count, len(triggerTS), 100*count/max(1,len(photoTS))) )
+						wx.Yield()
+		
+			#-----------------------------------------------------------
+			# Purge duplicates.
+			photoTS = sorted(set(row[0] for row in db.runQuery( 'SELECT ts FROM photo WHERE ts BETWEEN ? and ?', (self.tsQueryLower, self.tsQueryUpper))))
+			
+			progress.SetRange( len(photoTS) )
+			progress.Update( 0, 'Exporting Photos...' )
+			wx.Yield()
+			
+			pickle.dump( photoTS, f, -1 )
+			with db.dbLock, db.conn:
+				tsSeen = set()
+				count = 0
+				for row in db.conn.execute( 'SELECT {} FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(photoFields)), (self.tsQueryLower, self.tsQueryUpper) ):
+					if row[0] not in tsSeen:
+						tsSeen.add( row[0] )
+						obj = {f:v for f,v in zip(photoFields, row)}
+						pickle.dump( obj, f, -1 )
+						if count % 25 == 0:
+							progress.Update( count, 'Exporting Photos ({}/{} {:.1f}%) ...'.format(count, len(photoTS), 100*count/max(1,len(photoTS)) ) )
+							wx.Yield()
+						count += 1
+				
+		progress.Destroy()
+	
+	def importDB( self, event ):
+		with wx.FileDialog(self, "Open CrossMgrVideo Import file", wildcard="Files (*.gz)|*.gz",
+						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return
+			fname = fileDialog.GetPath()
+
+		# Check if the import file is valid.
+		try:
+			with gzip.open( fname, 'rb' ) as f:
+				info = pickle.load( f )
+				app = AppVerName.split()[0]
+				key = '{}_AppVersion'.format(app)
+				assert key in info
+		except Exception as e:
+			with wx.MessageDialog( self, 'Improper File Error', 'Exception: {}'.format(e), style=wx.OK|wx.ICON_ERROR ) as dlg:
+				dlg.ShowModal()
+				return
+	
+		progress = wx.ProgressDialog( 'Import Progress', 'Initializing...' )
+		progress.SetRange( 1 )
+		progress.Show()
+		wx.Yield()
+		
+		def getUpdateCB( msg ):
+			def updateCB( count, total ):
+				progress.Update( count, msg.format(count, total, 100*count/max(1,total)) )
+				wx.Yield()
+			return updateCB
+
+		db = GlobalDatabase()
+		
+		with gzip.open( fname, 'rb' ) as f:
+			info = pickle.load( f )
+
+			# Read the fields used to write the export file.
+			triggerFields = pickle.load( f )
+			photoFields = pickle.load( f )
+			
+			#-----------------------------------------------------------
+			triggerTS = pickle.load( f )
+			
+			progress.SetRange( len(triggerTS) )
+			progress.Update( 0, 'Removing exisiting triggers...' )
+			wx.Yield()
+			
+			db.deleteTss( 'trigger', triggerTS, getUpdateCB('Removing exisiting triggers ({}/{})...') )
+			
+			progress.Update( 0, 'Importing triggers...' )
+			wx.Yield()
+			
+			with BulkInsertDBRows( 'trigger', triggerFields, db ) as bid:
+				for count in range(len(triggerTS)):
+					obj = pickle.load( f )
+					bid.append( [obj[f] for f in triggerFields] )
+					if count % 25 == 0:
+						progress.Update( count, 'Importing Triggers ({}/{} {:.2f}%)...'.format(count, len(triggerTS)) )
+						wx.Yield()
+		
+			#-----------------------------------------------------------
+			photoTS = pickle.load( f )
+			print( photoTS )
+			
+			progress.SetRange( len(photoTS) )
+			progress.Update( 0, 'Removing exisiting photos...' )
+			wx.Yield()
+			
+			db.deleteTss( 'photo', photoTS, getUpdateCB('Removing exisiting photos ({}/{})...')  )
+			
+			progress.Update( 0, 'Importing photos...' )
+			wx.Yield()
+
+			with BulkInsertDBRows( 'photo', photoFields, db ) as bid:
+				for count in range(len(photoTS)):
+					obj = pickle.load( f )
+					obj['jpg'] = sqlite3.Binary( obj['jpg'] )
+					bid.append( [obj[f] for f in photoFields] )
+					if count % 25 == 0:
+						progress.Update( count, 'Importing Photos ({}/{} {:.2f}%) ...'.format(count, len(photoTS)) )
+						wx.Yield()
+				
+		progress.Destroy()
+		self.refreshTriggers( replace=True )
 	
 	def setFPS( self, fps ):
 		self.fps = int(fps if fps > 0 else 30)

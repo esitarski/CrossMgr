@@ -18,6 +18,30 @@ def removeDiacritic( s ):
 
 now = datetime.now
 
+class BulkInsertDBRows:
+	def __init__( self, table, fields, toDB, maxlen=2000 ):
+		self.toDB = toDB
+		self.sql = 'INSERT INTO {} ({}) VALUES ({})'.format( table, ','.join(fields), ','.join('?'*len(fields)) )
+		self.rows = []
+		#self.maxlen = maxlen
+		self.maxlen = 1
+				
+	def append( self, row ):
+		self.rows.append( row )
+		if len(self.rows) > self.maxlen:
+			self.flush()
+			
+	def flush( self ):
+		with self.toDB.dbLock, self.toDB.conn:
+			self.toDB.conn.executemany( self.sql, self.rows )
+		self.rows.clear()
+				
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		self.flush()
+
 def _createTable( c, table, fields ):
 	def default_str( d ):
 		return ' DEFAULT {}'.format(d) if d is not None else ''
@@ -44,6 +68,21 @@ class Database:
 	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames', 'finish_direction', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',}	# Fields to compare for equality of triggers.
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
+	
+	
+	@staticmethod
+	def isValidDatabase( fname ):
+		try:
+			conn = sqlite3.connect( fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0, check_same_thread=False )
+		except Exception as e:
+			return False
+			
+		with conn:
+			cur = conn.cursor()
+			cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+			cols = {row[0] for row in cur.fetchall()}
+			print( cols )
+		return 'trigger' in cols and 'photo' in cols		
 	
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
@@ -258,7 +297,20 @@ class Database:
 				duplicateIds.append( jpgId )
 		# For now, just filter out duplicates without removing them from the database.
 		# self._deleteIds( 'photo', duplicateIds )
-		
+	
+	def deleteTss( self, table, tss, callback=None ):
+		# Convert the timestamps to strings for the database.
+		tss = tss[:]	# Make a local copy as we destroy this as we go.
+		tssTotal = len(tss)
+		chunk_size = 250
+		while tss:
+			to_delete = tss[-chunk_size:]
+			with self.dbLock, self.conn:
+				self.conn.execute( 'DELETE FROM {} WHERE ts IN ({})'.format(table, ','.join('?'*len(to_delete))), to_delete )
+			del tss[-chunk_size:]
+			if callback:
+				callback( tssTotal - len(tss), tssTotal )
+	
 	def _getPhotosPurgeDuplicateTS( self, tsLower, tsUpper ):
 		tsJpgs = []
 		tsSeen = set()
@@ -288,6 +340,10 @@ class Database:
 		if tsJpgs:
 			self.tsJpgsKeyLast, self.tsJpgsLast = key, tsJpgs
 		return tsJpgs
+		
+	def runQuery( self, sql, params=None ):
+		with self.dbLock, self.conn:
+			return list(self.conn.execute( sql, params or tuple()))
 	
 	def getPhotosClosest( self, ts, closestFrames ):
 		# Cache the results of the last query.
@@ -376,7 +432,7 @@ class Database:
 					trigCur['tsJpgIds'] = self._getPhotosClosestIds( trig.ts, trig.closest_frames )
 				else:
 					trigCur['tsJpgIds'] = list( self._purgeDuplicateTS(
-						self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? and ?',
+						self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? AND ?',
 							(trig.ts - timedelta(seconds=trig.s_before), trig.ts + timedelta(seconds=trig.s_after)) ) 
 						)
 					)

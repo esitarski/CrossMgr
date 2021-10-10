@@ -143,6 +143,8 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			GlobalDatabase().updateTriggerRecord( id, postvars )
 
 	def do_GET(self):
+		import pdb; pdb.set_trace()
+		
 		up = urlparse( self.path )
 		content, gzip_content = None, None
 		try:
@@ -307,6 +309,7 @@ def WebServer():
 			server.init_thread_pool()
 			server.serve_forever( poll_interval = 2 )
 		except Exception as e:
+			print( e )
 			server = None
 			time.sleep( 5 )
 
