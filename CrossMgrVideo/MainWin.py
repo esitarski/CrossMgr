@@ -741,7 +741,7 @@ class MainWin( wx.Frame ):
 		wx.CallLater( 300, self.refreshTriggers )
 	
 	def OnAboutBox(self, e):
-			description = """CrossMgrVideo is an Impinj interface to CrossMgr
+			description = """CrossMgrVideo - USB Camera support
 	"""
 
 			licence = """CrossMgrVideo free software; you can redistribute 
