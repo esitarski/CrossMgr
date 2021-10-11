@@ -173,7 +173,7 @@ def getCameraResolutionChoice( resolution ):
 			return i
 	return len(cameraResolutionChoices) - 1
 
-FOURCC_DEFAULT = 'MJPG'
+FOURCC_DEFAULT = 'MJPG' if platform.system() != 'Windows' else ''
 
 class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, usb=0, fps=30, width=imageWidth, height=imageHeight, fourcc='', availableCameraUsb=None, id=wx.ID_ANY ):
@@ -205,7 +205,7 @@ class ConfigDialog( wx.Dialog ):
 		pfgs.Add( self.fps )
 		
 		pfgs.Add( wx.StaticText(self, label='FourCC'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.fourccChoices = ['', FOURCC_DEFAULT]
+		self.fourccChoices = ['', 'MJPG']
 		self.fourcc = wx.Choice( self, choices=self.fourccChoices )
 		self.fourcc.SetSelection( self.fourccChoices.index(fourcc if fourcc in self.fourccChoices else FOURCC_DEFAULT) )
 		pfgs.Add( self.fourcc )
@@ -215,7 +215,7 @@ class ConfigDialog( wx.Dialog ):
 				'After pressing Apply, check the "Actual" fps on the main screen.',
 				'The camera may not support the frame rate at the desired resolution,',
 				'or may lower the frame rate in low light.',
-				"If your fps is low or your camera doesn't work, try FourCC={}.".format(FOURCC_DEFAULT),
+				"If your fps is low or your camera doesn't work, try FourCC=MJPG.",
 			])), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )
@@ -1609,7 +1609,6 @@ class MainWin( wx.Frame ):
 			nonlocal lastPrimaryTime, primaryCount
 			
 			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
-			# print( 'processCamera: type(f), type(lastFrame)', type(msg['frame']), type(lastFrame), msg['frame'].shape if isinstance(msg['frame'], np.ndarray) else 'bytes', lastFrame.shape )
 			
 			if name == 'primary':
 				if lastFrame is None:
