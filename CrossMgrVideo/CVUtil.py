@@ -18,7 +18,7 @@ def getWidthHeight( o ):
 	if isinstance(o, (wx.Image, wx.Bitmap)):
 		return o.GetWidth(), o.GetHeight()
 	if isinstance(o, np.ndarray):
-		if o.shape[0] >= 2:
+		if o.shape[0] != 1:
 			return frameToWidthHeight( o )
 		return frameToWidthHeight( jpegToFrame(o.tobytes()) )	# Assume single-dimension np is encoded as jpeg.
 	if isinstance(o, bytes):			# Assume a jpg.
@@ -31,10 +31,13 @@ def toFrame( o ):
 		Specifically, a numpy ndarray of dimension 2 in BGR format.
 	'''
 	if isinstance(o, np.ndarray):
-		if o.shape[0] >= 2:
+		if o.shape[0] != 1:
 			return o
-		# return cv2.imdecode( o, cv2.IMREAD_COLOR )
-		return jpegToFrame( o.tobytes() )	# Assume single-dimension np is encoded as jpeg.
+		try:
+			return jpegToFrame( o.tobytes() )	# Assume single-dimension np is encoded as jpeg.
+		except Exception as e:
+			#print( 'Conversion failure.  o.shape=', o.shape )
+			return None
 	if isinstance( o, bytes ):
 		return jpegToFrame( o )
 	if isinstance( o, wx.Bitmap ):

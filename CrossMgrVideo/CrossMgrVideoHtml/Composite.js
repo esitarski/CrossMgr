@@ -63,9 +63,8 @@ class CompositeCtrl:
 		
 		canvas.addEventListener('resize', this.OnSize.bind(this) );
 
-		this.Bind( wx.EVT_MOTION, this.OnMotion )
-		this.Bind( wx.EVT_LEFT_DOWN, this.OnLeft )
-		this.Bind( wx.EVT_RIGHT_DOWN, this.OnRight )
+		canvas.addEventListener('pointerdown', this.OnLeft.bind(this), false);
+		canvas.addEventListener('pointermove', this.OnMotion.bind(this), false);
 	}
 
 	isValid() {
@@ -79,383 +78,394 @@ class CompositeCtrl:
 		}
 	}
 		
-	def OnErase( self, event ):
-		pass
+	tsFromPointer( xPointer ) {
+		const xV = this.xVLeft + xPointer / this.imageToScreenFactor;
+		return this.tsFromXV( xV );
+	}
 		
-	def tsFromPointer( self, xPointer ):
-		xV = this.xVLeft + xPointer / this.imageToScreenFactor
-		return this.tsFromXV( xV )
-		
-	def OnLeft( self, event ):
-		if not this.isValid():
-			this.currentTS = this.tsFromPointer( event.GetX() )
-			this.xVLeftClick = this.xVLeft
-			this.xClickLeft = event.GetX()
-			this.Refresh()
-			event.Skip()
-		
-	def OnRight( self, event ):
-		if not this.isValid():
-			return
-
-		this.SetInsetMagnification( event.GetY()/this.GetClientSize()[1] )
-		
-	def OnMotion( self, event ):
-		if not this.isValid():
-			return
-
-		this.pointerTS = this.insetTS = this.tsFromPointer( event.GetX() )
-		if event.Dragging() :
-			if event.LeftIsDown() and this.scrollbar:
-				dx = this.xClickLeft - event.GetX()
-				xV = this.xVLeftClick + dx / this.imageToScreenFactor
-				xSMax = this.scrollbar.GetRange() - this.scrollbar.GetThumbSize()
-				xS = min( xSMax, round(xV * this.imageToScreenFactor) )
-				if 0 <= xS < xSMax:
-					this.scrollbar.SetThumbPosition( xS )
-					this.xVLeft = round(xV)
-		this.Refresh()
+	OnLeft( self, event ) {
+		if( event.pointerType == 'mouse' && (event.buttons != 1) )	// Ignore all mouse events except for left button.
+			return;
 				
-	def calculateCompositeBitmapWidth( self ):
-		this.compositeBitmap = null	
-		this.pointerTS = null		// On-screen reference line
+		if !this.isValid():
+			this.currentTS = this.tsFromPointer( event.clientX )
+			this.xVLeftClick = this.xVLeft
+			this.xClickLeft = event.clientX
+			this.Refresh()
+	}
+		
+	OnMotion( self, event ) {
+		if !this.isValid():
+			return
 
-		if not this.isValid():
-			this.imageToScreenFactor = 1.0
-			this.compositeVBitmapWidth = 1024
-			this.imageWidth, this.imageHeight = 1024, 1024
+		this.pointerTS = this.insetTS = this.tsFromPointer( event.clientX )
+		if( event.LeftIsDown() and this.slider ):
+			const dx = this.xClickLeft - event.clientX;
+			const xV = this.xVLeftClick + dx / this.imageToScreenFactor;
+			const xSMax = this.slider.GetRange() - this.slider.GetThumbSize();
+			const xS = Math.min( xSMax, round(xV * this.imageToScreenFactor) )
+			if( 0 <= xS && xS < xSMax ) {
+				this.slider.value = xS;
+				this.xVLeft = xV;
+			}
+		this.Refresh()
+	}
+				
+	calculateCompositeCanvasWidth() {
+		this.compositeCanvas = null;
+		this.pointerTS = null;		// On-screen reference line
+
+		if( !this.isValid() ) {
+			this.imageToScreenFactor = 1.0;
+			this.compositeVCanvasWidth = 1024;
+			this.imageWidth = 1024;
+			this.imageHeight = 1024;
+		}
 			
-		dt = max( 1.0/30.0, (this.tsJpgs[-1][0] - this.tsJpgs[0][0]).total_seconds() )
+		const dt = Math.max( 1.0/30.0, this.tsJpgs[-1][0] - this.tsJpgs[0][0] )
 		
 		this.imageWidth, this.imageHeight = CVUtil.getWidthHeight( this.tsJpgs[0][1] )
 		this.imageToScreenFactor = this.GetClientSize()[1] / this.imageHeight
 		
-		this.compositeVBitmapWidth = round(dt * this.imagePixelsPerSecond)
+		this.compositeVCanvasWidth = round(dt * this.imagePixelsPerSecond)
 		
-		return this.compositeVBitmapWidth
-
-	def Set( self, tsJpgs, imagePixelsPerSecond=null, leftToRight=null, triggerTS=null, insetMagnification=null ):
-		this.tsJpgs = tsJpgs or []
-		this.iJpg = 0
+		return this.compositeVCanvasWidth;
+	}
+	
+	Set( tsJpgs, imagePixelsPerSecond=null, leftToRight=null, triggerTS=null, insetMagnification=null ) {
+		this.tsJpgs = tsJpgs || [];
+		this.iJpg = 0;
 		
-		if len(this.tsJpgs) < 2:
-			this.pointerTS = null
-			this.insetTS   = null
-			this.triggerTS = null
-			this.currentTS = null
-			this.compositeBitmap = null
-			return
+		if( this.tsJpgs.length < 2 ) {
+			this.pointerTS = null;
+			this.insetTS   = null;
+			this.triggerTS = null;
+			this.currentTS = null;
+			this.compositeCanvas = null;
+			return;
+		}
 		
-		this.imagePixelsPerSecond = (imagePixelsPerSecond if imagePixelsPerSecond is not null
-			else getPixelsPerSecond( frameWidthPixels=CVUtil.getWidthHeight(tsJpgs[0][1])[0], speedKMH=50 )
-		)
-		if leftToRight is not null:
-			this.leftToRight = leftToRight
+		this.imagePixelsPerSecond = imagePixelsPerSecond
+			? imagePixelsPerSecond
+			: getPixelsPerSecond( frameWidthPixels=CVUtil.getWidthHeight(tsJpgs[0][1])[0], speedKMH=50 );
+		if( leftToRight != null %% leftToRight != undefined )
+			this.leftToRight = leftToRight;
 		
-		this.calculateCompositeBitmapWidth()
+		this.calculateCompositeCanvasWidth();
 		
-		this.pointerTS = null		// timestamp of the pointer
-		this.currentTS = null		// timestamp of the set position
-		this.insetTS   = triggerTS or tsJpgs[-1][0]	// timestamp of the photo inset
-		if insetMagnification is not null:
-			this.SetInsetMagnification( insetMagnification )
+		this.pointerTS = null;		// timestamp of the pointer
+		this.currentTS = null;		// timestamp of the set position
+		this.insetTS   = triggerTS or tsJpgs[-1][0];	// timestamp of the photo inset
+		if( insetMagnification )
+			this.SetInsetMagnification( insetMagnification );
 		
-		this.xVLeft = 0
-		this.makeComposite()
-		this.SetTriggerTS( triggerTS )	// Also does a Refresh.
+		this.xVLeft = 0;
+		this.makeComposite();
+		this.SetTriggerTS( triggerTS );	// Also does a Refresh.
 		
-	def SetLeftToRight( self, leftToRight=true ):
-		this.leftToRight = leftToRight
-		this.makeComposite()
-		this.Refresh()
+	SetLeftToRight( leftToRight=true ) {
+		this.leftToRight = leftToRight;
+		this.makeComposite();
+		this.Refresh();
+	}
 		
-	def SetFilters( self, contrast=null, sharpen=null, grayscale=null ):
-		if contrast is not null:
-			this.filterContrast = contrast
-		if sharpen is not null:
-			this.filterSharpen = sharpen
-		if grayscale is not null:
-			this.filterGrayscale = grayscale
-		this.makeComposite()		
-		this.Refresh()
+	SetFilters( contrast=null, sharpen=null, grayscale=null ) {
+		if( contrast != null && contract != undefined )
+			this.filterContrast = contrast;
+		if( sharpen != null and sharpen != undefined )
+			this.filterSharpen = sharpen;
+		if( grayscale != null && grayscale != undefined )
+			this.filterGrayscale = grayscale;
+		this.makeComposite();
+		this.Refresh();
+	}
 		
-	def SetTriggerTS( self, triggerTS ):
-		this.triggerTS = triggerTS
-		if triggerTS and this.compositeBitmap:
+	SetTriggerTS( triggerTS ) {
+		this.triggerTS = triggerTS;
+		if( triggerTS && this.isValid() ) {
 			// Center the composite view on the trigger.
-			this.currentTS = triggerTS
+			this.currentTS = triggerTS;
 			screenWidth, screenHeight = this.GetClientSize()
 			this.xVLeft = round(
 				min(
 					max( 0, this.xVFromTS( triggerTS ) - (screenWidth/2) / this.imageToScreenFactor ),
-					(this.compositeBitmap.GetWidth() - screenWidth) / this.imageToScreenFactor
+					(this.compositeCanvas.GetWidth() - screenWidth) / this.imageToScreenFactor
 				)
 			)
-			if this.scrollbar:
-				wx.CallAfter( this.scrollbar.SetThumbPosition, round(this.xVLeft * this.imageToScreenFactor) )
+			if this.slider:
+				wx.CallAfter( this.slider.SetThumbPosition, round(this.xVLeft * this.imageToScreenFactor) )
+		}
 		this.Refresh()
 		
-	def SetPixelsPerSecond( self, imagePixelsPerSecond ):
-		this.imagePixelsPerSecond = imagePixelsPerSecond
-		this.calculateCompositeBitmapWidth()
-		this.makeComposite()
-		this.Refresh()
+	SetPixelsPerSecond( imagePixelsPerSecond ) {
+		this.imagePixelsPerSecond = imagePixelsPerSecond;
+		this.calculateCompositeCanvasWidth();
+		this.makeComposite();
+		this.Refresh();
+	}
 		
-	def SetScrollbar( self, scrollbar ):
-		this.scrollbar = scrollbar
-		this.scrollbar.Bind( wx.EVT_SCROLL, this.onScroll )
+	SetSlider( slider ) {
+		this.slider = slider;
+		slider.addEventListener('input', this.OnScroll.bind(this), false);
+		slider.addEventListener('change', this.OnScroll.bind(this), false);
+	}
 		
-	def onScroll( self, event ):
-		this.SetXLeft( event.GetPosition() )
+	onScroll( event ) {
+		this.SetXLeft( this.slider.value );
+	}
 		
-	def GetInsetMagnification( self ):
-		return this.insetMagnification
+	GetInsetMagnification() {
+		return this.insetMagnification;
+	}
 
-	def SetInsetMagnification( self, insetMagnification ):
-		this.insetMagnification = max( 0.1, min(1.0, insetMagnification) )
-		this.Refresh()
+	SetInsetMagnification( insetMagnification ) {
+		this.insetMagnification = max( 0.1, min(1.0, insetMagnification) );
+		this.Refresh();
+	}
 
-	def adjustScrollbar( self ):
-		''' Set up a scrollbar in screen coordinates. '''
-		if not this.scrollbar or not this.compositeBitmap:
-			return
+	adjustSlider() {
+		''' Set up a slider in screen coordinates. '''
+		if( !this.slider || !this.isValid() || !this.compositeCanvas )
+			return;
 			
-		screenWidth, screenHeight = this.GetClientSize()
-		compositeWidth, compositeHeight = this.compositeBitmap.GetSize()
+		compositeWidth, compositeHeight = this.compositeCanvas.GetSize()
 		
-		pixRange = compositeWidth
-		prevPositionRatio = this.scrollbar.GetThumbPosition() / (this.scrollbar.GetRange() or 1)
+		const pixRange = compositeWidth;
+		const prevPositionRatio = this.slider.value / (this.slider.max || 1);
 		
-		this.scrollbar.SetScrollbar( round(prevPositionRatio * pixRange), screenWidth, pixRange, screenWidth )
-		this.SetXVLeft( this.scrollbar.GetThumbPosition()  / (this.imageToScreenFactor or 1.0) )
+		this.slider.value = round(prevPositionRatio * pixRange;
+		this.SetXVLeft( this.slider.value  / (this.imageToScreenFactor || 1.0) );
+	}
 
-	def SetXLeft( self, xLeft ):
+	SetXLeft( xLeft ) {
 		// Set scroll in screen coordinates.
-		this.xVLeft = xLeft / (this.imageToScreenFactor or 1.0)
-		this.Refresh()
+		this.xVLeft = xLeft / (this.imageToScreenFactor || 1.0);
+		this.Refresh();
+	}
 
-	def SetXVLeft( self, xVLeft ):
+	SetXVLeft( xVLeft ) {
 		// Set scroll in image coordinates.
-		this.xVLeft = max( 0, xVLeft )
-		this.Refresh()
+		this.xVLeft = Math.max( 0, xVLeft );
+		this.Refresh();
+	}
 		
-	def SetTLeft( self, ts ):
+	SetTLeft( ts ) {
 		// Set scroll position by time.
-		this.SetXVLeft( xVFromTS(ts) )
+		this.SetXVLeft( this.xVFromTS(ts) );
+	}
 
-	def xVFromTS( self, t ):
-		''' Returns x in image coordinates (not screen coordinates). '''
-		if this.leftToRight:
-			return (this.tsJpgs[-1][0] - t).total_seconds() * this.imagePixelsPerSecond
+	xVFromTS( t ) {
+		''' Returns x in image coordinates (!screen coordinates). '''
+		if( this.leftToRight )
+			return (this.tsJpgs[-1][0] - t) * this.imagePixelsPerSecond;
 		else:
-			return (t - this.tsJpgs[0][0]).total_seconds() * this.imagePixelsPerSecond
+			return (t - this.tsJpgs[0][0]) * this.imagePixelsPerSecond;
+	}
 			
-	def tsFromXV( self, xv ):
-		''' Returns t from image coordinates (not screen coordinates). '''
-		if this.leftToRight:
-			return this.tsJpgs[-1][0] - timedelta( seconds=xv/this.imagePixelsPerSecond )
+	tsFromXV( xv ) {
+		''' Returns t from image coordinates (!screen coordinates). '''
+		if( this.leftToRight )
+			return this.tsJpgs[-1][0] - (xv/this.imagePixelsPerSecond) );
 		else:
-			return this.tsJpgs[0][0] + timedelta( seconds=xv/this.imagePixelsPerSecond )
+			return this.tsJpgs[0][0] + (xv/this.imagePixelsPerSecond );
+	}
 
-	def makeComposite( self ):		
-		'''
-			Make a composite bitmap.
-			The idea here is to create a composite bitmap that can be simply blit'ed to the screen (fast).
-			The height of the bitmap is the same of the screen, and the width is a long as necessary for all the images.
+	makeComposite() {
+		/*
+			Make a composite canvas.
+			The idea here is to create a composite canvas that can be simply blit'ed to the screen (fast).
+			The height of the canvas is the same of the screen, and the width is a long as necessary for all the images.
 			
 			We have to deal with 2 coordinate systems:  image and screen.
 			Images coordinates have a "V" and are in image coordinates.
 			Image coordinates are converted to screen coordinates by multipying by this.imageToScreenFactor.
-		'''
-		if not this.isValid():
-			this.compositeBitmap = null
-			return
+		*/
+		if( !this.isValid() )
+			this.compositeCanvas = null;
+			return;
+		}
 		
-		this.calculateCompositeBitmapWidth()
-		width, height = this.GetClientSize()
-		f = this.imageToScreenFactor
+		this.calculateCompositeCanvasWidth();
+		const width = this.canvas.width;
+		const height = this.canvas.height;
+		const f = this.imageToScreenFactor;
+		const canvasWidth = Math.round(self.compositeVCanvasWidth * f);
+
+		this.compositeCanvas = document.createElement('canvas');
+		this.compositeCanvas.width = canvasWidth;
+		this.compositeCanvas.height = height;
 		
-		// Make sure we don't exceed the maximum bitmap size.
-		MaxBitmapSize = 32768
-		bitmapWidth = round(this.compositeVBitmapWidth * f)
-		if bitmapWidth > MaxBitmapSize:
-			dt = max( 1.0/30.0, (this.tsJpgs[-1][0] - this.tsJpgs[0][0]).total_seconds() )
-			bitmapWidth = MaxBitmapSize
-			this.imagePixelsPerSecond = bitmapWidth / dt
-			this.compositeVBitmapWidth = round( bitmapWidth / f )
-		
-		try:
-			this.compositeBitmap = wx.Bitmap( bitmapWidth, height )
-			dc = wx.MemoryDC( this.compositeBitmap )
-		except Exception as e:
-			print( e )
-			return
-		
-		def copyImage(	sourceDC,
+		function copyImage(	sourceImg,
 						sourceX, sourceY, sourceW, sourceH,
 						destX,   destY ):
 			// Transform to screen coordinates.
 			dc.StretchBlit(
 				round(destX*f),   round(destY*f),   round(sourceW*f),   round(sourceH*f),
-				sourceDC,
+				sourceImg,
 				sourceX, sourceY, sourceW, sourceH,
 			)
 		
-		sourceDC = wx.MemoryDC()
-		PS = this.imagePixelsPerSecond
-		widthDiv2 = this.imageWidth // 2
-		xVFromTS = this.xVFromTS
+		const PS = this.imagePixelsPerSecond;
+		const widthDiv2 = this.imageWidth / 2;
+		const xVFromTS = this.xVFromTS;
 
 		// Precompute the x offsets of the images.
-		xImages = [round(xVFromTS(ts)) for ts, jpg in reversed(this.tsJpgs)]
+		xImages = [Math.round(xVFromTS(ts)) for ts, jpg in reversed(this.tsJpgs)]
 
 		if this.leftToRight:
-			xImages.append( round(xImages[-1] + widthDiv2) )	// Write a sentinel.
+			xImages.push( round(xImages[-1] + widthDiv2) )	// Write a sentinel.
 
 			for i, (ts, jpg) in enumerate(reversed(this.tsJpgs)):
 				try:
-					sourceDC.SelectObject(CVUtil.jpegToBitmap(jpg))
+					sourceImg.SelectObject(CVUtil.jpegToCanvas(jpg))
 				except Exception as e:
 					continue
 				
 				x = xImages[i]
 				w = xImages[i+1] - xImages[i] + 1
 				
-				copyImage( sourceDC,
+				copyImage( sourceImg,
 					this.imageWidth - w, 0, w, this.imageHeight,
 					x, 0,
 				)
-				sourceDC.SelectObject(wx.NullBitmap)
+				sourceImg.SelectObject(wx.NullCanvas)
 		else:
-			xImages.append( round(xImages[-1] - widthDiv2) )	// Write a sentinel.
+			xImages.push( round(xImages[-1] - widthDiv2) )	// Write a sentinel.
 
 			for i, (ts, jpg) in enumerate(reversed(this.tsJpgs)):
 				try:
-					sourceDC.SelectObject(CVUtil.jpegToBitmap(jpg))
+					sourceImg.SelectObject(CVUtil.jpegToCanvas(jpg))
 				except Exception as e:
 					continue
 				
 				x = xImages[i]
 				w = xImages[i] - xImages[i+1] + 1
 								
-				copyImage( sourceDC,
+				copyImage( sourceImg,
 					0, 0, w, this.imageHeight,
 					x - w, 0,
 				)
-				sourceDC.SelectObject(wx.NullBitmap)
+				sourceImg.SelectObject(wx.NullCanvas)
 
-		if this.filterContrast or this.filterSharpen or this.filterGrayscale:
-			this.compositeBitmap = CVUtil.frameToBitmap( this.filterFrame(CVUtil.bitmapToFrame( this.compositeBitmap )) )
-
-		this.adjustScrollbar()
+		this.adjustSlider();
+	
+	setClosestPhoto( ts ) {
+		this.iJpg = 0;
+		if( this.tsJpgs.length == 0 )
+			return this.iJpg;
 		
-	def filterFrame( self, frame ):
-		if this.filterContrast:
-			frame = CVUtil.adjustContrastFrame( frame )
-		if this.filterSharpen:
-			frame = CVUtil.sharpenFrame( frame )
-		if this.filterGrayscale:
-			frame = CVUtil.grayscaleFrame( frame )
-		return frame
-
-	def OnPaint( self, event ):
-		dc = wx.PaintDC( self )
-
-		if not this.isValid():
-			dc.SetBackground( wx.BLACK_BRUSH )
-			dc.Clear()
-			return
+		let iLeft = 0, iRight = this.tsJpgs.length;
+		while( iRight - iLeft > 1 ) {
+			let iMid = (iLeft + iRight) >> 1;
+			if( ts < this.tsJpgs[iMid][0] )
+				iRight = iMid;
+			else
+				iLeft = iMid;
+		}
+		const iMax = Math.min( this.tsJpgs.length, iLeft+1 );
+		for( let i = Math.max(0, iLeft-1); i < iMax; ++i ) {
+			if( Math.abs( this.tsJpgs[self.iJpg][0] - ts ) > Math.abs( this.tsJpgs[i][0] - ts) )
+				this.iJpg = i;
+		}
+		return this.iJpg;
+	}
+	
+	def Refresh() {
+		let ctx = this.canvas.getContext('2d');
+		if( !this.isValid() ) {
+			ctx.clearRect( 0, 0, this.canvas.width, this.canvas.height );
+			return;
+		}
 		
-		width, height = this.GetClientSize()
-		if this.compositeBitmap.GetSize()[0] < width:
-			dc.SetBackground( wx.BLACK_BRUSH )
-			dc.Clear()
-		
-		try:
-			dc.Blit( 0, 0, width, height, wx.MemoryDC(this.compositeBitmap), round(this.xVLeft * this.imageToScreenFactor), 0 )
-		except Exception as e:
-			// print( e )
-			pass
+		const width = this.canvas.width;
+		const height = this.canvas.height;
+		const compositeWidth = this.compositeCanvas.width;
+		const compositeHeight = this.compositeCanvas.height;
+		if compositeWidth < width
+			ctx.clearRect( 0, 0, this.canvas.width, this.canvas.height );
+
+		ctx.drawImage(
+			this.compositeCanvas,
+			round(this.xVLeft * this.imageToScreenFactor), 0, Math.min(width, compositeWidth), height,
+			0, 0
+		);
 		
 		// Draw the photo inset.
-		if this.insetTS is not null:
-			// Find the closest photo centered on the time.
-			ts = this.insetTS + timedelta( seconds = (-1.0 if this.leftToRight else 1.0) * (this.imageWidth / (2 * this.imagePixelsPerSecond) ) )
-			// Do a binary search to get us close to the required photo.
-			i = bisect_left( this.tsJpgs, (ts, b''), 0, len(this.tsJpgs)-1 )
-
-			// Do a small linear search to find the closest photo to the time.
-			tBest = sys.float_info.max
-			jpgBest = null
-			this.iJpg = 0
-			for j in range( max(0, i-1), min(len(this.tsJpgs), i+1) ):
-				tCur = abs( (this.insetTS - this.tsJpgs[j][0]).total_seconds() )
-				if tCur < tBest:
-					tBest = tCur
-					jpgBest = this.tsJpgs[j][1]
-					this.iJpg = j
-					
-			if jpgBest is not null:
-				bm = CVUtil.frameToBitmap( this.filterFrame(CVUtil.jpegToFrame(jpgBest)) )
-				lineWidth = 2
-				destHeight = round(height * this.insetMagnification)
-				destWidth = round((destHeight / bm.GetHeight()) * bm.GetWidth())
-				destX = width - destWidth - lineWidth*2
-				destY = 0
-				dc.SetPen( wx.Pen(wx.Colour(255,255,0)) )
-				dc.SetBrush( wx.TRANSPARENT_BRUSH )
-				dc.DrawRectangle( destX, destY, destWidth+lineWidth*2, destHeight+lineWidth*2 )
-				dc.StretchBlit( destX+lineWidth, destY+lineWidth, destWidth, destHeight,
-					wx.MemoryDC(bm), 0, 0, bm.GetWidth(), bm.GetHeight()
-				)
+		if( this.insetTS ) {
+			this.setClosestPhoto( this.insertTS );
+			let bm = this.tsJpgs[self.iJpg][1];
+			
+			lineWidth = 2
+			destHeight = round(height * this.insetMagnification)
+			destWidth = round((destHeight / bm.GetHeight()) * bm.GetWidth())
+			destX = width - destWidth - lineWidth*2
+			destY = 0
+			dc.SetPen( wx.Pen(wx.Colour(255,255,0)) )
+			dc.SetBrush( wx.TRANSPARENT_BRUSH )
+			dc.DrawRectangle( destX, destY, destWidth+lineWidth*2, destHeight+lineWidth*2 )
+			dc.StretchBlit( destX+lineWidth, destY+lineWidth, destWidth, destHeight,
+				wx.MemoryDC(bm), 0, 0, bm.GetWidth(), bm.GetHeight()
+			);
+		}
 		
 		// Draw the indicator lines.
-		fontSize = max( 16, height//40 )
-		lineHeight = round( fontSize * 1.25 )
-		dc.SetFont( wx.Font(wx.FontInfo(fontSize)) )
+		const fontSize = Math.max( 16, height/40 );
+		const lineHeight = Math.round( fontSize * 1.25 );
 		
-		tsLeft = this.tsFromXV( this.xVLeft )
-		tsRight = this.tsFromXV( this.xVLeft + width / this.imageToScreenFactor )
+		ctx.font = fontSize + 'px Ariel';
 		
-		def drawIndicatorLine( x, colour, text, textAtTop=true ):
-			if not 0 <= x < width:
-				return
+		const tsLeft = this.tsFromXV( this.xVLeft )
+		const tsRight = this.tsFromXV( this.xVLeft + width / this.imageToScreenFactor )
+		
+		function drawIndicatorLine( x, colour, text, textAtTop=true ) {
+			if( !(0 <= x && x < width) )
+				return;
 			
-			dc.SetPen( wx.Pen(colour) )
-			dc.DrawLine( x, 0, x, height )
+			ctx.strokeStyle = colour;
+			ctx.beginPath();
+			ctx.moveTo( x, 0 );
+			ctx.lineTo( x, height );
+			ctx.stroke();
 			
-			dc.SetTextForeground( colour )
-			xText = x + fontSize // 2
-			yText = fontSize//2 if textAtTop else round( height - (len(text)+1) * lineHeight)
-			for textCur in text:
-				if textCur:
-					tWidth, tHeight = dc.GetTextExtent( textCur )
-					dc.DrawText( textCur, xText, yText )
-				yText += lineHeight
+			ctx.fillStyle = colour;
+			const xText = x + fontSize / 2;
+			let yText = textAtTop ? fontSize/2 : Math.round( height - (text.length+1) * lineHeight);
+			for( textCur of text ) {
+				if( textCur ) {
+					tWidth = ctx.measureText( textCur );
+					ctx.fillText( textCur, xText, yText );
+				}
+				yText += lineHeight;
+			}
+		}
 		
-		if this.pointerTS:
-			text = [formatEpoch( this.pointerTS )]
-			if this.triggerTS:
-				text.append( '{} TRG'.format( formatTimeDelta( (this.pointerTS - this.triggerTS).total_seconds()) ) )
-			if this.currentTS:
-				text.append( '{} CUR'.format( formatTimeDelta( (this.pointerTS - this.currentTS).total_seconds()) ) )
-			x = round( (this.xVFromTS( this.pointerTS ) - this.xVLeft) * this.imageToScreenFactor )
-			drawIndicatorLine( x, wx.Colour(255,255,0), text, true )
+		if( this.pointerTS ) {
+			let text = [formatEpoch( this.pointerTS )];
+			if( this.triggerTS )
+				text.push( formatTimeDelta(this.pointerTS - this.triggerTS) + ' TRG' )
+			if( this.currentTS )
+				text.push( formatTimeDelta(this.pointerTS - this.currentTS) + ' CUR' )
+			let x = Math.round( (this.xVFromTS( this.pointerTS ) - this.xVLeft) * this.imageToScreenFactor );
+			drawIndicatorLine( x, 'rgb(255,255,0)', text, true )
+		}
 			
-		if this.triggerTS:
-			text = ['TRG {}'.format(formatEpoch(this.triggerTS))]
-			x = round( (this.xVFromTS(this.triggerTS) - this.xVLeft) * this.imageToScreenFactor )
-			drawIndicatorLine( x, wx.Colour(0,0,255), text, false )
+		if this.triggerTS {
+			let text = [formatEpoch(this.triggerTS) + ' TRG'];
+			let x = Math.round( (this.xVFromTS(this.triggerTS) - this.xVLeft) * this.imageToScreenFactor );
+			drawIndicatorLine( x, 'rgb(0,0,255)', text, false );
+		}
 		
-		if this.currentTS:
-			text = [formatEpoch( this.currentTS )]
-			if this.triggerTS:
-				text.append( '{} TRG'.format( formatTimeDelta( (this.currentTS - this.triggerTS).total_seconds()) ) )
-			text.append( '' )	// Blank line to give room for triggerTS line.
-			x = round( (this.xVFromTS(this.currentTS) - this.xVLeft) * this.imageToScreenFactor )
-			drawIndicatorLine( x, wx.Colour(255,0,0), text, false )
+		if( this.currentTS ) {
+			text = [formatEpoch( this.currentTS )];
+			if( this.triggerTS )
+				text.push( formatTimeDelta(this.currentTS - this.triggerTS) + ' TRG' );
+			text.push( '' );	// Blank line to give room for triggerTS line.
+			let x = Math.round( (this.xVFromTS(this.currentTS) - this.xVLeft) * this.imageToScreenFactor );
+			drawIndicatorLine( x, 'rgb(255,0,0)', text, false );
+		}
+	}
 
-class CompositePanel( wx.Panel):
+class CompositePanel:
 	def __init__( self, parent ):
 		super().__init__( parent )
 		
@@ -465,7 +475,7 @@ class CompositePanel( wx.Panel):
 		this.leftToRight.SetSelection( 0 )
 		this.leftToRight.Bind( wx.EVT_CHOICE, this.onLeftToRight )
 		
-		this.trig = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
+		this.trig = wx.CanvasButton(self, canvas=Utils.getCanvas('center-icon.png') )
 		this.trig.SetToolTip( wx.ToolTip('Recenter on Trigger Time') )
 		this.trig.Bind( wx.EVT_BUTTON, lambda e: this.composite.SetTriggerTS(this.composite.triggerTS) )
 		
@@ -477,21 +487,21 @@ class CompositePanel( wx.Panel):
 		this.sharpen.Bind(		wx.EVT_TOGGLEBUTTON, lambda e: this.composite.SetFilters(sharpen=e.IsChecked()) )
 		this.grayscale.Bind(	wx.EVT_TOGGLEBUTTON, lambda e: this.composite.SetFilters(grayscale=e.IsChecked()) )
 		
-		this.timeScrollbar = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
-		this.composite.SetScrollbar( this.timeScrollbar )
+		this.timeSlider = wx.ScrollBar( self, style=wx.SB_HORIZONTAL )
+		this.composite.SetSlider( this.timeSlider )
 		this.composite.Bind( wx.EVT_MOUSEWHEEL, this.onCompositeWheel )
 		
-		this.speedScrollbar = wx.ScrollBar( self, style=wx.SB_VERTICAL )		
+		this.speedSlider = wx.ScrollBar( self, style=wx.SB_VERTICAL )		
 		speedMax = 110	// km/h
 		thumbSize = 10
-		this.speedScrollbar.SetScrollbar( 50, thumbSize, speedMax, thumbSize )
-		this.speedScrollbar.Bind( wx.EVT_SCROLL, this.onScrollSpeed )
+		this.speedSlider.SetSlider( 50, thumbSize, speedMax, thumbSize )
+		this.speedSlider.Bind( wx.EVT_SCROLL, this.onScrollSpeed )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( this.composite, 1, flag=wx.EXPAND )
-		hs.Add( this.speedScrollbar, 0, flag=wx.EXPAND )
+		hs.Add( this.speedSlider, 0, flag=wx.EXPAND )
 		
 		vs.Add( hs, 1, flag=wx.EXPAND )
 		
@@ -501,7 +511,7 @@ class CompositePanel( wx.Panel):
 		hs.Add( this.contrast, flag=wx.LEFT, border=6 )
 		hs.Add( this.sharpen, flag=wx.LEFT, border=2 )
 		hs.Add( this.grayscale, flag=wx.LEFT, border=2 )
-		hs.Add( this.timeScrollbar, 1, flag=wx.EXPAND, border=2 )
+		hs.Add( this.timeSlider, 1, flag=wx.EXPAND, border=2 )
 		
 		vs.Add( hs, 0, flag=wx.EXPAND|wx.ALL, border=2 )
 				
@@ -518,7 +528,7 @@ class CompositePanel( wx.Panel):
 		elif event.ShiftDown():
 			pass
 		else:		
-			ssb = this.speedScrollbar
+			ssb = this.speedSlider
 			if rot < 0:
 				ssb.SetThumbPosition( max(0, ssb.GetThumbPosition() - 1) )
 			else:
@@ -529,7 +539,7 @@ class CompositePanel( wx.Panel):
 		if this.composite.tsJpgs:
 			this.composite.SetPixelsPerSecond( getPixelsPerSecond(
 					frameWidthPixels=this.composite.imageWidth,
-					speedKMH=this.speedScrollbar.GetThumbPosition()
+					speedKMH=this.speedSlider.GetThumbPosition()
 				)
 			)
 
@@ -564,10 +574,10 @@ if __name__ == '__main__':
 		with open(f, 'rb') as pf:
 			jpg = pf.read()
 		
-		if not leftToRight:
+		if !leftToRight:
 			jpg = CVUtil.frameToJPeg( cv2.flip( CVUtil.jpegToFrame(jpg), 1 ) )
 			
-		tsJpgs.append( (ts, jpg) )
+		tsJpgs.push( (ts, jpg) )
 	
 	pixelsPerSecond = getPixelsPerSecond( frameWidthPixels=CVUtil.getWidthHeight(tsJpgs[0][1])[0], speedKMH=50 )
 	//-------------------------------------------------------------------	

@@ -22,10 +22,10 @@ def getCameraUsb():
 		cap.release()
 	return cameraUsb
 
-def getVideoCapture( usb=1, fps=30, width=640, height=480, fourcc='' ):
+def getVideoCapture( usb=0, fps=30, width=640, height=480, fourcc='' ):
 	cap = cv2.VideoCapture( usb )
-	retvals = []
 	
+	retvals = []
 	if cap.isOpened():
 		properties = []
 		if fourcc and len(fourcc) == 4:
@@ -121,15 +121,16 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				if not ret:
 					break
 				
+				# if frame is not None: print( 'CamServer: frame.shape=', frame.shape )
+				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
+				# we send a group of photos for a capture.
+				if frame is not None and frame.shape[0] != 1:
+					frame = simplejpeg.encode_jpeg( frame, colorspace='BGR' )
+				
 				# Skip empty frames.
 				if frame is None:
 					continue
 					
-				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
-				# we send a group of photos for a capture.
-				if frame.shape[0] != 1:
-					frame = simplejpeg.encode_jpeg( image=frame, colorspace='BGR' )
-				
 				# Add the frame to the circular buffer.
 				fcb.append( ts, frame )
 				

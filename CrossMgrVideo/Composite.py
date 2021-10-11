@@ -63,7 +63,7 @@ class CompositeCtrl( wx.Control ):
 		
 		self.Bind( wx.EVT_MOTION, self.OnMotion )
 		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeft )
-		self.Bind( wx.EVT_RIGHT_DOWN, self.OnRight )
+		# self.Bind( wx.EVT_RIGHT_DOWN, self.OnRight )
 
 	def isValid( self ):
 		return len(self.tsJpgs) >= 2
@@ -175,7 +175,7 @@ class CompositeCtrl( wx.Control ):
 		
 	def SetTriggerTS( self, triggerTS ):
 		self.triggerTS = triggerTS
-		if triggerTS and self.compositeBitmap:
+		if triggerTS and self.isValid():
 			# Center the composite view on the trigger.
 			self.currentTS = triggerTS
 			screenWidth, screenHeight = self.GetClientSize()
@@ -211,7 +211,7 @@ class CompositeCtrl( wx.Control ):
 
 	def adjustScrollbar( self ):
 		''' Set up a scrollbar in screen coordinates. '''
-		if not self.scrollbar or not self.compositeBitmap:
+		if not self.scrollbar or not self.isValid() or not self.compositeBitmap:
 			return
 			
 		screenWidth, screenHeight = self.GetClientSize()
@@ -235,7 +235,7 @@ class CompositeCtrl( wx.Control ):
 		
 	def SetTLeft( self, ts ):
 		# Set scroll position by time.
-		self.SetXVLeft( xVFromTS(ts) )
+		self.SetXVLeft( self.xVFromTS(ts) )
 
 	def xVFromTS( self, t ):
 		''' Returns x in image coordinates (not screen coordinates). '''
@@ -251,7 +251,7 @@ class CompositeCtrl( wx.Control ):
 		else:
 			return self.tsJpgs[0][0] + timedelta( seconds=xv/self.imagePixelsPerSecond )
 
-	def makeComposite( self ):		
+	def makeComposite( self ):
 		'''
 			Make a composite bitmap.
 			The idea here is to create a composite bitmap that can be simply blit'ed to the screen (fast).
@@ -352,6 +352,28 @@ class CompositeCtrl( wx.Control ):
 			frame = CVUtil.grayscaleFrame( frame )
 		return frame
 
+	def setClosestPhoto( self, ts ):
+		self.iJpg = 0;
+		if len(self.tsJpgs) <= 1:
+			return self.iJpg
+		
+		iLeft, iRight = 0, len(self.tsJpgs)
+		while iRight - iLeft > 1:
+			iMid = (iLeft + iRight) >> 1
+			if ts < self.tsJpgs[iMid][0]:
+				iRight = iMid
+			else:
+				iLeft = iMid
+		
+		tBest = abs( (self.tsJpgs[self.iJpg][0] - ts).total_seconds() ) 
+		for i in range(max(0, iLeft-1), min(len(self.tsJpgs), iLeft+1)):
+			tCur = abs( (self.tsJpgs[i][0] - ts).total_seconds() )
+			if tCur < tBest:
+				tBest = tCur
+				self.iJpg = i
+		
+		return self.iJpg
+
 	def OnPaint( self, event ):
 		dc = wx.PaintDC( self )
 
@@ -361,12 +383,13 @@ class CompositeCtrl( wx.Control ):
 			return
 		
 		width, height = self.GetClientSize()
-		if self.compositeBitmap.GetSize()[0] < width:
+		compositeWidth, compositeHeight = self.compositeBitmap.GetSize();
+		if compositeWidth < width:
 			dc.SetBackground( wx.BLACK_BRUSH )
 			dc.Clear()
 		
 		try:
-			dc.Blit( 0, 0, width, height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
+			dc.Blit( 0, 0, min(compositeWidth, width), height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
 		except Exception as e:
 			# print( e )
 			pass
@@ -375,19 +398,8 @@ class CompositeCtrl( wx.Control ):
 		if self.insetTS is not None:
 			# Find the closest photo centered on the time.
 			ts = self.insetTS + timedelta( seconds = (-1.0 if self.leftToRight else 1.0) * (self.imageWidth / (2 * self.imagePixelsPerSecond) ) )
-			# Do a binary search to get us close to the required photo.
-			i = bisect_left( self.tsJpgs, (ts, b''), 0, len(self.tsJpgs)-1 )
-
-			# Do a small linear search to find the closest photo to the time.
-			tBest = sys.float_info.max
-			jpgBest = None
-			self.iJpg = 0
-			for j in range( max(0, i-1), min(len(self.tsJpgs), i+1) ):
-				tCur = abs( (self.insetTS - self.tsJpgs[j][0]).total_seconds() )
-				if tCur < tBest:
-					tBest = tCur
-					jpgBest = self.tsJpgs[j][1]
-					self.iJpg = j
+			
+			jpgBest = self.tsJpgs[self.setClosestPhoto(ts)][1]
 					
 			if jpgBest is not None:
 				bm = CVUtil.frameToBitmap( self.filterFrame(CVUtil.jpegToFrame(jpgBest)) )

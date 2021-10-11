@@ -1609,6 +1609,8 @@ class MainWin( wx.Frame ):
 			nonlocal lastPrimaryTime, primaryCount
 			
 			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
+			# print( 'processCamera: type(f), type(lastFrame)', type(msg['frame']), type(lastFrame), msg['frame'].shape if isinstance(msg['frame'], np.ndarray) else 'bytes', lastFrame.shape )
+			
 			if name == 'primary':
 				if lastFrame is None:
 					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
@@ -1676,7 +1678,7 @@ class MainWin( wx.Frame ):
 				if msg['cmd'] == 'terminate':
 					break
 				continue
-				
+			
 			handler( msg )
 		
 	def processRequests( self ):
