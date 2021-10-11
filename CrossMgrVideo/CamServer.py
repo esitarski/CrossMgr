@@ -6,7 +6,10 @@ import platform
 import simplejpeg
 from queue import Empty
 from multiprocessing import Process, Pipe, Queue
+
 from threading import Thread, Timer
+import queue
+
 from datetime import datetime, timedelta
 from FrameCircBuf import FrameCircBuf
 from FIFOCache import FIFOCacheSet
@@ -14,13 +17,27 @@ import CVUtil
 
 now = datetime.now
 
+CameraUsbMax = 16
+	
 def getCameraUsb():
-	cameraUsb = []
-	for usb in range(0, 8):
+	# Check the usb ports for cameras in parallel.
+	
+	def checkUsbPortForCamera( q, usb ):
 		cap = cv2.VideoCapture( usb )
-		if cap.isOpened():
-			cameraUsb.append( usb )
+		q.put( (usb, cap.isOpened()) )
 		cap.release()
+
+	q = queue.Queue()	
+	for usb in range(0,CameraUsbMax):
+		Thread(group=None, target=checkUsbPortForCamera, args=(q, usb) ).start()
+		
+	cameraUsb = []
+	for i in range(CameraUsbMax):
+		usb, hasCamera = q.get()
+		if hasCamera:
+			cameraUsb.append( usb )
+	
+	cameraUsb.sort()
 	return cameraUsb
 
 def getVideoCapture( usb=0, fps=30, width=640, height=480, fourcc='' ):
