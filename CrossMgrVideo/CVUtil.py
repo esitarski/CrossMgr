@@ -96,10 +96,7 @@ def jpegToFrame( jpeg ):
 	if jpeg in jpegFramesCache:
 		return jpegFramesCache[jpeg]
 	# frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
-	try:
-		frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
-	except Exception as e:
-		frame = None
+	frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
 	jpegFramesCache[jpeg] = frame
 	return frame
 
