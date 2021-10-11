@@ -236,7 +236,7 @@ class PhotoPanel( wx.Panel ):
 	def onRecenter( self, event=None ):
 		# Set to the photo closest to the trigger time.
 		if self.iJpg is not None:
-			self.setFrameIndex( self.findFrameClosestToTrigger(), True )
+			self.setFrameIndex( self.findFrameClosestToTrigger() )
 	
 	def changeFrame( self, frameDir ):
 		if self.tsJpg and self.iJpg is not None:
