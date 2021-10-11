@@ -171,12 +171,12 @@ class PhotoPanel( wx.Panel ):
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		
-		btn = wx.Button( self, label="Restore View" )
+		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('upload.png') )
 		btn.SetToolTip( wx.ToolTip('Restore Zoom and Frame') )
 		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
 		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
 		
-		btn = wx.Button( self, label="Save View" )
+		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('download.png') )
 		btn.SetToolTip( wx.ToolTip('Save Zoom and Frame') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveView )
 		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
