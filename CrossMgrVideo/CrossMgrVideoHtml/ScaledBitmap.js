@@ -65,7 +65,7 @@ class ScaledBitmap {
 	
 	OnSize( event ) {
 		this.resetMagRect();
-		this.Refresh();overflow:scroll;
+		this.Refresh();
 	}
 	
 	OnPointerDown( event ) {
