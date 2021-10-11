@@ -28,7 +28,7 @@ def getCameraUsb():
 		cap.release()
 
 	q = queue.Queue()	
-	for usb in range(0,CameraUsbMax):
+	for usb in range(CameraUsbMax):
 		Thread(group=None, target=checkUsbPortForCamera, args=(q, usb) ).start()
 		
 	cameraUsb = []

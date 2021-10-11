@@ -24,7 +24,10 @@ def getWidthHeight( o ):
 	if isinstance(o, bytes):			# Assume a jpg.
 		return frameToWidthHeight( jpegToFrame(o) )
 	raise TypeError( 'Unknown object type' )
-	
+
+def isJpegBuf( buf ):
+	return isinstance(buf, bytes) and buf[:2] == bytes.fromhex('FFD8') and buf[-2:] == bytes.fromhex('FFD9')	# Check for jpeg magic values.
+
 def toFrame( o ):
 	'''
 		Transform the given object into an opencv numpy frame.
@@ -38,7 +41,7 @@ def toFrame( o ):
 		except Exception as e:
 			#print( 'Conversion failure.  o.shape=', o.shape )
 			return None
-	if isinstance( o, bytes ):
+	if isJpegBuf( o ):
 		return jpegToFrame( o )
 	if isinstance( o, wx.Bitmap ):
 		return bitmapToFrame( o )
@@ -51,7 +54,10 @@ def toFrame( o ):
 def toJpeg( o ):
 	if isinstance(o, np.ndarray):
 		if o.shape[0] == 1:
-			return o.tobytes()
+			b = o.tobytes()
+			if isJpegBuf( b ):
+				return b
+			return None
 		if len(o.shape) != 3:
 			return None
 		return simplejpeg.encode_jpeg( o, colorspace='BGR' )
