@@ -189,7 +189,7 @@ class ConfigDialog( wx.Dialog ):
 		
 		pfgs.Add( wx.StaticText(self, label='Camera USB'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(16)] )
+		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(8)] )
 		self.usb.SetSelection( usb )
 		hs.Add( self.usb )
 		hs.Add( wx.StaticText(self, label='cameras detected on {}'.format(availableCameraUsb)), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )

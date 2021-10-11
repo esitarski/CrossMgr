@@ -10,12 +10,13 @@ from threading import Thread, Timer
 from datetime import datetime, timedelta
 from FrameCircBuf import FrameCircBuf
 from FIFOCache import FIFOCacheSet
+import CVUtil
 
 now = datetime.now
 
 def getCameraUsb():
 	cameraUsb = []
-	for usb in range(0, 16):
+	for usb in range(0, 8):
 		cap = cv2.VideoCapture( usb )
 		if cap.isOpened():
 			cameraUsb.append( usb )
@@ -89,8 +90,10 @@ def CamServer( qIn, pWriter, camInfo=None ):
 		except MemoryError as e:
 			print( 'pWriterSend: ', e )
 	
+	pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
+	time.sleep( 0.25 )
+	
 	while True:
-		pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
 		
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			time.sleep( 0.25 )
@@ -107,7 +110,8 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Read the frame.
 				if not cap.isOpened():		# Handle the case if the camera cannot open.
 					ret, frame = True, None
-					time.sleep( secondsPerFrame )
+					pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
+					time.sleep( 1 )
 				else:						
 					try:
 						ret, frame = cap.read()
@@ -121,16 +125,16 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				if not ret:
 					break
 				
-				# if frame is not None: print( 'CamServer: frame.shape=', frame.shape )
 				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
 				# we send a group of photos for a capture.
-				if frame is not None and frame.shape[0] != 1:
-					frame = simplejpeg.encode_jpeg( frame, colorspace='BGR' )
-				
+				frame = CVUtil.toJpeg( frame )
+					
 				# Skip empty frames.
 				if frame is None:
 					continue
 					
+				# print( len(frame) if isinstance(frame, bytes) else frame.shape )
+				
 				# Add the frame to the circular buffer.
 				fcb.append( ts, frame )
 				
@@ -250,17 +254,21 @@ def callCamServer( qIn, cmd, **kwargs ):
 	
 if __name__ == '__main__':
 	print( getCameraUsb() )
-	sys.exit()
+	# sys.exit()
 	
 	def handleMessages( q ):
 		while True:
-			m = q.get()
+			m = q.recv()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
-	qIn, pWriter = getCamServer( dict(usb=1, width=1920, height=1080, fps=30) )
+	qIn, pWriter = getCamServer( dict(usb=4, width=1920, height=1080, fps=30, fourcc="MJPG") )
+	qIn.put( {'cmd':'start_capture'} )
+	
 	thread = Thread( target=handleMessages, args=(pWriter,) )
 	thread.daemon = True
 	thread.start()
+	
+	time.sleep( 10000 )
 	
 	time.sleep( 2.0 )
 	callCamServer( qIn, 'cam_info', info=dict(usb=1, width=1920, height=1080, fps=30) )

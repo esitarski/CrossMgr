@@ -48,6 +48,17 @@ def toFrame( o ):
 		return o
 	raise TypeError( 'Unknown object type' )
 
+def toJpeg( o ):
+	if isinstance(o, np.ndarray):
+		if o.shape[0] == 1:
+			return o.tobytes()
+		if len(o.shape) != 3:
+			return None
+		return simplejpeg.encode_jpeg( o, colorspace='BGR' )
+	if isinstance(o, bytes) or o is None:
+		return o
+	raise TypeError( 'Unknown object type' )
+
 def frameToBitmap( frame, w_req=None, h_req=None ):
 	h_frame, w_frame = frame.shape[0], frame.shape[1]
 	if w_req is not None:
