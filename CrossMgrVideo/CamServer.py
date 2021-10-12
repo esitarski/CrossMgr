@@ -20,7 +20,7 @@ now = datetime.now
 CameraUsbMax = 16
 	
 def getCameraUsb():
-	# Check the usb ports for cameras in parallel.
+	# Check for cameras on all usb ports (in parallel).
 	
 	def checkUsbPortForCamera( q, usb ):
 		cap = cv2.VideoCapture( usb )
