@@ -1596,8 +1596,6 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('flush',) )
 	
 	def processCamera( self ):
-		lastPrimaryTime = now()
-		primaryCount = 0
 		
 		#---------------------------------------------------------------
 		def responseHandler( msg ):
@@ -1606,8 +1604,6 @@ class MainWin( wx.Frame ):
 		
 		#---------------------------------------------------------------
 		def updateHandler( msg ):
-			nonlocal lastPrimaryTime, primaryCount
-			
 			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
 			
 			if name == 'primary':
@@ -1615,13 +1611,6 @@ class MainWin( wx.Frame ):
 					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
 				else:
 					wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
-					primaryCount += self.primaryFreq
-					primaryTime = now()
-					primaryDelta = (primaryTime - lastPrimaryTime).total_seconds()
-					if primaryDelta > 2.5:
-						wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
-						lastPrimaryTime = primaryTime
-						primaryCount = 0
 					
 			elif name == 'focus':
 				if self.focusDialog.IsShown():
@@ -1655,6 +1644,9 @@ class MainWin( wx.Frame ):
 		def snapshotHandler( msg ):
 			lastFrame = lastFrame if msg['frame'] is None else msg['frame']
 			wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
+			
+		def fpsHandler( msg ):
+			wx.CallAfter( self.updateActualFPS, msg['fps_actual'] )
 
 		handlers = {
 			'response':		responseHandler,
@@ -1663,13 +1655,11 @@ class MainWin( wx.Frame ):
 			'info':			infoHandler,
 			'cameraUsb':	cameraUsbHandler,
 			'snapshot':		snapshotHandler,
+			'fps':			fpsHandler,
 		}
 		
 		while True:
-			try:
-				msg = self.camReader.recv()
-			except EOFError:
-				break
+			msg = self.camReader.get()
 				
 			try:
 				handler = handlers[msg['cmd']]

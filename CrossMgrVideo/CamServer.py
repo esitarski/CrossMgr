@@ -4,11 +4,10 @@ import sys
 import time
 import platform
 import simplejpeg
-from queue import Empty
-from multiprocessing import Process, Pipe, Queue
+import queue
+from queue import Empty, Queue
 
 from threading import Thread, Timer
-import queue
 
 from datetime import datetime, timedelta
 from FrameCircBuf import FrameCircBuf
@@ -96,26 +95,27 @@ def EstimateQuerySeconds( ts, s_before, s_after, fps ):
 	backlogRemaining = backlog - sAfter * transmitRate	
 	return sAfter + max(0.0, backlogRemaining / transmitRate)
 
-def CamServer( qIn, pWriter, camInfo=None ):
+def CamServer( qIn, qWriter, camInfo=None ):
 	sendUpdates = {}
 	tsSeen = FIFOCacheSet( 60*60 )		# Cache of times that have already been written to the database.
 	camInfo = camInfo or {}
 	backlog = []
 	
-	def pWriterSend( msg ):
+	def qWriterSend( msg ):
 		try:
-			pWriter.send( msg )
+			qWriter.put( msg )
 		except MemoryError as e:
-			print( 'pWriterSend: ', e )
+			print( 'qWriterSend: ', e )
 	
-	pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
+	qWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
 	time.sleep( 0.25 )
 	
 	while True:
 		
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			time.sleep( 0.25 )
-			frameCount = 0
+			frameCount = fpsFrameCount = 0
+			fpsStart = now()
 			inCapture = False
 			doSnapshot = False
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
@@ -128,8 +128,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Read the frame.
 				if not cap.isOpened():		# Handle the case if the camera cannot open.
 					ret, frame = True, None
-					pWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
-					time.sleep( .5 )
+					qWriterSend( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
 					break
 				else:						
 					try:
@@ -211,7 +210,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 						break
 					
 					elif cmd == 'terminate':
-						pWriterSend( {'cmd':'terminate'} )
+						qWriterSend( {'cmd':'terminate'} )
 						return
 					
 					else:
@@ -221,7 +220,7 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				
 				# Camera info.
 				if retvals:
-					pWriterSend( {'cmd':'info', 'retvals':retvals} )
+					qWriterSend( {'cmd':'info', 'retvals':retvals} )
 					convert_rgb = True
 					for name, property_index, call_status, update_value in retvals:
 						if name == 'convert_rgb' and call_status and update_value == 0:
@@ -239,29 +238,34 @@ def CamServer( qIn, pWriter, camInfo=None ):
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
 					backlogTransmitFrames = transmitFramesMax * (5 if not convert_rgb else 1)	# If we are sending jpeg frames we can send more at a time.
-					pWriterSend( { 'cmd':'response', 'ts_frames': backlog[-backlogTransmitFrames:] } )
+					qWriterSend( { 'cmd':'response', 'ts_frames': backlog[-backlogTransmitFrames:] } )
 					del backlog[-backlogTransmitFrames:]
 						
 				# Send status messages.
 				for name, freq in sendUpdates.items():
 					if frameCount % freq == 0:
-						pWriterSend( {'cmd':'update', 'name':name, 'frame':frame} )
+						qWriterSend( {'cmd':'update', 'name':name, 'frame':frame} )				
+				frameCount += 1
 						
 				# Send snapshot message.
 				if doSnapshot:
 					if frame is not None:
-						pWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':frame} )
+						qWriterSend( {'cmd':'snapshot', 'ts':ts, 'frame':frame} )
 					doSnapshot = False
-						
-				frameCount += 1
+				
+				# Send fps message.
+				fpsFrameCount += 1
+				if (ts - fpsStart).total_seconds() >= 3.0:
+					qWriterSend( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
+					fpsStart = ts
+					fpsFrameCount = 0
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
-	pReader, pWriter = Pipe( False )
-	p = Process( target=CamServer, args=(qIn, pWriter, camInfo), name='CamServer' )
-	p.daemon = True
-	p.start()
-	return qIn, pReader
+	qWriter = Queue()
+	thread = Thread( target=CamServer, args=(qIn, qWriter, camInfo), name='CamServer' )
+	thread.start()
+	return qIn, qWriter
 	
 def callCamServer( qIn, cmd, **kwargs ):
 	kwargs['cmd'] = cmd
@@ -273,13 +277,13 @@ if __name__ == '__main__':
 	
 	def handleMessages( q ):
 		while True:
-			m = q.recv()
+			m = q.get()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
-	qIn, pWriter = getCamServer( dict(usb=4, width=1920, height=1080, fps=30, fourcc="MJPG") )
+	qIn, qWriter = getCamServer( dict(usb=4, width=1920, height=1080, fps=30, fourcc="MJPG") )
 	qIn.put( {'cmd':'start_capture'} )
 	
-	thread = Thread( target=handleMessages, args=(pWriter,) )
+	thread = Thread( target=handleMessages, args=(qWriter,) )
 	thread.daemon = True
 	thread.start()
 	
