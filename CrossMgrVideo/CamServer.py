@@ -270,7 +270,7 @@ if __name__ == '__main__':
 			m = q.get()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
-	qIn, qWriter = getCamServer( dict(usb=6, width=800, height=600, fps=30, fourcc="MJPG") )
+	qIn, qWriter = getCamServer( dict(usb=6, width=10000, height=10000, fps=30, fourcc="MJPG") )
 	qIn.put( {'cmd':'start_capture'} )
 	
 	Thread( target=handleMessages, args=(qWriter,) ).start()
