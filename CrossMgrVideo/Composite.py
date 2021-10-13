@@ -40,6 +40,7 @@ def getPixelsPerSecond( frameWidthPixels=1920, finishWidthM=8, cameraDistanceFro
 class CompositeCtrl( wx.Control ):
 	def __init__( self, parent, size=(600,600) ):
 		super().__init__( parent, size=size )
+		
 		self.tsJpgs = []
 		self.iJpg = 0								# Index of the inset image.
 		
@@ -375,18 +376,22 @@ class CompositeCtrl( wx.Control ):
 		return self.iJpg
 
 	def OnPaint( self, event ):
-		dc = wx.PaintDC( self )
-
-		if not self.isValid():
-			dc.SetBackground( wx.BLACK_BRUSH )
-			dc.Clear()
-			return
+		dc = wx.BufferedPaintDC( self )
 		
 		width, height = self.GetClientSize()
+		
+		def clear():
+			dc.SetBrush( wx.BLACK_BRUSH )
+			dc.SetPen( wx.TRANSPARENT_PEN )
+			dc.DrawRectangle( 0, 0, width, height )
+
+		if not self.isValid():
+			clear()
+			return
+		
 		compositeWidth, compositeHeight = self.compositeBitmap.GetSize();
 		if compositeWidth < width:
-			dc.SetBackground( wx.BLACK_BRUSH )
-			dc.Clear()
+			clear()
 		
 		try:
 			dc.Blit( 0, 0, min(compositeWidth, width), height, wx.MemoryDC(self.compositeBitmap), round(self.xVLeft * self.imageToScreenFactor), 0 )
