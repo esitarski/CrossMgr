@@ -173,7 +173,7 @@ def getCameraResolutionChoice( resolution ):
 			return i
 	return len(cameraResolutionChoices) - 1
 
-FOURCC_DEFAULT = ''
+FOURCC_DEFAULT = 'MJPG'
 
 class ConfigDialog( wx.Dialog ):
 	def __init__( self, parent, usb=0, fps=30, width=imageWidth, height=imageHeight, fourcc='', availableCameraUsb=None, id=wx.ID_ANY ):

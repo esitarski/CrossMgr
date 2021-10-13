@@ -47,8 +47,6 @@ def getVideoCapture( usb=0, fps=30, width=640, height=480, fourcc='' ):
 		properties = []
 		if fourcc and len(fourcc) == 4:
 			properties.append( ('fourcc', cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*fourcc) ) )
-			if fourcc.upper() == 'MJPG':
-				properties.append( ('convert_rgb', cv2.CAP_PROP_CONVERT_RGB, 0) )
 		properties.append( ('frame_width', cv2.CAP_PROP_FRAME_WIDTH, width) )
 		properties.append( ('frame_height', cv2.CAP_PROP_FRAME_HEIGHT, height) )
 		properties.append( ('fps', cv2.CAP_PROP_FPS, fps) )
@@ -272,7 +270,7 @@ if __name__ == '__main__':
 			m = q.get()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
-	qIn, qWriter = getCamServer( dict(usb=6, width=800, height=600, fps=30, fourcc="") )
+	qIn, qWriter = getCamServer( dict(usb=6, width=800, height=600, fps=30, fourcc="MJPG") )
 	qIn.put( {'cmd':'start_capture'} )
 	
 	Thread( target=handleMessages, args=(qWriter,) ).start()
