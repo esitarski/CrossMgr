@@ -58,7 +58,7 @@ def toJpeg( o ):
 			if isJpegBuf( b ):
 				return b
 			return None
-		if len(o.shape) != 3:
+		if len(o.shape) != 3 or o.shape[2] != 3:	# Check for height, width, and 3 colors.
 			return None
 		return simplejpeg.encode_jpeg( o, colorspace='BGR' )
 	if isinstance(o, bytes) or o is None:
