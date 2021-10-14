@@ -22,6 +22,7 @@ pyinstaller
 pybabel
 opencv-python
 piexif
+simplejpeg
 virustotal-api
 -e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
 wxPython

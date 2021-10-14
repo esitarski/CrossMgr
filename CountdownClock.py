@@ -15,7 +15,7 @@ def GetSin( pos ):
 	return math.sin(pos*2.0*math.pi-math.pi/2.0)
 
 def GetPen( colour=wx.BLACK, cap=wx.CAP_ROUND, join=wx.JOIN_ROUND, width=1 ):
-	pen = wx.Pen( colour, width )
+	pen = wx.Pen( colour, round(width) )
 	pen.SetCap( cap )
 	pen.SetJoin( join )
 	return pen
@@ -217,7 +217,7 @@ class CountdownClock(wx.Control):
 		
 		ctx.SetFont( ctx.CreateFont(
 			wx.Font(
-				(0,radius*0.37),
+				(0,int(radius*0.37)),
 				wx.FONTFAMILY_SWISS,
 				wx.FONTSTYLE_NORMAL,
 				wx.FONTWEIGHT_NORMAL,

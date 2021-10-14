@@ -22,6 +22,7 @@
 [Results]:			Results.html
 [Pulled]:			Pulled.html
 [Situation]:		Situation.html
+[GapChart]:			Situation.html
 [LapCounter]:		LapCounter.html
 [Passings]:			Passings.html
 [RiderDetail]:		RiderDetail.html

@@ -30,8 +30,10 @@ Get started with CrossMgr now!
 * [Properties][]
 * [Prizes][]
 * [Primes][]
-* [Situation][]
+* [Animation][]
+* [GapChart][]
 * [LapCounter][]
+* [Announcer][]
 * [Histogram][]
 * [TeamResults][]
 

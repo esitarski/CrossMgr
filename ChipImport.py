@@ -197,12 +197,6 @@ class ChipImportDialog( wx.Dialog ):
 		else:
 			self.dataType.SetLabel( _('Data will be imported for a Race') )
 			
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
 		bs = wx.BoxSizer( wx.VERTICAL )
 		
 		border = 4
@@ -223,12 +217,10 @@ class ChipImportDialog( wx.Dialog ):
 		
 		bs.Add( gs, 0, wx.EXPAND | wx.ALL, border )
 		
-		buttonBox = wx.BoxSizer( wx.HORIZONTAL )
-		buttonBox.AddStretchSpacer()
-		buttonBox.Add( self.okBtn, flag = wx.RIGHT, border = border )
-		self.okBtn.SetDefault()
-		buttonBox.Add( self.cancelBtn )
-		bs.Add( buttonBox, 0, wx.EXPAND | wx.ALL, border )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			bs.Add( btnSizer, 0, wx.EXPAND | wx.ALL, border )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -318,6 +310,3 @@ class ChipImportDialog( wx.Dialog ):
 			Utils.MessageOK( self, _('Import Successful'), _('Import Successful') )
 		wx.CallAfter( Utils.refresh )
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )

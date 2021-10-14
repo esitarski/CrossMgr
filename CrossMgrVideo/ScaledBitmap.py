@@ -1,4 +1,5 @@
 import wx
+import traceback
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -9,10 +10,11 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 	return a0 <= b1 and b0 <= a1
 
 class ScaledBitmap( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(640,480), style=0, bitmap=None, drawFinishLine=False, inset=False ):
+	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, bitmap=None, drawFinishLine=False, inset=False, drawCallback=None ):
 		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
 		self.bitmap = bitmap
+		self.drawCallback = drawCallback
 		self.drawFinishLine = drawFinishLine
 		self.buttonDown = False
 		self.backgroundBrush = wx.Brush( wx.Colour(0,0,0), wx.SOLID )
@@ -23,19 +25,41 @@ class ScaledBitmap( wx.Panel ):
 			self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
 			self.Bind( wx.EVT_MOTION, self.OnMotion )
 			self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
+			self.Bind( wx.EVT_LEAVE_WINDOW, self.OnLeave )
 	
 	def resetMagRect( self ):
+		# traceback.print_stack()
 		self.xBegin = 0
 		self.yBegin = 0
 		self.xEnd = 0
 		self.yEnd = 0		
+		self.sourceRect = None
 	
 	def getMagRect( self ):
 		return wx.Rect( min(self.xBegin, self.xEnd), min(self.yBegin, self.yEnd), abs(self.xEnd-self.xBegin), abs(self.yEnd-self.yBegin) )
 	
+	def GetSourceRect( self ):
+		''' Returns the zoom rectangle in photo pixel coordinates. '''
+		return self.sourceRect
+		
+	def SetSourceRect( self, rect ):
+		''' Sets the zoom rectangle, given in photo pixel coordinates. '''
+		if not rect or rect.IsEmpty() or not self.bitmap:
+			return
+		sourceBM = self.bitmap
+		sourceWidth, sourceHeight = sourceBM.GetSize()
+		width, height = self.GetSize()
+		ratio = GetScaleRatio( sourceWidth, sourceHeight, width, height )
+		destWidth, destHeight = int(sourceWidth * ratio), int(sourceHeight * ratio)
+		xLeft, yTop = max(0, (width - destWidth)//2), max(0, (height - destHeight)//2)
+		self.xBegin = xLeft + int(rect.GetX() * ratio)
+		self.yBegin = yTop + int(rect.GetY() * ratio)
+		self.xEnd = self.xBegin + int(rect.GetWidth() * ratio)
+		self.yEnd = self.yBegin + int(rect.GetHeight() * ratio)
+		self.Refresh()
+	
 	def OnSize( self, event ):
-		self.resetMagRect()
-		wx.CallAfter( self.Refresh )
+		self.Refresh()
 	
 	def OnLeftDown( self, event ):
 		self.buttonDown = True
@@ -44,19 +68,24 @@ class ScaledBitmap( wx.Panel ):
 		self.SetCursor( wx.Cursor(wx.CURSOR_MAGNIFIER) )
 		wx.CallAfter( self.Refresh )
 		
-	def OnLeftUp( self, event ):
-		self.SetCursor( wx.NullCursor )
-		self.buttonDown = False
-		
 	def OnMotion( self, event ):
 		if self.buttonDown:
 			self.xEnd, self.yEnd = event.GetX(), event.GetY()
-			wx.CallAfter( self.Refresh )
+			self.Refresh()
+	
+	def OnLeftUp( self, event ):
+		self.SetCursor( wx.NullCursor )
+		self.buttonDown = False
+	
+	def OnLeave( self, event ):
+		if self.buttonDown:
+			self.buttonDown = False
+			self.SetCursor( wx.NullCursor )
 	
 	def getInsetRect( self, width, height, isWest, isNorth ):
 		r = 0.75
-		insetWidth = int(width*r)
-		insetHeight = int(height*r)
+		insetWidth = round(width*r)
+		insetHeight = round(height*r)
 		return wx.Rect( 0 if not isWest else width - insetWidth, 0 if not isNorth else height - insetHeight,
 			insetWidth, insetHeight
 		)
@@ -65,6 +94,7 @@ class ScaledBitmap( wx.Panel ):
 		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
 		
+		self.sourceRect = None
 		if not self.bitmap:
 			return
 		
@@ -83,13 +113,18 @@ class ScaledBitmap( wx.Panel ):
 		
 		magnifyRect = self.getMagRect()
 		if magnifyRect.IsEmpty():
+			if self.drawCallback:
+				self.drawCallback( dc, width, height )
 			return
 			
 		sourceRect = wx.Rect( 0, 0, sourceWidth, sourceHeight )
 		sourceRect.Intersect( wx.Rect( int((magnifyRect.GetX() - xLeft)/ratio), int((magnifyRect.GetY()-yTop)/ratio), int(magnifyRect.GetWidth()/ratio), int(magnifyRect.GetHeight()/ratio) ) )
 		
 		if sourceRect.IsEmpty():
+			if self.drawCallback:
+				self.drawCallback( dc, width, height )
 			return
+		self.sourceRect = sourceRect
 			
 		xCenter = sourceRect.GetX() + sourceRect.GetWidth() // 2
 		yCenter = sourceRect.GetY() + sourceRect.GetHeight() // 2
@@ -113,15 +148,13 @@ class ScaledBitmap( wx.Panel ):
 		dc.DrawRectangle( magnifyRect )
 
 		if intervalsOverlap(magnifyRect.GetLeft(), magnifyRect.GetRight(), insetRect.GetLeft(), insetRect.GetRight()):
-			if intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom()):
-				return
-			
-			if isNorth:
-				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetTopLeft() )
-				dc.DrawLine( magnifyRect.GetBottomRight(),insetRect.GetTopRight() )
-			else:
-				dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetBottomLeft() )
-				dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetBottomRight() )
+			if not intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom() ):
+				if isNorth:
+					dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetTopLeft() )
+					dc.DrawLine( magnifyRect.GetBottomRight(),insetRect.GetTopRight() )
+				else:
+					dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetBottomLeft() )
+					dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetBottomRight() )
 		else:
 			if isWest:
 				dc.DrawLine( magnifyRect.GetTopRight(),   insetRect.GetTopLeft() )
@@ -129,12 +162,20 @@ class ScaledBitmap( wx.Panel ):
 			else:
 				dc.DrawLine( magnifyRect.GetTopLeft(),    insetRect.GetTopRight() )
 				dc.DrawLine( magnifyRect.GetBottomLeft(), insetRect.GetBottomRight() )
+
+		if self.drawCallback:
+			self.drawCallback( dc, width, height )
 	
 	def OnPaint( self, event=None ):
 		width, height = self.GetSize()
 		self.draw( wx.AutoBufferedPaintDC(self), width, height )
 		
 	def SetBitmap( self, bitmap ):
+		if not bitmap:
+			self.resetMagRect()
+			self.SetTestBitmap()
+			return
+		
 		assert isinstance(bitmap, wx.Bitmap)
 		self.bitmap = bitmap
 		self.Refresh()
@@ -162,19 +203,6 @@ class ScaledBitmap( wx.Panel ):
 		self.bitmap = wx.Bitmap( width, height )
 		self.Refresh()
 		
-	def SetTile( self, tile ):
-		width, height = self.GetSize()
-		self.bitmap = wx.Bitmap( width, height )
-		dc = wx.MemoryDC()
-		dc.SelectObject( self.bitmap )
-		
-		wTile = tile.GetWidth()
-		hTile = tile.GetHeight()
-		for y in range( 0, height, hTile ):
-			for x in range( 0, width, wTile ):
-				dc.DrawBitmap( tile, x, y )
-		self.Refresh()
-		
 	def SetTestBitmap( self ):
 		width, height = self.GetSize()
 		self.bitmap = wx.Bitmap( width, height )
@@ -185,15 +213,15 @@ class ScaledBitmap( wx.Panel ):
 			wx.Colour(255,255,255), wx.Colour(255,0,0), wx.Colour(0,255,0), wx.Colour(0,0,255),
 			wx.Colour(255,255,0), wx.Colour(255,0,255), wx.Colour(0,255,255), wx.Colour(0,0,0),
 		)
-		rWidth = int(float(width) / len(colours) + 0.5)
+		rWidth = round(float(width) / len(colours))
 		for row, (y, hCur) in enumerate(((0, int(height*0.75)), (int(height*0.75), int(height*0.25)))):
 			for col, c in enumerate(colours if row == 0 else reversed(colours)):
 				dc.SetBrush( wx.Brush(c, wx.SOLID) )
 				dc.DrawRectangle( rWidth * col, y, rWidth+1, hCur )
 		
-		s = int(min(width, height) / 1.5)
-		x = int((width-s) / 2)
-		y = int((height-s) / 2)
+		s = round(min(width, height) / 1.5)
+		x = round((width-s) / 2)
+		y = round((height-s) / 2)
 		angle = 360.0 / len(colours)
 		for i, c in enumerate(colours):
 			dc.SetBrush( wx.Brush(c, wx.SOLID) )

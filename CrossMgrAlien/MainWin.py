@@ -104,7 +104,7 @@ class MessageManager( object ):
 
 class AdvancedSetup( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Advanced Setup",
+		super().__init__( parent, id, "Advanced Setup",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		'''
@@ -116,41 +116,33 @@ class AdvancedSetup( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 
 		border = 8
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Advanced Reader Options:'), pos = (0,0), span=(1, 2), border = border, flag=wx.ALL )
+		bs.Add( wx.StaticText(self, label='Advanced Reader Options:'), pos = (0,0), span=(1, 2), border = border, flag=wx.ALL )
 		
 		row = 1
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Repeat Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( wx.StaticText(self, label='Repeat Seconds'), pos=(row, 0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.RepeatSeconds = intctrl.IntCtrl( self, wx.ID_ANY, min=1, max=120, limited = True,
 			value = Alien.RepeatSeconds, size=(32,-1) )
 		bs.Add( self.RepeatSeconds, pos=(row, 1), span=(1,1), border = border, flag=wx.TOP )
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'interval in which multiple tag reads are considered "repeats" and not reported'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( wx.StaticText(self, label='interval in which multiple tag reads are considered "repeats" and not reported'), pos=(row, 2), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL )
 
 		row += 1
-		self.playSoundsCheckbox = wx.CheckBox( self, wx.ID_ANY, 'Beep on Read' )
+		self.playSoundsCheckbox = wx.CheckBox( self, label='Beep on Read' )
 		self.playSoundsCheckbox.SetValue( Utils.playBell )
 		bs.Add( self.playSoundsCheckbox, pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.LEFT|wx.RIGHT )
 		
 		row += 1
-		self.restoreDefaultButton = wx.Button( self, wx.ID_ANY, 'Restore Defaults' )
+		self.restoreDefaultButton = wx.Button( self, label='Restore Defaults' )
 		self.restoreDefaultButton.Bind( wx.EVT_BUTTON, self.onRestoreDefault )
 		bs.Add( self.restoreDefaultButton, pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_CENTER )
 		
 		row += 1
-		bs.Add( wx.StaticText(self, wx.ID_ANY, 'Reminder: Press "Reset" for these changes to take effect.'), pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT )
+		bs.Add( wx.StaticText(self, label='Reminder: Press "Reset" for these changes to take effect.'), pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		row += 1
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		hs.Add( self.cancelBtn, border = border, flag=wx.ALL )
-		
-		bs.Add( hs, pos=(row, 0), span=(1,3), flag=wx.ALIGN_RIGHT )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			row += 1
+			bs.Add( btnSizer, pos=(row, 0), span=(1,3), flag=wx.EXPAND )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -165,9 +157,6 @@ class AdvancedSetup( wx.Dialog ):
 		Alien.RepeatSeconds = self.RepeatSeconds.GetValue()
 		Utils.playBell = self.playSoundsCheckbox.IsChecked()
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 def setFont( font, w ):
 	w.SetFont( font )

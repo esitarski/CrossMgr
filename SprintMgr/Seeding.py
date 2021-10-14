@@ -52,22 +52,10 @@ class SortDialog( wx.Dialog ):
 		sizer.Add( self.randomize, flag=wx.ALL, border = 4 )
 		sizer.Add( self.ttOrder, flag=wx.ALL, border = 4 )
 		
-		btnSizer = wx.StdDialogButtonSizer()
-		okBtn = wx.Button( self, id=wx.ID_OK )
-		okBtn.Bind( wx.EVT_BUTTON, self.onOK )
-		cancelBtn = wx.Button( self, id=wx.ID_CANCEL )
-		cancelBtn.Bind( wx.EVT_BUTTON, self.onCancel )
-		btnSizer.Add( okBtn )
-		btnSizer.Add( cancelBtn )
-		
-		sizer.Add( btnSizer, flag=wx.ALL, border = 4 )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border = 4 )
 		self.SetSizerAndFit( sizer )
-
-	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 class Seeding(wx.Panel):
 	#----------------------------------------------------------------------

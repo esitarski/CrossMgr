@@ -491,8 +491,6 @@ class FinishStripPanel( wx.Panel ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		displayWidth, displayHeight = wx.GetDisplaySize()
-	
 		self.leftToRight = True
 		self.imageQuality = wx.IMAGE_QUALITY_NORMAL
 		self.finish = FinishStrip(
@@ -516,17 +514,14 @@ class FinishStripPanel( wx.Panel ):
 		zs.Add( self.zoomInButton )
 		zs.Add( self.zoomOutButton )
 		
-		self.direction = wx.RadioBox( self,
-			label=_(''),
-			choices=[_('Finish Right to Left'), _('Finish Left to Right')],
-			majorDimension=1,
-			style=wx.RA_SPECIFY_ROWS
+		self.direction = wx.Choice( self,
+			choices=['\u27F6 ' + _('Finish Left to Right'), '\u27F5 ' + _('Finish Right to Left')],
 		)
-		self.direction.SetSelection( 1 if self.leftToRight else 0 )
+		self.direction.SetSelection( 1 - int(self.leftToRight) )
 		self.direction.Bind( wx.EVT_RADIOBOX, self.onDirection )
 
 		self.recenter = wx.BitmapButton(self, bitmap=Utils.getBitmap('center-icon.png') )
-		self.recenter.SetToolTip( wx.ToolTip('Recenter') )
+		self.recenter.SetToolTip( wx.ToolTip('Recenter on Trigger Time') )
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
 		
 		self.photoView = wx.BitmapButton( self, bitmap=Utils.getBitmap('outline_photo_library_black_24dp.png') )
@@ -569,7 +564,7 @@ class FinishStripPanel( wx.Panel ):
 		vs.Add( self.finish, 1, flag=wx.EXPAND )
 		vs.Add( self.timeScrollbar, flag=wx.EXPAND )
 		vs.Add( szs, flag=wx.EXPAND|wx.ALL, border=0 )
-		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=0 )
+		vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizer( vs )
 		wx.CallAfter( self.initUI )
@@ -611,7 +606,7 @@ class FinishStripPanel( wx.Panel ):
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
 
 	def onDirection( self, event ):
-		self.SetLeftToRight( event.GetInt() == 1 ) 
+		self.SetLeftToRight( event.GetSelection() == 0 )		
 		event.Skip()
 		
 	def onChangeSpeed( self, event=None ):
@@ -741,8 +736,8 @@ if __name__ == '__main__':
 	
 	displayWidth, displayHeight = wx.GetDisplaySize()
 	
-	width = int(displayWidth * 0.8)
-	height = int(displayHeight * 0.8)
+	width = round(displayWidth * 0.8)
+	height = round(displayHeight * 0.8)
 	
 	mainWin = wx.Frame(None,title="FinishStrip", size=(width, height))
 	fs = FinishStripPanel( mainWin )

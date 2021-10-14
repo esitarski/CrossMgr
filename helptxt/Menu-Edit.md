@@ -72,3 +72,32 @@ The "Expected:" section will show nothing as there will be no projected lap time
 It is not recommended to do this unless you are running a race by laps only and not by time.
 
 This option does not change the race [Properties][], it clears the Autocorrect option for all riders in the race.
+
+## Reissue Bib Numbers
+
+This feature allows you to change an existing Bib number into another one.
+
+Normally this is done before a race by changing your Excel sheet.  And if you have reasonable number ranges, the new bib number will match the number ranges in the same Category.
+
+But, in the worse case:
+
+* You have a long time-trial (eg. all day).
+* You have already imported the TT start times for all riders and you have started the time trial.
+* Riders show up during the day who have lost their bib numbers, you don't have any duplicates, and you give out new ones.
+* You don't have reasonable number ranges for your categories and/or the new number you give out don't match existing number ranges.
+
+To fix this, you would need to change your Excel sheet from the old number to the new number to get the rider information.
+You also need to change or re-import your start times to update the start time for the rider.
+You need to change the number ranges in the Categories so that the rider remains in the same category.
+The final problem is that if you didn't get this done before the rider finished, the rider's finish time under the new Bib number will be the start time (as there is no start time for the new bib).
+
+This is not feasible to do during a live event.
+
+__Reissue Bib Numbers__ to the rescue.  It takes a list of the Old and New bib numbers and does everything requires to make the change:
+
+* Automatically updates the Excel workbook so that the old rider data is matched to the new number (it makes a backup first).
+* Ensures that the Category numbers are updated properly so that the riders remain in the same Categories as before.
+* If running a Time Trial and the rider was already started with the new bib number, the times will be fixed up so that the start time will become a lap time.
+
+It is important for the Excel file not to be open in Excel (otherwise this will cause a file sharing error).
+

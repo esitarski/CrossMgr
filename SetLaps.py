@@ -64,14 +64,6 @@ class SetLaps( wx.Dialog ):
 			
 		self.column[1].raceLaps.SetValue( self.category._numLaps )
 		self.column[1].raceLaps.Bind( wx.EVT_TEXT, self.onNewRaceLaps )
-			
-		btnSizer = wx.StdDialogButtonSizer()
-		okBtn = wx.Button( self, id=wx.ID_OK )
-		okBtn.Bind( wx.EVT_BUTTON, self.onOK )
-		cancelBtn = wx.Button( self, id=wx.ID_CANCEL )
-		cancelBtn.Bind( wx.EVT_BUTTON, self.onCancel )
-		btnSizer.Add( okBtn )
-		btnSizer.Add( cancelBtn )
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
@@ -81,12 +73,17 @@ class SetLaps( wx.Dialog ):
 
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( wx.StaticText(self, label='{}:  '.format(_('Scheduled Race Duration')) ) )
-		self.scheduledRaceDuration = wx.StaticText( self, label='60 min (1:00:00)' )
+		self.scheduledRaceDuration = wx.StaticText( self, label='6000 min (100:00:00)' )
 		hs.Add( self.scheduledRaceDuration )
 		vs.Add( hs, flag=wx.ALL, border=8 )
 		
 		vs.Add( self.fgs, flag=wx.ALL, border=8 )
-		vs.Add( btnSizer, flag=wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, border=4 )
+
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, id=wx.ID_CANCEL )
+		if btnSizer:
+			vs.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
 		
 		vs.Add( wx.StaticText(self) )
 		

@@ -186,10 +186,12 @@ else:
 
 imageFolder = os.path.join(dirName, 'CrossMgrVideoImages')
 helpFolder = os.path.join(dirName, 'CrossMgrVideoHtmlDoc')
+htmlFolder = os.path.join(dirName, 'CrossMgrVideoHtml')
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
 def getHelpFolder():	return helpFolder
+def getHtmlFolder():	return htmlFolder
 
 def getBitmap( fname ):
 	fname = os.path.join( imageFolder, fname )

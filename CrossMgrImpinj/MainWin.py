@@ -248,19 +248,11 @@ class AdvancedSetup( wx.Dialog ):
 		row += 1
 		bs.Add( wx.StaticText(self, label='Reminder: Press "Reset" for these changes to take effect.'), pos=(row, 0), span=(1,3), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_RIGHT )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		row += 1
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		hs.Add( self.cancelBtn, border = border, flag=wx.ALL )
-		
-		bs.Add( hs, pos=(row, 0), span=(1,3), flag=wx.ALIGN_RIGHT )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			row += 1
+			bs.Add( btnSizer, pos=(row, 0), span=(1,3), flag=wx.EXPAND|wx.ALL, border = border )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -285,9 +277,6 @@ class AdvancedSetup( wx.Dialog ):
 		
 		Utils.playBell = self.playSoundsCheckbox.IsChecked()
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 	
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):

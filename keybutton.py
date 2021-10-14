@@ -677,12 +677,12 @@ if __name__ == '__main__':
 	
 	border = 8
 	rowHeight = 48
-	fontSize = rowHeight / 2.6
+	fontSize = round(rowHeight / 2.6)
 	shrink = 0.95
 	
 	backgroundColour = wx.Colour(245,245,245)
 	app = wx.App(False)
-	mainWin = wx.Frame(None, title="keybutton", size=((rowHeight+0.75) * 15 + border * 2, rowHeight * (len(keyRows)+0.75) + border * 2))
+	mainWin = wx.Frame(None, title="keybutton", size=(round(rowHeight+0.75) * 15 + border * 2, round(rowHeight * (len(keyRows)+0.75)) + border * 2))
 	mainWin.SetBackgroundColour( backgroundColour )
 	
 	font = wx.Font( (0, fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD )
@@ -703,10 +703,10 @@ if __name__ == '__main__':
 				mult = 1.0
 		
 			width = rowHeight * mult
-			btn = KeyButton( mainWin, label = key, pos=(x, y), size=(width - rowHeight * (1.0-shrink), rowHeight * shrink) )
+			btn = KeyButton( mainWin, label = key, pos=(round(x), round(y)), size=(round(width - rowHeight * (1.0-shrink)), round(rowHeight * shrink)) )
 			btn.SetBackgroundColour( backgroundColour )
 			if key in keyFontHeight:
-				btn.SetFont( wx.Font( (0, fontSize*keyFontHeight[key]), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+				btn.SetFont( wx.Font( (0, round(fontSize*keyFontHeight[key])), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 			else:
 				btn.SetFont( font )
 			x += width + keySpaceAfter.get(key, 0) * rowHeight

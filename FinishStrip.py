@@ -587,12 +587,12 @@ class FinishStripDialog( wx.Dialog ):
 		
 		self.panel = FinishStripPanel( self, fps=fps, photoFolder=photoFolder )
 		
-		self.okButton = wx.Button( self, wx.ID_OK )
-		self.okButton.SetDefault()
-		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( self.panel, flag=wx.EXPAND )
-		vs.Add( self.okButton, flag=wx.ALIGN_CENTRE|wx.ALL, border=4 )
+		
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK )
+		if btnSizer:
+			vs.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		self.SetSizer( vs )
 		
 		self.panel.SetLeftToRight( leftToRight )

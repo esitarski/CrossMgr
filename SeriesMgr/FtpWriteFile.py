@@ -1,6 +1,5 @@
 import wx
 import wx.lib.intctrl
-import io
 import os
 import sys
 import ftplib
@@ -22,9 +21,9 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 		ftp.cwd( serverPath )
 	fileOpened = False
 	if file is None:
-		file = io.open(fileName, 'rb')
+		file = open(fileName, 'rb')
 		fileOpened = True
-	ftp.storbinary( 'STOR %s' % os.path.basename(fileName), file )
+	ftp.storbinary( 'STOR {}'.format(os.path.basename(fileName)), file )
 	ftp.quit()
 	if fileOpened:
 		file.close()
@@ -34,7 +33,7 @@ def FtpWriteHtml( html_in ):
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
 	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
 	defaultPath = os.path.dirname( modelFileName )
-	with io.open(os.path.join(defaultPath, fileName), 'w') as fp:
+	with open(os.path.join(defaultPath, fileName), 'w') as fp:
 		fp.write( html_in )
 		
 	model = SeriesModel.model
@@ -43,7 +42,7 @@ def FtpWriteHtml( html_in ):
 	passwd		= getattr( model, 'ftpPassword', '' )
 	serverPath	= getattr( model, 'ftpPath', '' )
 	
-	with io.open( os.path.join(defaultPath, fileName), 'rb' ) as file:
+	with open( os.path.join(defaultPath, fileName), 'rb') as file:
 		try:
 			FtpWriteFile(	host		= host,
 							user		= user,
@@ -64,66 +63,58 @@ class FtpPublishDialog( wx.Dialog ):
 	defaults =	['',		'',			'anonymous',	'anonymous@'	'http://']
 
 	def __init__( self, parent, html, id = wx.ID_ANY ):
-		wx.Dialog.__init__( self, parent, id, "Ftp Publish Results",
+		super().__init__( parent, id, "Ftp Publish Results",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.html = html
 		bs = wx.GridBagSizer(vgap=0, hgap=4)
 		
-		self.ftpHost = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpUser = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
-		self.ftpPassword = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
-		self.urlPath = wx.TextCtrl( self, wx.ID_ANY, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
+		self.urlPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.urlPath.Bind( wx.EVT_TEXT, self.urlPathChanged )
-		self.urlFull = wx.StaticText( self, wx.ID_ANY )
+		self.urlFull = wx.StaticText( self )
 		
 		self.refresh()
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
 		row = 0
 		border = 8
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("User:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("User:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpUser, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Password:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("Password:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpPassword, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("URL Path (optional):")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("URL Path (optional):")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.urlPath, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		row += 1
-		bs.Add( wx.StaticText( self, wx.ID_ANY, _("Series Results URL:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("Series Results URL:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.urlFull, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
-		row += 1
-		hb = wx.BoxSizer( wx.HORIZONTAL )
-		hb.Add( self.okBtn, border = border, flag=wx.ALL )
-		hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		
-		bs.Add( hb, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			row += 1
+			bs.Add( btnSizer, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -167,7 +158,7 @@ class FtpPublishDialog( wx.Dialog ):
 		self.setModelAttr()
 		e = FtpWriteHtml( self.html )
 		if e:
-			Utils.MessageOK( self, u'FTP Publish: {}'.format(e), u'FTP Publish Error' )
+			Utils.MessageOK( self, 'FTP Publish: {}'.format(e), 'FTP Publish Error' )
 		else:
 			# Automatically open the browser on the published file for testing.
 			model = SeriesModel.model
@@ -175,9 +166,6 @@ class FtpPublishDialog( wx.Dialog ):
 				webbrowser.open( model.urlFull, new = 0, autoraise = True )
 				
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
 	'''
@@ -192,7 +180,7 @@ if __name__ == '__main__':
 	sys.exit()
 	'''
 
-	app = wx.PySimpleApp()
+	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
 	ftpPublishDialog = FtpPublishDialog(mainWin, 'TestHtml')
 	ftpPublishDialog.ShowModal()

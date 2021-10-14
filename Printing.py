@@ -91,12 +91,6 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 			self.printFormatRadioBox.SetSelection( 0 )
 		self.printFormatRadioBox.Bind( wx.EVT_RADIOBOX, self.onPrintFormat )
 
-		self.okButton = wx.Button( self, wx.ID_OK )
-		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
-		
-		self.cancelButton = wx.Button( self, wx.ID_CANCEL )
-		self.cancelButton.Bind( wx.EVT_BUTTON, self.onCancel )
-		
 		vs.Add( title, flag = wx.ALL, border = 4 )
 		vs.Add( self.selectAllButton, flag = wx.ALL, border = 4 )
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
@@ -105,11 +99,12 @@ class ChoosePrintCategoriesDialog( wx.Dialog ):
 		vs.Add( self.includePrimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.printFormatRadioBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okButton )
-		hs.Add( self.cancelButton, flag = wx.LEFT, border = 16 )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, id=wx.ID_CANCEL )
+		if btnSizer:
+			vs.Add( btnSizer, flag = wx.ALL|wx.EXPAND, border = 4 )
 		
-		vs.Add( hs, flag = wx.ALL|wx.ALIGN_CENTER, border = 4 )
 		self.SetSizer( vs )
 		
 		self.onSelectAll()
@@ -182,12 +177,6 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		hs.Add( self.podiumPositionsLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border=4 )
 		hs.Add( self.podiumPositions )
 
-		self.okButton = wx.Button( self, wx.ID_OK )
-		self.okButton.Bind( wx.EVT_BUTTON, self.onOK )
-		
-		self.cancelButton = wx.Button( self, wx.ID_CANCEL )
-		self.cancelButton.Bind( wx.EVT_BUTTON, self.onCancel )
-		
 		vs.Add( title, flag = wx.ALL, border = 4 )
 		vs.Add( self.selectAllButton, flag = wx.ALL, border = 4 )
 		vs.Add( self.list, 1, flag = wx.ALL|wx.EXPAND, border = 4 )
@@ -200,6 +189,13 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		hs.Add( self.cancelButton, flag = wx.LEFT, border = 16 )
 		
 		vs.Add( hs, flag = wx.ALL|wx.ALIGN_CENTER, border = 4 )
+		
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		self.Bind( wx.EVT_BUTTON, self.onCancel, id=wx.ID_CANCEL )
+		if btnSizer:
+			vs.Add( btnSizer, flag = wx.ALL|wx.EXPAND, border = 4 )
+		
 		self.SetSizer( vs )
 		
 		self.onSelectAll()

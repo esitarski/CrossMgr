@@ -245,23 +245,34 @@ def removeDiacritic( s ):
 def GetFileName( rDate, rName, rNum, rMemo ):
 	return '{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
 		
-soundCache = {}
-def Play( soundFile ):
-	global soundCache
-	soundFile = os.path.join( getImageFolder(), soundFile )
-	
-	if sys.platform.startswith('linux'):
+# Attempt at portable sound player.
+if sys.platform.startswith('win'):
+	soundCache = {}
+	def Play( soundFile ):
+		global soundCache
+		soundFile = os.path.join( imageFolder, soundFile )
 		try:
-			subprocess.Popen(['aplay', '-q', soundFile])
+			return soundCache[soundFile].Play()
+		except KeyError:
+			pass
+		soundCache[soundFile] = wx.adv.Sound( soundFile )
+		return soundCache[soundFile].Play()
+			
+elif sys.platform.startswith('darwin'):
+	def Play( soundFile ):
+		try:
+			subprocess.Popen(['afplay', os.path.join(imageFolder, soundFile)])
 		except Exception:
 			pass
 		return True
 		
-	try:
-		return soundCache[soundFile].Play()
-	except Exception:
-		soundCache[soundFile] = wx.adv.Sound( soundFile )
-		return soundCache[soundFile].Play()
+else:	# Try Linux
+	def Play( soundFile ):
+		try:
+			subprocess.Popen(['aplay', '-q', os.path.join(imageFolder, soundFile)])
+		except Exception as e:
+			pass
+		return True
 		
 def PlaySound( soundFile ):
 	if mainWin and not mainWin.playSounds:

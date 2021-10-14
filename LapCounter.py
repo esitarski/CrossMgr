@@ -76,7 +76,7 @@ def getLapCounterOptions( isDialog ):
 			vs.Add( wx.StaticText(self, label=_("Seconds before Leader's ETA to change Lap Counter")), flag=wx.LEFT|wx.TOP|wx.RIGHT, border=8 )
 			self.slider = wx.Slider(
 				self,
-				value=Model.race.secondsBeforeLeaderToFlipLapCounter if Model.race else 5, minValue=1, maxValue=180,
+				value=int(Model.race.secondsBeforeLeaderToFlipLapCounter) if Model.race else 5, minValue=1, maxValue=180,
 				size=(360, -1), 
 				style = wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS 
 			)
@@ -84,18 +84,10 @@ def getLapCounterOptions( isDialog ):
 			vs.Add( self.slider, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=8 )
 			
 			if isDialog:
-				self.okButton = wx.Button(self, wx.ID_OK)
-				self.okButton.Bind(wx.EVT_BUTTON, self.OnOK)
-				self.cancelButton = wx.Button(self, wx.ID_CANCEL)
-				self.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancel)
-				
-				buttonSizer = wx.StdDialogButtonSizer()
-				buttonSizer.AddButton( self.okButton )
-				buttonSizer.AddButton( self.cancelButton )
-				buttonSizer.Realize()
-				
-				vs.Add( buttonSizer, flag=wx.ALL, border=16 )
-				
+				btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+				self.Bind( wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK )
+				if btnSizer:
+					vs.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=16 )
 				self.refresh()
 			
 			self.SetSizerAndFit( vs )
@@ -123,15 +115,12 @@ def getLapCounterOptions( isDialog ):
 					self.backgrounds[i].SetColour( bg[i] )
 				
 				self.lapCounterCycle.SetValue( race.lapCounterCycle or None )
-				self.slider.SetValue( race.secondsBeforeLeaderToFlipLapCounter )
+				self.slider.SetValue( int(race.secondsBeforeLeaderToFlipLapCounter) )
 				self.lapElapsedClock.SetValue( race.lapElapsedClock )
 			
 		def OnOK( self, event ):
 			self.commit()
 			self.EndModal( wx.ID_OK )
-			
-		def OnCancel( self, event ):
-			self.EndModal( wx.ID_CANCEL )
 			
 	return LapCounterOptionsClass
 

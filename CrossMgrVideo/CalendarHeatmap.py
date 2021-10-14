@@ -329,7 +329,7 @@ class CalendarHeatmap(wx.Control):
 		colour = self.GetForegroundColour()
 		textColour = am.DarkColour(wx.WHITE, 3.0) if am.IsDark(colour) else am.LightColour(wx.BLACK, 3.0)
 		
-		valueMax = max( v for v in self.dates.values() )
+		valueMax = max( self.dates.values(), default=1 )
 		
 		gc = wx.GraphicsContext.Create(dc)
 		

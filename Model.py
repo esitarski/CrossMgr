@@ -1030,7 +1030,7 @@ class NumTimeInfo:
 	def adjustAllTimes( self, dTime ):
 		newInfo = {}
 		for num, numInfo in self.info.items():
-			newInfo[num] = dict( (t+dTime, v) for t, v in numInfo.items() )
+			newInfo[num] = { (t+dTime):v for t, v in numInfo.items() }
 		self.info = newInfo
 	
 	def delete( self, num, t, reason = None ):

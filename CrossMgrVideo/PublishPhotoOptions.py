@@ -16,7 +16,7 @@ class PublishPhotoOptionsDialog( wx.Dialog ):
 		sizer.Add( self.explain, flag=wx.ALL, border=4 )
 		
 		self.directoryText = wx.StaticText( self, label="Folder for files" )
-		self.directory = wx.DirPickerCtrl( self, style=wx.DIRP_DIR_MUST_EXIST )
+		self.directory = wx.DirPickerCtrl( self )
 		
 		pfgs = wx.FlexGridSizer( rows=0, cols=2, vgap=4, hgap=8 )
 		pfgs.Add( self.directoryText, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -33,7 +33,7 @@ class PublishPhotoOptionsDialog( wx.Dialog ):
 		
 		if webPublish:
 			choices = (
-				'Recommended: .html page links to photos in seperate .jpeg files (requires uploading all the .jpeg and .html files to your web server)',
+				'Recommended: .html page links to photos in separate .jpeg files (requires uploading all the .jpeg and .html files to your web server)',
 				'Not Recommended: .html page embeds photos (one single .html file, but huge and inefficient)',
 			)
 			self.webPageGeneration = wx.RadioBox( self, label="Web Page Generation", choices=choices, majorDimension=len(choices), style=wx.RA_SPECIFY_ROWS )
@@ -41,9 +41,8 @@ class PublishPhotoOptionsDialog( wx.Dialog ):
 			sizer.Add( self.webPageGeneration, flag=wx.ALL|wx.EXPAND, border=8 )
 		
 		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
-		wx.FindWindowById( wx.ID_OK, self ).SetDefault()
-		
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
+		if btnSizer:	
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
 		
 		self.SetSizerAndFit( sizer )
 		

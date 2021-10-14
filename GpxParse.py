@@ -40,10 +40,9 @@ class GpxContentHandler( xml.sax.ContentHandler ):
 
 def GpxParse( fname ):
 	gpxCH = GpxContentHandler()
-	with open(fname) as f:
-		xml.sax.parse( f, gpxCH )
+	xml.sax.parse( fname, gpxCH )
 	return gpxCH.points
 
 if __name__ == '__main__':
-	points = GpxParse( 'GPX/circuit-violet-100-km.gpx' )
+	points = GpxParse( 'bugs/GPX/GPXBug.gpx' )
 	print( points )

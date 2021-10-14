@@ -330,11 +330,8 @@ class NumKeypad( wx.Panel ):
 		self.camera_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera.png'), wx.BITMAP_TYPE_PNG )
 		self.camera_broken_bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'camera_broken.png'), wx.BITMAP_TYPE_PNG )
 		
-		self.photoButton = wx.BitmapButton( panel, bitmap = self.camera_bitmap )
-		self.camera_tooltip = wx.ToolTip( _('Show Last Photos...') )
-		self.photoButton.SetToolTip( self.camera_tooltip )
-		self.photoButton.Bind( wx.EVT_BUTTON, self.onPhotoButton )
-		self.hbClockPhoto.Add( self.photoButton, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
+		self.photoBitmap = wx.StaticBitmap( panel, bitmap = self.camera_bitmap )
+		self.hbClockPhoto.Add( self.photoBitmap, flag=wx.ALIGN_CENTRE_VERTICAL|wx.RIGHT, border = 18 )
 		
 		gbs.Add( self.hbClockPhoto, pos=(rowCur, colCur), span=(1,1) )
 		rowCur += 1
@@ -557,21 +554,16 @@ class NumKeypad( wx.Panel ):
 				tStr = tStr[1:]
 			self.refreshRaceHUD()
 			if race.enableUSBCamera:
-				self.photoButton.Show( True )
+				self.photoBitmap.Show( True )
 				self.photoCount.SetLabel( '{}'.format(race.photoCount) )
-				if Utils.cameraError:
-					self.photoButton.SetBitmapLabel( self.camera_broken_bitmap )
-					self.photoButton.SetToolTip( wx.ToolTip(Utils.cameraError) )
-				else:
-					self.photoButton.SetBitmapLabel( self.camera_bitmap )
-					self.photoButton.SetToolTip( self.camera_tooltip )
+				self.photoBitmap.SetBitmap( self.camera_broken_bitmap if Utils.cameraError else self.camera_bitmap )
 			else:
-				self.photoButton.Show( False )
+				self.photoBitmap.Show( False )
 				self.photoCount.SetLabel( '' )
 		else:
 			tStr = ''
 			tRace = None
-			self.photoButton.Show( False )
+			self.photoBitmap.Show( False )
 			self.photoCount.SetLabel( '' )
 		self.raceTime.SetLabel( '  ' + tStr )
 		
@@ -583,12 +575,6 @@ class NumKeypad( wx.Panel ):
 				mainWin.refreshRaceAnimation()
 			except Exception:
 				pass
-	
-	def onPhotoButton( self, event ):
-		if not Utils.mainWin:
-			return
-		Utils.mainWin.photoDialog.Show( True )
-		Utils.mainWin.photoDialog.refresh( Utils.mainWin.photoDialog.ShowAllPhotos )
 	
 	raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
 	def refreshLaps( self ):
@@ -755,7 +741,7 @@ class NumKeypad( wx.Panel ):
 			self.bibTimeRecord.refresh()
 			
 		self.photoCount.Show( bool(race and race.enableUSBCamera) )
-		self.photoButton.Show( bool(race and race.enableUSBCamera) )
+		self.photoBitmap.Show( bool(race and race.enableUSBCamera) )
 		
 		# Refresh the race start time.
 		changed = False

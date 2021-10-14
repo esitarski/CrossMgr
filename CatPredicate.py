@@ -243,28 +243,16 @@ class CategoryPredicateDialog( wx.Dialog ):
 			border = border, flag=wx.RIGHT|wx.TOP|wx.BOTTOM|wx.EXPAND )
 		row += 1
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		row += 1
-		
-		border = 8
-		bs.Add( self.okBtn, pos=(row, 0), span=(1,1), border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		border = 4
+		if btnSizer:
+			row += 1
+			bs.Add( btnSizer, pos=(row, 0), span=(1,2), flag=wx.ALL|wx.EXPAND, border = border )
 		
 		bs.AddGrowableCol( 1 )
 		bs.AddGrowableRow( row - 2 )
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
-		
-	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 if __name__ == '__main__':
 	app = wx.App(False)

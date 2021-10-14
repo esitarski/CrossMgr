@@ -2,9 +2,11 @@ import wx
 import wx.adv
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
-import sys
 import os
 import re
+import sys
+import cv2
+import sys
 import time
 import math
 import json
@@ -17,6 +19,11 @@ import platform
 import tempfile
 import threading
 import webbrowser
+import platform
+import pickle
+import gzip
+import sqlite3
+import numpy as np
 from queue import Queue, Empty
 
 from datetime import datetime, timedelta, time
@@ -25,20 +32,23 @@ now = datetime.now
 
 import Utils
 import CVUtil
+import CamServer
+from Clock import Clock
 from SocketListener import SocketListener
 from MultiCast import multicast_group, multicast_port
-from Database import GlobalDatabase, DBWriter, Database
+from Database import GlobalDatabase, DBWriter, Database, BulkInsertDBRows
 from ScaledBitmap import ScaledBitmap
-from FinishStrip import FinishStripPanel
+from Composite import CompositePanel
 from ManageDatabase import ManageDatabase
-from PhotoDialog import PhotoDialog
-from Clock import Clock
+from PhotoDialog import PhotoPanel
 from AddPhotoHeader import AddPhotoHeader
-from Version import AppVerName
 from AddExifToJpeg import AddExifToJpeg
-import CamServer
 from PublishPhotoOptions import PublishPhotoOptionsDialog
 from roundbutton import RoundButton
+from GetMyIP import GetMyIP
+from FIFOCache import FIFOCacheSet
+from Version import AppVerName
+import WebServer
 
 imageWidth, imageHeight = 640, 480
 
@@ -67,6 +77,19 @@ def setFont( font, w ):
 def OpenHelp():
 	webbrowser.open( os.path.join(Utils.getHelpFolder(), 'QuickStart.html'), new=0, autoraise=1 )
 	
+def getInfo():
+	app = AppVerName.split()[0]
+	uname = platform.uname()
+	info = {
+		'{}_AppVersion'.format(app):	AppVerName,
+		'{}_Timestamp'.format(app):		datetime.now(),
+		'{}_User'.format(app):			os.path.basename(os.path.expanduser("~")),
+		'{}_Python'.format(app):		sys.version.replace('\n', ' '),
+	}
+	info.update( {'{}_{}'.format(app, a.capitalize()): getattr(uname, a)
+		for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '') } )
+	return info
+
 from CalendarHeatmap import CalendarHeatmap
 class DateSelectDialog( wx.Dialog ):
 	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
@@ -96,14 +119,12 @@ class DateSelectDialog( wx.Dialog ):
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelect )
 		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivate )
 		
-		btns = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
-		self.ok = wx.FindWindowById(wx.ID_OK, self)
-		self.cancel = wx.FindWindowById(wx.ID_CANCEL, self )		
+		btnSizer = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
 		
 		sizer.Add( self.chm, flag=wx.ALL, border=4 )
 		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
-		
-		sizer.Add( btns, flag=wx.EXPAND|wx.ALL, border=4 )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizer( sizer )
 		wx.CallAfter( self.Fit )
@@ -168,7 +189,7 @@ class ConfigDialog( wx.Dialog ):
 		
 		pfgs.Add( wx.StaticText(self, label='Camera USB'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(16)] )
+		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(CamServer.CameraUsbMax)] )
 		self.usb.SetSelection( usb )
 		hs.Add( self.usb )
 		hs.Add( wx.StaticText(self, label='cameras detected on {}'.format(availableCameraUsb)), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
@@ -184,7 +205,7 @@ class ConfigDialog( wx.Dialog ):
 		pfgs.Add( self.fps )
 		
 		pfgs.Add( wx.StaticText(self, label='FourCC'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
-		self.fourccChoices = ['', FOURCC_DEFAULT]
+		self.fourccChoices = ['', 'MJPG']
 		self.fourcc = wx.Choice( self, choices=self.fourccChoices )
 		self.fourcc.SetSelection( self.fourccChoices.index(fourcc if fourcc in self.fourccChoices else FOURCC_DEFAULT) )
 		pfgs.Add( self.fourcc )
@@ -194,7 +215,7 @@ class ConfigDialog( wx.Dialog ):
 				'After pressing Apply, check the "Actual" fps on the main screen.',
 				'The camera may not support the frame rate at the desired resolution,',
 				'or may lower the frame rate in low light.',
-				"If your fps is low or your camera doesn't work, try FourCC={}.".format(FOURCC_DEFAULT),
+				"If your fps is low or your camera doesn't work, try FourCC=MJPG.",
 			])), flag=wx.RIGHT, border=4 )
 		
 		sizer.Add( self.title, flag=wx.ALL, border=4 )
@@ -202,11 +223,11 @@ class ConfigDialog( wx.Dialog ):
 		sizer.Add( pfgs, flag=wx.ALL, border=4 )
 		
 		btnSizer = self.CreateButtonSizer( wx.OK|wx.APPLY|wx.CANCEL|wx.HELP )
-		wx.FindWindowById( wx.ID_APPLY , self ).Bind( wx.EVT_BUTTON, lambda event: self.EndModal(wx.ID_APPLY) )
-		wx.FindWindowById( wx.ID_HELP, self ).Bind( wx.EVT_BUTTON, lambda event: OpenHelp() )
-		wx.FindWindowById( wx.ID_OK, self ).SetDefault()
+		self.Bind( wx.EVT_BUTTON, lambda event: self.EndModal(wx.ID_APPLY), id=wx.ID_APPLY )
+		self.Bind( wx.EVT_BUTTON, lambda event: OpenHelp(), id=wx.ID_HELP )
 		
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
 		
 		self.SetSizerAndFit( sizer )
 		
@@ -312,28 +333,24 @@ class TriggerDialog( wx.Dialog ):
 			e = wx.TextCtrl(self, size=(500,-1) )
 			gs.Add( e )
 			self.editFields.append(e)
-		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.ok = wx.Button( self, wx.ID_OK )
-		self.ok.Bind( wx.EVT_BUTTON, self.onOK )
-		self.cancel = wx.Button( self, wx.ID_CANCEL )
-		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
-		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
+		
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
 		
 		sizer.Add( gs, flag=wx.ALL, border=4 )
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
 		self.SetSizerAndFit( sizer )
 	
 	def set( self, db, triggerId ):
 		self.db = db
 		self.triggerId = triggerId
-		ef = db.getTriggerEditFields( self.triggerId )
-		ef = ef or ['' for f in Database.triggerEditFields]
-		for e, v in zip(self.editFields, ef):
-			e.SetValue( '{}'.format(v) if v is not None else '' )
+		ef = db.getTriggerEditFields( triggerId )
+		for e, f in zip(self.editFields, Database.triggerEditFields):
+			e.SetValue( '{}'.format(ef.get(f,'') or '') )
 	
 	def get( self ):
-		values = []
+		values = {}
 		for f, e in zip(Database.triggerEditFields, self.editFields):
 			v = e.GetValue()
 			if f == 'bib':
@@ -341,11 +358,11 @@ class TriggerDialog( wx.Dialog ):
 					v = int(v)
 				except Exception:
 					v = 99999
-			values.append( v )
+			values[f] = v
 		return values
 	
 	def commit( self ):
-		self.db.setTriggerEditFields( self.triggerId, *self.get() )
+		self.db.setTriggerEditFields( self.triggerId, **self.get() )
 	
 	def onOK( self, event ):
 		self.commit()
@@ -356,29 +373,44 @@ class AutoCaptureDialog( wx.Dialog ):
 		super().__init__( parent, id, title=_('CrossMgr Video Auto Capture') )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
+		
+		sizer.Add( wx.StaticText(self, label="Configure what to Capture on each Trigger"), flag=wx.ALL, border=8 )
+
 		gs = wx.FlexGridSizer( 2, 2, 4 )
 		gs.AddGrowableCol( 1 )
-		fieldNames = ['Seconds Before', 'Seconds After']
+		
+		gs.Add( wx.StaticText(self, label="Capture"), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+		self.closestFrames = wx.Choice( self, choices=('by Seconds', 'Closest Frame to Trigger', 'Closest 2 Frames to Trigger') )
+		self.closestFrames.Bind( wx.EVT_CHOICE, self.onChoice )
+		gs.Add( self.closestFrames )
+		
+		fieldNames = ('Capture Seconds Before Trigger', 'Capture Seconds After Trigger')
+		self.labelFields = []
 		self.editFields = []
 		for f in fieldNames:
-			gs.Add( wx.StaticText(self, label=f), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-			e = wx.TextCtrl(self, size=(60,-1) )
-			gs.Add( e )
-			self.editFields.append(e)
-		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
-		self.ok = wx.Button( self, wx.ID_OK )
-		self.cancel = wx.Button( self, wx.ID_CANCEL )
-		btnSizer.Add( self.ok, flag=wx.ALL, border=4 )
-		btnSizer.AddStretchSpacer()
-		btnSizer.Add( self.cancel, flag=wx.ALL, border=4 )
-		
+			self.labelFields.append( wx.StaticText(self, label=f) )
+			gs.Add( self.labelFields[-1], flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
+			self.editFields.append( wx.TextCtrl(self, size=(60,-1) ) )
+			gs.Add( self.editFields[-1] )
+			
 		sizer.Add( gs, flag=wx.ALL, border=4 )
-		sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )		
+		if btnSizer:
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
+		
 		self.SetSizerAndFit( sizer )
 	
-	def set( self, s_before, s_after ):
-		self.editFields[0].SetValue( '{:.2f}'.format(s_before) )
-		self.editFields[1].SetValue( '{:.2f}'.format(s_after) )
+	def onChoice( self, event=None ):
+		enable = (self.closestFrames.GetSelection() == 0)
+		for w in (self.labelFields + self.editFields):
+			w.Enable( enable )
+	
+	def set( self, s_before, s_after, closestFrames=0 ):
+		for w, v in zip( self.editFields, (s_before, s_after) ):
+			w.SetValue( '{:.3f}'.format(v) )
+		self.closestFrames.SetSelection( closestFrames )
+		self.onChoice()
 	
 	def get( self ):
 		def fixValue( v ):
@@ -386,7 +418,7 @@ class AutoCaptureDialog( wx.Dialog ):
 				return abs(float(v))
 			except Exception:
 				return None
-		return [fixValue(e.GetValue()) for e in self.editFields]
+		return [fixValue(e.GetValue()) for e in self.editFields] + [self.closestFrames.GetSelection()]
 		
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
@@ -416,6 +448,7 @@ class MainWin( wx.Frame ):
 		
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
+		self.closestFrames = 0
 
 		dataDir = Utils.getHomeDir()
 		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
@@ -427,58 +460,66 @@ class MainWin( wx.Frame ):
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
+		
+		#-------------------------------------------
 
-		ID_MENU_RESETCAMERA = wx.NewIdRef()
-		ID_MENU_FOCUS = wx.NewIdRef()
-		ID_MENU_CONFIGAUTOCAPTURE = wx.NewIdRef()
-		ID_MENU_MANAGEDATABASE = wx.NewIdRef()
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
 		if 'WXMAC' in wx.Platform:
 			self.appleMenu = self.menuBar.OSXGetAppleMenu()
 			self.appleMenu.SetTitle("CrossMgrVideo")
-
 			self.appleMenu.Insert(0, wx.ID_ABOUT, "&About")
-
 			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
-
-			self.editMenu = wx.Menu()
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_RESETCAMERA,"R&eset Camera"))
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_FOCUS,"&Focus"))
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_CONFIGAUTOCAPTURE,"&Configure Autocapture"))
-			self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_MANAGEDATABASE,"&Manage Database"))
-
-			self.Bind(wx.EVT_MENU, self.resetCamera, id=ID_MENU_RESETCAMERA)
-			self.Bind(wx.EVT_MENU, self.onFocus, id=ID_MENU_FOCUS)
-			self.Bind(wx.EVT_MENU, self.autoCaptureConfig, id=ID_MENU_CONFIGAUTOCAPTURE)
-			self.Bind(wx.EVT_MENU, self.manageDatabase, id=ID_MENU_MANAGEDATABASE)
-			self.menuBar.Append(self.editMenu, "&Edit")
-
 		else:
 			self.fileMenu = wx.Menu()
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_RESETCAMERA,"R&eset Camera"))
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_FOCUS,"&Focus"))
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_CONFIGAUTOCAPTURE,"&Configure Autocapture"))
-			self.fileMenu.Append(wx.MenuItem(self.fileMenu, ID_MENU_MANAGEDATABASE,"&Manage Database"))
-			self.fileMenu.Append(wx.ID_EXIT)
-			self.Bind(wx.EVT_MENU, self.resetCamera, id=ID_MENU_RESETCAMERA)
-			self.Bind(wx.EVT_MENU, self.onFocus, id=ID_MENU_FOCUS)
-			self.Bind(wx.EVT_MENU, self.autoCaptureConfig, id=ID_MENU_CONFIGAUTOCAPTURE)
-			self.Bind(wx.EVT_MENU, self.manageDatabase, id=ID_MENU_MANAGEDATABASE)
+			item = self.fileMenu.Append( wx.ID_EXIT, "Exit", "Exit CrossMgrVideo" )
 			self.Bind(wx.EVT_MENU, self.onCloseWindow, id=wx.ID_EXIT)
 			self.menuBar.Append(self.fileMenu, "&File")
-			self.helpMenu = wx.Menu()
-			self.helpMenu.Insert(0, wx.ID_ABOUT, "&About")
-			self.helpMenu.Insert(1, wx.ID_HELP, "&Help")
-			self.Bind(wx.EVT_MENU, self.OnAboutBox, id=wx.ID_ABOUT)
-			self.Bind(wx.EVT_MENU, self.onHelp, id=wx.ID_HELP)
-			self.menuBar.Append(self.helpMenu, "&Help")
 
-		self.SetMenuBar(self.menuBar)
+		#-------------------------------------------
+		self.toolsMenu = wx.Menu()
+		
+		item = self.toolsMenu.Append( wx.ID_ANY, "R&eset Camera", "Reset the camera configuration" )
+		self.Bind(wx.EVT_MENU, self.resetCamera, item )
+		
+		item = self.toolsMenu.Append( wx.ID_ANY, "&Focus", "Large window to focus the camera" )
+		self.Bind(wx.EVT_MENU, self.onFocus, item )
+
+		item = self.toolsMenu.Append( wx.ID_ANY, "&Configure Autocapture", "Configure Autocapture parameters" )
+		self.Bind(wx.EVT_MENU, self.autoCaptureConfig, item )
+
+		item = self.toolsMenu.Append( wx.ID_ANY, "&Manage Database", "Manage the database" )
+		self.Bind(wx.EVT_MENU, self.manageDatabase, item )
+		
+		self.toolsMenu.AppendSeparator()
+		item = self.toolsMenu.Append( wx.ID_ANY, "Copy &Log File to Clipboard", "Copy Log File to Clipboard" )
+		self.Bind(wx.EVT_MENU, self.copyLogFileToClipboard, item )
+
+		self.toolsMenu.AppendSeparator()
+		item = self.toolsMenu.Append( wx.ID_ANY, "Export Photos...", "Export all photos and triggers for the current day." )
+		self.Bind(wx.EVT_MENU, self.exportDB, item )
+
+		item = self.toolsMenu.Append( wx.ID_ANY, "Import Photos...", "Import all photos and triggers for a day." )
+		self.Bind(wx.EVT_MENU, self.importDB, item )
+
+		self.menuBar.Append(self.toolsMenu, "&Tools")
+
+		#-------------------------------------------
+		if 'WXMAC' not in wx.Platform:
+			self.helpMenu = wx.Menu()
+			item = self.helpMenu.Append( wx.ID_ABOUT, "&About", "About CrossMgrVideo" )
+			self.Bind(wx.EVT_MENU, self.OnAboutBox, item )
+			
+			item = self.helpMenu.Append( wx.ID_HELP, "&Help", "CrossMgrVideo QuickHelp" )
+			self.Bind(wx.EVT_MENU, self.onHelp, item )
+
+			self.menuBar.Append(self.helpMenu, "Help")
+		#-------------------------------------------
+
+		self.SetMenuBar( self.menuBar )
 		
 		self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
 		self.focusDialog = FocusDialog( self )
-		self.photoDialog = PhotoDialog( self )
 		self.autoCaptureDialog = AutoCaptureDialog( self )
 		self.triggerDialog = TriggerDialog( self )
 				
@@ -517,10 +558,10 @@ class MainWin( wx.Frame ):
 		fgs.Add( self.usb )
 		
 		fgs.Add( wx.StaticText(self, label='Resolution:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.cameraResolution )
+		fgs.Add( self.cameraResolution, flag=wx.ALIGN_RIGHT )
 		
 		fgs.Add( wx.StaticText(self, label='FourCC:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.fourcc )
+		fgs.Add( self.fourcc, flag=wx.ALIGN_RIGHT )
 		
 		fgs.Add( wx.StaticText(self, label='Target:'), flag=wx.ALIGN_RIGHT )
 		fgs.Add( self.targetFPS, flag=wx.ALIGN_RIGHT )
@@ -539,6 +580,9 @@ class MainWin( wx.Frame ):
 		
 		self.autoCaptureBtn = wx.Button( self, label="Config Auto Capture" )
 		self.autoCaptureBtn.Bind( wx.EVT_BUTTON, self.autoCaptureConfig )
+		
+		self.webBtn = wx.Button( self, label="Web Page" )
+		self.webBtn.Bind( wx.EVT_BUTTON, self.onWeb )
 		
 		self.help = wx.Button( self, wx.ID_HELP )
 		self.help.Bind( wx.EVT_BUTTON, self.onHelp )
@@ -562,6 +606,7 @@ class MainWin( wx.Frame ):
 		fgs.Add( self.reset, flag=wx.EXPAND )
 		fgs.Add( self.manage, flag=wx.EXPAND )
 		fgs.Add( self.autoCaptureBtn, flag=wx.EXPAND )
+		fgs.Add( self.webBtn, flag=wx.EXPAND )
 		fgs.Add( self.help, flag=wx.EXPAND )
 		
 		headerSizer.Add( fgs, flag=wx.ALIGN_CENTRE|wx.LEFT, border=4 )
@@ -575,10 +620,16 @@ class MainWin( wx.Frame ):
 		mainSizer.Add( headerSizer, flag=wx.EXPAND )
 		
 		#------------------------------------------------------------------------------------------------
-		self.finishStrip = FinishStripPanel( self, size=(-1,wx.GetDisplaySize()[1]//2), photoViewCB=self.photoViewCB )
-		self.finishStrip.finish.Bind( wx.EVT_RIGHT_DOWN, self.onRightClick )
+		self.notebook = wx.Notebook( self, size=(-1,wx.GetDisplaySize()[1]//2), style=wx.NB_BOTTOM )
+		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onNotebook )
 		
-		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.75), int(imageHeight*0.75)) )
+		self.photoPanel = PhotoPanel( self.notebook )
+		self.finishStrip = CompositePanel( self.notebook )
+		
+		self.notebook.AddPage(self.photoPanel, "Images")
+		self.notebook.AddPage(self.finishStrip, "Finish Strip")
+		
+		self.primaryBitmap = ScaledBitmap( self, style=wx.BORDER_SUNKEN, size=(int(imageWidth*0.4), int(imageHeight*0.4)) )
 		self.primaryBitmap.SetTestBitmap()
 		self.primaryBitmap.Bind( wx.EVT_LEFT_UP, self.onFocus )
 		self.primaryBitmap.Bind( wx.EVT_RIGHT_UP, self.onFocus )
@@ -630,10 +681,11 @@ class MainWin( wx.Frame ):
 		
 		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name note kmh mph frames'.split())}
 		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph', 'Frames']
+		formatRightHeaders = {'Bib','km/h','mph','Frames'}
 		for i, h in enumerate(headers):
 			self.triggerList.InsertColumn(
 				i, h,
-				wx.LIST_FORMAT_RIGHT if h in ('Bib','km/h','mph','Frames') else wx.LIST_FORMAT_LEFT
+				wx.LIST_FORMAT_RIGHT if h in formatRightHeaders else wx.LIST_FORMAT_LEFT
 			)
 		self.iNoteCol = self.fieldCol['note']
 		self.itemDataMap = {}
@@ -648,7 +700,7 @@ class MainWin( wx.Frame ):
 		vsTriggers.Add( self.triggerList, 1, flag=wx.EXPAND|wx.TOP, border=2)
 		
 		#------------------------------------------------------------------------------------------------
-		mainSizer.Add( self.finishStrip, 1, flag=wx.EXPAND )
+		mainSizer.Add( self.notebook, 1, flag=wx.EXPAND )
 		
 		border=2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
@@ -689,7 +741,7 @@ class MainWin( wx.Frame ):
 		wx.CallLater( 300, self.refreshTriggers )
 	
 	def OnAboutBox(self, e):
-			description = """CrossMgrVideo is an Impinj interface to CrossMgr
+			description = """CrossMgrVideo - USB Camera support
 	"""
 
 			licence = """CrossMgrVideo free software; you can redistribute 
@@ -720,6 +772,160 @@ class MainWin( wx.Frame ):
 
 	def onHelp( self, event ):
 		OpenHelp()
+		
+	def onWeb( self, event ):
+		dateStrInitial = self.date.GetValue().Format('%Y-%m-%d')
+		url = '{}:{}?date={}'.format( GetMyIP(), WebServer.PORT_NUMBER, dateStrInitial )
+		webbrowser.open( url, new=0, autoraise=1 )
+		
+	def exportDB( self, event ):
+		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
+		with wx.MessageDialog( self,
+				'Export all photos for this day.\n\n\tPhotos will be exported to:\n\n"{}"'.format(fname),
+				'Photo Export',
+				style=wx.OK|wx.CANCEL|wx.ICON_INFORMATION ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return		
+		
+		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
+		if os.path.exists(fname):
+			os.remove( fname )
+
+		progress = wx.ProgressDialog( 'Export Progress', 'Initializing...' )
+		progress.SetRange( 1 )
+		progress.Show()
+		
+		def getUpdateCB( msg ):
+			msg += ' ({}/{})'
+			def updateCB( count, total ):
+				progress.Update( count, msg.format(count, total) )
+				wx.Yield()
+			return updateCB
+
+		db = GlobalDatabase()
+		
+		triggerFields = [f for f in db.triggerFieldsAll if f != 'id']
+		photoFields = ['ts', 'jpg']
+
+		with gzip.open( fname, 'wb' ) as f:
+			# Write out some info as a file header.
+			pickle.dump( getInfo(), f, -1 )
+			
+			# Write out the fields we are using.
+			pickle.dump( triggerFields, f, -1 )
+			pickle.dump( photoFields, f, -1 )
+			
+			#-----------------------------------------------------------
+			triggerTS = [row[0] for row in db.runQuery( 'SELECT ts FROM trigger WHERE ts BETWEEN ? and ? ORDER BY ts', (self.tsQueryLower, self.tsQueryUpper))]
+			
+			progress.SetRange( max(1,len(triggerTS)) )
+			
+			pickle.dump( triggerTS, f, -1 )
+			showUpdate = getUpdateCB( 'Exporting triggers' )
+			with db.dbLock, db.conn:
+				for count, row in enumerate(db.conn.execute( 'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(triggerFields)), (self.tsQueryLower, self.tsQueryUpper) )):
+					obj = {f:v for f,v in zip(triggerFields, row)}
+					pickle.dump( obj, f, -1 )
+					if count % 25 == 0:
+						showUpdate( count, len(triggerTS) )
+		
+			#-----------------------------------------------------------
+			# Purge duplicates.
+			photoTS = sorted(set(row[0] for row in db.runQuery( 'SELECT ts FROM photo WHERE ts BETWEEN ? and ?', (self.tsQueryLower, self.tsQueryUpper))))
+			
+			progress.SetRange( max(1,len(photoTS)) )
+			
+			pickle.dump( photoTS, f, -1 )
+			showUpdate = getUpdateCB( 'Exporting photos' )
+			with db.dbLock, db.conn:
+				tsSeen = set()
+				count = 0
+				for row in db.conn.execute( 'SELECT {} FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(photoFields)), (self.tsQueryLower, self.tsQueryUpper) ):
+					if row[0] not in tsSeen:
+						tsSeen.add( row[0] )
+						obj = {f:v for f,v in zip(photoFields, row)}
+						pickle.dump( obj, f, -1 )
+						if count % 25 == 0:
+							showUpdate( count, len(photoTS) )
+						count += 1
+				
+		progress.Destroy()
+	
+	def importDB( self, event ):
+		with wx.FileDialog(self, "Open CrossMgrVideo Import file", wildcard="Files (*.gz)|*.gz",
+						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return
+			fname = fileDialog.GetPath()
+
+		# Check if the import file is valid.
+		try:
+			with gzip.open( fname, 'rb' ) as f:
+				info = pickle.load( f )
+				app = AppVerName.split()[0]
+				key = '{}_AppVersion'.format(app)
+				assert key in info
+		except Exception as e:
+			with wx.MessageDialog( self, 'Exception: {}'.format(e), 'Improper File', style=wx.OK|wx.ICON_ERROR ) as dlg:
+				dlg.ShowModal()
+				return
+	
+		progress = wx.ProgressDialog( 'Import Progress', 'Initializing...' )
+		progress.SetRange( 1 )
+		progress.Show()
+		wx.Yield()
+		
+		def getUpdateCB( msg ):
+			msg += ' ({}/{})'
+			def updateCB( count, total ):
+				progress.Update( count, msg.format(count, total) )
+				wx.Yield()
+			return updateCB
+
+		db = GlobalDatabase()
+		
+		with gzip.open( fname, 'rb' ) as f:
+			info = pickle.load( f )
+
+			# Read the fields used to write the export file.
+			triggerFields = pickle.load( f )
+			photoFields = pickle.load( f )
+			
+			# For compatability, ensure there are no unexpected import fields.
+			triggerFieldsSet = set( f for f in db.triggerFieldsAll if f != 'id' )
+			triggerFields = [f for f in triggerFields if f in triggerFieldsSet]
+
+			#-----------------------------------------------------------
+			triggerTS = pickle.load( f )
+			
+			progress.SetRange( max(1,len(triggerTS)) )
+			db.deleteTss( 'trigger', triggerTS, getUpdateCB('Removing exisiting triggers') )
+			
+			showUpdate = getUpdateCB( 'Importing Triggers' )
+			with BulkInsertDBRows( 'trigger', triggerFields, db ) as bid:
+				for count in range(len(triggerTS)):
+					obj = pickle.load( f )
+					bid.append( [obj[f] for f in triggerFields] )
+					if count % 25 == 0:
+						showUpdate(count, len(triggerTS) )
+		
+			#-----------------------------------------------------------
+			photoTS = pickle.load( f )
+			
+			progress.SetRange( max(1,len(photoTS)) )
+			db.deleteTss( 'photo', photoTS, getUpdateCB('Removing exisiting photos')  )
+			
+			showUpdate = getUpdateCB( 'Importing Photos' )
+			with BulkInsertDBRows( 'photo', photoFields, db ) as bid:
+				for count in range(len(photoTS)):
+					obj = pickle.load( f )
+					obj['jpg'] = sqlite3.Binary( obj['jpg'] )
+					bid.append( [obj[f] for f in photoFields] )
+					if count % 25 == 0:
+						showUpdate(count, len(photoTS))
+				
+		progress.Destroy()
+		self.refreshTriggers( replace=True )
 	
 	def setFPS( self, fps ):
 		self.fps = int(fps if fps > 0 else 30)
@@ -741,7 +947,10 @@ class MainWin( wx.Frame ):
 			s = '{:0.1f}'.format( n )
 			return s[:-2] if s.endswith('.0') else s
 		
-		label = '\n'.join( ['AUTO','CAPTURE','{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
+		if self.closestFrames:
+			label = '\n'.join( ['AUTO','CAPTURE','CLOSEST {}'.format(self.closestFrames)] )
+		else:
+			label = '\n'.join( ['AUTO','CAPTURE','{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
 		for btn in (self.autoCapture, self.focusDialog.autoCapture):
 			btn.SetLabel( label )
 			btn.SetFontToFitLabel()
@@ -759,7 +968,32 @@ class MainWin( wx.Frame ):
 		with DateSelectDialog( self, triggerDates ) as dlg:
 			if dlg.ShowModal() == wx.ID_OK and dlg.GetDate():
 				self.setQueryDate( dlg.GetDate() )
+
+	def copyLogFileToClipboard( self, event ):
+		logFileName = getLogFileName()
+		try:
+			with open(logFileName) as f:
+				logData = f.read()
+		except IOError:
+			with wx.MessageDialog(self, "Unable to open log file.", "Error", style=wx.OK|wx.ICON_ERROR) as dlg:
+				dlg.ShowModal()
+			return
 			
+		logData = logData.split( '\n' )
+		logData = logData[-1000:]
+		logData = '\n'.join( logData )
+		
+		dataObj = wx.TextDataObject()
+		dataObj.SetText( logData )
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( dataObj )
+			wx.TheClipboard.Close()
+			with wx.MessageDialog(self, '\n\n'.join( ("Log file copied to clipboard.", "You can now paste it into an email.") ), "Success", style=wx.OK) as dlg:
+				dlg.ShowModal()
+		else:
+			with wx.MessageDialog(self, "Unable to open the clipboard.", "Error", style=wx.OK|wx.ICON_ERROR) as dlg:
+				dlg.ShowModal()
+
 	def onQueryDateChanged( self, event ):
 		v = self.date.GetValue()
 		self.setQueryDate( datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) )
@@ -779,9 +1013,17 @@ class MainWin( wx.Frame ):
 				infoListNew.append( info )
 		infoListNew.reverse()
 		return infoListNew
-	
+		
+	def refreshPhotoPanel( self ):
+		self.photoPanel.playStop()
+		self.photoPanel.set( self.finishStrip.getIJpg(), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps, editCB=self.doTriggerEdit )
+		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
+		
+	def onNotebook( self, event ):
+		self.refreshPhotoPanel()
+		
 	def onPublishPhotos( self, event ):
-		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]
 		if not infoList:
 			with wx.MessageDialog( self,
 					"Please select a date with videos.",
@@ -806,11 +1048,14 @@ class MainWin( wx.Frame ):
 				tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
 				if jpgBest is None:
 					continue
-				args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 				try:
 					args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 				except Exception:
 					args['raceSeconds'] = None
+				if isinstance(args['kmh'], str):
+					args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
+					
 				jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 				fname = Utils.RemoveDisallowedFilenameChars( '{:04d}-{}-{},{}.jpg'.format(
 						info['bib'],
@@ -836,7 +1081,7 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
 	
 	def onPublishWebPage( self, event ):
-		infoList = list( self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount()) )
+		infoList = [self.getTriggerInfo(row) for row in range(self.triggerList.GetItemCount())]
 		if not infoList:
 			with wx.MessageDialog( self,
 					"Please select a date with videos.",
@@ -870,11 +1115,20 @@ class MainWin( wx.Frame ):
 			
 			dateStr = infoList[0]['ts'].strftime('%Y-%m-%d')
 			fname = os.path.join( dirname, '{}-index.html'.format(dateStr) )
-			ftemplate = os.path.join( Utils.getImageFolder(), 'PhotoPage.html' )
+			ftemplate = os.path.join( Utils.getHtmlFolder(), 'PhotoPage.html' )
 			
 			with open(fname, 'w') as fOut, open(ftemplate) as fIn:
 				for line in fIn:
-					if not line.strip().startswith( 'var photo_info' ):
+					
+					lineStrip = line.strip()
+					if lineStrip == '<script src="ScaledBitmap.js"></script>':
+						fOut.write( '<script>\n' )
+						with open( os.path.join(Utils.getHtmlFolder(), 'ScaledBitmap.js') ) as fsb:
+							fOut.write( fsb.read() )
+						fOut.write( '\n</script>\n' )
+						continue
+					
+					if not lineStrip.startswith( 'var photo_info' ):
 						fOut.write( line )
 						continue
 						
@@ -884,11 +1138,14 @@ class MainWin( wx.Frame ):
 						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
 						if jpgBest is None:
 							continue
-						args = {k:info[k] for k in ('ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
 						try:
 							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 						except Exception:
 							args['raceSeconds'] = None
+						if isinstance(args['kmh'], str):
+							args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
+
 						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
 						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 						jpg = AddExifToJpeg( jpg, info['ts'], comment )
@@ -960,18 +1217,12 @@ class MainWin( wx.Frame ):
 			self.updateTriggerRow( row, fields )
 	
 	def getTriggerInfo( self, row ):
-		data = self.itemDataMap[self.triggerList.GetItemData(row)]
-		return {
-			a:data[i] for i, a in enumerate((
-				'id','ts','s_before','s_after','ts_start',
-				'bib','name','team','wave','race_name',
-				'first_name','last_name','note','kmh','frames'))
-		}
+		return self.itemDataMap[self.triggerList.GetItemData(row)]
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
 		self.lastTriggerRefresh = tNow
-		self.finishStrip.SetTsJpgs( None, None )
+		self.finishStrip.Set( None )
 		
 		# replace = True
 		if replace:
@@ -986,48 +1237,38 @@ class MainWin( wx.Frame ):
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
 
-		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )
-			
 		tsPrev = (self.tsMax or datetime(2000,1,1))
+		
+		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )			
 		if triggers:
-			self.tsMax = triggers[-1][1] # id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames
+			self.tsMax = triggers[-1].ts
 		
 		zeroFrames, tsLower, tsUpper = [], datetime.max, datetime.min
-		for i, (id,ts,s_before,s_after,ts_start,bib,first_name,last_name,team,wave,race_name,note,kmh,frames) in enumerate(triggers):
-			if s_before == 0.0 and s_after == 0.0:
-				s_before,s_after = tdCaptureBeforeDefault.total_seconds(),tdCaptureAfterDefault.total_seconds()
+		for i, trig in enumerate(triggers):
+			if not trig.closest_frames and trig.s_before == 0.0 and trig.s_after == 0.0:
+				trig = trig._replace( s_before=tdCaptureBeforeDefault.total_seconds(), s_after=tdCaptureAfterDefault.total_seconds() )
 			
-			dtFinish = (ts-tsPrev).total_seconds()
+			dtFinish = (trig.ts-tsPrev).total_seconds()
 			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
-			row = self.triggerList.InsertItem( 999999, ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
+			row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
 			
-			if not frames:
-				tsLower = min( tsLower, ts-timedelta(seconds=s_before) )
-				tsU = ts + timedelta(seconds=s_after)
-				tsUpper = max( tsUpper,tsU )
-				zeroFrames.append( (row, id, tsU) )
+			if not trig.closest_frames and not trig.frames:
+				tsLower = min( tsLower, trig.ts-timedelta(seconds=trig.s_before) )
+				tsU = trig.ts + timedelta(seconds=trig.s_after)
+				tsUpper = max( tsUpper, tsU )
+				zeroFrames.append( (row, trig.id, tsU) )
 			
-			kmh_text, mph_text = ('{:.2f}'.format(kmh), '{:.2f}'.format(kmh * 0.621371)) if kmh else ('', '')
-			fields = {
-				'bib':			bib,
-				'last_name':	last_name,
-				'first_name':	first_name,
-				'team':			team,
-				'wave':			wave,
-				'race_name':	race_name,
-				'note':			note,
-				'kmh':			kmh_text,
-				'mph':			mph_text,
-				'frames':		frames,
-			}
+			fields = trig._asdict()
+			fields['kmh'], fields['mph'] = ('{:.2f}'.format(trig.kmh), '{:.2f}'.format(trig.kmh * 0.621371)) if trig.kmh else ('', '')
+			fields['frames'] = max(trig.frames, trig.closest_frames)
 			self.updateTriggerRow( row, fields )
 			
 			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = (id,ts,s_before,s_after,ts_start,bib,fields['name'],team,wave,race_name,first_name,last_name,note,kmh,frames)
-			tsPrev = ts
+			self.itemDataMap[row] = fields
+			tsPrev = trig.ts
 		
 		if zeroFrames:
-			counts = self.db.getTriggerPhotoCounts( tsLower, tsUpper )
+			counts = GlobalDatabase().getTriggerPhotoCounts( tsLower, tsUpper )
 			values = {'frames':0}
 			for row, id, tsU in zeroFrames:
 				values['frames'] = counts[id]
@@ -1035,7 +1276,7 @@ class MainWin( wx.Frame ):
 				# Don't update the trigger if the number of frames is possibly not known yet.
 				if (tNow - tsU).total_seconds() < 5.0*60.0:
 					del counts[id]
-			self.db.updateTriggerPhotoCounts( counts )
+			GlobalDatabase().updateTriggerPhotoCounts( counts )
 		
 		self.updateTriggerColumnWidths()
 
@@ -1059,16 +1300,19 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('photo', t, f) )
 		self.dbWriterQ.put( (
 			'trigger',
-			t,
-			0.00001,		# s_before
-			0.00001,		# s_after
-			t,
-			self.snapshotCount,	# bib
-			'', 			# first_name
-			'Snapshot',	# last_name
-			'',			# team
-			'',			# save
-			'',			# race_name
+			{
+				'ts':				t,
+				's_before':			0.0,
+				's_after':			0.0,
+				'closest_frames':	1,
+				'ts_start':			t,
+				'bib':				self.snapshotCount,
+				'first_name':		'',
+				'last_name':		'Snapshot',
+				'team':				'',
+				'wave':				'',
+				'race_name':		'',
+			}
 		) )
 		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
 		
@@ -1082,7 +1326,7 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.join()
 		triggers = self.db.getTriggers( tStartCapture, tStartCapture, count )
 		if triggers:
-			id = triggers[0][0]
+			id = triggers[0].id
 			self.db.initCaptureTriggerData( id )
 			self.refreshTriggers( iTriggerRow=999999, replace=True )
 			self.showLastTrigger()
@@ -1104,12 +1348,13 @@ class MainWin( wx.Frame ):
 		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
 		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
 		self.requestQ.put( {
-				'time':tNow,
-				's_before':s_before,
-				's_after':s_after,
-				'ts_start':tNow,
-				'bib':self.autoCaptureCount,
-				'last_name':'Auto',
+				'time':				tNow,
+				's_before':			s_before,
+				's_after':			s_after,
+				'closest_frames':	self.closestFrames,
+				'ts_start':			tNow,
+				'bib':				self.autoCaptureCount,
+				'last_name':		'Auto',
 			}
 		)
 		
@@ -1148,20 +1393,21 @@ class MainWin( wx.Frame ):
 			self.onStartAutoCapture( event )
 	
 	def onStartCapture( self, event ):
+		wx.BeginBusyCursor()
 		tNow = self.tStartCapture = now()
 		
 		event.GetEventObject().SetForegroundColour( captureDisableColour )
 		wx.CallAfter( event.GetEventObject().Refresh )
-		wx.BeginBusyCursor()
 		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		self.requestQ.put( {
-				'time':tNow,
-				's_before':0.0,
-				's_after':self.tdCaptureAfter.total_seconds(),
-				'ts_start':tNow,
-				'bib':self.captureCount,
-				'last_name':'Capture',
+				'time':				tNow,
+				's_before':			0.0,
+				's_after':			self.tdCaptureAfter.total_seconds(),
+				'closest_frames':	0,
+				'ts_start':			tNow,
+				'bib':				self.captureCount,
+				'last_name':		'Capture',
 			}
 		)
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-self.tdCaptureBefore} )
@@ -1179,7 +1425,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
 		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
 		if triggers:
-			id = triggers[0][0]
+			id = triggers[0].id
 			self.db.updateTriggerBeforeAfter(
 				id,
 				0.0,
@@ -1190,9 +1436,9 @@ class MainWin( wx.Frame ):
 		
 		self.showLastTrigger()
 		
-		wx.EndBusyCursor()
 		event.GetEventObject().SetForegroundColour( captureEnableColour )
 		wx.CallAfter( event.GetEventObject().Refresh )
+		wx.EndBusyCursor()
 		
 		def updateFS():
 			# Wait for all the photos to be written.
@@ -1204,11 +1450,12 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=updateFS ).start()
 
 	def autoCaptureConfig( self, event ):
-		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds(), self.closestFrames )
 		if self.autoCaptureDialog.ShowModal() == wx.ID_OK:
-			s_before, s_after = self.autoCaptureDialog.get()
+			s_before, s_after, closestFrames = self.autoCaptureDialog.get()
 			self.tdCaptureBefore = timedelta(seconds=s_before) if s_before is not None else tdCaptureBeforeDefault
 			self.tdCaptureAfter  = timedelta(seconds=s_after)  if s_after  is not None else tdCaptureAfterDefault
+			self.closestFrames = closestFrames
 			self.writeOptions()
 			self.updateAutoCaptureLabel()
  		
@@ -1219,57 +1466,41 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.Show()
 	
-	def showPhotoDialog( self ):
-		self.photoDialog.set( self.finishStrip.finish.getIJpg(self.xFinish), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
-			self.doTriggerEdit,
-		)
-		self.photoDialog.CenterOnParent()
-		self.photoDialog.Move( self.photoDialog.GetScreenPosition().x, 0 )
-		self.photoDialog.ShowModal()
-		if self.triggerInfo['kmh'] != (self.photoDialog.kmh or 0.0):
-			self.db.updateTriggerKMH( self.triggerInfo['id'], self.photoDialog.kmh or 0.0 )
-			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
-		self.photoDialog.clear()		
-	
-	def onRightClick( self, event ):
-		if self.triggerInfo:
-			self.xFinish = event.GetX()
-			self.showPhotoDialog()
-
-	def photoViewCB( self, x ):
-		if self.triggerInfo:
-			self.xFinish = x
-			self.showPhotoDialog()
-
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
 		
 		if self.iTriggerSelect >= self.triggerList.GetItemCount():
 			self.ts = None
 			self.tsJpg = []
-			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, {} )
+			self.finishStrip.Set( self.tsJpg )
+			self.refreshPhotoPanel()
 			return
 		
-		self.finishStrip.SetTsJpgs( None, None )	# Clear the current finish strip so nothing gets updated.
-		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
+		self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
+		self.refreshPhotoPanel()
+		triggerInfo = self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
 		self.ts = self.triggerInfo['ts']
 		s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
 		if s_before == 0.0 and s_after == 0.0:
 			s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
 		
-		# Update the screen in the background so we don't freeze the UI.
-		def updateFS( triggerInfo ):
-			self.ts = triggerInfo['ts']
+		self.ts = triggerInfo['ts']
+		if triggerInfo['closest_frames']:
+			self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
+		else:
 			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
-			triggerInfo['frames'] = len(self.tsJpg)
-			self.finishStrip.SetTsJpgs( self.tsJpg, self.ts, triggerInfo )
-			
-		#threading.Thread( target=updateFS, args=(self.triggerInfo,) ).start()
-		updateFS( self.triggerInfo )
+		triggerInfo['frames'] = len(self.tsJpg)
+		self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
+		self.refreshPhotoPanel()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
+		if self.iTriggerSelect < 0:
+			self.iTriggerSelect = 0
+			return
+		
+		self.triggerList.Select( self.iTriggerSelect )
+		
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewIdRef()
 			self.triggerEditID = wx.NewIdRef()
@@ -1298,11 +1529,11 @@ class MainWin( wx.Frame ):
 		
 	def doTriggerEdit( self ):
 		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
-		self.triggerDialog.set( self.db, data[0] )
+		self.triggerDialog.set( self.db, data['id'] )
 		self.triggerDialog.CenterOnParent()
 		if self.triggerDialog.ShowModal() == wx.ID_OK:
 			row = self.iTriggerSelect
-			fields = {f:v for f, v in zip(Database.triggerEditFields,self.triggerDialog.get())}
+			fields = self.triggerDialog.get()
 			self.updateTriggerRow( row, fields )
 			self.updateTriggerColumnWidths()
 			self.triggerInfo.update( fields )
@@ -1365,8 +1596,6 @@ class MainWin( wx.Frame ):
 		self.dbWriterQ.put( ('flush',) )
 	
 	def processCamera( self ):
-		lastPrimaryTime = now()
-		primaryCount = 0
 		
 		#---------------------------------------------------------------
 		def responseHandler( msg ):
@@ -1375,21 +1604,13 @@ class MainWin( wx.Frame ):
 		
 		#---------------------------------------------------------------
 		def updateHandler( msg ):
-			nonlocal lastPrimaryTime, primaryCount
+			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
 			
-			name, lastFrame = msg['name'], msg['frame']
 			if name == 'primary':
 				if lastFrame is None:
 					wx.CallAfter( self.primaryBitmap.SetTestBitmap )
 				else:
 					wx.CallAfter( self.primaryBitmap.SetBitmap, CVUtil.frameToBitmap(lastFrame) )
-					primaryCount += self.primaryFreq
-					primaryTime = now()
-					primaryDelta = (primaryTime - lastPrimaryTime).total_seconds()
-					if primaryDelta > 2.5:
-						wx.CallAfter( self.updateActualFPS, primaryCount / primaryDelta )
-						lastPrimaryTime = primaryTime
-						primaryCount = 0
 					
 			elif name == 'focus':
 				if self.focusDialog.IsShown():
@@ -1423,6 +1644,9 @@ class MainWin( wx.Frame ):
 		def snapshotHandler( msg ):
 			lastFrame = lastFrame if msg['frame'] is None else msg['frame']
 			wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
+			
+		def fpsHandler( msg ):
+			wx.CallAfter( self.updateActualFPS, msg['fps_actual'] )
 
 		handlers = {
 			'response':		responseHandler,
@@ -1431,13 +1655,11 @@ class MainWin( wx.Frame ):
 			'info':			infoHandler,
 			'cameraUsb':	cameraUsbHandler,
 			'snapshot':		snapshotHandler,
+			'fps':			fpsHandler,
 		}
 		
 		while True:
-			try:
-				msg = self.camReader.recv()
-			except EOFError:
-				break
+			msg = self.camReader.get()
 				
 			try:
 				handler = handlers[msg['cmd']]
@@ -1445,7 +1667,7 @@ class MainWin( wx.Frame ):
 				if msg['cmd'] == 'terminate':
 					break
 				continue
-				
+			
 			handler( msg )
 		
 	def processRequests( self ):
@@ -1453,7 +1675,7 @@ class MainWin( wx.Frame ):
 			self.dbWriterQ.put( ('flush',) )
 	
 		while True:
-			msg = self.requestQ.get()
+			msg = self.requestQ.get()	# Blocking get.
 			
 			tSearch = msg['time']
 			advanceSeconds = msg.get('advanceSeconds', 0.0)
@@ -1461,21 +1683,28 @@ class MainWin( wx.Frame ):
 			
 			# Record this trigger.
 			self.dbWriterQ.put( (
-				'trigger',
-				tSearch - timedelta(seconds=advanceSeconds),
-				msg.get('s_before', self.tdCaptureBefore.total_seconds()),	# Use the configured capture interval, not the default.
-				msg.get('s_after', self.tdCaptureAfter.total_seconds()),
-				msg.get('ts_start', None) or now(),
-				msg.get('bib', 99999),
-				msg.get('first_name','') or msg.get('firstName',''),
-				msg.get('last_name','') or msg.get('lastName',''),
-				msg.get('team',''),
-				msg.get('wave',''),
-				msg.get('race_name','') or msg.get('raceName',''),
-			) )
+					'trigger',
+					{
+						'ts':				tSearch - timedelta(seconds=advanceSeconds),
+						's_before':			msg.get('s_before', self.tdCaptureBefore.total_seconds()),	# Use the configured capture interval, not the default.
+						's_after':			msg.get('s_after', self.tdCaptureAfter.total_seconds()),
+						'ts_start':			msg.get('ts_start', None) or now(),
+						'closest_frames':	msg.get('closest_frames', self.closestFrames),
+						'bib':				msg.get('bib', 99999),
+						'first_name':		msg.get('first_name','') or msg.get('firstName',''),
+						'last_name':		msg.get('last_name','') or msg.get('lastName',''),
+						'team':				msg.get('team',''),
+						'wave':				msg.get('wave',''),
+						'race_name':		msg.get('race_name','') or msg.get('raceName',''),
+					}
+				)
+			)
 			# Record the video frames for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter
-			self.camInQ.put( { 'cmd':'query', 'tStart':tStart, 'tEnd':tEnd,} )
+			if self.closestFrames:
+				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':self.closestFrames} )
+			else:
+				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
 			wx.CallAfter( wx.CallLater, max(100, int(100+1000*(tEnd-now()).total_seconds())), refresh )
 	
 	def shutdown( self ):
@@ -1540,7 +1769,7 @@ class MainWin( wx.Frame ):
 				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
 			self.db.cleanBetween( tsLower, tsUpper )
 			if vacuum:
-				self.db.vacuum()
+				GlobalDatabase().vacuum()
 			wx.CallAfter( self.finishStrip.Clear )
 			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()
@@ -1580,6 +1809,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
+		self.config.WriteInt( 'ClosestFrames', self.closestFrames )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1598,7 +1828,8 @@ class MainWin( wx.Frame ):
 			self.tdCaptureAfter = timedelta(seconds=abs(float(s_after)))
 		except Exception:
 			pass
-		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.25) )
+		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
+		self.closestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()
@@ -1611,6 +1842,9 @@ def disable_stdout_buffering():
 	os.dup2(temp_fd, fileno)
 	os.close(temp_fd)
 	sys.stdout = os.fdopen(fileno, "w", 0)
+	
+def getLogFileName():
+	return os.path.join(Utils.getHomeDir(), 'CrossMgrVideo.log')
 
 redirectFileName = None
 mainWin = None
@@ -1628,7 +1862,7 @@ def MainLoop():
 	mainWin = MainWin( None, title=AppVerName, size=(1000,500) )
 	
 	dataDir = Utils.getHomeDir()
-	redirectFileName = os.path.join(dataDir, 'CrossMgrVideo.log')
+	redirectFileName = getLogFileName()
 	
 	# Set up the log file.  Otherwise, show errors on the screen.
 	if __name__ == '__main__':

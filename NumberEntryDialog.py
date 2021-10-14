@@ -20,26 +20,19 @@ class NumberEntryDialog( wx.Dialog ):
 		if message:
 			sizer.Add( wx.StaticText(self, label=message), flag=wx.ALL, border=4 )
 		hSizer = wx.BoxSizer( wx.HORIZONTAL )
+		promptFlags = 0
 		if prompt:
 			hSizer.Add( wx.StaticText(self, label=prompt), flag=wx.ALIGN_CENTER_VERTICAL )
-		hSizer.Add( self.intctrl, 1, flag=wx.EXPAND )
+			promptFlags = wx.LEFT
+		hSizer.Add( self.intctrl, 1, flag=wx.EXPAND|promptFlags, border=4 )
 		sizer.Add( hSizer, flag=wx.ALL|wx.EXPAND, border=4 )
 
-		btnsizer = wx.StdDialogButtonSizer()
-
-		btn = wx.Button(self, wx.ID_OK)
-		btn.SetDefault()
-		btnsizer.AddButton(btn)
-
-		btn = wx.Button(self, wx.ID_CANCEL)
-		btnsizer.AddButton(btn)
-		btnsizer.Realize()
-
-		sizer.Add(btnsizer, 0, flag=wx.ALL, border=5)
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		if btnSizer:
+			sizer.Add(btnSizer, 0, flag=wx.ALL, border=4)
 		
 		self.SetSizer( sizer )
 		self.SetSize( 200, 50*(2+int(bool(message))) )
-		#self.Fit()
 
 		self.CenterOnParent() 
 		

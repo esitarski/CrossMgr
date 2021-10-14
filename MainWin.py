@@ -52,7 +52,8 @@ from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDe
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation
 from Search				import SearchDialog
-from Situation			import Situation
+#from Situation			import Situation
+from GapChart			import GapChart
 from LapCounter			import LapCounter
 from Announcer			import Announcer
 from Primes				import Primes, GetGrid
@@ -82,6 +83,7 @@ from TeamResults		import TeamResults
 from BibEnter			import BibEnter
 from BackgroundJobMgr	import BackgroundJobMgr
 from Restart			import Restart
+from ReissueBibs	 	import ReissueBibsDialog
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -540,6 +542,7 @@ class MainWin( wx.Frame ):
 		self.editMenu.AppendSeparator()
 		
 		item = self.editMenu.Append( wx.ID_ANY, _("&Find..."), _("Find a Rider") )
+		self.menuFindID = item.GetId()
 		self.Bind(wx.EVT_MENU, self.menuFind, item )
 		
 		self.editMenu.AppendSeparator()
@@ -559,6 +562,10 @@ class MainWin( wx.Frame ):
 		self.editMenu.AppendSeparator()
 		item = self.editMenu.Append( wx.ID_ANY, _('&Change "Autocorrect"...'), _('Change "Autocorrect"...') )
 		self.Bind( wx.EVT_MENU, self.menuAutocorrect, item )
+		
+		self.editMenu.AppendSeparator()
+		item = self.editMenu.Append( wx.ID_ANY, _('&Reissue Bibs...'), _('Reissue Bibs...') )
+		self.Bind( wx.EVT_MENU, self.menuReissueBibs, item )
 		
 		self.editMenuItem = self.menuBar.Append( self.editMenu, _("&Edit") )
 
@@ -681,13 +688,14 @@ class MainWin( wx.Frame ):
 			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'primes',			Primes,				_('Primes') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
-			[ 'situation',		Situation,			_('Situation') ],
+			#[ 'situation',		Situation,			_('Situation') ],
+			[ 'gapChart',		GapChart,			_('GapChart') ],
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 			[ 'announcer',		Announcer,			_('Announcer') ],
 			[ 'histogram',		HistogramPanel,		_('Histogram') ],
 			[ 'teamResults',	TeamResults,		_('Team Results') ],
 		]
-		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'situation', 'announcer', 'lapCounter', 'teamResults'}
+		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'gapChart', 'announcer', 'lapCounter', 'teamResults'}
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):
 			setattr( self, a, c(self.notebook) )
@@ -896,10 +904,11 @@ class MainWin( wx.Frame ):
 		#------------------------------------------------------------------------------
 		# Set the accelerator table so we can switch windows with the function keys.
 		accTable = [(wx.ACCEL_NORMAL, wx.WXK_F1 + i, jumpToIds[i]) for i in range(min(11,len(jumpToIds)))]
-		self.contextHelp = wx.ID_HELP
-		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelp )
-		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelp) )
-		accTable.append( (wx.ACCEL_SHIFT, wx.WXK_F1, self.contextHelp) )
+		self.contextHelpID = wx.ID_HELP
+		self.Bind(wx.EVT_MENU, self.onContextHelp, id=self.contextHelpID )
+		accTable.append( (wx.ACCEL_CTRL, ord('H'), self.contextHelpID) )
+		accTable.append( (wx.ACCEL_SHIFT, wx.WXK_F1, self.contextHelpID) )
+		accTable.append( (wx.ACCEL_CTRL, ord('F'), self.menuFindID) )
 		aTable = wx.AcceleratorTable( accTable )
 		self.SetAcceleratorTable(aTable)
 		
@@ -907,8 +916,6 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_CLOSE, self.onCloseWindow)
 		self.Bind(JChip.EVT_CHIP_READER, self.handleChipReaderEvent)
 		self.lastPhotoTime = now()
-		
-		self.photoDialog = PhotoViewerDialog( self, title = _("PhotoViewer"), size=(600,400) )
 		
 	@property
 	def chipReader( self ):
@@ -1068,10 +1075,12 @@ class MainWin( wx.Frame ):
 				numTimeInfo.add( newNum, t )
 			wx.CallAfter( self.refresh )
 		
+	@logCall
 	def menuDNS( self, event ):
 		with DNSManagerDialog(self) as dns:
 			dns.ShowModal()
 		
+	@logCall
 	def menuOpenExcelSheet( self, event ):
 		if not Model.race:
 			Utils.MessageOK(self, _("You must have a valid race."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
@@ -1087,6 +1096,7 @@ class MainWin( wx.Frame ):
 		except Exception as e:
 			pass
 		
+	@logCall
 	def menuFind( self, event = None ):
 		if not getattr(self, 'findDialog', None):
 			self.findDialog = SearchDialog( self )
@@ -1102,6 +1112,7 @@ class MainWin( wx.Frame ):
 		undo.doRedo()
 		self.refresh()
 		
+	@logCall
 	def menuAutocorrect( self, event ):
 		undo.pushState()
 		with Model.LockRace() as race:
@@ -1111,6 +1122,17 @@ class MainWin( wx.Frame ):
 			if not categories:
 				return
 		SetAutoCorrectDialog( self, categories ).ShowModal()
+	
+	@logCall
+	def menuReissueBibs( self, event ):
+		with Model.LockRace() as race:
+			if not race:
+				return
+			categories = race.getCategoriesInUse()
+			if not categories:
+				return
+		with ReissueBibsDialog(self) as dlg:
+			dlg.ShowModal()
 	
 	def menuShowHighPrecisionTimes( self, event ):
 		with Model.LockRace() as race:
@@ -1394,7 +1416,8 @@ class MainWin( wx.Frame ):
 	
 	def menuCopyLogFileToClipboard( self, event ):
 		try:
-			logData = open(redirectFileName).read()
+			with open(redirectFileName) as f:
+				logData = f.read()
 		except IOError:
 			Utils.MessageOK(self, _("Unable to open log file."), _("Error"), wx.ICON_ERROR )
 			return
@@ -3962,8 +3985,6 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		self.menuItemSyncCategories.Check( bool(race and race.syncCategories) )
 		
 		self.updateRaceClock()
-		if self.photoDialog.IsShown():
-			self.photoDialog.refresh()
 
 	def refreshTTStart( self ):
 		if self.notebook.GetSelection() in (self.iHistoryPage, self.iRecordPage):
@@ -4008,8 +4029,6 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.riderDetail.setNumSelect( num )
 			self.gantt.setNumSelect( num )
 			self.raceAnimation.setNumSelect( num )
-			if self.photoDialog.IsShown():
-				self.photoDialog.setNumSelect( num )
 			self.numSelect = num
 
 	#-------------------------------------------------------------

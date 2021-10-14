@@ -658,102 +658,15 @@ class CameraProperties( wx.Panel ):
 		self.radioBox = wx.RadioBox( self, label=_("USB Camera Options"), choices=choices, majorDimension=1, style=wx.RA_SPECIFY_COLS )
 		self.radioBox.SetBackgroundColour( wx.WHITE )
 		
-		sbox = wx.StaticBox( self, label=_('Photo Delay Option') )
-		sboxSizer = wx.StaticBoxSizer( sbox, wx.VERTICAL )
-		
-		self.antennaReadDistance = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, style=wx.ALIGN_RIGHT, min=-500, max=500, value=0, limited=True, limitOnFieldChange=True, size=(60,-1) )
-		self.antennaReadDistance.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
-		self.antennaReadDistanceUnit = wx.StaticText(self, label='m')
-		self.finishKMH = numctrl.NumCtrl( self, integerWidth=3, fractionWidth=2, min=0.0, max=999.99, limited=True, limitOnFieldChange=True, value=50.0, size=(30,-1), style=wx.ALIGN_RIGHT )
-		self.finishKMH.Bind( numctrl.EVT_NUM, self.doDistanceSpeedChanged )
-		self.finishSpeedUnit = wx.StaticText(self, label='km/h')
-
-		hsCalc = wx.BoxSizer( wx.HORIZONTAL )
-		hsCalc.Add( wx.StaticText(self, label=_('RFID Read Distance before Finish Line')), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_CENTRE_VERTICAL )
-		hsCalc.Add( self.antennaReadDistance, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
-		hsCalc.Add( self.antennaReadDistanceUnit, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
-		hsCalc.Add( wx.StaticText(self, label=("Finish Speed")), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=12 )
-		hsCalc.Add( self.finishKMH, flag=wx.LEFT, border=2 )
-		hsCalc.Add( self.finishSpeedUnit, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
-		
-		self.advancePhotoMillisecondsLabel = wx.StaticText( self, label=_('Milliseconds') )
-		self.advancePhotoMilliseconds = wx.Slider( self, style=wx.SL_HORIZONTAL|wx.SL_LABELS|wx.SL_AUTOTICKS, minValue=self.advanceMin, maxValue=self.advanceMax, )
-		self.advancePhotoMilliseconds.SetTickFreq( 100 )
-		self.advancePhotoMilliseconds.SetBackgroundColour( wx.WHITE )
-		self.advancePhotoMilliseconds.Bind( wx.EVT_SCROLL, self.doAdvancePhotoMillisecondsScroll )
-		self.advancePhotoMillisecondsValue = intctrl.IntCtrl( self, style=wx.ALIGN_RIGHT, value=0, min=self.advanceMin, max=self.advanceMax, limited=True, allow_none=True, size=(60,-1) )
-		self.advancePhotoMillisecondsValue.Bind( intctrl.EVT_INT, self.doAdvancePhotoMillisecondsText )
-		hsDelay = wx.BoxSizer( wx.HORIZONTAL )
-		hsDelay.Add( self.advancePhotoMillisecondsLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
-		hsDelay.Add( self.advancePhotoMillisecondsValue, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=4 )
-		hsDelay.Add( self.advancePhotoMilliseconds, 1, flag=wx.EXPAND|wx.LEFT, border=4 )
-		
-		sboxSizer.Add( hsCalc, flag=wx.EXPAND )
-		sboxSizer.Add( hsDelay, flag=wx.EXPAND|wx.TOP, border=4 )
-		
 		ms = wx.BoxSizer( wx.VERTICAL )
 		
 		ms.Add( self.radioBox, flag=wx.ALL, border=16 )
-		ms.Add( sboxSizer, flag=wx.ALL|wx.EXPAND, border=16 )
 		
-		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrCamera.  See help for details') )
+		self.explanation = wx.StaticText( self, label=_('Requires CrossMgrVideo.  See help for details.') )
 		ms.Add( self.explanation, flag=wx.ALL, border=16 )
 		
 		self.SetSizer( ms )
 
-	@property
-	def distanceUnitValue( self ):
-		return self.GetParent().GetParent().raceOptionsProperties.distanceUnitValue
-	
-	@property
-	def antennaReadDistanceValue( self ):
-		return (self.antennaReadDistance.GetValue() or 0.0) / [1.0, 3.2808399][self.distanceUnitValue]
-	
-	@antennaReadDistanceValue.setter
-	def antennaReadDistanceValue( self, meters ):
-		self.antennaReadDistance.SetValue( meters * [1.0, 3.2808399][self.distanceUnitValue] )
-		
-	@property
-	def finishKMHValue( self ):
-		return (self.finishKMH.GetValue() or 0.0) / [1.0, 0.62137119][self.distanceUnitValue]
-	
-	@finishKMHValue.setter
-	def finishKMHValue( self, kmh ):
-		self.finishKMH.SetValue( kmh * [1.0, 0.62137119][self.distanceUnitValue] )
-		
-	def getSpeedMS( self ):
-		return self.finishKMHValue / 3.6
-	
-	def doDistanceSpeedChanged( self, event ):
-		distanceM = self.antennaReadDistanceValue
-		speedMS = self.getSpeedMS()
-		timeS = (distanceM / speedMS) if speedMS != 0.0 else 0.0
-		timeMilliS = int(timeS * 1000)
-		timeMilliS = max( timeMilliS, self.advanceMin )
-		timeMilliS = min( timeMilliS, self.advanceMax )
-		self.advancePhotoMilliseconds.SetValue( timeMilliS )
-		self.advancePhotoMillisecondsValue.SetValue( timeMilliS )
-	
-	def updateRFIDDistance( self ):
-		timeS = (self.advancePhotoMilliseconds.GetValue() or 0) / 1000.0
-		speedMS = self.getSpeedMS()
-		self.antennaReadDistanceValue = timeS*speedMS
-	
-	def doAdvancePhotoMillisecondsText( self, event ):
-		ctl = event.GetEventObject()
-		value = ctl.GetValue() or 0
-		if value != self.advancePhotoMilliseconds.GetValue():
-			self.advancePhotoMilliseconds.SetValue( value )
-			self.updateRFIDDistance()
-			wx.CallAfter( self.commit )
-	
-	def doAdvancePhotoMillisecondsScroll( self, event ):
-		value = self.advancePhotoMilliseconds.GetValue() or 0
-		if value != self.advancePhotoMillisecondsValue.GetValue():
-			self.advancePhotoMillisecondsValue.SetValue( value )
-			self.updateRFIDDistance()
-			wx.CallAfter( self.commit )
-	
 	def refresh( self ):
 		race = Model.race
 		if not race or not race.enableUSBCamera:
@@ -763,14 +676,6 @@ class CameraProperties( wx.Panel ):
 				self.radioBox.SetSelection( 1 )
 			else:
 				self.radioBox.SetSelection( 2 )
-		if race:
-			self.finishSpeedUnit.SetLabel( ['km/h', 'mph'][self.distanceUnitValue] )
-			self.antennaReadDistanceUnit.SetLabel( ['m', 'ft'][self.distanceUnitValue] )
-			self.advancePhotoMilliseconds.SetValue( race.advancePhotoMilliseconds or 0 )
-			self.advancePhotoMillisecondsValue.SetValue( race.advancePhotoMilliseconds or 0 )
-			self.finishKMHValue = race.finishKMH or 0.0
-			self.updateRFIDDistance()
-			
 		self.GetSizer().Layout()
 		
 	def commit( self ):
@@ -778,11 +683,10 @@ class CameraProperties( wx.Panel ):
 		if not race:
 			return
 		
-		race.advancePhotoMilliseconds = self.advancePhotoMilliseconds.GetValue() or 0
-		race.finishKMH = self.finishKMHValue
+		race.advancePhotoMilliseconds = 0
+		
 		race.enableUSBCamera = False
 		race.photosAtRaceEndOnly = False
-		
 		v = self.radioBox.GetSelection()
 		if v == 1:
 			race.enableUSBCamera = True

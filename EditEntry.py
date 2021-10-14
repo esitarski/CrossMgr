@@ -46,16 +46,10 @@ class CorrectNumberDialog( wx.Dialog ):
 			self.noteEdit.SetValue( getattr(race, 'lapNote', {}).get( (self.entry.num, self.entry.lap), '' ) )
 		bs.Add( self.noteEdit, pos=(3,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		border = 4
-		bs.Add( self.okBtn, pos=(4, 0), span=(1,1), border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(4, 1), span=(1,1), border = border, flag=wx.ALL )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			bs.Add( btnSizer, pos=(4, 0), span=(1,2), flag=wx.ALL|wx.EXPAND, border = border )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -132,9 +126,6 @@ class CorrectNumberDialog( wx.Dialog ):
 			Utils.refresh()
 		
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 #------------------------------------------------------------------------------------------------
 class ShiftNumberDialog( wx.Dialog ):
@@ -172,15 +163,10 @@ class ShiftNumberDialog( wx.Dialog ):
 		bs.Add( self.timeMsEdit, pos=(3,1), span=(1,1), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		bs.Add( self.newTime, pos=(4,0), span=(1,2), border = border, flag=wx.GROW|wx.LEFT|wx.RIGHT )
 		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-		
-		bs.Add( self.okBtn, pos=(5, 0), span=(1,1), border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(5, 1), span=(1,1), border = border, flag=wx.ALL )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			bs.Add( btnSizer, pos=(5, 1), span=(1,2), border = border, flag=wx.ALL|wx.EXPAND )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -192,7 +178,11 @@ class ShiftNumberDialog( wx.Dialog ):
 	def getNewTime( self ):
 		tAdjust = self.timeMsEdit.GetSeconds() * (-1 if self.shiftBox.GetSelection() == 0 else 1)
 		return self.entry.t + tAdjust
-
+	
+	def updateNewTime( self, event = None ):
+		s = '{}: {}  {}: {}'.format(_('Was'), Utils.formatTime(self.entry.t,True), _('Now'), Utils.formatTime(self.getNewTime(),True) )
+		self.newTime.SetLabel( s )
+	
 	def onOK( self, event ):
 		num = self.numEdit.GetValue()
 		t = self.getNewTime()
@@ -210,13 +200,6 @@ class ShiftNumberDialog( wx.Dialog ):
 					race.setChanged()
 			Utils.refresh()
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
-		
-	def updateNewTime( self, event = None ):
-		s = '{}: {}  {}: {}'.format(_('Was'), Utils.formatTime(self.entry.t,True), _('Now'), Utils.formatTime(self.getNewTime(),True) )
-		self.newTime.SetLabel( s )
 
 #------------------------------------------------------------------------------------------------
 class InsertNumberDialog( wx.Dialog ):
@@ -228,12 +211,6 @@ class InsertNumberDialog( wx.Dialog ):
 		bs = wx.GridBagSizer(vgap=5, hgap=5)
 		
 		self.numEdit = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
-		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
 		bs.Add( wx.StaticText( self, label = '{}: {}   {}: {}'.format(
@@ -253,10 +230,11 @@ class InsertNumberDialog( wx.Dialog ):
 				pos=(3,0), span=(1,1), border = border, flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT )
 		bs.Add( self.numEdit,
 				pos=(3,1), span=(1,1), border = border, flag=wx.TOP|wx.RIGHT|wx.ALIGN_BOTTOM )
-				
-		bs.Add( self.okBtn, pos=(4, 0), span=(1,1), border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(4, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
+		
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			bs.Add( btnSizer, pos=(4, 1), span=(1,2), border = border, flag=wx.ALL|wx.EXPAND )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -283,9 +261,6 @@ class InsertNumberDialog( wx.Dialog ):
 		Utils.refresh()
 		
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 #------------------------------------------------------------------------------------------------
 class SplitNumberDialog( wx.Dialog ):
@@ -298,12 +273,6 @@ class SplitNumberDialog( wx.Dialog ):
 		
 		self.numEdit1 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
 		self.numEdit2 = wx.lib.intctrl.IntCtrl( self, style=wx.TE_RIGHT, value=int(self.entry.num), allow_none=False, min=1, max=9999 )
-		
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		
 		border = 8
 		bs.Add( wx.StaticText( self, label = '{}: {}   {}: {}'.format(
@@ -320,9 +289,10 @@ class SplitNumberDialog( wx.Dialog ):
 		bs.Add( self.numEdit2,
 				pos=(2,1), span=(1,1), border = border, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.ALIGN_BOTTOM )
 		
-		bs.Add( self.okBtn, pos=(3, 0), span=(1,1), border = border, flag=wx.ALL )
-		self.okBtn.SetDefault()
-		bs.Add( self.cancelBtn, pos=(3, 1), span=(1,1), border = border, flag=wx.ALL|wx.ALIGN_RIGHT )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
+		if btnSizer:
+			bs.Add( btnSizer, pos=(3, 1), span=(1,2), border = border, flag=wx.ALL|wx.EXPAND )
 		
 		self.SetSizerAndFit(bs)
 		bs.Fit( self )
@@ -354,9 +324,6 @@ class SplitNumberDialog( wx.Dialog ):
 		Utils.refresh()
 		
 		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 
 #------------------------------------------------------------------------------------------------
 
@@ -459,12 +426,6 @@ class StatusChangeDialog( wx.Dialog ):
 		else:
 			self.entryTime = None
 			
-		self.okBtn = wx.Button( self, wx.ID_OK )
-		self.Bind( wx.EVT_BUTTON, self.onOK, self.okBtn )
-
-		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
-		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-
 		border = 16
 		vs = wx.BoxSizer( wx.VERTICAL )
 		vs.Add( self.message, flag=wx.ALL, border=border )
@@ -472,12 +433,10 @@ class StatusChangeDialog( wx.Dialog ):
 			vs.Add( self.externalData, flag=wx.RIGHT|wx.LEFT|wx.BOTTOM, border=border )
 		if self.entryTime:
 			vs.Add( self.entryTime, flag=wx.RIGHT|wx.LEFT|wx.BOTTOM, border=border )
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okBtn, flag=wx.ALL, border = border )
-		self.okBtn.SetDefault()
-		hs.AddStretchSpacer()
-		hs.Add( self.cancelBtn, flag=wx.ALL, border = border )
-		vs.Add( hs, flag=wx.EXPAND )
+			
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
+		if btnSizer:
+			vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizerAndFit( vs )
 		
@@ -486,12 +445,6 @@ class StatusChangeDialog( wx.Dialog ):
 
 	def getSetEntryTime( self ):
 		return self.entryTime and self.entryTime.IsChecked()
-		
-	def onOK( self, event ):
-		self.EndModal( wx.ID_OK )
-		
-	def onCancel( self, event ):
-		self.EndModal( wx.ID_CANCEL )
 	
 def DoStatusChange( parent, num, message, title, newStatus, lapTime=None ):
 	if num is None:
@@ -590,6 +543,6 @@ if __name__ == '__main__':
 	app = wx.App( False )
 	frame = wx.Frame( None )
 	
-	d = CorrectNumberDialog( frame, Model.Entry( 110, 3, 60*4+7, False ) )
+	d = SplitNumberDialog( frame, Model.Entry( 110, 3, 60*4+7, False ) )
 	d.Show()
 	app.MainLoop()

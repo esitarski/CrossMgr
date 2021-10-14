@@ -37,14 +37,12 @@ class AdvancedDialog( wx.Dialog ):
 		fgs.Add( self.transmitPower, flag=wx.EXPAND )
 		fgs.Add( self.receiveSensitivity, flag=wx.EXPAND )
 		
-		bs = wx.StdDialogButtonSizer()
-		bs.AddButton( wx.Button(self, wx.ID_OK) )
-		bs.AddButton( wx.Button(self, wx.ID_CANCEL) )
-		bs.Realize()
+		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
-		sizer.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )		
-		sizer.Add( bs, flag=wx.ALL, border=4 )
+		sizer.Add( fgs, flag=wx.EXPAND|wx.ALL, border=4 )
+		if btnSizer:	
+			sizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=4 )
 		
 		self.SetSizerAndFit( sizer )
 		

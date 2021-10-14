@@ -5,6 +5,7 @@ import re
 import sys
 import math
 import socket
+import subprocess
 
 timeoutSecs = None
 
@@ -120,6 +121,41 @@ playBell = False
 def Bell():
 	if playBell:
 		wx.CallAfter( wx.Bell )
+
+# Attempt at portable sound player.
+if sys.platform.startswith('win'):
+	soundCache = {}
+	def Play( soundFile ):
+		global soundCache
+		soundFile = os.path.join( imageFolder, soundFile )
+		try:
+			return soundCache[soundFile].Play()
+		except KeyError:
+			pass
+		soundCache[soundFile] = wx.adv.Sound( soundFile )
+		return soundCache[soundFile].Play()
+			
+elif sys.platform.startswith('darwin'):
+	def Play( soundFile ):
+		try:
+			subprocess.Popen(['afplay', os.path.join(imageFolder, soundFile)])
+		except Exception:
+			pass
+		return True
+		
+else:	# Try Linux
+	def Play( soundFile ):
+		try:
+			subprocess.Popen(['aplay', '-q', os.path.join(imageFolder, soundFile)])
+		except Exception as e:
+			pass
+		return True
+					
+def PlaySound( soundFile ):
+	return Play(soundFile) if playBell else True
+
+def Beep():
+	return PlaySound( 'blip6.wav' )
 		
 #------------------------------------------------------------------------
 def disable_stdout_buffering():
