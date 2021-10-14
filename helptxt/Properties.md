@@ -283,34 +283,15 @@ In addition to making nice pictures of the event for publishing later, this feat
 
 It can be used with RFID or manual entry to automatically take a photo of riders as they cross the finish line.
 
-This requires a separate program:  __CrossMgrCamera__.  If you have not done so, download and install this program from the CrosMgr web site.
+This requires a separate program:  __CrossMgrVideo__.  If you have not done so, download and install this program from the CrossMgr web site.
 
-CrossMgrCamera runs for the entire race and takes photos about 25 times a second.  It holds those frames in a "ring buffer" that is 10 seconds long (a ring buffer just means that the most recent photo replaces the oldest). 
+CrossMgr sends __CrossMgrVideo__ a message with the rider information and a time.  CrossMgrVideo can then the closest 1 or 2 photos, or a short video based on the CrossMgr trigger.
 
-CrossMgr sends it a message with the rider information and a time.  CrossMgrCamera then saves the frame before and after the time after also adding the information as a header at the top of the photo.
+CrossMgrVideo allows viewing and analysing the photos on the desktop, or from any web browser/tablet/smart phone connected to the LAN.  This allows other anyone to review close finishes.
 
-Photos are stored in a folder called __<RaceFile>_Photos__ where <RaceFile> is the name of the CrossMgr race file.  Photo names have the form:
+Photos are stored in a database.  Again, see CrossMgrVideo for details.
 
-__bib-XXXX-time-HH-MM-SS-DDD-X.jpg__
-
-Where bib is the rider's race number, HH-MM-SS-DDD is the race time to millisecond accuracy, and X is the frame - either 1 or 2.
-
-This makes it easy to manage the photos in a regular file browser.  Sort alphabetically to see the files by rider bib number.  Sort by date to see the photos in full order.
-
-The CrossMgrCamera application supports three photo display areas:
-
-1. The top left area constantly shows what the camera is looking at along the top.
-1. Two areas below show the frame before and the frame after the last photo taken.
-
-CrossMgr sends messages to it to save photos.
-
-When you run CrossMgrCamera, consider the __Camera Device__.
-Normally, the external USB camera default is __device 0__, so you don't need to change this.
-
-On some PCs, the built-in camera is __device 0__ and the external USB camera is __device 1__.
-If this is the case on your computer, set __Camera Device__ to __1__.
-
-CrossMgrCamera uses the computer intensively and will drain the battery quickly.  Make sure you have an external source of power.
+CrossMgrVideo can also be used for many other purposes even if not connected to CrossMgr, for example, capturing close finishes.
 
 ### Options
 
@@ -320,66 +301,13 @@ Do Not Use Camera for Photo Finish|USB Camera not used
 Photos on Every Lap|Records a photo from a connected USB camera on every number entry on every lap.  See [Notes](#use-usb-camera-photo-finish) below for details.
 Photos at Race Finish Only|This option tells CrossMgr to record photos one minute before the leader's finish time for each Start Wave.  If the leader has not yet finished, CrossMgr uses leader's expected time.  If the leader's time is known, CrossMgr uses the leader's actual finish time.  If this option is disabled, CrossMgr will record photos of every rider on every lap.  If this race is a time trial, this option has no effect and photos will be recorded on every lap.
 
-### Photo Delay
-
-This sets a delay between when a photo is triggered (manual or RFID input) and when the camera is triggered.
-
-This is important when you are using __passive RFID tags__.  The reader will read the tags before the rider crosses the finish.  If the camera takes a photo when the tag is first read, the frame will be blank as the rider is not there yet.  Configuring a photo delay allows time for the rider to get in the frame.
-
-To set a reasonable delay, you need to estimate two pieces of data - the __RFID Read Distance before Finish Line__ and the __Finish Speed__.
-To figure this out, you need a helper:
-
-1. Start up CrossMgrImpinj (or CrossMgrAlien).  Make sure it is connected to the reader and working correctly.
-1. Take a spare tag, and stand on the finish line.  CrossMgrImpinj will show that the tag is constantly being read.
-1. Start walking the course in the opposite direction, away from the finish line.
-1. Ask the helper to tell you the moment the tag stops reading.
-1. At that point, make a mark on the course.
-1. Measure the distance between the mark and the finish with a tape measure.  This is the __RFID Read Distance before Finish Line__.  Enter it into CrossMgr.
-1. Estimate a reasonable __Est. Finish Speed__ depending on the type of race.  Ask the riders what their finish speed is.
-1. CrossMgr uses this information to calculate the photo delay in milliseconds.
-
-This can be approximate.  CrossMgr takes two photos, one before and one after, 40 milliseconds apart.  This allows for +/-40 milliseconds variation in the photo delay to get the rider in frame.
-
-If riders are consistently before, or after the finish line in the frame, this is easy to fix.
-
-For example, if the riders are 1 meter before the line, reduce __RFID Read Distance before Finish Line__ by one meter.
-If the riders are 1 meter after the line, increase __RFID Read Distance before Finish Line__ by one meter.
-
 ### Camera Notes:
 
-The purpose of __Photos at Race Finish Only__ is to avoid filling up your disk with uninteresting photos during the race.  This feature is especially useful for high-lap races like criteriums.  Aside from the space required, there is no problem with recording photos every lap, and you may wish to do for the additional information it provides.
+__Photos at Race Finish Only__ avoids filling up your disk with uninteresting photos during the race.  This feature is especially useful for high-lap races like criteriums.
 
 When using the __Photos at Race Finish Only__ option, be aware that sometimes CrossMgr does not know who the leader is.  Especially during a criterium, this can happen if the leader takes a free lap and CrossMgr does not auto-correct it, or in any race type, the leader might have a missed read.
 
-This is the reason for the policy of recording photos one minute before the expected leader - this makes it more likely that the leader will be included if misclassified during the race.
-
-One the leader of a Start Wave has been recorded, photos for all riders in the Start Wave will be recorded.  The same reason applies: CrossMgr may not know what lap a particular rider is on with 100% accuracy if the rider has take free laps or had missed reads.  This means that lapped riders may have their photo recorded twice.
-
-When using CrossMgr for track races, recording all photos 60 seconds in advance of the leader may result in photos of all riders for up to the last 4 laps (depending on the length of the track).
-
 In TimeTrial mode, __Photos at Race Finish Only__ has the same effect as __Photos on Every Lap__.
-
-### More Camera Notes
-
-CrossMgr automatically looks for a USB webcam plugged into a USB port.  If it does not find one there, and you have a built-in webcam, it might find the built-in one (not what you want!).  Make sure the USB camera is plugged in and working before starting the race.
-
-The USB camera feature can be turned on and off during the race at any time.  You can turn it on at the start, off in the middle, then on again to capture the last laps and the finish.
-
-Photos are saved in a folder created in the same location as the race.  The Photo folder has the same name as the race with with "_Photos" added to the end.  The photo files have the following format: "bib-XXXX-time-HH-MM-SS-DD-N.jpg" where XXXX is the bib number, HH, MM, SS and DD are hours, minutes, seconds, and decimal seconds, respectively, and N is the photo number.
-A header is written on each photo including the rider's Bib, Name, Team, the Event, the Race Time and the Current Date/Time.
-
-Although the pictures taken are far smaller than recording the entire video on disk, they can still take a lot of space.  Make sure you have lots of disk space available to accommodate the potential 500 (or more) pictures that might be taken.
-
-If you only want one photo of each rider for posting (CrossMgr takes two), you can delete all the second photos in the folder from a command line:
-
-    del *2.jpg    &:: Windows cmd window
-    rm *2.jpg     # Linux shell prompt
-
-Get a good USB camera.  Some good ones are available for about $100.  Make sure the camera can focus on far-away objects (some webcams only work well for faces in front of a computer).  Use a tripod or other stable support.
-
-For performance reasons, CrossMgr opens a connection to the USB webcam at the start of the race and closes it at the end.  Do Not Disconnect the USB Camera during the race!  This may cause CrossMgr to lock up.  Of course, you can always close CrossMgr and restart it if this happens.
-
-Note that aiming the camera into the sun will "blind" it, and the riders will appear as dark blotches on a white background.  Some experimentation will be required, and don't be surprised if you have to change the camera position throughout the day to compensate for changing lighting conditions.  Periodically review what the camera is seeing in CrossMgrCamera.
 
 ## Animation Options
 These only apply to the Track animation.  If you are using an uploaded GPX file, the animation will follow the GPX path.
