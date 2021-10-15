@@ -775,7 +775,7 @@ class MainWin( wx.Frame ):
 		
 	def onWeb( self, event ):
 		dateStrInitial = self.date.GetValue().Format('%Y-%m-%d')
-		url = '{}:{}?date={}'.format( GetMyIP(), WebServer.PORT_NUMBER, dateStrInitial )
+		url = 'http://{}:{}?date={}'.format( GetMyIP(), WebServer.PORT_NUMBER, dateStrInitial )
 		webbrowser.open( url, new=0, autoraise=1 )
 		
 	def exportDB( self, event ):
