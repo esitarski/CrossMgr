@@ -1016,7 +1016,11 @@ class MainWin( wx.Frame ):
 		
 	def refreshPhotoPanel( self ):
 		self.photoPanel.playStop()
-		self.photoPanel.set( self.finishStrip.getIJpg(), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps, editCB=self.doTriggerEdit )
+		self.photoPanel.set(
+			self.finishStrip.getIJpg(), self.triggerInfo, self.finishStrip.GetTsJpgs(), self.fps,
+			editCB=self.doTriggerEdit,
+			updateCB=lambda fields: self.updateTriggerRow(self.iTriggerSelect, fields)
+		)
 		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
 		
 	def onNotebook( self, event ):

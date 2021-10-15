@@ -204,12 +204,13 @@ class PhotoPanel( wx.Panel ):
 	def ts( self ):
 		return None if self.iJpg is None else self.tsJpg[self.iJpg][0]
 		
-	def set( self, iJpg, triggerInfo, tsJpg, fps=25, editCB=None ):
+	def set( self, iJpg, triggerInfo, tsJpg, fps=25, editCB=None, updateCB=None ):
 		self.iJpg = max( 0, min(iJpg or 0, (len(tsJpg)-1) if tsJpg else 0) )
 		self.triggerInfo = triggerInfo
 		self.tsJpg = tsJpg
 		self.fps = fps
 		self.editCB = editCB
+		self.updateCB = updateCB
 		
 		self.kmh = (triggerInfo.get('kmh',0.0) or 0.0) if triggerInfo else 0.0
 		if isinstance(self.kmh, str):
@@ -310,9 +311,10 @@ class PhotoPanel( wx.Panel ):
 	
 	def onEdit( self, event ):
 		if self.editCB:
-			self.triggerInfo = self.editCB()
+			self.triggerInfo.update( self.editCB() )
 			wx.CallAfter( self.SetBitmap )
 			wx.CallAfter( self.Refresh )
+			wx.CallAfter( self.updateCB, self.triggerInfo )
 			
 	def GetZoomInfo( self ):
 		r = self.scaledBitmap.GetSourceRect()
@@ -415,6 +417,10 @@ class PhotoPanel( wx.Panel ):
 		
 		computeSpeed = ComputeSpeed( self, size=self.GetSize() )
 		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( self.tsJpg, i1, i2, self.triggerInfo['ts_start'] )
+		if self.kmh is not None:
+			self.triggerInfo.update( {'kmh':'{:.2f}'.format(self.kmh), 'mph':'{:.2f}'.format(self.mph)} )
+			GlobalDatabase().updateTriggerRecord( self.triggerInfo['id'], {'kmh': self.kmh} )
+			wx.CallAfter( self.updateCB, self.triggerInfo )
 	
 	def onPrint( self, event ):
 		self.playStop()
