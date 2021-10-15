@@ -210,7 +210,7 @@ class PhotoPanel( wx.Panel ):
 		self.tsJpg = tsJpg
 		self.fps = fps
 		self.editCB = editCB
-		self.updateCB = updateCB or lambda update: None
+		self.updateCB = updateCB or (lambda update: None)
 		
 		self.kmh = (triggerInfo.get('kmh',0.0) or 0.0) if triggerInfo else 0.0
 		if isinstance(self.kmh, str):
