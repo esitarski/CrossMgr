@@ -173,7 +173,7 @@ class TimePage(adv.WizardPageSimple):
 	def getPosition( self ):
 		return self.sbvl.GetVerticalLines()[0]
 	
-class ComputeSpeed( object ):
+class ComputeSpeed:
 	wheelDiameter = 0.678
 
 	def __init__( self, parent, size=wx.DefaultSize ):

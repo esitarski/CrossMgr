@@ -1,5 +1,6 @@
 import wx
 import os
+import re
 import time
 import bisect
 import subprocess
@@ -211,6 +212,8 @@ class PhotoPanel( wx.Panel ):
 		self.editCB = editCB
 		
 		self.kmh = (triggerInfo.get('kmh',0.0) or 0.0) if triggerInfo else 0.0
+		if isinstance(self.kmh, str):
+			self.kmh = float( '0' + re.sub('[^0-9.]', '', self.kmh) )
 		self.mps = self.kmh / 3.6
 		self.mph = self.kmh * 0.621371
 		self.pps = 2000.0
