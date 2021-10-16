@@ -1207,6 +1207,8 @@ class MainWin( wx.Frame ):
 					v = '{:>6}'.format(v)
 				elif k == 'frames':
 					v = '{}'.format(v) if v else ''
+				elif isinstance(v, float):
+					v = '{:.2f}'.format(v) if v else ''
 				else:
 					v = '{}'.format(v) if v is not None else ''
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
@@ -1263,7 +1265,7 @@ class MainWin( wx.Frame ):
 				zeroFrames.append( (row, trig.id, tsU) )
 			
 			fields = trig._asdict()
-			fields['kmh'], fields['mph'] = ('{:.2f}'.format(trig.kmh), '{:.2f}'.format(trig.kmh * 0.621371)) if trig.kmh else ('', '')
+			fields['mph'] = (trig.kmh * 0.621371) if trig.kmh else 0.0
 			fields['frames'] = max(trig.frames, trig.closest_frames)
 			self.updateTriggerRow( row, fields )
 			
