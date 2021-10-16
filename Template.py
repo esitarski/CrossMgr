@@ -90,6 +90,9 @@ class Template:
 			'topTeamResults',
 			'finishPointsStructure',
 			'showNumTeamParticipants',
+			
+			'googleMapsApiKey',
+			'gaTrackingID',
 		},
 		set(batchPublishRaceAttr),
 	)

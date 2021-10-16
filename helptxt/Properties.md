@@ -267,10 +267,21 @@ Options for HTML output including Contact Email, Google Analytics Tracking ID an
 
 If you have a __Google Analytics Tracking ID__, enter it here to track access to the race results web page.
 
-CrossMgr will insert all the proper Javascript on the html page with your __Google Analytics Tracking ID__.
+CrossMgr will automatically insert the proper Javascript on the html page with your __Google Analytics Tracking ID__.
 You can then track access to the page from your Google Analytics account.
 
-For more information about Google Analytics, including how to create an account and get your Tracking ID, see [here](http://www.google.com/analytics).
+For more information about Google Analytics, including how to create an account and get your Tracking ID, see [here](https://marketingplatform.google.com/about/analytics/).
+
+### Google Maps API Key
+
+If you have a __Google Maps API Key__, enter it here.  CrossMgr requires this key to use Google Maps to display course maps, directions, etc.
+CrossMgr will automatically insert the proper Javascript to use your __Google Maps API Key__.
+
+If you do not have your own __Google Maps API Key__, CrossMgr will use a default key.
+This is a free key and has a limited number of allowed accesses each month.  When it has reached its maximum, Google Maps will show an access error.
+As this key is used by all CrossMgr implementations worldwide, this can happen quickly.
+
+For more information about the Google Maps API Key, including how to create an account and get your own Key, see [here](https://developers.google.com/maps/documentation/javascript/get-api-key).
 
 ## FTP
 
@@ -278,18 +289,18 @@ Options for FTP upload including host, password, directory and real-time publish
 
 ## Camera
 
-CrossMgr can record photos from an inexpensive USB camera as riders cross the finish line.
+This capability requires a separate program:  __CrossMgrVideo__.  If you have not done so, download and install this program from the CrossMgr web site.
+
+__CrossMgrVideo__ can record photos from an inexpensive USB camera as riders cross the finish line.
 In addition to making nice pictures of the event for publishing later, this feature is useful in resolving disputes.
 
-It can be used with RFID or manual entry to automatically take a photo of riders as they cross the finish line.
-
-This requires a separate program:  __CrossMgrVideo__.  If you have not done so, download and install this program from the CrossMgr web site.
+__CrossMgrVideo__  can be triggered from CrossMgr with RFID or manual entry.  It can be configured to automatically take a photo of riders as they cross the finish line on every lap, or just the last lap.
 
 CrossMgr sends __CrossMgrVideo__ a message with the rider information and a time.  CrossMgrVideo can then the closest 1 or 2 photos, or a short video based on the CrossMgr trigger.
+Because CrossMgrVideo maintains an image buffer, it is possible to record video for a few seconds before and after the trigger.
 
 CrossMgrVideo allows viewing and analysing the photos on the desktop, or from any web browser/tablet/smart phone connected to the LAN.  This allows other anyone to review close finishes.
-
-Photos are stored in a database.  Again, see CrossMgrVideo for details.
+It also has features to export photos so they can be shown on the web.
 
 CrossMgrVideo can also be used for many other purposes even if not connected to CrossMgr, for example, capturing close finishes.
 
@@ -303,7 +314,7 @@ Photos at Race Finish Only|This option tells CrossMgr to record photos one minut
 
 ### Camera Notes:
 
-__Photos at Race Finish Only__ avoids filling up your disk with uninteresting photos during the race.  This feature is especially useful for high-lap races like criteriums.
+__Photos at Race Finish Only__ will send a trigger only for the finish.  This feature is especially useful for high-lap races like criteriums.
 
 When using the __Photos at Race Finish Only__ option, be aware that sometimes CrossMgr does not know who the leader is.  Especially during a criterium, this can happen if the leader takes a free lap and CrossMgr does not auto-correct it, or in any race type, the leader might have a missed read.
 

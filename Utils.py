@@ -793,9 +793,6 @@ def GetContrastTextColour( backgroundColour ):
 	yiq = ((r*299)+(g*587)+(b*114))/1000.0
 	return  wx.BLACK if yiq >= 128.0 else wx.WHITE
 	
-def GetGoogleMapsApiKey():
-	return 'AIzaSyD2sl2JTvnyMcsgWc3tTceWCYo3ZoyWdAI'
-
 import json
 def ToJson( v, separators=(',',':') ):
 	''' Make sure we always return a unicode string. '''

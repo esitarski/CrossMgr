@@ -415,6 +415,11 @@ class WebProperties( wx.Panel ):
 		self.gaTrackingID = wx.TextCtrl( self )
 		fgs.Add( self.gaTrackingID, 1, flag=wx.EXPAND )
 				
+		fgs.Add( wx.StaticText( self, label=_('Google Maps API Key') ),
+				flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.googleMapsApiKey = wx.TextCtrl( self )
+		fgs.Add( self.googleMapsApiKey, 1, flag=wx.EXPAND )
+				
 		self.headerImageBitmap = wx.StaticBitmap( self )
 		
 		self.graphicFName = None
@@ -490,6 +495,7 @@ class WebProperties( wx.Panel ):
 		
 		self.email.SetValue( race.email or '' )
 		self.gaTrackingID.SetValue( getattr(race, 'gaTrackingID', '') )
+		self.googleMapsApiKey.SetValue( getattr(race, 'googleMapsApiKey', '') )
 		
 		if race.headerImage:
 			self.headerImage = race.headerImage

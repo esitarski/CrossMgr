@@ -1951,7 +1951,7 @@ class MainWin( wx.Frame ):
 		
 		def sanitize( template ):
 			# Sanitize the template into a safe json string.
-			template = template.replace( '{{api_key}}', Utils.GetGoogleMapsApiKey() )
+			template = template.replace( '{{api_key}}', race.googleMapsApiKey )
 			template = self.reLeadingWhitespace.sub( '', template )
 			template = self.reComments.sub( '', template )
 			template = self.reBlankLines.sub( '\n', template )
@@ -2453,7 +2453,7 @@ class MainWin( wx.Frame ):
 				return
 				
 		# Write out the results.
-		html = html.replace('{{api_key}}', Utils.GetGoogleMapsApiKey())
+		html = html.replace('{{api_key}}', race.googleMapsApiKey)
 		html = self.addCourseToHtmlStr( html )
 		fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'
 		try:

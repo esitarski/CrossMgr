@@ -1182,6 +1182,9 @@ class Race:
 	rfidRestartTime = None		# Restart time (used to ignore intervening tag reads)
 	#--------------------------------------
 	
+	googleMapsApiKey = 'AIzaSyD2sl2JTvnyMcsgWc3tTceWCYo3ZoyWdAI'
+	
+	#--------------------------------------
 	
 	def __init__( self ):
 		self.reset()

@@ -41,6 +41,7 @@ def ReadPropertiesFromExcel( reader ):
 		('Win and Out',		'winAndOut',		'b'),
 		('Event Long Name',	'longName', 		's'),
 		('Email',			'email', 			's'),
+		('Google Maps API Key','googleMapsApiKey','s'),
 	)
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
