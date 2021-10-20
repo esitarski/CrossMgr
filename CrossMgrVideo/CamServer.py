@@ -99,13 +99,13 @@ def CamServer( qIn, qWriter, camInfo=None ):
 	camInfo = camInfo or {}
 	backlog = []
 	
-	qWriter.put( {'cmd':'cameraUsb', 'usb':getCameraUsb()} )
-	time.sleep( 0.25 )
-	
 	#print( 'CamServer: camInfo={}'.format(camInfo) )
 	
 	while True:
 		
+		qWriter.put( {'cmd':'cameraUsb', 'usb':getCameraUsb(), 'usb_cur':camInfo.get('usb',0)} )
+		time.sleep( 0.25 )
+	
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			frameCount = fpsFrameCount = 0
 			fpsStart = now()
@@ -197,6 +197,10 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					elif cmd == 'cam_info':
 						camInfo = m['info'] or {}
 						keepCapturing = False
+						break
+					
+					elif cmd == 'get_usb':
+						keepCapturing = False	# Forces a camera reconnect to the same camInfo.  This, sends updated usb information.
 						break
 					
 					elif cmd == 'terminate':

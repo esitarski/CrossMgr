@@ -23,6 +23,7 @@ import platform
 import pickle
 import gzip
 import sqlite3
+from time import sleep
 import numpy as np
 from queue import Queue, Empty
 
@@ -1634,6 +1635,7 @@ class MainWin( wx.Frame ):
 		#---------------------------------------------------------------
 		def cameraUsbHandler( msg ):
 			wx.CallAfter( self.updateCameraUsb, msg['usb'] )
+			wx.CallAfter( self.setUsb, msg['usb_cur'] )
 			
 		#---------------------------------------------------------------
 		def snapshotHandler( msg ):
@@ -1728,6 +1730,9 @@ class MainWin( wx.Frame ):
 	def resetCamera( self, event=None ):
 		status = False
 		while True:
+			self.camInQ.put( {'cmd':'get_usb'} )
+			sleep( 1.0 )	# Give the usb scan a chance to work.
+			
 			width, height = self.getCameraResolution()
 			info = {'usb':self.getUsb(), 'fps':self.fps, 'width':width, 'height':height, 'fourcc':self.fourcc.GetLabel(), 'availableCameraUsb':self.availableCameraUsb}
 			with ConfigDialog( self, **info ) as dlg:
