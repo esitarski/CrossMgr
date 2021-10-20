@@ -50,6 +50,7 @@ from GetMyIP import GetMyIP
 from FIFOCache import FIFOCacheSet
 from Version import AppVerName
 import WebServer
+from DateSelectDialog import DateSelectDialog
 
 imageWidth, imageHeight = 640, 480
 
@@ -90,68 +91,6 @@ def getInfo():
 	info.update( {'{}_{}'.format(app, a.capitalize()): getattr(uname, a)
 		for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '') } )
 	return info
-
-from CalendarHeatmap import CalendarHeatmap
-class DateSelectDialog( wx.Dialog ):
-	def __init__( self, parent, triggerDates, id=wx.ID_ANY, ):
-		super().__init__( parent, id, title=_("Date Select") )
-		
-		sizer = wx.BoxSizer( wx.VERTICAL )
-		self.dateSelect = None
-		
-		self.triggerDates = triggerDates
-		
-		self.chm = CalendarHeatmap( self, dates=self.triggerDates )
-		self.chm.Bind( wx.EVT_BUTTON, self.onCHMSelect )
-		self.chm.Bind( wx.EVT_COMMAND_LEFT_DCLICK, self.onCHMChoose )
-		
-		self.triggerDatesList = wx.ListCtrl( self, style=wx.LC_REPORT|wx.LC_SINGLE_SEL, size=(-1,230) )
-		
-		self.triggerDatesList.InsertColumn( 0, 'Date' )
-		self.triggerDatesList.InsertColumn( 1, 'Entries', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
-		for i, (d, c) in enumerate(triggerDates):
-			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
-			self.triggerDatesList.SetItem( i, 1, str(c) )
-		
-		if self.triggerDates:
-			self.triggerDatesList.Select( 0 )
-			self.chm.SetDate( self.triggerDates[0][0] )
-		
-		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelect )
-		self.triggerDatesList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onItemActivate )
-		
-		btnSizer = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
-		
-		sizer.Add( self.chm, flag=wx.ALL, border=4 )
-		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
-		if btnSizer:
-			sizer.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
-		
-		self.SetSizer( sizer )
-		wx.CallAfter( self.Fit )
-
-	def onCHMSelect( self, event ):
-		dSelect = event.GetDate()
-		for i, (d, c) in enumerate(self.triggerDates):
-			if d == dSelect:
-				self.triggerDatesList.Select( i )
-				break
-		
-	def onCHMChoose( self, event ):
-		self.onCHMSelect( event )
-		self.dateSelect = event.GetDate()
-		self.EndModal( wx.ID_OK )	
-		
-	def onItemSelect( self, event ):
-		self.dateSelect = self.triggerDates[event.GetIndex()][0]
-		self.chm.SetDate( self.dateSelect )
-		
-	def onItemActivate( self, event ):
-		self.onItemSelect( event )
-		self.EndModal( wx.ID_OK )	
-		
-	def GetDate( self ):
-		return self.dateSelect
 
 cameraResolutionChoices = (
 	'320x240',
