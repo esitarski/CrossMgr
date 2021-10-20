@@ -107,25 +107,26 @@ def CamServer( qIn, qWriter, camInfo=None ):
 	while True:
 		
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
-			time.sleep( 0.25 )
 			frameCount = fpsFrameCount = 0
 			fpsStart = now()
 			inCapture = False
 			doSnapshot = False
-			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			tsMax = now()
 			keepCapturing = True
 			secondsPerFrame = 1.0/30.0
 			convert_rgb = True
+			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			
 			while keepCapturing:
 				# Read the frame.
-				if not cap.isOpened():		# Handle the case if the camera cannot open.
+				if not cap.isOpened():
 					ret, frame = False, None
-					break
+					time.sleep( 0.125 )		# Keep going so we can get camInfo to try again.
 				else:						
 					try:
 						ret, frame = cap.read()
+					except Exception as e:	# Potential out of memory error?
+						ret, frame = False, None
 					except KeyboardInterrupt:
 						return
 				
@@ -270,7 +271,7 @@ if __name__ == '__main__':
 			m = q.get()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
-	qIn, qWriter = getCamServer( dict(usb=6, width=10000, height=10000, fps=30, fourcc="MJPG") )
+	qIn, qWriter = getCamServer( dict(usb=4, width=10000, height=10000, fps=30, fourcc="MJPG") )
 	qIn.put( {'cmd':'start_capture'} )
 	
 	Thread( target=handleMessages, args=(qWriter,) ).start()
