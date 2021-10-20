@@ -389,6 +389,8 @@ class MainWin( wx.Frame ):
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
 		self.closestFrames = 0
+		
+		self.isShutdown = False
 
 		dataDir = Utils.getHomeDir()
 		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
@@ -1598,8 +1600,11 @@ class MainWin( wx.Frame ):
 			'fps':			fpsHandler,
 		}
 		
-		while True:
+		while not self.isShutdown:
 			msg = self.camReader.get()
+			
+			if self.isShutdown:
+				break
 				
 			try:
 				handler = handlers[msg['cmd']]
@@ -1649,6 +1654,7 @@ class MainWin( wx.Frame ):
 	
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
+		self.isShutdown = True
 		if hasattr(self, 'dbWriterThread'):
 			if hasattr(self, 'camInQ' ):
 				self.camInQ.put( {'cmd':'terminate'} )
