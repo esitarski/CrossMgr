@@ -67,9 +67,7 @@ class CompositeCtrl( wx.Control ):
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
 		
 		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
-		self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
 		self.Bind( wx.EVT_MOTION, self.OnMotion )
-		self.Bind( wx.EVT_LEAVE_WINDOW, self.OnLeave )
 
 	def isValid( self ):
 		return len(self.tsJpgs) >= 2
@@ -95,14 +93,8 @@ class CompositeCtrl( wx.Control ):
 			self.Refresh()
 			event.Skip()
 		
-	def OnLeftUp( self, event ):
-		self.leftButtonDown = False
-		
-	def OnLeave( self, event ):
-		self.leftButtonDown = False
-		
 	def OnMotion( self, event ):
-		if not self.isValid() or not self.leftButtonDown:
+		if not self.isValid():
 			return
 
 		self.pointerTS = self.insetTS = self.tsFromPointer( event.GetX() )

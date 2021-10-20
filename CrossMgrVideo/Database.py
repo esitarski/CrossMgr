@@ -228,7 +228,7 @@ class Database:
 		if data:
 			with self.dbLock, self.conn:
 				# Filter out any fields that are not part of the record.
-				safe_fields = set.intersection( self.triggerFieldsAll, data.keys() )
+				safe_fields = set.intersection( set(self.triggerFieldsAll), set(data.keys()) )
 				safe_data  = {k:v for k,v in data.items() if k in safe_fields}
 				if safe_data:
 					self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in safe_data.keys())),
