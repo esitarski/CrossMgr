@@ -52,7 +52,6 @@ class CompositeCtrl( wx.Control ):
 		
 		self.xClickLeft = 0							# Last left mouse click.
 		self.xVLeftClick = 0
-		self.leftButtonDown = False
 		
 		self.Set( None )
 		
@@ -85,7 +84,6 @@ class CompositeCtrl( wx.Control ):
 		return self.tsFromXV( xV )
 		
 	def OnLeftDown( self, event ):
-		self.leftButtonDown = True
 		if self.isValid():
 			self.currentTS = self.tsFromPointer( event.GetX() )
 			self.xVLeftClick = self.xVLeft
