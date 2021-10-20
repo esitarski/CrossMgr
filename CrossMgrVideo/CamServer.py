@@ -107,14 +107,15 @@ def CamServer( qIn, qWriter, camInfo=None ):
 		time.sleep( 0.25 )
 	
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
-			frameCount = fpsFrameCount = 0
-			fpsStart = now()
+			frameCount = 0
+			fpsFrameCount = 0
+			fpsStart = now() - timedelta( seconds=10 )		# Force an initial fps update.
+			
 			inCapture = False
 			doSnapshot = False
 			tsMax = now()
 			keepCapturing = True
 			secondsPerFrame = 1.0/30.0
-			convert_rgb = True
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			
 			while keepCapturing:
@@ -215,11 +216,6 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				# Camera info.
 				if retvals:
 					qWriter.put( {'cmd':'info', 'retvals':retvals} )
-					convert_rgb = True
-					for name, property_index, call_status, update_value in retvals:
-						if name == 'convert_rgb' and call_status and update_value == 0:
-							convert_rgb = False
-							break
 					retvals = None
 				
 				# If inCapture, or the capture time is in the future, add the frame to the backlog.
@@ -231,7 +227,7 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				# Don't send too many frames at a time so we don't overwhelm the queue and lose frame rate.
 				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
-					backlogTransmitFrames = transmitFramesMax * (5 if not convert_rgb else 1)	# If we are sending jpeg frames we can send more at a time.
+					backlogTransmitFrames = transmitFramesMax
 					qWriter.put( { 'cmd':'response', 'ts_frames': backlog[-backlogTransmitFrames:] } )
 					del backlog[-backlogTransmitFrames:]
 						
