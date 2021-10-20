@@ -1411,22 +1411,23 @@ class MainWin( wx.Frame ):
 			self.refreshPhotoPanel()
 			return
 		
-		self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
-		self.refreshPhotoPanel()
-		triggerInfo = self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
-		self.ts = self.triggerInfo['ts']
-		s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
-		if s_before == 0.0 and s_after == 0.0:
-			s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
-		
-		self.ts = triggerInfo['ts']
-		if triggerInfo['closest_frames']:
-			self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
-		else:
-			self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
-		triggerInfo['frames'] = len(self.tsJpg)
-		self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
-		self.refreshPhotoPanel()
+		with wx.BusyCursor():
+			self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
+			self.refreshPhotoPanel()
+			triggerInfo = self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
+			self.ts = self.triggerInfo['ts']
+			s_before, s_after = abs(self.triggerInfo['s_before']), abs(self.triggerInfo['s_after'])
+			if s_before == 0.0 and s_after == 0.0:
+				s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
+			
+			self.ts = triggerInfo['ts']
+			if triggerInfo['closest_frames']:
+				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
+			else:
+				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
+			triggerInfo['frames'] = len(self.tsJpg)
+			self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
+			self.refreshPhotoPanel()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
