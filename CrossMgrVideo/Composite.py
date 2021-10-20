@@ -82,7 +82,7 @@ class CompositeCtrl( wx.Control ):
 		return self.tsFromXV( xV )
 		
 	def OnLeft( self, event ):
-		if not self.isValid():
+		if self.isValid():
 			self.currentTS = self.tsFromPointer( event.GetX() )
 			self.xVLeftClick = self.xVLeft
 			self.xClickLeft = event.GetX()
@@ -464,7 +464,7 @@ class CompositeCtrl( wx.Control ):
 				text.append( '{} TRG'.format( formatSeconds( (self.currentTS - self.triggerTS).total_seconds()) ) )
 			text.append( '' )	# Blank line to give room for triggerTS line.
 			x = round( (self.xVFromTS(self.currentTS) - self.xVLeft) * self.imageToScreenFactor )
-			drawIndicatorLine( x, wx.Colour(255,0,0), text, False )
+			drawIndicatorLine( x, wx.Colour(255,69,0), text, False )
 
 class CompositePanel( wx.Panel):
 	def __init__( self, parent ):

@@ -227,9 +227,13 @@ class Database:
 	def updateTriggerRecord( self, id, data ):
 		if data:
 			with self.dbLock, self.conn:
-				self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in data.keys())),
-					list(data.values()) + [id]
-				)
+				# Filter out any fields that are not part of the record.
+				safe_fields = set.intersection( self.triggerFieldsAll, data.keys() )
+				safe_data  = {k:v for k,v in data.items() if k in safe_fields}
+				if safe_data:
+					self.conn.execute( 'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in safe_data.keys())),
+						list(safe_data.values()) + [id]
+					)
 		return True
 		
 	def getTriggerFields( self, id, fieldNames=None ):
@@ -237,7 +241,7 @@ class Database:
 			fieldNames = self.triggerFieldsAll
 		with self.dbLock, self.conn:
 			row = self.conn.execute( 'SELECT {} FROM trigger WHERE id=?'.format(','.join(fieldNames)), (id,) ).fetchone()
-		return { f:row[i] for i, f in enumerate(fieldNames) }
+		return { f:row[i] for i, f in enumerate(fieldNames) } if row else None
 	
 	def updateTriggerKMH( self, id, kmh ):
 		self.updateTriggerRecord(id, {'kmh':kmh})

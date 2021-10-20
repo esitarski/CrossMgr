@@ -362,7 +362,7 @@ class TriggerDialog( wx.Dialog ):
 		return values
 	
 	def commit( self ):
-		self.db.setTriggerEditFields( self.triggerId, **self.get() )
+		GlobalDatabase().setTriggerEditFields( self.triggerId, **self.get() )
 	
 	def onOK( self, event ):
 		self.commit()
@@ -688,7 +688,6 @@ class MainWin( wx.Frame ):
 				wx.LIST_FORMAT_RIGHT if h in formatRightHeaders else wx.LIST_FORMAT_LEFT
 			)
 		self.iNoteCol = self.fieldCol['note']
-		self.itemDataMap = {}
 		
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onTriggerEdit )
@@ -963,7 +962,7 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.date.SetValue, wx.DateTime(d.day, d.month-1, d.year) )
 		
 	def onDateSelect( self, event ):
-		triggerDates = self.db.getTriggerDates()
+		triggerDates = GlobalDatabase().getTriggerDates()
 		triggerDates.sort( reverse=True )
 		with DateSelectDialog( self, triggerDates ) as dlg:
 			if dlg.ShowModal() == wx.ID_OK and dlg.GetDate():
@@ -1047,9 +1046,9 @@ class MainWin( wx.Frame ):
 		if values['lastBibWaveOnly']:
 			infoList = self.filterLastBibWave( infoList )
 			
-		def write_photos( dirname, infoList, dbFName, fps ):
+		def write_photos( dirname, infoList ):
 			for info in infoList:
-				tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
+				tsBest, jpgBest = GlobalDatabase().getPhotoClosest( info['ts'] )
 				if jpgBest is None:
 					continue
 				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
@@ -1079,8 +1078,6 @@ class MainWin( wx.Frame ):
 		args = (
 			dirname,
 			infoList,
-			self.db.fname,
-			self.db.fps,
 		)
 		threading.Thread( target=write_photos, args=args, name='write_photos', daemon=True ).start()
 	
@@ -1113,7 +1110,7 @@ class MainWin( wx.Frame ):
 					return o.isoformat()
 				return json.JSONEncoder.default(self, o)
 		
-		def publish_web_photos( dirname, infoList, dbFName, fps, singleFile ):
+		def publish_web_photos( dirname, infoList, singleFile ):
 			if not infoList:
 				return
 			
@@ -1139,7 +1136,7 @@ class MainWin( wx.Frame ):
 					# Write out all the photo info.
 					fOut.write( 'var photo_info = [\n' )
 					for iInfo, info in enumerate(infoList):
-						tsBest, jpgBest = GlobalDatabase(dbFName).getPhotoClosest( info['ts'] )
+						tsBest, jpgBest = GlobalDatabase().getPhotoClosest( info['ts'] )
 						if jpgBest is None:
 							continue
 						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
@@ -1175,8 +1172,6 @@ class MainWin( wx.Frame ):
 		args = (
 			dirname,
 			infoList,
-			self.db.fname,
-			self.db.fps,
 			singleFile,
 		)
 		threading.Thread( target=publish_web_photos, args=args, name='publish_web', daemon=True ).start()
@@ -1188,13 +1183,9 @@ class MainWin( wx.Frame ):
 	def GetSortImages(self):
 		return (self.sm_dn, self.sm_up)
 	
-	def getItemData( self, i ):
-		data = self.triggerList.GetItemData( i )
-		return self.itemDataMap[data]
-	
 	def getTriggerRowFromID( self, id ):
-		for row in range(self.triggerList.GetItemCount()-1, -1, -1):
-			if self.itemDataMap[row][0] == id:
+		for row in range(self.triggerList.GetItemCount()):
+			if self.triggerList.GetItemData(row) == id:
 				return row
 		return None
 
@@ -1223,7 +1214,7 @@ class MainWin( wx.Frame ):
 			self.updateTriggerRow( row, fields )
 	
 	def getTriggerInfo( self, row ):
-		return self.itemDataMap[self.triggerList.GetItemData(row)]
+		return GlobalDatabase().getTriggerFields( self.triggerList.GetItemData(row) )
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
@@ -1235,7 +1226,6 @@ class MainWin( wx.Frame ):
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
 			self.triggerList.DeleteAllItems()
-			self.itemDataMap = {}
 			self.tsMax = None
 			self.iTriggerSelect = None
 			self.triggerInfo = {}
@@ -1245,7 +1235,7 @@ class MainWin( wx.Frame ):
 
 		tsPrev = (self.tsMax or datetime(2000,1,1))
 		
-		triggers = self.db.getTriggers( tsLower, tsUpper, self.bibQuery )			
+		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )			
 		if triggers:
 			self.tsMax = triggers[-1].ts
 		
@@ -1269,8 +1259,7 @@ class MainWin( wx.Frame ):
 			fields['frames'] = max(trig.frames, trig.closest_frames)
 			self.updateTriggerRow( row, fields )
 			
-			self.triggerList.SetItemData( row, row )
-			self.itemDataMap[row] = fields
+			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
 			tsPrev = trig.ts
 		
 		if zeroFrames:
@@ -1330,10 +1319,10 @@ class MainWin( wx.Frame ):
 	def doUpdateAutoCapture( self, tStartCapture, count, btn, colour ):
 		self.dbWriterQ.put( ('flush',) )
 		self.dbWriterQ.join()
-		triggers = self.db.getTriggers( tStartCapture, tStartCapture, count )
+		triggers = GlobalDatabase().getTriggers( tStartCapture, tStartCapture, count )
 		if triggers:
 			id = triggers[0].id
-			self.db.initCaptureTriggerData( id )
+			GlobalDatabase().initCaptureTriggerData( id )
 			self.refreshTriggers( iTriggerRow=999999, replace=True )
 			self.showLastTrigger()
 			self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
@@ -1429,15 +1418,15 @@ class MainWin( wx.Frame ):
 	
 	def onStopCapture( self, event ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
-		triggers = self.db.getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
+		triggers = GlobalDatabase().getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
 		if triggers:
 			id = triggers[0].id
-			self.db.updateTriggerBeforeAfter(
+			GlobalDatabase().updateTriggerBeforeAfter(
 				id,
 				0.0,
 				(now() - self.tStartCapture).total_seconds()
 			)
-			self.db.initCaptureTriggerData( id )
+			GlobalDatabase().initCaptureTriggerData( id )
 			self.refreshTriggers( iTriggerRow=999999, replace=True )
 		
 		self.showLastTrigger()
@@ -1526,7 +1515,7 @@ class MainWin( wx.Frame ):
 			triggerInfo['name'], triggerInfo['team'], triggerInfo['wave'], triggerInfo['race_name']) if f )
 		if not confirm or wx.MessageDialog( self, '{}:\n\n{}'.format('Confirm Delete', message), 'Confirm Delete',
 				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
-			self.db.deleteTrigger( triggerInfo['id'], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
+			GlobalDatabase().deleteTrigger( triggerInfo['id'], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
 			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
 	
 	def onTriggerDelete( self, event ):
@@ -1534,7 +1523,7 @@ class MainWin( wx.Frame ):
 		self.doTriggerDelete()
 		
 	def doTriggerEdit( self ):
-		data = self.itemDataMap[self.triggerList.GetItemData(self.iTriggerSelect)]
+		data = self.getTriggerInfo( self.iTriggerSelect )
 		self.triggerDialog.set( self.db, data['id'] )
 		self.triggerDialog.CenterOnParent()
 		if self.triggerDialog.ShowModal() == wx.ID_OK:
@@ -1583,7 +1572,7 @@ class MainWin( wx.Frame ):
 		self.eventThread = threading.Thread( target=self.processRequests )
 		self.eventThread.daemon = True
 		
-		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), self.db.fname) )
+		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), GlobalDatabase().fname) )
 		self.dbWriterThread.daemon = True
 		
 		self.cameraThread.start()
@@ -1722,17 +1711,17 @@ class MainWin( wx.Frame ):
 			self.dbWriterThread.join( 2.0 )
 			
 	def setDBName( self, dbName ):
-		if dbName != self.db.fname:
+		if dbName != GlobalDatabase().fname:
 			if hasattr(self, 'dbWriterThread'):
 				self.dbWriterQ.put( ('terminate', ) )
 				self.dbWriterThread.join()
 			try:
-				self.db = GlobalDatabase( dbName )
+				GlobalDatabase( dbName )
 			except Exception:
-				self.db = GlobalDatabase()
+				GlobalDatabase()
 			
 			self.dbWriterQ = Queue()
-			self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), self.db.fname) )
+			self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), GlobalDatabase().fname) )
 			self.dbWriterThread.daemon = True
 			self.dbWriterThread.start()
 	
@@ -1765,15 +1754,15 @@ class MainWin( wx.Frame ):
 		return status
 	
 	def manageDatabase( self, event ):
-		trigFirst, trigLast = self.db.getTimestampRange()
-		dlg = ManageDatabase( self, self.db.getsize(), self.db.fname, trigFirst, trigLast, title='Manage Database' )
+		trigFirst, trigLast = GlobalDatabase().getTimestampRange()
+		dlg = ManageDatabase( self, GlobalDatabase().getsize(), GlobalDatabase().fname, trigFirst, trigLast, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
 			work = wx.BusyCursor()
 			tsLower, tsUpper, vacuum, dbName = dlg.GetValues()
 			self.setDBName( dbName )
 			if tsUpper:
 				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
-			self.db.cleanBetween( tsLower, tsUpper )
+			GlobalDatabase().cleanBetween( tsLower, tsUpper )
 			if vacuum:
 				GlobalDatabase().vacuum()
 			wx.CallAfter( self.finishStrip.Clear )
@@ -1807,7 +1796,7 @@ class MainWin( wx.Frame ):
 		wx.Exit()
 		
 	def writeOptions( self ):
-		self.config.Write( 'DBName', self.db.fname )
+		self.config.Write( 'DBName', GlobalDatabase().fname )
 		self.config.Write( 'CameraDevice', str(self.getUsb()) )
 		self.config.Write( 'CameraResolution', self.cameraResolution.GetLabel() )
 		self.config.Write( 'FPS', self.targetFPS.GetLabel() )
