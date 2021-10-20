@@ -49,7 +49,10 @@ class CompositeCtrl( wx.Control ):
 		self.imageToScreenFactor = 1.0				# convert image coordinates to screen coordinates
 		self.imageHeight = self.imageWidth = 600
 		self.xVLeft = 0								# left side to show composite image (in image coordinates).
+		
 		self.xClickLeft = 0							# Last left mouse click.
+		self.xVLeftClick = 0
+		self.leftButtonDown = False
 		
 		self.Set( None )
 		
@@ -63,9 +66,10 @@ class CompositeCtrl( wx.Control ):
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_ERASE_BACKGROUND, self.OnErase )
 		
+		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
+		self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
 		self.Bind( wx.EVT_MOTION, self.OnMotion )
-		self.Bind( wx.EVT_LEFT_DOWN, self.OnLeft )
-		# self.Bind( wx.EVT_RIGHT_DOWN, self.OnRight )
+		self.Bind( wx.EVT_LEAVE_WINDOW, self.OnLeave )
 
 	def isValid( self ):
 		return len(self.tsJpgs) >= 2
@@ -82,7 +86,8 @@ class CompositeCtrl( wx.Control ):
 		xV = self.xVLeft + xPointer / self.imageToScreenFactor
 		return self.tsFromXV( xV )
 		
-	def OnLeft( self, event ):
+	def OnLeftDown( self, event ):
+		self.leftButtonDown = True
 		if self.isValid():
 			self.currentTS = self.tsFromPointer( event.GetX() )
 			self.xVLeftClick = self.xVLeft
@@ -90,14 +95,14 @@ class CompositeCtrl( wx.Control ):
 			self.Refresh()
 			event.Skip()
 		
-	def OnRight( self, event ):
-		if not self.isValid():
-			return
-
-		self.SetInsetMagnification( event.GetY()/self.GetClientSize()[1] )
+	def OnLeftUp( self, event ):
+		self.leftButtonDown = False
+		
+	def OnLeave( self, event ):
+		self.leftButtonDown = False
 		
 	def OnMotion( self, event ):
-		if not self.isValid():
+		if not self.isValid() or not self.leftButtonDown:
 			return
 
 		self.pointerTS = self.insetTS = self.tsFromPointer( event.GetX() )
