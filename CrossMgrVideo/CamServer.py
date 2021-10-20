@@ -248,12 +248,11 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					doSnapshot = False
 				
 				# Send fps message.
-				if frame is not None:
-					fpsFrameCount += 1
-					if (ts - fpsStart).total_seconds() >= 3.0:
-						qWriter.put( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
-						fpsStart = ts
-						fpsFrameCount = 0
+				fpsFrameCount += bool( frame is not None )
+				if (ts - fpsStart).total_seconds() >= 3.0:
+					qWriter.put( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
+					fpsStart = ts
+					fpsFrameCount = 0
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
@@ -275,7 +274,7 @@ if __name__ == '__main__':
 			m = q.get()
 			print( ', '.join( '{}={}'.format(k, v if k not in ('frame', 'ts_frames') else len(v)) for k, v in m.items()) )
 	
-	qIn, qWriter = getCamServer( dict(usb=4, width=10000, height=10000, fps=30, fourcc="MJPG") )
+	qIn, qWriter = getCamServer( dict(usb=6, width=10000, height=10000, fps=30, fourcc="MJPG") )
 	qIn.put( {'cmd':'start_capture'} )
 	
 	Thread( target=handleMessages, args=(qWriter,) ).start()
