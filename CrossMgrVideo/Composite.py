@@ -49,6 +49,7 @@ class CompositeCtrl( wx.Control ):
 		self.imageToScreenFactor = 1.0				# convert image coordinates to screen coordinates
 		self.imageHeight = self.imageWidth = 600
 		self.xVLeft = 0								# left side to show composite image (in image coordinates).
+		self.xClickLeft = 0							# Last left mouse click.
 		
 		self.Set( None )
 		
