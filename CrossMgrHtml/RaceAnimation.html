@@ -6058,12 +6058,6 @@ function onLoad()
 {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 
-	// Don't show the buttons if there aren't any templates.
-	if( !courseViewerTemplate )
-		document.getElementById('idCourseViewer').style.visibility="hidden";
-	if( !travelMap )
-		document.getElementById('idTravelMap').style.visibility="hidden";
-
 	resultsDiv = document.getElementById('idResultsDiv');
 	showLaps = document.getElementById('idShowLaps');
 	
@@ -6110,6 +6104,8 @@ function onLoad()
 		document.getElementById('idCourseViewer').className = 'hidden';
 		document.getElementById('idGetDirections').className = 'hidden';
 	}
+	if( !courseViewerTemplate )
+		document.getElementById('idCourseViewer').className = 'hidden';
 	if( !travelMap )
 		document.getElementById('idTravelMap').className = 'hidden';
 	

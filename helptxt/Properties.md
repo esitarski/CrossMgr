@@ -274,12 +274,11 @@ For more information about Google Analytics, including how to create an account 
 
 ### Google Maps API Key
 
-If you have a __Google Maps API Key__, enter it here.  CrossMgr requires this key to use Google Maps to display course maps, directions, etc.
+If you have a __Google Maps API Key__, enter it here.  CrossMgr requires this key to use Google Maps to display course maps and the travel map.
 CrossMgr will automatically insert the proper Javascript to use your __Google Maps API Key__.
 
-If you do not have your own __Google Maps API Key__, CrossMgr will use a default key.
-This is a free key and has a limited number of allowed accesses each month.  When it has reached its maximum, Google Maps will show an access error.
-As this key is used by all CrossMgr implementations worldwide, this can happen quickly.
+If you do not enter your own __Google Maps API Key__, the CrossMgr web page will not show any options to display the course on Google maps, nor will it show the Travel Map.
+It still show the "Get Directions" page as this does not require an API key.
 
 For more information about the Google Maps API Key, including how to create an account and get your own Key, see [here](https://developers.google.com/maps/documentation/javascript/get-api-key).
 
@@ -292,7 +291,7 @@ Options for FTP upload including host, password, directory and real-time publish
 This capability requires a separate program:  __CrossMgrVideo__.  If you have not done so, download and install this program from the CrossMgr web site.
 
 __CrossMgrVideo__ can record photos from an inexpensive USB camera as riders cross the finish line.
-In addition to making nice pictures of the event for publishing later, this feature is useful in resolving disputes.
+In addition to making nice pictures of the event for publishing later, this feature is useful for checking close finishes and in resolving disputes.
 
 __CrossMgrVideo__  can be triggered from CrossMgr with RFID or manual entry.  It can be configured to automatically take a photo of riders as they cross the finish line on every lap, or just the last lap.
 
