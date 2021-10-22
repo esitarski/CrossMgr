@@ -161,7 +161,7 @@ class MyTipProvider( adv.TipProvider ):
 	def __init__( self, fname, tipNo = None ):
 		self.tips = []
 		try:
-			with open(fname, 'r') as f:
+			with open(fname) as f:
 				for line in f:
 					line = line.strip()
 					if line and line[0] != '#':
@@ -1466,7 +1466,7 @@ class MainWin( wx.Frame ):
 		graphicFName = self.config.Read( 'graphic', defaultFName )
 		if graphicFName != defaultFName:
 			try:
-				with open(graphicFName, 'r') as f:
+				with open(graphicFName) as f:
 					return graphicFName
 			except IOError:
 				pass
@@ -1966,7 +1966,7 @@ class MainWin( wx.Frame ):
 				# Add the course viewer template.
 				templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
 				try:
-					with open(templateFile, 'r') as fp:
+					with open(templateFile) as fp:
 						template = fp.read()
 					payload['courseViewerTemplate'] = sanitize( template )
 				except Exception:
@@ -1975,7 +1975,7 @@ class MainWin( wx.Frame ):
 		# Add the rider dashboard.
 		templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
 		try:
-			with io.open(templateFile, 'r') as fp:
+			with open(templateFile) as fp:
 				template = fp.read()
 			payload['riderDashboard'] = sanitize( template )
 		except Exception:
@@ -1988,7 +1988,7 @@ class MainWin( wx.Frame ):
 				if excelLink.hasField('City') and any(excelLink.hasField(f) for f in ('Prov','State','StateProv')):
 					templateFile = os.path.join(Utils.getHtmlFolder(), 'TravelMap.html')
 					try:
-						with open(templateFile, 'r') as fp:
+						with open(templateFile) as fp:
 							template = fp.read()
 						payload['travelMap'] = sanitize( template )
 					except Exception:
@@ -2086,7 +2086,7 @@ class MainWin( wx.Frame ):
 			# Fix the google maps template.
 			templateFile = os.path.join(Utils.getHtmlFolder(), 'VirtualTourTemplate.html')
 			try:
-				with io.open(templateFile, 'r') as fp:
+				with open(templateFile) as fp:
 					template = fp.read()
 				# Sanitize the template into a safe json string.
 				template = self.reLeadingWhitespace.sub( '', template )
@@ -2321,7 +2321,7 @@ class MainWin( wx.Frame ):
 		for fTemplate in ('TTCountdown.html', 'TTStartList.html'):
 			htmlFile = os.path.join(Utils.getHtmlFolder(), fTemplate)
 			try:
-				with io.open(htmlFile, 'r') as fp:
+				with open(htmlFile) as fp:
 					html = fp.read()
 			except Exception:
 				Utils.MessageOK(self, _('Cannot read HTML template file.  Check program installation.'),
@@ -2333,7 +2333,7 @@ class MainWin( wx.Frame ):
 			# Write out the results.
 			fname = os.path.splitext(self.fileName)[0] + ('_TTCountdown.html' if fTemplate == 'TTCountdown.html' else '_TTStartList.html')
 			try:
-				with io.open(fname, 'w') as fp:
+				with open(fname, 'w') as fp:
 					fp.write( html )
 			except Exception:
 				Utils.MessageOK(self, '{} ({}).'.format(_('Cannot write HTML file'), fname),
@@ -2447,7 +2447,7 @@ class MainWin( wx.Frame ):
 			# Read the html template.
 			htmlFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewer.html')
 			try:
-				with io.open(htmlFile, 'r') as fp:
+				with open(htmlFile) as fp:
 					html = fp.read()
 			except Exception:
 				Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -2459,7 +2459,7 @@ class MainWin( wx.Frame ):
 		html = self.addCourseToHtmlStr( html )
 		fname = os.path.splitext(self.fileName)[0] + 'CoursePreview.html'
 		try:
-			with io.open(fname, 'w') as fp:
+			with open(fname, 'w') as fp:
 				fp.write( html )
 			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Course Preview written to'), fname), _('Html Write'))
@@ -2485,7 +2485,7 @@ class MainWin( wx.Frame ):
 		# Read the html template.
 		htmlFile = os.path.join(Utils.getHtmlFolder(), 'RawData.html')
 		try:
-			with io.open(htmlFile, 'r') as fp:
+			with open(htmlFile) as fp:
 				html = fp.read()
 		except Exception:
 			Utils.MessageOK(_('Cannot read HTML template file.  Check program installation.'),
@@ -2574,7 +2574,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = os.path.splitext(self.fileName)[0] + 'RawData.html'
 		try:
-			with io.open(fname, 'w') as fp:
+			with open(fname, 'w') as fp:
 				fp.write( html )
 			Utils.LaunchApplication( fname )
 			Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Html Raw Data written to'), fname), _('Html Write'))
@@ -2728,7 +2728,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with io.open(categoriesFile, 'r') as fp:
+				with open(categoriesFile) as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -2818,7 +2818,7 @@ class MainWin( wx.Frame ):
 		importedCategories = False
 		if categoriesFile:
 			try:
-				with open(categoriesFile, 'r') as fp:
+				with open(categoriesFile) as fp:
 					race.importCategories( fp )
 				importedCategories = True
 			except IOError:
@@ -3325,7 +3325,7 @@ class MainWin( wx.Frame ):
 			riderInfo = []
 			fnameInfo = os.path.join( Utils.getImageFolder(), 'NamesTeams.csv' )
 			try:
-				with io.open(fnameInfo, encoding='iso-8859-1') as fp:
+				with open(fnameInfo, encoding='iso-8859-1') as fp:
 					header = None
 					for r, line in enumerate(fp):
 						if not header:
@@ -3463,7 +3463,7 @@ class MainWin( wx.Frame ):
 			
 		self.showResultsPage()
 		try:
-			with open(categoriesFile, 'r') as fp, Model.LockRace() as race:
+			with open(categoriesFile) as fp, Model.LockRace() as race:
 				race.importCategories( fp )
 		except IOError:
 			Utils.MessageOK( self, '{}:\n\n{}'.format(_('Cannot open file'), categoriesFile), _("File Open Error"), iconMask=wx.ICON_ERROR)

@@ -18,9 +18,9 @@ ftputil
 markdown
 bs4
 trueskill
-pyinstaller
 pybabel
-opencv-python
+opencv-python==4.5.3.56
+pyinstaller
 piexif
 simplejpeg
 virustotal-api
