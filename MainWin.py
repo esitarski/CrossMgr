@@ -1962,14 +1962,15 @@ class MainWin( wx.Frame ):
 		if courseCoordinates:
 			payload['courseCoordinates'] = courseCoordinates
 			
-			# Add the course viewer template.
-			templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
-			try:
-				with io.open(templateFile, 'r') as fp:
-					template = fp.read()
-				payload['courseViewerTemplate'] = sanitize( template )
-			except Exception:
-				pass
+			if race.googleMapsApiKey:
+				# Add the course viewer template.
+				templateFile = os.path.join(Utils.getHtmlFolder(), 'CourseViewerTemplate.html')
+				try:
+					with open(templateFile, 'r') as fp:
+						template = fp.read()
+					payload['courseViewerTemplate'] = sanitize( template )
+				except Exception:
+					pass
 	
 		# Add the rider dashboard.
 		templateFile = os.path.join(Utils.getHtmlFolder(), 'RiderDashboard.html')
@@ -1981,18 +1982,19 @@ class MainWin( wx.Frame ):
 			pass
 	
 		# Add the travel map if the riders have locations.
-		try:
-			excelLink = race.excelLink
-			if excelLink.hasField('City') and any(excelLink.hasField(f) for f in ('Prov','State','StateProv')):
-				templateFile = os.path.join(Utils.getHtmlFolder(), 'TravelMap.html')
-				try:
-					with io.open(templateFile, 'r') as fp:
-						template = fp.read()
-					payload['travelMap'] = sanitize( template )
-				except Exception:
-					pass
-		except Exception as e:
-			pass
+		if race.googleMapsApiKey:
+			try:
+				excelLink = race.excelLink
+				if excelLink.hasField('City') and any(excelLink.hasField(f) for f in ('Prov','State','StateProv')):
+					templateFile = os.path.join(Utils.getHtmlFolder(), 'TravelMap.html')
+					try:
+						with open(templateFile, 'r') as fp:
+							template = fp.read()
+						payload['travelMap'] = sanitize( template )
+					except Exception:
+						pass
+			except Exception as e:
+				pass
 		
 		if totalElevationGain:
 			payload['gpsTotalElevationGain'] = totalElevationGain

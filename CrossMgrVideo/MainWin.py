@@ -484,9 +484,9 @@ class MainWin( wx.Frame ):
 		headerSizer.Add( clock, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, border=4 )
 		
 		#------------------------------------------------------------------------------
-		self.usb = wx.StaticText( self )
+		self.usb = wx.StaticText( self, label='[0, 2, 4, 6, 8]' )
 		self.cameraResolution = wx.StaticText( self )
-		self.targetFPS = wx.StaticText( self, label='30 fps' )
+		self.targetFPS = wx.StaticText( self, label='30.0 fps' )
 		self.actualFPS = wx.StaticText( self, label='30.0 fps' )
 		self.fourcc = wx.StaticText( self, label=FOURCC_DEFAULT )
 		
@@ -506,10 +506,10 @@ class MainWin( wx.Frame ):
 		fgs.Add( self.fourcc, flag=wx.ALIGN_RIGHT )
 		
 		fgs.Add( wx.StaticText(self, label='Target:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.targetFPS, flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.targetFPS, flag=wx.EXPAND|wx.ALIGN_RIGHT )
 		
 		fgs.Add( wx.StaticText(self, label='Actual:'), flag=wx.ALIGN_RIGHT )
-		fgs.Add( self.actualFPS, flag=wx.ALIGN_RIGHT )
+		fgs.Add( self.actualFPS, flag=wx.EXPAND|wx.ALIGN_RIGHT )
 		
 		self.focus = wx.Button( self, label="Focus..." )
 		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
@@ -875,10 +875,14 @@ class MainWin( wx.Frame ):
 	
 	def updateFPS( self, fps ):
 		self.setFPS( fps )
-		self.targetFPS.SetLabel( '{} fps'.format(self.fps) )
+		self.targetFPS.SetLabel( '{:.1f} fps'.format(float(self.fps)) )
 
 	def updateActualFPS( self, actualFPS ):
-		self.actualFPS.SetLabel( '{:.1f} fps'.format(actualFPS) )
+		oldLabel = self.actualFPS.GetLabel()
+		newLabel = '{:.1f} fps'.format(actualFPS)
+		if oldLabel != newLabel:
+			self.actualFPS.SetLabel( '{:.1f} fps'.format(actualFPS) )
+			self.GetSizer().Layout()
 		
 	def updateCameraUsb( self, availableCameraUsb ):
 		self.availableCameraUsb = availableCameraUsb
@@ -1724,7 +1728,14 @@ class MainWin( wx.Frame ):
 		dlg.Destroy()
 	
 	def setUsb( self, num ):
-		self.usb.SetLabel( '{} {}'.format(num, self.availableCameraUsb) )
+		oldLabel = self.usb.GetLabel()
+		label = '{} {}'.format(num, self.availableCameraUsb)
+		if label != oldLabel:
+			self.usb.SetLabel( label )
+			try:
+				self.GetSizer().Layout()
+			except AttributeError:
+				pass
 		
 	def getUsb( self ):
 		return int(self.usb.GetLabel().split()[0])

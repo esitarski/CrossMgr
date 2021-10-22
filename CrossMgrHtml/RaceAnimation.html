@@ -6058,6 +6058,12 @@ function onLoad()
 {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 
+	// Don't show the buttons if there aren't any templates.
+	if( !courseViewerTemplate )
+		document.getElementById('idCourseViewer').style.visibility="hidden";
+	if( !travelMap )
+		document.getElementById('idTravelMap').style.visibility="hidden";
+
 	resultsDiv = document.getElementById('idResultsDiv');
 	showLaps = document.getElementById('idShowLaps');
 	
@@ -6254,6 +6260,7 @@ function onLoad()
 <button id="idGetDirections" onclick="OpenGetDirections()" data-tr="Get Directions"></button>&nbsp;&nbsp;
 <button id="idCourseViewer" onclick="OpenCourseViewerWindow()" data-tr="Course Map"></button>&nbsp;&nbsp;
 <button id="idTravelMap" onclick="OpenTravelMapWindow()" data-tr="Participant Map"></button>&nbsp;&nbsp;
+
 <button onclick="doReload()" data-tr="Refresh"></button>&nbsp;&nbsp;&nbsp;
 <select id="idDisplaySelect" onchange="displaySelect(this);">
   <option value="normal" data-tr="Results">Results</option>

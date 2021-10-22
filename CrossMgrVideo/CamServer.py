@@ -119,10 +119,10 @@ def CamServer( qIn, qWriter, camInfo=None ):
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			
 			while keepCapturing:
-				# Read the frame.
+				# Read the frame.  If anything fails, keep going in the loop so we can reset with another camInfo.
 				if not cap.isOpened():
 					ret, frame = False, None
-					time.sleep( 0.125 )		# Keep going so we can get camInfo to try again.
+					time.sleep( 0.125 )		# Keep going so we can get a camInfo to try again.
 				else:						
 					try:
 						ret, frame = cap.read()
@@ -137,8 +137,6 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
 				# we send a group of photos for a capture.
 				frame = CVUtil.toJpeg( frame )
-				
-				# print( len(frame) if isinstance(frame, bytes) else frame.shape )
 				
 				# Add the frame to the circular buffer.
 				fcb.append( ts, frame )
