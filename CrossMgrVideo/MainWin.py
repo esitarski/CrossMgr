@@ -596,6 +596,10 @@ class MainWin( wx.Frame ):
 		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
 		hsDate.Add( self.bib, flag=wx.LEFT, border=2 )
 		
+		self.refreshBtn = wx.Button( self, label="Refresh" )
+		self.refreshBtn.Bind( wx.EVT_BUTTON, lambda event: self.refreshTriggers(replace=True) )
+		hsDate.Add( self.refreshBtn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8 )
+		
 		self.publishPhotos = wx.Button( self, label="Publish Photos" )
 		self.publishPhotos.SetToolTip( "Write a JPG for each Trigger into a Folder" )
 		self.publishPhotos.Bind( wx.EVT_BUTTON, self.onPublishPhotos )
@@ -621,19 +625,24 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name note kmh mph frames'.split())}
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Note', 'km/h', 'mph', 'Frames']
-		formatRightHeaders = {'Bib','km/h','mph','Frames'}
+		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name frames view kmh mph note'.split())}
+		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
+		formatRightHeaders = {'Bib','Frames','km/h','mph'}
+		formatMiddleHeaders = {'View',}
 		for i, h in enumerate(headers):
-			self.triggerList.InsertColumn(
-				i, h,
-				wx.LIST_FORMAT_RIGHT if h in formatRightHeaders else wx.LIST_FORMAT_LEFT
-			)
+			if h in formatRightHeaders:
+				align = wx.LIST_FORMAT_RIGHT
+			elif h in formatMiddleHeaders:
+				align = wx.LIST_FORMAT_CENTRE
+			else:
+				align = wx.LIST_FORMAT_LEFT
+			self.triggerList.InsertColumn( i, h, align )
 		self.iNoteCol = self.fieldCol['note']
 		
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onTriggerSelected )
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.onTriggerEdit )
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onTriggerRightClick )
+		self.triggerList.Bind( wx.EVT_LIST_KEY_DOWN, self.onTriggerKey )
 		#self.triggerList.Bind( wx.EVT_LIST_DELETE_ITEM, self.onTriggerDelete )
 		
 		vsTriggers = wx.BoxSizer( wx.VERTICAL )
@@ -994,7 +1003,7 @@ class MainWin( wx.Frame ):
 			
 		def write_photos( dirname, infoList ):
 			for info in infoList:
-				tsBest, jpgBest = GlobalDatabase().getPhotoClosest( info['ts'] )
+				tsBest, jpgBest = GlobalDatabase().getBestTriggerPhoto( info['id'] )
 				if jpgBest is None:
 					continue
 				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
@@ -1082,7 +1091,8 @@ class MainWin( wx.Frame ):
 					# Write out all the photo info.
 					fOut.write( 'var photo_info = [\n' )
 					for iInfo, info in enumerate(infoList):
-						tsBest, jpgBest = GlobalDatabase().getPhotoClosest( info['ts'] )
+						tsBest, jpgBest = GlobalDatabase().getBestTriggerPhoto( info['id'] )
+
 						if jpgBest is None:
 							continue
 						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
@@ -1166,6 +1176,8 @@ class MainWin( wx.Frame ):
 			fields['mph'] = (fields['kmh'] * 0.621371) if fields['kmh'] else 0.0
 		if 'frames' in fields and 'closest_frames' in fields:
 			fields['frames'] = max(fields['frames'], fields['closest_frames'])
+		if 'zoom_frame' in fields:
+			fields['view'] = 'Y' if fields['zoom_frame'] >= 0 else ''
 		return fields
 	
 	def getTriggerInfo( self, row ):
@@ -1476,6 +1488,10 @@ class MainWin( wx.Frame ):
 	def onTriggerDelete( self, event ):
 		self.iTriggerSelect = event.Index
 		self.doTriggerDelete()
+	
+	def onTriggerKey( self, event ):
+		if event.GetKeyCode() == 127 and self.iTriggerSelect != None:
+			self.doTriggerDelete()
 		
 	def doTriggerEdit( self ):
 		data = self.getTriggerInfo( self.iTriggerSelect )

@@ -316,14 +316,17 @@ class Database:
 			if callback:
 				callback( tssTotal - len(tss), tssTotal )
 	
-	def _getPhotosPurgeDuplicateTS( self, tsLower, tsUpper ):
+	def _getPhotosPurgeDuplicateTS( self, tsLower, tsUpper, maxPhotos=None ):
 		tsJpgs = []
 		tsSeen = set()
 		duplicateIds = []
+		maxPhotos = maxPhotos or 10000000
 		for jpgId, ts, jpg in self.conn.execute( 'SELECT id,ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) ):
 			if ts and jpg and ts not in tsSeen:
 				tsSeen.add( ts )
 				tsJpgs.append( (ts, jpg) )
+				if len(tsJpgs) == maxPhotos:
+					break
 			else:
 				duplicateIds.append( jpgId )
 		# For now, just filter out duplicates without removing them from the database.
@@ -401,8 +404,8 @@ class Database:
 	def getPhotoClosest( self, ts ):
 		tsJpgs = self.getPhotosClosest( ts, 1 )
 		return tsJpgs[0] if tsJpgs else (None, None)
-	
-	def getTriggerPhotoCount( self, id, s_before_default=0.5,  s_after_default=2.0 ):
+		
+	def getTriggerPhotoCount( self, id, s_before_default=0.5, s_after_default=2.0 ):
 		with self.dbLock, self.conn:
 			trigger = list( self.conn.execute( 'SELECT ts,s_before,s_after FROM trigger WHERE id=?', (id,) ) )
 			if not trigger:
@@ -426,6 +429,28 @@ class Database:
 			raise ValueError( 'Nonexistent photo id={}'.format(id) )
 		return row[0]		
 	
+	def getBestTriggerPhoto( self, id ):
+		'''
+			Return the photo closest to the trigger time, unless the zoom_frame is specified.
+			If the zoom_frame is specified, return the tsJpg at that frame.
+		'''
+		with self.dbLock, self.conn:
+			row = self.conn.execute( 'SELECT ts,zoom_frame,s_before,s_after,closest_frames FROM trigger WHERE id=?', (id,) ).fetchone()
+		if not row:
+			return None, None
+		ts,zoom_frame,s_before,s_after,closest_frames = row[0]
+		
+		if zoom_frame >= 0:
+			if closest_frames:
+				tsJpgs = self.getPhotosClosest( ts, closest_frames )
+			else:
+				with self.dbLock, self.conn:
+					tsJpgs = self._getPhotosPurgeDuplicateTS( ts-timedelta(seconds=s_before), ts+timedelta(seconds=s_after), zoom_frame+1 )
+			try:
+				return tsJpgs[zoom_frame]
+			except IndexError:
+				pass
+		return self.getPhotoClosest( ts )
 	
 	def queryTriggers( self, tsLower, tsUpper, bib=None ):
 		triggers = self.getTriggers( tsLower, tsUpper, bib )

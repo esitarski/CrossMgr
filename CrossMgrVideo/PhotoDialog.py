@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import time
+import datetime
 import bisect
 import subprocess
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
@@ -12,7 +13,7 @@ import CVUtil
 
 def _( x ):
 	return x
-
+	
 def RescaleBitmap( bitmap, width, height ):
 	wBitmap, hBitmap = bitmap.GetSize()
 	ratio = GetScaleRatio( wBitmap, hBitmap, width, height )
@@ -437,74 +438,84 @@ class PhotoPanel( wx.Panel ):
 			wx.MessageBox( _('Successfully copied to clipboard'), _('Success') )
 		else:
 			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
+	
+	def getDefaultFilename( self, suffix ):
+		if not suffix.startswith('.'):
+			suffix = '.' + suffix
 		
+		defaultFile = '{} {}-{:04d}-{}{}'.format(
+			self.triggerInfo.get('first_name',''),
+			self.triggerInfo.get('last_name',''),
+			self.triggerInfo.get('bib',0),
+			self.triggerInfo.get('ts', datetime.datetime.now()).strftime('%Y%m%d-%H%M%S-%f')[:-3],
+			suffix,
+		)
+		return Utils.RemoveDisallowedFilenameChars( defaultFile ) + suffix
+	
 	def onSavePng( self, event ):
 		self.playStop()
-		fd = wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE )
-		if fd.ShowModal() == wx.ID_OK:
-			try:
-				self.scaledBitmap.GetDisplayBitmap().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
-				wx.MessageBox( _('Photo Save Successful'), _('Success') )
-			except Exception as e:
-				wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )
-		fd.Destroy()
+		with wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.png') ) as fd:
+			if fd.ShowModal() == wx.ID_OK:
+				try:
+					self.scaledBitmap.GetDisplayBitmap().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+					wx.MessageBox( _('Photo Save Successful'), _('Success') )
+				except Exception as e:
+					wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )
 
 	def onSaveMP4( self, event ):
 		self.playStop()
-		fd = wx.FileDialog( self, message='Save MP4', wildcard='*.mp4', style=wx.FD_SAVE )
-		if fd.ShowModal() == wx.ID_OK:
-			work = wx.BusyCursor()
-			try:
-				# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
-				command = [
-					Utils.getFFMegExe(),
-					'-nostats', '-loglevel', '0',	# silence ffmpeg output
-					'-y', # (optional) overwrite output file if it exists
-					'-f', 'image2pipe',
-					'-r', '{}'.format(self.fps), # frames per second
-					'-i', '-', # The input comes from a pipe
-					'-an', # Tells FFMPEG not to expect any audio
-					'-movflags', 'faststart',
-					'-pix_fmt', 'yuv420p',
-					'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
-					fd.GetPath(),
-				]
-				proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
-				for i, (ts, jpg) in enumerate(self.tsJpg):
-					proc.stdin.write( jpg )
-				proc.stdin.close()
-				proc.wait()
-				
-				wx.MessageBox( _('MP4 Save Successful'), _('Success') )
-			except Exception as e:
-				wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
-		fd.Destroy()
+		with wx.FileDialog( self, message='Save MP4', wildcard='*.mp4', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.mp4') ) as fd:
+			if fd.ShowModal() == wx.ID_OK:
+				with wx.BusyCursor():
+					try:
+						# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
+						command = [
+							Utils.getFFMegExe(),
+							'-nostats', '-loglevel', '0',	# silence ffmpeg output
+							'-y', # (optional) overwrite output file if it exists
+							'-f', 'image2pipe',
+							'-r', '{}'.format(self.fps), # frames per second
+							'-i', '-', # The input comes from a pipe
+							'-an', # Tells FFMPEG not to expect any audio
+							'-movflags', 'faststart',
+							'-pix_fmt', 'yuv420p',
+							'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+							fd.GetPath(),
+						]
+						proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
+						for i, (ts, jpg) in enumerate(self.tsJpg):
+							proc.stdin.write( jpg )
+						proc.stdin.close()
+						proc.wait()
+						
+						wx.MessageBox( _('MP4 Save Successful'), _('Success') )
+					except Exception as e:
+						wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
 
 	def onSaveGif( self, event ):
 		self.playStop()
-		fd = wx.FileDialog( self, message='Save Animated Gif', wildcard='*.gif', style=wx.FD_SAVE )
-		if fd.ShowModal() == wx.ID_OK:
-			work = wx.BusyCursor()
-			try:
-				command = [
-					Utils.getFFMegExe(),
-					'-nostats', '-loglevel', '0',	# silence ffmpeg output
-					'-y', # (optional) overwrite output file if it exists
-					'-f', 'image2pipe',
-					'-r', '{}'.format(self.fps), # frames per second
-					'-i', '-', # The input comes from a pipe
-					'-an', # Tells FFMPEG not to expect any audio
-					fd.GetPath(),
-				]
-				proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
-				for i, (ts, jpg) in enumerate(self.tsJpg):
-					proc.stdin.write( jpg )
-				proc.stdin.close()
-				proc.wait()
-				wx.MessageBox( _('Gif Save Successful'), _('Success') )
-			except Exception as e:
-				wx.MessageBox( _('Gif Save Failed:\n\n{}').format(e), _('Save Failed') )
-		fd.Destroy()
+		with wx.FileDialog( self, message='Save Animated Gif', wildcard='*.gif', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.gif') ) as fd:
+			if fd.ShowModal() == wx.ID_OK:
+				with wx.BusyCursor():
+					try:
+						command = [
+							Utils.getFFMegExe(),
+							'-nostats', '-loglevel', '0',	# silence ffmpeg output
+							'-y', # (optional) overwrite output file if it exists
+							'-f', 'image2pipe',
+							'-r', '{}'.format(self.fps), # frames per second
+							'-i', '-', # The input comes from a pipe
+							'-an', # Tells FFMPEG not to expect any audio
+							fd.GetPath(),
+						]
+						proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
+						for i, (ts, jpg) in enumerate(self.tsJpg):
+							proc.stdin.write( jpg )
+						proc.stdin.close()
+						proc.wait()
+						wx.MessageBox( _('Gif Save Successful'), _('Success') )
+					except Exception as e:
+						wx.MessageBox( _('Gif Save Failed:\n\n{}').format(e), _('Save Failed') )
 
 class PhotoDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(500,500),

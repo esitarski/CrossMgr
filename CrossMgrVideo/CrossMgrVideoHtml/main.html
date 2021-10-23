@@ -126,6 +126,10 @@ table tr td.close-finish {
 	background-color:rgb(255, 213, 128);
 }
 
+table tr td.has-view {
+	background-color:rgb(230, 204, 255);
+}
+
 table tr td.same-value {
 	text-align:center;
 }
@@ -428,9 +432,9 @@ function triggerScrollToEnd() {
 	trigger_div.scrollTop = trigger_div.scrollHeight;
 }
 	
-const headers = ['Time', 'Bib', 'Last',       'First',      'Team', 'Note',	'Wave', 'Race',      'Frames'];
-const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team', 'note',	'wave', 'race_name', 'frames'];
-const numeric = [true,   true,   false,       false,        false,  false,	false,  false,        true];
+const headers = ['Time', 'Bib', 'Last',       'First',      'Team',	'Wave', 'Race',      'Frames', 'View', 'Note'];
+const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
+const numeric = [true,   true,   false,       false,        false,  false,	false, 		 true,     true,   false];
 
 function showTriggers( triggers ) {
 	playStop();
@@ -485,7 +489,10 @@ function showTriggers( triggers ) {
 		for( let col = 0; col < headers.length; ++col ) {
 			let td = document.createElement( 'td' );
 			tr.appendChild( td );
-			td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+			if( headers[col] == 'View' )
+				td.innerHTML = trig.zoom_frame >= 0 ? 'Y' : '';
+			else
+				td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
 			if( numeric[col] )
 				td.classList.add( 'numeric' );
 			if( col == 0 && closeFinishes.has(i) )
@@ -579,7 +586,11 @@ function updateOnScreenTriggerData() {
 	let rows = document.getElementById('id_trigger_table').rows;
 	let tr = rows[iTriggerCur+1];	// Allow for the title row.
 	for( let col = 0; col < headers.length; ++col ) {
-		tr.childNodes[col].innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+		let td = tr.childNodes[col];
+		if( headers[col] == 'View' )
+			td.innerHTML = trig.zoom_frame ? 'Y' : '';
+		else
+			td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
 	}
 	
 	// Update the images page title.
@@ -727,6 +738,7 @@ function saveView() {
 		'zoom_height='	+ trig.zoom_height
 	];
 	getJSON( 'trigger_update.js?' + params.join('&'), function(data) { return; } );
+	updateOnScreenTriggerData();
 }
 
 //----------------------------------------------------------------------
