@@ -1209,7 +1209,6 @@ class MainWin( wx.Frame ):
 				tsUpper = max( tsUpper, tsU )
 				zeroFrames.append( (row, trig.id, tsU) )
 			
-			print( trig.id, trig.frames )
 			self.updateTriggerRow( row, trig._asdict() )			
 			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
 			tsPrev = trig.ts
