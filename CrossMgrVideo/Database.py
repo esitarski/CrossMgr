@@ -69,7 +69,6 @@ class Database:
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 	
-	
 	@staticmethod
 	def isValidDatabase( fname ):
 		try:

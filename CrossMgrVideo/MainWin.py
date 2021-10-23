@@ -1160,13 +1160,16 @@ class MainWin( wx.Frame ):
 			self.updateTriggerRow( row, fields )
 	
 	def computeTriggerFields( self, fields ):
-		fields['name'] = ', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
-		fields['mph'] = (fields['kmh'] * 0.621371) if fields['kmh'] else 0.0
-		fields['frames'] = max(fields['frames'], fields['closest_frames'])
+		if 'last_name' in fields and 'first_name' in fields:
+			fields['name'] = ', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
+		if 'kmh' in fields:
+			fields['mph'] = (fields['kmh'] * 0.621371) if fields['kmh'] else 0.0
+		if 'frames' in fields and 'closest_frames' in fields:
+			fields['frames'] = max(fields['frames'], fields['closest_frames'])
 		return fields
 	
 	def getTriggerInfo( self, row ):
-		return self.computeTriggerFields( GlobalDatabase().getTriggerFields( self.triggerList.GetItemData(row) ) )
+		return self.computeTriggerFields( GlobalDatabase().getTriggerFields(self.triggerList.GetItemData(row)) )
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
@@ -1206,6 +1209,7 @@ class MainWin( wx.Frame ):
 				tsUpper = max( tsUpper, tsU )
 				zeroFrames.append( (row, trig.id, tsU) )
 			
+			print( trig.id, trig.frames )
 			self.updateTriggerRow( row, trig._asdict() )			
 			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
 			tsPrev = trig.ts
