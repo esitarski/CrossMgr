@@ -1135,9 +1135,13 @@ class MainWin( wx.Frame ):
 				return row
 		return None
 
+	def updateTriggerColumnWidths( self ):
+		for c in range(self.triggerList.GetColumnCount()):
+			self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
+				
 	def updateTriggerRow( self, row, fields ):
-		if 'last_name' in fields and 'first_name' in fields:
-			fields['name'] = ', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
+		if 'name' not in fields:
+			fields = self.computeTriggerFields( fields )
 		for k, v in fields.items():
 			if k in self.fieldCol:
 				if k == 'bib':
@@ -1150,17 +1154,19 @@ class MainWin( wx.Frame ):
 					v = '{}'.format(v) if v is not None else ''
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
 
-	def updateTriggerColumnWidths( self ):
-		for c in range(self.triggerList.GetColumnCount()):
-			self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
-				
 	def updateTriggerRowID( self, id, fields ):
 		row = self.getTriggerRowFromID( id )
 		if row is not None:
 			self.updateTriggerRow( row, fields )
 	
+	def computeTriggerFields( self, fields ):
+		fields['name'] = ', '.join( n for n in (fields['last_name'], fields['first_name']) if n )
+		fields['mph'] = (fields['kmh'] * 0.621371) if fields['kmh'] else 0.0
+		fields['frames'] = max(fields['frames'], fields['closest_frames'])
+		return fields
+	
 	def getTriggerInfo( self, row ):
-		return GlobalDatabase().getTriggerFields( self.triggerList.GetItemData(row) )
+		return self.computeTriggerFields( GlobalDatabase().getTriggerFields( self.triggerList.GetItemData(row) ) )
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		tNow = now()
@@ -1200,11 +1206,7 @@ class MainWin( wx.Frame ):
 				tsUpper = max( tsUpper, tsU )
 				zeroFrames.append( (row, trig.id, tsU) )
 			
-			fields = trig._asdict()
-			fields['mph'] = (trig.kmh * 0.621371) if trig.kmh else 0.0
-			fields['frames'] = max(trig.frames, trig.closest_frames)
-			self.updateTriggerRow( row, fields )
-			
+			self.updateTriggerRow( row, trig._asdict() )			
 			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
 			tsPrev = trig.ts
 		
