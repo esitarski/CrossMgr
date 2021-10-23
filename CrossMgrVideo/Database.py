@@ -438,7 +438,7 @@ class Database:
 			row = self.conn.execute( 'SELECT ts,zoom_frame,s_before,s_after,closest_frames FROM trigger WHERE id=?', (id,) ).fetchone()
 		if not row:
 			return None, None
-		ts,zoom_frame,s_before,s_after,closest_frames = row[0]
+		ts,zoom_frame,s_before,s_after,closest_frames = row
 		
 		if zoom_frame >= 0:
 			if closest_frames:

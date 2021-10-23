@@ -1010,7 +1010,7 @@ class MainWin( wx.Frame ):
 				try:
 					args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 				except Exception:
-					args['raceSeconds'] = None
+					pass
 				if isinstance(args['kmh'], str):
 					args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
 					

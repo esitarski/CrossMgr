@@ -8,6 +8,7 @@ import subprocess
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
 from ComputeSpeed import ComputeSpeed
 from Database import GlobalDatabase
+from AddPhotoHeader import AddPhotoHeader
 import Utils
 import CVUtil
 
@@ -100,19 +101,26 @@ class PhotoPanel( wx.Panel ):
 		self.recenter.Bind( wx.EVT_BUTTON, self.onRecenter )
 
 		self.frameBackward = wx.BitmapButton( self, bitmap=Utils.getBitmap('minus.png') )
+		self.frameBackward.SetToolTip( wx.ToolTip('-1 Frame') )
 		self.frameBackward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
 		self.frameForward = wx.BitmapButton( self, bitmap=Utils.getBitmap('plus.png') )
+		self.frameForward.SetToolTip( wx.ToolTip('+1 Frame') )
 		self.frameForward.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
 		self.playerRewind = wx.BitmapButton( self, bitmap=Utils.getBitmap('fast-backward.png') )
+		self.playerRewind.SetToolTip( wx.ToolTip('To Beginning') )
 		self.playerRewind.Bind( wx.EVT_BUTTON, lambda e: self.playRewind() )
 		self.playerReverse = wx.BitmapButton( self, bitmap=Utils.getBitmap('play-reverse.png') )
+		self.playerReverse.SetToolTip( wx.ToolTip('Play Backward') )
 		self.playerReverse.Bind( wx.EVT_BUTTON, lambda e: self.playReverse() )
 		self.playerStop = wx.BitmapButton( self, bitmap=Utils.getBitmap('stop.png') )
+		self.playerStop.SetToolTip( wx.ToolTip('Stop Play') )
 		self.playerStop.Bind( wx.EVT_BUTTON, lambda e: self.playStop() )		
 		self.playerForward = wx.BitmapButton( self, bitmap=Utils.getBitmap('play.png') )
+		self.playerForward.SetToolTip( wx.ToolTip('Play Forward') )
 		self.playerForward.Bind( wx.EVT_BUTTON, lambda e: self.play() )
 		self.playerForwardToEnd = wx.BitmapButton( self, bitmap=Utils.getBitmap('fast-forward.png') )
+		self.playerForwardToEnd.SetToolTip( wx.ToolTip('To End') )
 		self.playerForwardToEnd.Bind( wx.EVT_BUTTON, lambda e: self.playForwardToEnd() )
 		
 		btnsizer.Add( self.recenter, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)
@@ -137,11 +145,24 @@ class PhotoPanel( wx.Panel ):
 		self.grayscale.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.grayscale, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
 
-		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
+		#btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
+		btn = wx.Button( self, label='Edit' )
 		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
 		btn.Bind( wx.EVT_BUTTON, self.onEdit )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
 
+		btn = wx.Button( self, label='Export View' )
+		btn.SetToolTip( wx.ToolTip('Export current view (includes zoom)') )
+		btn.Bind( wx.EVT_BUTTON, self.onExportView )
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
+
+		btn = wx.Button( self, label='Save Photo' )
+		btn.SetToolTip( wx.ToolTip('Save current photo only') )
+		btn.Bind( wx.EVT_BUTTON, self.onSavePhoto )
+		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
+
+
+		'''
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('clipboard-bw.png'))
 		btn.SetToolTip( wx.ToolTip('Copy Photo to Clipboard') )
 		btn.Bind( wx.EVT_BUTTON, self.onCopyToClipboard )
@@ -167,21 +188,22 @@ class PhotoPanel( wx.Panel ):
 		btn.SetToolTip( wx.ToolTip('Save Sequence as Animated Gif') )
 		btn.Bind( wx.EVT_BUTTON, self.onSaveGif )
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
+		'''
 
+		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('upload.png') )
+		btn.SetToolTip( wx.ToolTip('Restore View from Database') )
+		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
+		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=16)
+		
+		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('download.png') )
+		btn.SetToolTip( wx.ToolTip('Save View to Database') )
+		btn.Bind( wx.EVT_BUTTON, self.onSaveView )
+		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=4)
+		
 		btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('speedometer.png'))
 		btn.SetToolTip( wx.ToolTip('Get Speed') )
 		btn.Bind( wx.EVT_BUTTON, self.onGetSpeed )
-		btnsizer.Add(btn, flag=wx.LEFT, border=4)
-		
-		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('upload.png') )
-		btn.SetToolTip( wx.ToolTip('Restore View') )
-		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
-		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
-		
-		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('download.png') )
-		btn.SetToolTip( wx.ToolTip('Save View') )
-		btn.Bind( wx.EVT_BUTTON, self.onSaveView )
-		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=8)
+		btnsizer.Add(btn, flag=wx.LEFT, border=16)
 		
 		if isDialog:
 			btnsizer.AddStretchSpacer()
@@ -305,7 +327,7 @@ class PhotoPanel( wx.Panel ):
 		if playStop:
 			self.playStop()
 		self.iJpg = None
-		self.triggerInfo = None
+		self.triggerInfo = {}
 		self.tsJpg = None
 		self.fps = None
 		self.editCB = None
@@ -337,7 +359,102 @@ class PhotoPanel( wx.Panel ):
 			self.iJpg = min( max(0, self.findFrameClosestToTrigger() if frame < 0 else frame), len(self.tsJpg)-1 )
 		self.scaledBitmap.SetSourceRect( wx.Rect( *[zinfo.get(f, 0) for f in ('zoom_x','zoom_y','zoom_width','zoom_height')] ) )
 		self.SetBitmap()
+	
+	#-------------------------------------------------------------------
+	def getDefaultFilename( self, suffix, label=None ):
+		if not suffix.startswith('.'):
+			suffix = '.' + suffix
+		
+		defaultFile = '{} {}-{:04d}-{}'.format(
+			self.triggerInfo.get('first_name',''),
+			self.triggerInfo.get('last_name',''),
+			self.triggerInfo.get('bib',0),
+			self.triggerInfo.get('ts', datetime.datetime.now()).strftime('%Y%m%d-%H%M%S-%f')[:-3],
+		)
+		if label:
+			defaultFile += '-' + label
+		return Utils.RemoveDisallowedFilenameChars( defaultFile ) + suffix
+	
+	#-------------------------------------------------------------------
+	def onExportToClipboard( self, event ):
+		self.playStop()
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( wx.BitmapDataObject(self.scaledBitmap.GetDisplayBitmap()) )
+			wx.TheClipboard.Flush() 
+			wx.TheClipboard.Close()
+			wx.MessageBox( _('Successfully exported to clipboard'), _('Success') )
+		else:
+			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
+	
+	def onExportPng( self, event ):
+		self.playStop()
+		with wx.FileDialog( self, message='Export View', wildcard='*.png', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.png', 'View') ) as fd:
+			if fd.ShowModal() == wx.ID_OK:
+				try:
+					self.scaledBitmap.GetDisplayBitmap().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+					wx.MessageBox( _('View Export Successful'), _('Success') )
+				except Exception as e:
+					wx.MessageBox( _('View Export Failed:\n\n{}').format(e), _('Export Failed') )
+
+	def onExportView( self, event ):
+		self.playStop()
+		if not hasattr(self, "exportToFileID"):
+			self.exportToFileID = wx.NewIdRef()
+			self.exportToClipboardID = wx.NewIdRef()
+			self.Bind(wx.EVT_MENU, self.onExportPng, 			id=self.exportToFileID)
+			self.Bind(wx.EVT_MENU, self.onExportToClipboard,	id=self.exportToClipboardID)
+
+		menu = wx.Menu()
+		menu.Append(self.exportToFileID,   "to File...")
+		menu.Append(self.exportToClipboardID, "to Clipboard...")
+
+		self.PopupMenu(menu)
+		menu.Destroy()
+	#-------------------------------------------------------------------
+	def onSaveToClipboard( self, event ):
+		self.playStop()
+		bitmap = self.getPhotoWithHeader()		
+		if bitmap is None:
+			wx.MessageBox( _('No photo to save'), _('Error') )
+		
+		if wx.TheClipboard.Open():
+			wx.TheClipboard.SetData( wx.BitmapDataObject(bitmap) )
+			wx.TheClipboard.Flush() 
+			wx.TheClipboard.Close()
+			wx.MessageBox( _('Successfully exported to clipboard'), _('Success') )
+		else:
+			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
+	
+	def onSaveJpg( self, event ):
+		self.playStop()
+		bitmap = self.getPhotoWithHeader()		
+		if bitmap is None:
+			wx.MessageBox( _('No photo to save'), _('Error') )
 			
+		with wx.FileDialog( self, message='Export View', wildcard='*.jpeg', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.jpeg') ) as fd:
+			if fd.ShowModal() == wx.ID_OK:
+				try:
+					bitmap.SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+					wx.MessageBox( _('Photo Save Successful'), _('Success') )
+				except Exception as e:
+					wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Export Failed') )
+		
+	def onSavePhoto( self, event ):
+		self.playStop()
+		if not hasattr(self, "saveToFileID"):
+			self.saveToFileID = wx.NewIdRef()
+			self.saveToClipboardID = wx.NewIdRef()
+			self.Bind(wx.EVT_MENU, self.onSaveJpg, 			id=self.saveToFileID)
+			self.Bind(wx.EVT_MENU, self.onSaveToClipboard,	id=self.saveToClipboardID)
+
+		menu = wx.Menu()
+		menu.Append(self.saveToFileID,   	"to File...")
+		menu.Append(self.saveToClipboardID, "to Clipboard...")
+
+		self.PopupMenu(menu)
+		menu.Destroy()
+	
+	#-------------------------------------------------------------------
 	def doRestoreView( self, event=None ):
 		if self.triggerInfo:
 			# Refresh the record from the database.
@@ -370,6 +487,14 @@ class PhotoPanel( wx.Panel ):
 			frame = CVUtil.grayscaleFrame( frame )
 		
 		return CVUtil.frameToBitmap(frame)
+	
+	def getPhotoWithHeader( self ):
+		photoData = {f:self.triggerInfo[f] for f in ('bib', 'ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh', 'mph') if f in self.triggerInfo}
+		try:
+			photoData['raceSeconds'] = (self.triggerInfo['ts'] - self.triggerInfo['ts_start']).total_seconds()
+		except Exception as e:
+			pass
+		return AddPhotoHeader( self.getPhoto(), **photoData )
 	
 	def drawCallback( self, dc, width, height ):
 		if self.jpg is None:
@@ -427,37 +552,12 @@ class PhotoPanel( wx.Panel ):
 		self.playStop()
 		PrintPhoto( self, self.scaledBitmap.GetDisplayBitmap() )
 		
-	def onCopyToClipboard( self, event ):
+	def onSaveJpg( self, event ):
 		self.playStop()
-		if wx.TheClipboard.Open():
-			bmData = wx.BitmapDataObject()
-			bmData.SetBitmap( self.scaledBitmap.GetDisplayBitmap() )
-			wx.TheClipboard.SetData( bmData )
-			wx.TheClipboard.Flush() 
-			wx.TheClipboard.Close()
-			wx.MessageBox( _('Successfully copied to clipboard'), _('Success') )
-		else:
-			wx.MessageBox( _('Unable to open the clipboard'), _('Error') )
-	
-	def getDefaultFilename( self, suffix ):
-		if not suffix.startswith('.'):
-			suffix = '.' + suffix
-		
-		defaultFile = '{} {}-{:04d}-{}{}'.format(
-			self.triggerInfo.get('first_name',''),
-			self.triggerInfo.get('last_name',''),
-			self.triggerInfo.get('bib',0),
-			self.triggerInfo.get('ts', datetime.datetime.now()).strftime('%Y%m%d-%H%M%S-%f')[:-3],
-			suffix,
-		)
-		return Utils.RemoveDisallowedFilenameChars( defaultFile ) + suffix
-	
-	def onSavePng( self, event ):
-		self.playStop()
-		with wx.FileDialog( self, message='Save Photo', wildcard='*.png', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.png') ) as fd:
+		with wx.FileDialog( self, message='Save Photo', wildcard='*.jpeg', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.jpeg') ) as fd:
 			if fd.ShowModal() == wx.ID_OK:
 				try:
-					self.scaledBitmap.GetDisplayBitmap().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_PNG )
+					self.scaledBitmap.GetDisplayBitmap().SaveFile( fd.GetPath(), wx.BITMAP_TYPE_JPEG )
 					wx.MessageBox( _('Photo Save Successful'), _('Success') )
 				except Exception as e:
 					wx.MessageBox( _('Photo Save Failed:\n\n{}').format(e), _('Save Failed') )
