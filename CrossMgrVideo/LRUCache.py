@@ -8,7 +8,7 @@ class LRUCache( OrderedDict ):
 	'''
 	def __init__(self, maxlen):
 		super().__init__()
-		self.maxlen = maxlen
+		self.maxlen = max( 1, maxlen )
 
 	def __getitem__(self, key):
 		# Move the item to the end to reset to MRU (most recently used).
@@ -31,7 +31,10 @@ class LRUCache( OrderedDict ):
 		# It calls __getitem__, and that calls move_to_end(), which messes up popitem().
 		# Use next(iter(self)) as it is safe.
 		if len(self) > self.maxlen:
-			del self[next(iter(self))]
+			try:
+				del self[next(iter(self))]
+			except Exception as e:
+				pass
 
 if __name__ == '__main__':
 	s = LRUCache( 3 )
