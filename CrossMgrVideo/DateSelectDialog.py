@@ -16,7 +16,7 @@ class DateSelectDialog( wx.Dialog ):
 		self.triggerDatesList = wx.ListCtrl( self, style=wx.LC_REPORT|wx.LC_SINGLE_SEL, size=(-1,230) )
 		
 		self.triggerDatesList.InsertColumn( 0, 'Date' )
-		self.triggerDatesList.InsertColumn( 1, 'Entries', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
+		self.triggerDatesList.InsertColumn( 1, '# Triggers', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
 		for i, (d, c) in enumerate(triggerDates):
 			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
 			self.triggerDatesList.SetItem( i, 1, str(c) )

@@ -437,10 +437,10 @@ class MainWin( wx.Frame ):
 		self.Bind(wx.EVT_MENU, self.copyLogFileToClipboard, item )
 
 		self.toolsMenu.AppendSeparator()
-		item = self.toolsMenu.Append( wx.ID_ANY, "Export Photos...", "Export all photos and triggers for the current day." )
+		item = self.toolsMenu.Append( wx.ID_ANY, "Export Photos...", "Export photos and triggers" )
 		self.Bind(wx.EVT_MENU, self.exportDB, item )
 
-		item = self.toolsMenu.Append( wx.ID_ANY, "Import Photos...", "Import all photos and triggers for a day." )
+		item = self.toolsMenu.Append( wx.ID_ANY, "Import Photos...", "Import photos and triggers" )
 		self.Bind(wx.EVT_MENU, self.importDB, item )
 
 		self.menuBar.Append(self.toolsMenu, "&Tools")
@@ -756,6 +756,8 @@ class MainWin( wx.Frame ):
 		
 		triggerFields = [f for f in db.triggerFieldsAll if f != 'id']
 		photoFields = ['ts', 'jpg']
+		
+		tsQueryLower, tsQueryUpper = self.tsQueryLower, self.tsQueryUpper
 
 		with gzip.open( fname, 'wb' ) as f:
 			# Write out some info as a file header.
@@ -766,14 +768,14 @@ class MainWin( wx.Frame ):
 			pickle.dump( photoFields, f, -1 )
 			
 			#-----------------------------------------------------------
-			triggerTS = [row[0] for row in db.runQuery( 'SELECT ts FROM trigger WHERE ts BETWEEN ? and ? ORDER BY ts', (self.tsQueryLower, self.tsQueryUpper))]
+			triggerTS = [row[0] for row in db.runQuery( 'SELECT ts FROM trigger WHERE ts BETWEEN ? and ? ORDER BY ts', (tsQueryLower, tsQueryUpper))]
 			
 			progress.SetRange( max(1,len(triggerTS)) )
 			
 			pickle.dump( triggerTS, f, -1 )
 			showUpdate = getUpdateCB( 'Exporting triggers' )
 			with db.dbLock, db.conn:
-				for count, row in enumerate(db.conn.execute( 'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(triggerFields)), (self.tsQueryLower, self.tsQueryUpper) )):
+				for count, row in enumerate(db.conn.execute( 'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(triggerFields)), (tsQueryLower, tsQueryUpper) )):
 					obj = {f:v for f,v in zip(triggerFields, row)}
 					pickle.dump( obj, f, -1 )
 					if count % 25 == 0:
@@ -781,7 +783,7 @@ class MainWin( wx.Frame ):
 		
 			#-----------------------------------------------------------
 			# Purge duplicates.
-			photoTS = sorted(set(row[0] for row in db.runQuery( 'SELECT ts FROM photo WHERE ts BETWEEN ? and ?', (self.tsQueryLower, self.tsQueryUpper))))
+			photoTS = sorted(set(row[0] for row in db.runQuery( 'SELECT ts FROM photo WHERE ts BETWEEN ? and ?', (tsQueryLower, tsQueryUpper))))
 			
 			progress.SetRange( max(1,len(photoTS)) )
 			
@@ -790,7 +792,7 @@ class MainWin( wx.Frame ):
 			with db.dbLock, db.conn:
 				tsSeen = set()
 				count = 0
-				for row in db.conn.execute( 'SELECT {} FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(photoFields)), (self.tsQueryLower, self.tsQueryUpper) ):
+				for row in db.conn.execute( 'SELECT {} FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts'.format(','.join(photoFields)), (tsQueryLower, tsQueryUpper) ):
 					if row[0] not in tsSeen:
 						tsSeen.add( row[0] )
 						obj = {f:v for f,v in zip(photoFields, row)}
@@ -1466,12 +1468,15 @@ class MainWin( wx.Frame ):
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewIdRef()
 			self.triggerEditID = wx.NewIdRef()
+			self.triggerExportID = wx.NewIdRef()
 			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerDelete(), id=self.triggerDeleteID)
 			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerEdit(),   id=self.triggerEditID)
+			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerExport(),   id=self.triggerExportID)
 
 		menu = wx.Menu()
 		menu.Append(self.triggerEditID,   "Edit...")
 		menu.Append(self.triggerDeleteID, "Delete...")
+		menu.Append(self.triggerDeleteID, "Export...")
 
 		self.PopupMenu(menu)
 		menu.Destroy()
@@ -1508,7 +1513,7 @@ class MainWin( wx.Frame ):
 	def onTriggerEdit( self, event ):
 		self.iTriggerSelect = event.Index
 		self.doTriggerEdit()
-	
+		
 	def showMessages( self ):
 		while True:
 			message = self.messageQ.get()
@@ -1527,7 +1532,7 @@ class MainWin( wx.Frame ):
 		self.listenerThread = SocketListener( self.requestQ, self.messageQ )
 		error = self.listenerThread.test()
 		if error:
-			wx.MessageBox('Socket Error:\n\n"{}" group={}, port={}\n\nIs another CrossMgrVideo or CrossMgrCamera running on this computer?'.format(
+			wx.MessageBox('Socket Error:\n\n"{}" group={}, port={}\n\nIs another CrossMgrVideo running on this computer?'.format(
 					error,
 					multicast_group, multicast_port,
 				),

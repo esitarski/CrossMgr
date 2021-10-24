@@ -146,7 +146,7 @@ class PhotoPanel( wx.Panel ):
 		btnsizer.Add(self.grayscale, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
 
 		#btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
-		btn = wx.Button( self, label='Edit' )
+		btn = wx.Button( self, label='Edit Info' )
 		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
 		btn.Bind( wx.EVT_BUTTON, self.onEdit )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
@@ -333,7 +333,7 @@ class PhotoPanel( wx.Panel ):
 		self.editCB = None
 	
 	def onEdit( self, event ):
-		if self.editCB:
+		if self.editCB and self.triggerInfo:
 			self.triggerInfo.update( self.editCB() )
 			wx.CallAfter( self.SetBitmap )
 			wx.CallAfter( self.Refresh )
@@ -405,11 +405,12 @@ class PhotoPanel( wx.Panel ):
 			self.Bind(wx.EVT_MENU, self.onExportToClipboard,	id=self.exportToClipboardID)
 
 		menu = wx.Menu()
-		menu.Append(self.exportToFileID,   "to File...")
+		menu.Append(self.exportToFileID,  	  "to File...")
 		menu.Append(self.exportToClipboardID, "to Clipboard...")
 
 		self.PopupMenu(menu)
 		menu.Destroy()
+	
 	#-------------------------------------------------------------------
 	def onSaveToClipboard( self, event ):
 		self.playStop()
@@ -471,6 +472,7 @@ class PhotoPanel( wx.Panel ):
 	def SetBitmap( self ):
 		self.scaledBitmap.SetBitmap( self.getPhoto() )
 		
+	#-------------------------------------------------------------------
 	def onBrightness( self, event ):
 		pass
 	
@@ -496,6 +498,7 @@ class PhotoPanel( wx.Panel ):
 			pass
 		return AddPhotoHeader( self.getPhoto(), **photoData )
 	
+	#-------------------------------------------------------------------
 	def drawCallback( self, dc, width, height ):
 		if self.jpg is None:
 			return None

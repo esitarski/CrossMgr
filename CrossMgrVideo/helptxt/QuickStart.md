@@ -25,7 +25,7 @@ The __Images__ shows photos captured by triggers that can be played back like a 
 The __Finish Stip__ shows photos captured by triggers spread out by time.
 Triggers are shown in the __Trigger List__.
 
-A trigger event could be a race finish, a close finish, a points lap, or potentially a race indicent from a live feed.
+A trigger event could be a captured race finish, a close finish, a points lap, or a race incident captured manually.
 
 __CrossMgr__ can automatically generate triggers for __CrossMgrVideo__ evey time a bib number is entered (can be RFID or manual entry).
 Alternatively, you can generate triggers in __CrossMgrVideo__ manually with the __AUTO CAPTURE__ and __CAPTURE__ buttons.
