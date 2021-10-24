@@ -328,6 +328,16 @@ var iImageCur = 0;
 function getTriggerCur()	{ return triggersCur[iTriggerCur]; }
 function getImageCur()		{ return imagesCur[iImageCur]; }
 
+// For Prev and Next, make sure we refresh the triggers between each call.
+function triggerGoNext() {
+	const iTrigger = iTriggerCur + 1;
+	updateTriggers( function() {updateImages(iTrigger);} );
+}
+function triggerGoPrev() {
+	const iTrigger = iTriggerCur - 1;
+	updateTriggers( function() {updateImages(iTrigger);} );
+}
+
 //----------------------------------------------------------------------
 
 var imageScaledBitmap = null;
@@ -392,6 +402,7 @@ function updateImages( iTrigger ) {
 	// Since the browser caches the images, subsequent accesses will be faster.
 	playStop();
 	
+	iTrigger = Math.max( 0, Math.min(iTrigger, triggersCur.length-1) )
 	iTriggerCur = iTrigger;
 	
 	const mods = (
@@ -571,10 +582,10 @@ function onWheel( e ) {
 
 //----------------------------------------------------------------------
 
-function updateTriggers() {
+function updateTriggers( afterFunc=null ) {
 	let select = document.getElementById( 'id_trigger_date' );
 	const date = select.options[select.selectedIndex].value;
-	getJSON( 'triggers.js' + '?' + 'day=' + date, function(data) { showTriggers(data); triggerScrollToEnd(); } );
+	getJSON( 'triggers.js' + '?' + 'day=' + date, function(data) { showTriggers(data); triggerScrollToEnd(); if(afterFunc) afterFunc(); } );
 }
 
 //----------------------------------------------------------------------
@@ -844,6 +855,9 @@ function OnLoad() {
 		
 		<input type="checkbox" id="id_grayscale" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_grayscale">Grayscale</label>
+
+		<button onclick="triggerGoNext()" style="margin-left: 2.5em;">Next</button>
+		<button onclick="triggerGoPrev()">Prev</button>
 	</div>
 </div>
 
