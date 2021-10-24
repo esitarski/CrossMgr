@@ -141,10 +141,6 @@ class PhotoPanel( wx.Panel ):
 		self.sharpen.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.sharpen, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
 
-		self.grayscale = wx.ToggleButton( self, label='Grayscale')
-		self.grayscale.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
-		btnsizer.Add(self.grayscale, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
-
 		#btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
 		btn = wx.Button( self, label='Edit Info' )
 		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
@@ -485,8 +481,6 @@ class PhotoPanel( wx.Panel ):
 			frame = CVUtil.adjustContrastFrame( frame )
 		if self.sharpen.GetValue():
 			frame = CVUtil.sharpenFrame( frame )
-		if self.grayscale.GetValue():
-			frame = CVUtil.grayscaleFrame( frame )
 		
 		return CVUtil.frameToBitmap(frame)
 	

@@ -161,8 +161,6 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 						frame = CVUtil.adjustContrastFrame( frame )
 					if 's' in mods:
 						frame = CVUtil.sharpenFrame( frame )
-					if 'g' in mods:
-						frame = CVUtil.grayscaleFrame( frame )
 					content = CVUtil.frameToJPeg( frame )
 				content_type = self.jpeg_content
 				

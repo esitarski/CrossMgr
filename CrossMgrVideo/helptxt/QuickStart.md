@@ -162,10 +162,8 @@ The frame time, and the +/- offset from the Trigger time is shown on the left.
 * Copy to Clipboard
 * Contrast - increases contrast in the photo
 * Sharpen - increase sharpness of transitions
-* Grayscale - removes color
-* Save as PNG - save the photo in PNG format
-* Save as MPG - save an mpg file of the entire clip
-* Save as GIF - save an animated gif file.  Caution: these files can be large.
+* Export View - export the screen view, including zoom, to the clipboard or as a .png file.
+* Save Photo - save the current photo to the clipboard or as a .jpeg file.
 * Speed - a wizard that enables you to estimate the speed of a bicycle by analyzing how far the bicycle moved between two video frames.  This only works if the camera is at right angle to the finish line.
 * Restore View - returns to the frame and zoom of this trigger.
 * Save View - saves the frame and zoom of this trigger.
