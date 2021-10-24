@@ -338,7 +338,7 @@ class PhotoPanel( wx.Panel ):
 	def GetZoomInfo( self ):
 		r = self.scaledBitmap.GetSourceRect()
 		if not r:
-			return {}
+			r = wx.Rect( 0, 0, 0, 0 )
 		return {
 			'zoom_frame':	self.iJpg,
 			'zoom_x':		r.GetX(),
