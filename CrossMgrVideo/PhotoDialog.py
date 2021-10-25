@@ -557,7 +557,31 @@ class PhotoPanel( wx.Panel ):
 	def onSaveMP4( self, event ):
 		self.playStop()
 		with wx.FileDialog( self, message='Save MP4', wildcard='*.mp4', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.mp4') ) as fd:
-			if fd.ShowModal() == wx.ID_OK:
+			if fd.ShowModal() != wx.ID_OK:
+				return
+			fname = fd.GetPath()
+
+		def writePhotos( fname, tsJpg ):
+			# Find the most likely fps.
+			tDiff = []
+			for i in range(len(tsJpg)-1):
+				tDiff.append( (tsJpg[i+1][0] - tsJpg[i][0]).total_seconds() )
+			if not tDiff:
+				return
+			tDiff.sort()
+			fps = 1.0 / tDiff[len(tDiff)//2]
+			
+			width, height = CVUtil.getWidthHeight( tsJpg[0][1] )
+			fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+			out = cv2.VideoWriter(fname, fourcc, fps, (width, height))
+			for ts, jpg in enumerate(tsJpg):
+				out.write( CVUtil.toFrame(jpg) )
+			out.release()
+							
+		threading.Thread( target=writePhotos, args=(fname, self.tsJpgs,) ).start()
+	'''
+	
+	'''
 				with wx.BusyCursor():
 					try:
 						# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
@@ -583,7 +607,8 @@ class PhotoPanel( wx.Panel ):
 						wx.MessageBox( _('MP4 Save Successful'), _('Success') )
 					except Exception as e:
 						wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
-
+	'''
+	'''
 	def onSaveGif( self, event ):
 		self.playStop()
 		with wx.FileDialog( self, message='Save Animated Gif', wildcard='*.gif', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.gif') ) as fd:
