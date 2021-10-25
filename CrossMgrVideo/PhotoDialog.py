@@ -200,7 +200,7 @@ class PhotoPanel( wx.Panel ):
 		btnsizer.Add(btn, flag=wx.LEFT, border=4)
 		'''
 
-		btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('upload.png') )
+		self.restoreViewBtn = btn = wx.BitmapButton( self, bitmap=Utils.getBitmap('upload.png') )
 		btn.SetToolTip( wx.ToolTip('Restore View from Database') )
 		btn.Bind( wx.EVT_BUTTON, self.doRestoreView )
 		btnsizer.Add(btn, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=16)
@@ -244,6 +244,8 @@ class PhotoPanel( wx.Panel ):
 		self.fps = fps
 		self.editCB = editCB
 		self.updateCB = updateCB or (lambda update: None)
+		
+		self.restoreViewBtn.Enable( self.triggerInfo.get('zoom_frame',-1) >= 0 )
 		
 		self.kmh = (triggerInfo.get('kmh',0.0) or 0.0) if triggerInfo else 0.0
 		if isinstance(self.kmh, str):
@@ -462,6 +464,7 @@ class PhotoPanel( wx.Panel ):
 			if zinfo:
 				self.triggerInfo.update( zinfo )
 				GlobalDatabase().updateTriggerRecord( self.triggerInfo['id'], zinfo )
+				self.restoreViewBtn.Enable( self.triggerInfo.get('zoom_frame',-1) >= 0 )
 
 	def SetBitmap( self ):
 		self.scaledBitmap.SetBitmap( self.getPhoto() )
