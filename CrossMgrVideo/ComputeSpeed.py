@@ -185,10 +185,8 @@ class ComputeSpeed:
 		
 		self.wheelEdgesPage = WheelEdgesPage( self.wizard )
 		self.frontWheelEdgePage = FrontWheelEdgePage( self.wizard, self.getSpeed )
-		self.timePage = TimePage( self.wizard )
 		
 		adv.WizardPageSimple.Chain( self.wheelEdgesPage, self.frontWheelEdgePage )
-		adv.WizardPageSimple.Chain( self.frontWheelEdgePage, self.timePage )
 
 		self.wizard.SetPageSize( size )
 		self.wizard.GetPageAreaSizer().Add( self.wheelEdgesPage )
@@ -230,7 +228,7 @@ class ComputeSpeed:
 		self.tsJpg, self.iPhoto1, self.iPhoto2, self.ts_start = tsJpg, iPhoto1, iPhoto2, ts_start
 		self.wheelEdgesPage.Set( self.tsJpg, self.iPhoto1, self.iPhoto2, self.wheelDiameter )
 		self.frontWheelEdgePage.Set( self.t2, self.bitmap2, self.wheelDiameter )
-		self.timePage.Set( self.bitmap2, self.t2, self.ts_start, 0.0001, 1, True )
+		#self.timePage.Set( self.bitmap2, self.t2, self.ts_start, 0.0001, 1, True )
 	
 		if self.wizard.RunWizard(self.wheelEdgesPage):
 			return self.getSpeed()
@@ -243,17 +241,6 @@ class ComputeSpeed:
 			page = evt.GetPage()
 			if page == self.wheelEdgesPage:
 				self.frontWheelEdgePage.sbvl.verticalLines = [self.wheelEdgesPage.sbvl.verticalLines[1]]
-			elif page == self.frontWheelEdgePage:
-				v = self.wheelEdgesPage.sbvl.verticalLines
-				self.timePage.Set(
-					self.bitmap2, self.t2, self.ts_start,
-					self.frontWheelEdgePage.getFrontWheelEdge(),
-					self.getSpeed()[3],		# pixels per second
-					v[0] < v[1],
-				)
-				self.timePage.sbvl.ratio = self.frontWheelEdgePage.sbvl.ratio
-				self.timePage.sbvl.verticalLines = [self.frontWheelEdgePage.sbvl.verticalLines[0]]
-				self.timePage.onVerticalLines()
 			
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
