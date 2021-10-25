@@ -229,7 +229,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/triggerdates.js':
 				# Get all dates that have triggers, and the image count.
 				# Most recent first.
-				triggerDates = [(d.strftime('%Y-%m-%d'),c) for d, c in reversed(GlobalDatabase().getTriggerDates())]
+				triggerDates = [(d.strftime('%Y-%m-%d'),c) for d, c, r in reversed(GlobalDatabase().getTriggerDates())]
 				
 				content = json.dumps( triggerDates ).encode()
 				content_type = self.json_content
