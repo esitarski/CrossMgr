@@ -48,7 +48,7 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		footerSizer.Add( vbsFooter, flag=wx.LEFT, border=4 )
 		
 		vbs.Add( footerSizer )
-		self.SetSizer( vbs )
+		self.SetSizerAndFit( vbs )
 		
 	def changeFrame( self, frameDir ):
 		if self.iPhoto1 is None:
@@ -110,7 +110,7 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		bigFont = wx.Font( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		self.speed.SetFont( bigFont )
 		vbs.Add( self.speed, flag=wx.ALL, border = border )
-		self.SetSizer( vbs )
+		self.SetSizerAndFit( vbs )
 		
 	def formatSpeed( self, kmh=0.0, mps=0.0, mph=0.0 ):
 		return '{:.2f}km/h   {:.2f}m/s   {:.2f}mph'.format(kmh, mps, mph)
@@ -129,48 +129,6 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		self.onVerticalLines()
 	
 	def getFrontWheelEdge( self ):
-		return self.sbvl.GetVerticalLines()[0]
-	
-class TimePage(adv.WizardPageSimple):
-	def __init__(self, parent):
-		super().__init__(parent)
-		
-		border = 4
-		vbs = wx.BoxSizer( wx.VERTICAL )
-		self.sbvl = ScaledBitmapVerticalLines( self, numLines=1, colors=(wx.Colour(255,0,255),) )
-		self.sbvl.Bind( EVT_VERTICAL_LINES, self.onVerticalLines )
-		vbs.Add( self.sbvl, 1, wx.EXPAND|wx.ALL, border=border)
-		vbs.Add( wx.StaticText(self,
-			label = _("Drag the Purple Square to show the Time in the photo.")),
-			flag=wx.ALL, border = border
-		)
-		self.speed = wx.StaticText( self, label="00.000" )
-		bigFont = wx.Font( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.speed.SetFont( bigFont )
-		vbs.Add( self.speed, flag=wx.ALL, border = border )
-		self.SetSizer( vbs )
-		
-	def onVerticalLines( self, event=None ):
-		try:
-			t = self.tBitmap + datetime.timedelta(
-				seconds=self.direction * (self.getPosition() - self.frontWheelEdge) / self.pixelsPerSecond
-			)
-		except Exception as e:
-			return
-		secs = (t - self.tStart).total_seconds()
-		self.speed.SetLabel( formatTime(secs, True) )
-		self.GetSizer().Layout()
-		
-	def Set( self, bitmap, tBitmap, tStart, frontWheelEdge, pixelsPerSecond, leftToRight ):
-		self.sbvl.SetBitmap( bitmap )
-		self.tBitmap = tBitmap
-		self.tStart = tStart
-		self.frontWheelEdge = frontWheelEdge
-		self.pixelsPerSecond = pixelsPerSecond
-		self.direction = 1.0 if leftToRight else -1.0
-		self.onVerticalLines()
-	
-	def getPosition( self ):
 		return self.sbvl.GetVerticalLines()[0]
 	
 class ComputeSpeed:
@@ -228,7 +186,6 @@ class ComputeSpeed:
 		self.tsJpg, self.iPhoto1, self.iPhoto2, self.ts_start = tsJpg, iPhoto1, iPhoto2, ts_start
 		self.wheelEdgesPage.Set( self.tsJpg, self.iPhoto1, self.iPhoto2, self.wheelDiameter )
 		self.frontWheelEdgePage.Set( self.t2, self.bitmap2, self.wheelDiameter )
-		#self.timePage.Set( self.bitmap2, self.t2, self.ts_start, 0.0001, 1, True )
 	
 		if self.wizard.RunWizard(self.wheelEdgesPage):
 			return self.getSpeed()
