@@ -7,7 +7,7 @@ class DateSelectDialog( wx.Dialog ):
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		self.dateSelect = None
 		
-		self.triggerDates = triggerDates
+		self.triggerDates = triggerDates	# list of (date, trigger_count, race_name)
 		
 		self.chm = CalendarHeatmap( self, dates=self.triggerDates )
 		self.chm.Bind( wx.EVT_BUTTON, self.onCHMSelect )
@@ -17,9 +17,14 @@ class DateSelectDialog( wx.Dialog ):
 		
 		self.triggerDatesList.InsertColumn( 0, 'Date' )
 		self.triggerDatesList.InsertColumn( 1, '# Triggers', format=wx.LIST_FORMAT_CENTRE, width=wx.LIST_AUTOSIZE_USEHEADER )
-		for i, (d, c) in enumerate(triggerDates):
+		self.triggerDatesList.InsertColumn( 2, 'Race', width=wx.LIST_AUTOSIZE_USEHEADER )
+		for i, (d, c, r) in enumerate(triggerDates):
 			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
 			self.triggerDatesList.SetItem( i, 1, str(c) )
+			self.triggerDatesList.SetItem( i, 2, r )
+		
+		for c in range(3):
+			self.triggerDatesList.SetColumnWidth( c, -2 )
 		
 		if self.triggerDates:
 			self.triggerDatesList.Select( 0 )
@@ -31,7 +36,7 @@ class DateSelectDialog( wx.Dialog ):
 		btnSizer = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
 		
 		sizer.Add( self.chm, flag=wx.ALL, border=4 )
-		sizer.Add( self.triggerDatesList, flag=wx.ALL, border=4 )
+		sizer.Add( self.triggerDatesList, flag=wx.ALL|wx.EXPAND, border=4 )
 		if btnSizer:
 			sizer.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		
@@ -40,7 +45,7 @@ class DateSelectDialog( wx.Dialog ):
 
 	def onCHMSelect( self, event ):
 		dSelect = event.GetDate()
-		for i, (d, c) in enumerate(self.triggerDates):
+		for i, (d, c, r) in enumerate(self.triggerDates):
 			if d == dSelect:
 				self.triggerDatesList.Select( i )
 				break

@@ -534,11 +534,13 @@ class Database:
 	
 	def getTriggerDates( self ):
 		dates = defaultdict( int )
+		races = defaultdict( set )
 		with self.dbLock, self.conn:
-			for row in self.conn.execute( 'SELECT ts FROM trigger' ):
-				if row[0]:
-					dates[row[0].date()] += 1
-		return sorted( dates.items() )
+			for row in self.conn.execute( 'SELECT ts,race_name FROM trigger' ):
+				d = row[0].date()
+				dates[d] += 1
+				races[d].add( row[1] )
+		return sorted( (d, c, ','.join(sorted(races[d]))) for d, c in dates.items() )
 	
 	def getTriggerEditFields( self, id ):
 		with self.dbLock, self.conn:

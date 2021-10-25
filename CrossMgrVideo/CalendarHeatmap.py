@@ -161,7 +161,7 @@ class CalendarHeatmap(wx.Control):
 	def SetDates( self, dates, refresh=True ):
 		dates = dates or {}
 		if not isinstance(dates, dict):
-			dates = dict( dates )
+			dates = {v[0]:v[1] for v in dates}
 		self.dates = dates
 		if refresh:
 			self.Refresh()

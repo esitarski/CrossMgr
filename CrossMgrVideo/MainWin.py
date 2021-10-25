@@ -1190,7 +1190,6 @@ class MainWin( wx.Frame ):
 		self.lastTriggerRefresh = tNow
 		self.finishStrip.Set( None )
 		
-		# replace = True
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
@@ -1468,27 +1467,25 @@ class MainWin( wx.Frame ):
 		if not hasattr(self, "triggerDeleteID"):
 			self.triggerDeleteID = wx.NewIdRef()
 			self.triggerEditID = wx.NewIdRef()
-			self.triggerExportID = wx.NewIdRef()
 			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerDelete(), id=self.triggerDeleteID)
 			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerEdit(),   id=self.triggerEditID)
-			self.Bind(wx.EVT_MENU, lambda event: self.doTriggerExport(),   id=self.triggerExportID)
 
 		menu = wx.Menu()
 		menu.Append(self.triggerEditID,   "Edit...")
 		menu.Append(self.triggerDeleteID, "Delete...")
-		menu.Append(self.triggerDeleteID, "Export...")
 
 		self.PopupMenu(menu)
 		menu.Destroy()
 		
 	def doTriggerDelete( self, confirm=True ):
-		triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
+		iTriggerSelect = self.iTriggerSelect
+		triggerInfo = self.getTriggerInfo( iTriggerSelect )
 		message = ', '.join( f for f in (triggerInfo['ts'].strftime('%H:%M:%S.%f')[:-3], '{}'.format(triggerInfo['bib']),
 			triggerInfo['last_name'], triggerInfo['first_name'], triggerInfo['team'], triggerInfo['wave'], triggerInfo['race_name']) if f )
 		if not confirm or wx.MessageDialog( self, '{}:\n\n{}'.format('Confirm Delete', message), 'Confirm Delete',
 				style=wx.OK|wx.CANCEL|wx.ICON_QUESTION ).ShowModal() == wx.ID_OK:		
 			GlobalDatabase().deleteTrigger( triggerInfo['id'], self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds() )
-			self.refreshTriggers( replace=True, iTriggerRow=self.iTriggerSelect )
+			self.refreshTriggers( replace=True, iTriggerRow=iTriggerSelect )
 	
 	def onTriggerDelete( self, event ):
 		self.iTriggerSelect = event.Index

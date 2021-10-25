@@ -842,8 +842,6 @@ function OnLoad() {
 		<button title="Stop Play"					onclick="playStop();"			><img src='stop.png'/></button>
 		<button title="Play Forward"				onclick="playStop();play(1);"	><img src='play.png'/></button>
 		<button title="Last Frame"					onclick="goImage(1e10);"		><img src='fast-forward.png'/></button>
-		<button style="margin-left: 1.5em;" title="Restore View" onClick="restoreView(true);" ><img src='upload.png'/></button>
-		<button title="Save View"					onClick="saveView();"			><img src='download.png'/></button>
 		</span>
 		mouse-wheel to scroll by frame | click-and-drag to zoom |
 		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
@@ -852,6 +850,9 @@ function OnLoad() {
 		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_sharpen">Sharpen</label>
 		
+		<button style="margin-left: 1.5em;" title="Restore View" onClick="restoreView(true);" ><img src='upload.png'/></button>
+		<button title="Save View"					onClick="saveView();"			><img src='download.png'/></button>
+
 		<button onclick="triggerGoPrev()" style="margin-left: 2.5em;">&#9650; Prev</button>
 		<button onclick="triggerGoNext()">&#9660; Next</button>
 	</div>
