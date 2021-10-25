@@ -338,7 +338,7 @@ class CalendarHeatmap(wx.Control):
 			width = dc.GetTextExtent(w)[0]
 			dc.DrawText( w, x + (self.leftLabelRect.GetWidth() - width) // 2, y )
 		
-		if self.date:
+		if self.date in self.dateGrid:
 			x, y = self._xyFromDate( self.date )
 			dText = '{}: {}'.format( self.date.strftime('%Y-%m-%d'), self.dates.get(self.date, 0) )
 			width = dc.GetTextExtent( dText )[0]

@@ -729,7 +729,7 @@ class MainWin( wx.Frame ):
 		webbrowser.open( url, new=0, autoraise=1 )
 		
 	def exportDB( self, event ):
-		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
+		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryLower.strftime('%Y-%m-%d')) )
 		with wx.MessageDialog( self,
 				'Export all photos for this day.\n\n\tPhotos will be exported to:\n\n"{}"'.format(fname),
 				'Photo Export',
@@ -737,7 +737,6 @@ class MainWin( wx.Frame ):
 			if dlg.ShowModal() != wx.ID_OK:
 				return		
 		
-		fname = os.path.join( os.path.expanduser("~"), 'CrossMgrVideo-{}.gz'.format(self.tsQueryUpper.strftime('%Y-%m-%d')) )
 		if os.path.exists(fname):
 			os.remove( fname )
 
