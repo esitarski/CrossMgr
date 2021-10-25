@@ -28,6 +28,11 @@ div label input {
    margin-right:220px;
 }
 
+button > img,
+button > span {
+  vertical-align: middle;
+}
+
 label {
 	margin-left:0.05em;
 	margin-top:0.5em;
@@ -854,8 +859,8 @@ function OnLoad() {
 		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_sharpen">Sharpen</label>
 		
-		<button style="margin-left: 1.5em;" title="Restore View" onClick="restoreView(true);" id="id_restore_view" disabled><img src='upload.png'/></button>
-		<button title="Save View"					onClick="saveView();"			><img src='download.png'/></button>
+		<button style="margin-left: 1.5em;" title="Restore View" onClick="restoreView(true);" id="id_restore_view" disabled><img src='upload.png'/> <span>Restore</span></button>
+		<button title="Save View"					onClick="saveView();"			><img src='download.png'/> <span>Save</span></button>
 
 		<button onclick="triggerGoPrev()" style="margin-left: 2.5em;">&#9650; Prev</button>
 		<button onclick="triggerGoNext()">&#9660; Next</button>
