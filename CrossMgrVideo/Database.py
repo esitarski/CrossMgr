@@ -224,6 +224,8 @@ class Database:
 				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgsUnique )
 	
 	def updateTriggerRecord( self, id, data ):
+		if not id:
+			return False
 		if data:
 			with self.dbLock, self.conn:
 				# Filter out any fields that are not part of the record.
@@ -601,11 +603,11 @@ class Database:
 			return s_before, s_after
 		
 		with self.dbLock, self.conn:
-			rows = list( self.conn.execute( 'SELECT ts,s_before,s_after,closest_frames FROM trigger WHERE id=?', (id,) ) )
-			if not rows:
+			row = self.conn.execute( 'SELECT ts,s_before,s_after,closest_frames FROM trigger WHERE id=?', (id,) ).fetchone()
+			if not row:
 				return
 			
-			ts, s_before, s_after, closest_frames = rows[0]
+			ts, s_before, s_after, closest_frames = row
 			self.conn.execute( 'DELETE FROM trigger WHERE id=?', (id,) )
 			
 		if closest_frames:

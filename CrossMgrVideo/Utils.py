@@ -144,7 +144,7 @@ def getHomeDir():
 	try:
 		if os.path.basename(homedir) == '.CrossMgr':
 			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrApp' )
-	except:
+	except Exception as e:
 		pass
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
@@ -158,7 +158,7 @@ def getDocumentsDir():
 if 'WXMAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
-	except:
+	except Exception as e:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
 	if os.path.isdir( os.path.join(topdirName, 'CrossMgrVideoImages') ):
 		dirName = topdirName
@@ -171,7 +171,7 @@ if 'WXMAC' in wx.Platform:
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
+	except Exception as e:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 	if os.path.basename(dirName) == 'library.zip':

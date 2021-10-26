@@ -191,17 +191,16 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			elif up.path=='/trigger_update.js':
 				# Update trigger values.
 				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
-				if 'id' in query:
-					id = query.pop('id')
-					try:
-						id = int(id)
-					except:
-						id = 0
-					if 'bib' in query:
-						try:
-							query['bib'] = int(query['bib'])
-						except:
-							query['bib'] = 0
+				try:
+					id = int(query.pop('id'))
+				except Exception as e:
+					id = None
+				# Convert the bib to an integer (if present).
+				try:
+					query['bib'] = int(query['bib'])
+				except Exception as e:
+					pass
+				if id is not None:
 					success = GlobalDatabase().updateTriggerRecord( id, query )
 				else:
 					success = False
@@ -209,21 +208,35 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				content_type = self.json_content
 				
 			elif up.path=='/trigger.js':
-				# Update trigger values.
+				# Get trigger fields from the database.
 				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
 				fields = {}
-				if 'id' in query:
-					id = query.pop('id')
-					try:
-						id = int(id)
-					except:
-						id = 0
-					if id:
-						fields = GlobalDatabase().getTriggerFields( id )
-						fields['ts'] = fields['ts'].timestamp()
-						fields['ts_start'] = fields['ts_start'].timestamp()
+				try:
+					id = int(query.pop('id'))
+				except Exception as e:
+					id = None
+				if id is not None:
+					fields = GlobalDatabase().getTriggerFields( id )
+					fields['ts'] = fields['ts'].timestamp()
+					fields['ts_start'] = fields['ts_start'].timestamp()
 
 				content = json.dumps( fields ).encode()
+				content_type = self.json_content
+				
+			elif up.path=='/trigger_delete.js':
+				# Delete trigger.
+				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				try:
+					id = int(query.pop('id'))
+				except Exception as e:
+					id = None
+						
+				if id is not None:
+					GlobalDatabase().deleteTrigger( id )
+					success = True
+				else:
+					success = False
+				content = json.dumps( [success] ).encode()
 				content_type = self.json_content
 				
 			elif up.path=='/triggerdates.js':

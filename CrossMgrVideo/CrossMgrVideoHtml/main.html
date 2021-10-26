@@ -617,6 +617,7 @@ function updateOnScreenTriggerData() {
 
 //----------------------------------------------------------------------
 
+const skipFields = new Set( ['ts', 'frames', 'note', 'view'] );
 function updateFormFields() {
 	const trig = getTriggerCur();
 	
@@ -656,7 +657,7 @@ function updateFormFields() {
 	
 	// Trigger fields.
 	for( let i = 0; i < fields.length; ++i ) {
-		if( fields[i] == 'ts' || fields[i] == 'frames' || fields[i] == 'note' )
+		if( skipFields.has(fields[i]) )
 			continue;
 		add_field( form_info_div, i, false );
 	}

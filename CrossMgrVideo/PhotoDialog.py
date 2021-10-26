@@ -4,7 +4,7 @@ import re
 import time
 import datetime
 import bisect
-import subprocess
+import threading
 from ScaledBitmap import ScaledBitmap, GetScaleRatio
 from ComputeSpeed import ComputeSpeed
 from Database import GlobalDatabase
@@ -485,16 +485,20 @@ class PhotoPanel( wx.Panel ):
 		
 		return CVUtil.frameToBitmap(frame)
 	
-	def getPhotoWithHeader( self ):
+	def getPhotoData( self ):
 		if not self.triggerInfo:
-			return None
-		
+			return {}
 		photoData = {f:self.triggerInfo[f] for f in ('bib', 'ts', 'first_name', 'last_name', 'team', 'race_name', 'kmh', 'mph') if f in self.triggerInfo}
 		try:
 			photoData['raceSeconds'] = (self.triggerInfo['ts'] - self.triggerInfo['ts_start']).total_seconds()
 		except Exception as e:
 			pass
-		return AddPhotoHeader( self.getPhoto(), **photoData )
+		return photoData
+	
+	def getPhotoWithHeader( self ):
+		if not self.triggerInfo:
+			return None
+		return AddPhotoHeader( self.getPhoto(), **self.getPhotoData() )
 	
 	#-------------------------------------------------------------------
 	def drawCallback( self, dc, width, height ):
@@ -553,15 +557,17 @@ class PhotoPanel( wx.Panel ):
 		self.playStop()
 		PrintPhoto( self, self.scaledBitmap.GetDisplayBitmap() )
 	
-	'''
 	def onSaveMP4( self, event ):
+		if not self.triggerInfo:
+			return
+		
 		self.playStop()
 		with wx.FileDialog( self, message='Save MP4', wildcard='*.mp4', style=wx.FD_SAVE, defaultFile=self.getDefaultFilename('.mp4') ) as fd:
 			if fd.ShowModal() != wx.ID_OK:
 				return
 			fname = fd.GetPath()
 
-		def writePhotos( fname, tsJpg ):
+		def writePhotos( fname, photoData, tsJpg ):
 			# Find the most likely fps.
 			tDiff = []
 			for i in range(len(tsJpg)-1):
@@ -569,44 +575,43 @@ class PhotoPanel( wx.Panel ):
 			if not tDiff:
 				return
 			tDiff.sort()
-			fps = 1.0 / tDiff[len(tDiff)//2]
+			fps = round(1.0 / tDiff[len(tDiff)//2])
 			
-			width, height = CVUtil.getWidthHeight( tsJpg[0][1] )
+			width, height = CVUtil.getWidthHeight( AddPhotoHeader(CVUtil.jpegToBitmap(tsJpg[0][1], **photoData)) )
 			fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 			out = cv2.VideoWriter(fname, fourcc, fps, (width, height))
-			for ts, jpg in enumerate(tsJpg):
-				out.write( CVUtil.toFrame(jpg) )
+			for ts, jpg in tsJpg:
+				out.write( CVUtil.toFrame(AddPhotoHeader(CVUtil.jpegToBitmap(jpg, **photoData))) )
 			out.release()
 							
-		threading.Thread( target=writePhotos, args=(fname, self.tsJpgs,) ).start()
-	'''
+		threading.Thread( target=writePhotos, args=(fname, self.getPhotoData(), self.tsJpgs,) ).start()
 	
 	'''
-				with wx.BusyCursor():
-					try:
-						# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
-						command = [
-							Utils.getFFMegExe(),
-							'-nostats', '-loglevel', '0',	# silence ffmpeg output
-							'-y', # (optional) overwrite output file if it exists
-							'-f', 'image2pipe',
-							'-r', '{}'.format(self.fps), # frames per second
-							'-i', '-', # The input comes from a pipe
-							'-an', # Tells FFMPEG not to expect any audio
-							'-movflags', 'faststart',
-							'-pix_fmt', 'yuv420p',
-							'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
-							fd.GetPath(),
-						]
-						proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
-						for i, (ts, jpg) in enumerate(self.tsJpg):
-							proc.stdin.write( jpg )
-						proc.stdin.close()
-						proc.wait()
-						
-						wx.MessageBox( _('MP4 Save Successful'), _('Success') )
-					except Exception as e:
-						wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
+			with wx.BusyCursor():
+				try:
+					# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
+					command = [
+						Utils.getFFMegExe(),
+						'-nostats', '-loglevel', '0',	# silence ffmpeg output
+						'-y', # (optional) overwrite output file if it exists
+						'-f', 'image2pipe',
+						'-r', '{}'.format(self.fps), # frames per second
+						'-i', '-', # The input comes from a pipe
+						'-an', # Tells FFMPEG not to expect any audio
+						'-movflags', 'faststart',
+						'-pix_fmt', 'yuv420p',
+						'-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+						fd.GetPath(),
+					]
+					proc = subprocess.Popen( command, stdin=subprocess.PIPE, bufsize=-1 )
+					for i, (ts, jpg) in enumerate(self.tsJpg):
+						proc.stdin.write( jpg )
+					proc.stdin.close()
+					proc.wait()
+					
+					wx.MessageBox( _('MP4 Save Successful'), _('Success') )
+				except Exception as e:
+					wx.MessageBox( _('MP4 Save Failed:\n\n{}').format(e), _('Save Failed') )
 	'''
 	'''
 	def onSaveGif( self, event ):

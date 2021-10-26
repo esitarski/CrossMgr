@@ -123,20 +123,20 @@ def PrintCategories():
 	if not mainWin or not race:
 		return
 	
-	with wx.PrintDialogData(mainWin.printData) as pdd:
-		pdd.EnableSelection( False )
-		pdd.EnablePageNumbers( False )
-		pdd.EnableHelp( False )
-		pdd.EnablePrintToFile( False )
-		
-		printer = wx.Printer(pdd)
-		printout = CategoriesPrintout()
+	pdd = wx.PrintDialogData(mainWin.printData)
+	pdd.EnableSelection( False )
+	pdd.EnablePageNumbers( False )
+	pdd.EnableHelp( False )
+	pdd.EnablePrintToFile( False )
+	
+	printer = wx.Printer(pdd)
+	printout = CategoriesPrintout()
 
-		if not printer.Print(mainWin, printout, True):
-			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(mainWin, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
-		else:
-			mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
+	if not printer.Print(mainWin, printout, True):
+		if printer.GetLastError() == wx.PRINTER_ERROR:
+			Utils.MessageOK(mainWin, '\n\n'.join( [_("There was a printer problem."), _("Check your printer setup.")] ), _("Printer Error"), iconMask=wx.ICON_ERROR)
+	else:
+		mainWin.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
 #--------------------------------------------------------------------------------
 class TimeEditor(gridlib.GridCellEditor):
