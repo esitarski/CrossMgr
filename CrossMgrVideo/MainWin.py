@@ -1605,7 +1605,7 @@ class MainWin( wx.Frame ):
 			
 		#---------------------------------------------------------------
 		def cameraUsbHandler( msg ):
-			wx.CallAfter( self.updateCameraUsb, msg['usb'] )
+			wx.CallAfter( self.updateCameraUsb, msg['usb_available'] )
 			wx.CallAfter( self.setUsb, msg['usb_cur'] )
 			
 		#---------------------------------------------------------------
@@ -1881,7 +1881,7 @@ def MainLoop():
 
 	# Start processing events.
 	mainWin.Start()
-	wx.CallLater( 1500, mainWin.resetCamera )
+	#wx.CallLater( 1500, mainWin.resetCamera )
 	app.MainLoop()
 
 @atexit.register

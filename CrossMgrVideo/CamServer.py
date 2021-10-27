@@ -16,7 +16,7 @@ import CVUtil
 
 now = datetime.now
 
-CameraUsbMax = 8
+CameraUsbMax = 16
 	
 def getCameraUsb( usbSuccess=None ):
 	# Check for cameras on all usb ports (in parallel).
@@ -106,7 +106,7 @@ def CamServer( qIn, qWriter, camInfo=None ):
 	
 	def backgroundGetCameraUsb( usbSuccess, camInfo ):
 		def get( usbSuccess, camInfo ):
-			qWriter.put( {'cmd':'cameraUsb', 'usb':getCameraUsb(usbSuccess), 'usb_cur':camInfo.get('usb',0)} )
+			qWriter.put( {'cmd':'cameraUsb', 'usb_available':getCameraUsb(usbSuccess), 'usb_cur':camInfo.get('usb',0)} )
 		Thread( target=get, args=(usbSuccess, camInfo) ).start()
 	
 	while True:
