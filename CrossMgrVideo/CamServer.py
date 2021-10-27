@@ -18,17 +18,20 @@ now = datetime.now
 
 CameraUsbMax = 8
 	
-def getCameraUsb():
+def getCameraUsb( connectedTo=None ):
 	# Check for cameras on all usb ports (in parallel).
 	
 	def checkUsbPortForCamera( q, usb ):
-		cap = cv2.VideoCapture( usb )
-		q.put( (usb, cap.isOpened()) )
-		cap.release()
+		if usb == connectedTo:
+			q.put( (usb, True) )
+		else:
+			cap = cv2.VideoCapture( usb )
+			q.put( (usb, cap.isOpened()) )
+			cap.release()
 
 	q = queue.Queue()	
 	for usb in range(CameraUsbMax):
-		Thread(group=None, target=checkUsbPortForCamera, args=(q, usb) ).start()
+		Thread(target=checkUsbPortForCamera, args=(q, usb) ).start()
 		
 	cameraUsb = []
 	for i in range(CameraUsbMax):
@@ -101,9 +104,14 @@ def CamServer( qIn, qWriter, camInfo=None ):
 	
 	#print( 'CamServer: camInfo={}'.format(camInfo) )
 	
+	def backgroundGetCameraUsb( connectedTo ):
+		def get( connectedTo ):
+			qWriter.put( {'cmd':'cameraUsb', 'usb':getCameraUsb(connectedTo), 'usb_cur':connectedTo} )
+		Thread( target=get, args=(connectedTo,) ).start()
+	
 	while True:
 		
-		qWriter.put( {'cmd':'cameraUsb', 'usb':getCameraUsb(), 'usb_cur':camInfo.get('usb',0)} )
+		needToGetUsbs = True
 	
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			frameCount = 0
@@ -117,11 +125,15 @@ def CamServer( qIn, qWriter, camInfo=None ):
 			secondsPerFrame = 1.0/30.0
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			
+			if needToGetUsbs:
+				needToGetUsbs = False
+				backgroundGetCameraUsb( camInfo['usb'] )
+			
 			while keepCapturing:
 				# Read the frame.  If anything fails, keep going in the loop so we can reset with another camInfo.
 				if not cap.isOpened():
 					ret, frame = False, None
-					time.sleep( 0.125 )		# Keep going so we can get a camInfo to try again.
+					time.sleep( 0.5 )		# Keep going so we can get a camInfo to try again.
 				else:						
 					try:
 						ret, frame = cap.read()
