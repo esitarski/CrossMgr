@@ -14,6 +14,8 @@ MJPEG is a broadly supported by webcams, security cameras and other digital came
 The camera must be a USB camera that plugs in with a USB cable (the built-in camera in the computer works too).
 __CrossMgrVideo__ does not currently support IP cameras, that is, cameras without a USB cable that are connected to the network via a cable or wifi.
 
+__Reminder:__  Make sure all your usb cameras are plugged into the computer before starting CrossMgrVideo.
+
 ## Overview
 
 __CrossMgrVideo__ has two primary panes:
@@ -65,12 +67,14 @@ Opens a big window suitable for focusing the camera.
 
 #### Reset Camera
 
-Allows the camera to be reset including the USB port as well as other parameters:
+__Reminder:__  Make sure all your usb cameras are plugged into the computer before starting CrossMgrVideo.
+
+__Reset Camera__ enables the camera to be reset - including the USB port and other parameters:
 
 * __Camera USB__: The USB port of the camera.  CrossMgrVideo shows all the ports that have a camera connect to them.  Choose the port/camera you wish to use.  The computer's built-in camera (if present) is usually port 0.
 * __Camera Resolution__:  The resolution of the camera to use.  Use MAXxMAX for maximum resolution.  Check your camera specs for details on which resolutions are supported - some cameras can only support lower frame rates at the highest resolutions.
 * __Frames per second__:  The frames per second.  See notes below for more details.
-* __FourCC__:  The image encoding.  For maximum performance, set this to MJPG (the default).  If your camera is the rare one that doesn't support MJPG, set it to blank.
+* __FourCC__:  The image encoding from the camera.  For maximum performance, try setting this to MJPG (the default).  If that doesn't work, set it to Blank.
 
 __Notes:__
 
@@ -92,7 +96,7 @@ Opens a dialog to manage the database including:
 * "Vacuuming" the database to reduce the file size after deleting records.
 
 Deleting items from the database will not reduce the file size.  However,
-"holes" in the file will be reused by future database records.
+"holes" in the file will be reused by future database data.
 
 To actually reduce the database size, select the "Vacuum" option.
 Warning - this can take a few minutes.
@@ -158,15 +162,13 @@ The frame time, and the +/- offset from the Trigger time is shown on the left.
 * Play forward.  Play the sequence forward.
 * Jump to end.  Jump to the last frame in the sequence.
 
-* Print
-* Copy to Clipboard
-* Contrast - increases contrast in the photo
-* Sharpen - increase sharpness of transitions
-* Export View - export the screen view, including zoom, to the clipboard or as a .png file.
-* Save Photo - save the current photo to the clipboard or as a .jpeg file.
-* Speed - a wizard that enables you to estimate the speed of a bicycle by analyzing how far the bicycle moved between two video frames.  This only works if the camera is at right angle to the finish line.
+* Contrast - increase contrast of the photos.
+* Sharpen - increase sharpness of the photos.
+* Export View - export the view to a file or the clipboard.  This wil include any Zoom window you have on the screen.
+* Save Photo - save the current photo to a file or the clipboard.  A nice header will be added to the photo with the rider information.
 * Restore View - returns to the frame and zoom of this trigger.
 * Save View - saves the frame and zoom of this trigger.
+* Speed - a wizard that enables you to estimate the speed of a bicycle by analyzing how far the bicycle moved between two video frames.  This only works if the camera is at right angle to the finish line.
 
 ### Finish Strip
 
@@ -175,7 +177,7 @@ Shows all the frames recorded around the trigger event.
 * Move the mouse across the Finish Strip to seen the current frame in the Zoom window.
 * Ctrl-mouse-wheel to change Magnification in the Photo window.
 * Mouse-wheel, or use the Stretch slider on the right to change the frame spacing so that the frame content lines up.
-* Left-click and Drag (or Scroll Bar) to move sideways.
+* Scroll Bar to move sideways.
 * Left-click move the current time line.
 
 #### Buttons on Bottom

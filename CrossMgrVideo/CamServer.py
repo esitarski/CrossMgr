@@ -109,8 +109,7 @@ def CamServer( qIn, qWriter, camInfo=None ):
 			qWriter.put( {'cmd':'cameraUsb', 'usb_available':getCameraUsb(usbSuccess), 'usb_cur':camInfo.get('usb',0)} )
 		Thread( target=get, args=(usbSuccess, camInfo) ).start()
 	
-	while True:
-		
+	while True: 
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			frameCount = 0
 			fpsFrameCount = 0

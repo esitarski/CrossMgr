@@ -2777,40 +2777,41 @@ class MainWin( wx.Frame ):
 			dlg.properties.updateFileName()
 			if dlg.ShowModal() != wx.ID_OK:
 				return
+			
 			fileName = dlg.GetPath()
 			categoriesFile = dlg.GetCategoriesFile()
-			properties = dlg.properties
 
-		# Check for existing file.
-		if os.path.exists(fileName) and \
-		   not Utils.MessageOKCancel(self, '{}\n\n    {}'.format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
-			return
+			# Check for existing file.
+			if os.path.exists(fileName) and \
+			   not Utils.MessageOKCancel(self, '{}\n\n    {}'.format(_('File already exists.  Overwrite?'), fileName), _('File Exists')):
+				return
 
-		# Try to open the file.
-		try:
-			with open(fileName, 'w') as fp:
-				pass
-		except IOError:
-			Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
-			return
-		except Exception as e:
-			Utils.MessageOK(self, '{}\n\n    "{}".\n\n{}: {}'.format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
-			return
+			# Try to open the file.
+			try:
+				with open(fileName, 'w') as fp:
+					pass
+			except IOError:
+				Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot open file.'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+				return
+			except Exception as e:
+				Utils.MessageOK(self, '{}\n\n    "{}".\n\n{}: {}'.format(_('Cannot open file.'), fileName, _('Error'), e), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
+				return
 
-		# Create a new race and initialize it with the properties.
-		self.fileName = fileName
-		WebServer.SetFileName( self.fileName )
-		Model.resetCache()
-		ResetExcelLinkCache()
-		
-		# Save the current Ftp settings.
-		ftpPublish = FtpWriteFile.FtpPublishDialog( self )
+			# Create a new race and initialize it with the properties.
+			self.fileName = fileName
+			WebServer.SetFileName( self.fileName )
+			Model.resetCache()
+			ResetExcelLinkCache()
+			
+			# Save the current Ftp settings.
+			ftpPublish = FtpWriteFile.FtpPublishDialog( self )
 
-		Model.newRace()
-		properties.commit()			# Apply the new properties
-		ftpPublish.commit()			# Apply the ftp properties
-		ftpPublish.Destroy()
-		
+			Model.newRace()
+			dlg.properties.commit()		# Apply the new properties from the dlg.  The PropertiesDialog dlg needs to be kept alive up to this point.
+			ftpPublish.commit()			# Apply the ftp properties
+			ftpPublish.Destroy()
+
+		# Done with properties.  On with initializing the rest of the race.
 		self.updateRecentFiles()
 
 		# Restore the previous categories.

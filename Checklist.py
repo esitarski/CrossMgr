@@ -173,7 +173,7 @@ class Checklist( wx.Panel ):
 			for dir in searchDirs:
 				fname = os.path.join(dir, 'CrossMgrChecklist.txt')
 				try:
-					fp = io.open(fname, 'r', encoding='utf-8')
+					fp = open(fname, 'r', encoding='utf-8')
 				except Exception as e:
 					continue
 					
@@ -315,7 +315,7 @@ if __name__ == '__main__':
 	app.MainLoop()
 	
 	'''
-	with io.open('Checklist.txt', 'r', encoding='utf-8') as fp:
+	with open('Checklist.txt', 'r', encoding='utf-8') as fp:
 		root = createTasks( fp )
 	root.pprint()
 	root.validate()
