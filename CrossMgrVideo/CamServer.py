@@ -16,7 +16,7 @@ import CVUtil
 
 now = datetime.now
 
-CameraUsbMax = 16
+CameraUsbMax = 8
 	
 def getCameraUsb():
 	# Check for cameras on all usb ports (in parallel).
@@ -104,7 +104,6 @@ def CamServer( qIn, qWriter, camInfo=None ):
 	while True:
 		
 		qWriter.put( {'cmd':'cameraUsb', 'usb':getCameraUsb(), 'usb_cur':camInfo.get('usb',0)} )
-		time.sleep( 0.25 )
 	
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
 			frameCount = 0
