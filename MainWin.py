@@ -2807,7 +2807,7 @@ class MainWin( wx.Frame ):
 			ftpPublish = FtpWriteFile.FtpPublishDialog( self )
 
 			Model.newRace()
-			dlg.properties.commit()		# Apply the new properties from the dlg.  The PropertiesDialog dlg needs to be kept alive up to this point.
+			dlg.properties.commit()		# Apply the new properties from the dlg.
 			ftpPublish.commit()			# Apply the ftp properties
 			ftpPublish.Destroy()
 
