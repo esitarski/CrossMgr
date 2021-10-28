@@ -203,6 +203,7 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					elif cmd == 'cam_info':
 						camInfo = m['info'] or {}
 						keepCapturing = False
+						CVUtil.resetCache()
 						break
 					
 					elif cmd == 'get_usb':

@@ -5,7 +5,9 @@ import numpy as np
 import simplejpeg
 from LRUCache import LRUCache
 
-jpegFramesCache = LRUCache( 2*30*60 )		# For performance, cache the last two minutes of jpegs to frame conversions.
+jpegFramesCache = LRUCache( 20*30 )		# For performance, cache the last few seconds of jpegs to frame conversions.
+def resetCache():
+	jpegFramesCache.clear()
 
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
