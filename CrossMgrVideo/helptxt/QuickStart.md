@@ -61,9 +61,9 @@ You are also prompted for the resolution and frames per second of your camera (s
 
 ### Buttons on Top
 
-#### Focus
+#### Monitor/Focus
 
-Opens a big window suitable for focusing the camera.
+Opens a big window suitable for monitoring or focusing the camera.
 
 #### Reset Camera
 

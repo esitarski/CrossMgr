@@ -511,7 +511,7 @@ class MainWin( wx.Frame ):
 		fgs.Add( wx.StaticText(self, label='Actual:'), flag=wx.ALIGN_RIGHT )
 		fgs.Add( self.actualFPS, flag=wx.EXPAND|wx.ALIGN_RIGHT )
 		
-		self.focus = wx.Button( self, label="Focus..." )
+		self.focus = wx.Button( self, label="Monitor/Focus" )
 		self.focus.Bind( wx.EVT_BUTTON, self.onFocus )
 		
 		self.reset = wx.Button( self, label="Reset Camera" )
@@ -694,12 +694,12 @@ class MainWin( wx.Frame ):
 			description = """CrossMgrVideo - USB Camera support
 	"""
 
-			licence = """CrossMgrVideo free software; you can redistribute 
+			licence = """CrossMgrVideo is free software; you can redistribute 
 	it and/or modify it under the terms of the GNU General Public License as 
 	published by the Free Software Foundation; either version 2 of the License, 
 	or (at your option) any later version.
 
-	CrossMgrImpinj is distributed in the hope that it will be useful, 
+	CrossMgrVideo is distributed in the hope that it will be useful, 
 	but WITHOUT ANY WARRANTY; without even the implied warranty of 
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
 	See the GNU General Public License for more details. You should have 
