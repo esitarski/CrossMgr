@@ -337,16 +337,11 @@ class RiderDetail( wx.Panel ):
 		vb.Add( self.alwaysFilterMinPossibleLapTime, flag=wx.ALL, border=2 )
 		gbs.Add( vb, pos = (row, 0), span=(1, 2), flag = wx.ALIGN_RIGHT )
 		
-		self.showPhotos = wx.Button( self, label = '{}...'.format(_('Show Photos')) )
-		gbs.Add( self.showPhotos, pos = (row, 3), span=(1, 1), flag = wx.ALIGN_CENTRE|wx.EXPAND )
-		self.Bind( wx.EVT_BUTTON, self.onShowPhotos, self.showPhotos )
 		self.adjustTime = wx.Button( self, label = '{}...'.format(_('Adjust Time Trial Times')) )
 		self.Bind( wx.EVT_BUTTON, self.onAdjustTime, self.adjustTime )
 		gbs.Add( self.adjustTime, pos=(row,5), span=(1,2), flag=wx.EXPAND )
 		row += 1
 		
-		self.showPhotos.Disable()
-
 		self.notInLap = wx.StaticText( self, label = '              ' )
 		gbs.Add( self.notInLap, pos=(row,0), span=(1,4) )
 		row += 1
@@ -411,14 +406,6 @@ class RiderDetail( wx.Panel ):
 		self.SetSizer( mainSizer )
 		self.hs = hs
 		self.setRider()
-	
-	@logCall
-	def onShowPhotos( self, event ):
-		mainWin = Utils.mainWin
-		if not mainWin:
-			return
-		mainWin.photoDialog.Show( True )
-		mainWin.photoDialog.setNumSelect( self.num.GetValue() )
 	
 	@logCall
 	def onAdjustTime( self, event ):
@@ -1201,8 +1188,6 @@ class RiderDetail( wx.Panel ):
 		
 		highPrecisionTimes = Model.highPrecisionTimes()
 		with Model.LockRace() as race:
-		
-			self.showPhotos.Enable( bool(race and num and race.enableUSBCamera) )
 		
 			if race is None or num is None:
 				return
