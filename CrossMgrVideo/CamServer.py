@@ -143,6 +143,7 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				
 				# If the frame is not in jpeg format, encode it now.  This spreads out the CPU per frame rather than when
 				# we send a group of photos for a capture.
+				opencv_frame = frame
 				frame = CVUtil.toJpeg( frame )
 				
 				# Add the frame to the circular buffer.
@@ -237,10 +238,10 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					qWriter.put( { 'cmd':'response', 'ts_frames': backlog[-backlogTransmitFrames:] } )
 					del backlog[-backlogTransmitFrames:]
 						
-				# Send status messages.
+				# Send status images.
 				for name, freq in sendUpdates.items():
 					if frameCount % freq == 0:
-						qWriter.put( {'cmd':'update', 'name':name, 'frame':frame} )
+						qWriter.put( {'cmd':'update', 'name':name, 'frame':opencv_frame} )	# Pass the raw frame so we don't have to convert it.
 				frameCount += 1
 						
 				# Send snapshot message.
