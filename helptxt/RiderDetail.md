@@ -192,10 +192,6 @@ Change Rider Start Wave Time...|Use this option if a rider started in the wrong 
 
 Remember, Ctrl-Z is undo!  (Ctrl-Y is redo).
 
-## Show Photos... Button
-
-Clicking this button shows the photos of this rider if the [USB Webcam][] option is enabled.
-
 ## Gantt Chart and Lap Time Graph (bottom right of screen)
 This shows a Gantt chart for this individual rider's times, as well as a line graph showing the lap times.
 
