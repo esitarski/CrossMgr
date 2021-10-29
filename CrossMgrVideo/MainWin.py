@@ -1571,7 +1571,7 @@ class MainWin( wx.Frame ):
 		
 		#---------------------------------------------------------------
 		def updateHandler( msg ):
-			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
+			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'], False)
 			
 			if name == 'primary':
 				if lastFrame is None:

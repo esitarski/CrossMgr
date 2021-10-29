@@ -30,7 +30,7 @@ def getWidthHeight( o ):
 def isJpegBuf( buf ):
 	return isinstance(buf, bytes) and buf[:2] == bytes.fromhex('FFD8') and buf[-2:] == bytes.fromhex('FFD9')	# Check for jpeg magic values.
 
-def toFrame( o ):
+def toFrame( o, updateCache=True ):
 	'''
 		Transform the given object into an opencv numpy frame.
 		Specifically, a numpy ndarray of dimension 2 in BGR format.
@@ -39,12 +39,12 @@ def toFrame( o ):
 		if o.shape[0] != 1:
 			return o
 		try:
-			return jpegToFrame( o.tobytes() )	# Assume single-dimension np is encoded as jpeg.
+			return jpegToFrame( o.tobytes(), updateCache )	# Assume single-dimension np is encoded as jpeg.
 		except Exception as e:
 			#print( 'Conversion failure.  o.shape=', o.shape )
 			return None
 	if isJpegBuf( o ):
-		return jpegToFrame( o )
+		return jpegToFrame( o, updateCache )
 	if isinstance( o, wx.Bitmap ):
 		return bitmapToFrame( o )
 	if isinstance( o, wx.Image ):
@@ -100,12 +100,13 @@ def frameToJPeg( frame ):
 	jpegFramesCache[jpeg] = frame
 	return jpeg
 
-def jpegToFrame( jpeg ):
+def jpegToFrame( jpeg, updateCache=True ):
 	if jpeg in jpegFramesCache:
 		return jpegFramesCache[jpeg]
 	# frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
 	frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
-	jpegFramesCache[jpeg] = frame
+	if updateCache:
+		jpegFramesCache[jpeg] = frame
 	return frame
 
 def jpegToImage( jpeg ):
