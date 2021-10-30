@@ -436,7 +436,7 @@ class StatusChangeDialog( wx.Dialog ):
 			
 		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
 		if btnSizer:
-			vs.Add( hs, flag=wx.EXPAND|wx.ALL, border=4 )
+			vs.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		
 		self.SetSizerAndFit( vs )
 		
