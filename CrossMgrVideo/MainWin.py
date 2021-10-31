@@ -714,7 +714,7 @@ class MainWin( wx.Frame ):
 			info.SetName('CrossMgrVideo')
 			info.SetVersion(AppVerName.split(' ')[1])
 			info.SetDescription(description)
-			info.SetCopyright('(C) 2020 Edward Sitarski')
+			info.SetCopyright('(C) 2021 Edward Sitarski')
 			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
 			info.SetLicence(licence)
 
