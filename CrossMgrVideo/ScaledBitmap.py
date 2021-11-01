@@ -213,11 +213,11 @@ class ScaledBitmap( wx.Panel ):
 			wx.Colour(255,255,255), wx.Colour(255,0,0), wx.Colour(0,255,0), wx.Colour(0,0,255),
 			wx.Colour(255,255,0), wx.Colour(255,0,255), wx.Colour(0,255,255), wx.Colour(0,0,0),
 		)
-		rWidth = round(float(width) / len(colours))
+		rWidth = float(width) / len(colours)
 		for row, (y, hCur) in enumerate(((0, int(height*0.75)), (int(height*0.75), int(height*0.25)))):
 			for col, c in enumerate(colours if row == 0 else reversed(colours)):
 				dc.SetBrush( wx.Brush(c, wx.SOLID) )
-				dc.DrawRectangle( rWidth * col, y, rWidth+1, hCur )
+				dc.DrawRectangle( round(rWidth * col), y, round(rWidth+1), hCur )
 		
 		s = round(min(width, height) / 1.5)
 		x = round((width-s) / 2)
