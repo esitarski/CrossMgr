@@ -614,7 +614,7 @@ class MainWin( wx.Frame ):
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		self.bibQuery = None
 		
-		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES )
+		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES|wx.LC_SINGLE_SEL )
 		
 		self.il = wx.ImageList(16, 16)
 		self.sm_close = []
@@ -1151,6 +1151,7 @@ class MainWin( wx.Frame ):
 			self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
 				
 	def updateTriggerRow( self, row, fields ):
+		''' Update the row in the UI only. '''
 		if 'name' not in fields:
 			fields = self.computeTriggerFields( fields )
 		for k, v in fields.items():
@@ -1246,7 +1247,7 @@ class MainWin( wx.Frame ):
 			else:
 				self.triggerList.EnsureVisible( self.triggerList.GetItemCount()-1 )
 				
-		self.onTriggerSelected( self, iTriggerSelect=0 )
+		wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
 
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
@@ -1428,12 +1429,15 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
 		
 		if self.iTriggerSelect >= self.triggerList.GetItemCount():
-			self.ts = None
-			self.tsJpg = []
-			self.finishStrip.Set( self.tsJpg )
-			self.refreshPhotoPanel()
-			return
-		
+			if self.triggerList.GetItemCount() == 0:
+				self.ts = None
+				self.tsJpg = []
+				self.finishStrip.Set( self.tsJpg )
+				self.refreshPhotoPanel()
+				return
+			else:
+				self.iTriggerSelect = self.triggerList.GetItemCount() - 1
+				
 		with wx.BusyCursor():
 			self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
 			self.refreshPhotoPanel()
@@ -1451,7 +1455,14 @@ class MainWin( wx.Frame ):
 				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
 			else:
 				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
-			triggerInfo['frames'] = len(self.tsJpg)
+			
+			# Update the frame information.
+			if triggerInfo['frames'] != len(self.tsJpg):
+				triggerInfo['frames'] = len(self.tsJpg)
+				GlobalDatabase().updateTriggerPhotoCount( self.triggerInfo['id'], len(self.tsJpg) )
+				self.updateTriggerRow( self.iTriggerSelect, {'frames':len(self.tsJpg)} )
+			
+			# Update the main UI.
 			self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
 			self.refreshPhotoPanel()
 	
