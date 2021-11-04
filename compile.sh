@@ -51,9 +51,9 @@ doPyInstaller() {
 		BUILDPATH=../build
 	fi
 	case $OSNAME in
-		Darwin)	echo pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+		Darwin)	echo pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --distpath=$DISTPATH -p . --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
 			cd $BUILDDIR
-			pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+			pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.icns --distpath=$DISTPATH -p . --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
 			if [ $? -ne 0 ]; then
 				goBack $PROGRAM
 				echo "Build Failed!"
@@ -61,9 +61,9 @@ doPyInstaller() {
 			fi
 			goBack $PROGRAM
 		;;
-		Linux) echo pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+		Linux) echo pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --distpath=$DISTPATH -p . --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
 			cd $BUILDDIR
-			pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --distpath=$DISTPATH --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
+			pyinstaller ${PROGRAM}.pyw --icon=${ICONPATH}/${PROGRAM}.png --distpath=$DISTPATH -p . --workpath=$BUILDPATH --clean --windowed --noconfirm --exclude-module=tcl --exclude-module=tk --exclude-module=Tkinter --exclude-module=_tkinter --osx-bundle-identifier=com.esitarsk.crossmgr
 			if [ $? -ne 0 ]; then
 				goBack $PROGRAM
 				echo "Build Failed!"
