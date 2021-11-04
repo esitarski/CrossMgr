@@ -10,16 +10,16 @@ def QuadReg( data ):
 	lenData = len(data)
 	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
-	return np.polyfit( np.fromiter( (d[0] for d in data), np.float64, lenData), np.fromiter( (d[1] for d in data), np.float64, lenData), 2 )
+	return np.polyfit( np.fromiter( (d[0] for d in data), float, lenData), np.fromiter( (d[1] for d in data), float, lenData), 2 )
 	
 def QuadRegRSS( data ):
 	lenData = len(data)
 	if lenData < 3:
 		raise ValueError( 'data must have >= 3 values' )
-	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
-	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
+	x = np.fromiter( (d[0] for d in data), float, lenData )
+	y = np.fromiter( (d[1] for d in data), float, lenData )
 	p = np.poly1d( np.polyfit(x, y, 2) )
-	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
+	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), float, lenData )
 	return np.dot( R, R )
 
 def QuadRegRSE( data ):
@@ -31,10 +31,10 @@ def QuadRegFindOutlier( data ):
 	lenData = len(data)
 	if lenData <= 3:
 		raise ValueError( 'data must have >= 3 values' )
-	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
-	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
+	x = np.fromiter( (d[0] for d in data), float, lenData )
+	y = np.fromiter( (d[1] for d in data), float, lenData )
 	p = np.poly1d( np.polyfit(x, y, 2) )
-	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, lenData )
+	R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), float, lenData )
 	rmse = math.sqrt( np.dot(R,R) / (lenData-1) )	# dot(R,R) = sum of squares
 	return max( ((i, abs(r/rmse)) for i, r in enumerate(R)), key=operator.itemgetter(1) )
 	
@@ -69,13 +69,13 @@ def QuadRegRemoveOutliersRobust( data, returnDetails=False ):
 	
 	zThreshold = 1.9
 	
-	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
-	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
+	x = np.fromiter( (d[0] for d in data), float, lenData )
+	y = np.fromiter( (d[1] for d in data), float, lenData )
 	
 	abc = np.polyfit(x, y, 2)
 	p = np.poly1d( abc )
 	while len(x) > 3:
-		R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), np.float64, len(x) )	# Residuals from Best Fit.
+		R = np.fromiter( (y[i] - p(v) for i, v in enumerate(x)), float, len(x) )	# Residuals from Best Fit.
 
 		# Root mean square error.
 		rmse = math.sqrt( np.dot(R,R) / (len(x)-1) )	# dot(R,R) = sum of squares
@@ -143,8 +143,8 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 	bestD = minD			# Best number of points within threshold distance of model.  Initialize to minimum.
 	
 	# Convert input to numpy.
-	x = np.fromiter( (d[0] for d in data), np.float64, lenData )
-	y = np.fromiter( (d[1] for d in data), np.float64, lenData )
+	x = np.fromiter( (d[0] for d in data), float, lenData )
+	y = np.fromiter( (d[1] for d in data), float, lenData )
 	
 	# Bias the sample to consider the strongest reads.
 	indexes = sorted( list(range(lenData)), key=lambda i: data[i][1], reverse=True )

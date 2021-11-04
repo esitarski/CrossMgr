@@ -79,17 +79,17 @@ class RaceResult( object ):
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1 ):
-		self.firstName = str(firstName or u'')
-		self.lastName = str(lastName or u'')
+		self.firstName = str(firstName or '')
+		self.lastName = str(lastName or '')
 		
-		self.license = (license or u'')
+		self.license = (license or '')
 		if isinstance(self.license, float) and int(self.license) == self.license:
 			self.license = int(self.license)
 		self.license = str(self.license)
 		
-		self.team = str(team or u'')
+		self.team = str(team or '')
 		
-		self.categoryName = str(categoryName or u'')
+		self.categoryName = str(categoryName or '')
 		
 		self.raceName = str(raceName)
 		self.raceDate = raceDate
@@ -173,15 +173,15 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'raceDate':		None,
 					'raceFileName':	raceInSeries.getFileName(),
 					'raceName':		raceName,
-					'raceOrganizer': u'',
+					'raceOrganizer': '',
 					'raceInSeries': raceInSeries,					
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
 					'tFinish':		f('time',0.0),
-					'firstName':	str(f('first_name',u'')).strip(),
-					'lastName'	:	str(f('last_name',u'')).strip(),
-					'license':		str(f('license_code',u'')).strip(),
-					'team':			str(f('team',u'')).strip(),
+					'firstName':	str(f('first_name','')).strip(),
+					'lastName'	:	str(f('last_name','')).strip(),
+					'license':		str(f('license_code','')).strip(),
+					'team':			str(f('team','')).strip(),
 					'categoryName': f('category_code',None),
 					'laps':			f('laps',1),
 				}
@@ -193,10 +193,10 @@ def ExtractRaceResultsExcel( raceInSeries ):
 				isUSAC = False
 				if info['categoryName'] is None:
 					# Hack for USAC cycling input spreadsheet.
-					cn = str(f('category_name',u'')).strip()
-					if cn and categoryNameSheet.startswith(u'Sheet'):
+					cn = str(f('category_name','')).strip()
+					if cn and categoryNameSheet.startswith('Sheet'):
 						isUSAC = True
-						g = str(f('gender', u'')).strip()
+						g = str(f('gender', '')).strip()
 						if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
 							cn += u' ({})'.format( u'Women' if g.upper() in u'FW' else u'Men' )
 						info['categoryName'] = cn
@@ -219,7 +219,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					info['rank'] = RaceResult.rankDNF
 					
 				# Check for comma-separated name.
-				name = str(f('name', u'')).strip()
+				name = str(f('name', '')).strip()
 				if name and not info['firstName'] and not info['lastName']:
 					try:
 						info['lastName'], info['firstName'] = name.split(',',1)
@@ -325,7 +325,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				'raceInSeries':	raceInSeries,
 			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
-				info[fTo] = getattr(rr, fFrom, u'')
+				info[fTo] = getattr(rr, fFrom, '')
 				
 			if not info['firstName'] and not info['lastName']:
 				continue				
@@ -341,7 +341,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			
 			raceNum = getattr(race, 'raceNum', '')
 			if raceNum:
-				info['raceName'] = u'{}-{}'.format(info['raceName'], raceNum)
+				info['raceName'] = '{}-{}'.format(info['raceName'], raceNum)
 				
 			info['raceFileName'] = fileName
 			if race.startTime:
@@ -457,7 +457,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	
 	riderEventsCompleted = defaultdict( int )
 	riderPlaceCount = defaultdict( lambda : defaultdict(int) )		# Indexed by (grade, rank).
-	riderTeam = defaultdict( lambda : u'' )
+	riderTeam = defaultdict( lambda : '' )
 	riderUpgrades = defaultdict( lambda : [False] * len(races) )
 	riderNameLicense = {}
 	
@@ -535,7 +535,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leaderTFinish = riderTFinish[leader]
 			leaderEventsCompleted = riderEventsCompleted[leader]
 			riderGap = { r : riderTFinish[r] - leaderTFinish if riderEventsCompleted[r] == leaderEventsCompleted else None for r in riderOrder }
-			riderGap = { r : formatTimeGap(gap) if gap else u'' for r, gap in riderGap.items() }
+			riderGap = { r : formatTimeGap(gap) if gap else '' for r, gap in riderGap.items() }
 		
 		# List of:
 		# lastName, firstName, license, team, tTotalFinish, [list of (points, position) for each race in series]
@@ -601,7 +601,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPercentTotal = riderPercentTotal[leader]
 			riderGap = { r : leaderPercentTotal - riderPercentTotal[r] for r in riderOrder }
-			riderGap = { r : percentFormat.format(gap) if gap else u'' for r, gap in riderGap.items() }
+			riderGap = { r : percentFormat.format(gap) if gap else '' for r, gap in riderGap.items() }
 					
 		# List of:
 		# lastName, firstName, license, team, totalPercent, [list of (percent, position) for each race in series]
@@ -667,7 +667,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPoints = riderPoints[leader]
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
-			riderGap = { r : u'{:0.2f}'.format(gap) if gap else u'' for r, gap in riderGap.items() }
+			riderGap = { r : u'{:0.2f}'.format(gap) if gap else '' for r, gap in riderGap.items() }
 		
 		riderPoints = { rider:formatRating(riderRating[rider]) for rider, points in riderPoints.items() }
 		
@@ -733,7 +733,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPoints = riderPoints[leader]
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
-			riderGap = { r : str(gap) if gap else u'' for r, gap in riderGap.items() }
+			riderGap = { r : str(gap) if gap else '' for r, gap in riderGap.items() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
@@ -857,7 +857,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 			leader = teamOrder[0]
 			leaderPoints = teamPoints[leader]
 			teamGap = { t : leaderPoints - teamPoints[t] for t in teamOrder }
-			teamGap = { t : str(gap) if gap else u'' for t, gap in teamGap.items() }
+			teamGap = { t : str(gap) if gap else '' for t, gap in teamGap.items() }
 		
 		# Reverse the race order if required for display.
 		if showLastToFirst:
@@ -918,7 +918,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 		
 		def formatEventCount( count ):
 			if not count:
-				return u''
+				return ''
 			if count < -1:
 				return u'{} events'.format( count )
 			else:
