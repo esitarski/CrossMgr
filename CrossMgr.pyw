@@ -1,2 +1,2 @@
-import MainWin
-MainWin.MainLoop()
+from MainWin import MainLoop
+MainLoop()

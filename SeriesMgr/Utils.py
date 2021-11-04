@@ -245,23 +245,34 @@ def removeDiacritic( s ):
 def GetFileName( rDate, rName, rNum, rMemo ):
 	return '{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
 		
-soundCache = {}
-def Play( soundFile ):
-	global soundCache
-	soundFile = os.path.join( getImageFolder(), soundFile )
-	
-	if sys.platform.startswith('linux'):
+# Attempt at portable sound player.
+if sys.platform.startswith('win'):
+	soundCache = {}
+	def Play( soundFile ):
+		global soundCache
+		soundFile = os.path.join( imageFolder, soundFile )
 		try:
-			subprocess.Popen(['aplay', '-q', soundFile])
+			return soundCache[soundFile].Play()
+		except KeyError:
+			pass
+		soundCache[soundFile] = wx.adv.Sound( soundFile )
+		return soundCache[soundFile].Play()
+			
+elif sys.platform.startswith('darwin'):
+	def Play( soundFile ):
+		try:
+			subprocess.Popen(['afplay', os.path.join(imageFolder, soundFile)])
 		except Exception:
 			pass
 		return True
 		
-	try:
-		return soundCache[soundFile].Play()
-	except Exception:
-		soundCache[soundFile] = wx.adv.Sound( soundFile )
-		return soundCache[soundFile].Play()
+else:	# Try Linux
+	def Play( soundFile ):
+		try:
+			subprocess.Popen(['aplay', '-q', os.path.join(imageFolder, soundFile)])
+		except Exception as e:
+			pass
+		return True
 		
 def PlaySound( soundFile ):
 	if mainWin and not mainWin.playSounds:
@@ -292,28 +303,21 @@ wx.ICON_INFORMATION	Shows an information (i) icon.
 '''
 
 def MessageOK( parent, message, title = '', iconMask = wx.ICON_INFORMATION, pos = wx.DefaultPosition ):
-	dlg = wx.MessageDialog(parent, message, title, wx.OK|iconMask, pos=pos)
-	dlg.ShowModal()
-	dlg.Destroy()
+	with wx.MessageDialog(parent, message, title, wx.OK|iconMask, pos=pos) as dlg:
+		dlg.ShowModal()
 	return True
 	
 def MessageOKCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
-	dlg = wx.MessageDialog(parent, message, title, wx.OK|wx.CANCEL|iconMask )
-	response = dlg.ShowModal()
-	dlg.Destroy()
-	return response == wx.ID_OK
+	with wx.MessageDialog(parent, message, title, wx.OK|wx.CANCEL|iconMask ) as dlg:
+		return dlg.ShowModal() == wx.ID_OK
 	
 def MessageYesNo( parent, message, title = '', iconMask = wx.ICON_QUESTION):
-	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|iconMask )
-	response = dlg.ShowModal()
-	dlg.Destroy()
-	return response == wx.ID_YES
+	with wx.MessageDialog(parent, message, title, wx.YES|wx.NO|iconMask ) as dlg:
+		return dlg.ShowModal() == wx.ID_YES
 	
 def MessageYesNoCancel( parent, message, title = '', iconMask = wx.ICON_QUESTION):
-	dlg = wx.MessageDialog(parent, message, title, wx.YES|wx.NO|wx.CANCEL|iconMask )
-	response = dlg.ShowModal()
-	dlg.Destroy()
-	return response
+	with wx.MessageDialog(parent, message, title, wx.YES|wx.NO|wx.CANCEL|iconMask ) as dlg:
+		return dlg.ShowModal()
 	
 def SetValue( st, value ):
 	if st.GetValue() != value:
@@ -789,9 +793,6 @@ def GetContrastTextColour( backgroundColour ):
 	yiq = ((r*299)+(g*587)+(b*114))/1000.0
 	return  wx.BLACK if yiq >= 128.0 else wx.WHITE
 	
-def GetGoogleMapsApiKey():
-	return 'AIzaSyD2sl2JTvnyMcsgWc3tTceWCYo3ZoyWdAI'
-
 import json
 def ToJson( v, separators=(',',':') ):
 	''' Make sure we always return a unicode string. '''
