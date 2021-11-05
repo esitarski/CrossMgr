@@ -92,13 +92,13 @@ getVersion() {
 
 cleanup() {
 	echo "Cleaning up everything..."
-	rm -rf __pycache__ CrossMgrImpinj/__pycache__ TagReadWrite/__pycache__ CrossMgrAlien/__pycache__ SeriesMgr/__pycache__
+	rm -rf __pycache__ CrossMgrImpinj/__pycache__ CrossMgrVideo/__pycache__ SprintMgr/__pycache__ PointsRaceMgr/__pycache__ TagReadWrite/__pycache__ CrossMgrAlien/__pycache__ SeriesMgr/__pycache__
 	rm -rf dist build release
 	rm -f *.spec
 }
 
 downloadAppImage() {
-	if [ "$OSNAME" == "Linux" ];then
+	if [ "$OSNAME" == "Linux" ]; then
 		if [ -f $LINUXDEPLOY ]; then
 			echo "$LINUXDEPLOY already installed"
 		else
@@ -116,7 +116,7 @@ compileCode() {
     checkEnvActive
 	echo "Compiling code"
 	python3 -mcompileall -l $BUILDDIR
-	if [ $? -ne 0 ];then
+	if [ $? -ne 0 ]; then
 		echo "Compile failed. Aborting..."
 		exit 1
 	fi
@@ -142,7 +142,7 @@ buildLocale() {
 	done
 }
 
-copyAssets(){
+copyAssets() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
 
@@ -152,7 +152,7 @@ copyAssets(){
 		RESOURCEDIR="dist/${PROGRAM}/usr/bin/"
 	fi
 	mkdir -p $RESOURCEDIR
-	if [ "$OSNAME" == "Linux" ];then
+	if [ "$OSNAME" == "Linux" ]; then
                 mv dist/${PROGRAM}/* $RESOURCEDIR
                 cp -v "${BUILDDIR}/${PROGRAM}Images/${PROGRAM}.png" "dist/${PROGRAM}"
 		echo "Setting up AppImage in dist/${PROGRAM}"
@@ -174,7 +174,7 @@ copyAssets(){
 		cp -rv "${BUILDDIR}/${PROGRAM}Locale" $RESOURCEDIR
 	fi
 
-	if [ "$PROGRAM" == "CrossMgr" ];then
+	if [ "$PROGRAM" == "CrossMgr" ]; then
 		if [ -d CrossMgrHelpIndex ]
 		then
 			rm -rf CrossMgrHelpIndex
@@ -187,7 +187,7 @@ copyAssets(){
 		fi
 		cp -rv CrossMgrHelpIndex $RESOURCEDIR
 	fi
-	if [ "$PROGRAM" == "SeriesMgr" ];then
+	if [ "$PROGRAM" == "SeriesMgr" ]; then
         cd SeriesMgr
 		if [ -d CrossMgrHelpIndex ]
 		then
@@ -216,15 +216,15 @@ package() {
 	getBuildDir $PROGRAM
         checkEnvActive
 
-	if [ $OSNAME == "Darwin" ];then
-		#if [ "$PROGRAM" != "Crossmgr" ];then
+	if [ $OSNAME == "Darwin" ]; then
+		#if [ "$PROGRAM" != "Crossmgr" ]; then
 		#	cd $BUILDDIR
 		#fi
 		echo "Packaging MacApp into DMG..."
 		echo "dmgbuild -s dmgsetup.py $PROGRAM $PROGRAM.dmg"
 		dmgbuild -s dmgsetup.py -D builddir=$BUILDDIR $PROGRAM $PROGRAM.dmg
 		RESULT=$?
-		#if [ "$PROGRAM" != "Crossmgr" ];then
+		#if [ "$PROGRAM" != "Crossmgr" ]; then
 		#		cd ..
 		#fi
 		if [ $RESULT -ne 0 ]; then
@@ -268,12 +268,12 @@ envSetup() {
 		else
 			echo "Creating virtual env in $ENVDIR..."
 			$PYTHONVER -mpip install virtualenv
-            if [ $? -ne 0 ];then
+            if [ $? -ne 0 ]; then
                 echo "Virtual env setup failed. Aborting..."
                 exit 1
             fi
 			$PYTHONVER -mvirtualenv $ENVDIR -p $PYTHONVER
-            if [ $? -ne 0 ];then
+            if [ $? -ne 0 ]; then
                 echo "Virtual env setup failed. Aborting..."
                 exit 1
             fi
@@ -283,7 +283,7 @@ envSetup() {
 		echo "Already using $VIRTUAL_ENV"
 	fi
 	
-	if   [ $OSNAME == "Linux" ];then
+	if   [ $OSNAME == "Linux" ]; then
         # On Linux, the wxPython module install attempts to rebuild the module from the C/C++ source.
         # Unfortunately, this always fails in an virtualenv and/or there are other missing C/C++ libraries.
         # The build also takes >40 minutes, which is an excessive amount of time to wait for a failed build.
@@ -294,7 +294,7 @@ envSetup() {
 		
 		# New way.  Get version information from /etc/os-release.  Ignore the third version value (if present).
 		UBUNTU_RELEASE=$(awk '/^VERSION_ID\s*=/{ gsub(/[^0-9.]/,"",$0); split($0, v, "."); print v[1] "." v[2] }' /etc/os-release)
-		if [ $? -ne 0 ];then
+		if [ $? -ne 0 ]; then
 			echo "Pip requirements: could not get UBUNTU_RELEASE from /etc/os-release. Aborting..."
 			exit 1
 		fi
@@ -303,15 +303,15 @@ envSetup() {
 		pip3 install -v -r requirements.txt
 	fi
 	
-    if [ $? -ne 0 ];then
+    if [ $? -ne 0 ]; then
         echo "Pip requirements install failed. Aborting..."
         exit 1
     fi
     
-    if   [ $OSNAME == "Windows" ];then
+    if   [ $OSNAME == "Windows" ]; then
 		pip3 install pywin32
 	fi
-    if [ $OSNAME == "Darwin" ];then
+    if [ $OSNAME == "Darwin" ]; then
 		pip3 install biplist "dmgbuild>=1.4.2"
 	else
 		downloadAppImage
@@ -405,7 +405,7 @@ fixDependencies() {
 	echo "Fixing: $PROGRAM"
     cd $PROGRAM
 	python3 UpdateDependencies.py
-	if [ $? -ne 0 ];then
+	if [ $? -ne 0 ]; then
 		echo "Fix Dependencies Failed...."
 		exit 1
 	fi
