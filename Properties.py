@@ -513,6 +513,7 @@ class WebProperties( wx.Panel ):
 		race = Model.race
 		race.email = self.email.GetValue().strip()
 		race.gaTrackingID = re.sub( '[^A-Z0-9]+', '-', self.gaTrackingID.GetValue().strip().upper() )
+		race.googleMapsApiKey = self.googleMapsApiKey.GetValue().strip()
 		race.headerImage = self.headerImage
 
 #------------------------------------------------------------------------------------------------

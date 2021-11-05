@@ -216,6 +216,9 @@ class LapCounter( wx.Panel ):
 	
 	def OnRightClick( self, event ):
 		race = Model.race
+		if not race:
+			return
+		
 		self.xClick, self.yClick = event.GetX(), event.GetY()
 
 		for (x, y, w, h), category in zip(self.tessellate(len(self.labels)), race.getCategories(startWaveOnly=True)):
