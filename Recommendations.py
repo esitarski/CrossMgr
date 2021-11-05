@@ -153,6 +153,9 @@ class Recommendations( wx.Panel ):
 				data[3].append( '{}'.format(recommendation) )
 			
 			self.isEmpty = False
+			
+			if not externalInfo:
+				append( issue=_('No Excel Spreadsheet Data'), recommendation=_('Link to an Excel spreadsheet to get Name and Team information.') )
 
 			# Check for Excel errors (very bad!).
 			for num, errorStr in excelErrors:
