@@ -375,7 +375,7 @@ buildall() {
 			updateversion
 			for program in $PROGRAMS
 			do
-                if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo"  -o "$program" == "SprintMgr"]; then
+                if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo"  -o "$program" == "SprintMgr" ]; then
                     fixDependencies $program
                 fi
 				getVersion $program
