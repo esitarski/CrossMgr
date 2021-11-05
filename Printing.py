@@ -184,12 +184,6 @@ class ChoosePrintCategoriesPodiumDialog( wx.Dialog ):
 		vs.Add( hs, flag = wx.EXPAND|wx.ALL, border = 4 )
 		vs.Add( self.includePrimesInPrintoutCheckBox, flag = wx.EXPAND|wx.ALL, border = 4 )
 		
-		hs = wx.BoxSizer( wx.HORIZONTAL )
-		hs.Add( self.okButton )
-		hs.Add( self.cancelButton, flag = wx.LEFT, border = 16 )
-		
-		vs.Add( hs, flag = wx.ALL|wx.ALIGN_CENTER, border = 4 )
-		
 		btnSizer = self.CreateStdDialogButtonSizer( wx.OK|wx.CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, id=wx.ID_CANCEL )
