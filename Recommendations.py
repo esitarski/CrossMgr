@@ -154,13 +154,14 @@ class Recommendations( wx.Panel ):
 			
 			self.isEmpty = False
 			
-			if not externalInfo:
-				append( issue=_('No Excel Spreadsheet Data'), recommendation=_('Link to an Excel spreadsheet to get Name and Team information.') )
-
 			# Check for Excel errors (very bad!).
 			for num, errorStr in excelErrors:
 				append( num, getName(num), 'Excel', '{} {}'.format(_('Fix'), errorStr) )
-			
+
+			# Check if external info exists.
+			if not externalInfo:
+				append( issue=_('No Excel Spreadsheet Data'), recommendation=_('Link to an Excel spreadsheet for Name and Team info.') )
+
 			firstRiderInCategory = []
 			entries = race.interpolate()
 			if entries:

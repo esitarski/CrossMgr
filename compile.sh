@@ -621,6 +621,7 @@ do
 		;;
 		f) fixDependencies 'SeriesMgr'
 		   fixDependencies 'CrossMgrVideo'
+		   fixDependencies 'SprintMgr'
 		;;
 		*) doHelp
 		;;

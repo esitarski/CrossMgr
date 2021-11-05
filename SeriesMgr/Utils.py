@@ -45,7 +45,7 @@ else:
 
 	if os.path.isdir( os.path.join(dirName, 'SeriesMgrImages') ):
 		pass
-	elif os.path.isdir( '/usr/local/CrossMgrImages' ):
+	elif os.path.isdir( '/usr/local/SeriesMgrImages' ):
 		dirName = '/usr/local'
 
 imageFolder = os.path.join(dirName, 'SeriesMgrImages')
@@ -261,7 +261,11 @@ if sys.platform.startswith('win'):
 elif sys.platform.startswith('darwin'):
 	def Play( soundFile ):
 		try:
-			subprocess.Popen(['afplay', os.path.join(imageFolder, soundFile)])
+			subprocess.Popen(
+				['afplay', os.path.join(imageFolder, soundFile)],
+				shell=False, stdin=None, stdout=None, stderr=None,
+				close_fds=True,
+			)
 		except Exception:
 			pass
 		return True
@@ -269,7 +273,11 @@ elif sys.platform.startswith('darwin'):
 else:	# Try Linux
 	def Play( soundFile ):
 		try:
-			subprocess.Popen(['aplay', '-q', os.path.join(imageFolder, soundFile)])
+			subprocess.Popen(
+				['aplay', '-q', os.path.join(imageFolder, soundFile)],
+				shell=False, stdin=None, stdout=None, stderr=None,
+				close_fds=True,
+			)
 		except Exception as e:
 			pass
 		return True
