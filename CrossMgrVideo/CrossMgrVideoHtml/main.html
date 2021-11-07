@@ -377,9 +377,11 @@ function showImages() {
 	restoreView( false );
 }
 
-function onLoadImage() {
-	// If all images have been loaded, show them.
-	if( ++loadedImageCount >= imagesCur.length )
+function onLoadImage( iFrame ) {
+	// If the zoomed image has loaded, or there is no zoom image and all images have been loaded, show them.
+	++loadedImageCount;
+	const trig = getTriggerCur();
+	if( trig.zoom_frame >= 0 ? trig.zoom_frame == iFrame : loadedImageCount >= imagesCur.length )
 		showImages();
 }
 
@@ -419,18 +421,32 @@ function updateImages( iTrigger ) {
 	loadedImageCount = imagesCur.length = 0;
 	iImageCur = 0;
 	const tsJpgIds = trig.tsJpgIds;
-	for( let i = 0; i < tsJpgIds.length; ++i ) {
-		let img = document.createElement( 'img' );
-		img.onload = onLoadImage;
-		img.src = 'img' + tsJpgIds[i][1] + mods + '.jpeg';
-		imagesCur.push( img );
-	}
 	
+	// Create all the images.
+	// Also, create an array of image indexes.
+	let idx = [];
+	for( let i = 0; i < tsJpgIds.length; ++i ) {
+		imagesCur.push( document.createElement('img') );
+		idx.push( i );		
+	}
+	// Sort the indexes by distance from the zoom frame.
+	idx.sort( function(a, b) { return Math.abs(a-trig.zoom_frame) - Math.abs(b-trig.zoom_frame); } );
+	
+	// Load the images by increasing distance from the zoom frame.
+	// Do this so we can show the zoom frame first, then sneakily load images before and after it.
+	// If there is no zoom frame, the frames will just load first to last.
+	function setImage( i ) {
+		let img = imagesCur[i];
+		img.onload = function( iFrame ) { return function () { onLoadImage(iFrame); } }( i );
+		img.src = 'img' + tsJpgIds[i][1] + mods + '.jpeg';
+	}
+	for( let i = 0; i < tsJpgIds.length; ++i )
+		setImage( idx[i] );
+		
 	// Update the trigger table row.
 	let rows = document.getElementById('id_trigger_table').rows;
-	for( let i = 1; i < rows.length; ++i ) {
+	for( let i = 1; i < rows.length; ++i )
 		rows[i].classList.toggle('highlight', i-1==iTrigger);	// account for the header row.
-	}
 
 	// Update the page title.
 	updateImageTitle();
@@ -853,7 +869,7 @@ function OnLoad() {
 		<button title="Play Forward"				onclick="playStop();play(1);"	><img src='play.png'/></button>
 		<button title="Last Frame"					onclick="goImage(1e10);"		><img src='fast-forward.png'/></button>
 		</span>
-		mouse-wheel to scroll by frame | click-and-drag to zoom |
+		mouse-wheel to scroll | click-drag to zoom
 		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_contrast">Contrast</label>
 		
