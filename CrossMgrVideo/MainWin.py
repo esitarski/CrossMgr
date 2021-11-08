@@ -96,7 +96,11 @@ import Resolutions
 cameraResolutionChoices = tuple( Resolutions.resolutions + ['MAXxMAX'] )
 
 def pixelsFromRes( res ):
-	return tuple( (int(v) if v.isdigit() else 20000) for v in res.split(' ')[0].split('x') )
+	res = re.split( '[^0-9]', res )
+	try:
+		return int(res[0]), int(res[1])
+	except ValueError:
+		return 20000, 20000
 
 def getCameraResolutionChoice( resolution ):
 	for i, res in enumerate(cameraResolutionChoices):

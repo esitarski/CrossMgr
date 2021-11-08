@@ -24,11 +24,6 @@ UW5K	5120×2160	11.059	Unknown
 5K	5120×2880	14.746	Unknown
 WHXGA	5120×3200	16.384	Unknown
 HSXGA	5120×4096	20.972	Unknown
-WHSXGA	6400×4096	26.214	Unknown
-HUXGA	6400×4800	30.720	Unknown
-8K UHD	7680×4320	33.178	Unknown
-WHUXGA	7680×4800	36.864	Unknown
-UW10K	10240×4320	44.237	Unknown
 '''
 
 resolutions = ['{1} [{0}]'.format(*line.split('\t')[:2]) for line in resolutions.split('\n') if line][1:]
