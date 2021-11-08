@@ -92,20 +92,11 @@ def getInfo():
 		for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '') } )
 	return info
 
-cameraResolutionChoices = (
-	'320x240',
-	'640x480',
-	'800x600',
-	'1024x768',
-	'1280x720',
-	'1280x1024',
-	'1920x1080',
-	'1600x1200',
-	'MAXxMAX',
-)
+import Resolutions
+cameraResolutionChoices = tuple( Resolutions.resolutions + ['MAXxMAX'] )
 
 def pixelsFromRes( res ):
-	return tuple( (int(v) if v.isdigit() else 10000) for v in res.split('x') )
+	return tuple( (int(v) if v.isdigit() else 20000) for v in res.split(' ')[0].split('x') )
 
 def getCameraResolutionChoice( resolution ):
 	for i, res in enumerate(cameraResolutionChoices):
