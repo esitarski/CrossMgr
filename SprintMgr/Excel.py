@@ -8,17 +8,13 @@ import xml.etree.ElementTree
 from mmap import mmap, ACCESS_READ
 
 def toAscii( s ):
-	if s is None or s == '':
+	if not s:
 		return ''
-	
-	if isinstance(s, str):
-		ret = unicodedata.normalize('NFKD', '{}'.format(s)).encode('ascii','ignore').decode()
-	else:
-		ret = str(s)
-	
+	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if isinstance(s, str) else str(s)
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret
+
 #----------------------------------------------------------------------------
 
 class ReadExcelXls:
