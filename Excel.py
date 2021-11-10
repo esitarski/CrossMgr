@@ -8,10 +8,18 @@ import unicodedata
 import xml.etree.ElementTree
 from mmap import mmap, ACCESS_READ
 
+
 def toAscii( s ):
-	if not s:
+	if s is None:
 		return ''
-	ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore') if isinstance(s, str) else str(s)
+		
+	if isinstance( s, bytes ):
+		ret = s.encode()
+	elif isinstance( s, str ):
+		ret = unicodedata.normalize('NFKD', s).encode('ascii','ignore').decode()
+	else:
+		ret = str( s )
+	
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret

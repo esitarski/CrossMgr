@@ -221,9 +221,6 @@ class MainWin( wx.Frame ):
 		self.menuBar.Append( self.fileMenu, "&File" )
 
 		self.optionsMenu = wx.Menu()
-		item = self.optionsMenu.Append( wx.ID_ANY, _("Copy Log File to &Clipboard"), _("Copy Log File to &Clipboard") )
-		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, item )
-		
 		item = self.optionsMenu.Append( wx.ID_ANY, _("Set &Graphic..."), _("Set Graphic for Output") )
 		self.Bind(wx.EVT_MENU, self.menuSetGraphic, item )
 		
@@ -231,14 +228,19 @@ class MainWin( wx.Frame ):
 
 		#-----------------------------------------------------------------------
 		
-		self.optionsMenu = wx.Menu()
-		item = self.optionsMenu.Append( wx.ID_ANY, _("Set &Root Folder"), _("Set Root Folder") )
+		self.toolsMenu = wx.Menu()
+		item = self.toolsMenu.Append( wx.ID_ANY, _("Set &Root Folder"), _("Set Root Folder") )
 		self.Bind(wx.EVT_MENU, self.menuSetRootFolder, item )
 		
-		item = self.optionsMenu.Append( wx.ID_ANY, _("Delete All Races..."), _("Delete All Races") )
+		item = self.toolsMenu.Append( wx.ID_ANY, _("Delete All Races..."), _("Delete All Races") )
 		self.Bind(wx.EVT_MENU, self.menuDeleteAllRaces, item )
 		
-		self.menuBar.Append( self.optionsMenu, _("&Tools") )
+		self.toolsMenu.AppendSeparator()
+
+		item = self.toolsMenu.Append( wx.ID_ANY , _("Copy Log File to &Clipboard..."), _("Copy Log File to &Clipboard") )
+		self.Bind(wx.EVT_MENU, self.menuCopyLogFileToClipboard, item )
+		
+		self.menuBar.Append( self.toolsMenu, _("&Tools") )
 
 		#-----------------------------------------------------------------------
 
