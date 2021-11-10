@@ -639,7 +639,7 @@ class TeamResults(wx.Panel):
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
-		self.grid.CreateGrid( 0, len(HeaderNamesTemplate)+1 )
+		self.grid.CreateGrid( 0, len(HeaderNamesTemplate)+2 )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.EnableReorderRows( False )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
@@ -772,11 +772,15 @@ class TeamResults(wx.Panel):
 		with wx.BusyCursor() as wait:
 			self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 		
+		if not self.raceResults:
+			Utils.AdjustGridSize( self.grid, rowsRequired=0 )
+			return			
+		
 		self.fixCategories()
 		
 		categoryName = self.categoryChoice.GetStringSelection()
 		if not categoryName or not (scoreByPoints or scoreByTime):
-			Utils.AdjustGridSize( self.grid, 0, 0 )
+			Utils.AdjustGridSize( self.grid, rowsRequired=0)
 			return
 		
 		self.grid.ClearGrid()
