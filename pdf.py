@@ -146,4 +146,4 @@ class PDF( fpdf.FPDF ):
 		return widthMax, heightMax
 	
 	def to_bytes( self ):
-		return self.output(dest='S')
+		return bytes( self.output() )
