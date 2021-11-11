@@ -362,6 +362,7 @@ OutputDir=$releasepath
 		exit 1
 	}
 	$inno = "${innolocaton}ISCC.exe"
+	Write-Host "$inno"  "${builddir}\${program}.iss"
 	Start-Process -Wait -NoNewWindow -FilePath "$inno" -ArgumentList "${builddir}\${program}.iss"
 	if ($? -eq $false)
 	{
@@ -731,6 +732,7 @@ if ($all -eq $true)
 		'PointsRaceMgr',
 		'SprintMgr'
 		)
+	$virus = $true
 }
 if ($setupenv -eq $true)
 {
