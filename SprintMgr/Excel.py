@@ -1,4 +1,5 @@
 import os
+import re
 import math
 import xlrd
 import openpyxl
@@ -6,6 +7,7 @@ import datetime
 import unicodedata
 import xml.etree.ElementTree
 from mmap import mmap, ACCESS_READ
+
 
 def toAscii( s ):
 	if s is None:
@@ -21,6 +23,28 @@ def toAscii( s ):
 	if ret.endswith( '.0' ):
 		ret = ret[:-2]
 	return ret
+
+def timeFromStr( value ):
+	if not isinstance(value, str):
+		return value
+		
+	# Convert times with AM/PM to 24-hour format.
+	# First check that we have an am/pm time.
+	# This will accept formats like 9:00a, 09:00am, 09:00 A, 09:00 AM, etc.
+	v = value.strip().lower()
+	if not ':' in v or not ('a' in v or 'p' in v) or not v[0].isdigit() or not re.match('^[0-9: apm]+$', v):
+		return value
+	
+	isPM = ('p' in v)			# Check for pm.
+	fields = re.sub( '[^0-9:]', '', v ).split(':')
+	while len(fields) < 3:		# Fix missing seconds.
+		fields.append( '0' )
+	if len(fields) > 3:			# Ignore extra fields.
+		fields = fields[:3]
+	hh, mm, ss = [int(f or 0) for f in fields]
+	if isPM and hh != 12:		# Adjust hours to 24-hour format.
+		hh += 12
+	return '{:02d}:{:02d}:{:02d}'.format( hh, mm, ss );
 
 #----------------------------------------------------------------------------
 
@@ -100,7 +124,7 @@ class ReadExcelXls:
 								value = "{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}".format( *datetuple )
 			elif type == 5:
 				value = xlrd.error_text_from_code[value]
-			values.append(value)
+			values.append(timeFromStr(value))
 		return values
 		
 	def iter_list(self, sname, date_as_tuple=False):
@@ -148,9 +172,8 @@ class ReadExcelXlsx:
 					elif isinstance(value, datetime.datetime):
 						value = value.strftime( '%Y/%m/%d %H:%M:%S.%f' )
 					if isinstance(value, str) and value.endswith( '.000000' ):
-						value = value[:-7]
-				
-			values.append( value )
+						value = value[:-7]				
+			values.append( timeFromStr(value) )
 		return values
 		
 	def iter_list(self, sname, date_as_tuple=False):

@@ -741,7 +741,7 @@ if ($fixsmgr -eq $true)
 {
 	FixDependencies("SeriesMgr")
 	FixDependencies("CrossMgrVideo")
-#	FixDependencies("CrossMgrCamera")
+	FixDependencies("SprintMgr")
 }
 
 if ($clean -eq $true)
