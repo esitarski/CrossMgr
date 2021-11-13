@@ -254,7 +254,7 @@ class Race:
 		self.rankBy = Race.RankByPoints		# 0 = Points only, 1 = Distance, then points, 2 = 
 		self.date = datetime.date.today()
 		self.pointsForLapping = 20
-		self.doublePointsForLastSprint = False
+		self.doublePointsForLastSprint = True
 		self.snowball = False
 		self.pointsForPlace = Race.pointsForPlaceDefault.copy()
 
@@ -265,6 +265,18 @@ class Race:
 		self.sprintCount = 0
 
 		self.isChangedFlag = True
+	
+	def getRaceType( self ):
+		if self.snowball:
+			return 'Snowball Race'
+		
+		if (	self.rankBy == Race.RankByPoints and
+				self.pointsForLapping == 20 and
+				self.doublePointsForLastSprint == True
+			):
+			return 'Points Race' if len(self.pointsForPlace) > 1 else 'Tempo Race'
+		
+		return ''
 	
 	def getDistance( self ):	# Always return in km
 		return self.courseLength * self.laps / (1000.0 if self.courseLengthUnit == 0 else 1.0)
