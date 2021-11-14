@@ -719,8 +719,11 @@ class MainWin( wx.Frame ):
 		OpenHelp()
 		
 	def onWeb( self, event ):
+		url = 'http://{}:{}'.format( GetMyIP(), WebServer.PORT_NUMBER )
 		dateStrInitial = self.date.GetValue().Format('%Y-%m-%d')
-		url = 'http://{}:{}?date={}'.format( GetMyIP(), WebServer.PORT_NUMBER, dateStrInitial )
+		dateStrCur = datetime.now().strftime('%Y-%m-%d')
+		if dateStrInitial != dateStrCur:
+			url += '?date={}'.format( dateStrInitial )
 		webbrowser.open( url, new=0, autoraise=1 )
 		
 	def exportDB( self, event ):
