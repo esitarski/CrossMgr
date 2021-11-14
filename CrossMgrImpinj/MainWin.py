@@ -695,7 +695,7 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.start )
 		
 	def doAutoDetect( self, event ):
-		with wx.BeginBusyCursor():
+		with wx.BusyCursor():
 			self.gracefulShutdown()
 			self.shutdown()
 			impinjHost, crossMgrHost = AutoDetect(ImpinjInboundPort)[0], '127.0.0.1'
