@@ -20,7 +20,7 @@ bs4
 trueskill
 pybabel
 opencv-python==4.5.3.56
-pyinstaller
+pyinstaller==4.5.1
 piexif
 simplejpeg
 virustotal-api
