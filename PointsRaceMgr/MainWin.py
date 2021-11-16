@@ -672,13 +672,9 @@ hr { clear: both; }
 		if not race:
 			return False
 			
-		self.commit()
-		
-		raceType = race.getRaceType()
-		if raceType:
-			raceType = ' ' + raceType
+		self.commit()		
 		dlg = wx.FileDialog( self, message="Save a Race File",
-							defaultFile = Utils.RemoveDisallowedFilenameChars( race.category + raceType ) + '.tp5',
+							defaultFile = '',
 							wildcard = 'PointsRaceMgr files (*.tp5)|*.tp5',
 							style=wx.FD_SAVE | wx.FD_CHANGE_DIR )
 		while True:

@@ -328,21 +328,21 @@ class MainWin( wx.Frame ):
 			self.menuBar.Append(self.helpMenu, "&Help")
 
 		self.SetMenuBar(self.menuBar)
-		self.SetBackgroundColour( wx.Colour(232,232,232) )
+		#self.SetBackgroundColour( wx.Colour(232,232,232) )
 		
 		self.LightGreen = wx.Colour(153,255,153)
 		self.LightRed = wx.Colour(255,153,153)
 		
 		font = self.GetFont()
-		bigFont = wx.Font( int(font.GetPointSize() * 1.2), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
-		titleFont = wx.Font( int(bigFont.GetPointSize()*2.2), bigFont.GetFamily(), bigFont.GetStyle(), bigFont.GetWeight() )
+		bigFont = wx.Font( wx.FontInfo(int(font.GetPointSize() * 1.2)).Bold() )
+		titleFont = wx.Font( wx.FontInfo(int(font.GetPointSize() * 2.2)).Bold() )
 		
 		self.vbs = wx.BoxSizer( wx.VERTICAL )
 		
 		bs = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.reset = RoundButton(self, label='Reset', size=(80, 80))
-		self.reset.SetBackgroundColour( wx.WHITE )
+		#self.reset.SetBackgroundColour( wx.WHITE )
 		self.reset.SetForegroundColour( wx.Colour(0,128,128) )
 		self.reset.SetFontToFitLabel()	# Use the button's default font, but change the font size to fit the label.
 		self.reset.Bind( wx.EVT_BUTTON, self.doReset )
@@ -505,9 +505,12 @@ class MainWin( wx.Frame ):
 		self.strayTagsLabel = wx.StaticText(self, label='Stray Tags:         ')
 		cmcs.Add( self.strayTagsLabel, flag=wx.LEFT|wx.RIGHT, border=4 )
 		
-		self.strays = wx.ListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN, size=(-1,50) )
+		self.strays = wx.ListCtrl( self, style=wx.LC_REPORT, size=(-1,50) )
 		self.strays.InsertColumn( 0, 'Tag', width=wx.LIST_AUTOSIZE_USEHEADER )
 		self.strays.InsertColumn( 1, 'Time', width=wx.LIST_AUTOSIZE_USEHEADER )
+		
+		if wx.SystemSettings.GetAppearance().IsDark():
+			self.strays.SetForegroundColour( wx.WHITE )
 	
 		cmcs.Add( self.strays, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
@@ -883,7 +886,7 @@ class MainWin( wx.Frame ):
 		
 		if not self.messageQ:
 			return
-		while 1:
+		while True:
 			try:
 				d = self.messageQ.get( False )
 			except Empty:
@@ -897,6 +900,7 @@ class MainWin( wx.Frame ):
 			message = ' '.join( '{}'.format(x) for x in d[1:] )
 			if   d[0] == 'Impinj':
 				if 'state' in d:
+					self.impinjMessages.messageList.SetForegroundColour( wx.BLACK if d[2] else wx.BLACK )
 					self.impinjMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
 				else:
 					self.impinjMessages.write( message )
@@ -916,6 +920,7 @@ class MainWin( wx.Frame ):
 				self.refreshMethodName()
 			elif d[0] == 'Impinj2JChip':
 				if 'state' in d:
+					self.crossMgrMessages.messageList.SetForegroundColour( wx.BLACK if d[2] else wx.BLACK )
 					self.crossMgrMessages.messageList.SetBackgroundColour( self.LightGreen if d[2] else self.LightRed )
 				else:
 					self.crossMgrMessages.write( message )

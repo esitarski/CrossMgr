@@ -9,7 +9,7 @@ import random
 import traceback
 from collections import defaultdict
 from six.moves.queue import Queue, Empty
-from Utils import readDelimitedData, timeoutSecs, Bell
+from Utils import readDelimitedData, timeoutSecs, Beep
 
 try:
 	from pyllrp.pyllrp import *
@@ -393,7 +393,7 @@ class Impinj:
 			self.antennaReadCount,
 			)
 		)
-		Utils.Beep()
+		Beep()
 		return True
 	
 	def handleTagGroup( self ):
