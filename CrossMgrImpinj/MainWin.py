@@ -510,7 +510,7 @@ class MainWin( wx.Frame ):
 		self.strays.InsertColumn( 1, 'Time', width=wx.LIST_AUTOSIZE_USEHEADER )
 		
 		if wx.SystemSettings.GetAppearance().IsDark():
-			self.strays.SetForegroundColour( wx.BLACK )
+			self.strays.SetForegroundColour( wx.WHITE )
 	
 		cmcs.Add( self.strays, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=4 )
 		
