@@ -12,7 +12,7 @@ from io import StringIO
 import Utils
 
 #----------------------------------------------------------------------
-class memoize(object):
+class memoize:
 	"""Decorator that caches a function's return value each time it is called.
 	If called later with the same arguments, the cached value is returned, and
 	not re-evaluated.
@@ -58,7 +58,7 @@ def RaceNameFromPath( p ):
 	raceName = raceName.replace( ' ', '-', 2 )
 	return raceName
 
-class PointStructure( object ):
+class PointStructure:
 
 	participationPoints = 0
 	dnfPoints = 0
@@ -143,10 +143,10 @@ class PointStructure( object ):
 		self.pointsForPlace = dict( (i+1, v) for i, v in enumerate(sorted(values, reverse=True)) )
 		
 	def __repr__( self ):
-		return u'({}: {} + {}, dnf={})'.format( self.name, self.getStr(), self.participationPoints, self.dnfPoints )
+		return '({}: {} + {}, dnf={})'.format( self.name, self.getStr(), self.participationPoints, self.dnfPoints )
 
-class Race( object ):
-	grade = u'A'
+class Race:
+	grade = 'A'
 	
 	IndividualResultsOnly = 0
 	TeamResultsOnly = 1
@@ -160,7 +160,7 @@ class Race( object ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
 		self.teamPointStructure = teamPointStructure
-		self.grade = grade or u'A'
+		self.grade = grade or 'A'
 		
 	def getRaceName( self ):
 		return RaceNameFromPath( self.fileName )
@@ -176,8 +176,8 @@ class Race( object ):
 	def __repr__( self ):
 		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
 
-class Category( object ):
-	name = u''
+class Category:
+	name = ''
 	iSequence = 0
 	publish = False
 	teamN = 3
@@ -203,18 +203,19 @@ class Category( object ):
 			self.name, self.iSequence, self.publish, self.teamN, self.useNthScore, self.teamPublish
 		)
 
-class SeriesModel( object ):
+class SeriesModel:
 	DefaultPointStructureName = 'Regular'
 	useMostEventsCompleted = False
 	scoreByTime = False
 	scoreByPercent = False
 	scoreByTrueSkill = False
 	considerPrimePointsOrTimeBonus = True
+	scoreByPointsInput = False
 	
-	licenseLinkTemplate = u''	# Used to create an html link from the rider's license number in the html output.
+	licenseLinkTemplate = ''	# Used to create an html link from the rider's license number in the html output.
 	bestResultsToConsider = 0	# 0 == all
 	mustHaveCompleted = 0		# Number of events to complete to be eligible for results.
-	organizer = u''
+	organizer = ''
 	upgradePaths = []
 	upgradeFactors = []
 	showLastToFirst = True		# If True, show the latest races first in the output.
@@ -257,7 +258,7 @@ class SeriesModel( object ):
 			r.postReadFix()
 	
 	def setPoints( self, pointsList ):
-		oldPointsList = [(p.name, p.name, p.getStr(), u'{}'.format(p.participationPoints), u'{}'.format(p.dnfPoints))
+		oldPointsList = [(p.name, p.name, p.getStr(), '{}'.format(p.participationPoints), '{}'.format(p.dnfPoints))
 			for p in self.pointStructures]
 		if oldPointsList == pointsList:
 			return

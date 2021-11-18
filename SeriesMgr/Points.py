@@ -89,9 +89,13 @@ class Points(wx.Panel):
 		
 		#--------------------------------------------------------------------------
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		hb = wx.BoxSizer( wx.HORIZONTAL )
 		self.considerPrimePointsOrTimeBonus = wx.CheckBox( self, label='Consider Points or Time Bonuses from CrossMgr Primes' )
 		self.considerPrimePointsOrTimeBonus.SetValue( True )
-		bsizer.Add( self.considerPrimePointsOrTimeBonus, 0, flag=wx.ALL, border=4 )
+		self.scoreByLastEventPoints = wx.CheckBox( self, label='Score by Last Event Points' )
+		hb.Add( self.considerPrimePointsOrTimeBonus )
+		hb.Add( self.scoreByLastEventPoints, flag=wx.LEFT, border=8 )
+		bsizer.Add( hb, 0, flag=wx.ALL, border=4 )
 		
 		#--------------------------------------------------------------------------
 		bsizer.Add( wx.StaticLine(self), 1, flag=wx.EXPAND|wx.ALL, border=4 )
@@ -127,9 +131,9 @@ class Points(wx.Panel):
 			'Number of 1st, 2nd, 3rd then 4th Place Finishes',
 			'Number of 1st, 2nd, 3rd, 4th then 5th Place Finishes',
 		])
-		self.numPlacesTieBreaker.SetLabel( u'If Riders are still Tied on Points:' )
+		self.numPlacesTieBreaker.SetLabel( 'If Riders are still Tied on Points:' )
 		bsizer.Add( self.numPlacesTieBreaker, 0, flag=wx.ALL|wx.EXPAND, border=2 )
-		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label=u'Points are considered separately by Grade.  If Riders are still Tied on Points, use most Recent Results')
+		self.ifRidersAreStillTiedOnPoints = wx.StaticText(self, label='Points are considered separately by Grade.  If Riders are still Tied on Points, use most Recent Results')
 		bsizer.Add( self.ifRidersAreStillTiedOnPoints, flag=wx.ALL, border=4 )
 
 		self.headerNames = ['Name', 'OldName', 'Depth', 'Points for Position', 'Participation', 'DNF']
@@ -139,7 +143,7 @@ class Points(wx.Panel):
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 50, len(self.headerNames) )
 		for col in range(self.grid.GetNumberCols()):
-			self.grid.SetColLabelValue( col, self.headerNames[col] + (u'       ' if  self.headerNames[col] == 'DNF' else '') )
+			self.grid.SetColLabelValue( col, self.headerNames[col] + ('       ' if  self.headerNames[col] == 'DNF' else '') )
 		
 		attr = gridlib.GridCellAttr()
 		attr.SetReadOnly( True )
@@ -189,7 +193,7 @@ class Points(wx.Panel):
 	
 	def updateDepth( self, row ):
 		v = self.grid.GetCellValue(row, self.PointsCol).strip()
-		depth = '{}'.format(len(v.split())) if v else u''
+		depth = '{}'.format(len(v.split())) if v else ''
 		self.grid.SetCellValue( row, self.DepthCol, depth )
 	
 	def onGridChange( self, event ):
@@ -220,6 +224,7 @@ class Points(wx.Panel):
 		wx.CallAfter( self.gridAutoSize )
 		
 		self.considerPrimePointsOrTimeBonus.SetValue( model.considerPrimePointsOrTimeBonus )
+		self.scoreByLastEventPoints.SetValue( model.scoreByPointsInput )
 		self.bestResultsToConsider.SetSelection( model.bestResultsToConsider )
 		self.mustHaveCompleted.SetSelection( model.mustHaveCompleted )
 		
@@ -242,25 +247,27 @@ class Points(wx.Panel):
 		pointsList = []
 		for row in range(self.grid.GetNumberRows()):
 			if( self.grid.GetCellValue(row, self.NameCol).strip() ):
-				pointsList.append( (self.grid.GetCellValue(row, self.NameCol),
-									self.grid.GetCellValue(row, self.OldNameCol),
-									self.grid.GetCellValue(row, self.PointsCol),
-									self.grid.GetCellValue(row, self.ParticipationCol),
-									self.grid.GetCellValue(row, self.DNFCol),
-									) )
+				pointsList.append( (
+					self.grid.GetCellValue(row, self.NameCol),
+					self.grid.GetCellValue(row, self.OldNameCol),
+					self.grid.GetCellValue(row, self.PointsCol),
+					self.grid.GetCellValue(row, self.ParticipationCol),
+					self.grid.GetCellValue(row, self.DNFCol),
+				) )
 		
 		model = SeriesModel.model
 		model.setPoints( pointsList )
 		
 		modelUpdate = {
-			'considerPrimePointsOrTimeBonus': self.considerPrimePointsOrTimeBonus.GetValue(),
-			'bestResultsToConsider': self.bestResultsToConsider.GetSelection(),
-			'mustHaveCompleted': self.mustHaveCompleted.GetSelection(),
-			'useMostEventsCompleted': self.mostEventsCompleted.GetValue(),
-			'numPlacesTieBreaker': self.numPlacesTieBreaker.GetSelection(),
-			'scoreByTime': self.scoreByTime.GetValue(),
-			'scoreByPercent': self.scoreByPercent.GetValue(),
-			'scoreByTrueSkill': self.scoreByTrueSkill.GetValue(),
+			'considerPrimePointsOrTimeBonus':	self.considerPrimePointsOrTimeBonus.GetValue(),
+			'scoreByPointsInput':				self.scoreByLastEventPoints.GetValue(),
+			'bestResultsToConsider':			self.bestResultsToConsider.GetSelection(),
+			'mustHaveCompleted':				self.mustHaveCompleted.GetSelection(),
+			'useMostEventsCompleted':			self.mostEventsCompleted.GetValue(),
+			'numPlacesTieBreaker':				self.numPlacesTieBreaker.GetSelection(),
+			'scoreByTime':						self.scoreByTime.GetValue(),
+			'scoreByPercent':					self.scoreByPercent.GetValue(),
+			'scoreByTrueSkill':					self.scoreByTrueSkill.GetValue(),
 		}
 		
 		for attr, value in modelUpdate.items():

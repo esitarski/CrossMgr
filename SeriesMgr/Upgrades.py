@@ -16,21 +16,21 @@ class Upgrades(wx.Panel):
 		box = wx.StaticBox( self, -1, 'Upgrades' )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
-		example = wx.StaticText( self, label=(u'\n'.join( [
-				u'"Category Upgrade Progression" is the sequence of Category upgrades, lowest to highest.',
-				u'"Factor" is the fraction of previous points than can be carried forward from the current category',
-				u'to the Upgrade category.',
-				u'',
-				u'For example:',
-				u'Category Upgrade Progression:     Beginner (Men), Novice (Men), Intermediate (Men), Expert (Men)',
-				u'Factor:        0.5',
-				u'',
-				u'This would specify that if a rider is upgraded from Beginner to Novice (or Novice to Intermediate,',
-				u'or Intermediate to Expert), 0.5 of the total points earned in the previous category carry forward',
-				u'to the new category.',
-				u'',
-				u'Upgrades only apply when the Scoring Criteria is by Points.  They have no effect on other scoring systems.',
-				u'',
+		example = wx.StaticText( self, label=('\n'.join( [
+				'"Category Upgrade Progression" is the sequence of Category upgrades, lowest to highest.',
+				'"Factor" is the fraction of previous points than can be carried forward from the current category',
+				'to the Upgrade category.',
+				'',
+				'For example:',
+				'Category Upgrade Progression:     Beginner (Men), Novice (Men), Intermediate (Men), Expert (Men)',
+				'Factor:        0.5',
+				'',
+				'This would specify that if a rider is upgraded from Beginner to Novice (or Novice to Intermediate,',
+				'or Intermediate to Expert), 0.5 of the total points earned in the previous category carry forward',
+				'to the new category.',
+				'',
+				'Upgrades only apply when the Scoring Criteria is by Points.  They have no effect on other scoring systems.',
+				'',
 			]))
 		)
 		
@@ -38,15 +38,15 @@ class Upgrades(wx.Panel):
 		fgs.AddGrowableCol( 1, proportion=1 )
 		
 		fgs.Add( wx.StaticText(self, label='') )
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format('Category Upgrade Progression')) )
-		fgs.Add( wx.StaticText(self, label=u'{}:'.format('Factor')) )
+		fgs.Add( wx.StaticText(self, label='{}:'.format('Category Upgrade Progression')) )
+		fgs.Add( wx.StaticText(self, label='{}:'.format('Factor')) )
 		self.upgradePaths, self.upgradeFactors = [], []
 		for i in range(8):
 			self.upgradePaths.append( wx.TextCtrl(self) )
 			self.upgradeFactors.append( FS.FloatSpin(self, min_val=0.0, max_val=1.0, increment=0.01, value=0.5, agwStyle=FS.FS_RIGHT ) )
 			self.upgradeFactors[-1].SetFormat( '%f' )
 			self.upgradeFactors[-1].SetDigits( 2 )
-			fgs.Add( wx.StaticText(self, label=u'{}.'.format(i+1) ), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( wx.StaticText(self, label='{}.'.format(i+1) ), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.upgradePaths[-1], 1, flag=wx.EXPAND )
 			fgs.Add( self.upgradeFactors[-1], 0 )
 
@@ -60,7 +60,7 @@ class Upgrades(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		for row in range(len(self.upgradePaths)):
-			self.upgradePaths[row].SetValue(model.upgradePaths[row] if row < len(model.upgradePaths) else u'' )			
+			self.upgradePaths[row].SetValue(model.upgradePaths[row] if row < len(model.upgradePaths) else '' )			
 			self.upgradeFactors[row].SetValue(model.upgradeFactors[row] if row < len(model.upgradeFactors) else 0.5 )
 	
 	def commit( self ):
@@ -68,8 +68,8 @@ class Upgrades(wx.Panel):
 		upgradeFactors = []
 		for row in range(len(self.upgradePaths)):
 			path = self.upgradePaths[row].GetValue().strip()
-			components = [re.sub(r'\s+', u' ', p).strip() for p in path.split(u',')]
-			cleanPath = u', '.join( c for c in components if c )
+			components = [re.sub(r'\s+', ' ', p).strip() for p in path.split(',')]
+			cleanPath = ', '.join( c for c in components if c )
 			if cleanPath:
 				upgradePaths.append( cleanPath )
 				upgradeFactors.append( self.upgradeFactors[row].GetValue() )

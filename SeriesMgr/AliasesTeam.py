@@ -10,26 +10,26 @@ class AliasesTeam(wx.Panel):
 		wx.Panel.__init__(self, parent)
 		
 		text =	(
-			u'Team Aliases match alternate team names to the same team.\n'
-			u'This can be more convenient than editing race results when the same team appears with a different spelling.\n'
-			u'\n'
-			u'To create a Team Alias, first press the "Add Reference Team" button.\n'
-			u'The first column is the Team that will appear in Results.\n'
-			u'The second column are the Team Aliases, separated by ";".  These are the alternate team names.\n'
-			u'SeriesMgr will match all aliased Teams to the Reference Team in the Results.\n'
-			u'\n'
-			u'For example, Reference Team="Cannondale pb Fortius", AliasesTeam="Cannondale; Cannondale Pro".  Results for the alternate Teams will appear as "Cannondale pb Fortius".\n'
-			u'\n'
-			u'You can Copy-and-Paste Teams from the Results without retyping them.  Right-click and Copy the name in the Results page,'
-			u'then Paste the Team into a Reference Team or Alias field.\n'
-			u'Aliased Teams will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
-			u'This allows you to configure many Teams without having to wait for the Results update after each change.\n'
+			'Team Aliases match alternate team names to the same team.\n'
+			'This can be more convenient than editing race results when the same team appears with a different spelling.\n'
+			'\n'
+			'To create a Team Alias, first press the "Add Reference Team" button.\n'
+			'The first column is the Team that will appear in Results.\n'
+			'The second column are the Team Aliases, separated by ";".  These are the alternate team names.\n'
+			'SeriesMgr will match all aliased Teams to the Reference Team in the Results.\n'
+			'\n'
+			'For example, Reference Team="Cannondale pb Fortius", AliasesTeam="Cannondale; Cannondale Pro".  Results for the alternate Teams will appear as "Cannondale pb Fortius".\n'
+			'\n'
+			'You can Copy-and-Paste Teams from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			'then Paste the Team into a Reference Team or Alias field.\n'
+			'Aliased Teams will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
+			'This allows you to configure many Teams without having to wait for the Results update after each change.\n'
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
 		self.explain.SetFont( wx.Font((0,15), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False) )
 		
-		self.addButton = wx.Button( self, label=u'Add Reference Team' )
+		self.addButton = wx.Button( self, label='Add Reference Team' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
 		
 		headerNames = ('Team','Aliases separated by ";"')
@@ -47,7 +47,7 @@ class AliasesTeam(wx.Panel):
 		self.SetSizer(sizer)
 	
 	def onAddButton( self, event ):
-		defaultText = u''
+		defaultText = ''
 		
 		# Initialize the team from the clipboard.
 		if wx.TheClipboard.Open():
@@ -68,7 +68,7 @@ class AliasesTeam(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.referenceTeams) )
 		for row, (reference, aliases) in enumerate(model.referenceTeams):
 			self.grid.SetCellValue( row, 0, reference )
-			self.grid.SetCellValue( row, 1, u'; '.join(aliases) )
+			self.grid.SetCellValue( row, 1, '; '.join(aliases) )
 			
 		self.grid.AutoSize()
 		self.GetSizer().Layout()

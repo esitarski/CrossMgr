@@ -18,7 +18,7 @@ class Sequence(wx.Panel):
 		self.organizerNameLabel = wx.StaticText( self, label='Organizer:' )
 		self.organizerName = wx.TextCtrl( self )
 		
-		self.explanation = wx.StaticText( self, label=u'\n'.join( [
+		self.explanation = wx.StaticText( self, label='\n'.join( [
 				_("Change the Category order by dragging-and-dropping the first grey column in the table."),
 			] )
 		)

@@ -19,10 +19,10 @@ class CategorySequence(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		
-		self.alphaSort = wx.Button( self, label=u'Sort Alphabetically' )
+		self.alphaSort = wx.Button( self, label='Sort Alphabetically' )
 		self.alphaSort.Bind( wx.EVT_BUTTON, self.onSort )
 
-		self.explanation = wx.StaticText( self, label=u'\n'.join( [
+		self.explanation = wx.StaticText( self, label='\n'.join( [
 				_("Change the Category order by dragging-and-dropping the first grey column in the table."),
 				_("If 'Use Nth Result Only' is True, 'Team N' specifies the top Nth rider's time to use for the team's time (eg. Team TT, scored on 3rd rider's result)"),
 				_("If 'Use Nth Result Only' if False, 'Team N' specifies the top riders' times to be totaled for the team result (eg. Team Stage Finish, scored on sum of top 3 results for each team)."),
@@ -88,10 +88,10 @@ class CategorySequence(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(categoryList) )
 		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
-			self.grid.SetCellValue( row, self.PublishCol, u'01'[int(c.publish)] )
+			self.grid.SetCellValue( row, self.PublishCol, '01'[int(c.publish)] )
 			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
-			self.grid.SetCellValue( row, self.UseNthScoreCol, u'01'[int(c.useNthScore)] )
-			self.grid.SetCellValue( row, self.TeamPublishCol, u'01'[int(c.teamPublish)] )
+			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
+			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def getCategoryList( self ):
@@ -102,10 +102,10 @@ class CategorySequence(wx.Panel):
 			c = Category(
 				name=gc(row, self.CategoryCol),
 				iSequence=row,
-				publish=gc(row, self.PublishCol) == u'1',
+				publish=gc(row, self.PublishCol) == '1',
 				teamN=max(1, int(gc(row, self.TeamNCol))),
-				useNthScore=gc(row, self.UseNthScoreCol) == u'1',
-				teamPublish=gc(row, self.TeamPublishCol) == u'1'
+				useNthScore=gc(row, self.UseNthScoreCol) == '1',
+				teamPublish=gc(row, self.TeamPublishCol) == '1'
 			)
 			categories.append( c )
 		return categories

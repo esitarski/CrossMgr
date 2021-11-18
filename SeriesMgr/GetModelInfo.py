@@ -74,11 +74,11 @@ def safe_upper( f ):
 	except:
 		return f
 
-class RaceResult( object ):
+class RaceResult:
 	rankDNF = 999999
 	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1 ):
+					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1, pointsInput=None ):
 		self.firstName = str(firstName or '')
 		self.lastName = str(lastName or '')
 		
@@ -103,6 +103,7 @@ class RaceResult( object ):
 		self.primePoints = primePoints
 		self.timeBonus = timeBonus
 		self.laps = laps
+		self.pointsInput = pointsInput
 		
 		self.tFinish = tFinish
 		self.tProjected = tProjected if tProjected else tFinish
@@ -130,10 +131,10 @@ class RaceResult( object ):
 		
 	@property
 	def full_name( self ):
-		return u', '.join( [name for name in [self.lastName.upper(), self.firstName] if name] )
+		return ', '.join( [name for name in [self.lastName.upper(), self.firstName] if name] )
 		
 	def __repr__( self ):
-		return u', '.join( u'{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
+		return ', '.join( '{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
 
 def ExtractRaceResults( r ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
@@ -164,6 +165,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 			posHeader = set( a.lower() for a in sfa[1] )
 			break
 	for sheetName in excel.sheet_names():
+		hasPointsInput, defaultPointsInput = False, None
 		fm = None
 		categoryNameSheet = sheetName.strip()
 		for row in excel.iter_list(sheetName):
@@ -184,6 +186,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					'team':			str(f('team','')).strip(),
 					'categoryName': f('category_code',None),
 					'laps':			f('laps',1),
+					'pointsInput':	f('points',defaultPointsInput),
 				}
 				
 				info['rank'] = str(info['rank']).strip()
@@ -198,7 +201,7 @@ def ExtractRaceResultsExcel( raceInSeries ):
 						isUSAC = True
 						g = str(f('gender', '')).strip()
 						if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
-							cn += u' ({})'.format( u'Women' if g.upper() in u'FW' else u'Men' )
+							cn += ' ({})'.format( 'Women' if g.upper() in 'FW' else 'Men' )
 						info['categoryName'] = cn
 					else:
 						info['categoryName'] = categoryNameSheet
@@ -253,6 +256,10 @@ def ExtractRaceResultsExcel( raceInSeries ):
 			elif any( str(r).strip().lower() in posHeader for r in row ):
 				fm = standard_field_map()
 				fm.set_headers( row )
+				
+				# Check if this spreadsheet has points.
+				if 'points' in fm:
+					hasPointsInput, defaultPointsInput = True, 0
 				
 				# Check if this is a team-only sheet.
 				raceInSeries.pureTeam = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
@@ -436,6 +443,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
 	showLastToFirst = SeriesModel.model.showLastToFirst
 	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
+	scoreByPointsInput = SeriesModel.model.scoreByPointsInput
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -499,7 +507,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				continue
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
-			if rr.team and rr.team != u'0':
+			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (
 				formatTime(tFinish, True), rr.rank, 0, rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0
@@ -615,7 +623,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		sigmaMultiple = 3.0
 		
 		def formatRating( rating ):
-			return u'{:0.2f} ({:0.2f},{:0.2f})'.format(
+			return '{:0.2f} ({:0.2f},{:0.2f})'.format(
 				rating.mu-sigmaMultiple*rating.sigma,
 				rating.mu,
 				rating.sigma
@@ -627,7 +635,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		for rr in raceResults:
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
-			if rr.team and rr.team != u'0':
+			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			if rr.rank != RaceResult.rankDNF:
 				riderResults[rider][raceSequence[rr.raceInSeries]] = (0, rr.rank, 0, 0)
@@ -667,7 +675,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leader = riderOrder[0]
 			leaderPoints = riderPoints[leader]
 			riderGap = { r : leaderPoints - riderPoints[r] for r in riderOrder }
-			riderGap = { r : u'{:0.2f}'.format(gap) if gap else '' for r, gap in riderGap.items() }
+			riderGap = { r : '{:0.2f}'.format(gap) if gap else '' for r, gap in riderGap.items() }
 		
 		riderPoints = { rider:formatRating(riderRating[rider]) for rider, points in riderPoints.items() }
 		
@@ -688,7 +696,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		for rr in raceResults:
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
-			if rr.team and rr.team != u'0':
+			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 			earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
@@ -700,6 +708,21 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
 			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
+
+		# Apply scoring by points input if set in the last race.
+		# Used for scoring Omniums.
+		if scoreByPointsInput:
+			hasPointsInput = set()	# Keep track of the riders with points.
+			for rr in raceResults:
+				rider = rr.key()
+				if rr.pointsInput is not None:
+					riderPoints[rider] = rr.pointsInput or 0
+					hasPointsInput.add( rider )
+			if hasPointsInput:	# If some of the riders have points.
+				# For all riders without points (presumably DNF'd or DQ'd in earlier events).
+				for rider in list(riderPoints.keys()):
+					if rider not in hasPointsInput:
+						riderPoints[rider] = 0
 
 		# Adjust for the best scores.
 		if bestResultsToConsider > 0:
@@ -717,8 +740,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# Filter out minimal events completed.
 		riderOrder = [rider for rider, results in riderResults.items() if riderEventsCompleted[rider] >= mustHaveCompleted]
 		
-		# Sort by rider points - greatest number of points first.  Break ties with place count, then
-		# most recent result.
+		# Sort by rider points - greatest number of points first.  Break ties with place count, then most recent result.
 		rankDNF = RaceResult.rankDNF
 		riderOrder.sort(
 			key = lambda r:	[-riderPoints[r]] +
@@ -920,9 +942,9 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 			if not count:
 				return ''
 			if count < -1:
-				return u'{} events'.format( count )
+				return '{} events'.format( count )
 			else:
-				return u'{} event'.format( count )
+				return '{} event'.format( count )
 		
 		# Compute the time gap.
 		teamGap = {}

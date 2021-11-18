@@ -6,34 +6,34 @@ import Utils
 from AliasGrid import AliasGrid
 
 def normalizeText( text ):
-	return u', '.join( [t.strip() for t in text.split(',')][:2] )
+	return ', '.join( [t.strip() for t in text.split(',')][:2] )
 
 class Aliases(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		
 		text =	(
-			u'Name Aliases match different name spellings to the same participant.\n'
-			u'This can be more convenient than editing race results when the same participant has resullts under different names.\n'
-			u'\n'
-			u'To create a name Alias, first press the "Add Reference Name" button.\n'
-			u'The first column is the name that will appear in Results.'
-			u'Then, add Aliases in the next column separated by ";" (semicolons). These are the alternate spellings of the name.\n'
-			u'SeriesMgr will match all Aliases to the Reference Name in the Results.\n'
-			u'\n'
-			u'For example, Reference Name="Bell, Robert", Aliases="Bell, Bobby; Bell, Bob".  Results for the alternate spellings will appear as "Bell, Robert".\n'
-			u'Accents and upper/lower case are ignored.\n'
-			u'\n'
-			u'You can Copy-and-Paste names from the Results without retyping them.  Right-click and Copy the name in the Results page,'
-			u'then Paste the name into the Reference Name or Alias field.\n'
-			u'Aliases will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
-			u'This allows you to configure many Aliases without having to wait for the Results update after each change.\n'
+			'Name Aliases match different name spellings to the same participant.\n'
+			'This can be more convenient than editing race results when the same participant has resullts under different names.\n'
+			'\n'
+			'To create a name Alias, first press the "Add Reference Name" button.\n'
+			'The first column is the name that will appear in Results.'
+			'Then, add Aliases in the next column separated by ";" (semicolons). These are the alternate spellings of the name.\n'
+			'SeriesMgr will match all Aliases to the Reference Name in the Results.\n'
+			'\n'
+			'For example, Reference Name="Bell, Robert", Aliases="Bell, Bobby; Bell, Bob".  Results for the alternate spellings will appear as "Bell, Robert".\n'
+			'Accents and upper/lower case are ignored.\n'
+			'\n'
+			'You can Copy-and-Paste names from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			'then Paste the name into the Reference Name or Alias field.\n'
+			'Aliases will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
+			'This allows you to configure many Aliases without having to wait for the Results update after each change.\n'
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
 		self.explain.SetFont( wx.Font((0,15), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False) )
 		
-		self.addButton = wx.Button( self, label=u'Add Reference Name' )
+		self.addButton = wx.Button( self, label='Add Reference Name' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
 		
 		headerNames = ('Name (Last, First)','Aliases separated by ";"')
@@ -51,7 +51,7 @@ class Aliases(wx.Panel):
 		self.SetSizer(sizer)
 	
 	def onAddButton( self, event ):
-		defaultText = u''
+		defaultText = ''
 		
 		# Initialize the name from the clipboard.
 		if wx.TheClipboard.Open():
@@ -67,10 +67,10 @@ class Aliases(wx.Panel):
 		self.grid.MakeCellVisible( self.grid.GetNumberRows()-1, 0 )
 	
 	def getName( self, s ):
-		name = [t.strip() for t in s.split(u',')[:2]]
+		name = [t.strip() for t in s.split(',')[:2]]
 		if not name or not any(name):
 			return None
-		name.extend( [u''] * (2 - len(name)) )
+		name.extend( [''] * (2 - len(name)) )
 		return tuple( name )
 		
 	def refresh( self ):
@@ -78,8 +78,8 @@ class Aliases(wx.Panel):
 		
 		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.references) )
 		for row, (reference, aliases) in enumerate(model.references):
-			self.grid.SetCellValue( row, 0, u'{}, {}'.format(*reference) )
-			self.grid.SetCellValue( row, 1, u'; '.join(u'{}, {}'.format(*a) for a in aliases) )
+			self.grid.SetCellValue( row, 0, '{}, {}'.format(*reference) )
+			self.grid.SetCellValue( row, 1, '; '.join('{}, {}'.format(*a) for a in aliases) )
 			
 		self.grid.AutoSize()
 		self.GetSizer().Layout()

@@ -28,14 +28,14 @@ class Races(wx.Panel):
 		self.organizerNameLabel = wx.StaticText( self, label='Organizer:' )
 		self.organizerName = wx.TextCtrl( self )
 		
-		self.explanation = wx.StaticText( self, label=u'\n'.join( [
+		self.explanation = wx.StaticText( self, label='\n'.join( [
 				_("Add all the races in your Series."),
 				_("Make sure the races are in chronological order."),
 				_("You can change the order by dragging-and-dropping the first grey column in the table."),
-				u'',
+				'',
 				_("Configure the Points Structures or Time Scoring parameters on the Scoring Criteria page."),
 				_("Each race can have its own Points Structure.  For example, you could create 'Double Points' for one race."),
-				u'',
+				'',
 				_("Race results are shown Last-to-First in the output by default."),
 				_("You can change this on the Options page."),
 			] )
@@ -194,7 +194,7 @@ class Races(wx.Panel):
 			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
 			self.grid.SetCellValue( row, self.GradeCol, race.grade )
 			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
-			self.grid.SetCellValue( row, self.TeamPointsCol, race.teamPointStructure.name if race.teamPointStructure else u'' )
+			self.grid.SetCellValue( row, self.TeamPointsCol, race.teamPointStructure.name if race.teamPointStructure else '' )
 			self.grid.SetCellValue( row, self.RaceFileCol, race.fileName )
 		wx.CallAfter( self.gridAutoSize )
 		
@@ -212,8 +212,8 @@ class Races(wx.Panel):
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			pteamname = self.grid.GetCellValue( row, self.TeamPointsCol ) or None
 			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()[:1]
-			if not (grade and ord(u'A') <= ord(grade) <= ord(u'Z')):
-				grade = u'A'
+			if not (grade and ord('A') <= ord(grade) <= ord('Z')):
+				grade = 'A'
 			if not fileName or not pname:
 				continue
 			raceList.append( (fileName, pname, pteamname, grade) )

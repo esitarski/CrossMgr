@@ -6,14 +6,14 @@ def remove_diacritic( s ):
 	without any diacritical marks.
 	'''
 	try:
-		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
 	except:
 		return s
 
 def normalize( s ):
 	return remove_diacritic( s.replace('.','').replace('_',' ').strip().lower() )
  
-class FieldMap( object ):
+class FieldMap:
 	def __init__( self ):
 		self.reset()
 		
@@ -226,6 +226,10 @@ standard_field_aliases = (
 	('laps',
 		('Laps',),
 		"Laps",
+	),
+	('points',
+		('Points',),
+		"Points",
 	),
 )
 

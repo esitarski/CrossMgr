@@ -14,7 +14,7 @@ def CmdLine( args ):
 			with open(seriesFileName, 'rb') as fp:
 				SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
 		except IOError:
-			print ( u'cannot open series file "{}".'.format(seriesFileName) )
+			print( 'cannot open series file "{}".'.format(seriesFileName) )
 			return 1
 		SeriesModel.model.postReadFix()
 
@@ -42,7 +42,7 @@ def CmdLine( args ):
 			else:
 				fileName = components[0]
 			if not any( fileName.endswith(suffix) for suffix in ('.xlsx', 'xlsm', '.xls') ):
-				print ( u'unrecognized file suffix "{}".'.format(fileName) )
+				print( 'unrecognized file suffix "{}".'.format(fileName) )
 				return 2
 				
 		pointStructures = None
@@ -52,7 +52,7 @@ def CmdLine( args ):
 				break
 				
 		if pointStructures is None:
-			print ( u'cannot find points structure "{}".'.format(pointStructuresName) )
+			print( 'cannot find points structure "{}".'.format(pointStructuresName) )
 			return 3
 		
 		races.append( SeriesModel.Race(fileName, pointStructures) )

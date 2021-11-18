@@ -10,26 +10,26 @@ class AliasesLicense(wx.Panel):
 		wx.Panel.__init__(self, parent)
 		
 		text =	(
-			u'License Aliases match alternate license codes to the same code.\n'
-			u'This can be more convenient than editing race results when the same participant has results under different license codes.\n'
-			u'\n'
-			u'To create a License Alias, first press the "Add Reference License" button.\n'
-			u'The first column is the license that will appear in Results.\n'
-			u'Then, add license aliases in the next column.  These are the alternate licenses.\n'
-			u'SeriesMgr will match all aliased Licenses to the Reference License in the Results.\n'
-			u'\n'
-			u'For example, Reference License="BC03457", Aliases="BC03449; BC32749".  Results for the alternate licenses will appear as "BC03457".\n'
-			u'\n'
-			u'You can Copy-and-Paste licenses from the Results without retyping them.  Right-click and Copy the name in the Results page,'
-			u'then Paste the license into a Reference License or Alias field.\n'
-			u'Aliased Licenses will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
-			u'This allows you to configure many licenses without having to wait for the Results update after each change.\n'
+			'License Aliases match alternate license codes to the same code.\n'
+			'This can be more convenient than editing race results when the same participant has results under different license codes.\n'
+			'\n'
+			'To create a License Alias, first press the "Add Reference License" button.\n'
+			'The first column is the license that will appear in Results.\n'
+			'Then, add license aliases in the next column.  These are the alternate licenses.\n'
+			'SeriesMgr will match all aliased Licenses to the Reference License in the Results.\n'
+			'\n'
+			'For example, Reference License="BC03457", Aliases="BC03449; BC32749".  Results for the alternate licenses will appear as "BC03457".\n'
+			'\n'
+			'You can Copy-and-Paste licenses from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			'then Paste the license into a Reference License or Alias field.\n'
+			'Aliased Licenses will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
+			'This allows you to configure many licenses without having to wait for the Results update after each change.\n'
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
 		self.explain.SetFont( wx.Font((0,15), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False) )
 		
-		self.addButton = wx.Button( self, label=u'Add Reference License' )
+		self.addButton = wx.Button( self, label='Add Reference License' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
 		
 		headerNames = ('License','Aliases separated by ";"')
@@ -47,7 +47,7 @@ class AliasesLicense(wx.Panel):
 		self.SetSizer(sizer)
 	
 	def onAddButton( self, event ):
-		defaultText = u''
+		defaultText = ''
 		
 		# Initialize the license from the clipboard.
 		if wx.TheClipboard.Open():
@@ -68,7 +68,7 @@ class AliasesLicense(wx.Panel):
 		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.referenceLicenses) )
 		for row, (reference, aliases) in enumerate(model.referenceLicenses):
 			self.grid.SetCellValue( row, 0, reference )
-			self.grid.SetCellValue( row, 1, u'; '.join(aliases) )
+			self.grid.SetCellValue( row, 1, '; '.join(aliases) )
 			
 		self.grid.AutoSize()
 		self.GetSizer().Layout()

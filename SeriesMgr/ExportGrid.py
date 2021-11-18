@@ -18,10 +18,10 @@ def tag( buf, name, attrs = {} ):
 	if not isinstance(attrs, dict) and attrs:
 		attrs = { 'class': attrs }
 	buf.write(
-		u'<{}>'.format(u' '.join( [name] + [u'{}="{}"'.format(attr, value) for attr, value in attrs.items()] ) )
+		'<{}>'.format(' '.join( [name] + ['{}="{}"'.format(attr, value) for attr, value in attrs.items()] ) )
 	)
 	yield
-	buf.write( u'</{}>\n'.format(name) )
+	buf.write( '</{}>\n'.format(name) )
 
 brandText = 'Powered by CrossMgrMgr (sites.google.com/site/crossmgrsoftware)'
 
@@ -45,7 +45,7 @@ def ImageToPil( image ):
 		pil = Image.merge('RGB', (redImage, greenImage, blueImage))
 	return pil
 
-class ExportGrid( object ):
+class ExportGrid:
 	PDFLineFactor = 1.10
 
 	def __init__( self, title, grid ):
@@ -82,7 +82,7 @@ class ExportGrid( object ):
 		dc.SetFont( font )
 		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
 		extents = [ dc.GetMultiLineTextExtent(self.colnames[col]) ]
-		extents.extend( dc.GetMultiLineTextExtent(u'{}'.format(v)) for v in self.data[col] )
+		extents.extend( dc.GetMultiLineTextExtent('{}'.format(v)) for v in self.data[col] )
 		return max( e[0] for e in extents ), sum( e[1] for e in extents ) + hSpace/4
 	
 	def _getDataSizeTuple( self, dc, font ):
@@ -105,8 +105,8 @@ class ExportGrid( object ):
 	def _drawMultiLineText( self, dc, text, x, y ):
 		if not text:
 			return
-		lineHeightText = dc.GetTextExtent( u'PpJjYy' )[1]
-		for line in text.split( u'\n' ):
+		lineHeightText = dc.GetTextExtent( 'PpJjYy' )[1]
+		for line in text.split( '\n' ):
 			dc.DrawText( line, x, y )
 			y += lineHeightText
 
@@ -142,7 +142,7 @@ class ExportGrid( object ):
 		fontHeight = borderPix // 4
 		font = self._getFont( fontHeight, False )
 		dc.SetFont( font )
-		updateText = u'Updated: {}'.format( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
+		updateText = 'Updated: {}'.format( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
 		w, h = dc.GetMultiLineTextExtent( updateText )
 		self._drawMultiLineText( dc, updateText, widthPix - borderPix - w, yPix - fontHeight )
 		
@@ -183,8 +183,8 @@ class ExportGrid( object ):
 		# Draw the table.
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
-		wSpace, hSpace = dc.GetMultiLineTextExtent( u'    ' )
-		textHeight = dc.GetMultiLineTextExtent( u'PpJjYy' )[1]
+		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
+		textHeight = dc.GetMultiLineTextExtent( 'PpJjYy' )[1]
 		
 		# Get the max height per row.
 		rowHeight = [0] * (self.grid.GetNumberRows() + 1)
@@ -211,9 +211,9 @@ class ExportGrid( object ):
 			w, h = dc.GetMultiLineTextExtent( c )
 			lines = c.count('\n') + 1
 			if col in self.leftJustifyCols:
-				self._drawMultiLineText( dc, u'{}'.format(c), xPix, yPix + (headerRowLines-lines)*textHeight )		# left justify
+				self._drawMultiLineText( dc, '{}'.format(c), xPix, yPix + (headerRowLines-lines)*textHeight )		# left justify
 			else:
-				self._drawMultiLineText( dc, u'{}'.format(c), xPix + colWidth - w, yPix + (headerRowLines-lines)*textHeight )	# right justify
+				self._drawMultiLineText( dc, '{}'.format(c), xPix + colWidth - w, yPix + (headerRowLines-lines)*textHeight )	# right justify
 			yPix += headerRowHeight + hSpace/4
 			if col == 0:
 				yLine = yPix - hSpace/8
@@ -223,7 +223,7 @@ class ExportGrid( object ):
 					dc.DrawLine( borderPix, yLine, widthPix - borderPix, yLine )
 					
 			for r, v in enumerate(self.data[col]):
-				vStr = u'{}'.format(v)
+				vStr = '{}'.format(v)
 				if vStr:
 					w, h = dc.GetMultiLineTextExtent( vStr )
 					if col in self.leftJustifyCols:
@@ -248,7 +248,7 @@ class ExportGrid( object ):
 		
 		rowTop = 0
 		if self.title:
-			for line in self.title.split(u'\n'):
+			for line in self.title.split('\n'):
 				sheet.write(rowTop, 0, line, titleStyle)
 				rowTop += 1
 			rowTop += 1

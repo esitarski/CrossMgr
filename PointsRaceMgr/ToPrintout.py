@@ -1,5 +1,6 @@
 import wx
 import os
+import re
 from html import escape
 import math
 import datetime
@@ -378,8 +379,12 @@ def ToHtml( html ):
 	# Utils.getMainWin().commentary.toHtml(html)
 	
 def ToExcel( wb ):
+	# Name the sheet after the Category.
+	race = Model.race
+	sheetName = re.sub( '[\\/\*\?:\[\]\.]', '', race.category.strip() )
+	
 	formats = ExportGrid.getExcelFormatsXLSX( wb )
-	for title, report in (('Results', Utils.getMainWin().rankSummary), ('Details', Utils.getMainWin().rankDetails), ):
+	for title, report in ((sheetName, Utils.getMainWin().rankSummary), ('Details', Utils.getMainWin().rankDetails), ):
 		sheetCur = wb.add_worksheet( title )
 		report.refresh()
 		ExportGrid(title, report.grid).toExcelSheet( sheetCur, formats )

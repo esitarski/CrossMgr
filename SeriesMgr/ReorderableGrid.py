@@ -35,7 +35,7 @@ class GridCellMultiLineStringRenderer(gridlib.GridCellRenderer):
 	def Clone(self): 
 		return GridCellMultiLineStringRenderer()
 
-class ReorderableGridRowMixin( object ):
+class ReorderableGridRowMixin:
 	"""This mixin allows the use of grid rows as Rearrange sources, you can Rearrange
 	rows off of a grid to a text target.  Only row labels are Rearrangegable, internal
 	cell contents are not.
@@ -176,7 +176,7 @@ class ReorderableGridRowMixin( object ):
 
 		return row, col
 
-class KeyboardNavigationGridMixin( object ):
+class KeyboardNavigationGridMixin:
 	def __init__( self ):
 		self.Bind( gridlib.EVT_GRID_EDITOR_CREATED, self.onCellEdit )
 		
@@ -210,7 +210,7 @@ class KeyboardNavigationGridMixin( object ):
 			pass
 		event.Skip()
 
-class SaveEditWhenFocusChangesGridMixin( object ):
+class SaveEditWhenFocusChangesGridMixin:
 	def __init__(self):
 		self.Bind(gridlib.EVT_GRID_EDITOR_CREATED, self.OnGridEditorCreated)
 
