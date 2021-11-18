@@ -684,6 +684,33 @@ class MainWin( wx.Frame ):
 		self.messageThread.start()
 		
 		wx.CallLater( 300, self.refreshTriggers )
+		
+		# Add event handlers to the app as this is the last window to process events.
+		wx.App.Get().Bind( wx.EVT_CHAR_HOOK, self.OnKeyDown )
+		wx.App.Get().Bind( wx.EVT_KEY_UP, self.OnKeyUp )
+	
+	def OnKeyDown( self, event ):
+		#print( 'OnKeyDown', event.GetKeyCode() )
+		if not self.capturing:
+			if event.GetKeyCode() == wx.WXK_SHIFT:
+				# Toggle Capture on shift key.  Use Shift key as it doesn't auto-repeat.
+				self.capturing = True
+				event.SetEventObject( self.capture )
+				self.onStartCapture( event )
+			elif event.GetKeyCode() == wx.WXK_SPACE:
+				# Trigger Auto Capture on Space Bar.
+				event.SetEventObject( self.autoCapture )
+				self.onStartAutoCapture( event )
+		event.Skip()
+	
+	def OnKeyUp( self, event ):
+		#print( 'OnKeyUp', event.GetKeyCode() )
+		if self.capturing and event.GetKeyCode() == wx.WXK_SHIFT:
+			# Toggle capture on shift key.  Use Shft as it doesn't auto-repeat.
+			self.capturing = False
+			event.SetEventObject( self.capture )
+			self.onStopCapture( event )
+		event.Skip()
 	
 	def OnAboutBox(self, e):
 			description = """CrossMgrVideo - USB Camera support

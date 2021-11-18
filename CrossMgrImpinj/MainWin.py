@@ -559,7 +559,7 @@ class MainWin( wx.Frame ):
 
 			info = wx.adv.AboutDialogInfo()
 
-			crossMgrPng = Utils.getImageFolder() + '/CrossMgrImpinj.png'
+			crossMgrPng = os.path.join( Utils.getImageFolder(), 'CrossMgrImpinj.png' )
 			info.SetIcon(wx.Icon(crossMgrPng, wx.BITMAP_TYPE_PNG))
 			info.SetName('CrossMgrImpinj')
 			info.SetVersion(AppVerName.split(' ')[1])

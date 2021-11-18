@@ -130,12 +130,16 @@ Takes a single snapshot and saves it to the database.
 
 Captures frames as specified by the __Auto Capture__ dialog described above.
 
+__Auto Capture__ can be triggered by pressing the 'A' key or the Space Bar.
+
 #### Capture
 
 Captures video frames as long as the __CAPTURE__ button is pressed.
 Useful for capturing finishes.
 
-Capture can also be triggered by a joystick.  Capture starts when the top joystick button is pressed and stops when it is released.
+__Capture__ can be triggered by pressing the Shift key.  Capture starts when the Shift is pressed and stops when it is released.
+
+__Capture__ can be triggered by a joystick.  Capture starts when the primary joystick button is pressed (usually the trigger) and stops when it is released.
 
 #### Images
 

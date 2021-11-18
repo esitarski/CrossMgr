@@ -502,9 +502,11 @@ class Event:
 	
 	def canStart( self ):
 		state = self.competition.state
-		return  all(c in state.labels for c in self.composition) and \
-				any(state.inContention(c) for c in self.composition) and \
-				self.winner not in state.labels
+		return (
+			all(c in state.labels for c in self.composition) and
+			any(state.inContention(c) for c in self.composition) and
+			self.winner not in state.labels
+		)
 	
 	def setFinishRiders( self, places ):
 		finishCode = Start.finishCode
