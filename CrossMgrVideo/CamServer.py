@@ -76,7 +76,7 @@ class VideoCaptureManager:
 transmitFramesMax = 6
 bufferSeconds = 8
 
-def EstimateQuerySeconds( ts, s_before, s_after, fps ):
+def EstimateQuerySeconds( ts, s_before, s_after, closest_frames, fps ):
 	t = now()
 	tEarliest = ts - timedelta(seconds=s_before)
 	tLatest = ts + timedelta(seconds=s_after)
@@ -95,6 +95,19 @@ def EstimateQuerySeconds( ts, s_before, s_after, fps ):
 	# The transmit rate may or may not be able to catch up.
 	backlogRemaining = backlog - sAfter * transmitRate	
 	return sAfter + max(0.0, backlogRemaining / transmitRate)
+	
+class TimeInterval:
+	def __init__( self, start, end ):
+		self.start, self.end = start, end
+		
+	def contains( self, t ):
+		return self.start <= t <= self.end
+		
+	def overlaps( self, ti ):
+		return not (ti.end < self.start or self.end < ti.start)
+		
+	def merge( self, ti ):
+		self.start, self.end = min(self.start, ti.start), max(self.end, ti.end)
 
 def CamServer( qIn, qWriter, camInfo=None ):
 	sendUpdates = {}
@@ -115,11 +128,15 @@ def CamServer( qIn, qWriter, camInfo=None ):
 			fpsFrameCount = 0
 			fpsStart = now() - timedelta( seconds=10 )		# Force an initial fps update.
 			
-			inCapture = False
 			doSnapshot = False
-			tsMax = now()
+			endOfTime = now() + timedelta( days=400*100 )
 			keepCapturing = True
 			secondsPerFrame = 1.0/30.0
+			
+			tiCapture = TimeInterval( fpsStart, fpsStart )	# Interval for interactive capture.
+			intervals = []									# Current intervals we are capturing for.
+			captureLatency = timedelta( seconds=0.0 )		# Delay it takes for frame to get from the camera to the computer.
+			
 			fcb = FrameCircBuf( int(camInfo.get('fps', 30) * bufferSeconds) )
 			
 			# Get the available usb ports.  If the current port succeeded, don't waste time checking it again.
@@ -146,8 +163,9 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				opencv_frame = frame
 				frame = CVUtil.toJpeg( frame )
 				
-				# Add the frame to the circular buffer.
-				fcb.append( ts, frame )
+				# Add the frame to the circular buffer.  Adjust for the capture latency.
+				tsFrame = ts - captureLatency
+				fcb.append( tsFrame, frame )
 				
 				# Process all pending requests.
 				# Do this as quickly as possible so we can keep up with the camera's frame rate.
@@ -161,33 +179,35 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					cmd = m['cmd']
 					
 					if cmd == 'query':
-						if m['tStart'] > ts:
-							# Reschedule requests in the future to the past when the buffer has the frames.
-							Timer( (m['tStart'] - ts).total_seconds(), qIn.put, (m,) ).start()
-							continue
+						tiCur = TimeInterval( m['tStart'], m['tEnd'] )
 						
-						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], m['tEnd'], tsSeen)) )
-						if m['tEnd'] > tsMax:
-							tsMax = m['tEnd']
+						# Process all frames before the current time.
+						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(tiCur.start, tiCur.end, tsSeen)) )
+						
+						# Add this query interval to the list, or merge with an existing interval if it overlaps.
+						for ti in intervals:
+							if ti.overlaps( tiCur ):
+								ti.merge( tiCur )
+								break
+						else:
+							intervals.append( tiCur )
 					
 					elif cmd == 'query_closest':
-						if (ts - m['t']).total_seconds() < secondsPerFrame:
+						if (ts - m['t']).total_seconds() < secondsPerFrame + captureLatency.total_seconds():
 							# Reschedule requests earlier than secondsPerFrame.
 							# This ensures that the buffer has a frame after the time, which might be the closest one.
-							Timer( secondsPerFrame*2.0 - (ts - m['t']).total_seconds(), qIn.put, (m,) ).start()
+							Timer( captureLatency.total_seconds() + secondsPerFrame*2.0 - (ts - m['t']).total_seconds(), qIn.put, (m,) ).start()
 							continue
 						
 						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFramesClosest(m['t'], m['closest_frames'], tsSeen)) )
-						if m['t'] > tsMax:
-							tsMax = m['t']
-					
+										
 					elif cmd == 'start_capture':
 						if 'tStart' in m:
-							backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(m['tStart'], ts, tsSeen)) )
-							inCapture = True
+							tiCapture.start, tiCapture.end = m['tStart'], endOfTime
+							backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(tiCapture.start, tiCapture.end, tsSeen)) )
 					
 					elif cmd == 'stop_capture':
-						inCapture = False
+						tiCapture.end = ts
 					
 					elif cmd == 'snapshot':
 						doSnapshot = True
@@ -225,10 +245,10 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					qWriter.put( {'cmd':'info', 'retvals':retvals} )
 					retvals = None
 				
-				# If inCapture, or the capture time is in the future, add the frame to the backlog.
-				if (tsMax > ts or inCapture) and ts not in tsSeen and frame is not None :
-					tsSeen.add( ts )
-					backlog.append( (ts, frame) )
+				# Check if we need to keep the current photo.
+				if frame is not None and tsFrame not in tsSeen and (tiCapture.contains(tsFrame) or any(i.contains(tsFrame) for i in intervals)):
+					tsSeen.add( tsFrame )
+					backlog.append( (tsFrame, frame) )
 
 				# Send the frames to the database for writing.
 				# Don't send too many frames at a time so we don't overwhelm the queue and lose frame rate.
@@ -256,6 +276,11 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					qWriter.put( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
 					fpsStart = ts
 					fpsFrameCount = 0
+					
+					# Remove stale intervals from list.
+					if intervals:
+						tsCutoff = now() - timedelta( seconds=6 )
+						intervals = [ti for ti in intervals if ti.end < tsCutoff]
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
@@ -269,6 +294,14 @@ def callCamServer( qIn, cmd, **kwargs ):
 	qIn.put( kwargs )
 	
 if __name__ == '__main__':
+	ti1 = TimeInterval( 0, 10 )
+	ti2 = TimeInterval( 5, 15 )
+	ti3 = TimeInterval( 11, 21 )
+	assert ti1.overlaps( ti2 )
+	assert not ti1.overlaps( ti3 )
+	assert ti1.contains( 5 )
+	assert not ti1.contains( 15 )
+	
 	print( getCameraUsb() )
 	# sys.exit()
 	

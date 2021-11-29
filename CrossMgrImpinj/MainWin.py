@@ -798,13 +798,11 @@ class MainWin( wx.Frame ):
 			do.SetText( '\n'.join(cc) )
 			wx.TheClipboard.SetData(do)
 			wx.TheClipboard.Close()
-			dlg = wx.MessageDialog(self, 'Configuration and Logs copied to the Clipboard.',
+			with wx.MessageDialog(self, 'Configuration and Logs copied to the Clipboard.',
 									'Copy to Clipboard Succeeded',
-									wx.OK | wx.ICON_INFORMATION )
-			ret = dlg.ShowModal()
-			dlg.Destroy()
+									wx.OK | wx.ICON_INFORMATION ) as dlg:
+				dlg.ShowModal()
 		else:
-			# oops... something went wrong!
 			wx.MessageBox("Unable to open the clipboard", "Error")
 
 	def getCrossMgrHost( self ):
@@ -967,7 +965,7 @@ def MainLoop():
 		try:
 			with open(redirectFileName, 'a') as pf:
 				pf.write( '********************************************\n' )
-				pf.write( '%s: %s Started.\n' % (datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
+				pf.write( '{}: {} Started.\n'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except Exception:
 			pass
 	

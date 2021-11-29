@@ -251,15 +251,18 @@ class Database:
 		self.updateTriggerRecord(id, {'s_before':s_before, 's_after':s_after})
 	
 	def initCaptureTriggerData( self, id ):
-		''' Initialize some fields from the previous record. '''
+		''' Initialize triggerFieldsUpdate from the previous record (eg. race and wave). '''
 		with self.dbLock, self.conn:
+			# Get the timestamp of the given record.
 			rows = list( self.conn.execute( 'SELECT ts FROM trigger WHERE id=?', (id,) ) )
 			if not rows:
 				return
 			ts = rows[0][0]
-			tsLower, tsUpper = ts - timedelta(days=1), ts, 
+			
+			# Get the record just before this one starting on this day.
+			tsLower, tsUpper = ts - timedelta(hours=ts.hour, minutes=ts.minute, seconds=ts.second, microseconds=ts.microsecond), ts, 
 			rows = list( self.conn.execute( 
-				'SELECT {} FROM trigger WHERE ? < ts AND ts < ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
+				'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
 					(tsLower, tsUpper)
 				)
 			)

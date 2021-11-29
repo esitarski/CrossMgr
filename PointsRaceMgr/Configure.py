@@ -1,6 +1,6 @@
 import wx
 import wx.adv
-import wx.lib.masked.numctrl as NC
+from NumCtrl import PosNumCtrl
 import wx.lib.intctrl as IC
 import sys
 import os
@@ -91,7 +91,7 @@ class Configure( wx.Panel ):
 		#--------------------------------------------------------------------------------------------------------------
 		label = wx.StaticText( self, label='Start Laps:' )
 		self.gbs.Add( label, pos=(2, 3), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
-		ctrl = IC.IntCtrl( self, min=0, max=300, value=0, limited=True, style=wx.ALIGN_RIGHT, size=(40,-1) )
+		ctrl = IC.IntCtrl( self, min=0, max=300, value=0, limited=True, style=wx.ALIGN_RIGHT, size=(60,-1) )
 		ctrl.Bind(IC.EVT_INT, self.onChange)
 		self.gbs.Add( ctrl, pos=(2, 4), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.startLapsLabel = label
@@ -131,8 +131,7 @@ class Configure( wx.Panel ):
 		label = wx.StaticText( self, label='Course Len:' )
 		self.gbs.Add( label, pos=(3, 3), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
 		
-		ctrl = NC.NumCtrl( self, min = 0, integerWidth=3, fractionWidth=2, style=wx.ALIGN_RIGHT, size=(40,-1), useFixedWidthFont=False )
-		ctrl.SetAllowNegative(False)
+		ctrl = PosNumCtrl( self, style=wx.ALIGN_RIGHT, value="250.00", size=(80,-1) )
 		ctrl.Bind(wx.EVT_TEXT, self.onChange)
 		self.gbs.Add( ctrl, pos=(3, 4), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
 		

@@ -7,7 +7,7 @@ import re
 import sys
 import cv2
 import sys
-import time
+from time import sleep
 import math
 import json
 import time
@@ -368,6 +368,7 @@ class MainWin( wx.Frame ):
 		self.db = GlobalDatabase()
 		
 		self.bufferSecs = 10
+		self.curFPS = 30.0
 		self.setFPS( 30 )
 		self.xFinish = None
 		
@@ -713,10 +714,9 @@ class MainWin( wx.Frame ):
 		event.Skip()
 	
 	def OnAboutBox(self, e):
-			description = """CrossMgrVideo - USB Camera support
-	"""
+		description = "CrossMgrVideo - USB Camera support"
 
-			licence = """CrossMgrVideo is free software; you can redistribute 
+		licence = """CrossMgrVideo is free software; you can redistribute 
 	it and/or modify it under the terms of the GNU General Public License as 
 	published by the Free Software Foundation; either version 2 of the License, 
 	or (at your option) any later version.
@@ -729,18 +729,18 @@ class MainWin( wx.Frame ):
 	if not, write to the Free Software Foundation, Inc., 59 Temple Place, 
 	Suite 330, Boston, MA  02111-1307  USA"""
 
-			info = wx.adv.AboutDialogInfo()
+		info = wx.adv.AboutDialogInfo()
 
-			crossMgrPng = Utils.getImageFolder() + '/CrossMgrVideo.png'
-			info.SetIcon(wx.Icon(crossMgrPng, wx.BITMAP_TYPE_PNG))
-			info.SetName('CrossMgrVideo')
-			info.SetVersion(AppVerName.split(' ')[1])
-			info.SetDescription(description)
-			info.SetCopyright('(C) 2021 Edward Sitarski')
-			info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
-			info.SetLicence(licence)
+		crossMgrPng = os.path.join( Utils.getImageFolder(), 'CrossMgrVideo.png' )
+		info.SetIcon(wx.Icon(crossMgrPng, wx.BITMAP_TYPE_PNG))
+		info.SetName('CrossMgrVideo')
+		info.SetVersion(AppVerName.split(' ')[1])
+		info.SetDescription(description)
+		info.SetCopyright('(C) 2019-{} Edward Sitarski'.format(datetime.today().strftime('%Y')))
+		info.SetWebSite('http://www.sites.google.com/site/crossmgrsoftware/')
+		info.SetLicence(licence)
 
-			wx.adv.AboutBox(info, self)
+		wx.adv.AboutBox(info, self)
 
 	def onHelp( self, event ):
 		OpenHelp()
@@ -918,6 +918,7 @@ class MainWin( wx.Frame ):
 		if oldLabel != newLabel:
 			self.actualFPS.SetLabel( '{:.1f} fps'.format(actualFPS) )
 			self.GetSizer().Layout()
+		self.curFPS = actualFPS
 		
 	def updateCameraUsb( self, availableCameraUsb ):
 		self.availableCameraUsb = availableCameraUsb
@@ -1298,12 +1299,10 @@ class MainWin( wx.Frame ):
 				'race_name':		'',
 			}
 		) )
-		self.doUpdateAutoCapture( t, self.snapshotCount, [self.snapshot, self.focusDialog.snapshot], snapshotEnableColour )
+		self.doUpdateAutoCapture( t, self.snapshotCount, self.snapshot, snapshotEnableColour )
 		
 	def onStartSnapshot( self, event ):
-		event.GetEventObject().SetForegroundColour( snapshotDisableColour )
-		wx.CallAfter( event.GetEventObject().Refresh )
-		self.camInQ.put( {'cmd':'snapshot'} )
+		self.onStartAutoCapture( event, isSnapshot=True )
 		
 	def doUpdateAutoCapture( self, tStartCapture, count, btn, colour ):
 		self.dbWriterQ.put( ('flush',) )
@@ -1320,30 +1319,45 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( b.Refresh )
 
 	def onStartAutoCaptureAccel( self, event ):
-		event.SetEventObject( self.autoCapture )
 		self.onStartAutoCapture( event )
 
-	def onStartAutoCapture( self, event ):
+	def onStartAutoCapture( self, event, isSnapshot=False ):
 		tNow = now()
 		
-		event.GetEventObject().SetForegroundColour( autoCaptureDisableColour )
-		wx.CallAfter( event.GetEventObject().Refresh )
+		# A snapshot is an auto-capture with one closest frame.
+		if isSnapshot:
+			btn = self.snapshot
+			enableColour = snapshotEnableColour
+			disableColour = snapshotDisableColour
+			count = self.snapshotCount = getattr(self, 'snapshotCount', 0) + 1
+			closest_frames = 1
+			last_name = 'Snapshot'
+		else:
+			btn = self.autoCapture
+			enableColour = autoCaptureEnableColour
+			disableColour = autoCaptureDisableColour
+			count = self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
+			closest_frames = self.closestFrames
+			last_name = 'Auto'
 		
-		self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
-		s_before, s_after = self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds()
+		btn.SetForegroundColour( disableColour )
+		wx.CallAfter( btn.Refresh )
+		
+		s_before = self.tdCaptureBefore.total_seconds()
+		s_after = self.tdCaptureAfter.total_seconds()
 		self.requestQ.put( {
 				'time':				tNow,
 				's_before':			s_before,
 				's_after':			s_after,
-				'closest_frames':	self.closestFrames,
+				'closest_frames':	closest_frames,
 				'ts_start':			tNow,
-				'bib':				self.autoCaptureCount,
-				'last_name':		'Auto',
+				'bib':				count,
+				'last_name':		last_name,
 			}
 		)
 		
-		wx.CallLater( int(CamServer.EstimateQuerySeconds(tNow, s_before, s_after, self.fps)*1000.0) + 80,
-			self.doUpdateAutoCapture, tNow, self.autoCaptureCount, self.autoCapture, autoCaptureEnableColour
+		wx.CallLater( int(CamServer.EstimateQuerySeconds(tNow, s_before, s_after, closest_frames, self.curFPS)*1000.0) + 80,
+			self.doUpdateAutoCapture, tNow, count, btn, enableColour
 		)
 		
 	def onToggleCapture( self, event ):
@@ -1386,15 +1400,15 @@ class MainWin( wx.Frame ):
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		self.requestQ.put( {
 				'time':				tNow,
-				's_before':			0.0,
-				's_after':			self.tdCaptureAfter.total_seconds(),
+				's_before':			0.0,			# seconds before 0.0
+				's_after':			60.0*10.0,		# seconds after a default end time.
 				'closest_frames':	0,
 				'ts_start':			tNow,
 				'bib':				self.captureCount,
 				'last_name':		'Capture',
 			}
 		)
-		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow-self.tdCaptureBefore} )
+		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow} )
 	
 	def showLastTrigger( self ):
 		iTriggerRow = self.triggerList.GetItemCount() - 1
@@ -1403,35 +1417,45 @@ class MainWin( wx.Frame ):
 		self.triggerList.EnsureVisible( iTriggerRow )
 		for r in range(self.triggerList.GetItemCount()-1):
 			self.triggerList.Select(r, 0)
+		self.onTriggerSelected( iTriggerSelect=iTriggerRow )
 		self.triggerList.Select( iTriggerRow )		
 	
 	def onStopCapture( self, event ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
-		triggers = GlobalDatabase().getTriggers( self.tStartCapture, self.tStartCapture, self.captureCount )
-		if triggers:
-			id = triggers[0].id
-			GlobalDatabase().updateTriggerBeforeAfter(
-				id,
-				0.0,
-				(now() - self.tStartCapture).total_seconds()
-			)
-			GlobalDatabase().initCaptureTriggerData( id )
-			self.refreshTriggers( iTriggerRow=999999, replace=True )
 		
-		self.showLastTrigger()
+		s_after = (now() - self.tStartCapture).total_seconds()
+		tStartCapture = self.tStartCapture
+		captureCount = self.captureCount
+
+		captureLatency = timedelta( seconds=0.0 )
 		
+		def postCapture():
+			# Update the capture trigger info.
+			triggers = GlobalDatabase().getTriggers( tStartCapture, tStartCapture, captureCount )
+			if triggers:
+				id = triggers[0].id
+				GlobalDatabase().updateTriggerBeforeAfter( id, 0.0, s_after )
+				GlobalDatabase().initCaptureTriggerData( id )
+		
+			# Wait for the frame capture latency.
+			sleep( captureLatency.total_seconds() + 0.08 )
+			
+			# Flush all the photos to the database.
+			self.dbWriterQ.put( ('flush',) )
+			self.dbWriterQ.join()
+			
+			# Update the last trigger to show the photos.
+			wx.CallAfter( self.showLastTrigger )
+
+		# Update on a thread so we don't slow down the main loop.
+		thread = threading.Thread( target=postCapture )
+		thread.daemon = True
+		thread.start()
+
+		# Re-enable the UI.
 		event.GetEventObject().SetForegroundColour( captureEnableColour )
 		wx.CallAfter( event.GetEventObject().Refresh )
 		wx.EndBusyCursor()
-		
-		def updateFS():
-			# Wait for all the photos to be written.
-			self.dbWriterQ.put( ('flush',) )
-			self.dbWriterQ.join()
-			# Update the finish strip.
-			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=self.triggerList.GetItemCount() - 1 )
-
-		threading.Thread( target=updateFS ).start()
 
 	def autoCaptureConfig( self, event ):
 		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds(), self.closestFrames )
@@ -1645,10 +1669,6 @@ class MainWin( wx.Frame ):
 			wx.CallAfter( self.setUsb, msg['usb_cur'] )
 			
 		#---------------------------------------------------------------
-		def snapshotHandler( msg ):
-			lastFrame = lastFrame if msg['frame'] is None else msg['frame']
-			wx.CallAfter( self.updateSnapshot,  msg['ts'], lastFrame )
-			
 		def fpsHandler( msg ):
 			wx.CallAfter( self.updateActualFPS, msg['fps_actual'] )
 
@@ -1658,7 +1678,6 @@ class MainWin( wx.Frame ):
 			'focus':		focusHandler,
 			'info':			infoHandler,
 			'cameraUsb':	cameraUsbHandler,
-			'snapshot':		snapshotHandler,
 			'fps':			fpsHandler,
 		}
 		

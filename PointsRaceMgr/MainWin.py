@@ -306,7 +306,7 @@ class MainWin( wx.Frame ):
 							pass
 						with tag(html, 'meta', dict(name='generator', content="PointsRaceMgr")):
 							pass
-						with tag(html, 'style', dict( type="text/css")):
+						with tag(html, 'style', dict(type="text/css")):
 							write( '''
 body{ font-family: sans-serif; }
 
