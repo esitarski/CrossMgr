@@ -173,6 +173,7 @@ function CompileCode($program)
 {
 	CheckPythonVersion
 	CheckEnvActive
+	FixDependencies($program)
 	$builddir = GetBuildDir($program)
 	Write-Host "Compiling code..."
 	Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mcompileall -l $builddir"
@@ -489,10 +490,6 @@ function BuildAll($programs)
 	updateVersion($programs)
 	foreach ($program in $programs)
 	{
-		if (($program -eq "SeriesMgr") -or ($program -eq "CrossMgrVideo"))
-		{
-			FixDependencies($program)
-		}
 		CompileCode($program)
 		doPyInstaller($program)
 		CopyAssets($program)
@@ -502,16 +499,19 @@ function BuildAll($programs)
 
 function FixDependencies($program)
 {
-	Write-Host "Fixing dependencies for $program"
-	$dependsfile = Get-Content "$program\Dependencies.py"
-	Set-Location -Path "$program"
-	Start-Process -Wait -NoNewWindow -FilePath "python.exe" "UpdateDependencies.py"
-	if ($? -eq $false)
+	if (Test-Path -Path "$program\Dependencies.py" -PathType Leaf)
 	{
-		Write-Host "Compile failed. Aborting..."
-		exit 1
+		Write-Host "Fixing dependencies for $program"
+		$dependsfile = Get-Content "$program\Dependencies.py"
+		Set-Location -Path "$program"
+		Start-Process -Wait -NoNewWindow -FilePath "python.exe" "UpdateDependencies.py"
+		if ($? -eq $false)
+		{
+			Write-Host "Compile failed. Aborting..."
+			exit 1
+		}
+		Set-Location -Path '..'
 	}
-	Set-Location -Path '..'
 }
 
 function Virustotal
@@ -742,8 +742,6 @@ if ($setupenv -eq $true)
 if ($fixsmgr -eq $true)
 {
 	FixDependencies("SeriesMgr")
-	FixDependencies("CrossMgrVideo")
-	FixDependencies("SprintMgr")
 }
 
 if ($clean -eq $true)

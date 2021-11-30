@@ -132,6 +132,7 @@ class Configure( wx.Panel ):
 		self.gbs.Add( label, pos=(3, 3), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
 		
 		ctrl = PosNumCtrl( self, style=wx.ALIGN_RIGHT, value="250.00", size=(80,-1) )
+		#ctrl = wx.SpinCtrlDouble( self, style=wx.ALIGN_RIGHT, initial=250.0, min=1.0, max=10000.0, size=(120,-1) )
 		ctrl.Bind(wx.EVT_TEXT, self.onChange)
 		self.gbs.Add( ctrl, pos=(3, 4), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
 		
