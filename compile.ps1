@@ -499,7 +499,7 @@ function BuildAll($programs)
 
 function FixDependencies($program)
 {
-	if (Test-Path -Path "$program\Dependencies.py" -PathType Leaf)
+	if (Test-Path -Path "$program\UpdateDependencies.py" -PathType Leaf)
 	{
 		Write-Host "Fixing dependencies for $program"
 		$dependsfile = Get-Content "$program\Dependencies.py"

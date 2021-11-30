@@ -111,9 +111,12 @@ downloadAppImage() {
 }
 
 compileCode() {
+    fixDependencies
+    
 	PROGRAM=$1
 	getBuildDir $PROGRAM
     checkEnvActive
+    
 	echo "Compiling code"
 	python3 -mcompileall -l $BUILDDIR
 	if [ $? -ne 0 ]; then
@@ -375,9 +378,6 @@ buildall() {
 			updateversion
 			for program in $PROGRAMS
 			do
-                if [ "$program" == "SeriesMgr" -o "$program" == "CrossMgrVideo"  -o "$program" == "SprintMgr" ]; then
-                    fixDependencies $program
-                fi
 				getVersion $program
 				compileCode $program
 				doPyInstaller $program
@@ -402,14 +402,17 @@ listFiles() {
 
 fixDependencies() {
 	PROGRAM=$1
-	echo "Fixing: $PROGRAM"
-    cd $PROGRAM
-	python3 UpdateDependencies.py
-	if [ $? -ne 0 ]; then
-		echo "Fix Dependencies Failed...."
-		exit 1
+	
+	if [ -f "$PROGRAM/UpdateDependencies.py" ]; then
+		echo "Fixing: $PROGRAM"
+		cd $PROGRAM
+		python3 UpdateDependencies.py
+		if [ $? -ne 0 ]; then
+			echo "Fix Dependencies Failed...."
+			exit 1
+		fi
+		cd ..
 	fi
-    cd ..
 }
 
 tagrepo() {
