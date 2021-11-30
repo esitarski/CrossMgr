@@ -190,6 +190,25 @@ def getCompetitions():
 				Event( 'N1 - N2 -> 1R - 2R', 3 ),
 			]),
 		]),
+		
+		Competition( 'Track: Sprint Track Champions League', [
+			System( '1/4 Finals', [
+				Event( 'N1 N12 N13 -> 4A' ),
+				Event( 'N2 N11 N14 -> 4B' ),
+				Event( 'N3 N10 N15 -> 4C' ),
+				Event( 'N4  N9 N16 -> 4D' ),
+				Event( 'N5  N8 N17 -> 4E' ),
+				Event( 'N6  N7 N18 -> 4F' ),
+				]),
+			System( '1/2 Finals', [
+				Event( '4A 4D 4E -> 2A' ),
+				Event( '4B 4C 4F -> 2B' ),
+			]),
+			System( 'Finals', [
+				Event( '2A 2B -> 1R 2R' ),
+			]),
+		]),
+
 	]
 	
 	#-----------------------------------------------------------------------------------------
