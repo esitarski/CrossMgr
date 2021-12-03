@@ -9,6 +9,7 @@ import OutputStreamer
 import bisect
 from GetResults import GetEntries
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
+from FtpWriteFile import realTimeFtpPublish
 from roundbutton import RoundButton
 
 def RestartAfterLap( race, lap, rfidDelay ):

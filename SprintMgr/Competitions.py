@@ -191,7 +191,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Track Champions League', [
+		Competition( 'Track(MTB): Sprint Track Champions League', [
 			System( '1/4 Finals', [
 				Event( 'N1 N12 N13 -> 4A' ),
 				Event( 'N2 N11 N14 -> 4B' ),

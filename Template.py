@@ -33,10 +33,12 @@ class Template:
 			'ftpUploadPhotos',
 			
 			'ftpHost',
+			'ftpPath',
 			'ftpUser',
 			'ftpPassword',
-			'ftpPath',
 
+			'urlPath',
+			
 			'groupByStartWave',
 			'winAndOut',
 
