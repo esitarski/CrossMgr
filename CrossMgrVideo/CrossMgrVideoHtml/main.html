@@ -167,7 +167,7 @@ div.scroll {
   border: none;
   outline: none;
   cursor: pointer;
-  padding: 14px 16px;
+  padding: 8px 10px;
   transition: 0.3s;
 }
 
@@ -400,7 +400,7 @@ function updateImageTitle() {
 		}
 	}
 	let imageTitle = document.getElementById( 'id_image_title' );
-	imageTitle.innerHTML = ( '<span style="font-size: 120%;">' + info.join(', ') + '</>');
+	imageTitle.innerHTML = info.join(', ');
 }
 
 function updateImages( iTrigger ) {
@@ -856,7 +856,19 @@ function OnLoad() {
 </div>
 
 <div id="id_images_tab" class="tabcontent">
-	<div id="id_image_title"></div>
+	<div style="display: flex; justify-content: space-between; margin-top: .5em; margin-bottom: .5em;">
+		<div>
+			<span id="id_image_title" style="font-size:120%">Title</span>
+		</div>
+		<div>
+			<button style="margin-left: 1.5em;" onClick="restoreView(true);" id="id_restore_view" disabled><span style="font-weight:bold">&mapstoup;</span> Restore</button>
+			<button onClick="saveView();"><span style="font-weight:bold">&mapstodown;</span> Save</button>
+		</div>
+		<div style="margin-left: 1.5em;">
+			<button onclick="triggerGoPrev()" style="margin-left: 2.5em;">&#9650; Prev</button>
+			<button onclick="triggerGoNext()">&#9660; Next</button>
+		</div>
+	</div>
 	<canvas id="id_image_canvas" width="500" height="600"></canvas>
 	<div style="margin-top: 0.25em;">
 		<span style=" font-size:200%">
@@ -876,11 +888,6 @@ function OnLoad() {
 		<input type="checkbox" id="id_sharpen" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
 		<label for="id_sharpen">Sharpen</label>
 		
-		<button style="margin-left: 1.5em;" title="Restore View" onClick="restoreView(true);" id="id_restore_view" disabled><img src='upload.png'/> <span>Restore</span></button>
-		<button title="Save View"					onClick="saveView();"			><img src='download.png'/> <span>Save</span></button>
-
-		<button onclick="triggerGoPrev()" style="margin-left: 2.5em;">&#9650; Prev</button>
-		<button onclick="triggerGoNext()">&#9660; Next</button>
 	</div>
 </div>
 

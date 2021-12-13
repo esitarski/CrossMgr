@@ -222,11 +222,13 @@ def disable_stdout_buffering():
 	sys.stdout = os.fdopen(fileno, "w", 0)
 		
 def readDelimitedData( s, delim ):
+	# Handle all the processing in bytes, convert to str on return.
+	delim = delim.encode()
 	buffer = s.recv( 4096 )
-	while 1:
+	while True:
 		nl = buffer.find( delim )
 		if nl >= 0:
-			yield buffer[:nl]
+			yield buffer[:nl].decode()
 			buffer = buffer[nl+len(delim):]
 		else:
 			more = s.recv( 4096 )
@@ -234,7 +236,7 @@ def readDelimitedData( s, delim ):
 				buffer = buffer + more
 			else:
 				break
-	yield buffer
+	yield buffer.decode()
 		
 #------------------------------------------------------------------------------------------------
 reIP = re.compile( '^[0-9.]+$' )

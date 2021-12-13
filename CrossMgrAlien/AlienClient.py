@@ -1,5 +1,4 @@
 import sys
-import six
 import time
 import socket
 import threading
@@ -44,7 +43,7 @@ alienOptions = {
 	'cmdPort':		CmdPort
 }
 
-heartbeat = u'''<Alien-RFID-Reader-Heartbeat>
+heartbeat = '''<Alien-RFID-Reader-Heartbeat>
  <ReaderName>{readerName}</ReaderName>
  <ReaderType>{readerType}</ReaderType>
  <IPAddress>{notifyHost}</IPAddress>
@@ -105,7 +104,7 @@ def Heartbeat():
 		s.sendto( heartbeat.encode(), address )
 		time.sleep( 5 )
 		
-intro = u'''*****************************************************
+intro = '''*****************************************************
 *
 * Alien Technology : RFID Reader Test (AlienClient.py)
 *
@@ -145,7 +144,7 @@ def MonitorCmds():
 				response = '{} = TestResponse cmdCount={}'.format(cmd[:-1], cmdCount)
 			else:
 				response = cmd
-			conn.sendall( '{}\r\n\0'.format(response) )
+			conn.sendall( '{}\r\n\0'.format(response).encode() )
 		haveCommands = True
 		cmdCount += 1
 
@@ -158,7 +157,7 @@ def MonitorCmds():
 count = 0
 def formatMessage( n, lap, t ):
 	global count
-	message = u'''<?xml version="1.0" encoding="UTF-8"?>
+	message = '''<?xml version="1.0" encoding="UTF-8"?>
 <Alien-RFID-Reader-Auto-Notification>
  <ReaderName>{readerName}</ReaderName>
  <ReaderType>{readerType}</ReaderType>

@@ -5,7 +5,7 @@ import atexit
 import time
 from roundbutton import RoundButton
 import Utils
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 from threading import Thread as Process
 from Alien import AlienServer
 import Alien
@@ -218,8 +218,8 @@ class MainWin( wx.Frame ):
 		self.LightRed = wx.Colour(255,153,153)
 		
 		font = self.GetFont()
-		bigFont = wx.Font( font.GetPointSize() * 1.5, font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
-		titleFont = wx.Font( bigFont.GetPointSize()*2.2, bigFont.GetFamily(), bigFont.GetStyle(), bigFont.GetWeight() )
+		bigFont = wx.Font( round(font.GetPointSize() * 1.5), font.GetFamily(), font.GetStyle(), wx.FONTWEIGHT_BOLD )
+		titleFont = wx.Font( round(bigFont.GetPointSize()*2.2), bigFont.GetFamily(), bigFont.GetStyle(), bigFont.GetWeight() )
 		
 		self.vbs = wx.BoxSizer( wx.VERTICAL )
 		

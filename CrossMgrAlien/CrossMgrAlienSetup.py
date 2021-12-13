@@ -1,6 +1,5 @@
 from distutils.core import setup
 import os
-import six
 import shutil
 import zipfile
 import datetime

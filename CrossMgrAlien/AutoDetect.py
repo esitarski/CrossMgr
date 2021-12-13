@@ -1,5 +1,4 @@
 import re
-import six
 import socket
 import subprocess
 

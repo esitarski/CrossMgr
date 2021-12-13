@@ -383,7 +383,7 @@ def setter( self, value, cmd, inType, outType ):
 	assert inType.validate(value)
 	
 	inStr = inType.toStr( value )
-	response = sendCmd( self.cmdSocket, cmd, u'set {} = {}'.format(cmd, inStr), outType )
+	response = sendCmd( self.cmdSocket, cmd, 'set {} = {}'.format(cmd, inStr), outType )
 	
 	if not outType:
 		return None
@@ -557,13 +557,14 @@ class AlienReader( object ):
 	
 	def getResponse( self, conn ):
 		# Read delimited data from the reader
+		ReaderDelim = seld.ReaderDelim.decode()
 		response = ''
-		while not response.endswith( self.ReaderDelim ):
+		while not response.endswith( ReaderDelim ):
 			more = conn.recv( 4096 )
 			if not more:
 				break
 			response += more
-		return response
+		return response.encode()
 	
 	def sendCmd( self, name, cmdStr ):
 		if self.testMode:
@@ -576,7 +577,7 @@ class AlienReader( object ):
 			return outType.toStr( outType.repValue() )
 		else:
 			# Send the command to the Alien reader and get the response.
-			self.cmdSocket.sendall( u'{}{}{}'.format(self.SupressPrefix, cmdStr, self.CmdDelim).encode() )
+			self.cmdSocket.sendall( '{}{}{}'.format(self.SupressPrefix, cmdStr, self.CmdDelim).encode() )
 			response = self.getResponse( self.cmdSocket )
 			return response
 	

@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------- #
 # ROUNDBUTTON wxPython IMPLEMENTATION
 #
-# Edward Sitarski, @ 07 November 2011
+# Edward Sitarski, @ Updated April 2019
 #
 #
 # TODO List
@@ -87,7 +87,7 @@ class RoundButtonEvent(wx.PyCommandEvent):
 		:param `eventId`: the event identifier.
 		"""
 		
-		wx.PyCommandEvent.__init__(self, eventType, eventId)
+		super().__init__(eventType, eventId)
 		self.isDown = False
 		self.theButton = None
 
@@ -129,7 +129,7 @@ class RoundButton(wx.Control):
 		:param `name`: the button name.
 		"""
 		
-		wx.Control.__init__(self, parent, id, pos, size, style, validator, name)
+		super().__init__(parent, id, pos, size, style, validator, name)
 
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
@@ -519,11 +519,11 @@ class RoundButton(wx.Control):
 		# Magic constants to get things to look right.
 		rWidth = rSmaller * (2.0 * 0.7 * 0.9)
 		rHeight = rSmaller * (0.8 * 0.9)
-		gc.DrawEllipse( xCenter - rWidth / 2, yCenter - rSmaller, rWidth, rHeight )
+		gc.DrawEllipse( round(xCenter - rWidth / 2), round(yCenter - rSmaller), rWidth, rHeight )
 		
 		# Draw an outline around the button body.
 		# Also covers up the gap between the flare and the top edge of the button.
-		gc.SetPen( wx.Pen(wx.Colour(50,50,50), r * 0.025) )
+		gc.SetPen( wx.Pen(wx.Colour(50,50,50), round(r * 0.025)) )
 		gc.SetBrush( wx.TRANSPARENT_BRUSH )
 		gc.DrawEllipse( xCenter - rSmaller, yCenter - rSmaller, rSmaller * 2, rSmaller * 2 )
 		
@@ -537,9 +537,8 @@ class RoundButton(wx.Control):
 		
 		yText = yCenter - textHeight * len(lines) / 2.0
 		for line in lines:
-			dc.DrawText( line, xCenter - dc.GetTextExtent(line)[0] // 2, yText )
+			dc.DrawText( line, round(xCenter - dc.GetTextExtent(line)[0] / 2), round(yText) )
 			yText += textHeight
-		
 		
 if __name__ == '__main__':
 

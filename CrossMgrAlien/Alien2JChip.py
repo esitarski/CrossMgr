@@ -1,16 +1,15 @@
 import re
 import os
-import six
 import socket
 import time
 import threading
 import datetime
-from six.moves.queue import Empty
+from queue import Empty
 from Utils import readDelimitedData, timeoutSecs
 
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
-CR = u'\r'
+CR = '\r'
 		
 #------------------------------------------------------------------------------	
 # Function to format number, lap and time in JChip format
@@ -18,7 +17,7 @@ CR = u'\r'
 count = 0
 def formatMessage( tagID, t ):
 	global count
-	message = u"DA{} {} 10  {:05X}      C7 date={}{}".format(
+	message = "DA{} {} 10  {:05X}      C7 date={}{}".format(
 				tagID.lstrip('0').upper(),			# Tag code as read, no leading zeros, upper case.
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
 				count,								# Data index number in hex.
@@ -28,7 +27,7 @@ def formatMessage( tagID, t ):
 	count += 1
 	return message
 
-class Alien2JChip( object ):
+class Alien2JChip:
 	def __init__( self, dataQ, messageQ, shutdownQ, crossMgrHost, crossMgrPort ):
 		self.dataQ = dataQ
 		self.messageQ = messageQ
@@ -56,7 +55,7 @@ class Alien2JChip( object ):
 		instance_name = '{}-{}'.format(socket.gethostname(), os.getpid())
 		while self.checkKeepGoing():
 			self.messageQ.put( ('Alien2JChip', 'state', False) )
-			self.messageQ.put( ('Alien2JChip', u'Trying to connect to CrossMgr as "{}"...'.format(instance_name)) )
+			self.messageQ.put( ('Alien2JChip', 'Trying to connect to CrossMgr as "{}"...'.format(instance_name)) )
 			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 
 			#------------------------------------------------------------------------------
@@ -67,7 +66,7 @@ class Alien2JChip( object ):
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except socket.error:
-					self.messageQ.put( ('Alien2JChip', u'CrossMgr Connection Failed.  Trying a "{}" again in 2 secs...'.format(instance_name)) )
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed.  Trying "{}" again in 2 secs...'.format(instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():
@@ -78,9 +77,9 @@ class Alien2JChip( object ):
 				
 			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'state', True) )
-			self.messageQ.put( ('Alien2JChip', u'CrossMgr Connection succeeded!' ) )
-			self.messageQ.put( ('Alien2JChip', u'Sending identifier "{}"...'.format(instance_name)) )
-			sock.send("N0000{}{}".format(instance_name, CR) )
+			self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection succeeded!' ) )
+			self.messageQ.put( ('Alien2JChip', 'Sending identifier "{}"...'.format(instance_name)) )
+			sock.send( "N0000{}{}".format(instance_name, CR).encode() )
 
 			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'Waiting for "get time" command from CrossMgr...') )
@@ -89,13 +88,13 @@ class Alien2JChip( object ):
 				try:
 					received = sock.recv(1).decode()
 				except Exception as e:
-					self.messageQ.put( ('Alien2JChip', u'CrossMgr Communication Error: {}'.format(e)) )
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: {}'.format(e)) )
 					success = False
 					break
 				if received == 'G':
 					while received[-1] != CR:
 						received += sock.recv(1).decode()
-					self.messageQ.put( ('Alien2JChip', u'Received cmd: "{}" from CrossMgr'.format(received[:-1])) )
+					self.messageQ.put( ('Alien2JChip', 'Received cmd: "{}" from CrossMgr'.format(received[:-1])) )
 					break
 
 			#------------------------------------------------------------------------------
@@ -106,10 +105,10 @@ class Alien2JChip( object ):
 			if not self.keepGoing:
 				break
 				
-			self.messageQ.put( ('Alien2JChip', u'Send gettime data...') )
+			self.messageQ.put( ('Alien2JChip', 'Send gettime data...') )
 			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
 			dBase = datetime.datetime.now()
-			message = u'GT0{} date={}{}'.format(
+			message = 'GT0{} date={}{}'.format(
 				dBase.strftime('%H%M%S%f'),
 				dBase.strftime('%Y%m%d'),
 				CR)

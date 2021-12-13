@@ -13,7 +13,8 @@ import xml.dom
 import xml.dom.minidom
 import unicodedata
 from xml.dom.minidom import parseString
-from six.moves.queue import Empty
+import traceback
+from queue import Empty
 from Utils import readDelimitedData, timeoutSecs, Bell
 
 HOME_DIR = os.path.expanduser("~")
@@ -24,7 +25,7 @@ RepeatSeconds = RepeatSecondsDefault
 #-------------------------------------------------------------------------
 # Alien Reader Initialization Commands
 #
-cmdStr = u'''
+cmdStr = '''
 alien							# default username
 password						# default password
 
@@ -99,11 +100,11 @@ def removeDiacritic( s ):
 	without any diacritical marks.
 	'''
 	try:
-		return unicodedata.normalize('NFKD', u'{}'.format(s)).encode('ASCII', 'ignore').decode()
+		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
 	except Exception:
 		return s
 	
-class Alien( object ):
+class Alien:
 	CmdPrefix = chr(1)			# Causes Alien reader to suppress prompt on response.
 	CmdDelim = '\n'				# Delimiter of Alien commands (sent to reader).
 	ReaderDelim = '\0'			# Delimiter of Alien reader responses (received from reader).
@@ -153,13 +154,14 @@ class Alien( object ):
 			
 	def getResponse( self, conn ):
 		# Read delimited data from the reader
-		response = ''
-		while not response.endswith( self.ReaderDelim ):
+		ReaderDelim = self.ReaderDelim.encode()
+		response = b''
+		while not response.endswith( ReaderDelim ):
 			more = conn.recv( 4096 )
 			if not more:
 				break
 			response += more
-		return response
+		return response.decode()
 	
 	def stripReaderDelim( self, response ):
 		return (response[:-len(self.ReaderDelim)] if response.endswith(self.ReaderDelim) else response).strip()
@@ -174,9 +176,9 @@ class Alien( object ):
 		try:
 			cmdSocket.connect( (self.cmdHost, int(self.cmdPort)) )
 		except Exception as inst:
-			self.messageQ.put( ('Alien', u'Reader Connection Failed: CmdAddr={}:{}'.format(self.cmdHost, self.cmdPort) ) )
-			self.messageQ.put( ('Alien', u'{}'.format(inst) ) )
-			self.messageQ.put( ('Alien', u'Check that the Reader is turned on and connected, and press Reset.') )
+			self.messageQ.put( ('Alien', 'Reader Connection Failed: CmdAddr={}:{}'.format(self.cmdHost, self.cmdPort) ) )
+			self.messageQ.put( ('Alien', '{}'.format(inst) ) )
+			self.messageQ.put( ('Alien', 'Check that the Reader is turned on and connected, and press Reset.') )
 			cmdSocket.close()
 			return False
 		
@@ -198,7 +200,7 @@ class Alien( object ):
 			cmd = c.format( **cmdContext )											# Perform field substitutions.
 			self.messageQ.put( ('Alien', 'Sending Command: "{}"'.format(cmd)) )		# Write to the message queue.
 			# Send cmd.  Prefix with 0x01 if not username or password.
-			cmdSocket.sendall( u'{}{}{}'.format('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim).encode() )
+			cmdSocket.sendall( '{}{}{}'.format('' if i < 2 else self.CmdPrefix, cmd, self.CmdDelim).encode() )
 			response = self.getResponse( cmdSocket )								# Get the response.
 			self.messageQ.put( ('Alien', 'Reader Response: "{}"'.format(self.stripReaderDelim(response)) ) )
 			
@@ -252,7 +254,7 @@ class Alien( object ):
 				#---------------------------------------------------------------------------
 				# Strip terminating null (if present).
 				#
-				data = data.encode()
+				data = data.decode()
 				while data.endswith( chr(0) ):
 					data = data[:-1]
 				
@@ -280,10 +282,10 @@ class Alien( object ):
 							info[c.tagName] = c.firstChild.nodeValue.strip()
 					break
 					
-				self.messageQ.put( ('Alien', u'Successfully Received Heartbeat Info:') )
-				self.messageQ.put( ('Alien', u'**********************************************') )
+				self.messageQ.put( ('Alien', 'Successfully Received Heartbeat Info:') )
+				self.messageQ.put( ('Alien', '**********************************************') )
 				self.messageQ.put( ('Alien', data) )
-				self.messageQ.put( ('Alien', u'**********************************************') )
+				self.messageQ.put( ('Alien', '**********************************************') )
 				
 				#---------------------------------------------------------------------------
 				# Save info especially connection details.
@@ -292,8 +294,8 @@ class Alien( object ):
 				self.cmdHost = info['IPAddress']
 				self.cmdPort = int(info['CommandPort'])
 				
-			self.messageQ.put( ('Alien', u'Alien reader.  CmdAddr={}:{}'.format(self.cmdHost, self.cmdPort)) )
-			self.messageQ.put( ('CmdHost', u'{}:{}'.format(self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('Alien', 'Alien reader.  CmdAddr={}:{}'.format(self.cmdHost, self.cmdPort)) )
+			self.messageQ.put( ('CmdHost', '{}:{}'.format(self.cmdHost, self.cmdPort)) )
 
 			#---------------------------------------------------------------------------
 			# Send initialization commands to the reader.
@@ -301,16 +303,16 @@ class Alien( object ):
 			try:
 				success = self.sendCommands()
 			except Exception as e:
-				self.messageQ.put( ('Alien', u'Send Commands fails.  Error: {}'.format(e)) )
+				self.messageQ.put( ('Alien', 'Send Commands fails.  Error: {}\n{}'.format(e, traceback.format_exc())) )
 				success = False
 			
 			if not success:
 				return
 			
-			self.messageQ.put( ('Alien', u'state', True) )
+			self.messageQ.put( ('Alien', 'state', True) )
 			
 			self.tagCount = 0
-			self.messageQ.put( ('Alien', u'Listening for Alien reader data on ({}:{})...'.format(self.notifyHost, self.notifyPort)) )
+			self.messageQ.put( ('Alien', 'Listening for Alien reader data on ({}:{})...'.format(self.notifyHost, self.notifyPort)) )
 			dataSocket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			dataSocket.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 			dataSocket.bind( (self.notifyHost, self.notifyPort) )
@@ -325,7 +327,7 @@ class Alien( object ):
 			
 				# Wait for a connection from the reader if we do not already have one.
 				if not readerSocket:
-					self.messageQ.put( (u'Alien', 'Waiting for reader to send tag info...') )
+					self.messageQ.put( ('Alien', 'Waiting for reader to send tag info...') )
 					try:
 						readerSocket, addr = dataSocket.accept()
 					except socket.timeout:
@@ -333,7 +335,7 @@ class Alien( object ):
 					readerSocket.settimeout( 1 )	# Set timeout to 1 second so we can check whether to keep going.
 			
 				# Get the reader message.
-				response = u''
+				response = ''
 				while not response.endswith( self.ReaderDelim ):
 					try:
 						more = readerSocket.recv( 4096 ).decode()
@@ -367,7 +369,7 @@ class Alien( object ):
 					try:
 						doc = parseString( data )
 					except Exception as e:
-						self.messageQ.put( ('Alien', u'Message Syntax error:', e) )
+						self.messageQ.put( ('Alien', 'Message Syntax error:', e) )
 						self.messageQ.put( ('Alien', data) )
 						continue
 						
@@ -429,7 +431,7 @@ class Alien( object ):
 						# Write the entry to the log.
 						if pf:
 							# 									Thu Dec 04 10:14:49 PST
-							pf.write( u'{},{},{}\n'.format(
+							pf.write( '{},{},{}\n'.format(
 										tagID,					# Keep tag in same format as read.
 										discoveryTime.strftime('%a %b %d %H:%M:%S.%f %Z %Y-%m-%d'),
 										readCount) )
