@@ -39,6 +39,7 @@ import xlsxwriter
 
 import Utils
 
+from AddExcelInfo import AddExcelInfo
 from LogPrintStackStderr import LogPrintStackStderr
 from ForecastHistory	import ForecastHistory
 from NumKeypad			import NumKeypad
@@ -1804,6 +1805,7 @@ class MainWin( wx.Frame ):
 				export = ExportGrid( **GetGrid() )
 				export.toExcelSheetXLSX( formats, sheetCur )
 
+		AddExcelInfo( wb )
 		if silent:
 			try:
 				wb.close()
@@ -3577,6 +3579,7 @@ class MainWin( wx.Frame ):
 		sheetCur = wb.add_worksheet( 'Combined Results' )
 		VTTAExport( wb, sheetCur )
 		
+		AddExcelInfo( wb )
 		try:
 			wb.close()
 			if not silent:
@@ -3602,6 +3605,7 @@ class MainWin( wx.Frame ):
 		sheetCur = wb.add_worksheet( 'JP Results' )
 		JPResultsExport( wb, sheetCur )
 		
+		AddExcelInfo( wb )
 		try:
 			wb.close()
 			if not silent:

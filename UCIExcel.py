@@ -1,5 +1,6 @@
 import Model
 import Utils
+from AddExcelInfo import AddExcelInfo
 from GetResults import GetResults, UnstartedRaceWrapper
 
 import copy
@@ -451,4 +452,5 @@ def UCIExcel( category, fname, startList=False ):
 	for col, width in colWidths.items():
 		ws.set_column( col, col, width+2 )
 	
+	AddExcelInfo( wb )
 	wb.close()

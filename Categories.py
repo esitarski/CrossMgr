@@ -5,6 +5,8 @@ import wx.grid as gridlib
 import xlsxwriter
 import Utils
 import Model
+from AddExcelInfo import AddExcelInfo
+
 from Undo import undo
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
@@ -451,6 +453,8 @@ class Categories( wx.Panel ):
 		wb = xlsxwriter.Workbook( xlFName )
 		sheetCur = wb.add_worksheet( _('Categories') )
 		export.toExcelSheetXLSX( ExportGrid.getExcelFormatsXLSX(wb), sheetCur )
+		
+		AddExcelInfo( wb )
 		try:
 			wb.close()
 			if Utils.getMainWin().launchExcelAfterPublishingResults:
