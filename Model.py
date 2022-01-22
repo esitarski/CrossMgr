@@ -8,7 +8,6 @@ import copy
 import bisect
 import socket
 import random
-import getpass
 import datetime
 import itertools
 import functools
@@ -26,7 +25,12 @@ import minimal_intervals
 import SetRangeMerge
 from InSortedIntervalList import InSortedIntervalList
 
-CurrentUser = getpass.getuser()
+from getuser import lookup_username
+try:
+	CurrentUser = lookup_username()
+except Exception as e:
+	CurrentUser = ''
+	
 CurrentComputer = socket.gethostname()
 
 maxInterpolateTime = 7.0*60.0*60.0	# 7 hours.

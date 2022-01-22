@@ -13,7 +13,7 @@ random.seed( 10101010 )
 seen = set()
 nums = []
 for i in range(25):
-	while 1:
+	while True:
 		x = random.randint(1,200)
 		if x not in seen:
 			seen.add( x )
@@ -101,7 +101,7 @@ def StartClient():
 	
 	print( 'StartClient: Waiting for commands.' )
 	llrpSuccess = LLRPStatus_Parameter( StatusCode = StatusCode.M_Success, ErrorDescription = 'Success')
-	while 1:
+	while True:
 		message = UnpackMessageFromSocket( clientSocket )
 		
 		print( 'Received:' )

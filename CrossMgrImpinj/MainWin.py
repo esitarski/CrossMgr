@@ -612,7 +612,7 @@ class MainWin( wx.Frame ):
 			self.strays.SetColumnWidth( c, wx.LIST_AUTOSIZE_USEHEADER )
 			
 	def strayHandler( self, strayQ ):
-		while 1:
+		while True:
 			msg = strayQ.get()
 			if msg[0] == 'strays':
 				wx.CallAfter( self.refreshStrays, msg[1] )

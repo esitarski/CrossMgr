@@ -1,11 +1,10 @@
 import sys
-import six
 import random
 import operator
 import itertools
 from time import sleep
 from datetime import datetime, timedelta
-from six.moves.queue import Queue, Empty
+from queue import Queue, Empty
 from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
 
 # Use a reference time to convert given times to float seconds.
@@ -26,7 +25,7 @@ MethodNames = ('Quad Regression', 'Strongest Read', 'First Read Time')
 MostReadsChoice, DBMaxChoice = 0, 1
 AntennaChoiceNames = ('Most Reads', 'Max Signal dB')
 	
-class AntennaReads( object ):
+class AntennaReads:
 	__slots__ = ('firstRead', 'reads', 'trDbMax', 'dbMax')
 	
 	def __init__( self, tr, db ):
@@ -80,15 +79,21 @@ class AntennaReads( object ):
 		else:	# method == StrongestReadMethod or len(self.reads) < 3
 			return self.trDbMax, len(self.reads)
 		
-class TagGroupEntry( object ):
+class TagGroupEntry:
 	__slots__ = ('antennaReads', 'firstReadMin', 'lastReadMax', 'isStray')
 	
+	# Compare functions to find the best antenna sample.
+	antennaQRCmp = {
+		MostReadsChoice: (lambda x: (len(x[1].reads), x[1].dbMax)),		# number of reads, break ties with dbMax.
+		DBMaxChoice: 	 (lambda x: (x[1].dbMax, len(x[1].reads))),		# dbMax, break ties with number of reads.
+	}
+		
 	def __init__( self, antenna, t, db ):
 		self.antennaReads = [None, None, None, None]
 		self.firstReadMin, self.lastReadMax = sys.float_info.max, -sys.float_info.max
 		self.isStray = False
 		self.add( antenna, t, db )
-		
+	
 	def add( self, antenna, t, db ):
 		tr = datetimeToTr(t)
 		iAntenna = antenna - 1
@@ -111,22 +116,19 @@ class TagGroupEntry( object ):
 			return trToDatetime( self.firstReadMin ), 1, 0
 		
 		if method == QuadraticRegressionMethod:
-			a, arBest = max(
-				((a, ar) for a, ar in enumerate(self.antennaReads) if ar),
-				key=((lambda x: (len(x[1].reads), x[1].dbMax)) if antennaChoice == MostReadsChoice else (lambda x: (x[1].dbMax, len(x[1].reads))))
-			)
+			a, arBest = max( ((a, ar) for a, ar in enumerate(self.antennaReads) if ar), key=self.antennaQRCmp[antennaChoice] )
 			tr, sampleSize = arBest.getBestEstimate( method, removeOutliers )
 			return trToDatetime(tr), sampleSize, a+1
 		
 		else: # method == StrongestReadMethod:
-			a, arBest = max( ((a, ar) for a, ar in enumerate(self.antennaReads) if ar), key=lambda x: x[1].dbMax )
+			a, arBest = max( ((a, ar) for a, ar in enumerate(self.antennaReads) if ar), key=self.antennaQRCmp[DBMaxChoice] )
 			tr, sampleSize = arBest.trDbMax, len(arBest.reads)
 			return trToDatetime(tr), sampleSize, a+1
 		
 	def __repr__( self ):
 		return 'TagGroupEntry({},{})'.format(self.firstReadMin, self.lastReadMax)
 	
-class TagGroup( object ):
+class TagGroup:
 	'''
 		Process groups of tag reads and return the best time estimated using quadratic regression.
 		Stray reads are also detected if there is no quiet period for the tag.
@@ -141,7 +143,7 @@ class TagGroup( object ):
 
 	def flush( self ):
 		# Process all waiting reads.
-		while 1:
+		while True:
 			try:
 				antenna, tag, t, db = self.q.get(False)
 			except Empty:

@@ -8,8 +8,8 @@ import datetime
 import random
 import traceback
 from collections import defaultdict
-from six.moves.queue import Queue, Empty
-from Utils import readDelimitedData, timeoutSecs, Beep
+from queue import Queue, Empty
+from Utils import timeoutSecs, Beep
 
 try:
 	from pyllrp.pyllrp import *

@@ -3,7 +3,7 @@ import operator
 from pyllrp.pyllrp import *
 from pyllrp.TagWriter import TagWriter
 
-def GetReceiveTransmitPowerGeneralCapabilities( connector):
+def GetReceiveTransmitPowerGeneralCapabilities( connector ):
 	# Enable Impinj Extensions
 	message = IMPINJ_ENABLE_EXTENSIONS_Message( MessageID = 0xeded )
 	response = connector.transact( message )
