@@ -29,6 +29,7 @@ import Version
 import WebReader
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
 from Synchronizer import syncfunc
+import OutputStreamer
 
 # import LockLog
 # Lock, RLock = LockLog.Lock, LockLog.RLock
@@ -396,20 +397,62 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				success = True
 				try:
 					rfid_data = json.loads( post_body )
-				except Exception:
+				except Exception as e:
 					success = False
+					wx.CallAfter( Utils.writeLog, str(post_body) )
+					wx.CallAfter( Utils.logException, e, sys.exc_info() )
+					
 				if success:
 					data = []
 					for d in rfid_data['data']:
-						assert( len(d) == 2 and all(f in d for f in ('t','tag')) )
 						try:
 							data.append( ('data', d['tag'], datetime.datetime.fromisoformat( d['t'] )) )
-						except Exception:
-							pass
+						except Exception as e:
+							wx.CallAfter( Utils.writeLog, str(d) )
+							wx.CallAfter( Utils.logException, e, sys.exc_info() )
 					WebReader.SetData( data )
+					wx.CallAfter( Utils.refresh )
 					
 				self.send_response( HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST )
 				self.end_headers()
+			
+			elif up.path == '/bib.js':
+				# Accept Bib input as json.  Assume all time corrections have been done by the client.
+				content_len = int(self.headers.get('Content-Length'))
+				post_body = self.rfile.read(content_len)
+				success = True
+				try:
+					rfid_data = json.loads( post_body )
+				except Exception as e:
+					success = False
+					wx.CallAfter( Utils.writeLog, str(post_body) )
+					wx.CallAfter( Utils.logException, e, sys.exc_info() )
+				
+				if success:
+					data = []
+					for d in rfid_data['data']:
+						try:
+							data.append( (d['bib'], datetime.datetime.fromisoformat( d['t'] )) )
+						except Exception as e:
+							wx.CallAfter( Utils.writeLog, str(d) )
+							wx.CallAfter( Utils.logException, e, sys.exc_info() )
+					
+					def updateModel( data ):
+						# Must be run on the main thread.
+						race = Model.race
+						if not race or not data:
+							return
+						for num, t in data:
+							race.addTime( num, t, False )
+						race.setChanged()
+						OutputStreamer.writeNumTimes( data )
+						Utils.refresh()
+						
+					wx.CallAfter( updateModel, data )
+
+				self.send_response( HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST )
+				self.end_headers()
+				
 			else:
 				assert( 'Unrecognized POST' )
 		except Exception as e:

@@ -2,14 +2,15 @@ import random
 import bisect
 from Names import GetNameTeam
 
-def SimulateData( riders=200 ):
+def SimulateData( riders=None, laps=None ):
 	# Generate random rider events.
 	random.seed( 10101021 )
 
-	riders = 24
+	riders = riders or 24
+	laps = laps or 8
 	
 	raceMinutes = 8
-	mean = 8*60.0 / 8	# Average lap time.
+	mean = raceMinutes*60.0 / laps	# Average lap time.
 	juniorLaps = 5
 	seniorLaps = 4
 
@@ -42,7 +43,7 @@ def SimulateData( riders=200 ):
 			mu = random.normalvariate( mean * 1.15, mean/20.0 )		# These riders are slower, on average.
 			riderInfo.append( [num] + list(GetNameTeam(False)) )
 			t += startOffset										# Account for offset start.
-		for laps in (lapsTotal):
+		for laps in range(lapsTotal):
 			t += random.normalvariate( mu, var/2.0 )	# Rider's lap time.
 			if random.random() > errorPercent:		# Respect error rate.
 				lapTimes.append( (t, num) )

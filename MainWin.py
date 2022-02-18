@@ -3182,7 +3182,7 @@ class MainWin( wx.Frame ):
 
 	def genTimes( self, regen=False ):
 		if regen:
-			for k, v in SimulateData().items():
+			for k, v in SimulateData(200, 40).items():
 				setattr( self, k, v )
 		else:
 			self.raceMinutes = SimulationLapTimes.raceMinutes
