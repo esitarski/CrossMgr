@@ -1,9 +1,29 @@
+import wx
+import io
 import os
 import csv
+import math
 import operator
+import datetime
 from collections import defaultdict
 
 import Model
+import Utils
+
+def getLynxDir( race ):
+	return os.path.splitext(race.getFileName(includeMemo=False))[0] + '-lynx'
+
+def hhmmssmsFromSeconds( t ):
+	fract, secs = math.modf( t )
+	ms = round( fract * 1000000.0 )
+	
+	secs = int( secs )
+	hh = secs // (60*60)
+	mm = (secs // 60) % 60
+	ss = secs % 60
+	
+	return hh, mm, ss, ms
+	
 
 def strToSeconds( s = '' ):
 	secs = 0.0
@@ -31,7 +51,11 @@ def getStatus( p ):
 		return Model.Rider.DQ
 	return Model.Rider.DNF			# default DNF
 
-def ReadLIF( crossMgrStart, fname ):
+def ReadLIF( fname ):
+	race = Model.race
+	if not race:
+		return
+
 	reader = csv.reader( fname )
 	# Place, ID, lane, last name, first name, affiliation, <time>, license, <delta time>, <ReacTime>, <splits>, time trial start time, user 1, user 2, user 3
 	
@@ -78,13 +102,19 @@ def ReadLIF( crossMgrStart, fname ):
 			
 		return record
 
-	with open( fname, newline='' ) as f:
+	with open(fname) as f:
+		s = f.read()
+		
+	# Check for training newline (hopefully indicates we got the entire file).
+	if s.endswith('\n'):
 		raceStart = None
-		reader = csv.reader( f )
+		reader = csv.reader( io.StringIO(s) )
 		for i, row in enumerate(reader):
 			if i == 0:
-				# Get the time of day start from the header.
+				# Get the race start time from the header.
 				raceStart = strToSeconds( row[-1] )
+				race.startTime = datetime.datetime( *(tuple(int(v) for v in race.date.split('-')) + hhmmssmsFromSeconds(raceStart)) )
+				continue
 			
 			try:
 				yield getFields(raceStart, row)
@@ -96,12 +126,7 @@ def ImportLIF( fname ):
 	if not race:
 		return
 	
-	if race.startTime:
-		crossMgrStartTime = strToSeconds( race.startTime.strftime('%H:%M:%S.f') )
-	else:
-		crossMgrStartTime = strToSeconds( race.self.scheduledStart )
-	
-	for r in ReadLIF(crossMgrStart, fname):
+	for r in ReadLIF(fname):
 		rider = race.getRider( r['id'] )
 		category = race.getCategory( rider.num )
 		startOffset = self.categoryStartOffset(category)
@@ -112,8 +137,11 @@ def ImportLIF( fname ):
 
 #-----------------------------------------------------------------------
 
-def Export( folder ):
+def Export( folder=None ):
 	''' Export the race in FinishLynx file format (lynx.ppl, lynx.evt, lynx.sch). '''
+	''' Write the files into a -lynx folder in the CrossMgr race folder (if no folder given). '''
+	''' Ignore the category start offsets and put everyone into one start for FinishLynx. '''
+	''' Assume that the categories were started with the correct offsets on import. '''
 
 	race = Model.race
 	if not race:
@@ -123,9 +151,15 @@ def Export( folder ):
 		externalInfo = race.excelLink.read()
 	except Exception:
 		externalInfo = {}
+		
+	folder = folder or getLynxDir( race )
+	if not os.path.isdir(folder):
+		os.mkdir( folder )
+	
+	fnameBase = 'lynx'
 	
 	# Create the people reference file.
-	fname = os.path.join( folder, 'lynx.ppl' )
+	fname = os.path.join( folder, '{}.ppl'.format(fnameBase) )
 	# ID number, last name, first name, affiliation
 	fields = ('LastName', 'FirstName', 'Team')
 	with open(fname, 'w', newline='') as f:
@@ -133,28 +167,91 @@ def Export( folder ):
 		for id, info in sorted( externalInfo.items(), key=operator.itemgetter(0) ):
 			writer.writerow( [id] + [externalInfo.get(field,'') for field in fields] )
 
-	# Partition riders by category.
-	categoryRiders = defaultdict( list )
-	for id in externalInfo.keys():
-		categoryRiders[race.getCategory(id)].append( id )
-			
-	fname = os.path.join( folder, 'lynx.evt' )
+	fname = os.path.join( folder, '{}.evt'.format(fnameBase) )
 	# Event number, round number, heat number, event name
-	# <tab, space or comma>ID, lane
-	categories = sorted(race.getCategories(), key=operator.methodcaller('getStartOffsetSecs'))
+	# <tab, space or comma>ID, lane # lane=0 as there are no assigned lanes.
 	with open(fname, 'w') as f:
-		for event, category in enumerate(categories, 1):
-			f.write( '{},1,1,{}\n'.format(event, category.fullname.replace(',', r'\,')) )
-			for id in sorted(categoryRiders[category]):
-				f.write( ',{}'.format(id) )
+		f.write( '1,1,1,{}\n'.format( os.path.splitext(race.getFileName(includeMemo=False))[0] ) )
+		for id in sorted( externalInfo.keys() ):
+			f.write( ',{},0\n'.format(id) )
 	
-	fname = os.path.join( folder, 'lynx.sch' )
+	fname = os.path.join( folder, '{}.sch'.format(fnameBase) )
 	# event number, round number, heat number
 	with open(fname, 'w') as f:
-		for event, category in enumerate(categories, 1):
-			f.write( '{},1,1\n'.format(event) )
+		f.write( '1,1,1\n' )
 
+#-----------------------------------------------------------------------
+
+class FinishLynxDialog( wx.Dialog ):
+	def __init__( self, parent, id = wx.ID_ANY ):
+		super().__init__( parent, id, "FinishLynx",
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
+					
+		mainSizer = wx.BoxSizer( wx.VERTICAL )	
+		fgs = wx.FlexGridSizer( 2, 4, 4 )
+		
+		self.exportButton = wx.Button( self, label=_('Export files in FinishLynx Format') )
+		self.exportButton.Bind( wx.EVT_BUTTON, self.onExport )
+		fgs.Add( self.exportButton )
+		self.exportText = wx.StaticText( self, label=_('') )
+		fgs.Add( self.exportText )
+		
+		self.importButton = wx.Button( self, label=_('Import FinishLynx Results Files') )
+		self.importButton.Bind( wx.EVT_BUTTON, self.onImport )
+		self.importText = wx.StaticText( self, label=_('') )
+		fgs.Add( self.importButton )
+		fgs.Add( self.importText )
+		
+		fgs.AddGrowableCol( 1 )
+		
+		mainSizer.Add( fgs, flag=wx.EXPAND|wx.ALL, border=8 )
+		
+		btnSizer = self.CreateStdDialogButtonSizer( wx.CLOSE )
+		if btnSizer:
+			mainSizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border = 8 )
+			
+		self.SetSizerAndFit( mainSizer )
+
+	def onExport( self, event ):
+		race = Model.race
+		if not Model.race:
+			return
+		
+		try:
+			Export()
+			wx.MessageBox( '{}.\n{}:\n\n  {}'.format( _("Export successful"), _(".ppl, .evt, .sch files written to folder"), getLynxDir(race) ), _("FinishLynx Export"), wx.OK, self )
+		except Exception as e:
+			wx.MessageBox( '{}:\n\n\t{}'.format( _("Export failure"), e), _("FinishLynx Export"), wx.OK, self )
+		
+	def onImport( self, event ):
+		race = Model.race
+		if not Model.race:
+			return
+		
+		with wx.FileDialog(self, _("FinishLynx Results Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif)|*.lif",
+						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return
+			pathname = fileDialog.GetPath()
+			
+		try:
+			ImportLIF( pathname )
+			wx.MessageBox( _("Import successful"), _("FinishLynx Import"), wx.OK, self )
+			Utils.refresh()
+		except Exception as e:
+			wx.MessageBox( '{}:\n\n\t{}'.format( _("Import failure"), e), _("FinishLynx Import"), wx.OK, self )
+		
 if __name__ == "__main__":
 	Model.race = Model.Race()
 	Model.race._populate()
+	
 	Export( 'finishlynx' )
+	ImportLIF( 'data/003-1-01 Default.lif' )
+	
+	app = wx.App(False)
+	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
+	finishLynx = FinishLynxDialog( mainWin )
+	Model.newRace()
+	finishLynx.ShowModal()
+	app.MainLoop()
