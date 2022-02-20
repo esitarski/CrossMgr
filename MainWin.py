@@ -85,6 +85,7 @@ from BibEnter			import BibEnter
 from BackgroundJobMgr	import BackgroundJobMgr
 from Restart			import Restart
 from ReissueBibs	 	import ReissueBibsDialog
+from FinishLynx			import FinishLynxDialog
 import BatchPublishAttrs
 import Model
 import JChipSetup
@@ -641,6 +642,11 @@ class MainWin( wx.Frame ):
 
 		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("Export Results as &JSON..."), _("Export results as JSON (.json)") )
 		self.Bind(wx.EVT_MENU, self.menuExportResultsJSON, item )
+		
+		self.dataMgmtMenu.AppendSeparator()
+		
+		item = self.dataMgmtMenu.Append( wx.ID_ANY, _("FinishLynx Integration..."), _("Export/Import with FinishLynx") )
+		self.Bind(wx.EVT_MENU, self.menuFinishLynx, item )
 		
 		self.menuBar.Append( self.dataMgmtMenu, _("&DataMgmt") )
 
@@ -2600,6 +2606,11 @@ class MainWin( wx.Frame ):
 		except Exception as e:
 			Utils.writeLog( 'menuExportResultsJSON: error "{}"'.format(e) )
 	
+	@logCall
+	def menuFinishLynx( self, event ):
+		with FinishLynxDialog( self ) as fld:
+			fld.ShowModal()
+		
 	#--------------------------------------------------------------------------------------------
 	def doCleanup( self ):
 		self.showResultsPage()

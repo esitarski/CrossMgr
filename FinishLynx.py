@@ -11,7 +11,11 @@ import Model
 import Utils
 
 def getLynxDir( race ):
-	return os.path.splitext(race.getFileName(includeMemo=False))[0] + '-lynx'
+	fileName = Utils.getFileName()
+	baseName = os.path.splitext(fileName)[0]
+	while baseName.endswith('-'):
+		baseName = baseName[:-1]
+	return baseName + '-lynx'
 
 def hhmmssmsFromSeconds( t ):
 	fract, secs = math.modf( t )
@@ -156,28 +160,25 @@ def Export( folder=None ):
 	if not os.path.isdir(folder):
 		os.mkdir( folder )
 	
-	fnameBase = 'lynx'
+	fnameBase = os.path.join( folder, 'lynx' )
 	
 	# Create the people reference file.
-	fname = os.path.join( folder, '{}.ppl'.format(fnameBase) )
 	# ID number, last name, first name, affiliation
 	fields = ('LastName', 'FirstName', 'Team')
-	with open(fname, 'w', newline='') as f:
+	with open(fnameBase + '.ppl', 'w', newline='') as f:
 		writer = csv.writer( f );
 		for id, info in sorted( externalInfo.items(), key=operator.itemgetter(0) ):
 			writer.writerow( [id] + [externalInfo.get(field,'') for field in fields] )
 
-	fname = os.path.join( folder, '{}.evt'.format(fnameBase) )
 	# Event number, round number, heat number, event name
 	# <tab, space or comma>ID, lane # lane=0 as there are no assigned lanes.
-	with open(fname, 'w') as f:
+	with open(fnameBase + '.evt', 'w') as f:
 		f.write( '1,1,1,{}\n'.format( os.path.splitext(race.getFileName(includeMemo=False))[0] ) )
 		for id in sorted( externalInfo.keys() ):
 			f.write( ',{},0\n'.format(id) )
 	
-	fname = os.path.join( folder, '{}.sch'.format(fnameBase) )
 	# event number, round number, heat number
-	with open(fname, 'w') as f:
+	with open(fnameBase + '.sch', 'w') as f:
 		f.write( '1,1,1\n' )
 
 #-----------------------------------------------------------------------
@@ -190,13 +191,13 @@ class FinishLynxDialog( wx.Dialog ):
 		mainSizer = wx.BoxSizer( wx.VERTICAL )	
 		fgs = wx.FlexGridSizer( 2, 4, 4 )
 		
-		self.exportButton = wx.Button( self, label=_('Export files in FinishLynx Format') )
+		self.exportButton = wx.Button( self, label=_('Export CrossMgr Data to FinishLynx Files (linx.ppl, linx.evt, linx.sch)') )
 		self.exportButton.Bind( wx.EVT_BUTTON, self.onExport )
 		fgs.Add( self.exportButton )
 		self.exportText = wx.StaticText( self, label=_('') )
 		fgs.Add( self.exportText )
 		
-		self.importButton = wx.Button( self, label=_('Import FinishLynx Results Files') )
+		self.importButton = wx.Button( self, label=_('Import FinishLynx Results Files into CrossMgr (*.lif)') )
 		self.importButton.Bind( wx.EVT_BUTTON, self.onImport )
 		self.importText = wx.StaticText( self, label=_('') )
 		fgs.Add( self.importButton )
@@ -215,6 +216,19 @@ class FinishLynxDialog( wx.Dialog ):
 	def onExport( self, event ):
 		race = Model.race
 		if not Model.race:
+			return
+		
+		folder = getLynxDir( race )
+		pplname = os.path.join( folder, 'lynx.ppl' )
+		if (os.path.isfile(pplname) and
+			wx.OK != wx.MessageBox(
+				'{}\n\n\t{}\n\n{}'.format(
+					_("FinishLynx files already exist in."),
+					folder,
+					_("Replace them?"),
+				),
+				_("FinishLynx Export"), wx.OK|wx.CANCEL, self )
+			):
 			return
 		
 		try:
