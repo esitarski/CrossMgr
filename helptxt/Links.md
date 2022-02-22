@@ -40,6 +40,7 @@
 [TeamResults]:		TeamResults.html
 [Restart]:			Restart.html
 [TimeTrial]:		TimeTrial.html
+[FinishLynx]:		FinishLynx.html
 [FAQ]:				FAQ.html
 
 [SetLaps]:			SetLaps.html

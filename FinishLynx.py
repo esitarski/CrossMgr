@@ -3,8 +3,10 @@ import io
 import os
 import csv
 import math
+import time
 import operator
 import datetime
+import random
 from collections import defaultdict
 
 import Model
@@ -106,11 +108,16 @@ def ReadLIF( fname ):
 			
 		return record
 
-	with open(fname) as f:
-		s = f.read()
-		
-	# Check for training newline (hopefully indicates we got the entire file).
-	if s.endswith('\n'):
+	for i in range(3):
+		with open(fname) as f:
+			s = f.read()
+			
+		# Check for trailing newline.
+		if not (s and s.endswith('\n')):
+			# Empty file or no newline.  File is likely being written.  Wait a little and try again.
+			time.sleep( 0.5 + random.random() );
+			continue
+			
 		raceStart = None
 		reader = csv.reader( io.StringIO(s) )
 		for i, row in enumerate(reader):
@@ -124,20 +131,25 @@ def ReadLIF( fname ):
 				yield getFields(raceStart, row)
 			except Exception as e:
 				pass
+		break
+	else:
+		raise ValueError( 'FinishLynx results file is empty or does not end with newline' )
 	
 def ImportLIF( fname ):
 	race = Model.race
 	if not race:
 		return
 	
-	for r in ReadLIF(fname):
+	race.resetAllCaches()
+	for r in ReadLIF( fname ):
 		rider = race.getRider( r['id'] )
-		category = race.getCategory( rider.num )
-		startOffset = self.categoryStartOffset(category)
-		rider.times = [t + startOffset for t in record['race_times']]
-		rider.status = record['status']
-		
-	race.setChanged()
+		rider.times = []
+		if not race.isTimeTrial:
+			rider.firstTime = None
+		for t in record['race_times']:
+			race.addTime( r['id'], t, False )
+		rider.setStatus( record['status'] )
+		race.setChanged()
 
 #-----------------------------------------------------------------------
 

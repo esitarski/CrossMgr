@@ -126,3 +126,6 @@ Edit|Reason for the data edit
 By|Username who made the edit (login name on the computer)
 On|Date and Time when the edit was made.
 
+## FinishLynx...
+
+Import and Export with FinishLynx.  See [FinishLynx][] for more details.

@@ -573,7 +573,7 @@ class Entry:
 	def __repr__( self ):
 		return 'Entry(num={}, lap={}, interp={}, t={})'.format(self.num, self.lap, self.interp, self.t)
 
-class Rider(object):
+class Rider:
 	# Rider Status.
 	Finisher  = 0
 	DNF       = 1
