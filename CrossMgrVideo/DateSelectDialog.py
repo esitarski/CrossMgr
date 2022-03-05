@@ -21,7 +21,7 @@ class DateSelectDialog( wx.Dialog ):
 		for i, (d, c, r) in enumerate(triggerDates):
 			self.triggerDatesList.InsertItem( i, d.strftime('%Y-%m-%d') )
 			self.triggerDatesList.SetItem( i, 1, str(c) )
-			self.triggerDatesList.SetItem( i, 2, r )
+			self.triggerDatesList.SetItem( i, 2, r[:128] )
 		
 		for c in range(3):
 			self.triggerDatesList.SetColumnWidth( c, -2 )
