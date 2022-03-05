@@ -687,9 +687,13 @@ class MainWin( wx.Frame ):
 		wx.CallLater( 300, self.refreshTriggers )
 		
 		# Add event handlers to the app as this is the last window to process events.
+		'''
+		# Do not process the space key as it messes up when typing into the notes dialog.
 		wx.App.Get().Bind( wx.EVT_CHAR_HOOK, self.OnKeyDown )
 		wx.App.Get().Bind( wx.EVT_KEY_UP, self.OnKeyUp )
+		'''
 	
+	'''
 	def OnKeyDown( self, event ):
 		#print( 'OnKeyDown', event.GetKeyCode() )
 		if not self.capturing:
@@ -712,6 +716,7 @@ class MainWin( wx.Frame ):
 			event.SetEventObject( self.capture )
 			self.onStopCapture( event )
 		event.Skip()
+	'''
 	
 	def OnAboutBox(self, e):
 		description = "CrossMgrVideo - USB Camera support"
