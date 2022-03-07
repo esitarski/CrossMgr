@@ -436,7 +436,9 @@ class Race:
 		self.events.append( RaceEvent(RaceEvent.DNS, [41,42]) )
 		random.seed( 0xed )
 		bibs = list( range(10,34) )
+		self.events.append( RaceEvent(RaceEvent.Break, bibs=[13,14]) )
 		self.events.append( RaceEvent(RaceEvent.LapUp, bibs=[13,14]) )
+		self.events.append( RaceEvent(RaceEvent.OTB, bibs=[14,15]) )
 		self.events.append( RaceEvent(RaceEvent.LapDown, bibs=[14,15]) )
 		
 		def addTies( bibList ):

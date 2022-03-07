@@ -100,7 +100,7 @@ class EventDialog( wx.Dialog ):
 		eventTypeName = None
 		for id, btn in self.idToButton.items():
 			if id == self.e.eventType:
-				btn.SetBackgroundColour( wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNHIGHLIGHT) )
+				btn.SetBackgroundColour( highlightColour )
 				eventTypeName = btn.GetLabel()
 			else:
 				btn.SetBackgroundColour( wx.NullColour )
@@ -117,7 +117,7 @@ class EventDialog( wx.Dialog ):
 	def onVerb( self, event, idEvent ):
 		for id, btn in self.idToButton.items():
 			if id == idEvent:
-				btn.SetBackgroundColour( wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNHIGHLIGHT) )
+				btn.SetBackgroundColour( highlightColour )
 			else:
 				btn.SetBackgroundColour( wx.NullColour )
 		self.EndModal( wx.ID_OK )
@@ -133,9 +133,9 @@ class EventDialog( wx.Dialog ):
 	def commit( self ):
 		changed = False
 
-		highlightColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNHIGHLIGHT).GetAsString(wx.C2S_CSS_SYNTAX)
+		hlc = highlightColour.GetAsString(wx.C2S_CSS_SYNTAX)
 		for id, btn in self.idToButton.items():
-			if btn.GetBackgroundColour().GetAsString(wx.C2S_CSS_SYNTAX) == highlightColour:
+			if btn.GetBackgroundColour().GetAsString(wx.C2S_CSS_SYNTAX) == hlc:
 				if id != self.e.eventType:
 					self.e.eventType = id
 					changed = True
@@ -146,22 +146,6 @@ class EventDialog( wx.Dialog ):
 			changed = True
 		
 		return changed
-
-class EventPopupMenu( wx.Menu ):
-	def __init__(self, row=None ):
-		super().__init__()
-
-		self.row = row		
-		mmi = wx.MenuItem(self, wx.ID_DELETE)
-		self.Append( mmi )
-		self.Bind(wx.EVT_MENU, self.OnDelete, mmi)
-
-	def OnDelete(self, event):
-		events = Model.race.events[:]
-		del events[self.row]
-		Model.race.setEvents( events )
-		if Utils.getMainWin():
-			Utils.getMainWin().refresh()
 
 class EventList( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY ):
@@ -211,7 +195,6 @@ class EventList( wx.Panel ):
 
 		self.grid = EventListGrid( self )
 		self.grid.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onLeftClick )
-		#self.grid.Bind( gridlib.EVT_GRID_CELL_RIGHT_CLICK, self.onRightClick )
 
 		self.grid.CreateGrid( 0, 5 )
 		self.grid.SetSelectionMode( gridlib.Grid.SelectRows )
@@ -307,9 +290,6 @@ class EventList( wx.Panel ):
 			def GetRow( self ):
 				return row
 		self.onLeftClick( EditEventDuck() )
-	
-	def onRightClick( self, event ):
-		self.PopupMenu(EventPopupMenu(event.GetRow()), event.GetPosition())
 	
 	def refresh( self ):
 		race = Model.race
