@@ -195,7 +195,7 @@ class EventList( wx.Panel ):
 				name = 'Sprint'
 			elif 'Finish' in name:
 				continue
-			self.choiceButtons.append( wx.Button(self, label=name) )
+			self.choiceButtons.append( Button(self, label=name) )
 			self.choiceButtons[-1].SetForegroundColour( eventColour )
 			self.choiceButtons[-1].Bind( wx.EVT_BUTTON, lambda event, idEvent=idEvent: self.onVerb(event, idEvent) )
 			ws.Add( self.choiceButtons[-1] )
@@ -203,7 +203,7 @@ class EventList( wx.Panel ):
 
 		ws = wx.GridSizer(1, 4, 2, 2)
 		for name, idEvent in Model.RaceEvent.States:
-			self.choiceButtons.append( wx.Button(self, label=name) )
+			self.choiceButtons.append( Button(self, label=name) )
 			self.choiceButtons[-1].SetForegroundColour( stateColour )
 			self.choiceButtons[-1].Bind( wx.EVT_BUTTON, lambda event, idEvent=idEvent: self.onVerb(event, idEvent) )
 			ws.Add( self.choiceButtons[-1], flag=wx.LEFT, border=2 )
