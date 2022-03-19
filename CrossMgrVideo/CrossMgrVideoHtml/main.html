@@ -418,6 +418,9 @@ function updateImages( iTrigger ) {
 	// Since the browser caches the images, subsequent accesses will be faster.
 	playStop();
 	
+	// Clear the current zoom view while waiting for the load.
+	imageScaledBitmap.SetSourceRect( [0,0,0,0] );
+	
 	// Show the wait cursor until all the images have loaded.
 	for( let e of document.getElementsByClassName('display_ctrl') )
 		e.style.cursor = 'wait';
