@@ -97,9 +97,22 @@ class Database:
 		UpdateSeconds = 10	# Seconds into the past to track duplicate times.
 		self.lastTsPhotos = FIFOCacheSet( UpdateSeconds*60 )
 		
-		# Use the RLock so that we serialize writes ourselves.  This allows use to share the same sqlite3 instance between threads.
+		# Use an RLock to contol database access ourselves.
 		self.dbLock = RLock()
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0, check_same_thread=False )
+
+		# Configure database for better performance of large blobs.
+		cmds = '''
+pragma journal_mode = WAL;
+pragma synchronous = normal;
+pragma temp_store = memory;
+pragma page_size = 32768;
+pragma mmap_size = 30000000000;'''
+
+		for c in cmds.split(';'):
+			c = c.strip()
+			if c:
+				self.conn.execute( c )
 		
 		if initTables:
 			with self.dbLock, self.conn:

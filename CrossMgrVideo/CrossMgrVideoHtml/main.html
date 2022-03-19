@@ -377,12 +377,21 @@ function showImages() {
 	restoreView( false );
 }
 
+function imagesAreLoading() { return loadedImageCount < imagesCur.length; }
+
 function onLoadImage( iFrame ) {
 	// If the zoomed image has loaded, or there is no zoom image and all images have been loaded, show them.
 	++loadedImageCount;
 	const trig = getTriggerCur();
-	if( trig.zoom_frame >= 0 ? trig.zoom_frame == iFrame : loadedImageCount >= imagesCur.length )
+	if( (trig.zoom_frame >= 0 && trig.zoom_frame == iFrame) || loadedImageCount >= imagesCur.length ) {
 		showImages();
+		
+		if( loadedImageCount >= imagesCur.length ) {
+			// Clear the wait cursor as we now have all the images.
+			for( let e of document.getElementsByClassName('display_ctrl') )
+				e.style.cursor = 'auto';
+		}
+	}
 }
 
 function updateImageTitle() {
@@ -408,6 +417,10 @@ function updateImages( iTrigger ) {
 	// When the last image has loaded, the screen will update.
 	// Since the browser caches the images, subsequent accesses will be faster.
 	playStop();
+	
+	// Show the wait cursor until all the images have loaded.
+	for( let e of document.getElementsByClassName('display_ctrl') )
+		e.style.cursor = 'wait';
 	
 	iTrigger = Math.max( 0, Math.min(iTrigger, triggersCur.length-1) )
 	iTriggerCur = iTrigger;
@@ -564,6 +577,9 @@ function showImage( iImage ) {
 
 var playTimer = null;
 function play( dir ) {
+	if( imagesAreLoading() )
+		return;
+	
 	const tsJpgIds = getTriggerCur().tsJpgIds;
 	const iImageNext = (iImageCur + dir + tsJpgIds.length) % tsJpgIds.length;
 	let dt = tsJpgIds[iImageNext][0] - tsJpgIds[iImageCur][0];
@@ -584,17 +600,21 @@ function playStop() {
 	
 function goImage( iImage ) {
 	playStop();
-	if( !triggersCur.length )
+	if( !triggersCur.length || imagesAreLoading() )
 		return;
 	showImage( Math.max(0, Math.min(getTriggerCur().tsJpgIds.length-1, iImage) ) );
 }
 function goTrigger() {
 	playStop();
+	if( !triggersCur.length || imagesAreLoading() )
+		return;
 	showImage( getClosestImage() );
 }
 	
 function onWheel( e ) {
 	playStop();
+	if( !triggersCur.length || imagesAreLoading() )
+		return;
 	if( e )
 		iImageCur += (event.deltaY < 0) ? -1 : 1;
 	iImageCur = Math.max( 0, Math.min(iImageCur, imagesCur.length-1) );
@@ -869,17 +889,17 @@ function OnLoad() {
 			<button onclick="triggerGoNext()">&#9660; Next</button>
 		</div>
 	</div>
-	<canvas id="id_image_canvas" width="500" height="600"></canvas>
+	<canvas class="display_ctrl" id="id_image_canvas" width="500" height="600"></canvas>
 	<div style="margin-top: 0.25em;">
 		<span style=" font-size:200%">
-		<button title="Frame closest to Trigger"	onclick="goTrigger();"			><img src='center-icon.png'/></button>
-		<button style="margin-left: 1.5em;" title="-1 Frame"					onclick="goImage(iImageCur-1);"	><img src='minus.png'/></button>
-		<button title="+1 Frame"					onclick="goImage(iImageCur+1);"	><img src='plus.png'/></button>
-		<button  style="margin-left: 1.5em;"title="First Frame"					onclick="goImage(0);"			><img src='fast-backward.png'/></button>
-		<button title="Play Reverse"				onclick="playStop();play(-1);"	><img src='play-reverse.png'/></button>
-		<button title="Stop Play"					onclick="playStop();"			><img src='stop.png'/></button>
-		<button title="Play Forward"				onclick="playStop();play(1);"	><img src='play.png'/></button>
-		<button title="Last Frame"					onclick="goImage(1e10);"		><img src='fast-forward.png'/></button>
+		<button class="display_ctrl" title="Frame closest to Trigger"	onclick="goTrigger();"										>	<img src='center-icon.png'/>	</button>
+		<button class="display_ctrl" title="-1 Frame"					onclick="goImage(iImageCur-1);"	style="margin-left: 1.5em;"	>	<img src='minus.png'/>			</button>
+		<button class="display_ctrl" title="+1 Frame"					onclick="goImage(iImageCur+1);"								>	<img src='plus.png'/>			</button>
+		<button class="display_ctrl" title="First Frame"				onclick="goImage(0);"			style="margin-left: 1.5em;"	>	<img src='fast-backward.png'/>	</button>
+		<button class="display_ctrl" title="Play Reverse"				onclick="playStop();play(-1);"								>	<img src='play-reverse.png'/>	</button>
+		<button class="display_ctrl" title="Stop Play"					onclick="playStop();"										>	<img src='stop.png'/>			</button>
+		<button class="display_ctrl" title="Play Forward"				onclick="playStop();play(1);"								>	<img src='play.png'/>			</button>
+		<button class="display_ctrl" title="Last Frame"					onclick="goImage(1e10);"									>	<img src='fast-forward.png'/>	</button>
 		</span>
 		mouse-wheel scroll | click-drag zoom
 		<input type="checkbox" id="id_contrast" onchange="updateImages(iTriggerCur);" style="margin-left: 1.25em;">
