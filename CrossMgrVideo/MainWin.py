@@ -13,7 +13,6 @@ import re
 import sys
 import cv2
 import sys
-from time import sleep
 import math
 import json
 import time
