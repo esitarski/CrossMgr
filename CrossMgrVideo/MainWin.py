@@ -2,7 +2,7 @@ import platform
 import os
 
 # Apply workaround for cv2 slow open cameras.
-if platform.system == 'Windows':
+if platform.system() == 'Windows':
 	os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 import wx
