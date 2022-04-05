@@ -1,8 +1,14 @@
+import platform
+import os
+
+# Apply workaround for cv2 slow open cameras.
+if platform.system == 'Windows':
+	os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+
 import wx
 import wx.adv
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
-import os
 import re
 import sys
 import cv2
@@ -15,7 +21,6 @@ import socket
 import atexit
 import base64
 import random
-import platform
 import tempfile
 import threading
 import webbrowser
