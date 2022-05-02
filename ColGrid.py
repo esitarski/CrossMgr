@@ -188,9 +188,11 @@ class ColTable( Grid.GridTableBase ):
 		textColour = self.textColour.get(rc, None)
 		if textColour:
 			textColour = textColour.GetAsString(wx.C2S_HTML_SYNTAX)
+
 		backgroundColour = self.backgroundColour.get(rc, None)
 		if backgroundColour:
 			backgroundColour = backgroundColour.GetAsString(wx.C2S_HTML_SYNTAX)
+			
 		key = (textColour, backgroundColour, col, hCellAlign)
 		try:
 			attr = self.attrs[key]

@@ -16,6 +16,7 @@ from GetResults import GetResults, GetResultsWithData, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
 from FixCategories import SetCategory
 from FtpWriteFile import realTimeFtpPublish
+from GridHoverRow import AugmentGridHoverRow
 
 def getExpectedRecorded( tCutoff=0.0 ):
 	race = Model.race
@@ -118,6 +119,7 @@ def GetLabelGrid( parent, bigFont=False, colnames=[], leftAlignCols=[] ):
 	label = wx.StaticText( parent, label = '{}:'.format(_('Recorded')) )
 	
 	grid = ColGrid.ColGrid( parent, colnames = colnames )
+	AugmentGridHoverRow( grid )
 	grid.SetLeftAlignCols( leftAlignCols )
 	grid.SetRowLabelSize( 0 )
 	grid.SetRightAlign( True )
@@ -126,6 +128,8 @@ def GetLabelGrid( parent, bigFont=False, colnames=[], leftAlignCols=[] ):
 	grid.DisableDragRowSize()
 	grid.SetDefaultCellFont( font )
 	grid.SetDefaultRowSize( int(h * 1.15), True )
+	grid.SetSelectionBackground( wx.Colour(200,200,200) )
+	grid.SetSelectionForeground( wx.Colour(  0,  0,  0) )
 	return label, grid
 		
 class LabelGrid( wx.Panel ):
@@ -148,9 +152,9 @@ class ForecastHistory( wx.Panel ):
 		self.quickRecorded = None
 		self.quickExpected = None
 		self.entryCur = None
-		self.orangeColour = wx.Colour(255, 165, 0)
-		self.redColour = wx.Colour(255, 51, 51)
-		self.groupColour = wx.Colour(220, 220, 220)
+		self.orangeColour = wx.Colour(255, 165,   0)
+		self.redColour    = wx.Colour(255,  51,  51)
+		self.groupColour  = wx.Colour(220, 220, 220)
 
 		self.callFutureRefresh = None
 		self.SetDoubleBuffered( True )
