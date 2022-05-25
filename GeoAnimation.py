@@ -22,6 +22,7 @@ import xml.dom
 import xml.dom.minidom
 from GpxParse import GpxParse
 import collections
+from getuser import lookup_username
 import zipfile
 
 def LineNormal( x1, y1, x2, y2, normLen ):
@@ -197,7 +198,7 @@ def CreateGPX( courseName, gpsPoints ):
 		'For more information, see http://sites.google.com/site/crossmgrsoftware',
 		'',
 		'Created:  {}'.format(datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )),
-		'User:     {}'.format(escape(getpass.getuser())),
+		'User:     {}'.format(escape(lookup_username())),
 		'Computer: {}'.format(escape(socket.gethostname())),
 		'', ] )
 	) )
@@ -387,7 +388,7 @@ class GeoTrack:
 			'For more information, see http://sites.google.com/site/crossmgrsoftware',
 			'',
 			'Created:  {}'.format(datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )),
-			'User:     {}'.format(escape(getpass.getuser())),
+			'User:     {}'.format(escape(lookup_username())),
 			'Computer: {}'.format(escape(socket.gethostname())),
 			'', ] )
 		) )
