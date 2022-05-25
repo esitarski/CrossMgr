@@ -6,9 +6,9 @@ class ColGridHoverRow( ColGrid ):
 	def __init__( self, *args, **kwargs ):
 		super().__init__( *args, **kwargs )
 		self.GetGridWindow().Bind( wx.EVT_MOTION, self.OnMotionHover )
-		self.GetGridWindow().Bind( wx.EVT_LEAVE_WINDOW, self.OnLeaveHover )
+		# self.GetGridWindow().Bind( wx.EVT_LEAVE_WINDOW, self.OnLeaveHover )
 		
-	def HitCellTest(self,x,y):
+	def HitRowTest(self,x,y):
 		"""Convert client coordinates to cell position.
 
 		@return: a tuple of (row,col). If the position is not over a column or row,
@@ -18,20 +18,20 @@ class ColGridHoverRow( ColGrid ):
 				the grid itself!
 		"""
 		x, y = self.CalcUnscrolledPosition(x, y)
-		return self.YToRow(y), self.XToCol(x)
+		return self.YToRow(y)
 		
 	def OnLeaveHover( self, event ):
 		self.ClearSelection()
 		
 	def OnMotionHover( self, event ):
-		row, col = self.HitCellTest( event.GetX(), event.GetY() )
+		row = self.HitRowTest( event.GetX(), event.GetY() )
 		if row < 0:
 			self.ClearSelection()
 		else:
 			self.SelectRow( row )
 			
 def AugmentGridHoverRow( grid ):
-	def HitCellTest( x, y ):
+	def HitRowTest( x, y ):
 		"""Convert client coordinates to cell position.
 
 		@return: a tuple of (row,col). If the position is not over a column or row,
@@ -41,20 +41,20 @@ def AugmentGridHoverRow( grid ):
 				the grid itgrid!
 		"""
 		x, y = grid.CalcUnscrolledPosition(x, y)
-		return grid.YToRow(y), grid.XToCol(x)
+		return grid.YToRow(y)
 		
 	def OnLeaveHover( event ):
 		grid.ClearSelection()
 		
 	def OnMotionHover( event ):
-		row, col = HitCellTest( event.GetX(), event.GetY() )
+		row = HitRowTest( event.GetX(), event.GetY() )
 		if row < 0:
 			grid.ClearSelection()
 		else:
 			grid.SelectRow( row )
 
 	grid.GetGridWindow().Bind( wx.EVT_MOTION, OnMotionHover )
-	grid.GetGridWindow().Bind( wx.EVT_LEAVE_WINDOW, OnLeaveHover )
+	# grid.GetGridWindow().Bind( wx.EVT_LEAVE_WINDOW, OnLeaveHover )
 	return grid
 		
 if __name__ == '__main__':
