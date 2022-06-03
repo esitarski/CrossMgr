@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------	
-# JChipClient.py: JChip simulator program for testing JChip interface and CrossMgr.
+# MyLapsClient.py: MyLaps simulator program for testing MyLaps interface and CrossMgr.
 #
 # Copyright (C) Edward Sitarski, 2012.
 import os
@@ -13,12 +13,8 @@ import datetime
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port and socket.
-DEFAULT_PORT = 53135
+DEFAULT_PORT = 3097
 DEFAULT_HOST = '127.0.0.1'
-
-#------------------------------------------------------------------------------	
-# JChip delimiter (CR, **not** LF)
-CR = '\r'
 
 NumberOfStarters = 50
 
@@ -30,7 +26,7 @@ random.shuffle( nums )
 nums = nums[:NumberOfStarters]
 
 #------------------------------------------------------------------------------	
-# Create a JChip-style hex tag for each number.
+# Create a MyLaps-style hex tag for each number.
 tag = {n: '41AA%03X' % n for n in nums }
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01290700D0D8'
 tag[random.choice(list(tag.keys()))] = 'E2001018860B01530700D138'
@@ -282,7 +278,7 @@ Spin Doctors
 # Write out as a .xls file with the number tag data.
 #
 wb = xlwt.Workbook()
-ws = wb.add_sheet( "JChipTest" )
+ws = wb.add_sheet( "MyLapsTest" )
 for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag,StartTime'.split(',')):
 	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
@@ -295,14 +291,14 @@ for r, (n, t) in enumerate(tag.items()):
 	for c, v in enumerate([n, lastName, firstName, Team, t, 5*rowCur/(24.0*60.0*60.0)]):
 		ws.write( rowCur, c, v )
 	rowCur += 1
-wb.save('JChipTest.xls')
+wb.save('MyLapsTest.xls')
 wb = None
-print( 'Created JChipTest.xls.' )
+print( 'Created MyLapsTest.xls.' )
 
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with open('JChipTest.csv', 'w') as f:
+with open('MyLapsTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '{},{}\n'.format(n, tag[n]) )
@@ -310,7 +306,7 @@ with open('JChipTest.csv', 'w') as f:
 sendDate = True
 
 #------------------------------------------------------------------------------	
-# Function to format number, lap and time in JChip format
+# Function to format number, lap and time in MyLaps format
 # Z413A35 10:11:16.4433 10  10000      C7
 count = 0
 def formatMessage( n, lap, t ):
@@ -337,20 +333,19 @@ for n in nums:
 	lapTime = random.normalvariate( mean, mean/(varFactor * 4.0) )
 	for lap in range(0, lapMax+1):
 		numLapTimes.append( (n, lap, lapTime*lap) )
-numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time.
+numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time in seconds.
 
 def getCmd( sock ):
 	received = ''
-	while received[-1:] != CR:
+	while received[-1:] != '$':
 		try:
-			received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for JChip protocol).
+			received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for MyLaps protocol).
 		except socket.timeout:
 			return received, True
-	return received[:-1], False
+	return received, False
 
 #------------------------------------------------------------------------------	
 # Connect to the CrossMgr server.
-dBaseStart = None
 iMessage = 1
 while True:
 	print( 'Attempting to connect to CrossMgr server...' )
@@ -373,71 +368,79 @@ while True:
 	#------------------------------------------------------------------------------	
 	print( 'Connection succeeded!' )
 	name = '{}-{}'.format(socket.gethostname(), os.getpid())
-	print( 'Sending name...', name )
-	message = "N0000{}{}".format(name, CR)
+	
+	print( 'Sending Pong...', name )
+	message = "{}@Pong@$".format(name)
 	sock.send( message.encode() )
 
-	#------------------------------------------------------------------------------	
-	print( 'Waiting for get time command...' )
+	#------------------------------------------------------------------------------
+	print( 'Waiting for AckPong...' )
 	received, timedOut = getCmd( sock )
 	if timedOut:
 		print( 'Timed out [1]' )
 		continue
 	
 	print('Received cmd: "{}" from CrossMgr'.format(received) )
-	if not received.startswith('GT'):
+	if 'AckPong' not in received:
 		print( 'Unknown cmd [1]' )
 		continue
 
+	messageNumber = 0
+
+	#------------------------------------------------------------------------------	
+	print( 'Sending Gunshot Marker to start the race...' )
+	messageNumber += 1
+	raceStart = datetime.datetime.now()
+	sock.send( '{}@Marker@mt=Gunshot|t={}@{}@$'.format(name, raceStart.strftime('%H:%M:%S.%f'), messageNumber ).encode() )
+
 	#------------------------------------------------------------------------------
-	dBase = datetime.datetime.now()
-	dBase -= datetime.timedelta( seconds = 13*60+13.13 )	# Send the wrong time for testing purposes.
-	if not dBaseStart:
-		dBaseStart = dBase	# Record the first sent time to keep it as a basis for all transmitted times.
-
-	#------------------------------------------------------------------------------	
-	print( 'Send gettime data...' )
-	# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
-	message = 'GT0{:02d}{:02d}{:02d}{:02d}{}{}'.format(
-		dBase.hour, dBase.minute, dBase.second, int((dBase.microsecond / 1000000.0) * 100.0),
-		' date={}'.format( dBase.strftime('%Y%m%d') ) if sendDate else '',
-		CR)
-	print( message[:-1] )
-	sock.send( message.encode() )
-
-	#------------------------------------------------------------------------------	
-	print( 'Waiting for send command from CrossMgr...' )
+	print( 'Waiting for AckMarker...' )
 	received, timedOut = getCmd( sock )
 	if timedOut:
 		print( 'Timed out [2]' )
 		continue
-	print('Received cmd: "{}" from CrossMgr'.format(received) )
-	if not received.startswith('S'):
+	
+	print('Received: "{}" from CrossMgr'.format(received) )
+	if 'AckMarker' not in received:
 		print( 'Unknown cmd [2]' )
 		continue
 
 	#------------------------------------------------------------------------------	
 	print( 'Sending data...' )
 
+	tLast = numLapTimes[iMessage-1][2]
 	while iMessage < len(numLapTimes):
 		n, lap, t = numLapTimes[iMessage]
-		dt = t - numLapTimes[iMessage-1][2]
-		
-		time.sleep( dt )
+		time.sleep( t - tLast )
+		tLast = t
 		
 		# Send offsets relative to the transmit start time.
-		message = formatMessage( n, lap, dBaseStart + datetime.timedelta(seconds = t - 0.5) )
-		if iMessage & 15 == 0:
-			print( 'sending: {}: {}\n'.format(iMessage, message[:-1]) )
+		message = '{}@Passing@'.format( name )
+		iMessageLast = min(iMessage+3, len(numLapTimes))
+		for i in range(iMessage, iMessageLast):
+			n, lap, t = numLapTimes[i]
+			tCur = raceStart + datetime.timedelta(seconds = t)
+			message += 'c={}|t={}|d={}@'.format( tag[n], tCur.strftime('%H:%M:%S.%f'), tCur.strftime('%y%m%d') )
+		iMessage = iMessageLast
+		messageNumber += 1
+		message += '{}@$'.format( messageNumber )
+		
+		print( 'sending: {}\n'.format(message) )
 		try:
 			sock.send( message.encode() )
 			iMessage += 1
 		except Exception:
-			print( 'Disconnected.  Attempting to reconnect...' )
+			print( 'Error: {}  Attempting to reconnect...', e )
 			break
 		
-	if iMessage >= len(numLapTimes):
-		message = '<<<GarbageTerminateMessage>>>' + CR
-		sock.send( message.encode() )
-		break
+		print( 'Waiting for AckPassing...' )
+		received, timedOut = getCmd( sock )
+		if timedOut:
+			print( 'Timed out [3]' )
+			break
+			
+		print('Received: "{}" from CrossMgr'.format(received) )
+		if 'AckPassing' not in received:
+			print( 'Unknown cmd [3]' )
+			break
 		

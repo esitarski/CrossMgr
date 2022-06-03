@@ -1,21 +1,20 @@
-import socket
+import wx
 import sys
 import time
+import socket
 import datetime
 import atexit
 import re
 import os
-import wx
-import wx.lib.newevent
-import Utils
-import Model
 import select
+
 from threading import Thread as Process
 from queue import Queue, Empty
 
-ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
-
-stripLeadingZeros = Utils.stripLeadingZeros
+import Utils
+from Utils import stripLeadingZeros
+import Model
+from JChip import ChipReaderEvent, EVT_CHIP_READER
 
 readerEventWindow = None
 def sendReaderEvent( tagTimes ):
@@ -24,9 +23,6 @@ def sendReaderEvent( tagTimes ):
 
 combine = datetime.datetime.combine
 reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
-
-CR = u'\r'			# JChip delimiter
-CRByte = b'\r'
 
 dateToday = datetime.date.today()
 tSameCount = 0
@@ -42,7 +38,7 @@ def reset( raceDate = None ):
 	tSameCount = 0
 
 DEFAULT_HOST = '0.0.0.0'		# Listen to all available network cards on this computer.
-DEFAULT_PORT = int(os.environ.get('JCHIP_REMOTE_PORT',53135))
+DEFAULT_PORT = int(os.environ.get('MYLAPS_PORT',3097))
 
 q = None
 shutdownQ = None
@@ -50,23 +46,25 @@ listener = None
 
 # if we get the same time, make sure we give it a small offset to make it unique, but preserve the order.
 tSmall = datetime.timedelta( seconds = 0.00001 )
-tDay = datetime.timedelta( days = 1 )
 
-def parseTime( tStr, day = 0 ):
+def parseTime( tStr, dStr=None ):
 	global dateToday
 	global tLast
 	global tSameCount
 	
-	hh, mm, ss = tStr.split(':')
-	t = combine(dateToday, datetime.time()) + datetime.timedelta(
-			seconds = (float(hh) * 60.0 * 60.0) + (float(mm)  * 60.0) + float(ss) )
+	if dStr:
+		dToday = datetime.date( 2000 + int(dStr[:2]), int(dStr[2:4]), int(dStr[4:]) )
+	else:
+		dToday = dateToday
 	
-	t += tDay * day
+	hh, mm, ss = tStr.split(':')
+	t = combine(dToday, datetime.time()) + datetime.timedelta(
+			seconds = (float(hh) * 60.0 * 60.0) + (float(mm)  * 60.0) + float(ss) )
 	
 	if tLast is None:
 		tLast = t - tSmall
 	
-	# Add a small offset to equal times so the order is preserved.
+	# Add a tiny offset to equal times so the order is preserved.
 	if t == tLast:
 		tSameCount += 1
 	else:
@@ -88,24 +86,39 @@ def safeAppend( lst, x ):
 		
 reUnprintable = re.compile( r'[\x00-\x19\x7f-\xff]' )
 def formatAscii( s ):
+	if isinstance(s, bytes):
+		s = s.decode()
+	
 	r = []
 	charsPerLine = 40
 	for i in range(0, len(s), charsPerLine):
-		line = s[i:i+charsPerLine]
-		r.append( ''.join( '.{}'.format(c) for c in reUnprintable.sub('.', line)) )
-		r.append( ''.join( '{:02x}'.format(ord(c)) for c in line ) )
+		record = s[i:i+charsPerLine]
+		r.append( ''.join( '.{}'.format(c) for c in reUnprintable.sub('.', record)) )
+		r.append( ''.join( '{:02x}'.format(ord(c)) for c in record ) )
 	return '\n'.join( r )
+
+def parseRecord( record ):
+	return dict( f.split('=',1) for f in record.split('|') if '=' in f )
+
+def parseMessages( messages ):
+	for m in messages:
+		data = parseRecord( m )
+		if data:
+			yield data
+
+def Server( q, shutdownQ, HOST, PORT, startTime, test ):
+	# Ensure there are no reserved characters in the severName.
+	serverName = 'CrossMgr-{}'.format( re.sub( '[@$|-]', '-', socket.gethostname()) )
 	
-def Server( q, shutdownQ, HOST, PORT, startTime ):
 	global readerEventWindow
 	
 	if not readerEventWindow:
 		readerEventWindow = Utils.mainWin
 	
 	#-----------------------------------------------------
-	# Support multiple connections to a JChip client.
-	# If we get a Address Already in use, we wait some time and try again
+	# Support multiple connections to MyLaps clients.
 	#
+	# First open the server socket.
 	while True:
 		server = None
 		server = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
@@ -128,7 +141,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	outputs = []
 	
 	#
-	# Read and write buffers and state for JChip readers.
+	# Read and write buffers and state for MyLaps readers.
 	#
 	readerReadBytes, readerWriteBytes, readerName, readerComputerTimeDiff, nameReader = {}, {}, {}, {}, {}
 	
@@ -152,7 +165,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
-		Utils.writeLog( 'JChip: {}: {}'.format(category, message) )
+		Utils.writeLog( 'MyLaps: {}: {}'.format(category, message) )
 	
 	while inputs:
 		# qLog( 'waiting', 'for communication' )
@@ -165,13 +178,13 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		except Empty:
 			pass
 
-		# qLog( 'waiting', 'len(readable)=%d, len(writable)=%d, len(exceptional)=%d' % (len(readable), len(writable), len(exceptional) ) )
+		# qLog( 'waiting', 'len(readable)={}, len(writable)={}, len(exceptional)={}'.format(len(readable), len(writable), len(exceptional) ) )
 		#----------------------------------------------------------------------------------
 		# Handle inputs.
 		#
 		for s in readable:
 			if s is server:
-				# This is the listener.  Accept the connection from a JChip reader.
+				# This is the listener.  Accept a connection from a MyLaps reader.
 				connCur, addr = s.accept()
 				connCur.setblocking( 0 )
 				inputs.append( connCur )
@@ -179,7 +192,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
-			# This socket is a data socket.  Get the data.
+			# This socket is a data socket.  Get the data.  Assume utf-8 encoding.
 			try:
 				data = s.recv( 4096 )
 			except Exception as e:
@@ -192,127 +205,79 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				closeReader( s )
 				continue
 			
-			# Accumulate the data from this socket.
+			# Accumulate the data.
 			readerReadBytes[s] += data
-			if not readerReadBytes[s].endswith( CRByte ):
-				continue	# Missing delimiter - need to get more data.
+			if not readerReadBytes[s].endswith(b'$'):
+				continue	# Missing delimiter - need more data.
 				
-			# The buffer is delimited.  Decode from utf-8.  Process the messages.
+			# Process all delimited messages even if they come in the same buffer.
 			tagTimes = []
-			lines = readerReadBytes[s].decode().split( CR )
+			records = readerReadBytes[s].decode().split('$')
 			readerReadBytes[s] = b''
-			for line in lines:
-				line = line.strip()
-				if not line:
+			for record in records:
+				record = record.strip()
+				if not record:
 					continue
+				
+				components	= record.split('@')
+				reader  	= components[0]
+				cmd			= components[1]
+				
 				try:
-					if line.startswith( 'D' ):
-						# The tag and time are always separated by at least one space.
-						iSpace = line.find( ' ' )
-						if iSpace < 0:
-							qLog( 'error', line.strip() )
-							continue
-						tag = line[2:iSpace]	# Skip the D and first initial letter (always the same).
+					if cmd == 'Passing':
+						# Passing data from MyLaps.
+						messageNumber	= components[-2]
+						passings		= components[2:-2]
 						
-						# Find the first colon of the time and parse the time working backwards.
-						iColon = line.find( ':' )
-						if iColon < 0:
-							qLog( 'error', line.strip() )
-							continue
-							
-						m = reTimeChars.match( line[iColon-2:] )
-						if not m:
-							qLog( 'error', line.strip() )
-							continue
-						tStr = m.group(0)
-						
-						# Find the second field separated by a space after the time.
-						# The second character of the field is the day count.
-						iSecondField = line.find( ' ', iColon ) + 1
-						if iSecondField >= 0:
+						for data in parseMessages(passings):
 							try:
-								day = int(line[iSecondField+1:iSecondField+2])
-							except Exception:
-								day = 0
-						
-						try:
-							iDate = line.index( 'date=' ) + 5
-							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
-							if Model.race and Model.race.isRunning():
-								raceStartTime = Model.race.startTime
-								startDate = datetime.date( raceStartTime.year, raceStartTime.month, raceStartTime.day )
-								tagDate = datetime.date( YYYY, MM, DD )
-								day = (tagDate - startDate).days
-						except ValueError:
-							pass
-						
-						t = parseTime( tStr, day )
-						t += readerComputerTimeDiff.get(s, datetime.timedelta())
-						
-						tag = stripLeadingZeros(tag)
-						q.put( ('data', tag, t) )
-						tagTimes.append( (tag, t) )
-						
-					elif line.startswith( 'N' ):
-						name = line[5:].strip()		# Skip the cmd and current number of recorded times.
-						
-						# Check if this reader is known to us already.
-						# If so, the reader has dropped its previous connection and is reconnecting.
-						# Close the previous connection as it is no longer needed.
-						if name in nameReader:
-							s_dropped = nameReader[name]
-							qLog( 'transmitting', '"{}" is reconnecting'.format(readerName[s]) )
-							closeReader( s_dropped )
-						
-						readerName[s] = name
-						nameReader[name] = s
-						q.put( ('name', name) )
-						
-						# Now, get the reader's current time.
-						cmd = 'GT'
-						qLog( 'transmitting', '{} command to "{}" (gettime)'.format(cmd, readerName[s]) )
-						socketWrite( s, '{}{}'.format(cmd, CR) )
+								tag		= stripLeadingZeros( data['c'] )
+								t		= parseTime( data['t'], data['d'] )
+								q.put( ('data', tag, t) )
+								tagTimes.append( (tag, t) )
+							except Exception as e:
+								q.put( ('exception', '{}: {}'.format(e, data)) )		
 					
-					elif line.startswith( 'GT' ):
-						tNow = datetime.datetime.now()
+						# Acknowledge that we received the passings so MyLaps doesn't retransmit them.
+						socketWrite( s, '{}@AckPassing@{}@$'.format(serverName, messageNumber) )
+
+					elif cmd == 'Pong':
+						# The MyLaps client is connecting.  Acknowledge the connection and configure the info to receive.
+						# Read parameters:    c=Chip Code|d=date|utc=milliseconds in UTC time
+						# Device parameters:  time=time on the device in utc milliseconds.
+						readerName[s]		= reader
+						nameReader[reader]	= s
 						
-						iStart = 3
-						hh, mm, ss, hs = [int(line[i:i+2]) for i in range(iStart, iStart + 4 * 2, 2)]
-						try:
-							iDate = line.index( 'date=' ) + 5
-							YYYY, MM, DD = int(line[iDate:iDate+4]), int(line[iDate+4:iDate+6]), int(line[iDate+6:iDate+8])
-							tJChip = datetime.datetime( YYYY, MM, DD, hh, mm, ss, hs * 10000 )
-						except ValueError:
-							tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
-						except Exception:
-							tJChip = datetime.datetime.combine( tNow.date(), datetime.time(hh, mm, ss, hs * 10000) )
-							
-						readerComputerTimeDiff[s] = tNow - tJChip
+						# Acknowledge the Pong.
+						# Return the chip, time and date for Passings.
+						socketWrite( s, '{}@AckPong@Version2.1@c|t|d@$'.format(serverName) )
 						
-						qLog( 'getTime', '({})={:02d}:{:02d}:{:02d}.{:02d}'.format(line[2:].strip(), hh,mm,ss,hs) )
-						rtAdjust = readerComputerTimeDiff[s].total_seconds()
-						if rtAdjust > 0:
-							behindAhead = 'Behind'
-						else:
-							behindAhead = 'Ahead'
-							rtAdjust *= -1
-						qLog( 'timeAdjustment', 
-								'"{}" is: {} {} (relative to computer)'.format(
-									readerName.get(s, '<<unknown>>'),
-									behindAhead,
-									Utils.formatTime(rtAdjust, True)
-								) )
+					elif cmd == 'Ping':
+						# The MyLaps client is checking the connection.
+						# Acknowledge the Ping.
+						socketWrite( s, '{}@AckPing@$'.format(serverName) )
 						
-						# Send command to start sending data.
-						cmd = 'S0000'
-						qLog( 'transmitting', '{} command to "{}" (start transmission)'.format(
-							cmd, readerName.get(s, '<<unknown>>')) )
-						socketWrite( s, '{}{}'.format(cmd, CR) )
+					elif cmd == 'Marker':
+						messageNumber	= components[-2]
+						markers			= components[2:-2]
+
+						# Acknowledge the markers.
+						socketWrite( s, '{}@AckMarker@{}@$'.format(serverName, messageNumber) )
+
+						for data in parseMessages(markers):
+							if data.get('mt', None) == 'Gunshot':
+								startTimeNew = parseTime( data['t'] )
+								race = Model.race
+								if race and not test:
+									race.startTime = startTimeNew
+									race.setChanged()
+									wx.CallLater( 1, Utils.refresh )
+						
 					else:
-						q.put( ('unknown', line ) )
+						q.put( ('unknown', record ) )
 						
 				except (ValueError, KeyError, IndexError) as e:
-					qLog( 'exception', '{}: {}'.format(line, e) )
+					qLog( 'exception', '{}: {}'.format(record, e) )
 					pass
 			
 			sendReaderEvent( tagTimes )
@@ -320,16 +285,15 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		# Handle outputs.
 		#
 		for s in writable:
-			# Write out the waiting data.
-			# One call per command.
-			# If we sent it all, remove it from the outputs list.
+			# Write out the waiting bytes.  If we sent it all, remove it from the outputs list.
+			# Send each command in its own call.
 			try:
 				buf = readerWriteBytes[s]
-				buf = buf[:buf.find(CRByte)+1]
+				buf = buf[:buf.find(b'$')+1]
 				readerWriteBytes[s] = readerWriteBytes[s][s.send(buf):]
 			except Exception as e:
 				qLog( 'exception', 'send error: {}'.format(e) )
-				readerWriteBytes[s] = b''
+				readerWriteBytes[s] = ''
 			if not readerWriteBytes[s]:
 				safeRemove( outputs, s )
 			
@@ -344,7 +308,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 
 def GetData():
 	data = []
-	while 1:
+	while True:
 		try:
 			data.append( q.get_nowait() )
 		except (Empty, AttributeError):
@@ -386,8 +350,8 @@ def StartListener( startTime = datetime.datetime.now(),
 	
 	q = Queue()
 	shutdownQ = Queue()
-	listener = Process( target = Server, args=(q, shutdownQ, HOST, PORT, startTime) )
-	listener.name = 'JChip Listener'
+	listener = Process( target = Server, args=(q, shutdownQ, HOST, PORT, startTime, test) )
+	listener.name = 'MyLaps Listener'
 	listener.daemon = True
 	listener.start()
 	
@@ -405,6 +369,7 @@ def CleanupListener():
 	
 if __name__ == '__main__':
 	StartListener()
+	
 	count = 0
 	for count in range(50):
 		time.sleep( 1 )
@@ -415,4 +380,5 @@ if __name__ == '__main__':
 		for m in messages:
 			print( m )
 		sys.stdout.flush()
-		
+	
+	StopListener()

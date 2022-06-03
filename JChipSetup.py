@@ -1,10 +1,12 @@
+import re
+import sys
+import socket
+import datetime
+
 import wx
 import wx.lib.intctrl
 import wx.lib.rcsizer  as rcs
-import socket
-import sys
-import re
-import datetime
+
 import Model
 import Utils
 import JChip
@@ -12,6 +14,7 @@ import ChipReader
 from JChip import EVT_CHIP_READER
 import RaceResult
 import Ultra
+import MyLapsServer
 import HelpSearch
 from ReadSignOnSheet import GetTagNums
 
@@ -80,7 +83,7 @@ class JChipSetupDialog( wx.Dialog ):
 			_('Run this test before each race.'),
 		]) )
 		intro = ('\n'.join( [
-				_('CrossMgr supports the JChip, RaceResult, Ultra, Impinj and Alien RFID readers.'),
+				_('CrossMgr supports the JChip, RaceResult, Ultra, MyLaps, Impinj and Alien RFID readers.'),
 				_('For more details, consult the documentation for your reader.'),
 				] ) + '\n' + _('Checklist:') + '\n\n{}\n').format( todoList )
 		
@@ -100,7 +103,7 @@ class JChipSetupDialog( wx.Dialog ):
 		row = 0
 		rowColSizer.Add( wx.StaticText( self, label='{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra'),  _('WebReader')] )
+		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra'),  _('WebReader'),  _('MyLaps')] )
 		self.chipReaderType.SetSelection( 0 )
 		self.chipReaderType.Bind( wx.EVT_CHOICE, self.changechipReaderType )
 		rowColSizer.Add( self.chipReaderType,
@@ -225,6 +228,17 @@ class JChipSetupDialog( wx.Dialog ):
 				self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( False )
 		
+		elif selection == 4:	# MyLaps
+			self.port.SetValue( MyLapsServer.DEFAULT_PORT )
+			self.port.SetEditable( False )
+			self.ipaddr.SetEditable( False )
+			rfidReaderHost = ''
+			try:
+				self.ipaddr.SetValue( rfidReaderHost )
+			except Exception as e:
+				self.ipaddr.SetValue( Utils.GetDefaultHost() )
+			self.autoDetect.Show( False )
+		
 		self.Layout()
 		self.Refresh()
 	
@@ -308,7 +322,7 @@ class JChipSetupDialog( wx.Dialog ):
 			self.testJChip.SetBackgroundColour( wx.Colour(255,128,128) )
 			self.testJChip.SetValue( True )
 			
-			ChipReader.chipReaderCur.StartListener()
+			ChipReader.chipReaderCur.StartListener( test=True )
 			
 			self.appendMsg( 'listening for RFID connection...' )
 			

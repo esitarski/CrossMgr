@@ -3,9 +3,10 @@ import JChip
 import RaceResult
 import Ultra
 import WebReader
+import MyLapsServer
 
 class ChipReader:
-	JChip, RaceResult, Ultra, WebReader = tuple( range(4) )	# Add new options at the end.
+	JChip, RaceResult, Ultra, WebReader, MyLaps = tuple( range(5) )	# Add new options at the end.
 	
 	def __init__( self ):
 		self.chipReaderType = None
@@ -41,13 +42,20 @@ class ChipReader:
 			self.CleanupListener = WebReader.CleanupListener
 			self.IsListening = WebReader.IsListening
 			
-		else: # self.chipReaderType == ChipReader.JChip:
+		elif self.chipReaderType == ChipReader.JChip:
 			self.StartListener = JChip.StartListener
 			self.GetData = JChip.GetData
 			self.StopListener = JChip.StopListener
 			self.CleanupListener = JChip.CleanupListener
 			self.IsListening = JChip.IsListening
-
+			
+		elif self.chipReaderType == ChipReader.MyLaps:
+			self.StartListener = MyLapsServer.StartListener
+			self.GetData = MyLapsServer.GetData
+			self.StopListener = MyLapsServer.StopListener
+			self.CleanupListener = MyLapsServer.CleanupListener
+			self.IsListening = MyLapsServer.IsListening
+			
 chipReaderCur = ChipReader()
 
 

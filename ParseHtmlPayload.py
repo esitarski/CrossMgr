@@ -5,7 +5,8 @@ import json
 import datetime
 
 def ParseHtmlPayload( fname=None, content=None ):
-	assert fname or content
+	if not (fname or content):
+		return {'success':False, 'error':None, 'payload':None}
 	
 	payloadStart = "/* !!! payload begin !!! */"
 	payloadEnd = "/* !!! payload end !!! */"

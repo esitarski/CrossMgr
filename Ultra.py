@@ -287,7 +287,7 @@ def StopListener():
 def IsListening():
 	return listener is not None
 
-def StartListener( startTime=now(), HOST=None, PORT=None ):
+def StartListener( startTime=now(), HOST=None, PORT=None, test=False ):
 	global q
 	global shutdownQ
 	global listener

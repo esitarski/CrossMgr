@@ -4,7 +4,7 @@ import Model
 
 # Simple reader control functions as the messages come from the web server.
 
-def StartListener( startTime=None, HOST=None, PORT=None ):
+def StartListener( startTime=None, HOST=None, PORT=None, test=False ):
 	# Messages come from the web server, so, nothing to do here.
 	pass
 	
