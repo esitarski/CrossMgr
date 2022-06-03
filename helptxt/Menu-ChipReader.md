@@ -3,7 +3,7 @@
 
 # ChipReader
 
-CrossMgr can accept real-time messages from [JChip](http://mts.greentag.to/english/index.html) and [RaceResult](http://www.raceresult.ca/en-ca/home/index.php) receivers as well as an Impinj and Alien readers through the CrossMgrImpinj or CrossMgrAlien bridge programs respectively.
+CrossMgr can accept real-time messages from [JChip](http://mts.greentag.to/english/index.html), [RaceResult](http://www.raceresult.ca/en-ca/home/index.php), WebReader and MyLaps receivers as well as an Impinj and Alien readers through the CrossMgrImpinj or CrossMgrAlien bridge programs respectively.
 CrossMgr can also import a file that was generated from the JChip and RaceResult systems, or the CrossMgrImpinj or CrossMgrAlien bridge programs.
 
 All chip systems log the time and code when it reads a chip, and each chip has a unique code.  This code may be the same as the rider's Bib number, or it might be something different.  The code must to be associated with a rider's name, team, bib, etc.
@@ -44,9 +44,11 @@ __RaceResult:__ make sure your RaceResult reader is plugged into the network.
 
 __JChip:__ The JChip Setup Dialog provides the needed parameters to allow you to configure JChip.  Go to the "7 Setting of Connections" section in the JChip "Control Panel Soft Manual" and configure a JChip connection as follows:
 
-__Impinj and Alien bridge:__ CrossMgr will find these programs automatically as they are running on the same machine.
+__MyLaps:__ configure your MyLaps client(s) to connect to the CrossMgr computer using port 3097 (the default).
 
-CrossMgr communicates with the Chip or RaceResult reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  CrossMgr listens for a connection on all network connections including cable and wireless.  Check what hardware you need to accomplish this.
+__CrossMgrImpinj and CrossMgrAlien bridge:__ CrossMgr will find these programs automatically as they are running on the same machine.
+
+CrossMgr communicates with the reader through a TCP/IP interface (that is, an internet connection).  This can be done with cable or wireless.  CrossMgr listens for a connection on all network connections including cable and wireless.  Check what hardware you need to accomplish this.
 
 Field|Value|Description
 :----|:----|:----------
@@ -62,6 +64,21 @@ You may have to power down/power up JChip after making this change.
 __RaceResult__
 
 The __Remote IP Address__ is the address of the RaceResult reader.  If the AutoDetect button cannot find it on the LAN, of if you are using a fixed IP, you will have to enter it manually.
+
+__MyLaps__
+
+The MyLaps reader must be configured to connect to the CrossMgr computer on port 3097 (the default).
+
+Be extra careful to ensure that the the MyLaps reader and the CrossMgr computer have the same clock time as there is no way for CrossMgr to synchronize to the MyLaps clock automatically.
+The clocks should be synchronized automatically if both the MyLaps reader and the CrossMgr computer are connected to the internet.
+
+CrossMgr also supports the Gunshot Marker from MyLaps.  This will restart the race at the Gunshot time.  To use the MyLaps Gunshot Marker:
+
+* Start the CrossMgr race.
+* Give the MyLaps reader a minute-or-so to connect to it.
+* Generate the Gunshot Marker in MyLaps.  This will restart the CrossMgr race using the Gunshot time.
+
+Of course, other race start options can be used (eg. race started on first tag read, see [Actions][] for details).
 
 #### Do Reader Test
 
