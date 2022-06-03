@@ -103,7 +103,7 @@ class JChipSetupDialog( wx.Dialog ):
 		row = 0
 		rowColSizer.Add( wx.StaticText( self, label='{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		self.chipReaderType = wx.Choice( self, choices=[_('JChip/Impinj/Alien'), _('RaceResult'),  _('Ultra'),  _('WebReader'),  _('MyLaps')] )
+		self.chipReaderType = wx.Choice( self, choices=ChipReader.ChipReader.Choices )
 		self.chipReaderType.SetSelection( 0 )
 		self.chipReaderType.Bind( wx.EVT_CHOICE, self.changechipReaderType )
 		rowColSizer.Add( self.chipReaderType,

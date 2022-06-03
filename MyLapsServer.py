@@ -267,8 +267,9 @@ def Server( q, shutdownQ, HOST, PORT, startTime, test ):
 						for data in parseMessages(markers):
 							if data.get('mt', None) == 'Gunshot':
 								startTimeNew = parseTime( data['t'] )
+								q.put( ('marker', 'gunshot', startTimeNew) )
 								race = Model.race
-								if race and not test:
+								if not test and race and not race.isFinished():
 									race.startTime = startTimeNew
 									race.setChanged()
 									wx.CallLater( 1, Utils.refresh )

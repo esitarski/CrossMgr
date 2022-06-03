@@ -27,6 +27,7 @@ from BatchPublishAttrs import batchPublishAttr, batchPublishRaceAttr
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 import JChipSetup
 import WebServer
+import ChipReader
 import HelpSearch
 
 #------------------------------------------------------------------------------------------------
@@ -345,7 +346,7 @@ class RfidProperties( wx.Panel ):
 		self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.chipReaderChoices=[_('JChip/Impinj/Alien'), _('RaceResult'), _('Ultra')] 
+		self.chipReaderChoices = ChipReader.ChipReader.Choices
 		self.chipReaderType = wx.StaticText( self )
 		hs.Add( wx.StaticText( self, label='{}'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.chipReaderType, flag=wx.LEFT, border=4)
