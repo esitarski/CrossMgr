@@ -255,6 +255,7 @@ class Race:
 		self.date = datetime.date.today()
 		self.pointsForLapping = 20
 		self.doublePointsForLastSprint = True
+		self.doublePointsOnSprint = set()		# set other sprints to double points on.
 		self.snowball = False
 		self.pointsForPlace = Race.pointsForPlaceDefault.copy()
 
@@ -312,8 +313,11 @@ class Race:
 		Sprint = RaceEvent.Sprint
 		return sum( 1 for e in self.events if e.eventType == Sprint )
 	
+	def isDoublePoints( self, sprint ):
+		return sprint in self.doublePointsOnSprint or (self.doublePointsForLastSprint and sprint == self.getNumSprints())
+	
 	def getSprintLabel( self, sprint ):
-		if self.doublePointsForLastSprint and sprint == self.getNumSprints():
+		if self.isDoublePoints(sprint):
 			return 'Sp{} \u00D72'.format(sprint)
 		return 'Sp{}'.format(sprint)
 	
@@ -353,7 +357,7 @@ class Race:
 		points = self.pointsForPlace.get(place,0)
 		if self.snowball:
 			points *= sprint
-		if self.doublePointsForLastSprint and sprint == self.getNumSprints():
+		if self.isDoublePoints(sprint):
 			points *= 2
 		return points, place, tie
 	

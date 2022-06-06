@@ -116,6 +116,14 @@ class Configure( wx.Panel ):
 		self.doublePointsForLastSprintLabel = label
 		self.doublePointsForLastSprintCtrl = ctrl
 		
+		label = wx.StaticText( self, label='Double Points on Sprint(s):', style = wx.ALIGN_RIGHT )
+		self.gbs.Add( label, pos=(2, 9), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
+		ctrl = wx.TextCtrl( self )
+		ctrl.Bind(wx.EVT_TEXT, self.onChange)
+		self.gbs.Add( ctrl, pos=(2, 10), flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL )
+		self.doublePointsOnSprintLabel = label
+		self.doublePointsOnSprintCtrl = ctrl
+
 		#--------------------------------------------------------------------------------------------------------------
 		label = wx.StaticText( self, label='Sprint Every:' )
 		self.gbs.Add( label, pos=(3, 0), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
@@ -198,6 +206,7 @@ class Configure( wx.Panel ):
 	def ConfigureTempoRace( self ):
 		self.configurePointsRaceOptions()
 		self.doublePointsForLastSprintCtrl.SetValue( False )
+		self.doublePointsOnSprintCtrl.SetValue( '' )
 		self.pointsForLappingCtrl.SetValue( 4 )
 		self.lapsCtrl.SetValue( 4*10 )
 		self.startLapsCtrl.SetValue( 5 )
@@ -209,6 +218,7 @@ class Configure( wx.Panel ):
 	def ConfigureTempoTop2Race( self ):
 		self.configurePointsRaceOptions()
 		self.doublePointsForLastSprintCtrl.SetValue( False )
+		self.doublePointsOnSprintCtrl.SetValue( '' )
 		self.pointsForLappingCtrl.SetValue( 4 )
 		self.lapsCtrl.SetValue( 4*10 )
 		self.startLapsCtrl.SetValue( 5 )
@@ -221,6 +231,7 @@ class Configure( wx.Panel ):
 		self.snowballCtrl.SetValue( True )
 		self.rankByCtrl.SetSelection( Model.Race.RankByPoints )
 		self.doublePointsForLastSprintCtrl.SetValue( False )
+		self.doublePointsOnSprintCtrl.SetValue( '' )
 		self.pointsForPlaceCtrl.SetValue( '1' )
 		self.commit()
 		self.refresh()
@@ -230,6 +241,7 @@ class Configure( wx.Panel ):
 		self.rankByCtrl.SetSelection( Model.Race.RankByLapsPointsNumWins )
 		self.pointsForLappingCtrl.SetValue( 0 )
 		self.doublePointsForLastSprintCtrl.SetValue( False )
+		self.doublePointsOnSprintCtrl.SetValue( '' )
 		self.commit()
 		self.refresh()
 
@@ -273,6 +285,17 @@ class Configure( wx.Panel ):
 		pfp = [f for f in pfp if f > 0]
 		pointsForPlace = {r:p for r, p in enumerate(pfp,1)}
 		race.setattr( 'pointsForPlace', pointsForPlace )
+		
+		race.doublePointsOnSprint = set()
+		v = self.doublePointsOnSprintCtrl.GetValue()
+		v = re.sub( '[^0-9,]', '', v )
+		for s in v.split(','):
+			try:
+				sprint = int(s)
+			except ValueError:
+				continue
+			if sprint:
+				race.doublePointsOnSprint.add( sprint )
 			
 		self.updateDependentFields()
 	
@@ -294,6 +317,8 @@ class Configure( wx.Panel ):
 		
 		v = ','.join( '{}'.format(points) for place, points in sorted( race.pointsForPlace.items()) )
 		self.pointsForPlaceCtrl.SetValue( v )
+		
+		self.doublePointsOnSprintCtrl.SetValue( ','.join( str(v) for v in sorted(race.doublePointsOnSprint) ) )
 		
 		self.updateDependentFields()
 				
