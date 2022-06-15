@@ -15,6 +15,7 @@ whoosh
 qrcode
 tornado
 ftputil
+paramiko
 markdown
 bs4
 trueskill

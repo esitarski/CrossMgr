@@ -5,6 +5,7 @@ import os
 import sys
 import webbrowser
 import ftputil
+import paramiko
 from urllib.parse import quote
 import datetime
 import threading
@@ -19,7 +20,35 @@ def lineno():
 	"""Returns the current line number in our program."""
 	return inspect.currentframe().f_back.f_lineno
 
-def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', callback=None ):
+class SftpCallback:
+	def __init__( self, callback, fname, i ):
+		self.callback = callback
+		self.fname = fname
+		self.i = i
+		self.bytesCur = 0
+		
+	def __call__( self, bytesCur, bytesTotal ):
+		# Fake a call to the ftputil callback signature.
+		self.callback( b' '*(bytesCur - self.bytesCur), self.fname, self.i )
+		self.bytesCur = bytesCur
+
+def sftp_mkdir_p( sftp, remote_directory ):
+	dirs_exist = remote_directory.split('/')
+	i_dir_last = len( dirs_exist )
+	
+	# Find the highest level where the dir exists.
+	while i_dir_last:
+		try:
+			sftp.listdir('/'.join(dirs_exist[:i_dir_last]))
+			break
+		except IOError:
+			i_dir_last -= 1
+	
+	# Create new dirs starting from the last one that existed.
+	for i in range( i_dir_last, len(dirs_exist) ):
+		sftp.mkdir( '/'.join(dirs_exist[:i+1]) )
+
+def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', useSftp=False, sftpPort=22, callback=None ):
 	
 	if isinstance(fname, str):
 		fname = [fname]
@@ -29,29 +58,48 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 	
 	'''
 	if callback:
-		print 'FtpWriteFile: called with callback'
+		print( 'FtpWriteFile: called with callback' )
 		import time
 		for i, f in enumerate(fname):
 			fSize = os.path.getsize(f)
 			for s in range(0, fSize, 1024 ):
-				callback( ' '*1024, f, i )
+				callback( b' '*1024, f, i )
 				time.sleep( 0.1 )
 			if s != fSize:
-				callback( ' '*(fSize-s), f, i )
+				callback( b' '*(fSize-s), f, i )
 				time.sleep( 0.1 )
 			#if i == 2:
 			#	raise ValueError, 'Testing exception'
 		return
 	'''
 	
-	with ftputil.FTPHost( host, user, passwd ) as ftp_host:
-		ftp_host.makedirs( serverPath, exist_ok=True )
+	if useSftp:
+		ssh = paramiko.SSHClient()
+		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+		ssh.load_system_host_keys()                  
+		ssh.connect(host, sftpPort, username, passwd)
+
+		sftp = ssh.open_sftp()
+		sftp_mkdir_p( sftp, serverPath )
+		
 		for i, f in enumerate(fname):
-			ftp_host.upload_if_newer(
-				f,
+			sftp.put(
+				filePath,
 				serverPath + '/' + os.path.basename(f),
-				(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
+				SftpCallback( callback, f, i ) if callback else None
 			)
+		
+		sftp.close()
+		ssh.close()
+	else:
+		with ftputil.FTPHost( host, user, passwd ) as ftp_host:
+			ftp_host.makedirs( serverPath, exist_ok=True )
+			for i, f in enumerate(fname):
+				ftp_host.upload_if_newer(
+					f,
+					serverPath + '/' + os.path.basename(f),
+					(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
+				)
 
 def FtpIsConfigured():
 	with Model.LockRace() as race:
@@ -73,6 +121,7 @@ def FtpUploadFile( fname=None, callback=None ):
 		'user':			getattr(race, 'ftpUser', ''),
 		'passwd':		getattr(race, 'ftpPassword', ''),
 		'serverPath':	getattr(race, 'ftpPath', ''),
+		'useSftp':		getattr(race, 'useSftp', False),
 		'fname':		fname or [],
 		'callback':		callback,
 	}
@@ -293,8 +342,8 @@ class FtpQRCodePrintout( wx.Printout ):
 
 #------------------------------------------------------------------------------------------------
 
-ftpFields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
-ftpDefaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,					'http://',	False]
+ftpFields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'useSftp',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
+ftpDefaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,		False,					'http://',	False]
 
 def GetFtpPublish( isDialog=True ):
 	ParentClass = wx.Dialog if isDialog else wx.Panel
@@ -310,6 +359,7 @@ def GetFtpPublish( isDialog=True ):
 			fgs = wx.FlexGridSizer(vgap=4, hgap=4, rows=0, cols=2)
 			fgs.AddGrowableCol( 1, 1 )
 			
+			self.useSftp = wx.CheckBox( self, label=_("Use SFTP Protocol (on port 22)") )
 			self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 			self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 			self.ftpUploadPhotos = wx.CheckBox( self, label=_("Upload Photos to Path") )
@@ -324,7 +374,7 @@ def GetFtpPublish( isDialog=True ):
 			
 			self.refresh()
 			
-			self.qrcodeBitmap = wx.StaticBitmap( self, wx.ID_ANY, wx.Bitmap( os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG ) )
+			self.qrcodeBitmap = wx.StaticBitmap( self, bitmap=wx.Bitmap(os.path.join(Utils.getImageFolder(), 'QRCodeIcon.png'), wx.BITMAP_TYPE_PNG) )
 			self.printBtn = wx.Button( self, label = _('Print Results URL as a QR Code...') )
 			self.Bind( wx.EVT_BUTTON, self.onPrint, self.printBtn )
 			
@@ -334,11 +384,11 @@ def GetFtpPublish( isDialog=True ):
 
 				self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 				self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
-				
-				self.helpBtn = wx.Button( self, wx.ID_HELP )
-				self.Bind( wx.EVT_BUTTON, lambda evt: HelpSearch.showHelp('Menu-File.html#publish-html-results-with-ftp'), self.helpBtn )
 			
-			fgs.Add( wx.StaticText( self, label = _("Ftp Host Name")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.AddSpacer( 16 )
+			fgs.Add( self.useSftp )
+			
+			fgs.Add( wx.StaticText( self, label = _("Host Name")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.ftpHost, 1, flag=wx.TOP|wx.ALIGN_LEFT|wx.EXPAND )
 			
 			fgs.Add( wx.StaticText( self, label = _("Upload files to Path")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
@@ -376,7 +426,6 @@ def GetFtpPublish( isDialog=True ):
 				hb = wx.BoxSizer( wx.HORIZONTAL )
 				hb.Add( self.okBtn, border = border, flag=wx.ALL )
 				hb.Add( self.cancelBtn, border = border, flag=wx.ALL )
-				hb.Add( self.helpBtn, border = border, flag=wx.ALL )
 				self.okBtn.SetDefault()
 				
 				mvs = wx.BoxSizer( wx.VERTICAL )
@@ -388,10 +437,10 @@ def GetFtpPublish( isDialog=True ):
 				self.CentreOnParent( wx.BOTH )
 				wx.CallAfter( self.SetFocus )
 			else:
-				self.ftpTestButton = wx.Button( self, label=_('Test FTP Connection') )
+				self.ftpTestButton = wx.Button( self, label=_('Test Connection') )
 				self.ftpTestButton.Bind( wx.EVT_BUTTON, self.onFtpTest )
 				if uploadNowButton:
-					self.ftpUploadNowButton = wx.Button( self, label=_('Do FTP Upload Now') )
+					self.ftpUploadNowButton = wx.Button( self, label=_('Do Upload Now') )
 					self.ftpUploadNowButton.Bind( wx.EVT_BUTTON, self.onFtpUploadNow )
 				fgs.AddSpacer( 16 )
 				fgs.AddSpacer( 16 )
@@ -405,19 +454,19 @@ def GetFtpPublish( isDialog=True ):
 
 		def onFtpTest( self, event ):
 			self.commit()
-			if Utils.MessageYesNo(self, "Are you sure you want to FTP Test Now? This can take several minutes and you will not be able to do anything until complete?", "Test FTP Upload"):
+			if Utils.MessageYesNo(self, "Are you sure you want to Test Now? This can take several minutes and you will not be able to do anything until complete?", "Test Upload"):
 				busy = wx.BusyInfo('Uploading...', self)
 				result = FtpTest()
 				del busy
 				if result:
 					Utils.MessageOK(self, '{}\n\n{}\n'.format(_("Ftp Test Failed"), result), _("Ftp Test Failed"), iconMask=wx.ICON_ERROR)
 				else:
-					Utils.MessageOK(self, _("Ftp Test Successful"), _("Ftp Test Successful"))
+					Utils.MessageOK(self, _("Test Successful"), _("Test Successful"))
 								
 
 		def onFtpUploadNow( self, event ):
 			self.commit()
-			if Utils.MessageYesNo(self, "Are you sure you want to FTP Upload Now? This can take several minutes and you will not be able to do anything until complete?", "FTP Upload Now"):
+			if Utils.MessageYesNo(self, "Are you sure you want to Upload Now? This can take several minutes and you will not be able to do anything until complete?", "Upload Now"):
 				busy = wx.BusyInfo('Uploading...', self)
 				FtpUploadNow( self )
 				del busy
@@ -506,7 +555,7 @@ def FtpUploadNow( parent ):
 	host = getattr( race, 'ftpHost', '' )
 		
 	if not host:
-		Utils.MessageOK(parent, '{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+		Utils.MessageOK(parent, '{}\n\n    {}'.format(_('Error'), _('Missing host name.')), _('Upload Failed'), iconMask=wx.ICON_ERROR )
 		return
 	
 	wx.BeginBusyCursor()
@@ -514,7 +563,7 @@ def FtpUploadNow( parent ):
 	wx.EndBusyCursor()
 
 	if e:
-		Utils.MessageOK(parent, '{}  {}\n\n{}'.format(_('Ftp Upload Failed.'), _('Error'), e), _('Ftp Upload Failed'), iconMask=wx.ICON_ERROR )
+		Utils.MessageOK(parent, '{}  {}\n\n{}'.format(_('Upload Failed.'), _('Error'), e), _('Upload Failed'), iconMask=wx.ICON_ERROR )
 	else:
 		# Automatically open the browser on the published file for testing.
 		if race.urlFull and race.urlFull != 'http://':
@@ -528,6 +577,7 @@ if __name__ == '__main__':
 					timeout = 30,
 					serverPath = '',
 					fname = 'test.html',
+					useSftp = False,
 	)
 	sys.exit()
 	'''

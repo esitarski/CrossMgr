@@ -29,7 +29,6 @@ import Version
 import WebReader
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
 from Synchronizer import syncfunc
-import OutputStreamer
 
 # import LockLog
 # Lock, RLock = LockLog.Lock, LockLog.RLock
@@ -445,7 +444,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 						for num, t in data:
 							race.addTime( num, t, False )
 						race.setChanged()
-						OutputStreamer.writeNumTimes( data )
+						# OutputStreamer.writeNumTimes( data )
 						Utils.refresh()
 						
 					wx.CallAfter( updateModel, data )

@@ -284,7 +284,7 @@ For more information about the Google Maps API Key, including how to create an a
 
 ## FTP
 
-Options for FTP upload including host, password, directory and real-time publish option.
+Options for SFTP and FTP upload including host, password, directory and real-time publish options.
 
 ## Camera
 
