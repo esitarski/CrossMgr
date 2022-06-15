@@ -284,7 +284,16 @@ For more information about the Google Maps API Key, including how to create an a
 
 ## FTP
 
-Options for SFTP and FTP upload including host, password, directory and real-time publish options.
+Options for SFTP and FTP upload:
+
+Option|Description
+:-------|:----------
+Use SFTP|Check this if you wish to use the SFTP protocol.  Otherwise, FTP protocol will be used.
+Host Name:Name of the FTP/SFTP host to upload to.  In SFTP, CrossMgr also loads hosts from the user's local hosts file (as used by OpenSSH).
+Upload files to Path|The directory path on the host you wish to upload the files into.  If blank, files will be uploaded into the root directory.
+User|FTP/SFTP User name
+Password|FTP/SFTP Password
+Automatically Upload Results During Race|If checked, CrossMgr will automatically upload live results during the race.
 
 ## Camera
 
