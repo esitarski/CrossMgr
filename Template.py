@@ -29,15 +29,16 @@ class Template:
 			'advancePhotoMilliseconds',
 			'finishKMH',
 		
-			'ftpUploadDuringRace',
-			'ftpUploadPhotos',
-			
+			'useSFTP',
 			'ftpHost',
 			'ftpPath',
 			'ftpUser',
 			'ftpPassword',
 
 			'urlPath',
+			
+			'ftpUploadDuringRace',
+			'ftpUploadPhotos',
 			
 			'groupByStartWave',
 			'winAndOut',

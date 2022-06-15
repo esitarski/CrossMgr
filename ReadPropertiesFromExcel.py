@@ -27,6 +27,7 @@ def ReadPropertiesFromExcel( reader ):
 		('Time Trial',		'isTimeTrial',		'b'),
 		('RFID Option',		'__rfidOption__',	'n'),
 		
+		('Use SFTP',		'useSFTP',			'b'),
 		('FTP Host',		'ftpHost',			's'),
 		('FTP User',		'ftpUser',			's'),
 		('FTP Password',	'ftpPassword',		's'),
