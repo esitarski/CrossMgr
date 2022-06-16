@@ -1,5 +1,5 @@
 wheel
-numpy==1.19.3
+numpy==1.21.0
 setuptools==v44.0.0
 requests
 waitress
