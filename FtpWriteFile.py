@@ -19,6 +19,14 @@ import inspect
 def lineno():
 	"""Returns the current line number in our program."""
 	return inspect.currentframe().f_back.f_lineno
+	
+class CallCloseOnExit:
+	def __enter__(self, obj):
+		self.obj = obj
+		return obj
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		self.obj.close()
 
 class SftpCallback:
 	def __init__( self, callback, fname, i ):
@@ -52,9 +60,13 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 	
 	if isinstance(fname, str):
 		fname = [fname]
+
+	# Normalize serverPath.
+	serverPath = serverPath.strip().replace('\\', '/').rstrip('/')
 	
-	# This stops the ftputils from going into an infinite loop.
-	serverPath = serverPath.strip().lstrip('/').lstrip('\\')
+	if not useSftp:
+		# Stops ftputils from going into an infinite loop by removing leading slashes..
+		serverPath = serverPath.lstrip('/').lstrip('\\')
 	
 	'''
 	if callback:
@@ -74,23 +86,19 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 	'''
 	
 	if useSftp:
-		ssh = paramiko.SSHClient()
-		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		ssh.load_system_host_keys()                  
-		ssh.connect(host, sftpPort, username, passwd)
+		with CallCloseOnExit(paramiko.SSHClient()) as ssh:
+			ssh.set_missing_host_key_policy( paramiko.AutoAddPolicy() )
+			ssh.load_system_host_keys()                  
+			ssh.connect( host, sftpPort, username, passwd )
 
-		sftp = ssh.open_sftp()
-		sftp_mkdir_p( sftp, serverPath )
-		
-		for i, f in enumerate(fname):
-			sftp.put(
-				filePath,
-				serverPath + '/' + os.path.basename(f),
-				SftpCallback( callback, f, i ) if callback else None
-			)
-		
-		sftp.close()
-		ssh.close()
+			with CallCloseOnExit(ssh.open_sftp()) as sftp:
+				sftp_mkdir_p( sftp, serverPath )
+				for i, f in enumerate(fname):
+					sftp.put(
+						filePath,
+						serverPath + '/' + os.path.basename(f),
+						SftpCallback( callback, f, i ) if callback else None
+					)
 	else:
 		with ftputil.FTPHost( host, user, passwd ) as ftp_host:
 			ftp_host.makedirs( serverPath, exist_ok=True )
