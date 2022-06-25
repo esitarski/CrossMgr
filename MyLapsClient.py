@@ -336,13 +336,13 @@ for n in nums:
 numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time in seconds.
 
 def getCmd( sock ):
-	received = ''
-	while received[-1:] != '$':
+	received = b''
+	while not received.endswith(b'$'):
 		try:
-			received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for MyLaps protocol).
+			received += sock.recv(4096)
 		except socket.timeout:
-			return received, True
-	return received, False
+			return received.decode(errors="replace"), True
+	return received.decode(errors="replace"), False
 
 #------------------------------------------------------------------------------	
 # Connect to the CrossMgr server.

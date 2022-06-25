@@ -19,6 +19,7 @@ DEFAULT_HOST = '127.0.0.1'
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
 CR = '\r'
+bCR = b'\r'
 
 NumberOfStarters = 50
 
@@ -315,10 +316,10 @@ sendDate = True
 count = 0
 def formatMessage( n, lap, t ):
 	global count
-	message = "DJ%s %s 10  %05X      C7%s%s" % (
+	message = "DJ{} {} 10  {:05X}      C7{}{}".format(
 				tag[n],								# Tag code
 				t.strftime('%H:%M:%S.%f'),			# hh:mm:ss.ff
-				count,								# Data index number in hex.
+				count,								# Data index number (in hex).
 				' date={}'.format( t.strftime('%Y%m%d') ) if sendDate else '',
 				CR
 			)
@@ -340,13 +341,13 @@ for n in nums:
 numLapTimes.sort( key = operator.itemgetter(1, 2) )	# Sort by lap, then race time.
 
 def getCmd( sock ):
-	received = ''
-	while received[-1:] != CR:
+	received = b''
+	while not received.endswith( bCR ):
 		try:
-			received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for JChip protocol).
+			received += sock.recv(4096)
 		except socket.timeout:
-			return received, True
-	return received[:-1], False
+			return received.decode(errors="replace"), True
+	return received.decode(errors="replace")[:-1], False		# Return the message without the trailing CR.
 
 #------------------------------------------------------------------------------	
 # Connect to the CrossMgr server.
