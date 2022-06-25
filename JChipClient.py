@@ -426,7 +426,7 @@ while True:
 		
 		time.sleep( dt )
 		
-		# Send offsets relative to the transmit start time.
+		# Send offsets relative to the transmit start time (for testing).
 		message = formatMessage( n, lap, dBaseStart + datetime.timedelta(seconds = t - 0.5) )
 		if iMessage & 15 == 0:
 			print( 'sending: {}: {}\n'.format(iMessage, message[:-1]) )
