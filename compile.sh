@@ -466,7 +466,7 @@ dorelease() {
 
 doHelp() {
 	cat <<EOF
-$0 [ -hcCtaep: ]
+$0 [ -hcitywVqseCtaep: ]
  -h        - Help
  -E [env]  - Use Environment ($VIRTUAL_ENV)
  -p [pythonexe]  - Python version (Default $PYTHONVER)
@@ -478,6 +478,7 @@ $0 [ -hcCtaep: ]
  -V        - Build CrossMgrVideo
  -q        - Build PointsRaceMgr
  -s        - Build SprintMgr
+ -e        - Build CallupSeedingMgr
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -507,14 +508,14 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaviCdPBASkomzlTfyqswVZUr" option
+while getopts "hcitaveiCdPBASkomzlTfyqswVZUr" option
 do
 	gotarg=1
 	case ${option} in
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
+ 		    PROGRAMS="CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CallupSeedingMgr CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
@@ -528,6 +529,8 @@ do
 		;;
 		q) PROGRAMS="$PROGRAMS PointsRaceMgr"
 		;;
+		e) PROGRAMS="$PROGRAMS CallupSeedingMgr"
+		;;
 		s) PROGRAMS="$PROGRAMS SprintMgr"
 		;;
 		V) PROGRAMS="$PROGRAMS CrossMgrVideo"
@@ -540,6 +543,7 @@ do
 			getVersion "CrossMgrVideo"
 			getVersion "PointsRaceMgr"
 			getVersion "SprintMgr"
+			getVersion "CallupSeedingMgr"
 		;;
 		C) 	cleanup
 		;;
@@ -625,6 +629,7 @@ do
 		f) fixDependencies 'SeriesMgr'
 		   fixDependencies 'CrossMgrVideo'
 		   fixDependencies 'SprintMgr'
+		   fixDependencies 'CallupSeedingMgr'
 		;;
 		*) doHelp
 		;;

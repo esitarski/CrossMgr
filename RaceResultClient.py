@@ -365,7 +365,7 @@ thread.start()
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serversocket.bind((DEFAULT_HOST, DEFAULT_PORT))
 serversocket.listen(5)
-while 1:
+while True:
 	(clientsocket, address) = serversocket.accept()
 	clientsocket.settimeout( 5 )
 	

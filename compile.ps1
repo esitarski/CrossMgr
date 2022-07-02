@@ -156,6 +156,7 @@ function Cleanup($program)
 		'CrossMgrAlien/__pycache__',
 		'SeriesMgr/__pycache__',
 		'PointsRaceMgr/__pycache__',
+		'CallupSeedingMgr/__pycache__',
 		'SprintMgr/__pycache__',
 		'dist',
 		'build',
@@ -611,6 +612,7 @@ function doHelp
 	-video       - Build CrossMgrVideo
 	-cam         - Build CrossMgrCamera (NOT COMPLETE)
 	-pts         - Build PointsRaceMgr
+	-call        - Build CallupSeedingMgr
 	-spr         - Build SprintMgr
 	-all         - Build all programs
 	
@@ -672,6 +674,7 @@ if ((($clean -eq $false) -and ($setupenv -eq $false) -and ($fix -eq $false)) -an
 		($video -eq $false) -and
 		($cam -eq $false) -and
 		($pts -eq $false) -and
+		($call -eq $false) -and
 		($spr -eq $false) -and
 		($all -eq $false))
 {
@@ -716,6 +719,10 @@ if ($pts -eq $true)
 {
 	$programs += 'PointsRaceMgr'
 }
+if ($call -eq $true)
+{
+	$programs += 'SprintMgr'
+}
 if ($spr -eq $true)
 {
 	$programs += 'SprintMgr'
@@ -730,6 +737,7 @@ if ($all -eq $true)
 		'CrossMgrAlien',
 		'CrossMgrVideo',
 		'PointsRaceMgr',
+		'CallupSeedingMgr',
 		'SprintMgr'
 		)
 	$virus = $true
