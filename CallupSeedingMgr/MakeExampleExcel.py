@@ -73,22 +73,24 @@ def MakeExampleExcel(
 	if include_national_champion:
 		ws = wb.add_worksheet('National Champ')
 		fit_sheet = FitSheetWrapper( ws )
-		for c, header in enumerate(['UCI ID', 'Name']):
+		for c, header in enumerate(['Pos', 'UCI ID', 'Name']):
 			fit_sheet.write( 0, c, header )
 		row = 1
 		result = registration[4]
-		fit_sheet.write( row, 0, result.uci_id if result.uci_id else '' )
-		fit_sheet.write( row, 1, '{} {}'.format(result.last_name.upper(), result.first_name) )
+		fit_sheet.write( row, 0, 1 )
+		fit_sheet.write( row, 1, result.uci_id if result.uci_id else '' )
+		fit_sheet.write( row, 2, '{} {}'.format(result.last_name.upper(), result.first_name) )
 	
 	if include_regional_champion:
 		ws = wb.add_worksheet('Regional Champ')
 		fit_sheet = FitSheetWrapper( ws )
-		for c, header in enumerate(['UCI ID', 'Name']):
+		for c, header in enumerate(['Pos', 'UCI ID', 'Name']):
 			fit_sheet.write( 0, c, header )
 		row = 1
 		result = registration[8]
-		fit_sheet.write( row, 0, result.uci_id if result.uci_id else '' )
-		fit_sheet.write( row, 1, '{} {}'.format(result.last_name.upper(), result.first_name) )
+		fit_sheet.write( row, 0, 1 )
+		fit_sheet.write( row, 1, result.uci_id if result.uci_id else '' )
+		fit_sheet.write( row, 2, '{} {}'.format(result.last_name.upper(), result.first_name) )
 	
 	if include_uci_points:
 		ws = wb.add_worksheet('UCIPoints')
@@ -112,26 +114,31 @@ def MakeExampleExcel(
 		for c, header in enumerate(['First Name', 'Last Name', 'License', 'Ability', 'Points']):
 			fit_sheet.write( 0, c, header )
 		
+		row = 0
 		for r, result in enumerate(random.sample(eligible_for_points, min(len(eligible_for_points),35))):
-			row = r + 1
-			fit_sheet.write( row, 0, result.first_name )
-			fit_sheet.write( row, 1, result.last_name )
-			fit_sheet.write( row, 2, result.license )
-			fit_sheet.write( row, 3, 'Cat{}'.format(r%4+1) )
-			fit_sheet.write( row, 4, random.randint(1, 200) )
+			if r % 3 == 0:
+				row += 1
+				fit_sheet.write( row, 0, result.first_name )
+				fit_sheet.write( row, 1, result.last_name )
+				fit_sheet.write( row, 2, result.license )
+				fit_sheet.write( row, 3, 'Cat{}'.format(row%3+1) )
+				fit_sheet.write( row, 4, random.randint(1, 200) )
 	
 	if include_western_series:
 		ws = wb.add_worksheet( 'Western Series' )
 		fit_sheet = FitSheetWrapper( ws )
 		for c, header in enumerate(['Pos', 'First Name', 'Last Name', 'UCI ID', 'License']):
 			fit_sheet.write( 0, c, header )
+		
+		row = 0
 		for r, result in enumerate(random.sample(eligible_for_points, min(len(eligible_for_points),35))):
-			row = r + 1
-			fit_sheet.write( row, 0, row )
-			fit_sheet.write( row, 1, result.first_name )
-			fit_sheet.write( row, 2, result.last_name )
-			fit_sheet.write( row, 3, result.uci_id )
-			fit_sheet.write( row, 4, result.license )
+			if r % 3 == 1:
+				row += 1
+				fit_sheet.write( row, 0, row )
+				fit_sheet.write( row, 1, result.first_name )
+				fit_sheet.write( row, 2, result.last_name )
+				fit_sheet.write( row, 3, result.uci_id )
+				fit_sheet.write( row, 4, result.license )
 
 	wb.close()
 	
