@@ -16,11 +16,17 @@ def random_uci_id():
 	id += '{:02d}'.format( int(id) % 97 )
 	return id
 
-def MakeExampleExcel( include_uci_points=True, include_national_points=True, include_previous_result=True ):
+def MakeExampleExcel(
+		include_national_champion=True,
+		include_regional_champion=True,
+		include_uci_points=True,
+		include_eastern_series=True,
+		include_western_series=True
+	):
 	Year = datetime.date.today().year
 	YearAdjust = Year - 2017
 	
-	fname = os.path.join(Utils.getImageFolder(), 'IndividualRanking.xlsx')
+	fname = os.path.join(Utils.getImageFolder(), 'UCIPoints.xlsx')
 	reader = GetExcelReader( fname )
 	uci_points = Source( fname, 'Individual' )
 	uci_points.read( reader )
@@ -64,8 +70,28 @@ def MakeExampleExcel( include_uci_points=True, include_national_points=True, inc
 		for c, field in enumerate(fields):
 			fit_sheet.write( r+1, c, getattr(result, field) )
 	
+	if include_national_champion:
+		ws = wb.add_worksheet('National Champ')
+		fit_sheet = FitSheetWrapper( ws )
+		for c, header in enumerate(['UCI ID', 'Name']):
+			fit_sheet.write( 0, c, header )
+		row = 1
+		result = registration[4]
+		fit_sheet.write( row, 0, result.uci_id if result.uci_id else '' )
+		fit_sheet.write( row, 1, '{} {}'.format(result.last_name.upper(), result.first_name) )
+	
+	if include_regional_champion:
+		ws = wb.add_worksheet('Regional Champ')
+		fit_sheet = FitSheetWrapper( ws )
+		for c, header in enumerate(['UCI ID', 'Name']):
+			fit_sheet.write( 0, c, header )
+		row = 1
+		result = registration[8]
+		fit_sheet.write( row, 0, result.uci_id if result.uci_id else '' )
+		fit_sheet.write( row, 1, '{} {}'.format(result.last_name.upper(), result.first_name) )
+	
 	if include_uci_points:
-		ws = wb.add_worksheet('Individual')
+		ws = wb.add_worksheet('UCIPoints')
 		fit_sheet = FitSheetWrapper( ws )
 		for c, header in enumerate(['Rank', 'UCI ID', 'Name', 'Team Code', 'Age', 'Points']):
 			fit_sheet.write( 0, c, header )
@@ -80,10 +106,10 @@ def MakeExampleExcel( include_uci_points=True, include_national_points=True, inc
 
 	eligible_for_points = other_sample + [rr for rr in uci_points.results if rr.nation_code == 'FRA']
 
-	if include_national_points:
-		ws = wb.add_worksheet('National Points')
+	if include_eastern_series:
+		ws = wb.add_worksheet('Eastern Series')
 		fit_sheet = FitSheetWrapper( ws )
-		for c, header in enumerate(['First Name', 'Last Name', 'License', 'Points']):
+		for c, header in enumerate(['First Name', 'Last Name', 'License', 'Ability', 'Points']):
 			fit_sheet.write( 0, c, header )
 		
 		for r, result in enumerate(random.sample(eligible_for_points, min(len(eligible_for_points),35))):
@@ -91,10 +117,11 @@ def MakeExampleExcel( include_uci_points=True, include_national_points=True, inc
 			fit_sheet.write( row, 0, result.first_name )
 			fit_sheet.write( row, 1, result.last_name )
 			fit_sheet.write( row, 2, result.license )
-			fit_sheet.write( row, 3, random.randint(1, 200) )
+			fit_sheet.write( row, 3, 'Cat{}'.format(r%4+1) )
+			fit_sheet.write( row, 4, random.randint(1, 200) )
 	
-	if include_previous_result:
-		ws = wb.add_worksheet( '{} Result'.format(Year-1) )
+	if include_western_series:
+		ws = wb.add_worksheet( 'Western Series' )
 		fit_sheet = FitSheetWrapper( ws )
 		for c, header in enumerate(['Pos', 'First Name', 'Last Name', 'UCI ID', 'License']):
 			fit_sheet.write( 0, c, header )
