@@ -26,7 +26,7 @@ subprocess.call( [
 	'pyinstaller',
 	
 	'CallupSeedingMgr.pyw',
-	'--icon=images\CallupSeedingMgr.ico',
+	'--icon=CallupSeedingMgrImages\CallupSeedingMgr.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -59,9 +59,8 @@ def copyDir( d ):
 		if i[-3:] != '.db':	# Ignore .db files.
 			shutil.copy( os.path.join(d, i), os.path.join(destD,i) )
 			
-copyDir( 'images' )
-#copyDir( 'data' )
-copyDir( 'htmldoc' )
+copyDir( 'CallupSeedingMgrImages' )
+copyDir( 'CallupSeedingMgrHtmlDoc' )
 
 # Create the installer
 inno = r'\Program Files (x86)\Inno Setup 5\ISCC.exe'

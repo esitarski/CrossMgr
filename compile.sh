@@ -192,9 +192,9 @@ copyAssets() {
 	fi
 	if [ "$PROGRAM" == "SeriesMgr" ]; then
         cd SeriesMgr
-		if [ -d CrossMgrHelpIndex ]
+		if [ -d SeriesMgrHelpIndex ]
 		then
-			rm -rf CrossMgrHelpIndex
+			rm -rf SeriesMgrHelpIndex
 		fi
 		echo "Building Help for SeriesMgr ..."
         #rm -f HelpIndex.py
@@ -204,9 +204,25 @@ copyAssets() {
 			echo "Building help failed. Aborting..."
 			exit 1
 		fi
-		#cp -rv CrossMgrHelpIndex "../$RESOURCEDIR"
         cd ..
 	fi
+	if [ "$PROGRAM" == "CallupSeedingMgr" ]; then
+        cd SeriesMgr
+		if [ -d CallupSeedingMgrHelpIndex ]
+		then
+			rm -rf CallupSeedingMgrHelpIndex
+		fi
+		echo "Building Help for CallupSeedingMgr ..."
+        #rm -f HelpIndex.py
+        #ln -s ../HelpIndex.py HelpIndex.py
+		python3 buildhelp.py
+		if [ $? -ne 0 ]; then
+			echo "Building help failed. Aborting..."
+			exit 1
+		fi
+        cd ..
+	fi
+
 	# Copy help files last to ensure they are built by now.
 	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
 		echo "Copying HtmlDoc to $RESOURCEDIR"

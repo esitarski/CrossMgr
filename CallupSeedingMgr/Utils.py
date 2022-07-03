@@ -97,7 +97,7 @@ if 'WXMAC' in wx.Platform:
 		topdirName = os.environ['RESOURCEPATH']
 	except:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
-	if os.path.isdir( os.path.join(topdirName, 'images') ):
+	if os.path.isdir( os.path.join(topdirName, 'CallupSeedingMgrImages') ):
 		dirName = topdirName
 	else:
 		dirName = os.path.normpath(topdirName + '/../Resources/')
@@ -116,15 +116,15 @@ else:
 		dirName = os.path.dirname(dirName)
 	if 'CrossMgrSeedingMgr?' in os.path.basename(dirName):
 		dirName = os.path.dirname(dirName)
-	if not os.path.isdir( os.path.join(dirName, 'images') ):
+	if not os.path.isdir( os.path.join(dirName, 'CallupSeedingMgrImages') ):
 		dirName = os.path.dirname(dirName)
 
-	if os.path.isdir( os.path.join(dirName, 'images') ):
+	if os.path.isdir( os.path.join(dirName, 'CallupSeedingMgrImages') ):
 		pass
 	elif os.path.isdir( '/usr/local/images' ):
 		dirName = '/usr/local'
 
-imageFolder = os.path.join(dirName, 'images')
+imageFolder = os.path.join(dirName, 'CallupSeedingMgrImages')
 htmlFolder = os.path.join(dirName, 'html')
 htmlDocFolder = os.path.join(dirName, 'htmldoc')
 

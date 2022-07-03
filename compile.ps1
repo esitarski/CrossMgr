@@ -254,7 +254,6 @@ function CopyAssets($program)
 			Remove-Item -Recurse -Force -Path "CrossMgrHelpIndex"
 		}
 		Write-Host 'Building Help for CrossMgr...'
-		# Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
 		if ($? -eq $false)
 		{
@@ -262,18 +261,16 @@ function CopyAssets($program)
 			Set-Location -Path '..'
 			exit 1
 		}
-		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
 		Set-Location -Path '..'
 	}
 	if ($program -eq "SeriesMgr")
 	{
 		Set-Location -Path 'SeriesMgr'
-		if (Test-Path "CrossMgrHelpIndex")
+		if (Test-Path "SeriesMgrHelpIndex")
 		{
-			Remove-Item -Recurse -Force -Path "CrossMgrHelpIndex"
+			Remove-Item -Recurse -Force -Path "SeriesMgrHelpIndex"
 		}
 		Write-Host 'Building Help for SeriesMgr...'
-		# Copy-Item -Force -Path '..\HelpIndex.py' -Destination 'HelpIndex.py'
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
 		if ($? -eq $false)
 		{
@@ -281,7 +278,23 @@ function CopyAssets($program)
 			Set-Location -Path '..'
 			exit 1
 		}
-		# Copy-Item -Force -Recurse -Path "CrossMgrHelpIndex" -Destination "..\${resourcedir}"
+		Set-Location -Path '..'
+	}
+	if ($program -eq "CallupSeedingMgr")
+	{
+		Set-Location -Path 'CallupSeedingMgr'
+		if (Test-Path "CallupSeedingMgrHelpIndex")
+		{
+			Remove-Item -Recurse -Force -Path "CallupSeedingMgrHelpIndex"
+		}
+		Write-Host 'Building Help for CallupSeedingMgrMgr...'
+		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
+		if ($? -eq $false)
+		{
+			Write-Host "Help Build failed. Aborting..."
+			Set-Location -Path '..'
+			exit 1
+		}
 		Set-Location -Path '..'
 	}
 	# Copy help files last to ensure they are built by now.
