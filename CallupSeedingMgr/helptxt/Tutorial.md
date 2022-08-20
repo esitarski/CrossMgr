@@ -263,9 +263,9 @@ When matching fields, accents are removed, non-ascii characters are removed as a
 
 # Ability Criteria
 
-Sometimes you need to rank riders from a number of ability categories.  __CallupSeedingMgr__ supports this as follows:
+Sometimes you need to rank riders from a number of ability categories into a single age-based category.  __CallupSeedingMgr__ supports this as follows:
 
-In one or more of your sheets, create an __Ability__ column.  In the __Ability__ column, __CallupSeedingMgr__ recognizes:
+Create an __Ability__ column in one of your sheets.  In the __Ability__ column, __CallupSeedingMgr__ recognizes:
 
 * numbers on their own (1, 2, 3, 4)
 * text followed by a number (Cat1, Cat2... M1, M2...).  Spaces don't matter.
@@ -275,34 +275,33 @@ Where 1 and A are the highest ability.
 
 Now, make sure you also have a __Points__ or __Position__ column to indicate the rank of the rider within that ability.  If no __Points__ or __Position__ column is present, __CallupSeedingMgr__ will use the row number as the position.
 
-__CallupSeedingMgr__ will then group the riders by __Ability__, then by __Points__ (or __Position__) within each ability.
+__CallupSeedingMgr__ will then group the riders by __Ability__, then by __Points__ (or __Position__) within each ability to form an overall ranking.
 
-This feature is very useful to rank riders competing in an age-based category from ability-based results.
-
-Of course, ability criteria can be combined with any other sheets and ranking criteria.
+Of course, Ability criteria sheets can be combined with other sheets in the overall ordering.
 
 In the tutorial, take a look at the __Western Series__ sheet where there are rider rankings by Ability and Points.
 
 # Cycling by Criteria
 
-Sometimes you need to combine the results from independent championships or series, and the only way is to cycle them.
+Sometimes you need to combine the results from independent championships or series by cycling entries between them.
 
-For example, in the tutorial, we want to cycle between the Western Series and the Eastern Series results.
+For example, in the tutorial, we want to cycle between the Western Series and the Eastern Series.
 
-We must tell __CallupSeedingMgr__ about the cycling by setting __Cycle Criteria__.
+Tell __CallupSeedingMgr__ about the cycling by setting __Cycle Criteria__.
 
-In the tutorial, set __Cycle Criteria__ to __Last 2__ to tell it that we want to cycle callups between the criteria in the last 2 sheets.
-Scroll down and take a look.  Now those riders are cycled, while the riders with no criteria are randomized after, just as we want.
+In the tutorial, set __Cycle Criteria__ to __Last 2__ to tell it that we want to cycle callups between the last two criteria.
 
-In general, if __CallupSeedingMgr__ has more then 2 sets to cycle through, it will cycle the remaining elements as sets become empty.
+Now, scroll down and take a look.  The riders alternate between the criteria, "leftover" riders are in the same sequence, and riders with no criteria are randomized.  Just as we want.
 
-The cycling starts with the first sheet (Western Series in this example).
+If __CallupSeedingMgr__ has more then 2 critera to cycle through, it will cycle the remaining elements as sets become empty.
 
-__Cycle Criteria__ can cycle up to the last 4 sheets in your Excel.
+The cycling starts with the first sheet in the Excel workbook (Western Series in this example).
+
+__Cycle Criteria__ can cycle up to the last 4 criteria.
 
 # Conclusion
 
 This tutorial shows how to do callups and seeding with many criteria, including converting ability-based rankings to age-based, and cycling through multiple criteria.
 Hopefully you will never encounter a situation this complicated.
 
-In practice, collect and organize your criteria sheets ahead of time.  Then, when you get the final registration list (could be the day of the competition), you can generate the callups or seeding instantly.
+In practice, collect and organize your criteria sheets ahead of time.  Then, when you get the final registration list (could be the day of the competition), generate the callups or seeding instantly.

@@ -39,6 +39,7 @@ class Rider:
 					  'DNS':4,		DNS:4,
 					  'DSQ':5,		DSQ:5,
 	}
+	pullSequence = 0
 	
 	def __init__( self, num ):
 		self.num = num
@@ -53,6 +54,7 @@ class Rider:
 		self.numWins = 0
 		self.existingPoints = 0
 		self.finishOrder = 1000
+		self.pullSequence = 0
 		self.status = Rider.Finisher
 		
 	def addSprintResult( self, sprint, place, bibs ):
@@ -82,11 +84,11 @@ class Rider:
 		
 	def getKey( self ):
 		if   race.rankBy == race.RankByPoints:
-			return (Rider.statusSortSeq[self.status], -self.pointsTotal, self.finishOrder, self.num)
+			return (Rider.statusSortSeq[self.status], -self.pullSequence, -self.pointsTotal, self.finishOrder, self.num)
 		elif race.rankBy == race.RankByLapsPoints:
-			return (Rider.statusSortSeq[self.status], -self.updown, -self.pointsTotal, self.finishOrder, self.num)
+			return (Rider.statusSortSeq[self.status], -self.pullSequence, -self.updown, -self.pointsTotal, self.finishOrder, self.num)
 		else:	# race.RankByLapsPointsNumWins
-			return (Rider.statusSortSeq[self.status], -self.updown, -self.pointsTotal, -self.numWins, self.finishOrder, self.num)
+			return (Rider.statusSortSeq[self.status], -self.pullSequence, -self.updown, -self.pointsTotal, -self.numWins, self.finishOrder, self.num)
 
 	def tiedWith( s, r ):
 		return s.getKey()[:-1] == r.getKey()[:-1]
@@ -135,7 +137,10 @@ class GetRank:
 		self.rankLast, self.rrLast = None, None
 	
 	def __call__( self, rank, rr ):
-		if rr.status != Rider.Finisher:
+		if rr.status == Rider.PUL:
+			self.rankLast, self.rrLast = rank, rr
+			return 'PUL {}'.format(rank)
+		elif rr.status != Rider.Finisher:
 			return Rider.statusNames[rr.status]
 		elif self.rrLast and self.rrLast.tiedWith(rr):
 			return '{}'.format(self.rankLast)
@@ -371,6 +376,7 @@ class Race:
 		
 		numSprints = self.getNumSprints()
 		self.sprintCount = 0
+		pullSequenceCur = 0
 		for iEvent, e in enumerate(self.events):
 			# Ensure the eventType matches the number of sprints.
 			if e.eventType == RaceEvent.Finish and self.sprintCount != numSprints-1:
@@ -406,6 +412,8 @@ class Race:
 			elif e.eventType == RaceEvent.PUL:
 				for b in e.bibs:
 					self.getRider(b).status = Rider.PUL
+					pullSequenceCur += 1
+					self.getRider(b).pullSequence = pullSequenceCur
 			elif e.eventType == RaceEvent.DSQ:
 				for b in e.bibs:
 					self.getRider(b).status = Rider.DSQ
