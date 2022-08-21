@@ -332,7 +332,8 @@ envSetup() {
 	fi
     if [ $OSNAME == "Darwin" ]; then
 		echo "Darwin build..."
-		# pip3 install biplist "dmgbuild>=1.4.2"
+		#pip3 install biplist "dmgbuild>=1.4.2"
+		pip3 install "dmgbuild>=1.4.2"
 	else
 		downloadAppImage
 	fi
