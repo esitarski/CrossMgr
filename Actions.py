@@ -232,7 +232,7 @@ class Actions( wx.Panel ):
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
 		
-		self.clock = Clock( self, size=(190,190), checkFunc=self.updateClock )
+		self.clock = Clock( self.leftPanel, size=(190,190), checkFunc=self.updateClock )
 		self.clock.SetBackgroundColour( wx.WHITE )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  '' )
@@ -268,7 +268,7 @@ class Actions( wx.Panel ):
 		hsClock.AddSpacer( 26 )
 		hsClock.Add( self.clock )
 		hsClock.Add(hsSettings, border=4, flag=wx.LEFT )
-		bs.Add(hsClock, border=4, flag=wx.ALL)
+		bs.Add( hsClock, border=4, flag=wx.ALL )
 		
 		bs.Add(self.chipTimingOptions, border=border, flag=wx.ALL)
 		

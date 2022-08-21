@@ -1,6 +1,6 @@
 wheel
-numpy==1.19.3
-setuptools==v44.0.0
+numpy
+setuptools
 requests
 waitress
 xlsxwriter
@@ -8,7 +8,7 @@ pygments
 xlrd
 openpyxl
 pytz
-fpdf2==2.4.0
+fpdf2
 xlwt
 netifaces
 whoosh
@@ -20,8 +20,8 @@ markdown
 bs4
 trueskill
 pybabel
-opencv-python==4.5.3.56
-pyinstaller==4.5.1
+opencv-python
+pyinstaller
 piexif
 simplejpeg
 virustotal-api
