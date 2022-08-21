@@ -331,7 +331,7 @@ envSetup() {
 		pip3 install pywin32
 	fi
     if [ $OSNAME == "Darwin" ]; then
-		pip3 install biplist "dmgbuild>=1.4.2"
+		# pip3 install biplist "dmgbuild>=1.4.2"
 	else
 		downloadAppImage
 	fi
