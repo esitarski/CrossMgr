@@ -1,4 +1,4 @@
-import biplist
+import plistlib
 import os, sys
 
 builddir = defines.get('builddir')
@@ -43,7 +43,8 @@ print("App:", application)
 
 def icon_from_app(app_path):
 	plist_path = os.path.join(app_path, 'Contents', 'Info.plist')
-	plist = biplist.readPlist(plist_path)
+	with open(plist_path) as fp:
+		plist = plistlib.load(fp)
 	icon_name = plist['CFBundleIconFile']
 	icon_root,icon_ext = os.path.splitext(icon_name)
 	if not icon_ext:
