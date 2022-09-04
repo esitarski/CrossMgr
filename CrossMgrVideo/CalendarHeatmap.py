@@ -281,7 +281,7 @@ class CalendarHeatmap(wx.Control):
 	def _setDimensions( self, dc ):
 		x, y, width, height = self.GetClientRect()
 		self.rowHeight = int(height / 9.0)
-		font = wx.Font(wx.FontInfo((0,int(self.rowHeight)*.9)))
+		font = wx.Font(wx.FontInfo((0,int(self.rowHeight*.9))))
 		dc.SetFont( font )
 		self.leftLabelRect = wx.Rect( x, y+self.rowHeight*1, dc.GetTextExtent('W ')[0], self.rowHeight*7 )
 		self.topLabelRect = wx.Rect( x+self.leftLabelRect.GetWidth(), y, self._yearWeeks()*self.rowHeight, self.rowHeight )
