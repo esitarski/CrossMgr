@@ -170,7 +170,7 @@ class Animation(wx.Control):
 		self._initAnimation()
 		self.speedup = 1.0
 		self.tMax = 999999
-		self.timer.Start( 1000.0/self.framesPerSecond, False )
+		self.timer.Start( int(1000.0/self.framesPerSecond), False )
 	
 	def StopAnimate( self ):
 		if self.timer.IsRunning():
