@@ -298,9 +298,9 @@ class GanttChart(wx.Control):
 			else:
 				s = '%d:%02d:%02d' % (t//(60*60), (t // 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, x - w/2, 0 + 4 )
+			dc.DrawText( s, round(x - w/2), 0 + 4 )
 			if not self.minimizeLabels:
-				dc.DrawText( s, x - w/2, yBottom + 4)
+				dc.DrawText( s, round(x - w/2), yBottom + 4)
 			dc.DrawLine( x, yBottom+3, x, yTop-3 )
 		
 		# Draw the Gantt chart.
@@ -445,9 +445,9 @@ class GanttChart(wx.Control):
 				dc.DrawRectangle( rect )
 
 			dc.SetTextForeground( wx.WHITE )
-			dc.DrawText( nowTimeStr, x - labelWidth / 2, 0 )
+			dc.DrawText( nowTimeStr, round(x - labelWidth / 2), 0 )
 			if not self.minimizeLabels:
-				dc.DrawText( nowTimeStr, x - labelWidth / 2, yLast + 2 )
+				dc.DrawText( nowTimeStr, round(x - labelWidth / 2), yLast + 2 )
 
 		self.xFactor = xFactor
 		self.barHeight = barHeight

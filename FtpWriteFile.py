@@ -240,7 +240,7 @@ def drawMultiLineText( dc, text, x, y ):
 		y += lineHeightText
 
 def getFont( pixelSize = 28, isBold = False ):
-	return wx.Font( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
+	return wx.Font( (0,int(pixelSize)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL,
 								 wx.FONTWEIGHT_BOLD if isBold else wx.FONTWEIGHT_NORMAL )
 
 def getFontToFit( dc, widthToFit, heightToFit, sizeFunc, isBold = False ):
@@ -248,7 +248,7 @@ def getFontToFit( dc, widthToFit, heightToFit, sizeFunc, isBold = False ):
 	right = max(widthToFit, heightToFit)
 	
 	while right - left > 1:
-		mid = (left + right) / 2.0
+		mid = (left + right) // 2
 		font = getFont( mid, isBold )
 		widthText, heightText = sizeFunc( font )
 		if widthText <= widthToFit and heightText <= heightToFit:

@@ -179,7 +179,7 @@ class StatusBar(wx.Control):
 		if self._range != 0 and value == 0:
 			# Draw the Do Not Enter sign.
 			radius = min(width, height) / 2 - 1
-			xCenter, yCenter = width/2, radius
+			xCenter, yCenter = width//2, radius
 			lineHeight = 2 * int(radius * 0.25)
 			lineWidth = 2 * int(radius * 0.70)
 			sep = 4
@@ -230,7 +230,7 @@ class StatusBar(wx.Control):
 			s = Utils.SecondsToMMSS(value)
 			if s[0] == '0':
 				s = s[1:]
-			dc.DrawText(s, (width - self.textWidth) / 2, 0)
+			dc.DrawText(s, (width - self.textWidth) // 2, 0)
 			
 			dc.SetPen( wx.BLACK_PEN )
 			dc.SetBrush( wx.TRANSPARENT_BRUSH )

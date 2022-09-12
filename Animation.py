@@ -596,7 +596,7 @@ class Animation(wx.Control):
 				dc.DrawText( s, int(x + tHeight * 1.2), int(y))
 				y += tHeight
 
-		# Draw the positions of the highlighted ridrs
+		# Draw the positions of the highlighted riders
 		if self.numsToWatch:
 			rp = []
 			for n in self.numsToWatch:
