@@ -200,7 +200,7 @@ class LineGraph(wx.Control):
 		# Define a path for the indicator about the origin.
 		radius = 12
 		ctx.SetPen( wx.Pen( wx.Colour(128,128,128), 1 ) )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
+		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius//2, 0, 0, radius + 1, wx.WHITE, wx.Colour(220,220,0) ) )
 		path = ctx.CreatePath()
 		path.MoveToPoint( 0, -radius )
 		path.AddLineToPoint( -radius, 0 )

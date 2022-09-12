@@ -610,13 +610,13 @@ class Animation(wx.Control):
 			tWidth, tHeight = dc.GetTextExtent(leaderHeader)
 			spaceWidth, spaceHeight = dc.GetTextExtent(' ')
 			x = xLeft + leaderWidth + spaceWidth
-			yTop = r / 2 + laneWidth * 1.5+ tHeight
+			yTop = r / 2 + laneWidth * 1.5 + tHeight
 			y = yTop
 			for i, (pos, num) in enumerate(rp):
 				if i >= 4:
 					break
 				s = '({}) {} {}'.format(Utils.ordinal(pos), num, self.getShortName(num) )
-				dc.DrawText( s, x + tHeight * 1.2, y)
+				dc.DrawText( s, round(x + tHeight * 1.2), round(y) )
 				y += tHeight
 				if y > r * 1.5 - tHeight * 1.5:
 					colCount += 1
