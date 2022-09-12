@@ -167,8 +167,8 @@ class LineGraph(wx.Control):
 			dc.DrawLine( x, yBottom+2, x, yTop );
 			s = '{}'.format(i+1)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, x - w/2, yBottom + 4)
-			dc.DrawText( s, x - w/2, 0 + 4)
+			dc.DrawText( s, round(x - w/2), yBottom + 4)
+			dc.DrawText( s, round(x - w/2), 0 + 4)
 			
 		# Draw the horizontal lines.
 		# Find some reasonable tickmarks.
@@ -189,8 +189,8 @@ class LineGraph(wx.Control):
 			else:
 				s = '%d:%02d:%02d' % (t/(60*60), (t // 60)%60, t%60)
 			w, h = dc.GetTextExtent(s)
-			dc.DrawText( s, textWidth - w, y-textHeight/2 - 2 )
-			dc.DrawLine( xLeft-3, y, xRight, y )
+			dc.DrawText( s, textWidth - w, round(y-textHeight/2 - 2) )
+			dc.DrawLine( xLeft-3, round(y), xRight, round(y) )
 		
 		# Draw the baseline
 		dc.SetPen(wx.Pen('black', 2))
@@ -217,7 +217,7 @@ class LineGraph(wx.Control):
 			x = xLeft
 			for d in s:
 				y = yBottom - (d - dataMinRange) * dFactor
-				points.append( wx.Point(x, y) )
+				points.append( wx.Point(round(x), round(y)) )
 				x += thick
 			if points:
 				dc.DrawLines( points );

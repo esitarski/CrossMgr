@@ -589,7 +589,7 @@ class GanttChartPanel(wx.Panel):
 										lenRight = lenMid
 								note = note[:lenLeft].strip() + '...'
 								noteWidth, noteHeight = dc.GetTextExtent( note )
-							dc.DrawText( note, xLast + noteBorderWidth, yLast + (dy - noteHeight) / 2 )
+							dc.DrawText( note, round(xLast + noteBorderWidth), round(yLast + (dy - noteHeight) / 2) )
 							dc.SetFont( fontBarLabel )
 					
 					if j == self.moveLap and self.moveIRider == i:
@@ -598,10 +598,10 @@ class GanttChartPanel(wx.Panel):
 							cameraHeight = int(dy * 0.75)
 							cameraWidth = int(cameraHeight * 1.5)
 							dc.SetBrush( wx.BLACK_BRUSH )
-							dc.DrawRoundedRectangle( xCur - 2 - cameraWidth, yLast + (dy - cameraHeight) / 2, cameraWidth, cameraHeight, cameraHeight/5 )
+							dc.DrawRoundedRectangle( round(xCur - 2 - cameraWidth), round(yLast + (dy - cameraHeight) / 2), cameraWidth, cameraHeight, round(cameraHeight/5) )
 							dc.SetPen( wx.WHITE_PEN )
 							dc.SetBrush( transparentBrush )
-							dc.DrawCircle( xCur - 2 - cameraWidth / 2, yLast + dy / 2, cameraHeight * (0.6 / 2) ) 
+							dc.DrawCircle( round(xCur - 2 - cameraWidth / 2), round(yLast + dy / 2), round(cameraHeight * (0.6 / 2)) ) 
 					
 					if xOriginal <= xRight:
 						try:
