@@ -383,14 +383,24 @@ function onLoadImage( iFrame ) {
 	// If the zoomed image has loaded, or there is no zoom image and all images have been loaded, show them.
 	++loadedImageCount;
 	const trig = getTriggerCur();
-	if( (trig.zoom_frame >= 0 && trig.zoom_frame == iFrame) || loadedImageCount >= imagesCur.length ) {
-		showImages();
-		
-		if( loadedImageCount >= imagesCur.length ) {
-			// Clear the wait cursor as we now have all the images.
-			for( let e of document.getElementsByClassName('display_ctrl') )
-				e.style.cursor = 'auto';
+	if( loadedImageCount < imagesCur.length ) {
+		if( trig.zoom_frame >= 0 && trig.zoom_frame == iFrame)
+			showImages();
+		else {
+			try {
+				imageScaledBitmap.Refresh();
+			}
+			catch( error ) {
+				// Ignore all update errors.
+				console.log( error );
+			}
 		}
+	}
+	else {
+		showImages();
+		// Clear the wait cursor as we now have all the images.
+		for( let e of document.getElementsByClassName('display_ctrl') )
+			e.style.cursor = 'auto';
 	}
 }
 
@@ -567,8 +577,12 @@ function drawCallback( canvas ) {
 	ctx.textBaseline = 'top';
 	ctx.fillStyle = 'rgb(255,255,0)';
 	
-	ctx.fillText( formatTimeDelta(tsImage - ts) + ' TRG', fontSize, fontSize );
-	ctx.fillText( formatEpoch(tsImage), fontSize, fontSize*2.15 );
+	if( ts && tsImage ) {
+		ctx.fillText( formatTimeDelta(tsImage - ts) + ' TRG', fontSize, fontSize );
+		ctx.fillText( formatEpoch(tsImage), fontSize, fontSize*2.15 );
+	}
+	const imageStatusText = loadedImageCount + '/' + imagesCur.length + ' IMG';
+	ctx.fillText( imageStatusText, fontSize, fontSize*3.30 );
 }
 
 function showImage( iImage ) {
