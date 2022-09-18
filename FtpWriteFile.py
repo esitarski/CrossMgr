@@ -293,7 +293,7 @@ class FtpQRCodePrintout( wx.Printout ):
 		widthPix, heightPix = dc.GetSize()
 		
 		# Get a reasonable border.
-		borderPix = max(widthPix, heightPix) / 20
+		borderPix = int(max(widthPix, heightPix) / 20)
 		
 		widthFieldPix = widthPix - borderPix * 2
 		heightFieldPix = heightPix - borderPix * 2
@@ -304,8 +304,8 @@ class FtpQRCodePrintout( wx.Printout ):
 		# Draw the graphic.
 		bitmap = getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
-		graphicHeight = heightPix * 0.15
-		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
+		graphicHeight = int(heightPix * 0.15)
+		graphicWidth = int(float(bmWidth) / float(bmHeight) * graphicHeight)
 		graphicBorder = int(graphicWidth * 0.15)
 
 		# Rescale the graphic to the correct size.

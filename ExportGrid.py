@@ -141,7 +141,7 @@ class ExportGrid:
 		self.iLapTimes -= 1
 	
 	def _getFont( self, pixelSize = 28, bold = False ):
-		return wx.Font( (0,pixelSize), wx.FONTFAMILY_SWISS, wx.NORMAL,
+		return wx.Font( (0,max(pixelSize,1)), wx.FONTFAMILY_SWISS, wx.NORMAL,
 									 wx.FONTWEIGHT_BOLD if bold else wx.FONTWEIGHT_NORMAL, False )
 	
 	def _getColSizeTuple( self, dc, font, col ):
@@ -175,7 +175,7 @@ class ExportGrid:
 			return
 		lineHeightText = dc.GetTextExtent( 'Py' )[1]
 		for line in text.split( '\n' ):
-			dc.DrawText( line, x, y )
+			dc.DrawText( line, round(x), round(y) )
 			y += lineHeightText
 
 	def _getFontToFit( self, widthToFit, heightToFit, sizeFunc, isBold = False ):
@@ -183,7 +183,7 @@ class ExportGrid:
 		right = max(widthToFit, heightToFit)
 		
 		while right - left > 1:
-			mid = (left + right) / 2.0
+			mid = (left + right) // 2
 			font = self._getFont( mid, isBold )
 			widthText, heightText = sizeFunc( font )
 			if widthText <= widthToFit and heightText <= heightToFit:
@@ -205,7 +205,7 @@ class ExportGrid:
 		widthPix, heightPix = dc.GetSize()
 		
 		# Get a reasonable border.
-		borderPix = max(widthPix, heightPix) / 20
+		borderPix = int(max(widthPix, heightPix) / 20)
 		
 		widthFieldPix = widthPix - borderPix * 2
 		heightFieldPix = heightPix - borderPix * 2
@@ -215,8 +215,8 @@ class ExportGrid:
 		# Draw the graphic.
 		bitmap = getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
-		graphicHeight = heightPix * 0.15
-		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
+		graphicHeight = int(heightPix * 0.15)
+		graphicWidth = int(float(bmWidth) / float(bmHeight) * graphicHeight)
 		graphicBorder = int(graphicWidth * 0.15)
 
 		# Rescale the graphic to the correct size.
@@ -294,12 +294,12 @@ class ExportGrid:
 				self._drawMultiLineText( dc, '{}'.format(c), xPix, yPix )					# left justify
 			else:
 				self._drawMultiLineText( dc, '{}'.format(c), xPix + colWidth - w, yPix )	# right justify
-			yPix += h + hSpace/4
+			yPix += h + hSpace//4
 			if col == 0:
-				yLine = yPix - hSpace/8
+				yLine = yPix - hSpace//8
 				dc.SetPen( wx.Pen(wx.Colour(200,200,200)) )
 				for r in range(max(len(cData) for cData in dataDraw) + 1):
-					dc.DrawLine( borderPix, yLine + r * textHeight, widthPix - borderPix, yLine + r * textHeight )
+					dc.DrawLine( borderPix, round(yLine + r * textHeight), round(widthPix - borderPix), round(yLine + r * textHeight) )
 				dc.SetPen( wx.BLACK_PEN )
 			
 			for v in dataDraw[col]:
@@ -388,7 +388,7 @@ class ExportGrid:
 			widthPix, heightPix = heightPix, widthPix
 		
 		# Get a reasonable border.
-		borderPix = max(widthPix, heightPix) / 20
+		borderPix = int(max(widthPix, heightPix) / 20)
 		
 		widthFieldPix = widthPix - borderPix * 2
 		heightFieldPix = heightPix - borderPix * 2
@@ -399,8 +399,8 @@ class ExportGrid:
 		bitmap = getHeaderBitmap()
 		bmWidth, bmHeight = bitmap.GetWidth(), bitmap.GetHeight()
 		
-		graphicHeight = heightPix * 0.15
-		graphicWidth = float(bmWidth) / float(bmHeight) * graphicHeight
+		graphicHeight = int(heightPix * 0.15)
+		graphicWidth = int(float(bmWidth) / float(bmHeight) * graphicHeight)
 		graphicBorder = int(graphicWidth * 0.15)
 
 		image = bitmap.ConvertToImage()
@@ -497,9 +497,9 @@ class ExportGrid:
 				pdf.image( flagFName, x=x, y=y+int(padding*1.75), w=w, h=h, type='PNG' )
 				
 		# Switch to smaller font.
-		h = borderPix / 4.0
+		h = int(borderPix / 4.0)
 		pdf.set_font_size( h )
-		textHeight = h * 1.15
+		textHeight = int(h * 1.15)
 		
 		def write_link( x, y, text, link ):
 			pdf.set_xy( x, y )
@@ -543,7 +543,7 @@ class ExportGrid:
 		''' Write the contents of the grid to an xlwt excel sheet. '''
 		titleStyle = xlwt.XFStyle()
 		titleStyle.font.bold = True
-		titleStyle.font.height += titleStyle.font.height / 2
+		titleStyle.font.height += titleStyle.font.height // 2
 
 		headerStyleAlignLeft = xlwt.XFStyle()
 		headerStyleAlignLeft.borders.bottom = xlwt.Borders.MEDIUM

@@ -286,8 +286,8 @@ class ImageView(wx.Window):
         owidth = int(scale*iwidth)
         oheight = int(scale*iheight)
 
-        diffx = (wwidth - owidth)/2   # center calc
-        diffy = (wheight - oheight)/2   # center calc
+        diffx = (wwidth - owidth)//2     # center calc
+        diffy = (wheight - oheight)//2   # center calc
 
         if not bmp:
             if owidth!=iwidth or oheight!=iheight:
@@ -338,7 +338,7 @@ class ImagePanel(wx.Panel):
         bmp = GetNamedBitmap('Checked')
         btn = wx.BitmapButton(self, ID_CHECK_BG, bmp, style=wx.BU_EXACTFIT)
         self.Bind(wx.EVT_BUTTON, self.OnSetImgBackground, btn)
-        btn.SetToolTip("Set background to chekered pattern")
+        btn.SetToolTip("Set background to checkered pattern")
         hbox_ctrls.Add(btn, 0, wx.ALIGN_LEFT|wx.LEFT, 4)
 
 
