@@ -311,11 +311,13 @@ class RaceHUD(wx.Control):
 				x = max( x - textWidth - textHeight / 8, xLeft + 2 )
 				dc.DrawText( tCur, round(x), round(yTop + hMiddle - textHeight / 2) )
 				
-				if	(nextLap == len(raceTimes)-2 and tToLeader > 15) or \
-					(nextLap == len(raceTimes)-3 and tToLeader < 15):
+				if (
+						(nextLap == len(raceTimes)-2 and tToLeader > 15) or
+						(nextLap == len(raceTimes)-3 and tToLeader < 15)
+					):
 					x -= self.bell.GetWidth() + textHeight / 8
 					if x >= xLeft:
-						dc.DrawBitmap( self.bell, x, round(yTop + hMiddle - self.bell.GetHeight() / 2) )
+						dc.DrawBitmap( self.bell, round(x), round(yTop + hMiddle - self.bell.GetHeight() / 2) )
 			
 			# Draw the leader.
 			if leader is not None:

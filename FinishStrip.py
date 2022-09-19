@@ -353,9 +353,9 @@ class FinishStrip( wx.Panel ):
 		gc.SetPen( wx.Pen(wx.Colour(64,64,64), 1) )
 		gc.SetBrush( wx.Brush(wx.Colour(200,200,200)) )
 		rect = wx.Rect( xTimeLine - tWidth//2 - border, 0, tWidth + border*2, tHeight + border*2 )
-		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
+		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), int(border*1.5) )
 		rect.SetTop( heightWin - tHeight - border )
-		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), border*1.5 )
+		gc.DrawRoundedRectangle( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), int(border*1.5) )
 		
 		gc.DrawText( text, xTimeLine - tWidth//2, border )
 		gc.DrawText( text, xTimeLine - tWidth//2, heightWin - tHeight - border/2 )
