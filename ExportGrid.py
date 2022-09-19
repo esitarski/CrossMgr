@@ -77,7 +77,7 @@ def drawQRCode( url, dc, x, y, size ):
 	dc.SetBrush( wx.BLACK_BRUSH )
 	dc.SetPen( wx.TRANSPARENT_PEN )
 	squareSize = float(size) / float(qr.modules_count)
-	offset = [int(squareSize*i + 0.5) for i in range(qr.modules_count+1)];
+	offset = [round(squareSize*i) for i in range(qr.modules_count+1)];
 	for row in range(qr.modules_count):
 		for col, v in enumerate(qr.modules[row]):
 			if v:
