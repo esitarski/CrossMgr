@@ -198,7 +198,7 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', 
 	# Draw a frame around the bitmap.
 	dc.SetBrush( wx.TRANSPARENT_BRUSH )
 	
-	frameHalf = frameWidth / 2
+	frameHalf = frameWidth // 2
 	dc.SetPen( wx.Pen(drawResources.borderColour, frameWidth) )
 	dc.DrawRectangle( frameHalf, frameHalf, bitmapWidth+frameHalf, bitmapHeight+frameHalf )
 	dc.SetPen( wx.Pen(wx.WHITE, frameHalf) )

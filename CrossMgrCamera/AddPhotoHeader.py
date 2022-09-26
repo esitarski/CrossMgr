@@ -101,7 +101,7 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	if drawResources is None or drawResources.w != w or drawResources.h != h:
 		setDrawResources( dc, w, h )
 	
-	bibTxt = u'{}'.format(bib) if bib else u''
+	bibTxt = '{}'.format(bib) if bib else ''
 	if time and raceSeconds:
 		timeTxt = _('{}  {}').format(
 			formatTime(raceSeconds),
@@ -187,7 +187,7 @@ def AddPhotoHeader( image, bib=None, time=None, raceSeconds=None, firstNameTxt=u
 	# Draw a frame around the bitmap.
 	dc.SetBrush( wx.TRANSPARENT_BRUSH )
 	
-	frameHalf = frameWidth / 2
+	frameHalf = frameWidth // 2
 	dc.SetPen( wx.Pen(drawResources.borderColour, frameWidth) )
 	dc.DrawRectangle( frameHalf, frameHalf, bitmapWidth+frameHalf, bitmapHeight+frameHalf )
 	dc.SetPen( wx.Pen(wx.WHITE, frameHalf) )
