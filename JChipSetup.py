@@ -57,7 +57,7 @@ class JChipSetupDialog( wx.Dialog ):
 		self.receivedCount = 0
 		self.refTime = None
 		
-		self.enableJChipCheckBox = wx.CheckBox( self, label = _('Accept RFID Reader Data During Race') )
+		self.enableJChipCheckBox = wx.CheckBox( self, label = _('Use RFID Reader During Race') )
 		if Model.race:
 			self.enableJChipCheckBox.SetValue( getattr(Model.race, 'enableJChipIntegration', False) )
 		else:

@@ -333,7 +333,7 @@ class RfidProperties( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id )
-		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Use RFID Reader') )
+		self.jchip = wx.CheckBox( self, style=wx.ALIGN_LEFT, label = _('Use RFID Reader During Race') )
 
 		self.chipTimingOptions = wx.RadioBox(
 			self,
