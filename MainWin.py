@@ -3867,6 +3867,8 @@ class MainWin( wx.Frame ):
 		
 	@logCall
 	def menuWebIndexPage( self, event ):
+		if not Model.race:
+			return
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage(), new = 2, autoraise = True )
 		except Exception as e:
@@ -3874,6 +3876,8 @@ class MainWin( wx.Frame ):
 	
 	@logCall
 	def menuWebQRCodePage( self, event ):
+		if not Model.race:
+			return
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new = 2, autoraise = True )
 		except Exception as e:

@@ -5,7 +5,6 @@ import datetime
 
 import wx
 import wx.lib.intctrl
-import wx.lib.rcsizer  as rcs
 
 import Model
 import Utils
@@ -52,7 +51,7 @@ def GetAllIps():
 class JChipSetupDialog( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id, _("Chip Reader Setup"),
-						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL|wx.RESIZE_BORDER )
 		
 		self.timer = None
 		self.receivedCount = 0
@@ -66,7 +65,7 @@ class JChipSetupDialog( wx.Dialog ):
 		
 		self.testJChip = wx.ToggleButton( self, label = _('Start RFID Test') )
 		self.testJChip.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		self.Bind(wx.EVT_TOGGLEBUTTON, self.testJChipToggle, self.testJChip)
+		self.testJChip.Bind( wx.EVT_TOGGLEBUTTON, self.testJChipToggle )
 		
 		self.testList = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,200) )
 		self.testList.Bind( wx.EVT_RIGHT_DOWN, self.skip )
@@ -97,17 +96,17 @@ class JChipSetupDialog( wx.Dialog ):
 		bs.Add( wx.StaticText( self, label = _('Reader Configuration:') ), 0, wx.EXPAND|wx.ALL, border )
 		
 		#-------------------------------------------------------------------
-		rowColSizer = rcs.RowColSizer()
-		bs.Add( rowColSizer, 0, wx.EXPAND|wx.ALL, border )
+		gridBagSizer = wx.GridBagSizer()
+		bs.Add( gridBagSizer, 0, wx.EXPAND|wx.ALL, border )
 		
 		row = 0
-		rowColSizer.Add( wx.StaticText( self, label='{}:'.format(_('Reader Type')) ), row=row, col=0, border=border,
+		gridBagSizer.Add( wx.StaticText( self, label='{}:'.format(_('Reader Type')) ), pos=(row,0), border=border,
 			flag=wx.TOP|wx.LEFT|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		self.chipReaderType = wx.Choice( self, choices=ChipReader.ChipReader.Choices )
 		self.chipReaderType.SetSelection( 0 )
 		self.chipReaderType.Bind( wx.EVT_CHOICE, self.changechipReaderType )
-		rowColSizer.Add( self.chipReaderType,
-			row=row, col=1, border=border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
+		gridBagSizer.Add( self.chipReaderType,
+			pos=(row, 1), border=border, flag=wx.EXPAND|wx.TOP|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
 		sep = '  -' + _('or') + '-  '
@@ -121,16 +120,16 @@ class JChipSetupDialog( wx.Dialog ):
 		iphs.Add( self.ipaddr, 1, flag=wx.EXPAND )
 		iphs.Add( self.autoDetect, 0, flag=wx.LEFT, border=4 )
 		
-		rowColSizer.Add( wx.StaticText( self, label=_('Remote IP Address:') ),
-						row=row, col=0, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		rowColSizer.Add( iphs, row=row, col=1, border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
+		gridBagSizer.Add( wx.StaticText( self, label=_('Remote IP Address:') ),
+						pos=(row,0), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		gridBagSizer.Add( iphs, pos=(row, 1), border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
 		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
 											limited=True, style = wx.TE_READONLY )
-		rowColSizer.Add( wx.StaticText(self, label = _('Remote Port:')), row=row, col=0,
+		gridBagSizer.Add( wx.StaticText(self, label = _('Remote Port:')), pos=(row,0),
 						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
-		rowColSizer.Add( self.port, row=row, col=1, border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
+		gridBagSizer.Add( self.port, pos=(row,1), border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		bs.Add( wx.StaticText( self, label = _('If using JChip, see "7  Setting of Connections" in JChip "Control Panel Soft Manual" for more details.') ),
 				border=border, flag = wx.GROW|wx.ALL )

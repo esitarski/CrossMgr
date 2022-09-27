@@ -160,7 +160,7 @@ class Results( wx.Panel ):
 		self.yellowColour = wx.Colour( 255, 255, 0 )
 		self.orangeColour = wx.Colour( 255, 165, 0 )
 		self.greyColour = wx.Colour( 150, 150, 150 )
-		self.greenColour = wx.Colour( 127, 255, 0 )
+		self.greenColour = wx.Colour( 127, 210, 0 )
 		self.lightBlueColour = wx.Colour( 153, 205, 255 )
 		
 		self.splitter = wx.SplitterWindow( self )
