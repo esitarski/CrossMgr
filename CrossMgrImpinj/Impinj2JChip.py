@@ -80,7 +80,7 @@ class Impinj2JChip:
 					sock = None
 					sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 					# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
-					sock.settimeout( 2.0 )				
+					sock.settimeout( 2.0 )
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except Exception as e:
