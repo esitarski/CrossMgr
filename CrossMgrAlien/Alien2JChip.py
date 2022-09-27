@@ -56,17 +56,21 @@ class Alien2JChip:
 		while self.checkKeepGoing():
 			self.messageQ.put( ('Alien2JChip', 'state', False) )
 			self.messageQ.put( ('Alien2JChip', 'Trying to connect to CrossMgr as "{}"...'.format(instance_name)) )
-			sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 
 			#------------------------------------------------------------------------------
 			# Connect to the CrossMgr server.
 			self.tagCount = 0
 			while self.checkKeepGoing():
 				try:
+					sock = None
+					sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+					# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
+					sock.settimeout( 2.0 )				
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
-				except socket.error:
-					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed.  Trying "{}" again in 2 secs...'.format(instance_name)) )
+				except Exception as e:
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed ({}).'.format(e)) );
+					self.messageQ.put( ('Alien2JChip', 'Trying "{}" again in 2 secs...'.format(instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():

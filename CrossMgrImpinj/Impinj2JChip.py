@@ -9,6 +9,7 @@ from queue import Empty
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
 CR = '\r'
+bCR = CR.encode()
 		
 #------------------------------------------------------------------------------	
 # Function to format number, lap and time in JChip format
@@ -56,20 +57,19 @@ class Impinj2JChip:
 			return True
 
 	def getCmd( self, sock ):
-		received = ''
-		while self.keepGoing and received[-1:] != CR:
+		received = b''
+		while self.keepGoing and received[-1:] != bCR:
 			try:
-				received += sock.recv(4096).decode()	# doing a decode() here only works if there are no multi-byte utf characters (which is true for JChip protocol).
+				received += sock.recv(4096)
 			except socket.timeout:
-				return received, True
-		return received[:-1], False
+				return received.decode(), True
+		return received[:-1].decode(), False
 
 	def runServer( self ):
 		instance_name = '{}-{}'.format(socket.gethostname(), os.getpid())
 		while self.checkKeepGoing():
 			self.messageQ.put( ('Impinj2JChip', 'state', False) )
 			self.messageQ.put( ('Impinj2JChip', 'Trying to connect to CrossMgr at {}:{} as "{}"...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
-			sock = None
 
 			#------------------------------------------------------------------------------	
 			# Connect to the CrossMgr server.
@@ -77,12 +77,16 @@ class Impinj2JChip:
 			self.tagCount = 0
 			while self.checkKeepGoing():
 				try:
+					sock = None
 					sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+					# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
+					sock.settimeout( 2.0 )				
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
-				except socket.error:
+				except Exception as e:
 					sock = None
-					self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection Failed.  Trying again at {}:{} as "{}" in 2 sec...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
+					self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection Failed ({}).'.format(e)) )
+					self.messageQ.put( ('Impinj2JChip', 'Trying again at {}:{} as "{}" in 2 sec...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )
 						if not self.checkKeepGoing():
@@ -90,9 +94,6 @@ class Impinj2JChip:
 
 			if not self.checkKeepGoing():
 				break
-				
-			# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
-			sock.settimeout( 2.0 )
 				
 			#------------------------------------------------------------------------------
 			# Send client identity.

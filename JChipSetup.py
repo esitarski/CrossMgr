@@ -89,7 +89,7 @@ class JChipSetupDialog( wx.Dialog ):
 		border = 4
 		bs.Add( wx.StaticText(self, label = intro), 0, wx.EXPAND|wx.ALL, border )
 
-		bs.Add( self.enableJChipCheckBox, 0, wx.EXPAND|wx.ALL|wx.ALIGN_LEFT, border )
+		bs.Add( self.enableJChipCheckBox, 0, wx.ALL|wx.ALIGN_LEFT, border )
 		
 		#-------------------------------------------------------------------
 		bs.AddSpacer( border )
