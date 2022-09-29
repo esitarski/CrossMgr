@@ -10,6 +10,7 @@ from Utils import readDelimitedData, timeoutSecs
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
 CR = '\r'
+bCR = b'\r'
 		
 #------------------------------------------------------------------------------	
 # Function to format number, lap and time in JChip format
@@ -51,6 +52,15 @@ class Alien2JChip:
 		except Empty:
 			return True
 			
+	def getCmd( self, sock ):
+		received = b''
+		while self.keepGoing and received[-1:] != bCR:
+			try:
+				received += sock.recv(4096)
+			except Exception as e:
+				return received.decode(), e
+		return received[:-1].decode(), None
+
 	def runServer( self ):
 		instance_name = '{}-{}'.format(socket.gethostname(), os.getpid())
 		while self.checkKeepGoing():
@@ -83,31 +93,25 @@ class Alien2JChip:
 			self.messageQ.put( ('Alien2JChip', 'state', True) )
 			self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection succeeded!' ) )
 			self.messageQ.put( ('Alien2JChip', 'Sending identifier "{}"...'.format(instance_name)) )
-			sock.send( "N0000{}{}".format(instance_name, CR).encode() )
+			sock.sendall( "N0000{}{}".format(instance_name, CR).encode() )
 
 			#------------------------------------------------------------------------------
 			self.messageQ.put( ('Alien2JChip', 'Waiting for "get time" command from CrossMgr...') )
 			success = True
-			while self.keepGoing:
-				try:
-					received = sock.recv(1).decode()
-				except Exception as e:
-					self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: {}'.format(e)) )
-					success = False
-					break
-				if received == 'G':
-					while received[-1] != CR:
-						received += sock.recv(1).decode()
-					self.messageQ.put( ('Alien2JChip', 'Received cmd: "{}" from CrossMgr'.format(received[:-1])) )
-					break
-
-			#------------------------------------------------------------------------------
-			if not success:
-				sock.close()
-				continue
-			
-			if not self.keepGoing:
+			received, e = self.getCmd( sock )
+			if not self.checkKeepGoing():
 				break
+			if e:
+				self.messageQ.put( ('Alien2JChip', 'CrossMgr error: {}.'.format(e)) )
+				sock.close()
+				sock = None
+				continue
+			self.messageQ.put( ('Alien2JChip', 'Received: "{}" from CrossMgr'.format(received)) )
+			if received != 'GT':
+				self.messageQ.put( ('Alien2JChip', 'Incorrect command (expected GT).') )
+				sock.close()
+				sock = None
+				continue
 				
 			self.messageQ.put( ('Alien2JChip', 'Send gettime data...') )
 			# format is GT0HHMMSShh<CR> where hh is 100's of a second.  The '0' (zero) after GT is the number of days running and is ignored by CrossMgr.
@@ -118,27 +122,35 @@ class Alien2JChip:
 				CR)
 			self.messageQ.put( ('Alien2JChip', message[:-1]) )
 			try:
-				sock.send( message.encode() )
+				sock.sendall( message.encode() )
 			except Exception as e:
-				self.messageQ.put( ('Alien2JChip', 'CrossMgr Communication Error: {}'.format(e)) )
+				self.messageQ.put( ('Alien2JChip', 'CrossMgr error: {}'.format(e)) )
 				success = False
 
 			#------------------------------------------------------------------------------	
 			if not success:
 				sock.close()
+				sock = None
 				continue
 			
 			if not self.keepGoing:
 				break
 
-			self.messageQ.put( ('Alien2JChip', 'Waiting for send command from CrossMgr...') )
-			while self.keepGoing:
-				received = sock.recv(1).decode()
-				if received == 'S':
-					while received[-1] != CR:
-						received += sock.recv(1).decode()
-					self.messageQ.put( ('Alien2JChip', 'Received cmd: "{}" from CrossMgr'.format(received[:-1])) )
-					break
+			self.messageQ.put( ('Alien2JChip', 'Waiting for S0000 (send) command from CrossMgr...') )
+			received, e = self.getCmd( sock )
+			if not self.checkKeepGoing():
+				break
+			if e:
+				self.messageQ.put( ('Alien2JChip', 'CrossMgr error: {}.'.format(e)) )
+				sock.close()
+				sock = None
+				continue
+			self.messageQ.put( ('Alien2JChip', 'Received: "{}" from CrossMgr'.format(received)) )
+			if not received.startswith('S'):
+				self.messageQ.put( ('Alien2JChip', 'Incorrect command (expected S0000).') )
+				sock.close()
+				sock = None
+				continue
 
 			#------------------------------------------------------------------------------	
 			self.messageQ.put( ('Alien2JChip', 'Start sending data to CrossMgr...') )
@@ -153,7 +165,7 @@ class Alien2JChip:
 				
 				message = formatMessage( d[0], d[1] )
 				try:
-					sock.send( message.encode() )
+					sock.sendall( message.encode() )
 					self.tagCount += 1
 					self.messageQ.put( ('Alien2JChip', 'Forwarded {}: {}'.format(self.tagCount, message[:-1])) )
 				except Exception as e:

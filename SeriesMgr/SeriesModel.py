@@ -423,9 +423,7 @@ class SeriesModel:
 	def getReferenceName( self, lastName, firstName ):
 		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())
 		alias = self.aliasLookup.get( key, None )
-		if alias is None:
-			return lastName, firstName
-		return alias
+		return alias if alias is not None else (lastName, firstName)
 	
 	def getReferenceLicense( self, license ):
 		key = Utils.removeDiacritic(license).upper()

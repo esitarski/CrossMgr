@@ -57,13 +57,15 @@ class Impinj2JChip:
 			return True
 
 	def getCmd( self, sock ):
+		# Read from the socket until we get data ending in the delimiter.
+		# Handle all exceptions, and return them.
 		received = b''
 		while self.keepGoing and received[-1:] != bCR:
 			try:
 				received += sock.recv(4096)
-			except socket.timeout:
-				return received.decode(), True
-		return received[:-1].decode(), False
+			except Exception as e:
+				return received.decode(), e
+		return received[:-1].decode(), None
 
 	def runServer( self ):
 		instance_name = '{}-{}'.format(socket.gethostname(), os.getpid())
@@ -81,11 +83,11 @@ class Impinj2JChip:
 					sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 					# Set the timeout with CrossMgr to 2 seconds.  If CrossMgr fails to respond within this time, re-establish the connection.
 					sock.settimeout( 2.0 )
-					sock.connect((self.crossMgrHost, self.crossMgrPort))
+					sock.connect( (self.crossMgrHost, self.crossMgrPort) )
 					break
 				except Exception as e:
 					sock = None
-					self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection Failed ({}).'.format(e)) )
+					self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection Failed: {}.'.format(e)) )
 					self.messageQ.put( ('Impinj2JChip', 'Trying again at {}:{} as "{}" in 2 sec...'.format(self.crossMgrHost, self.crossMgrPort, instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )
@@ -103,20 +105,20 @@ class Impinj2JChip:
 			self.messageQ.put( ('Impinj2JChip', 'CrossMgr Connection succeeded!' ) )
 			self.messageQ.put( ('Impinj2JChip', 'Sending identifier "{}"...'.format(instance_name)) )
 			try:
-				sock.send("N0000{}{}".format(instance_name, CR).encode())
-			except socket.timeout:
-				self.messageQ.put( ('Impinj2JChip', 'CrossMgr connection timed out [1].') )
+				sock.sendall( "N0000{}{}".format(instance_name, CR).encode() )
+			except Exception as e:
+				self.messageQ.put( ('Impinj2JChip', 'CrossMgr error: {}.'.format(e)) )
 				sock.close()
 				sock = None
 				continue
 
 			#------------------------------------------------------------------------------	
 			self.messageQ.put( ('Impinj2JChip', 'Waiting for GT (get time) command from CrossMgr...') )
-			received, timedOut = self.getCmd( sock )
+			received, e = self.getCmd( sock )
 			if not self.checkKeepGoing():
 				break
-			if timedOut:
-				self.messageQ.put( ('Impinj2JChip', 'CrossMgr connection timed out [2].') )
+			if e:
+				self.messageQ.put( ('Impinj2JChip', 'CrossMgr error: {}.'.format(e)) )
 				sock.close()
 				sock = None
 				continue
@@ -137,9 +139,9 @@ class Impinj2JChip:
 				CR)
 			self.messageQ.put( ('Impinj2JChip', message[:-1]) )
 			try:
-				sock.send( message.encode() )
-			except socket.timeout:
-				self.messageQ.put( ('Impinj2JChip', 'CrossMgr connection timed out [3].') )
+				sock.sendall( message.encode() )
+			except Exception as e:
+				self.messageQ.put( ('Impinj2JChip', 'CrossMgr exception: {}.'.format(e)) )
 				sock.close()
 				sock = None
 				continue
@@ -149,11 +151,11 @@ class Impinj2JChip:
 				break
 
 			self.messageQ.put( ('Impinj2JChip', 'Waiting for S0000 (send) command from CrossMgr...') )
-			received, timedOut = self.getCmd( sock )
+			received, e = self.getCmd( sock )
 			if not self.checkKeepGoing():
 				break
-			if timedOut:
-				self.messageQ.put( ('Impinj2JChip', 'CrossMgr connection timed out [4].') )
+			if e:
+				self.messageQ.put( ('Impinj2JChip', 'CrossMgr error: {}.'.format(e)) )
 				sock.close()
 				sock = None
 				continue
@@ -181,12 +183,13 @@ class Impinj2JChip:
 				# Expect message if the form [tag, time].
 				message = formatMessage( d[0], d[1] )
 				try:
-					sock.send( message.encode() )
+					sock.sendall( message.encode() )
 					self.tagCount += 1
 					self.messageQ.put( ('Impinj2JChip', 'Forwarded {}: {}'.format(self.tagCount, message[:-1])) )
-				except Exception:
+				except Exception as e:
 					self.dataQ.put( d )	# Put the data back on the queue for resend.
-					self.messageQ.put( ('Impinj2JChip', 'Lost CrossMgr Connection.  Attempting to reconnect...') )
+					self.messageQ.put( ('Impinj2JChip', 'CrossMgr error: {}.'.format(e)) )
+					self.messageQ.put( ('Impinj2JChip', 'Attempting to reconnect...') )
 					break
 		
 			sock.close()
