@@ -23,6 +23,7 @@ import ReadCategoriesFromExcel
 import ReadPropertiesFromExcel
 import ModuleUnpickler
 import GetMatchingExcelFile
+import ReorderableGrid
 import SetGraphic
 import imagebrowser
 import scramble
