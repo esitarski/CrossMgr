@@ -203,6 +203,14 @@ class Category:
 			self.name, self.iSequence, self.publish, self.teamN, self.useNthScore, self.teamPublish
 		)
 
+def nameToAliasKey( name ):
+	no_accent_name = Utils.removeDiacritic( name )
+	if len(no_accent_name) == len(name):
+		return no_accent_name.lower()
+	else:
+		# If characters are lost, the name contains non-roman characters.  Just return what we have.
+		return name.lower()
+
 class SeriesModel:
 	DefaultPointStructureName = 'Regular'
 	useMostEventsCompleted = False
@@ -345,7 +353,7 @@ class SeriesModel:
 			self.aliasLookup = {}
 			for name, aliases in self.references:
 				for alias in aliases:
-					key = tuple( [Utils.removeDiacritic(n).lower() for n in alias] )
+					key = tuple( [nameToAliasKey(n) for n in alias] )
 					self.aliasLookup[key] = name				
 	
 		#if updated:
@@ -414,14 +422,14 @@ class SeriesModel:
 			self.aliasTeamLookup = {}
 			for Team, aliases in self.referenceTeams:
 				for alias in aliases:
-					key = Utils.removeDiacritic(alias).upper()
+					key = nameToAliasKey( alias )
 					self.aliasTeamLookup[key] = Team				
 	
 		#if updated:
 		#	memoize.clear()
 	
 	def getReferenceName( self, lastName, firstName ):
-		key = (Utils.removeDiacritic(lastName).lower(), Utils.removeDiacritic(firstName).lower())
+		key = (nameToAliasKey(lastName), nameToAliasKey(firstName))
 		alias = self.aliasLookup.get( key, None )
 		return alias if alias is not None else (lastName, firstName)
 	
@@ -430,8 +438,7 @@ class SeriesModel:
 		return self.aliasLicenseLookup.get( key, key )
 	
 	def getReferenceTeam( self, team ):
-		key = Utils.removeDiacritic(team).upper()
-		return self.aliasTeamLookup.get( key, team )
+		return self.aliasTeamLookup.get( nameToAliasKey(team), team )
 	
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
