@@ -219,7 +219,7 @@ class LineGraph(wx.Control):
 				y = yBottom - (d - dataMinRange) * dFactor
 				points.append( wx.Point(round(x), round(y)) )
 				x += thick
-			if points:
+			if len(points) >= 2:
 				dc.DrawLines( points );
 			
 			# Draw indicators for interpolated values.
