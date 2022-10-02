@@ -221,7 +221,9 @@ class LineGraph(wx.Control):
 				x += thick
 			if len(points) >= 2:
 				dc.DrawLines( points );
-			
+			elif len(points) == 1:
+				dc.DrawLines( [points[0], wx.Point(points[0].x,points[0].y)] );
+				
 			# Draw indicators for interpolated values.
 			ctx.SetPen( wx.Pen( wx.Colour(128,128,128), 1 ) )
 			for j, p in enumerate(points):
