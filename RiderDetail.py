@@ -1308,9 +1308,9 @@ class RiderDetail( wx.Panel ):
 			
 			raceStartTimeOfDay = Utils.StrToSeconds(race.startTime.strftime('%H:%M:%S.%f')) if race and race.startTime else 0.0
 
-			startOffset = race.getStartOffset( num )
+			startOffset = race.getStartOffset( num )				# 0.0 if isTimeTrial.
 			entries = GetEntriesForNum(waveCategory, num) if rider.autocorrectLaps else rider.interpolate()
-			entries = [e for e in entries if e.t > startOffset]
+			entries = [e for e in entries if e.t > startOffset]		# For time trials, e.t is relative to the the rider's firstTime.  Eg. e.t + rider.firstTime == raceTime.
 			
 			unfilteredTimes = [t for t in race.getRider(num).times if t > startOffset]
 			entryTimes = set( e.t for e in entries )
@@ -1367,8 +1367,8 @@ class RiderDetail( wx.Panel ):
 				fields = {
 					'Lap': '{}'.format(r+1),
 					'Lap Time': Utils.formatTime(tLap, highPrecisionTimes),
-					'Race': Utils.formatTime(e.t, highPrecisionTimes),
-					'Clock': Utils.formatTime(e.t + raceStartTimeOfDay, highPrecisionTimes),
+					'Race': Utils.formatTime(rider.riderTimeToRaceTime(e.t), highPrecisionTimes),
+					'Clock': Utils.formatTime(rider.riderTimeToRaceTime(e.t) + raceStartTimeOfDay, highPrecisionTimes),
 				}
 				
 				graphData.append( tLap )

@@ -35,7 +35,8 @@ class CorrectNumberDialog( wx.Dialog ):
 		self.timeChoiceLastSelection = 0
 		self.timeChoice.SetSelection( self.timeChoiceLastSelection )
 		self.timeChoice.Bind( wx.EVT_CHOICE, self.doTimeChoice, self.timeChoice )
-		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=entry.t, size=(120, -1) )
+		# Set time edit in race time.
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=race.getRider(entry.num).riderTimeToRaceTime(entry.t) if race and race.startTime else entry.t, size=(120, -1) )
 				
 		bs.Add( self.timeChoice,  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
@@ -79,19 +80,32 @@ class CorrectNumberDialog( wx.Dialog ):
 		self.timeChoiceLastSelection = iSelection
 		
 	def onOK( self, event ):
+		# This gets confusing.
+		# If this is a Time Trial, we have to be very careful about how we pass times to the various routines.
+		# Some take race time (and subtract off the firstTime), other take the rider time (which already has the firstTime subtracted).
 		num = self.numEdit.GetValue()
 		t = self.timeMsEdit.GetSeconds()
 		
+		# First, make sure the input race time (time since race start).
 		if self.timeChoice.GetSelection() == 1 and Model.race and Model.race.startTime:
+			# Time given in 24-hour clock, not Race Time.
 			dtStart = Model.race.startTime
 			dtInput = datetime.datetime(dtStart.year, dtStart.month, dtStart.day) + datetime.timedelta(seconds = t)
 			if dtInput < dtStart:
 				Utils.MessageOK( self, '\n\n'.join( [_('Cannot Enter Clock Time Before Race Start.'), _('(reminder: clock time is in 24-hour format)')] ),
 										_('Time Entry Error'), iconMask = wx.ICON_ERROR )
 				return
-			t = (dtInput - dtStart).total_seconds()
+			t = (dtInput - dtStart).total_seconds()				
+			# Time converted from 24-hour clock to race time.
 
+		# Convert the time to rider time, that is, if a time trial, subtract firstTime.
 		race = Model.race
+		if race.isTimeTrial:
+			t = race.getRider( num ).raceTimeToRiderTime( t )
+			# Time converted from race time to rider time (that is, if a TT, subtract firstTime).
+			# t is now in the same format as self.entry.t.
+
+		# Check offset (only applies if this is not a TT).
 		offset = race.getStartOffset( num )
 		if t <= offset:
 			Utils.MessageOK( self, '{}: {}\n\n{}\n{}'.format(
@@ -102,6 +116,7 @@ class CorrectNumberDialog( wx.Dialog ):
 			)
 			return
 
+		# Check for changes.
 		race.lapNote = getattr( race, 'lapNote', {} )
 		if self.noteEdit.GetValue() != race.lapNote.get( (self.entry.num, self.entry.lap), '' ) or self.entry.num != num or self.entry.t != t:
 			undo.pushState()
@@ -115,12 +130,13 @@ class CorrectNumberDialog( wx.Dialog ):
 			if self.entry.num != num or self.entry.t != t:
 				rider = race.getRider( num )
 				if self.entry.lap != 0:
-					race.numTimeInfo.change( self.entry.num, self.entry.t, t )
-					race.deleteTime( self.entry.num, self.entry.t )
-					race.addTime( num, t + ((rider.firstTime or 0.0) if race.isTimeTrial else 0.0) )
+					race.numTimeInfo.change( self.entry.num, self.entry.t, t )			# Change entry time (in rider time).
+					race.deleteTime( self.entry.num, self.entry.t )						# Delete time (in rider time).
+					race.addTime( num, race.getRider(num).riderTimeToRaceTime(t) )		# Add time (in race Time).  This is only different if a time trial.
 				else:
-					race.numTimeInfo.change( self.entry.num, rider.firstTime, t )
-					rider.firstTime = t
+					firstTime = race.getRider(num).riderTimeToRaceTime(t)				# Set firstTime in raceTime.
+					race.numTimeInfo.change( self.entry.num, rider.firstTime, firstTime  )
+					rider.firstTime = firstTime
 					
 			race.setChanged()
 			Utils.refresh()

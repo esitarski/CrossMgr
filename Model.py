@@ -660,6 +660,7 @@ class Rider:
 			self.times.insert( i, t )
 
 	def deleteTime( self, t ):
+		# Expecting t in riderTime.
 		try:
 			self.times.remove( t )
 		except ValueError:
@@ -955,7 +956,17 @@ class Rider:
 		if len(iTimes) > 2:			# Ignore the first lap.
 			del iTimes[0]
 		return [b-a for b, a in zip(iTimes[1:], iTimes)]
+	
+	def riderTimeToRaceTime( self, t ):
+		if not race or not race.isTimeTrial or self.firstTime is None or t is None:
+			return t
+		return t + self.firstTime
 		
+	def raceTimeToRiderTime( self, t ):
+		if not race or not race.isTimeTrial or self.firstTime is None or t is None:
+			return t
+		return t - self.firstTime
+	
 	def getEarlyStartOffset( self ):
 		if (not race or
 			race.isTimeTrial or
