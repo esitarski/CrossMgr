@@ -96,7 +96,7 @@ class CorrectNumberDialog( wx.Dialog ):
 										_('Time Entry Error'), iconMask = wx.ICON_ERROR )
 				return
 			t = (dtInput - dtStart).total_seconds()				
-			# Time converted from 24-hour clock to race time.
+			# Time now converted from 24-hour clock to race time.
 
 		# Convert the time to rider time, that is, if a time trial, subtract firstTime.
 		race = Model.race
@@ -104,24 +104,24 @@ class CorrectNumberDialog( wx.Dialog ):
 			t = race.getRider( num ).raceTimeToRiderTime( t )
 			# Time converted from race time to rider time (that is, if a TT, subtract firstTime).
 			# t is now in the same format as self.entry.t.
+		else:
+			# Check offset (only applies if this is not a TT).
+			offset = race.getStartOffset( num )
+			if t <= offset:
+				Utils.MessageOK( self, '{}: {}\n\n{}\n{}'.format(
+					_('Cannot enter a time that is before the Category Start Offset'), Utils.formatTime(offset, highPrecision=True),
+					_('All times earlier than the Start Offset are ignored.'),
+					_('Please enter a time after the Start Offset.')
+					), _('Time Entry Error'), iconMask = wx.ICON_ERROR
+				)
+				return
 
-		# Check offset (only applies if this is not a TT).
-		offset = race.getStartOffset( num )
-		if t <= offset:
-			Utils.MessageOK( self, '{}: {}\n\n{}\n{}'.format(
-				_('Cannot enter a time that is before the Category Start Offset'), Utils.formatTime(offset, highPrecision=True),
-				_('All times earlier than the Start Offset are ignored.'),
-				_('Please enter a time after the Start Offset.')
-				), _('Time Entry Error'), iconMask = wx.ICON_ERROR
-			)
-			return
-
-		# Check for changes.
+		# Check for edit changes.
 		race.lapNote = getattr( race, 'lapNote', {} )
-		if self.noteEdit.GetValue() != race.lapNote.get( (self.entry.num, self.entry.lap), '' ) or self.entry.num != num or self.entry.t != t:
+		note = self.noteEdit.GetValue().strip()
+		if note != race.lapNote.get( (self.entry.num, self.entry.lap), '' ) or self.entry.num != num or self.entry.t != t:
 			undo.pushState()
 			
-			note = self.noteEdit.GetValue().strip()
 			if not note:
 				race.lapNote.pop( (self.entry.num, self.entry.lap), None )
 			else:
@@ -132,9 +132,9 @@ class CorrectNumberDialog( wx.Dialog ):
 				if self.entry.lap != 0:
 					race.numTimeInfo.change( self.entry.num, self.entry.t, t )			# Change entry time (in rider time).
 					race.deleteTime( self.entry.num, self.entry.t )						# Delete time (in rider time).
-					race.addTime( num, race.getRider(num).riderTimeToRaceTime(t) )		# Add time (in race Time).  This is only different if a time trial.
+					race.addTime( num, rider.riderTimeToRaceTime(t) )					# Add time (in race time).
 				else:
-					firstTime = race.getRider(num).riderTimeToRaceTime(t)				# Set firstTime in raceTime.
+					firstTime = rider.riderTimeToRaceTime(t)							# Set firstTime (in race time).
 					race.numTimeInfo.change( self.entry.num, rider.firstTime, firstTime  )
 					rider.firstTime = firstTime
 					
