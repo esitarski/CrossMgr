@@ -359,8 +359,8 @@ class RaceHUD(wx.Control):
 							hoverWidth + hoverBorderWidth*2, hoverHeight + hoverBorderHeight*2
 						), wx.CONTROL_ISDEFAULT )
 					for label, value in info:
-						dc.DrawText( label, xHover+labelHoverWidth-dc.GetTextExtent(label)[0], yHover )
-						dc.DrawText( value, xHover+hoverWidth-valueHoverWidth, yHover )
+						dc.DrawText( label, round(xHover+labelHoverWidth-dc.GetTextExtent(label)[0]), round(yHover) )
+						dc.DrawText( value, round(xHover+hoverWidth-valueHoverWidth), round(yHover) )
 						yHover += hoverLineHeight
 				yTop += hudHeight
 			
