@@ -845,6 +845,7 @@ class UnstartedRaceWrapper:
 	
 	def __init__(self,  getExternalData = True):
 		self.getExternalData = getExternalData
+		self.tempNums = set()
 		
 	def __enter__( self ):
 		UnstartedRaceWrapper.count += 1

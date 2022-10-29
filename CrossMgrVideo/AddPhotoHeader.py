@@ -27,7 +27,7 @@ def setDrawResources( dc, w, h ):
 	drawResources.w = w
 	drawResources.h = h
 	
-	fontHeight = int(h/36.0)
+	fontHeight = max( 1, int(h/36.0) )
 	fontFace = Utils.FontFace
 	
 	drawResources.bibFontSize = int(fontHeight * 1.5)
@@ -118,10 +118,11 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', 
 		tsTxt = ''
 	if tsTxt.startswith('0'):
 		tsTxt = tsTxt[1:]
+	
 	if kmh:
-		tsTxt += ', {:.2f}km/h'.format(kmh)
+		tsTxt += ', {:.2f}km/h'.format(kmh) if isinstance(kmh, float) else str(kmh)
 	if mph:
-		tsTxt += ', {:.2f}mph'.format(mph)
+		tsTxt += ', {:.2f}mph'.format(mph) if isinstance(mph, float) else str(kmh)
 	nameTxt = ' '.join( n for n in (first_name, last_name) if n )
 	
 	frameWidth = 4
@@ -198,7 +199,7 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', 
 	# Draw a frame around the bitmap.
 	dc.SetBrush( wx.TRANSPARENT_BRUSH )
 	
-	frameHalf = frameWidth // 2
+	frameHalf = round(frameWidth // 2)
 	dc.SetPen( wx.Pen(drawResources.borderColour, frameWidth) )
 	dc.DrawRectangle( frameHalf, frameHalf, bitmapWidth+frameHalf, bitmapHeight+frameHalf )
 	dc.SetPen( wx.Pen(wx.WHITE, frameHalf) )
