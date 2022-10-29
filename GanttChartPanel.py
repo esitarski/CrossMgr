@@ -119,7 +119,7 @@ class GanttChartPanel(wx.Panel):
 		units = -amt / event.GetWheelDelta()
 		sb = self.verticalSB
 		pos = sb.GetThumbPosition() + units
-		pos = min( max( pos, 0 ), sb.GetRange() - sb.GetThumbSize() )
+		pos = round( min( max( pos, 0 ), sb.GetRange() - sb.GetThumbSize() ) )
 		if pos != sb.GetThumbPosition():
 			sb.SetThumbPosition( pos )
 			self.OnVerticalScroll( event )

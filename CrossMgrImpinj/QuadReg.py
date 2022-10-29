@@ -170,7 +170,6 @@ def QuadRegRemoveOutliersRansac( data, returnDetails=False ):
 		curD = sum( alsoInliers )
 		
 		if curD >= bestD:
-		
 			betterModel = np.polyfit(x[alsoInliers], y[alsoInliers], 2)
 			if not modelValid(betterModel, alsoInliers):
 				samplesBad += 1
