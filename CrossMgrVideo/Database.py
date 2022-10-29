@@ -713,7 +713,7 @@ def DBWriter( q, triggerWriteCB=None, fname=None ):
 		doFlush = True
 		if v[0] == 'photo':
 			doFlush = False
-			if v1 is not None and not db.isDup( v[1] ):
+			if v[2] is not None and not db.isDup( v[1] ):
 				# If the photo is "bytes" it is already in jpeg encoding.
 				# Otherwise it is a numpy array and needs to be encoded before writing to the database.
 				tsJpgs.append( (v[1], sqlite3.Binary(v[2] if isinstance(v[2], bytes) else CVUtil.frameToJPeg(v[2]))) )
