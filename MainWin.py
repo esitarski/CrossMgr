@@ -709,7 +709,9 @@ class MainWin( wx.Frame ):
 			getattr( self, a ).SetDropTarget( self.fileDrop )
 			addPage( getattr(self, a), '{}. {}'.format(i+1, n) )
 			setattr( self, 'i' + a[0].upper() + a[1:] + 'Page', i )
+		# Add page alternale names.
 		self.iChartPage = self.iGanttPage
+		self.iPassingsPage = self.iHistoryPage
 		
 		self.riderDetailDialog = None
 		self.splitter.SplitVertically( self.forecastHistory, self.notebook, 256+80)
