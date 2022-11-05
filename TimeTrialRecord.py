@@ -85,11 +85,11 @@ class TimeTrialRecord( wx.Panel ):
 		self.recordTimeButton.SetFont( self.bigFont )
 		
 		self.recordTimeButton.SetToolTip( wx.ToolTip('\n'.join([
-				_('Tap to get a Time, or press "t".'),
+				_('Tap to get a Time, or press t.'),
 				_('Then enter the Bib number(s) and Save.')
 			])) )
 			
-		tapExplain = wx.StaticText( self, label=_('(or press "t")') )
+		tapExplain = wx.StaticText( self, label=_('or press t') )
 		tapExplain.SetFont( self.font )
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
@@ -126,14 +126,14 @@ class TimeTrialRecord( wx.Panel ):
 		self.saveButton = (wx.lib.buttons.ThemedGenButton if 'WXMAC' in wx.Platform else wx.Button)( self, label=_('Save') )
 		self.saveButton.Bind( wx.EVT_BUTTON, self.doSave )
 		self.saveButton.SetFont( self.bigFont )
-		self.saveButton.SetToolTip(wx.ToolTip(_('Save Entries (or press "s")')))
-		saveExplain = wx.StaticText( self, label=_('(or press "s")') )
+		self.saveButton.SetToolTip(wx.ToolTip(_('Save Entries, or press s')))
+		saveExplain = wx.StaticText( self, label=_('or press s') )
 		saveExplain.SetFont( self.font )
 		
 		self.cleanupButton = (wx.lib.buttons.ThemedGenButton if 'WXMAC' in wx.Platform else wx.Button)( self, label=_('Cleanup') )
 		self.cleanupButton.Bind( wx.EVT_BUTTON, self.doCleanup )
 		self.cleanupButton.SetFont( self.bigFont )
-		self.cleanupButton.SetToolTip(wx.ToolTip(_('Cleanup Empty Entries (or press "c")')))
+		self.cleanupButton.SetToolTip(wx.ToolTip(_('Cleanup Empty Entries, or press c')))
 		
 		hbsCommit = wx.BoxSizer( wx.HORIZONTAL )
 		hbsCommit.Add( self.saveButton, 0 )
