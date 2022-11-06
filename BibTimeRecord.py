@@ -161,6 +161,9 @@ class BibTimeRecord( wx.Panel ):
 			self.numEdit.SetValue( '' )
 			self.refresh()
 			wx.CallAfter( Utils.refreshForecastHistory )
+	
+	def Layout( self ):
+		self.GetSizer().Layout()
 		
 	def refresh( self ):
 		valuesToKeep = []

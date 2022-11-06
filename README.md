@@ -5,7 +5,8 @@
 
 Welcome to Cross Manager! Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
 
-In addition to the application help files, there is a tutorial for CrossMgr here and an explanation of an RFID implementation using CrossMgrIpinj here.
+In addition to the application help files, there is a tutorial for CrossMgr [here](/https://github.com/esitarski/CrossMgr/blob/master/CrossMgrTutorial.docx)
+and an explanation of an RFID implementation using CrossMgrIpinj [here](https://github.com/esitarski/CrossMgr/blob/master/CrossMgrImpinj/CrossMgrImpinjReadme.docx).
 
 The software consists of a set of executables.  For Cyclocross, MTB CX, TimeTrial, Road and Criterium races, you will need:
 
@@ -18,15 +19,13 @@ If you are scoring Track races you will need:
 * PointsRaceMgr - for scoring races with intermediate sprints and Laps gained/lost.
 * SprintMgr - for Track sprint races as well as MTB (4x, eliminator, etc.)
 
-CrossMgr was also designed to work with [RaceDB](https://github.com/esitarski/RaceDB), a web-based database for competition management and race check-in.
-
-## What's New in this Release
-
-After installing CrossMgr, check __Help/What's New__.
+CrossMgr was designed to work with [RaceDB](https://github.com/esitarski/RaceDB), a web-based database for competition management and race check-in.
+RaceDB handles race check-in including issue bib numbers and creating RFID tags on-the-fly.  This eliminates most sources of administration error (missing/non-working/wrong RFID tag).
+Additionally, RaceDB supports a self-serve kiosk feature that allows riders to check-in with their tags automatically.
 
 ## System Requirements
 
-All applications are written in Python and compiled into machine code. Builds are made available for Windows, MacOSX, and Linux. In order to publish results, an internet connection is required.
+All applications are written in Python and compiled into machine code. Builds are made available for Windows and MacOSX. In order to publish results, an internet connection is required.
 
 The minimum system requires are as follows:
 
@@ -42,20 +41,12 @@ The minimum system requires are as follows:
 - 4G RAM
 - 10G HD space
 
-### Linux
-
-- Ubuntu 20.04 LTS or newer (other linux distributions may work but are not offically supported)
-- 4G RAM
-- 10G HD space
-
 ## User Installation
 
 As a user, you can install the CrossManager applications on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. The Windows and MacOSX versions are available as binary releases.
 See the Releases tab in the github repo for binaries.
 
-Unfortunately, Linux binaries cannot be supported because wxPython is not manylinux1 compliant (we are holding out hope for manylinux2).
-
-You can still run on Linux, but you have to run from the source code.
+You can still run on Linux too, but you have to run from the source code.
 
 ### Windows Installation
 
@@ -75,18 +66,24 @@ CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRa
 
 #### Debugging the Mac Apps
 
-Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting. First, and foremost, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then click Open on the dialog box to start the application the first time. Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc.. Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application. Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run. Additionally, sometimes the application just won't start. Typically, it's icon will start to flash, and then nothing. To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
+Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting
+First, and foremost, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then click Open on the dialog box to start the application the first time
+Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc...
+Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application.
+Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run.
+Additionally, sometimes the application just won't start. Typically, it's icon will start to flash, and then nothing.
+To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
 
 ```bash
 cd /Applications/CrossMgr.app/Content/MacOS
 ./CrossMgr
 ```
 
-Python is setup to dump logs to stdout which usually indicates the problem. Sometimes, the problem of starting the application will just go away.
+Python is set up to dump logs to stdout which usually indicates the problem. Sometimes, the problem of starting the application will just go away.
 
 ### Linux Installation
 
-Follow the instructions for building CrossMgr on your system.
+Follow the instructions for building CrossMgr on your system.  Check the wxPython web page for specific instructions for how to install it on your distro.
 
 ## Building Cross Manager (for developers)
 

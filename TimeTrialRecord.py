@@ -90,7 +90,6 @@ class TimeTrialRecord( wx.Panel ):
 			])) )
 			
 		tapExplain = wx.StaticText( self, label=_('or press t') )
-		tapExplain.SetFont( self.font )
 		
 		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		hbs.Add( self.recordTimeButton, 0 )
@@ -128,7 +127,6 @@ class TimeTrialRecord( wx.Panel ):
 		self.saveButton.SetFont( self.bigFont )
 		self.saveButton.SetToolTip(wx.ToolTip(_('Save Entries, or press s')))
 		saveExplain = wx.StaticText( self, label=_('or press s') )
-		saveExplain.SetFont( self.font )
 		
 		self.cleanupButton = (wx.lib.buttons.ThemedGenButton if 'WXMAC' in wx.Platform else wx.Button)( self, label=_('Cleanup') )
 		self.cleanupButton.Bind( wx.EVT_BUTTON, self.doCleanup )
@@ -245,6 +243,9 @@ class TimeTrialRecord( wx.Panel ):
 		if timesBibs:
 			self.grid.SetGridCursor( len(timesBibs)-1, 1 )
 			
+	def Layout( self ):
+		self.GetSizer().Layout()
+	
 	def refresh( self ):
 		race = Model.race
 		if not race or not race.isRunning():
