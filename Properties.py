@@ -397,7 +397,7 @@ class RfidProperties( wx.Panel ):
 		if not race:
 			return
 		race.enableJChipIntegration = self.jchip.IsChecked()
-		race.timeTrialNoRFIDStart = self.manualTTStart.IsChecked()
+		race.timeTrialNoRFIDStart = self.ignoreTTStart.IsChecked()
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)
