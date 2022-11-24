@@ -166,7 +166,7 @@ def getPulledCmpTuple( rr, rider, winnerLaps, decreasingLapsToGo=True ):
 			lapsToGo = winnerLaps - (len(rr.lapTimes) + int(rider.tStatus - rr.raceLaps[-1] > 20.0))
 		except Exception:
 			lapsToGo = winnerLaps
-	return (lapsToGo*f, rider.pulledSequence or 9999999, rr.raceTimes[-1] if rr.raceTimes else 24.0*60*60*300, rr.num, rr)
+	return (lapsToGo*f, (rider.pulledSequence if rider.pulledSequence is not None else 9999999), rr.raceTimes[-1] if rr.raceTimes else 24.0*60*60*300, rr.num, rr)
 	
 def FixPulled( riderResults, race, category ):
 	if not race.useTableToPullRiders or (race.isTimeTrial or race.winAndOut):

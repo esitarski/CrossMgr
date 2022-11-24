@@ -562,27 +562,34 @@ class MainWin( wx.Frame ):
 									'Reader Not Connected' )
 			return
 		
-		busy = wx.BusyCursor()
-			
 		wx.CallAfter( self.writeOptions )
 		
 		self.tags.SetBackgroundColour( wx.WHITE )
 		
 		tagInventory = None
-		try:
-			tagInventory, otherMessages = self.tagWriter.GetTagInventory()
-			tagDetail = { t['Tag']:t for t in self.tagWriter.tagDetail }
-			tagInventory = ['{}, PeakRSSI={}db, ANT={}'.format(t or '0', tagDetail[t].get('PeakRSSI',''), tagDetail[t].get('AntennaID',''))
-				for t in sorted(tagInventory, key = lambda x: int(x,16))]
-			self.tags.SetValue( '\n'.join(tagInventory) )
-		except Exception as e:
-			Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.\n\n{}'.format(e, traceback.format_exc()),
-							'Read Fails' )
 		
+		with wx.BusyCursor():
+				
+			def tagInventoryKey( x ):
+				try:
+					return int(x, 16)
+				except ValueError:
+					return 0
+			
+			try:
+				tagInventory, otherMessages = self.tagWriter.GetTagInventory()
+				tagDetail = { t['Tag']:t for t in self.tagWriter.tagDetail }
+				tagInventory = ['{}, PeakRSSI={}db, ANT={}'.format(t or '0', tagDetail[t].get('PeakRSSI',''), tagDetail[t].get('AntennaID',''))
+					for t in sorted(tagInventory, key = tagInventoryKey)]
+				self.tags.SetValue( '\n'.join(tagInventory) )
+			except Exception as e:
+				Utils.MessageOK( self, 'Read Fails: {}\n\nCheck the reader connection.\n\n{}'.format(e, traceback.format_exc()),
+								'Read Fails' )
+			
 		if event is None:
 			# This read follows a write.
 			# Check that the tag read matches the tag wrote.
-			if len(tagInventory) == 1 and self.getWriteValue() == tagInventory[0].split(',',2)[0]:
+			if tagInventory and len(tagInventory) == 1 and self.getWriteValue() == tagInventory[0].split(',',2)[0]:
 				self.number.SetValue( self.number.GetValue() + self.increment.GetValue() )
 				self.getWriteValue()
 				

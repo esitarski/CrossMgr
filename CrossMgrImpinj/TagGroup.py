@@ -1,10 +1,12 @@
 import sys
 import random
 import operator
+import threading
 import itertools
 from time import sleep
 from datetime import datetime, timedelta
 from queue import Queue, Empty
+from threading import Lock
 from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
 
 # Use a reference time to convert given times to float seconds.
@@ -137,22 +139,24 @@ class TagGroup:
 	def __init__( self ):
 		self.q = Queue()
 		self.tagInfo = {}
+		self.tagInfoLock = threading.Lock()
 		
 	def add( self, antenna, tag, t, db ):
 		self.q.put((antenna, tag, t, db))
 
 	def flush( self ):
 		# Process all waiting reads.
-		while True:
-			try:
-				antenna, tag, t, db = self.q.get(False)
-			except Empty:
-				break
-			try:
-				self.tagInfo[tag].add( antenna, t, db )
-			except KeyError:
-				self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
-			self.q.task_done()
+		with self.tagInfoLock:
+			while True:
+				try:
+					antenna, tag, t, db = self.q.get(False)
+				except Empty:
+					break
+				try:
+					self.tagInfo[tag].add( antenna, t, db )
+				except KeyError:
+					self.tagInfo[tag] = TagGroupEntry( antenna, t, db )
+				self.q.task_done()
 			
 	def getReadsStrays( self, tNow=None, method=QuadraticRegressionMethod, antennaChoice=MostReadsChoice, removeOutliers=True ):
 		'''
@@ -168,21 +172,22 @@ class TagGroup:
 		reads, strays = [], []
 		toDelete = []
 		
-		for tag, tge in list(self.tagInfo.items()):				# Make a local copy to avoid updpate conflicts.
-			if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
-				if not tge.isStray:
-					t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice, removeOutliers)
-					reads.append( (tag, t, sampleSize, antennaID) )
-				toDelete.append( tag )
-			elif tge.lastReadMax - tge.firstReadMin >= tStray:	# This is a stray.
-				t = trToDatetime( tge.firstReadMin )
-				if not tge.isStray:
-					tge.setStray()
-					reads.append( (tag, t, 1, 0) )				# Report stray first read time.
-				strays.append( (tag, t) )
-				
-		for tag in toDelete:
-			del self.tagInfo[tag]
+		with self.tagInfoLock:
+			for tag, tge in list(self.tagInfo.items()):				# Make a local copy to avoid updpate conflicts.
+				if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
+					if not tge.isStray:
+						t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice, removeOutliers)
+						reads.append( (tag, t, sampleSize, antennaID) )
+					toDelete.append( tag )
+				elif tge.lastReadMax - tge.firstReadMin >= tStray:	# This is a stray.
+					t = trToDatetime( tge.firstReadMin )
+					if not tge.isStray:
+						tge.setStray()
+						reads.append( (tag, t, 1, 0) )				# Report stray first read time.
+					strays.append( (tag, t) )
+					
+			for tag in toDelete:
+				del self.tagInfo[tag]
 		
 		reads.sort( key=operator.itemgetter(1,0))
 		strays.sort( key=operator.itemgetter(1,0) )
