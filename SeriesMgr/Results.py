@@ -26,7 +26,7 @@ import platform
 
 reNoDigits = re.compile( '[^0-9]' )
 
-HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Team']
+HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Machine', 'Team']
 def getHeaderNames():
 	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points', 'Gap']
 
@@ -445,7 +445,7 @@ function sortTableId( iTable, iCol ) {
 					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if toFloat(rr[3]) > 0.0]
+				results = [rr for rr in results if toFloat(rr[4]) > 0.0]
 				
 				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
 				
@@ -489,7 +489,7 @@ function sortTableId( iTable, iCol ) {
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( 'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
-							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
+							for pos, (name, license, machine, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
@@ -501,6 +501,8 @@ function sortTableId( iTable, iCol ) {
 												write( '{}'.format(license or '') )
 										else:
 											write( '{}'.format(license or '') )
+									with tag(html, 'td'):
+										write( '{}'.format(machine or '') )
 									with tag(html, 'td'):
 										write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
@@ -794,6 +796,7 @@ class Results(wx.Panel):
 			self.popupInfo = [
 				('{}...'.format(_('Copy Name to Clipboard')),	wx.NewId(), self.onCopyName),
 				('{}...'.format(_('Copy License to Clipboard')),	wx.NewId(), self.onCopyLicense),
+				('{}...'.format(_('Copy Machine to Clipboard')),	wx.NewId(), self.onCopyMachine),
 				('{}...'.format(_('Copy Team to Clipboard')),	wx.NewId(), self.onCopyTeam),
 			]
 			for p in self.popupInfo:
@@ -830,14 +833,17 @@ class Results(wx.Panel):
 	def onCopyLicense( self, event ):
 		self.copyCellToClipboard( self.rowCur, 2 )
 	
-	def onCopyTeam( self, event ):
+	def onCopyMachine( self, event ):
 		self.copyCellToClipboard( self.rowCur, 3 )
+	
+	def onCopyTeam( self, event ):
+		self.copyCellToClipboard( self.rowCur, 4 )
 	
 	def setColNames( self, headerNames ):
 		for col, headerName in enumerate(headerNames):
 			self.grid.SetColLabelValue( col, headerName )
 			attr = gridlib.GridCellAttr()
-			if headerName in ('Name', 'Team', 'License'):
+			if headerName in ('Name', 'Team', 'License', 'Machine'):
 				attr.SetAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
 			elif headerName in ('Pos', 'Points', 'Gap'):
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_TOP )
@@ -896,23 +902,24 @@ class Results(wx.Panel):
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
 		
-		results = [rr for rr in results if toFloat(rr[3]) > 0.0]
+		results = [rr for rr in results if toFloat(rr[4]) > 0.0]
 		
 		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
+		for row, (name, license, machine, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
 			self.grid.SetCellValue( row, 1, '{}'.format(name or '') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
 			self.grid.SetCellValue( row, 2, '{}'.format(license or '') )
-			self.grid.SetCellValue( row, 3, '{}'.format(team or '') )
-			self.grid.SetCellValue( row, 4, '{}'.format(points) )
-			self.grid.SetCellValue( row, 5, '{}'.format(gap) )
+			self.grid.SetCellValue( row, 3, '{}'.format(machine or '') )
+			self.grid.SetCellValue( row, 4, '{}'.format(team or '') )
+			self.grid.SetCellValue( row, 5, '{}'.format(points) )
+			self.grid.SetCellValue( row, 6, '{}'.format(gap) )
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 6 + q,
+				self.grid.SetCellValue( row, 7 + q,
 					'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
 					else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 					else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
@@ -1005,7 +1012,7 @@ class Results(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if toFloat(rr[3]) > 0.0]
+			results = [rr for rr in results if toFloat(rr[4]) > 0.0]
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
@@ -1037,15 +1044,16 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
+			for pos, (name, license, machine, team, points, gap, racePoints) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
 				wsFit.write( rowCur, 1, name, textStyle )
 				wsFit.write( rowCur, 2, license, textStyle )
-				wsFit.write( rowCur, 3, team, textStyle )
-				wsFit.write( rowCur, 4, points, numberStyle )
-				wsFit.write( rowCur, 5, gap, numberStyle )
+				wsFit.write( rowCur, 3, machine, textStyle )
+				wsFit.write( rowCur, 4, team, textStyle )
+				wsFit.write( rowCur, 5, points, numberStyle )
+				wsFit.write( rowCur, 6, gap, numberStyle )
 				for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-					wsFit.write( rowCur, 6 + q,
+					wsFit.write( rowCur, 7 + q,
 						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
 						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints

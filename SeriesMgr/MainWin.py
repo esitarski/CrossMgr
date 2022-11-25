@@ -40,6 +40,7 @@ from TeamResults		import TeamResults
 from CategorySequence	import CategorySequence
 from Aliases			import Aliases
 from AliasesLicense		import AliasesLicense
+from AliasesMachine		import AliasesMachine
 from AliasesTeam		import AliasesTeam
 from Options			import Options
 from Errors				import Errors
@@ -265,6 +266,7 @@ class MainWin( wx.Frame ):
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'aliases',		Aliases,			'Name Aliases' ],
 			[ 'licenseAliases',	AliasesLicense,		'License Aliases' ],
+			[ 'machineAliases',	AliasesMachine,		'Machine Aliases' ],
 			[ 'teamAliases',	AliasesTeam,		'Team Aliases' ],
 			[ 'options',		Options,			'Options' ],
 			[ 'errors',			Errors,				'Errors' ],
