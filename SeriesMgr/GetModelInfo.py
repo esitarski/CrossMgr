@@ -337,7 +337,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 				'raceURL':		raceURL,
 				'raceInSeries':	raceInSeries,
 			}
-			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
+			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('machine', 'Machine'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
 				
 			if not info['firstName'] and not info['lastName']:
@@ -346,7 +346,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 			info['categoryName'] = category.fullname
 			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
 			info['license'] = getReferenceLicense(info['license'])
-			info['machine'] = getReferenceMachine(rr.Machine)
+			info['machine'] = getReferenceMachine(info['machine'])
 			info['team'] = getReferenceTeam(info['team'])
 			info['laps'] = rr.laps
 			
