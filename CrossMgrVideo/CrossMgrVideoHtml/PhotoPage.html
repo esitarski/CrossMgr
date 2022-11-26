@@ -147,7 +147,7 @@ function do_search() {
 	table.appendChild( thead );
 	let tr = document.createElement( 'tr' );
 	thead.appendChild( tr );
-	const headers = ['', 'Bib', 'First Name', 'Last Name', 'Team', 'Time', 'Time of Day', 'Race'];
+	const headers = ['', 'Bib', 'First Name', 'Last Name', 'Machine', 'Team', 'Time', 'Time of Day', 'Race'];
 	for( const h of headers ) {
 		let th = document.createElement('th');
 		th.appendChild( document.createTextNode(h) );
@@ -155,7 +155,7 @@ function do_search() {
 	}
 	let tbody = document.createElement( 'tbody' );
 	table.appendChild( tbody );
-	const attrs = ['bib', 'first_name', 'last_name', 'team', 'raceSeconds', 'ts', 'race_name'];
+	const attrs = ['bib', 'first_name', 'last_name', 'machine', 'team', 'raceSeconds', 'ts', 'race_name'];
 	for( let i = 0; i < matched.length; ++i ) {
 		const info = matched[i];
 		let tr = document.createElement( 'tr' );
