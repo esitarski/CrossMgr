@@ -460,7 +460,7 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'tr'):
 								for iHeader, col in enumerate(HeaderNames):
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
-									if col in ('License', 'Gap'):
+									if col in ('License', 'Machine', 'Gap'):
 										colAttr['class'] = 'noprint'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
@@ -489,7 +489,7 @@ function sortTableId( iTable, iCol ) {
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( 'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
-							for pos, (name, license, machine, team, points, gap, racePoints) in enumerate(results):
+							for pos, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
@@ -501,8 +501,8 @@ function sortTableId( iTable, iCol ) {
 												write( '{}'.format(license or '') )
 										else:
 											write( '{}'.format(license or '') )
-									with tag(html, 'td'):
-										write( '{}'.format(machine or '') )
+									with tag(html, 'td', {'class':'noprint'}):
+										write( '{}'.format(',<br>'.join(machines) or '') )
 									with tag(html, 'td'):
 										write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
@@ -909,12 +909,12 @@ class Results(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (name, license, machine, team, points, gap, racePoints) in enumerate(results):
+		for row, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
 			self.grid.SetCellValue( row, 1, '{}'.format(name or '') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
 			self.grid.SetCellValue( row, 2, '{}'.format(license or '') )
-			self.grid.SetCellValue( row, 3, '{}'.format(machine or '') )
+			self.grid.SetCellValue( row, 3, '{}'.format(',\n'.join(machines) or '') )
 			self.grid.SetCellValue( row, 4, '{}'.format(team or '') )
 			self.grid.SetCellValue( row, 5, '{}'.format(points) )
 			self.grid.SetCellValue( row, 6, '{}'.format(gap) )
@@ -1044,11 +1044,11 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (name, license, machine, team, points, gap, racePoints) in enumerate(results):
+			for pos, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 				wsFit.write( rowCur, 0, pos+1, numberStyle )
 				wsFit.write( rowCur, 1, name, textStyle )
 				wsFit.write( rowCur, 2, license, textStyle )
-				wsFit.write( rowCur, 3, machine, textStyle )
+				wsFit.write( rowCur, 3, ', '.join(machines), textStyle )
 				wsFit.write( rowCur, 4, team, textStyle )
 				wsFit.write( rowCur, 5, points, numberStyle )
 				wsFit.write( rowCur, 6, gap, numberStyle )

@@ -4,7 +4,7 @@ import pickle
 import datetime
 import operator
 import itertools
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, Counter
 
 import trueskill
 
@@ -475,7 +475,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderTeam = defaultdict( lambda : '' )
 	riderUpgrades = defaultdict( lambda : [False] * len(races) )
 	riderNameLicense = {}
-	riderMachine = defaultdict( lambda : '' )
+	#riderMachine = defaultdict( lambda : '' ) #fixme should be a list of machines per rider:
+	riderMachines = defaultdict( lambda : [''] * len(races) )
 	
 	
 	def asInt( v ):
@@ -491,6 +492,19 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				if u:
 					v = riderResults[rider][i]
 					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
+	
+	def TidyMachinesList (riderMachines):
+		for rider, machines in riderMachines.items():
+			#remove Nones
+			while('None' in machines):
+				machines.remove('None')
+			#sort by frequency
+			counts = Counter(machines)
+			machines = sorted(machines, key=counts.get, reverse=True)
+			#remove duplicates
+			machines = list(dict.fromkeys(machines))
+			#overwrite
+			riderMachines[rider] = machines
 	
 	riderResults = defaultdict( lambda : [(0,0,0,0)] * len(races) )
 	riderFinishes = defaultdict( lambda : [None] * len(races) )
@@ -517,7 +531,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.machine and rr.machine != '0':
-				riderMachine[rider] = rr.machine
+				riderMachines[rider][raceSequence[rr.raceInSeries]] = rr.machine
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (
@@ -528,6 +542,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
 			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
+			
+		#fixme call ListMachines() to generate a dict of strings for each rider
 
 		# Adjust for the best times.
 		if bestResultsToConsider > 0:
@@ -556,9 +572,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderGap = { r : riderTFinish[r] - leaderTFinish if riderEventsCompleted[r] == leaderEventsCompleted else None for r in riderOrder }
 			riderGap = { r : formatTimeGap(gap) if gap else '' for r, gap in riderGap.items() }
 		
+		
 		# List of:
-		# lastName, firstName, license, machine, team, tTotalFinish, [list of (points, position) for each race in series]
-		categoryResult = [list(riderNameLicense[rider]) + [riderMachine[rider], riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		# lastName, firstName, license, [list of machines], team, tTotalFinish, [list of (points, position) for each race in series]
+		#fixme need to return machine list string (line 540) here!
+		categoryResult = [list(riderNameLicense[rider]) + [riderMachines[rider], riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 	
 	elif scoreByPercent:
@@ -586,7 +604,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.machine and rr.machine != '0':
-				riderMachine[rider] = rr.machine
+				riderMachines[rider][raceSequence[rr.raceInSeries]] = rr.machine
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 ) * (rr.upgradeFactor if rr.upgradeResult else 1)
@@ -625,8 +643,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderGap = { r : percentFormat.format(gap) if gap else '' for r, gap in riderGap.items() }
 					
 		# List of:
-		# lastName, firstName, license, machine, team, totalPercent, [list of (percent, position) for each race in series]
-		categoryResult = [list(riderNameLicense[rider]) + [riderMachine[rider], riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		# lastName, firstName, license, [list of machines], team, totalPercent, [list of (percent, position) for each race in series]
+		categoryResult = [list(riderNameLicense[rider]) + [riderMachines[rider], riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 	
 	elif scoreByTrueSkill:
@@ -649,7 +667,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.machine and rr.machine != '0':
-				riderMachine[rider] = rr.machine
+				riderMachines[rider][raceSequence[rr.raceInSeries]] = rr.machine
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			if rr.rank != RaceResult.rankDNF:
@@ -701,8 +719,8 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 				results.reverse()
 		
 		# List of:
-		# lastName, firstName, license, machine, team, points, [list of (points, position) for each race in series]
-		categoryResult = [list(riderNameLicense[rider]) + [riderMachine[rider], riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		# lastName, firstName, license, [list of machines], team, points, [list of (points, position) for each race in series]
+		categoryResult = [list(riderNameLicense[rider]) + [riderMachines[rider], riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 		
 	else: # Score by points.
@@ -712,7 +730,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			rider = rr.key()
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.machine and rr.machine != '0':
-				riderMachine[rider] = rr.machine
+				riderMachines[rider][raceSequence[rr.raceInSeries]] = rr.machine
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
@@ -780,9 +798,12 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			for results in riderResults.values():
 				results.reverse()
 		
+		# Tidy up the machines list for display
+		TidyMachinesList( riderMachines )
+		
 		# List of:
-		# lastName, firstName, license, machine, team, points, [list of (points, position) for each race in series]
-		categoryResult = [list(riderNameLicense[rider]) + [riderMachine[rider], riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
+		# lastName, firstName, license, [list of machines], team, points, [list of (points, position) for each race in series]
+		categoryResult = [list(riderNameLicense[rider]) + [riderMachines[rider], riderTeam[rider], riderPoints[rider], riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 
 #------------------------------------------------------------------------------------------------
