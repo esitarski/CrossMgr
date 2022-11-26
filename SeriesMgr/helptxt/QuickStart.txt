@@ -49,7 +49,7 @@ Blank team names, or "Independent", "Ind.", "Ind" are treated separately and are
 
 ## Machine Identification
 
-For sports where the engineering of the bike (or human-powered vehicle, etc.) being ridden is an integral element of the competition.  SeriesMgr keeps track of the machines used by each rider over the course of a series, and in the case of multiple machines being use presents a list for each rider in order of frequency.
+For sports where the engineering of the bike (or human-powered vehicle, etc.) being ridden is an integral element of the competition.  SeriesMgr keeps track of the machines used by each rider over the course of a series, and in the case of multiple machines being used presents a list for each rider in order of frequency.
 
 You can map variations of spelling etc. to a single name in the Machine Aliases screen.
 
