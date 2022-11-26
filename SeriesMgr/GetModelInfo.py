@@ -475,7 +475,6 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	riderTeam = defaultdict( lambda : '' )
 	riderUpgrades = defaultdict( lambda : [False] * len(races) )
 	riderNameLicense = {}
-	#riderMachine = defaultdict( lambda : '' ) #fixme should be a list of machines per rider:
 	riderMachines = defaultdict( lambda : [''] * len(races) )
 	
 	
@@ -494,10 +493,13 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 	
 	def TidyMachinesList (riderMachines):
+		# Format list of unique machines used by each rider in frequency order
 		for rider, machines in riderMachines.items():
-			#remove Nones
+			#remove Nones and empty strings
 			while('None' in machines):
 				machines.remove('None')
+			while('' in machines):
+				machines.remove('')
 			#sort by frequency
 			counts = Counter(machines)
 			machines = sorted(machines, key=counts.get, reverse=True)
@@ -543,8 +545,6 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
 			
-		#fixme call ListMachines() to generate a dict of strings for each rider
-
 		# Adjust for the best times.
 		if bestResultsToConsider > 0:
 			for rider, finishes in riderFinishes.items():
@@ -575,7 +575,6 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 		# List of:
 		# lastName, firstName, license, [list of machines], team, tTotalFinish, [list of (points, position) for each race in series]
-		#fixme need to return machine list string (line 540) here!
 		categoryResult = [list(riderNameLicense[rider]) + [riderMachines[rider], riderTeam[rider], formatTime(riderTFinish[rider],True), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
 		return categoryResult, races, GetPotentialDuplicateFullNames(riderNameLicense)
 	
