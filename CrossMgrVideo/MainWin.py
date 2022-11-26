@@ -625,8 +625,8 @@ class MainWin( wx.Frame ):
 		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
-		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name frames view kmh mph note'.split())}
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
+		self.fieldCol = {f:c for c, f in enumerate('ts bib name machine team wave race_name frames view kmh mph note'.split())}
+		headers = ['Time', 'Bib', 'Name', 'Machine', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
 		formatRightHeaders = {'Bib','Frames','km/h','mph'}
 		formatMiddleHeaders = {'View',}
 		for i, h in enumerate(headers):
@@ -1042,7 +1042,7 @@ class MainWin( wx.Frame ):
 				tsBest, jpgBest = GlobalDatabase().getBestTriggerPhoto( info['id'] )
 				if jpgBest is None:
 					continue
-				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'machine', 'team', 'race_name', 'kmh')}
 				try:
 					args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 				except Exception:
@@ -1058,7 +1058,7 @@ class MainWin( wx.Frame ):
 						info['first_name'],
 					)
 				)
-				comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+				comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'machine', 'team', 'race_name')} )
 				try:
 					with open(os.path.join(dirname, fname), 'wb') as f:
 						f.write( AddExifToJpeg(jpg, info['ts'], comment) )
@@ -1131,7 +1131,7 @@ class MainWin( wx.Frame ):
 
 						if jpgBest is None:
 							continue
-						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'machine', 'team', 'race_name', 'kmh')}
 						try:
 							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 						except Exception:
@@ -1139,7 +1139,7 @@ class MainWin( wx.Frame ):
 						if isinstance(args['kmh'], str):
 							args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
 
-						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'machine', 'team', 'race_name')} )
 						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 						jpg = AddExifToJpeg( jpg, info['ts'], comment )
 
@@ -1303,6 +1303,7 @@ class MainWin( wx.Frame ):
 				'bib':				self.snapshotCount,
 				'first_name':		'',
 				'last_name':		'Snapshot',
+#				'machine':			'',
 				'team':				'',
 				'wave':				'',
 				'race_name':		'',
@@ -1728,6 +1729,7 @@ class MainWin( wx.Frame ):
 						'bib':				msg.get('bib', 99999),
 						'first_name':		msg.get('first_name','') or msg.get('firstName',''),
 						'last_name':		msg.get('last_name','') or msg.get('lastName',''),
+						'machine':			msg.get('machine',''),
 						'team':				msg.get('team',''),
 						'wave':				msg.get('wave',''),
 						'race_name':		msg.get('race_name','') or msg.get('raceName',''),
