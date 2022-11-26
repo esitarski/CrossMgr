@@ -47,6 +47,12 @@ If you are interested in Team results, the Team names must be present in the Rac
 
 Blank team names, or "Independent", "Ind.", "Ind" are treated separately and are not combined into an overall result.
 
+## Machine Identification
+
+For sports where the engineering of the bike (or human-powered vehicle, etc.) being ridden is an integral element of the competition.  SeriesMgr keeps track of the machines used by each rider over the course of a series, and in the case of multiple machines being use presents a list for each rider in order of frequency.
+
+You can map variations of spelling etc. to a single name in the Machine Aliases screen.
+
 # Races Screen
 
 At the top, add the name of your Series and Organizer.
