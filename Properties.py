@@ -485,7 +485,13 @@ class WebProperties( wx.Panel ):
 				return				
 			self.graphicFName = dlg.GetValue().strip() or self.getDefaultGraphicFNameType()[0]
 		
-		self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
+		try:
+			self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
+		except Exception as e:
+			self.graphicFName = self.getDefaultGraphicFNameType()[0]
+			self.headerImage = ImageIO.toBufFromFile( self.graphicFName )
+			Utils.MessageOK( self, '{}:\n\n{}'.format(_("Error"), '\n\n'.join(str(e).split(':'))), _("Set Graphic Error"), iconMask=wx.ICON_ERROR )
+			
 		self.headerImageBitmap.SetBitmap( ImageIO.toBitmapFromBuf(self.headerImage) )
 		self.setGraphicStats()
 		self.GetSizer().Layout()
