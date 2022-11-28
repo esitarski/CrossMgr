@@ -123,7 +123,6 @@ pragma mmap_size = 30000000000;'''
 				if cols:
 					col_names = {col[1] for col in cols}
 					if 'machine' not in col_names:
-						print( "Adding machine column to database..." )
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN machine TEXT DEFAULT ""' )
 					if 'note' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN note TEXT DEFAULT ""' )
