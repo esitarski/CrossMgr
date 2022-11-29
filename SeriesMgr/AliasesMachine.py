@@ -92,7 +92,7 @@ class AliasesMachine(wx.Panel):
 
 class AliasesMachineFrame(wx.Frame):
 	def __init__(self):
-		wx.Frame.__init__(self, None, title="AliasesMachine Test", size=(800,600) )
+		wx.Frame.__init__(self, None, title="Machine Aliases Test", size=(800,600) )
 		self.panel = AliasesMachine(self)
 		self.Show()
  

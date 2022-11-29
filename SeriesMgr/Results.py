@@ -1004,7 +1004,7 @@ class Results(wx.Panel):
 		menu = wx.Menu()
 		menu.SetTitle( 'Show/Hide columns' )
 		for c in range(self.grid.GetNumberCols()):
-			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.grid.GetColLabelValue(c) )
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.grid.GetColLabelValue(c).strip() )
 			self.Bind(wx.EVT_MENU, self.onToggleResultsColumn)
 			if self.grid.IsColShown(c):
 				menu.Check( menuItem.GetId(), True )
@@ -1015,7 +1015,7 @@ class Results(wx.Panel):
 		#find the column number
 		colLabels = []
 		for c in range(self.grid.GetNumberCols()):
-			colLabels.append(self.grid.GetColLabelValue(c))
+			colLabels.append(self.grid.GetColLabelValue(c).strip())
 		label = event.GetEventObject().FindItemById(event.GetId()).GetItemLabel()
 		c = colLabels.index(label)
 		if self.grid.IsColShown(c):
