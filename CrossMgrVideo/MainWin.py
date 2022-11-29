@@ -30,6 +30,7 @@ import sqlite3
 from time import sleep
 import numpy as np
 from queue import Queue, Empty
+import ast
 
 from datetime import datetime, timedelta, time
 
@@ -626,10 +627,11 @@ class MainWin( wx.Frame ):
 		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		self.fieldCol = {f:c for c, f in enumerate('ts bib name machine team wave race_name frames view kmh mph note'.split())}
-		headers = ['Time', 'Bib', 'Name', 'Machine', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
+		self.fieldHeaders = ['Time', 'Bib', 'Name', 'Machine', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
 		formatRightHeaders = {'Bib','Frames','km/h','mph'}
 		formatMiddleHeaders = {'View',}
-		for i, h in enumerate(headers):
+		self.hiddenTriggerCols = []
+		for i, h in enumerate(self.fieldHeaders):
 			if h in formatRightHeaders:
 				align = wx.LIST_FORMAT_RIGHT
 			elif h in formatMiddleHeaders:
@@ -644,6 +646,7 @@ class MainWin( wx.Frame ):
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onTriggerRightClick )
 		self.triggerList.Bind( wx.EVT_LIST_KEY_DOWN, self.onTriggerKey )
 		#self.triggerList.Bind( wx.EVT_LIST_DELETE_ITEM, self.onTriggerDelete )
+		self.triggerList.Bind( wx.EVT_LIST_COL_RIGHT_CLICK, self.onTriggerColumnRightClick )
 		
 		vsTriggers = wx.BoxSizer( wx.VERTICAL )
 		vsTriggers.Add( hsDate )
@@ -1183,7 +1186,11 @@ class MainWin( wx.Frame ):
 
 	def updateTriggerColumnWidths( self ):
 		for c in range(self.triggerList.GetColumnCount()):
-			self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
+			if not c in self.hiddenTriggerCols:
+				self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
+			else:
+				#if column is hidden, just set the width to zero
+				self.triggerList.SetColumnWidth( c, 0 )
 				
 	def updateTriggerRow( self, row, fields ):
 		''' Update the row in the UI only. '''
@@ -1580,6 +1587,29 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index
 		self.doTriggerEdit()
 		
+	def onTriggerColumnRightClick( self, event ):
+		# Create and display a popup menu of columns on right-click event
+		menu = wx.Menu()
+		menu.SetTitle( 'Show/Hide columns' )
+		for c in range(self.triggerList.GetColumnCount()):
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.fieldHeaders[c] )
+			self.Bind(wx.EVT_MENU, self.onToggleTriggerColumn)
+			if not c in self.hiddenTriggerCols:
+				menu.Check( menuItem.GetId(), True )
+		self.PopupMenu(menu)
+		menu.Destroy()
+		
+	def onToggleTriggerColumn( self, event ):
+		#find the column number
+		label = event.GetEventObject().FindItemById(event.GetId()).GetItemLabel()
+		c = self.fieldHeaders.index(label)
+		#add or remove from hidden columns and update width
+		if c in self.hiddenTriggerCols:
+			self.hiddenTriggerCols.remove( c )
+		else:
+			self.hiddenTriggerCols.append( c )
+		self.updateTriggerColumnWidths()
+		
 	def showMessages( self ):
 		while True:
 			message = self.messageQ.get()
@@ -1858,6 +1888,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
 		self.config.WriteInt( 'ClosestFrames', self.closestFrames )
+		self.config.Write( 'HiddenTriggerCols', repr(self.hiddenTriggerCols) )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1878,6 +1909,7 @@ class MainWin( wx.Frame ):
 			pass
 		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
 		self.closestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
+		self.hiddenTriggerCols = ast.literal_eval( self.config.Read( 'HiddenTriggerCols', '[]' ) )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()
