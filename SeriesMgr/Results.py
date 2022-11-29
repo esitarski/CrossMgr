@@ -743,6 +743,7 @@ class Results(wx.Panel):
 		self.grid.EnableReorderRows( False )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
+		self.grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.onResultsColumnRightClick )
 		self.sortCol = None
 
 		self.setColNames(getHeaderNames())
@@ -908,6 +909,8 @@ class Results(wx.Panel):
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
+		#List of columns that can be hidden if empty
+		emptyCols = ['Name', 'License', 'Machine', 'Team']
 		
 		for row, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
@@ -926,10 +929,18 @@ class Results(wx.Panel):
 					else '({})'.format(Utils.ordinal(rRank)) if rRank
 					else ''
 				)
-				
 			for c in range( len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
+			#Remove columns from emptyCols as soon as we see some data
+			if name is not (None or ''):
+				if 'Name' in emptyCols:	emptyCols.remove('Name')
+			if license is not (None or ''):
+				if 'License' in emptyCols:	emptyCols.remove('License')
+			if ''.join(machines) is not (None or ''):
+				if 'Machine' in emptyCols:	emptyCols.remove('Machine')
+			if team is not (None or ''):
+				if 'Team' in emptyCols:	emptyCols.remove('Team')
 		
 		if self.sortCol is not None:
 			def getBracketedNumber( v ):
@@ -976,10 +987,41 @@ class Results(wx.Panel):
 		
 		self.statsLabel.SetLabel( '{} / {}'.format(self.grid.GetNumberRows(), GetModelInfo.GetTotalUniqueParticipants(self.raceResults)) )
 		
+		#Hide the empty columns
+		for c in range(self.grid.GetNumberCols()):
+			if self.grid.GetColLabelValue(c) in emptyCols:
+				self.grid.HideCol(c)
+			else:
+				self.grid.ShowCol(c)
+		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 		
 		self.GetSizer().Layout()
+		
+	def onResultsColumnRightClick( self, event ):
+		# Create and display a popup menu of columns on right-click event
+		menu = wx.Menu()
+		menu.SetTitle( 'Show/Hide columns' )
+		for c in range(self.grid.GetNumberCols()):
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.grid.GetColLabelValue(c) )
+			self.Bind(wx.EVT_MENU, self.onToggleResultsColumn)
+			if self.grid.IsColShown(c):
+				menu.Check( menuItem.GetId(), True )
+		self.PopupMenu(menu)
+		menu.Destroy()
+		
+	def onToggleResultsColumn( self, event ):
+		#find the column number
+		colLabels = []
+		for c in range(self.grid.GetNumberCols()):
+			colLabels.append(self.grid.GetColLabelValue(c))
+		label = event.GetEventObject().FindItemById(event.GetId()).GetItemLabel()
+		c = colLabels.index(label)
+		if self.grid.IsColShown(c):
+			self.grid.HideCol(c)
+		else:
+			self.grid.ShowCol(c)
 		
 	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
