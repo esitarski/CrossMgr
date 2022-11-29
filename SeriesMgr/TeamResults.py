@@ -644,6 +644,7 @@ class TeamResults(wx.Panel):
 		self.grid.EnableReorderRows( False )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
+		self.grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.onResultsColumnRightClick )
 		self.sortCol = None
 
 		self.setColNames(getHeaderNames())
@@ -800,6 +801,10 @@ class TeamResults(wx.Panel):
 		
 		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
+		#Show all columns
+		for c in range(self.grid.GetNumberCols()):
+			self.grid.ShowCol(c)
+		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
@@ -864,6 +869,30 @@ class TeamResults(wx.Panel):
 		self.grid.AutoSizeRows( False )
 		
 		self.GetSizer().Layout()
+		
+	def onResultsColumnRightClick( self, event ):
+		# Create and display a popup menu of columns on right-click event
+		menu = wx.Menu()
+		menu.SetTitle( 'Show/Hide columns' )
+		for c in range(self.grid.GetNumberCols()):
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.grid.GetColLabelValue(c).strip() )
+			self.Bind(wx.EVT_MENU, self.onToggleResultsColumn)
+			if self.grid.IsColShown(c):
+				menu.Check( menuItem.GetId(), True )
+		self.PopupMenu(menu)
+		menu.Destroy()
+		
+	def onToggleResultsColumn( self, event ):
+		#find the column number
+		colLabels = []
+		for c in range(self.grid.GetNumberCols()):
+			colLabels.append(self.grid.GetColLabelValue(c).strip())
+		label = event.GetEventObject().FindItemById(event.GetId()).GetItemLabel()
+		c = colLabels.index(label)
+		if self.grid.IsColShown(c):
+			self.grid.HideCol(c)
+		else:
+			self.grid.ShowCol(c)
 		
 	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
