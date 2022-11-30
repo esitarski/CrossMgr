@@ -909,8 +909,10 @@ class Results(wx.Panel):
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
-		#List of columns that can be hidden if empty
-		emptyCols = ['Name', 'License', 'Machine', 'Team']
+		#These columns start off hidden
+		hideLicense = True
+		hideMachine = True
+		hideTeam = True
 		
 		for row, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
@@ -932,15 +934,13 @@ class Results(wx.Panel):
 			for c in range( len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
 				self.grid.SetCellTextColour( row, c, wx.BLACK )
-			#Remove columns from emptyCols as soon as we see some data
-			if name is not (None or ''):
-				if 'Name' in emptyCols:	emptyCols.remove('Name')
+			#Unhide label columns as soon as we see some data
 			if license is not (None or ''):
-				if 'License' in emptyCols:	emptyCols.remove('License')
+				hideLicense = False
 			if ''.join(machines) is not (None or ''):
-				if 'Machine' in emptyCols:	emptyCols.remove('Machine')
+				hideMachine = False
 			if team is not (None or ''):
-				if 'Team' in emptyCols:	emptyCols.remove('Team')
+				hideTeam = False
 		
 		if self.sortCol is not None:
 			def getBracketedNumber( v ):
@@ -987,12 +987,15 @@ class Results(wx.Panel):
 		
 		self.statsLabel.SetLabel( '{} / {}'.format(self.grid.GetNumberRows(), GetModelInfo.GetTotalUniqueParticipants(self.raceResults)) )
 		
-		#Hide the empty columns
-		for c in range(self.grid.GetNumberCols()):
-			if self.grid.GetColLabelValue(c) in emptyCols:
-				self.grid.HideCol(c)
-			else:
-				self.grid.ShowCol(c)
+		#Reset column visibility, hide the empty label columns
+		for c in range(0, self.grid.GetNumberCols()):
+			self.grid.ShowCol(c)
+		if hideLicense:
+			self.grid.HideCol( 2 )
+		if hideMachine:
+			self.grid.HideCol( 3 )
+		if hideTeam:
+			self.grid.HideCol( 4 )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
