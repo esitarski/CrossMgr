@@ -55,6 +55,7 @@ In each row, add the race, either a CrossMgr race file (.cmn) or an Excel sheet 
 
 You can change the order of races by dragging the row in the grey column to the left of the race name.
 
+* The __Race__ column can be edited to change how the race name is displayed in the results.
 * The __Grade__ column is used to break ties (more on that later too).
 * The __Points__ column is the points structure to be used to score that race.  This only applies if you are scoring by Points (more on that later).
 * The __Team Points__ column is the points structure used to score teams for that race.
