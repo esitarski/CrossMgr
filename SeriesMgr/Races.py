@@ -61,7 +61,7 @@ class Races(wx.Panel):
 		self.grid.SetColAttr( self.TeamPointsCol, attr )
 		
 		attr = gridlib.GridCellAttr()
-		attr.SetReadOnly( True )
+		#attr.SetReadOnly( True )
 		self.grid.SetColAttr( self.RaceCol, attr )
 		
 		attr = gridlib.GridCellAttr()
@@ -212,11 +212,12 @@ class Races(wx.Panel):
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			pteamname = self.grid.GetCellValue( row, self.TeamPointsCol ) or None
 			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()[:1]
+			raceName = self.grid.GetCellValue( row, self.RaceCol ).strip()
 			if not (grade and ord('A') <= ord(grade) <= ord('Z')):
 				grade = 'A'
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname, pteamname, grade) )
+			raceList.append( (fileName, pname, pteamname, grade, raceName) )
 		
 		model = SeriesModel.model
 		model.setRaces( raceList )

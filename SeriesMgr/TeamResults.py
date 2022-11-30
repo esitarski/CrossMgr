@@ -448,7 +448,7 @@ function sortTableId( iTable, iCol ) {
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 				
-				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
+				headerNames = HeaderNames + ['{}'.format(r[3].raceName) for r in races]
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -477,9 +477,9 @@ function sortTableId( iTable, iCol ) {
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+												write( '{}'.format(escape(r[3].raceName).replace('\n', '<br/>\n')) )
 										else:
-											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+											write( '{}'.format(escape(r[3].raceName).replace('\n', '<br/>\n')) )
 										if r[0]:
 											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
@@ -798,7 +798,7 @@ class TeamResults(wx.Panel):
 		)
 		results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 		
-		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
+		headerNames = HeaderNames + ['{}\n{}'.format(r[3].raceName,r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
@@ -901,7 +901,7 @@ class TeamResults(wx.Panel):
 			)
 			results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 			
-			headerNames = HeaderNames + [r[1] for r in races]
+			headerNames = HeaderNames + [r[3].raceName for r in races]
 			
 			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapper( ws )
