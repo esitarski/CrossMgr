@@ -2108,7 +2108,7 @@ class Race:
 			args = dict( t )
 			if not 'name' in args or not args['name']:
 				continue
-			if '{}'.format(args.get('active', True)).strip().upper() in '1YT':
+			if '{}'.format(args.get('active', '1')).strip().upper() in '1YT':
 				allInactive = False
 				break
 		
@@ -2124,14 +2124,20 @@ class Race:
 				args['active'] = True
 			category = Category( **args )
 			
+			# Check that all component categories are in a wave.
 			if category.active:
 				if category.catType == Category.CatWave:
 					# Record this category if it is a CatWave.  It controls the following component categories.
 					waveCategory = category
-				elif waveCategory is None:
-					# Else, there is a component or custom category without a start wave.
-					# Make it a start wave so that the results don't mess up.
-					category.catType = Category.CatWave
+				elif category.catType == Category.CatComponent:
+					if waveCategory is None:
+						# This component category has no start wave.
+						# Make it a start wave so that the results don't mess up.
+						category.catType = Category.CatWave
+				elif category.catType == Category.CatCustom:
+					# Leave custom categories as they are.
+					# They do not need leading CatWaves either.
+					pass
 			
 			if category.fullname not in self.categories:
 				if category.distance is None:
