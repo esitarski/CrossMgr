@@ -830,7 +830,7 @@ class Results(wx.Panel):
 		if wx.TheClipboard.Open():
 			# Create a wx.TextDataObject
 			do = wx.TextDataObject()
-			do.SetText( self.grid.GetCellValue(r, c) )
+			do.SetText( self.grid.GetCellValue(r, c).replace(',\n', '; ') )  #reformat delimiter for compatibility with aliases
 
 			# Add the data to the clipboard
 			wx.TheClipboard.SetData(do)
