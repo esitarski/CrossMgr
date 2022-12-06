@@ -60,10 +60,10 @@ class MultiCastSender( threading.Thread ):
 			return receivers
 		
 		# Look for responses from all recipients
-		while 1:
+		while True:
 			try:
 				data, server = sock.recvfrom(4096)
-			except socket.timeout:
+			except Exception as e:
 				break
 			
 			try:
@@ -121,7 +121,7 @@ class MultiCastSender( threading.Thread ):
 			
 			# Clear all waiting messages.
 			messages = [message]
-			while 1:
+			while True:
 				try:
 					message = self.qIn.get( block=False )
 					messages.append( message )
@@ -215,7 +215,7 @@ class MultiCastReceiver( threading.Thread ):
 		now = datetime.now
 
 		sock = self.open()
-		while 1:
+		while True:
 			data, address = sock.recvfrom(4096)
 			tNow = now()
 			
@@ -261,14 +261,14 @@ class MultiCastReceiver( threading.Thread ):
 
 if __name__ == '__main__':
 	if len(sys.argv) == 2 and sys.argv[1].startswith('-r'):
-		# Receiver
+		print( 'Receiver:' )
 		triggerQ = Queue()
 
 		def triggerCallback( info ):
 			triggerQ.put( info )
 			
 		def printQ():
-			while 1:
+			while True:
 				info = triggerQ.get()
 				print( info )
 				triggerQ.task_done()
@@ -281,7 +281,7 @@ if __name__ == '__main__':
 		receiver.start()
 		receiver.join()
 	else:
-		# Sender
+		print( 'Sender:' )
 		def receiverCallback( receivers ):
 			print( 'receivers:' )
 			for r in receivers:
