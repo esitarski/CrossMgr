@@ -73,7 +73,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
-def getHtml( htmlfileName=None, seriesFileName=None ):
+def getHtml( htmlfileName=None, hideLicense=False, hideMachine=False, hideTeam=False, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
@@ -290,9 +290,13 @@ select {
 hr { clear: both; }
 
 @media print {
+	.hide {display:none;}
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
 }
+
+.hide {display:none;}
+
 ''')
 
 			with tag(html, 'script', dict( type="text/javascript")):
@@ -460,8 +464,14 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'tr'):
 								for iHeader, col in enumerate(HeaderNames):
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
-									if col in ('License', 'Machine', 'Gap'):
+									if col in ('License', 'Gap'):
 										colAttr['class'] = 'noprint'
+									if hideLicense and col in 'License':
+										colAttr['class'] = 'hide'
+									if hideMachine and col in 'Machine':
+										colAttr['class'] = 'hide'
+									if hideTeam and col in 'Team':
+										colAttr['class'] = 'hide'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
@@ -489,21 +499,33 @@ function sortTableId( iTable, iCol ) {
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( 'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
+							if hideLicense:
+								licenseClass = 'hide'
+							else:
+								licenseClass = 'noprint'
+							if hideMachine:
+								machineClass = 'hide'
+							else:
+								machineClass = 'leftAlign'
+							if hideTeam:
+								teamClass = 'hide'
+							else:
+								teamClass = 'leftAlign'
 							for pos, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
 									with tag(html, 'td'):
 										write( '{}'.format(name or '') )
-									with tag(html, 'td', {'class':'noprint'}):
+									with tag(html, 'td', {'class': licenseClass}):
 										if licenseLinkTemplate and license:
 											with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
 												write( '{}'.format(license or '') )
 										else:
 											write( '{}'.format(license or '') )
-									with tag(html, 'td', {'class':'noprint'}):
-										write( '{}'.format(',<br>'.join(machines) or '') )
-									with tag(html, 'td'):
+									with tag(html, 'td', {'class': machineClass}):
+										write( '{}'.format(',<br>'.join(list(filter(None, machines))) or '') )
+									with tag(html, 'td', {'class': teamClass}):
 										write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(points or '') )
@@ -919,7 +941,7 @@ class Results(wx.Panel):
 			self.grid.SetCellValue( row, 1, '{}'.format(name or '') )
 			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
 			self.grid.SetCellValue( row, 2, '{}'.format(license or '') )
-			self.grid.SetCellValue( row, 3, '{}'.format(',\n'.join(machines) or '') )
+			self.grid.SetCellValue( row, 3, '{}'.format(',\n'.join(list(filter(None, machines))) or '') )
 			self.grid.SetCellValue( row, 4, '{}'.format(team or '') )
 			self.grid.SetCellValue( row, 5, '{}'.format(points) )
 			self.grid.SetCellValue( row, 6, '{}'.format(gap) )
@@ -1137,9 +1159,10 @@ class Results(wx.Panel):
 		htmlfileName = getHtmlFileName()
 		model = SeriesModel.model
 		model.postPublishCmd = self.postPublishCmd.GetValue().strip()
-
+		
 		try:
-			getHtml( htmlfileName )
+			#surpress currently hidden license/machine/team columns in the HTML output
+			getHtml( htmlfileName, not self.grid.IsColShown(2), not self.grid.IsColShown(3), not self.grid.IsColShown(4))
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
@@ -1157,7 +1180,8 @@ class Results(wx.Panel):
 		htmlfileName = getHtmlFileName()
 		
 		try:
-			getHtml( htmlfileName )
+			#surpress currently hidden license/machine/team columns in the HTML output
+			getHtml( htmlfileName, not self.grid.IsColShown(2), not self.grid.IsColShown(3), not self.grid.IsColShown(4))
 		except IOError:
 			return
 		
