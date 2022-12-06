@@ -47,12 +47,6 @@ If you are interested in Team results, the Team names must be present in the Rac
 
 Blank team names, or "Independent", "Ind.", "Ind" are treated separately and are not combined into an overall result.
 
-## Machine Identification
-
-For sports where the engineering of the bike (or human-powered vehicle, etc.) being ridden is an integral element of the competition.  SeriesMgr keeps track of the machines used by each rider over the course of a series, and in the case of multiple machines being used presents a list for each rider in order of frequency.
-
-You can map variations of spelling etc. to a single name in the Machine Aliases screen.
-
 # Races Screen
 
 At the top, add the name of your Series and Organizer.
@@ -61,6 +55,7 @@ In each row, add the race, either a CrossMgr race file (.cmn) or an Excel sheet 
 
 You can change the order of races by dragging the row in the grey column to the left of the race name.
 
+* The __Race__ column can be edited to change how the race name is displayed in the results.
 * The __Grade__ column is used to break ties (more on that later too).
 * The __Points__ column is the points structure to be used to score that race.  This only applies if you are scoring by Points (more on that later).
 * The __Team Points__ column is the points structure used to score teams for that race.
@@ -179,18 +174,13 @@ In this way, SeriesMgr will purge riders from the previous category.  This preve
 
 Use this screen to specify name aliases to fix misspellings in your given Race Results.  This is easier than fixing each race file or spreadsheet.
 
-# License Aliases Screen
-
-Use this screen to specify license aliases to fix misspellings in your given Race Results.
-
-# Machine Aliases Screen
-
-Use this screen to specify machine aliases to fix misspellings in your given Race Results.
-
 # Team Aliases Screen
 
 Use this screen to specify team aliases to fix misspellings in your given Race Results.
 
+# License Aliases Screen
+
+Use this screen to specify license aliases to fix misspellings in your given Race Results.
 
 # Results Screen
 
@@ -199,8 +189,6 @@ Shows the individual SeriesResult for each category.  The Refresh button will re
 The publish buttons are fairly self-explanitory.  __Publish to HTML with FTP__ will use the FTP site and password in the last CrossMgr race file.
 
 The __Post Publish Cmd__ is a command that is run after the publish.  This allows you to post-process the results (for example, copy them somewhere).  As per the Windows shell standard, you can use %* to refer to all files created by SeriesMgr in the publish.
-
-You can temporarily hide columns by right-clicking on the headings.  Empty Name, Licence, Machine, or Team columns will be hidden by default.
 
 # Team Results Screen
 
