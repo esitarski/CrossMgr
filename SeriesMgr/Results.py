@@ -89,6 +89,12 @@ def getHtml( htmlfileName=None, hideLicense=False, hideMachine=False, hideTeam=F
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
 	HeaderNames = getHeaderNames()
+	if hideLicense:
+		HeaderNames.remove('License')
+	if hideMachine:
+		HeaderNames.remove('Machine')
+	if hideTeam:
+		HeaderNames.remove('Team')
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
 	if not seriesFileName:
@@ -290,12 +296,9 @@ select {
 hr { clear: both; }
 
 @media print {
-	.hide {display:none;}
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
 }
-
-.hide {display:none;}
 
 ''')
 
@@ -462,16 +465,11 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
+								
 								for iHeader, col in enumerate(HeaderNames):
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
 									if col in ('License', 'Gap'):
 										colAttr['class'] = 'noprint'
-									if hideLicense and col in 'License':
-										colAttr['class'] = 'hide'
-									if hideMachine and col in 'Machine':
-										colAttr['class'] = 'hide'
-									if hideTeam and col in 'Team':
-										colAttr['class'] = 'hide'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
@@ -499,34 +497,25 @@ function sortTableId( iTable, iCol ) {
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( 'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
-							if hideLicense:
-								licenseClass = 'hide'
-							else:
-								licenseClass = 'noprint'
-							if hideMachine:
-								machineClass = 'hide'
-							else:
-								machineClass = 'leftAlign'
-							if hideTeam:
-								teamClass = 'hide'
-							else:
-								teamClass = 'leftAlign'
 							for pos, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
 									with tag(html, 'td'):
 										write( '{}'.format(name or '') )
-									with tag(html, 'td', {'class': licenseClass}):
-										if licenseLinkTemplate and license:
-											with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+									if not hideLicense:
+										with tag(html, 'td', {'class':'noprint'}):
+											if licenseLinkTemplate and license:
+												with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+													write( '{}'.format(license or '') )
+											else:
 												write( '{}'.format(license or '') )
-										else:
-											write( '{}'.format(license or '') )
-									with tag(html, 'td', {'class': machineClass}):
-										write( '{}'.format(',<br>'.join(list(filter(None, machines))) or '') )
-									with tag(html, 'td', {'class': teamClass}):
-										write( '{}'.format(team or '') )
+									if not hideMachine:
+										with tag(html, 'td'):
+											write( '{}'.format(',<br>'.join(list(filter(None, machines))) or '') )
+									if not hideTeam:
+										with tag(html, 'td'):
+											write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(points or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
