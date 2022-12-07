@@ -241,7 +241,7 @@ class SeriesModel:
 	referenceTeams = []
 	aliasLookup = {}
 	aliasLicenseLookup = {}
-	aliasMachineLoopup = {}
+	aliasMachineLookup = {}
 	aliasTeamLookup = {}
 
 	ftpHost = ''
