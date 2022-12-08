@@ -24,8 +24,6 @@ import webbrowser
 import subprocess
 import platform
 
-import copy
-
 reNoDigits = re.compile( '[^0-9]' )
 
 HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Machine', 'Team']
