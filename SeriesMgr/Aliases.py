@@ -41,7 +41,6 @@ class Aliases(wx.Panel):
 		wx.CallAfter( self.Refresh )
 		
 	def refreshCurrentPage( self ):
-		self.setTitle()
 		self.callPageRefresh( self.notebook.GetSelection() )
 
 	def refresh( self ):
@@ -55,12 +54,10 @@ class Aliases(wx.Panel):
 		
 	def commit( self ):
 		self.callPageCommit( self.notebook.GetSelection() )
-		self.setTitle()
 		
 	def callPageCommit( self, i ):
 		try:
 			self.pages[i].commit()
-			self.setTitle()
 		except (AttributeError, IndexError) as e:
 			pass
 		

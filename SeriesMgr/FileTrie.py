@@ -42,7 +42,7 @@ class FileTrie:
 			if c not in node:
 				node[c] = {}
 			node = node[c]
-				
+		
 	def best_match( self, p ):
 		path = []
 		node = self.node
@@ -65,14 +65,17 @@ class FileTrie:
 		path.reverse()
 		if re.match( '^[a-zA-Z]:$', path[0] ):
 			path[0] += '\\'
-			
+		# *nix paths should start with a '/'
+		if path[0] == '':
+			path[0] = '/'
 		return os.path.join( *path )
 
 if __name__ == '__main__':
 	ft = FileTrie()
 	for i in range(5):
 		ft.add( r'c:\Projects\CrossMgr\SeriesMgr\test{}'.format(i) ) 
-	ft.add( r'c:\Projects\CrossMgr\CrossMgrImpinj\test{}'.format(0) ) 
+	ft.add( r'c:\Projects\CrossMgr\CrossMgrImpinj\test{}'.format(0) )
+	ft.add( r'/home/Projects/CrossMgr/CrossMgrImpinj/test{}'.format(0) )
 	print( ft.best_match( '/home/Projects/CrossMgr/SeriesMgr/test2' ) )
 	print( ft.best_match( '/home/Projects/CrossMgr/CrossMgrImpinj/test0' ) )
 	print( ft.best_match( 'test4' ) )
