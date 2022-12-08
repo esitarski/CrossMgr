@@ -744,16 +744,7 @@ class TeamResults(wx.Panel):
 			self.grid.SetColAttr( col, attr )
 	
 	def getGrid( self ):
-		#Make a copy of the grid without the hidden columns for printing
-		grid = self.grid
-		delcols = []
-		for c in range(grid.GetNumberCols()):
-			if not grid.IsColShown( c ):
-				delcols.append( c )
-		delcols.sort(reverse=True)
-		for c in delcols:
-			grid.DeleteCols( c )
-		return grid
+		return self.grid
 
 	def getTitle( self ):
 		return self.showResults.GetStringSelection() + ' Series Results'
