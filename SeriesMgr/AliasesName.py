@@ -100,7 +100,9 @@ class AliasesName(wx.Panel):
 		
 		model = SeriesModel.model
 		model.setReferences( references )
-
+	
+	def getGrid( self ):
+		return self.grid
 #----------------------------------------------------------------------------
 
 class AliasesNameFrame(wx.Frame):

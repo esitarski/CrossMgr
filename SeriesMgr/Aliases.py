@@ -65,3 +65,6 @@ class Aliases(wx.Panel):
 		self.callPageCommit( event.GetOldSelection() )
 		self.callPageRefresh( event.GetSelection() )
 		event.Skip()	# Required to properly repaint the screen.
+		
+	def getGrid( self ):
+		return self.pages[self.notebook.GetSelection()].getGrid()

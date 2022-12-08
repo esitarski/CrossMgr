@@ -88,6 +88,8 @@ class AliasesMachine(wx.Panel):
 		model = SeriesModel.model
 		model.setReferenceMachines( references )
 		
+	def getGrid( self ):
+		return self.grid
 #----------------------------------------------------------------------------
 
 class AliasesMachineFrame(wx.Frame):

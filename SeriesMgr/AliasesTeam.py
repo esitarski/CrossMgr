@@ -88,6 +88,9 @@ class AliasesTeam(wx.Panel):
 		model = SeriesModel.model
 		model.setReferenceTeams( references )
 		
+	def getGrid( self ):
+		return self.grid
+		
 #----------------------------------------------------------------------------
 
 class AliasesTeamFrame(wx.Frame):
