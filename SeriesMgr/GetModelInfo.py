@@ -571,7 +571,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leaderEventsCompleted = riderEventsCompleted[leader]
 			riderGap = { r : riderTFinish[r] - leaderTFinish if riderEventsCompleted[r] == leaderEventsCompleted else None for r in riderOrder }
 			riderGap = { r : formatTimeGap(gap) if gap else '' for r, gap in riderGap.items() }
-		
+			
+		# Tidy up the machines list for display
+		TidyMachinesList( riderMachines )
 		
 		# List of:
 		# lastName, firstName, license, [list of machines], team, tTotalFinish, [list of (points, position) for each race in series]
@@ -640,7 +642,10 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			leaderPercentTotal = riderPercentTotal[leader]
 			riderGap = { r : leaderPercentTotal - riderPercentTotal[r] for r in riderOrder }
 			riderGap = { r : percentFormat.format(gap) if gap else '' for r, gap in riderGap.items() }
-					
+			
+		# Tidy up the machines list for display
+		TidyMachinesList( riderMachines )
+		
 		# List of:
 		# lastName, firstName, license, [list of machines], team, totalPercent, [list of (percent, position) for each race in series]
 		categoryResult = [list(riderNameLicense[rider]) + [riderMachines[rider], riderTeam[rider], percentFormat.format(riderPercentTotal[rider]), riderGap[rider]] + [riderResults[rider]] for rider in riderOrder]
@@ -716,6 +721,9 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			races.reverse()
 			for results in riderResults.values():
 				results.reverse()
+				
+		# Tidy up the machines list for display
+		TidyMachinesList( riderMachines )
 		
 		# List of:
 		# lastName, firstName, license, [list of machines], team, points, [list of (points, position) for each race in series]
