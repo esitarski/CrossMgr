@@ -79,7 +79,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
-def getHtml( htmlfileName=None, seriesFileName=None ):
+def getHtml( htmlfileName=None,  hideCols=[], seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByPoints = model.scoreByPoints
 	scoreByTime = model.scoreByTime
@@ -288,6 +288,10 @@ table.points tr.odd {
 
 hr { clear: both; }
 
+.hidden {
+	display: none;
+}
+
 @media print {
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
@@ -343,13 +347,13 @@ function sortTable( table, col, reverse ) {
 	};
 	
 	var cmpFunc;
-	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
+	if( col == 0 || col == 2 || col == 3 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
-	else if( col >= 6 ) {				// Race Points/Time and Rank
+	else if( col >= 4 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
-			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
-			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
+			var x = parseRank( a.cells[4+(col-4)].textContent.trim() );
+			var y = parseRank( b.cells[4+(col-4)].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
@@ -449,6 +453,7 @@ function sortTableId( iTable, iCol ) {
 				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
 				
 				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
+				hideRaces = []
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -463,15 +468,21 @@ function sortTableId( iTable, iCol ) {
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
 									if col in ('Gap',):
 										colAttr['class'] = 'noprint'
+									if col in hideCols:
+										colAttr['class'] = colAttr.get('class', '') + ' hidden'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
 										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
+									hideClass = ''
+									if r[1] + '\n' in hideCols:
+										hideRaces.append(iRace)  #list of race columns to hide when rendering points rows
+										hideClass = ' hidden'
 									with tag(html, 'th', {
-											'class':'centerAlign noprint',
-											#'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
+											'class':'centerAlign noprint' + hideClass,
+											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),  #I've re-enabled this and fixed the constants in sortTable() so it actually works- KW
 										} ):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
@@ -487,18 +498,19 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'tbody'):
 							for pos, (team, result, gap, rrs) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
-									with tag(html, 'td', {'class':'rightAlign'}):
+									with tag(html, 'td', {'class':'rightAlign' + (' hidden' if 'Pos' in hideCols else '')}):
 										write( '{}'.format(pos+1) )
-									with tag(html, 'td'):
+									with tag(html, 'td', {'class':'' + (' hidden' if 'Team' in hideCols else '')}):
 										write( '{}'.format(team or '') )
-									with tag(html, 'td', {'class':'rightAlign'}):
+									with tag(html, 'td', {'class':'rightAlign' + (' hidden' if 'Points' in hideCols else '')}):
 										write( '{}'.format(result or '') )
-									with tag(html, 'td', {'class':'rightAlign noprint'}):
+									with tag(html, 'td', {'class':'rightAlign noprint' + (' hidden' if 'Gap' in hideCols else '')}):
 										write( '{}'.format(gap or '') )
+									iRace = 0 #simple iterator, is there a more pythonesque way to do this?
 									for rt in rrs:
-										with tag(html, 'td', {'class': 'centerAlign noprint'}):
+										with tag(html, 'td', {'class': 'centerAlign noprint' + (' hidden' if iRace in hideRaces else '')}):
 											write( formatTeamResults(scoreByPoints, rt) )
-										
+										iRace += 1
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
@@ -1000,7 +1012,7 @@ class TeamResults(wx.Panel):
 		model.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
 		try:
-			getHtml( htmlfileName )
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c) for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:

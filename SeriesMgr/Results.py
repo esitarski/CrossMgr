@@ -73,7 +73,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
-def getHtml( htmlfileName=None, hideLicense=False, hideMachine=False, hideTeam=False, seriesFileName=None ):
+def getHtml( htmlfileName=None, hideCols=[], seriesFileName=None):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
@@ -89,12 +89,7 @@ def getHtml( htmlfileName=None, hideLicense=False, hideMachine=False, hideTeam=F
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
 	HeaderNames = getHeaderNames()
-	if hideLicense:
-		HeaderNames.remove('License')
-	if hideMachine:
-		HeaderNames.remove('Machine')
-	if hideTeam:
-		HeaderNames.remove('Team')
+	
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
 	if not seriesFileName:
@@ -295,6 +290,10 @@ select {
 
 hr { clear: both; }
 
+.hidden {
+	display: none;
+}
+
 @media print {
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
@@ -354,10 +353,10 @@ function sortTable( table, col, reverse ) {
 	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
-	else if( col >= 6 ) {				// Race Points/Time and Rank
+	else if( col >= 7 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
-			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
-			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
+			var x = parseRank( a.cells[7+(col-7)*2+1].textContent.trim() );
+			var y = parseRank( b.cells[7+(col-7)*2+1].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
@@ -455,6 +454,7 @@ function sortTableId( iTable, iCol ) {
 				results = [rr for rr in results if toFloat(rr[4]) > 0.0]
 				
 				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
+				hideRaces = []
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -465,19 +465,24 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
-								
 								for iHeader, col in enumerate(HeaderNames):
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
 									if col in ('License', 'Gap'):
 										colAttr['class'] = 'noprint'
+									if col in hideCols:
+										colAttr['class'] = colAttr.get('class', '') + ' hidden'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
 										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
+									hideClass = ''
+									if r[1] + '\n' in hideCols:
+										hideRaces.append(iRace)  #list of race columns to hide when rendering points rows
+										hideClass = ' hidden'
 									with tag(html, 'th', {
-											'class':'leftBorder centerAlign noprint',
+										'class':'leftBorder centerAlign noprint' + hideClass,
 											'colspan': 2,
 											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
 										} ):
@@ -499,52 +504,49 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'tbody'):
 							for pos, (name, license, machines, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
-									with tag(html, 'td', {'class':'rightAlign'}):
+									with tag(html, 'td', {'class':'rightAlign' + (' hidden' if 'Pos' in hideCols else '')}):
 										write( '{}'.format(pos+1) )
-									with tag(html, 'td'):
+									with tag(html, 'td', {'class':'' + (' hidden' if 'Name' in hideCols else '')}):
 										write( '{}'.format(name or '') )
-									if not hideLicense:
-										with tag(html, 'td', {'class':'noprint'}):
-											if licenseLinkTemplate and license:
-												with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
-													write( '{}'.format(license or '') )
-											else:
+									with tag(html, 'td', {'class':'noprint' + (' hidden' if 'License' in hideCols else '')}):
+										if licenseLinkTemplate and license:
+											with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
 												write( '{}'.format(license or '') )
-									if not hideMachine:
-										with tag(html, 'td'):
-											write( '{}'.format(',<br>'.join(list(filter(None, machines))) or '') )
-									if not hideTeam:
-										with tag(html, 'td'):
-											write( '{}'.format(team or '') )
-									with tag(html, 'td', {'class':'rightAlign'}):
+										else:
+											write( '{}'.format(license or '') )
+									with tag(html, 'td', {'class':'' + (' hidden' if 'Machine' in hideCols else '')}):
+										write( '{}'.format(',<br>'.join(list(filter(None, machines))) or '') )
+									with tag(html, 'td', {'class':'' + (' hidden' if 'Team' in hideCols else '')}):
+										write( '{}'.format(team or '') )
+									with tag(html, 'td', {'class':'rightAlign' + (' hidden' if 'Points' in hideCols else '')}):
 										write( '{}'.format(points or '') )
-									with tag(html, 'td', {'class':'rightAlign noprint'}):
+									with tag(html, 'td', {'class':'rightAlign noprint' + (' hidden' if 'Gap' in hideCols else '')}):
 										write( '{}'.format(gap or '') )
+									iRace = 0 #simple iterator, is there a more pythonesque way to do this?
 									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
 										if rPoints:
-											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if '**' in '{}'.format(rPoints) else '')}):
+											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if '**' in '{}'.format(rPoints) else '') + (' hidden' if iRace in hideRaces else '')}):
 												write( '{}'.format(rPoints).replace('[','').replace(']','').replace(' ', '&nbsp;') )
 										else:
-											with tag(html, 'td', {'class':'leftBorder noprint'}):
+											with tag(html, 'td', {'class':'leftBorder noprint' + (' hidden' if iRace in hideRaces else '')}):
 												pass
-										
 										if rRank:
 											if rPrimePoints:
-												with tag(html, 'td', {'class':'rank noprint'}):
+												with tag(html, 'td', {'class':'rank noprint' + (' hidden' if iRace in hideRaces else '')}):
 													write( '({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:
-												with tag(html, 'td', {'class':'rank noprint'}):
+												with tag(html, 'td', {'class':'rank noprint' + (' hidden' if iRace in hideRaces else '')}):
 													write( '({})&nbsp;-{}'.format(
 														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
 														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
 													)
 											else:
-												with tag(html, 'td', {'class':'rank noprint'}):
+												with tag(html, 'td', {'class':'rank noprint' + (' hidden' if iRace in hideRaces else '')}):
 													write( '({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
-											with tag(html, 'td', {'class':'noprint'}):
+											with tag(html, 'td', {'class':'noprint' + (' hidden' if iRace in hideRaces else '')}):
 												pass
-										
+										iRace += 1
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
@@ -1150,8 +1152,8 @@ class Results(wx.Panel):
 		model.postPublishCmd = self.postPublishCmd.GetValue().strip()
 		
 		try:
-			#surpress currently hidden license/machine/team columns in the HTML output
-			getHtml( htmlfileName, not self.grid.IsColShown(2), not self.grid.IsColShown(3), not self.grid.IsColShown(4))
+			#surpress currently hidden columns in the HTML output
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c) for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
@@ -1170,7 +1172,7 @@ class Results(wx.Panel):
 		
 		try:
 			#surpress currently hidden license/machine/team columns in the HTML output
-			getHtml( htmlfileName, not self.grid.IsColShown(2), not self.grid.IsColShown(3), not self.grid.IsColShown(4))
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c) for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 		except IOError:
 			return
 		
