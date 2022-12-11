@@ -227,7 +227,12 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					try:
 						info['lastName'], info['firstName'] = name.split(',',1)
 					except:
-						pass
+						# Failing that, split on the last space character.
+						try:
+							info['firstName'], info['lastName'] = name.rsplit(' ',1)
+						except:
+							# If there are no spaces to split on, treat the entire name as lastName.  This is fine.
+							info['lastName'] = name
 				
 				if not info['firstName'] and not info['lastName']:
 					continue
