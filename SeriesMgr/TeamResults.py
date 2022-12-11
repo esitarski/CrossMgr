@@ -477,7 +477,7 @@ function sortTableId( iTable, iCol ) {
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									hideClass = ''
-									if r[1] + '\n' in hideCols:
+									if r[1]  in hideCols:
 										hideRaces.append(iRace)  #list of race columns to hide when rendering points rows
 										hideClass = ' hidden'
 									with tag(html, 'th', {
@@ -914,6 +914,7 @@ class TeamResults(wx.Panel):
 		scoreByPercent = model.scoreByPercent
 		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
+		hideCols = [self.grid.GetColLabelValue(c).strip() for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)]
 		
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
@@ -944,6 +945,11 @@ class TeamResults(wx.Panel):
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
+			hideRaces = []
+			for iRace, r in enumerate(races):
+				if r[1] in hideCols:
+					hideRaces.append(iRace)
+			
 			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapper( ws )
 
@@ -968,17 +974,31 @@ class TeamResults(wx.Panel):
 																	) );
 				
 			rowCur += 2
-			for c, headerName in enumerate(headerNames):
-				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
+			c = 0
+			for headerName in headerNames:
+				if headerName not in hideCols:
+					wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
+					c += 1
 			rowCur += 1
 			
 			for pos, (team, points, gap, rrs) in enumerate(results):
-				wsFit.write( rowCur, 0, pos+1, numberStyle )
-				wsFit.write( rowCur, 1, team, textStyle )
-				wsFit.write( rowCur, 2, points, numberStyle )
-				wsFit.write( rowCur, 3, gap, numberStyle )
+				c = 0
+				if 'Pos' not in hideCols:
+					wsFit.write( rowCur, c, pos+1, numberStyle )
+					c += 1
+				if 'Team' not in hideCols:
+					wsFit.write( rowCur, c, team, textStyle )
+					c += 1
+				if 'Points' not in hideCols:
+					wsFit.write( rowCur, c, points, numberStyle )
+					c += 1
+				if 'Gap' not in hideCols:
+					wsFit.write( rowCur, c, gap, numberStyle )
+					c += 1
 				for q, rt in enumerate(rrs):
-					wsFit.write( rowCur, 4 + q, formatTeamResults(scoreByPoints, rt), centerStyle )
+					if q not in hideRaces:
+						wsFit.write( rowCur, c, formatTeamResults(scoreByPoints, rt), centerStyle )
+						c += 1
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
@@ -1012,7 +1032,7 @@ class TeamResults(wx.Panel):
 		model.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
 		try:
-			getHtml( htmlfileName, [self.grid.GetColLabelValue(c) for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c).strip() for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
@@ -1030,7 +1050,7 @@ class TeamResults(wx.Panel):
 		htmlfileName = getHtmlFileName()
 		
 		try:
-			getHtml( htmlfileName )
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c).strip() for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 		except IOError:
 			return
 		
