@@ -36,17 +36,26 @@ def getHeaderNames():
 def toFloat( n ):
 	try:
 		return float(n)
-	except:
+	except Exception:
 		pass
 	try:
 		return float(n.split()[0])
-	except:
+	except Exception:
 		pass
 	try:
 		return float(n.split(',')[0])
-	except:
+	except Exception:
 		pass
 	return -1.0
+	
+def toSeconds( s ):
+	secs = 0.0
+	try:
+		for f in s.split(':'):
+			secs = secs * 60.0 + float(f)
+	except Exception:
+		return -1.0
+	return secs
 
 def getHeaderGraphicBase64():
 	if Utils.mainWin:
@@ -446,7 +455,11 @@ function sortTableId( iTable, iCol ) {
 					teamPointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
+				
+				if scoreByPoints:
+					results = [rr for rr in results if toFloat(rr[1]) > 0.0]
+				elif scoreByTime:
+					results = [rr for rr in results if toSeconds(rr[1]) > 0.0]
 				
 				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
 				
@@ -796,7 +809,10 @@ class TeamResults(wx.Panel):
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
-		results = [rr for rr in results if toFloat(rr[1]) > 0.0]
+		if scoreByPoints:
+			results = [rr for rr in results if toFloat(rr[1]) > 0.0]
+		elif scoreByTime:
+			results = [rr for rr in results if toSeconds(rr[1]) > 0.0]
 		
 		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
@@ -899,7 +915,10 @@ class TeamResults(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if toFloat(rr[1]) > 0.0]
+			if scoreByPoints:
+				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
+			elif scoreByTime:
+				results = [rr for rr in results if toSeconds(rr[1]) > 0.0]
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
