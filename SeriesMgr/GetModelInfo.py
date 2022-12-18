@@ -124,10 +124,14 @@ class RaceResult:
 		return tuple( safe_upper(getattr(self, a)) for a in fields )
 		
 	def key( self ):
-		return (Utils.removeDiacritic(self.full_name.upper()), Utils.removeDiacritic(self.license))
+		k = self.full_name.upper()
+		s = Utils.removeDiacritic(k)	# If the full name has characters that have no ascii representation, return it as-is.
+		return (s if len(s) == len(k) else k, Utils.removeDiacritic(self.license))
 		
 	def keyTeam( self ):
-		return Utils.removeDiacritic(self.team.upper())
+		k = self.team.upper()
+		s = Utils.removeDiacritic(k)
+		return s if len(s) == len(k) else k		# If the team name has characters that have no ascii representation, return it as-is.
 		
 	@property
 	def full_name( self ):
@@ -968,7 +972,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 		
 		# List of:
 		# team, points, gap, [list of ResultTuple for each race in series]
-		categoryResult = [[teamName[t], Utils.formatTime(teamTime[t]), teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]
+		categoryResult = [[teamName[t], Utils.formatTime(teamTime[t]), teamGap[t]] + [[teamResults[r.raceInSeries][t] for r in races]] for t in teamOrder]		
 		return categoryResult, races
 		
 	return [], []
