@@ -62,11 +62,11 @@ def ReadLIF( fname ):
 		return
 
 	reader = csv.reader( fname )
-	# Place, ID, lane, last name, first name, affiliation, <time>, license, <delta time>, <ReacTime>, <splits>, time trial start time, user 1, user 2, user 3
+	# Place, ID, lane, last name, first name, affiliation, <time>, <license>, <delta time>, <ReacTime>, <splits>, time trial start time, user 1, user 2, user 3
 	
 	fields = ('place', 'id', 'lane', 'last_name', 'first_name', 'affiliation', 'time', 'license', 'delta_time', 'react_time', 'splits', 'tt_start_time')
 	int_fields = {'id', 'lane'}
-	time_fields = {'time', 'react_time', 'tt_start_time','delta_time'}
+	time_fields = {'time', 'react_time', 'delta_time', 'tt_start_time'}
 	
 	def getFields( raceStart, row ):
 		record = {f:None for f in fields}
