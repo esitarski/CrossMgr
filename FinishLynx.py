@@ -30,7 +30,6 @@ def hhmmssmsFromSeconds( t ):
 	
 	return hh, mm, ss, ms
 	
-
 def strToSeconds( s = '' ):
 	secs = 0.0
 	for f in s.split(':'):
@@ -65,7 +64,7 @@ def ReadLIF( fname ):
 	reader = csv.reader( fname )
 	# Place, ID, lane, last name, first name, affiliation, <time>, license, <delta time>, <ReacTime>, <splits>, time trial start time, user 1, user 2, user 3
 	
-	fields = ('place', 'id', 'lane', 'last_name', 'first_name', 'affiliation', 'time', 'delta_time', 'react_time', 'splits', 'tt_start_time')
+	fields = ('place', 'id', 'lane', 'last_name', 'first_name', 'affiliation', 'time', 'license', 'delta_time', 'react_time', 'splits', 'tt_start_time')
 	int_fields = {'id', 'lane'}
 	time_fields = {'time', 'react_time', 'tt_start_time','delta_time'}
 	
@@ -89,7 +88,7 @@ def ReadLIF( fname ):
 					sv = split.split(' ')
 					try:
 						race_times.append( strToSeconds(sv[0]) )
-						lap_times.append( strToSeconds(sv[1:-1]) )	# Remove brackets.
+						lap_times.append( strToSeconds(sv[1][1:-1]) )	# Remove brackets.
 					except IndexError:
 						break
 				record['race_times'] = race_times
@@ -146,9 +145,9 @@ def ImportLIF( fname ):
 		rider.times = []
 		if not race.isTimeTrial:
 			rider.firstTime = None
-		for t in record['race_times']:
+		for t in r['race_times']:
 			race.addTime( r['id'], t, False )
-		rider.setStatus( record['status'] )
+		rider.setStatus( r['status'] )
 		race.setChanged()
 
 #-----------------------------------------------------------------------
@@ -272,12 +271,14 @@ if __name__ == "__main__":
 	Model.race = Model.Race()
 	Model.race._populate()
 	
-	Export( 'finishlynx' )
-	ImportLIF( 'data/003-1-01 Default.lif' )
+	#Export( 'finishlynx' )
+	ImportLIF( '/home/edward/Downloads/Wave 1  _1 Default.lif' )
 	
+	'''
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	finishLynx = FinishLynxDialog( mainWin )
 	Model.newRace()
 	finishLynx.ShowModal()
 	app.MainLoop()
+	'''
