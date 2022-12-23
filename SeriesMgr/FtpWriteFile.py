@@ -3,6 +3,7 @@ import wx.lib.intctrl
 import os
 import sys
 import ftplib
+import paramiko
 import datetime
 import threading
 import webbrowser
@@ -13,25 +14,51 @@ import inspect
 def lineno():
     """Returns the current line number in our program."""
     return inspect.currentframe().f_back.f_lineno
-	
-def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fileName = '', file = None ):
-	ftp = ftplib.FTP( host, timeout = timeout )
-	ftp.login( user, passwd )
-	if serverPath and serverPath != '.':
-		ftp.cwd( serverPath )
-	fileOpened = False
-	if file is None:
-		file = open(fileName, 'rb')
-		fileOpened = True
-	ftp.storbinary( 'STOR {}'.format(os.path.basename(fileName)), file )
-	ftp.quit()
-	if fileOpened:
-		file.close()
 
-def FtpWriteHtml( html_in ):
+class CallCloseOnExit:
+	def __init__(self, obj):
+		self.obj = obj
+	def __enter__(self):
+		return self.obj
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		self.obj.close()
+
+def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fileName = '', file = None, useSftp = False, sftpPort = 22):
+	if useSftp:
+		with CallCloseOnExit(paramiko.SSHClient()) as ssh:
+			ssh.set_missing_host_key_policy( paramiko.AutoAddPolicy() )
+			ssh.load_system_host_keys()                  
+			ssh.connect( host, sftpPort, user, passwd )
+
+			with CallCloseOnExit(ssh.open_sftp()) as sftp:
+				fileOpened = False
+				if file is None:
+					file = open(fileName, 'rb')
+					fileOpened = True
+				sftp.putfo(
+					file,
+					serverPath + os.path.basename(fileName)
+				)
+				if fileOpened:
+					file.close()
+	else:
+		ftp = ftplib.FTP( host, timeout = timeout )
+		ftp.login( user, passwd )
+		if serverPath and serverPath != '.':
+			ftp.cwd( serverPath )
+		fileOpened = False
+		if file is None:
+			file = open(fileName, 'rb')
+			fileOpened = True
+		ftp.storbinary( 'STOR {}'.format(os.path.basename(fileName)), file )
+		ftp.quit()
+		if fileOpened:
+			file.close()
+
+def FtpWriteHtml( html_in, team = False ):
 	Utils.writeLog( 'FtpWriteHtml: called.' )
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
-	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
+	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + ('-Team.html' if team else '.html') )
 	defaultPath = os.path.dirname( modelFileName )
 	with open(os.path.join(defaultPath, fileName), 'w') as fp:
 		fp.write( html_in )
@@ -41,6 +68,7 @@ def FtpWriteHtml( html_in ):
 	user		= getattr( model, 'ftpUser', '' )
 	passwd		= getattr( model, 'ftpPassword', '' )
 	serverPath	= getattr( model, 'ftpPath', '' )
+	useSftp		= getattr( model, 'useSftp', False )
 	
 	with open( os.path.join(defaultPath, fileName), 'rb') as file:
 		try:
@@ -49,7 +77,8 @@ def FtpWriteHtml( html_in ):
 							passwd		= passwd,
 							serverPath	= serverPath,
 							fileName	= fileName,
-							file		= file )
+							file		= file,
+							useSftp 	= useSftp)
 		except Exception as e:
 			Utils.writeLog( 'FtpWriteHtml Error: {}'.format(e) )
 			return e
@@ -59,16 +88,19 @@ def FtpWriteHtml( html_in ):
 #------------------------------------------------------------------------------------------------
 class FtpPublishDialog( wx.Dialog ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'urlPath']
-	defaults =	['',		'',			'anonymous',	'anonymous@'	'http://']
+	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'urlPath', 'useSftp']
+	defaults =	['',		'',			'anonymous',	'anonymous@',	'http://', False]
+	team = False
 
-	def __init__( self, parent, html, id = wx.ID_ANY ):
+	def __init__( self, parent, html, team = False, id = wx.ID_ANY ):
 		super().__init__( parent, id, "Ftp Publish Results",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.html = html
+		self.team = team
 		bs = wx.GridBagSizer(vgap=0, hgap=4)
 		
+		self.useSftp = wx.CheckBox( self, label=_("Use SFTP Protocol (on port 22)") )
 		self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
@@ -79,8 +111,15 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		self.refresh()
 		
+		
+		
 		row = 0
 		border = 8
+		
+		bs.Add( self.useSftp, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		row += 1
+		
 		bs.Add( wx.StaticText( self, label=_("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
@@ -130,7 +169,7 @@ class FtpPublishDialog( wx.Dialog ):
 		else:
 			if not url.endswith( '/' ):
 				url += '/'
-			fileName = os.path.basename( os.path.splitext(fileName)[0] + '.html' )
+			fileName = os.path.basename( os.path.splitext(fileName)[0] + ( '-Team.html' if self.team else '.html') )
 			url += fileName
 			self.urlFull.SetLabel( url )
 		
@@ -156,7 +195,7 @@ class FtpPublishDialog( wx.Dialog ):
 	
 	def onOK( self, event ):
 		self.setModelAttr()
-		e = FtpWriteHtml( self.html )
+		e = FtpWriteHtml( self.html, self.team )
 		if e:
 			Utils.MessageOK( self, 'FTP Publish: {}'.format(e), 'FTP Publish Error' )
 		else:

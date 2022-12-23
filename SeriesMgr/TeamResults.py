@@ -1013,7 +1013,7 @@ class TeamResults(wx.Panel):
 			return
 		
 		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
-		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
+		with FtpWriteFile.FtpPublishDialog( self, html=html, team=True ) as dlg:
 			dlg.ShowModal()
 		self.callPostPublishCmd( htmlfileName )
 	
