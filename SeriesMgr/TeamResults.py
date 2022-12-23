@@ -56,6 +56,13 @@ def toSeconds( s ):
 	except Exception:
 		return -1.0
 	return secs
+	
+def filterResults( results, scoreByPoints, scoreByTime ):
+	if scoreByPoints:
+		return [rr for rr in results if toFloat(rr[1]) > 0.0]
+	elif scoreByTime:
+		return [rr for rr in results if toSeconds(rr[1]) > 0.0]
+	return []
 
 def getHeaderGraphicBase64():
 	if Utils.mainWin:
@@ -456,10 +463,7 @@ function sortTableId( iTable, iCol ) {
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				
-				if scoreByPoints:
-					results = [rr for rr in results if toFloat(rr[1]) > 0.0]
-				elif scoreByTime:
-					results = [rr for rr in results if toSeconds(rr[1]) > 0.0]
+				results = filterResults( results, scoreByPoints, scoreByTime )
 				
 				headerNames = HeaderNames + ['{}'.format(r[3].raceName) for r in races]
 				
@@ -809,10 +813,8 @@ class TeamResults(wx.Panel):
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
-		if scoreByPoints:
-			results = [rr for rr in results if toFloat(rr[1]) > 0.0]
-		elif scoreByTime:
-			results = [rr for rr in results if toSeconds(rr[1]) > 0.0]
+		
+		results = filterResults( results, scoreByPoints, scoreByTime )
 		
 		headerNames = HeaderNames + ['{}\n{}'.format(r[3].raceName,r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
 		
@@ -915,10 +917,8 @@ class TeamResults(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			if scoreByPoints:
-				results = [rr for rr in results if toFloat(rr[1]) > 0.0]
-			elif scoreByTime:
-				results = [rr for rr in results if toSeconds(rr[1]) > 0.0]
+			
+			results = filterResults( results, scoreByPoints, scoreByTime )
 			
 			headerNames = HeaderNames + [r[3].raceName for r in races]
 			
