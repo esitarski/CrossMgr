@@ -288,7 +288,7 @@ Options for SFTP and FTP upload:
 
 Option|Description
 :-------|:----------
-Use SFTP|Check this if you wish to use the SFTP protocol.  Otherwise, FTP protocol will be used.
+Protocol|Select one of FTP, FTPS (FTP with SSL encryption) or SFTP (SSH File Transfer Protocol)
 Host Name|Name of the FTP/SFTP host to upload to.  In SFTP, CrossMgr also loads hosts from the user's local hosts file (as used by OpenSSH).
 Port|Port of the FTP/SFTP host to upload to (resets to default after switching between FTP and SFTP).
 Upload files to Path|The directory path on the host you wish to upload the files into.  If blank, files will be uploaded into the root directory.
