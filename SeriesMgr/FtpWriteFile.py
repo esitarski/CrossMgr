@@ -23,12 +23,19 @@ class CallCloseOnExit:
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		self.obj.close()
 
-def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fileName = '', file = None, useSftp = False, sftpPort = 22):
+class FtpWithPort(ftplib.FTP):
+    def __init__(self, host, user, passwd, port):
+        #Act like ftplib.FTP's constructor but connect to another port.
+        ftplib.FTP.__init__(self)
+        self.connect(host, port)
+        self.login(user, passwd)
+
+def FtpWriteFile( host, port, user = 'anonymous', passwd = 'anonymous@', timeout = 30, serverPath = '.', fileName = '', file = None, useSftp = False):
 	if useSftp:
 		with CallCloseOnExit(paramiko.SSHClient()) as ssh:
 			ssh.set_missing_host_key_policy( paramiko.AutoAddPolicy() )
 			ssh.load_system_host_keys()                  
-			ssh.connect( host, sftpPort, user, passwd )
+			ssh.connect( host, port, user, passwd )
 
 			with CallCloseOnExit(ssh.open_sftp()) as sftp:
 				fileOpened = False
@@ -42,7 +49,8 @@ def FtpWriteFile( host, user = 'anonymous', passwd = 'anonymous@', timeout = 30,
 				if fileOpened:
 					file.close()
 	else:
-		ftp = ftplib.FTP( host, timeout = timeout )
+		ftp = ftplib.FTP()
+		ftp.connect( host, port, timeout = timeout )
 		ftp.login( user, passwd )
 		if serverPath and serverPath != '.':
 			ftp.cwd( serverPath )
@@ -65,6 +73,7 @@ def FtpWriteHtml( html_in, team = False ):
 		
 	model = SeriesModel.model
 	host		= getattr( model, 'ftpHost', '' )
+	port		= getattr( model, 'ftpPort', 21 )
 	user		= getattr( model, 'ftpUser', '' )
 	passwd		= getattr( model, 'ftpPassword', '' )
 	serverPath	= getattr( model, 'ftpPath', '' )
@@ -73,6 +82,7 @@ def FtpWriteHtml( html_in, team = False ):
 	with open( os.path.join(defaultPath, fileName), 'rb') as file:
 		try:
 			FtpWriteFile(	host		= host,
+							port		= port,
 							user		= user,
 							passwd		= passwd,
 							serverPath	= serverPath,
@@ -88,20 +98,23 @@ def FtpWriteHtml( html_in, team = False ):
 #------------------------------------------------------------------------------------------------
 class FtpPublishDialog( wx.Dialog ):
 
-	fields = 	['ftpHost',	'ftpPath',	'ftpUser',		'ftpPassword',	'urlPath', 'useSftp']
-	defaults =	['',		'',			'anonymous',	'anonymous@',	'http://', False]
+	fields = 	['ftpHost',	'ftpPort',	'ftpPath',	'ftpUser',		'ftpPassword',	'urlPath', 'useSftp']
+	defaults =	['',	21,		'',			'anonymous',	'anonymous@',	'http://', False]
 	team = False
 
 	def __init__( self, parent, html, team = False, id = wx.ID_ANY ):
-		super().__init__( parent, id, "Ftp Publish Results",
+		super().__init__( parent, id, "(S)FTP Publish Results",
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.html = html
 		self.team = team
 		bs = wx.GridBagSizer(vgap=0, hgap=4)
 		
-		self.useSftp = wx.CheckBox( self, label=_("Use SFTP Protocol (on port 22)") )
+		self.useFtp = wx.RadioButton( self, label=_("FTP"), style = wx.RB_GROUP )
+		self.useSftp = wx.RadioButton( self, label=_("SFTP (SSH)") )
+		self.Bind( wx.EVT_RADIOBUTTON,self.onSelectProtocol ) 
 		self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+		self.ftpPort = wx.lib.intctrl.IntCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER )
 		self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpUser = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 		self.ftpPassword = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER|wx.TE_PASSWORD, value='' )
@@ -111,18 +124,29 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		self.refresh()
 		
-		
-		
 		row = 0
 		border = 8
+		
+		bs.Add( wx.StaticText( self, label=_("Protocol:")),  pos=(row,0), span=(1,1), border = border,
+				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( self.useFtp, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		row += 1
 		
 		bs.Add( self.useSftp, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
 		
-		bs.Add( wx.StaticText( self, label=_("Ftp Host Name:")),  pos=(row,0), span=(1,1), border = border,
+		bs.Add( wx.StaticText( self, label=_("Host Name:")),  pos=(row,0), span=(1,1), border = border,
 				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.ftpHost, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
+		
+		
+		row += 1
+		
+		bs.Add( wx.StaticText( self, label=_("Port:")),  pos=(row,0), span=(1,1), border = border,
+				flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+		bs.Add( self.ftpPort, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		
 		row += 1
 		bs.Add( wx.StaticText( self, label=_("Path on Host to Write HTML:")),  pos=(row,0), span=(1,1), border = border,
@@ -160,6 +184,14 @@ class FtpPublishDialog( wx.Dialog ):
 		
 		self.CentreOnParent(wx.BOTH)
 		self.SetFocus()
+
+	def onSelectProtocol( self, event ):
+		if self.useSftp.GetValue():
+			self.useFtp.SetValue(False)
+			self.ftpPort.SetValue(22)
+		else:
+			self.useFtp.SetValue(True)
+			self.ftpPort.SetValue(21)
 
 	def urlPathChanged( self, event = None ):
 		url = self.urlPath.GetValue()

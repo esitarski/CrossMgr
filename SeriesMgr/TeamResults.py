@@ -628,7 +628,7 @@ class TeamResults(wx.Panel):
 		self.refreshButton.Bind( wx.EVT_BUTTON, self.onRefresh )
 		self.publishToHtml = wx.Button( self, label='Publish to Html' )
 		self.publishToHtml.Bind( wx.EVT_BUTTON, self.onPublishToHtml )
-		self.publishToFtp = wx.Button( self, label='Publish to Html with FTP' )
+		self.publishToFtp = wx.Button( self, label='Publish to Html with (S)FTP' )
 		self.publishToFtp.Bind( wx.EVT_BUTTON, self.onPublishToFtp )
 		self.publishToExcel = wx.Button( self, label='Publish to Excel' )
 		self.publishToExcel.Bind( wx.EVT_BUTTON, self.onPublishToExcel )

@@ -243,6 +243,7 @@ class SeriesModel:
 	aliasTeamLookup = {}
 
 	ftpHost = ''
+	ftpPort = 21
 	ftpPath = ''
 	ftpUser = ''
 	ftpPassword = ''
