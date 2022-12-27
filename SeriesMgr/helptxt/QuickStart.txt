@@ -185,7 +185,7 @@ Use this screen to specify license aliases to fix misspellings in your given Rac
 
 Shows the individual SeriesResult for each category.  The Refresh button will recompute the results and is necessary if you have changed one of the Race files.
 
-The publish buttons are fairly self-explanitory.  __Publish to HTML with FTP__ will use the FTP site and password in the last CrossMgr race file.
+The publish buttons are fairly self-explanitory.  __Publish to HTML with (S)FTP__ will open a dialog where you can enter FTP/SFTP server details.
 
 The __Post Publish Cmd__ is a command that is run after the publish.  This allows you to post-process the results (for example, copy them somewhere).  As per the Windows shell standard, you can use %* to refer to all files created by SeriesMgr in the publish.
 
