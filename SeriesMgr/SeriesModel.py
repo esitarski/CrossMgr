@@ -247,8 +247,8 @@ class SeriesModel:
 	ftpPath = ''
 	ftpUser = ''
 	ftpPassword = ''
+	ftpProtocol = ''
 	urlPath = ''
-	useSftp = False
 	
 	@property
 	def scoreByPoints( self ):
