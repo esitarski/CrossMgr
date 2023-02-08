@@ -1237,6 +1237,7 @@ class MainWin( wx.Frame ):
 			tsUpper = tsLower + timedelta(days=1)
 
 		# Read the triggers from the database before we repaint the screen to avoid flashing.
+		counts = GlobalDatabase().updateTriggerPhotoCountInterval( tsLower, tsUpper )
 		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )		
 		if triggers:
 			self.tsMax = triggers[-1].ts
@@ -1250,7 +1251,6 @@ class MainWin( wx.Frame ):
 			self.triggerInfo = {}
 			self.triggerList.DeleteAllItems()
 
-		zeroFrames = []
 		tsLower, tsUpper = datetime.max, datetime.min
 		for i, trig in enumerate(triggers):
 			if not trig.closest_frames and trig.s_before == 0.0 and trig.s_after == 0.0:
@@ -1261,28 +1261,10 @@ class MainWin( wx.Frame ):
 			tsNext = triggers[i+1].ts if i < len(triggers)-1 else (trig.ts + timedelta(days=1))
 			deltaFinish = min( (trig.ts-tsPrev).total_seconds(), (tsNext-trig.ts).total_seconds() )
 			row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3], getCloseFinishIndex(deltaFinish) )
-			#row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3] )
-			
-			if not trig.closest_frames and not trig.frames:
-				tsLower = min( tsLower, trig.ts-timedelta(seconds=trig.s_before) )
-				tsU = trig.ts + timedelta(seconds=trig.s_after)
-				tsUpper = max( tsUpper, tsU )
-				zeroFrames.append( (row, trig.id, tsU) )
 			
 			self.updateTriggerRow( row, trig._asdict() )			
 			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
 			tsPrev = trig.ts
-		
-		if zeroFrames:
-			counts = GlobalDatabase().getTriggerPhotoCounts( tsLower, tsUpper )
-			values = {'frames':0}
-			for row, id, tsU in zeroFrames:
-				values['frames'] = counts[id]
-				self.updateTriggerRow( row, values )
-				# Don't update the trigger if the number of frames is possibly not known yet.
-				if (tNow - tsU).total_seconds() < 5.0*60.0:
-					del counts[id]
-			GlobalDatabase().updateTriggerPhotoCounts( counts )
 		
 		self.updateTriggerColumnWidths()
 		
@@ -1484,7 +1466,6 @@ class MainWin( wx.Frame ):
 		
 		if self.inCapture > 0:
 			self.inCapture -= 1
-		# If this is the last capture, refresh the triggers.
 		if self.inCapture == 0:
 			self.refreshTriggers()
 
@@ -1887,7 +1868,8 @@ class MainWin( wx.Frame ):
 	def onCloseWindow( self, event ):
 		self.writeOptions()
 		self.shutdown()
-		wx.Exit()
+		#wx.Exit()
+		sys.exit()
 		
 	def writeOptions( self ):
 		self.config.Write( 'DBName', GlobalDatabase().fname )

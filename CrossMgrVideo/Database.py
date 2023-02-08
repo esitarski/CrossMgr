@@ -81,7 +81,7 @@ class Database:
 			cur = conn.cursor()
 			cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
 			cols = {row[0] for row in cur.fetchall()}
-			print( cols )
+			# print( cols )
 		return 'trigger' in cols and 'photo' in cols		
 	
 	def __init__( self, fname=None, initTables=True, fps=30 ):
@@ -549,6 +549,9 @@ pragma mmap_size = 30000000000;'''
 				[(count, id, count) for id, count in counts.items()]
 			)
 	
+	def updateTriggerPhotoCountInterval( self, tsLower, tsUpper ):
+		self.updateTriggerPhotoCounts( self.getTriggerPhotoCounts(tsLower, tsUpper) )
+	
 	def getLastPhotos( self, count ):
 		with self.dbLock, self.conn:
 			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,)) )
@@ -810,7 +813,8 @@ if __name__ == '__main__':
 	
 	import time
 	t_start = time.process_time()
-	counts = d.getTriggerPhotoCounts(datetime.now() - timedelta(days=30), datetime(2200,1,1))
+	# counts = d.getTriggerPhotoCounts(datetime.now() - timedelta(days=30), datetime(2200,1,1))
+	d.updateTriggerPhotoCountInterval( datetime.now() - timedelta(days=2000), datetime(2200,1,1) )
 	print( time.process_time() - t_start )
 	sys.exit()
 	
