@@ -584,7 +584,7 @@ class PhotoPanel( wx.Panel ):
 				out.write( CVUtil.toFrame(AddPhotoHeader(CVUtil.jpegToBitmap(jpg, **photoData))) )
 			out.release()
 							
-		threading.Thread( target=writePhotos, args=(fname, self.getPhotoData(), self.tsJpgs,) ).start()
+		threading.Thread( target=writePhotos, args=(fname, self.getPhotoData(), self.tsJpgs,), daemon=True ).start()
 	
 	'''
 			with wx.BusyCursor():

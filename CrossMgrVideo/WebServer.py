@@ -330,8 +330,7 @@ if __name__ == '__main__':
 	WebServer()
 else:
 	# Run the web server as a thread.
-	webThread = threading.Thread( target=WebServer, name='CrossMgrVideoWebServer' )
-	webThread.daemon = True
+	webThread = threading.Thread( target=WebServer, name='CrossMgrVideoWebServer', daemon=True )
 	webThread.start()
 			
 

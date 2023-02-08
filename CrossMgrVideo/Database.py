@@ -2,10 +2,11 @@ import wx
 import os
 import sys
 import time
+import traceback
 from datetime import datetime, timedelta
 import sqlite3
 from collections import namedtuple, defaultdict
-from threading import RLock
+from threading import RLock, Timer
 
 import CVUtil
 from FIFOCache import FIFOCacheSet
@@ -65,7 +66,7 @@ class Database:
 		'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',
 	)
 	TriggerRecord = namedtuple( 'TriggerRecord', triggerFieldsAll )
-	triggerFieldsInput = set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames', 'finish_direction', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',}	# Fields to compare for equality of triggers.
+	triggerFieldsInput = tuple( set(triggerFieldsAll) - {'id', 'note', 'kmh', 'frames', 'finish_direction', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',})	# Fields to compare for equality of triggers.
 	triggerFieldsUpdate = ('wave','race_name',)
 	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
 	
@@ -206,35 +207,42 @@ pragma mmap_size = 30000000000;'''
 				return None
 	
 	def _purgeTriggerWriteDuplicates( self, tsTriggers ):
-		""" Remove all triggers that are already in the database. """
-		return [trig for trig in tsTriggers
-			if self.conn.execute(
-						'SELECT id FROM trigger WHERE {}'.format(' AND '.join('{}=?'.format(f) for f in self.triggerFieldsInput)),
-						[trig[f] for f in self.triggerFieldsInput]
-					).fetchone() is None
-		]
+		'''
+			Purge triggers that are already in the database.
+			Optimized to use one database call.
+		'''
+		if not tsTriggers:
+			return tsTriggers
+
+		# Get all existing triggers in the same interval as the new ones.
+		tsTriggers.sort( key=lambda trig: trig['ts'] )	# Seems inefficient, but tsTriggers are most likely already sorted so python can do this quickly.
+		tsLower, tsUpper = tsTriggers[0]['ts'], tsTriggers[-1]['ts']
+		existingTriggers = set( self.conn.execute( 'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ?'.format(','.join(self.triggerFieldsInput)), (tsLower, tsUpper) ) )
+		return [trig for trig in tsTriggers if tuple(trig[f] for f in self.triggerFieldsInput) not in existingTriggers]
 	
 	def write( self, tsTriggers=None, tsJpgs=None ):
-		with self.dbLock, self.conn:
-			tsTriggers = self._purgeTriggerWriteDuplicates( tsTriggers )
-			if not tsTriggers and not tsJpgs:
-				return
-		
-			for trig in tsTriggers:
-				self.conn.execute( 'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(trig.keys()), ','.join('?'*len(trig))), list(trig.values()) )
+		if tsTriggers or tsJpgs:
+			with self.dbLock, self.conn:
+				if tsTriggers:
+					tsTriggers = self._purgeTriggerWriteDuplicates( tsTriggers )
+					for trig in tsTriggers:
+						# We can't do an executemany here as each trigger might have different fields.
+						# This isn't important for performance as triggers are low volume.
+						self.conn.execute( 'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(trig.keys()), ','.join('?'*len(trig))), list(trig.values()) )
 
-			if tsJpgs:
-				# Purge duplicate photos and photos with the same timestamp.
-				tsJpgsUnique = []
-				for ts, jpg in tsJpgs:
-					if ts and jpg and ts not in self.lastTsPhotos:
-						self.lastTsPhotos.add( ts )
-						tsJpgsUnique.append( (ts, jpg) )
-						
-				tsJpgs = tsJpgsUnique
+				if tsJpgs:
+					# Purge photos with the same timestamp.
+					tsJpgsUnique = []
+					for ts, jpg in tsJpgs:
+						if ts and jpg and ts not in self.lastTsPhotos:
+							self.lastTsPhotos.add( ts )
+							tsJpgsUnique.append( (ts, jpg) )
+					tsJpgs = tsJpgsUnique
+				
+				if tsJpgs:
+					self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgsUnique )
 			
-			if tsJpgs:
-				self.conn.executemany( 'INSERT INTO photo (ts,jpg) VALUES (?,?)', tsJpgsUnique )
+			# print( 'Database: write tsTriggers={}, tsJpgs={}'.format( tsTriggers, len(tsJpgs) if tsJpgs else 0) )
 	
 	def updateTriggerRecord( self, id, data ):
 		if not id:
@@ -262,28 +270,34 @@ pragma mmap_size = 30000000000;'''
 	
 	def updateTriggerBeforeAfter( self, id, s_before, s_after ):
 		self.updateTriggerRecord(id, {'s_before':s_before, 's_after':s_after})
-	
+		
 	def initCaptureTriggerData( self, id ):
-		''' Initialize triggerFieldsUpdate from the previous record (eg. race and wave). '''
+		'''
+			Initialize triggerFieldsUpdate from the previous record.
+			Returns the updated fields as a dict.
+		'''
 		with self.dbLock, self.conn:
-			# Get the timestamp of the given record.
-			rows = list( self.conn.execute( 'SELECT ts FROM trigger WHERE id=?', (id,) ) )
-			if not rows:
-				return
-			ts = rows[0][0]
+			# Get the trigger data and timestamp of the given record.
+			triggerRow = self.conn.execute(
+				'SELECT {},ts FROM trigger WHERE id=?'.format(','.join(self.triggerFieldsUpdate)), (id,)
+			).fetchone()
+			if not triggerRow:
+				return None
+			ts = triggerRow[-1]
 			
-			# Get the record just before this one starting on this day.
-			tsLower, tsUpper = ts - timedelta(hours=ts.hour, minutes=ts.minute, seconds=ts.second, microseconds=ts.microsecond), ts, 
-			rows = list( self.conn.execute( 
-				'SELECT {} FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
-					(tsLower, tsUpper)
-				)
-			)
-			if rows:
+			# Get the trigger just before this one on this day.
+			tsLower, tsUpper = ts.replace(hour=0, minute=0, second=0, microsecond=0), ts
+			referenceRow = self.conn.execute( 
+				'SELECT {} FROM trigger WHERE id!=? AND ts BETWEEN ? AND ? ORDER BY ts DESC LIMIT 1'.format(','.join(self.triggerFieldsUpdate)),
+					(id, tsLower, tsUpper)
+			).fetchone()
+			if referenceRow and referenceRow != triggerRow[:-1]:
 				self.conn.execute(
 					'UPDATE trigger SET {} WHERE id=?'.format(','.join('{}=?'.format(f) for f in self.triggerFieldsUpdate)),
-						rows[0] + (id,)
+						referenceRow + (id,)
 				)
+				return { k:v for k, v in zip(self.triggerFieldsUpdate, referenceRow) }
+			return None
 	
 	def getTriggers( self, tsLower, tsUpper, bib=None ):
 		with self.dbLock, self.conn:
@@ -321,7 +335,7 @@ pragma mmap_size = 30000000000;'''
 	
 	def deleteTss( self, table, tss, callback=None ):
 		# Convert the timestamps to strings for the database.
-		tss = tss[:]	# Make a local copy as we destroy this as we go.
+		tss = tss.copy()	# Make a local copy as we destroy this as we go.
 		tssTotal = len(tss)
 		chunk_size = 250
 		if callback:
@@ -488,37 +502,46 @@ pragma mmap_size = 30000000000;'''
 		return trigs
 	
 	def getTriggerPhotoCounts( self, tsLower, tsUpper ):
-		counts = defaultdict( int )
+		'''
+			Return photo counts for all triggers in the interval (tsLower, tsUpper).
+		'''
+		tsLowerPhoto, tsUpperPhoto = tsLower, tsUpper
 		with self.dbLock, self.conn:
-			triggers = { r[0]:(r[1]-timedelta(seconds=r[2]), r[1]+timedelta(seconds=r[3])) for r in self.conn.execute(
-				'SELECT id,ts,s_before,s_after FROM trigger WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)
-			) }
-			if not triggers:
-				return counts
-			tsLowerPhoto = min( tsBefore for tsBefore,tsAfter in triggers.values() )
-			tsUpperPhoto = max( tsAfter  for tsBefore,tsAfter in triggers.values() )
-			rangeSecs = (tsUpperPhoto - tsLowerPhoto).total_seconds()
-			if rangeSecs == 0.0:
-				return counts
+			# Create trigger intervals.
+			counts = {}
+			trigger_intervals = []
+			for (id, ts, s_before, s_after, closest_frames) in self.conn.execute( 'SELECT id,ts,s_before,s_after,closest_frames FROM trigger WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) ):
+				if closest_frames:
+					counts[id] = closest_frames
+				else:
+					ti = (ts-timedelta(seconds=s_before), ts+timedelta(seconds=s_after), id)
+					if ti[0] < tsLowerPhoto: tsLowerPhoto = ti[0]
+					if ti[1] > tsUpperPhoto: tsUpperPhoto = ti[1]
+					trigger_intervals.append( ti )
+					counts[id] = 0
 			
-			# Create a bucket list containing every intersecting trigger interval.
-			bucketMax = min( len(triggers)*2+10, 256 )
-			bucketSecs = (rangeSecs + 0.001) / bucketMax	# Ensure the timestamps equal to tsUpperPhoto go into the last bucket.
-			def tsToB( ts ):
-				return int((ts - tsLowerPhoto).total_seconds() / bucketSecs)
-			buckets = [[] for b in range(bucketMax)]
-			for id, (tsBefore,tsAfter) in triggers.items():
-				for b in range(tsToB(tsBefore), tsToB(tsAfter)+1):
-					buckets[b].append(id)
+			# Sort intervals by start interval time.
+			trigger_intervals.sort()
+
+			# Count the number of photos in each trigger's interval.
+			# Maintain an "active" list of intervals containing the current photo ts.
+			active = []
+			i = 0
+			len_trigger_intervals = len(trigger_intervals)
+			for (ts,) in self.conn.execute( 'SELECT ts FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLowerPhoto, tsUpperPhoto) ):
+				# Purge intervals outside the current ts.
+				active = [act for act in active if ts <= act[1]]
+
+				# Add intervals containing the current ts.
+				while i < len_trigger_intervals and trigger_intervals[i][0] <= ts:
+					active.append( trigger_intervals[i] )
+					i += 1
 					
-			# Increment the count for every trigger intersecting this photo in the bucket.
-			for r in self.conn.execute( 'SELECT ts FROM photo WHERE ts BETWEEN ? AND ?', (tsLowerPhoto, tsUpperPhoto) ):
-				tsPhoto = r[0]
-				for id in buckets[tsToB(tsPhoto)]:
-					tsBefore,tsAfter = triggers[id]
-					if tsBefore <= tsPhoto <= tsAfter:
-						counts[id] += 1
-		return counts
+				# Count the photos for all active intervals.
+				for act in active:
+					counts[act[2]] += 1
+			
+			return counts			
 	
 	def updateTriggerPhotoCounts( self, counts ):
 		with self.dbLock, self.conn:
@@ -686,51 +709,95 @@ def GlobalDatabase( fname=None ):
 		dbGlobal = Database( fname=fname )
 	return dbGlobal
 
-# Global write buffers.
-tsJpgs, tsTriggers = [], []
-def flush( db, triggerWriteCB = None ):
-	# Write all outstanding triggers and photos to the database.
-	if db:
-		db.write( tsTriggers, tsJpgs )
-		if tsTriggers and triggerWriteCB:
-			triggerWriteCB()
-	# Cleanup the buffers.
-	del tsTriggers[:]
-	del tsJpgs[:]
-		
-def DBWriter( q, triggerWriteCB=None, fname=None ):
+def DBWriter( q, queueEmptyCB=None, fname=None ):
 	db = GlobalDatabase( fname=fname )
 	
+	tsTriggers, tsJpgs = [], []
+	def flush():
+		# Write all outstanding triggers and photos to the database.
+		# Clear the buffers afterwards.
+		db.write( tsTriggers, tsJpgs )
+		tsTriggers.clear()
+		tsJpgs.clear()
+
 	keepGoing = True
+	
+	isTimerRunning = []		# Flag indicating that the timer is running.  Use a list so we can change it from inside the lowActivity function.
+	
+	if queueEmptyCB:
+		def lowActivity():
+			# print( 'lowActivity: called' )
+			isTimerRunning.clear()
+			flush()
+			queueEmptyCB()
+	else:
+		def lowActivity():
+			# print( 'lowActivity: called' )
+			isTimerRunning.clear()
+			flush()
+
+	inactivitySeconds = 0.2
+	inactivityTimer = None
+	
+	# If syncWhenEmpty is True, the lowActivity timer is started when the queue is empty.
+	# Set to True when doing buffered writes (eg. photos or triggers).
+	syncWhenEmpty = False
+	
+	def appendPhoto( t, f ):
+		if f is not None and not db.isDup( t ):
+			# If the photo is "bytes" it is already in jpeg encoding.
+			# Otherwise it is a numpy array and needs to be encoded before writing to the database.
+			tsJpgs.append( (t, sqlite3.Binary(f if isinstance(f, bytes) else CVUtil.frameToJPeg(f))) )
+
 	while keepGoing:
-		try:
-			v = q.get( timeout=2 )
-		except Empty:
-			if tsTriggers or tsJpgs:
-				flush( db, triggerWriteCB )
-			continue
+		v = q.get()
 		
-		doFlush = True
 		if v[0] == 'photo':
-			doFlush = False
-			if v[2] is not None and not db.isDup( v[1] ):
-				# If the photo is "bytes" it is already in jpeg encoding.
-				# Otherwise it is a numpy array and needs to be encoded before writing to the database.
-				tsJpgs.append( (v[1], sqlite3.Binary(v[2] if isinstance(v[2], bytes) else CVUtil.frameToJPeg(v[2]))) )
+			syncWhenEmpty = True
+			appendPhoto( v[1], v[2] )
+		elif v[0] == 'ts_frames':
+			syncWhenEmpty = True
+			for i, (t, f) in enumerate(v[1], 1):
+				appendPhoto( t, f )
+				if i % 50 == 0:		# Ensure we don't hog all the CPU in this thread (converting bitmaps to jpgs can be CPU intensive).
+					time.sleep( 0 )
 		elif v[0] == 'trigger':
+			syncWhenEmpty = True
 			tsTriggers.append( v[1] )
 		elif v[0] == 'kmh':
-			db.updateTriggerKMH( v[1], v[2] )	# id, kmh
+			db.updateTriggerKMH( v[1], v[2] )			# id, kmh
+		elif v[0] == 'photoCount':
+			db.updateTriggerPhotoCount( v[1], v[2] )	# id, count
 		elif v[0] == 'flush':
-			pass
+			flush()
 		elif v[0] == 'terminate':
 			keepGoing = False
 		
-		if doFlush or len(tsJpgs) >= 30*3:
-			flush( db, triggerWriteCB )
+		if len(tsJpgs) >= 30*4:	# Sync about 4 seconds of frames at a time.
+			flush()
+		
 		q.task_done()
 		
-	flush( db )
+		if keepGoing and syncWhenEmpty and q.empty():
+			# Detect database inactivity after writing photos or triggers.
+			#
+			# When we have an empty queue, start a timer.
+			# If we get more photos or triggers, reset the timer.
+			# When the timer goes off, flush the database and call the application callback.
+			if isTimerRunning:
+				inactivityTimer.cancel()
+				isTimerRunning.clear()
+			inactivityTimer = Timer( inactivitySeconds, lowActivity )
+			inactivityTimer.start()
+			isTimerRunning.append( True )
+			syncWhenEmpty = False
+		
+	flush()
+	if isTimerRunning:
+		inactivityTimer.cancel()
+		isTimerRunning.clear()
+		if queueEmptyCB:
+			queueEmptyCB()
 	
 if __name__ == '__main__':
 	if False:
@@ -741,7 +808,17 @@ if __name__ == '__main__':
 
 	d = GlobalDatabase()
 	
-	ts = d.getLastTimestamp(datetime(2000,1,1), datetime(2200,1,1))
+	import time
+	t_start = time.process_time()
+	counts = d.getTriggerPhotoCounts(datetime.now() - timedelta(days=30), datetime(2200,1,1))
+	print( time.process_time() - t_start )
+	sys.exit()
+	
+	for k,v in counts.items():
+		print( k, v )
+	sys.exit()
+	
+	ts = d.getLastTimestamp(datetime.now() - timedelta(days=30), datetime(2200,1,1))
 	print( ts )
 	
 	def printTriggers():

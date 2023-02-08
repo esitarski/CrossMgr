@@ -61,7 +61,7 @@ imageWidth, imageHeight = 640, 480
 tdCaptureBeforeDefault = timedelta(seconds=0.5)
 tdCaptureAfterDefault = timedelta(seconds=2.0)
 
-closeFinishThreshold = 3.0/30.0
+closeFinishThreshold = 3.0/30.0	# Time gap when two finishes are considered close.
 closeColors = ('E50000','D1D200','00BF00')
 def getCloseFinishBitmaps( size=(16,16) ):
 	bm = []
@@ -72,9 +72,15 @@ def getCloseFinishBitmaps( size=(16,16) ):
 		dc.SetPen( wx.Pen(wx.Colour(0,0,0), 1) )
 		dc.SetBrush( wx.Brush(wx.Colour(*[int(c[i:i+2],16) for i in range(0,6,2)]) ) )
 		dc.DrawRectangle( 0, 0, size[0]-1, size[1]-1 )
-		dc.SelectObject( wx.NullBitmap )
 		bm.append( bitmap )
 	return bm
+
+def getCloseFinishIndex( delta ):
+	if delta > closeFinishThreshold:
+		return 2
+	if delta > closeFinishThreshold/2:
+		return 1
+	return 0
 
 def setFont( font, w ):
 	w.SetFont( font )
@@ -319,9 +325,9 @@ class AutoCaptureDialog( wx.Dialog ):
 		gs.AddGrowableCol( 1 )
 		
 		gs.Add( wx.StaticText(self, label="Capture"), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT )
-		self.closestFrames = wx.Choice( self, choices=('by Seconds', 'Closest Frame to Trigger', 'Closest 2 Frames to Trigger') )
-		self.closestFrames.Bind( wx.EVT_CHOICE, self.onChoice )
-		gs.Add( self.closestFrames )
+		self.autoCaptureClosestFrames = wx.Choice( self, choices=('by Seconds', 'Closest Frame to Trigger', 'Closest 2 Frames to Trigger') )
+		self.autoCaptureClosestFrames.Bind( wx.EVT_CHOICE, self.onChoice )
+		gs.Add( self.autoCaptureClosestFrames )
 		
 		fieldNames = ('Capture Seconds Before Trigger', 'Capture Seconds After Trigger')
 		self.labelFields = []
@@ -341,14 +347,14 @@ class AutoCaptureDialog( wx.Dialog ):
 		self.SetSizerAndFit( sizer )
 	
 	def onChoice( self, event=None ):
-		enable = (self.closestFrames.GetSelection() == 0)
+		enable = (self.autoCaptureClosestFrames.GetSelection() == 0)
 		for w in (self.labelFields + self.editFields):
 			w.Enable( enable )
 	
-	def set( self, s_before, s_after, closestFrames=0 ):
+	def set( self, s_before, s_after, autoCaptureClosestFrames=0 ):
 		for w, v in zip( self.editFields, (s_before, s_after) ):
 			w.SetValue( '{:.3f}'.format(v) )
-		self.closestFrames.SetSelection( closestFrames )
+		self.autoCaptureClosestFrames.SetSelection( autoCaptureClosestFrames )
 		self.onChoice()
 	
 	def get( self ):
@@ -357,7 +363,7 @@ class AutoCaptureDialog( wx.Dialog ):
 				return abs(float(v))
 			except Exception:
 				return None
-		return [fixValue(e.GetValue()) for e in self.editFields] + [self.closestFrames.GetSelection()]
+		return [fixValue(e.GetValue()) for e in self.editFields] + [self.autoCaptureClosestFrames.GetSelection()]
 		
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, ID = wx.ID_ANY, pos=wx.DefaultPosition,
@@ -382,13 +388,14 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = None
 		self.triggerInfo = None
 		self.tsMax = None
+		self.inCapture = 0	# Use an integer so we can support reentrant captures.
 		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		self.availableCameraUsb = []
 		
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
-		self.closestFrames = 0
+		self.autoCaptureClosestFrames = 0
 		
 		self.isShutdown = False
 
@@ -616,14 +623,12 @@ class MainWin( wx.Frame ):
 		
 		self.triggerList = AutoWidthListCtrl( self, style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES|wx.LC_SINGLE_SEL )
 		
-		self.il = wx.ImageList(16, 16)
-		self.sm_close = []
-		for bm in getCloseFinishBitmaps():
-			self.sm_close.append( self.il.Add(bm) )
-		self.sm_up = self.il.Add( Utils.GetPngBitmap('SmallUpArrow.png'))
-		self.sm_up = self.il.Add( Utils.GetPngBitmap('SmallUpArrow.png'))
-		self.sm_dn = self.il.Add( Utils.GetPngBitmap('SmallDownArrow.png'))
-		self.triggerList.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+		self.sm_close = getCloseFinishBitmaps()
+		images = self.sm_close.copy()
+		self.sm_up = Utils.GetPngBitmap('SmallUpArrow.png')
+		self.sm_dn = Utils.GetPngBitmap('SmallDownArrow.png')
+		images.extend( [self.sm_up, self.sm_dn] )
+		self.triggerList.SetSmallImages( images )
 		
 		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name frames view kmh mph note'.split())}
 		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
@@ -669,8 +674,8 @@ class MainWin( wx.Frame ):
 		self.capturing = False
 		self.joystick = wx.adv.Joystick()
 		self.joystick.SetCapture( self )
-		self.Bind(wx.EVT_JOY_BUTTON_DOWN, self.OnJoystickButton)
-		self.Bind(wx.EVT_JOY_BUTTON_UP, self.OnJoystickButton)
+		self.Bind(wx.EVT_JOY_BUTTON_DOWN, self.onJoystickButton)
+		self.Bind(wx.EVT_JOY_BUTTON_UP, self.onJoystickButton)
 		
 		# Add keyboard accellerators.
 
@@ -684,8 +689,7 @@ class MainWin( wx.Frame ):
 		self.SetAcceleratorTable( wx.AcceleratorTable(entries) )
 
 		# Start the message reporting thread so we can see what is going on.
-		self.messageThread = threading.Thread( target=self.showMessages )
-		self.messageThread.daemon = True
+		self.messageThread = threading.Thread( target=self.showMessages, daemon=True )
 		self.messageThread.start()
 		
 		wx.CallLater( 300, self.refreshTriggers )
@@ -782,7 +786,6 @@ class MainWin( wx.Frame ):
 			msg += ' ({}/{})'
 			def updateCB( count, total ):
 				progress.Update( count, msg.format(count, total) )
-				wx.Yield()
 			return updateCB
 
 		db = GlobalDatabase()
@@ -858,13 +861,11 @@ class MainWin( wx.Frame ):
 		progress = wx.ProgressDialog( 'Import Progress', 'Initializing...' )
 		progress.SetRange( 1 )
 		progress.Show()
-		wx.Yield()
 		
 		def getUpdateCB( msg ):
 			msg += ' ({}/{})'
 			def updateCB( count, total ):
 				progress.Update( count, msg.format(count, total) )
-				wx.Yield()
 			return updateCB
 
 		db = GlobalDatabase()
@@ -937,8 +938,8 @@ class MainWin( wx.Frame ):
 			s = '{:0.1f}'.format( n )
 			return s[:-2] if s.endswith('.0') else s
 		
-		if self.closestFrames:
-			label = '\n'.join( ['AUTO','CAPTURE','CLOSEST {}'.format(self.closestFrames)] )
+		if self.autoCaptureClosestFrames:
+			label = '\n'.join( ['AUTO','CAPTURE','CLOSEST {}'.format(self.autoCaptureClosestFrames)] )
 		else:
 			label = '\n'.join( ['AUTO','CAPTURE','{} .. {}'.format(f(-self.tdCaptureBefore.total_seconds()), f(self.tdCaptureAfter.total_seconds()))] )
 		for btn in (self.autoCapture, self.focusDialog.autoCapture):
@@ -1202,9 +1203,10 @@ class MainWin( wx.Frame ):
 				self.triggerList.SetItem( row, self.fieldCol[k], v )
 
 	def updateTriggerRowID( self, id, fields ):
-		row = self.getTriggerRowFromID( id )
-		if row is not None:
-			self.updateTriggerRow( row, fields )
+		if fields:
+			row = self.getTriggerRowFromID( id )
+			if row is not None:
+				self.updateTriggerRow( row, fields )
 	
 	def computeTriggerFields( self, fields ):
 		if 'last_name' in fields and 'first_name' in fields:
@@ -1221,35 +1223,45 @@ class MainWin( wx.Frame ):
 		return self.computeTriggerFields( GlobalDatabase().getTriggerFields(self.triggerList.GetItemData(row)) )
 	
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
+		'''
+			Refreshes the trigger list from the database.
+			If any rows have zero frames, it fixes the number of frames by reading the database.
+		'''
 		tNow = now()
-		self.lastTriggerRefresh = tNow
-		self.finishStrip.Set( None )
-		
+
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
-			self.triggerList.DeleteAllItems()
-			self.tsMax = None
-			self.iTriggerSelect = None
-			self.triggerInfo = {}
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
 
-		tsPrev = (self.tsMax or datetime(2000,1,1))
-		
-		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )			
+		# Read the triggers from the database before we repaint the screen to avoid flashing.
+		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )		
 		if triggers:
 			self.tsMax = triggers[-1].ts
 		
-		zeroFrames, tsLower, tsUpper = [], datetime.max, datetime.min
+		self.lastTriggerRefresh = tNow
+		self.finishStrip.Set( None )
+		
+		if replace:
+			self.tsMax = None
+			self.iTriggerSelect = None
+			self.triggerInfo = {}
+			self.triggerList.DeleteAllItems()
+
+		zeroFrames = []
+		tsLower, tsUpper = datetime.max, datetime.min
 		for i, trig in enumerate(triggers):
 			if not trig.closest_frames and trig.s_before == 0.0 and trig.s_after == 0.0:
 				trig = trig._replace( s_before=tdCaptureBeforeDefault.total_seconds(), s_after=tdCaptureAfterDefault.total_seconds() )
 			
-			dtFinish = (trig.ts-tsPrev).total_seconds()
-			itemImage = self.sm_close[min(len(self.sm_close)-1, int(len(self.sm_close) * dtFinish / closeFinishThreshold))]		
-			row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3], itemImage )
+			# Color code whether this is a close finish.
+			tsPrev = triggers[i-1].ts if i != 0 else (trig.ts - timedelta(days=1))
+			tsNext = triggers[i+1].ts if i < len(triggers)-1 else (trig.ts + timedelta(days=1))
+			deltaFinish = min( (trig.ts-tsPrev).total_seconds(), (tsNext-trig.ts).total_seconds() )
+			row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3], getCloseFinishIndex(deltaFinish) )
+			#row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3] )
 			
 			if not trig.closest_frames and not trig.frames:
 				tsLower = min( tsLower, trig.ts-timedelta(seconds=trig.s_before) )
@@ -1273,16 +1285,26 @@ class MainWin( wx.Frame ):
 			GlobalDatabase().updateTriggerPhotoCounts( counts )
 		
 		self.updateTriggerColumnWidths()
+		
+		# Unconditionally refresh the photos if the triggerList is empty.
+		if self.triggerList.GetItemCount() == 0:
+			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
+			return
 
-		if self.triggerList.GetItemCount() >= 1:
-			if iTriggerRow is not None:
-				iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
-				self.triggerList.EnsureVisible( iTriggerRow )
-				self.triggerList.Select( iTriggerRow )
-			else:
-				self.triggerList.EnsureVisible( self.triggerList.GetItemCount()-1 )
-				
+		# Figure out which photo to refresh.
+		if iTriggerRow is None:
+			iTriggerRow = self.triggerList.GetItemCount()-1
+		else:
+			iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
+			
+		self.triggerList.EnsureVisible( iTriggerRow )
+		self.triggerList.Select( iTriggerRow )
 		wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
+
+	def dbInactivityUpdate( self ):
+		# Do actions when the database goes inactive.
+		if not self.inCapture:
+			self.refreshTriggers()
 
 	def Start( self ):
 		self.messageQ.put( ('', '************************************************') )
@@ -1313,25 +1335,35 @@ class MainWin( wx.Frame ):
 	def onStartSnapshot( self, event ):
 		self.onStartAutoCapture( event, isSnapshot=True )
 		
-	def doUpdateAutoCapture( self, tStartCapture, count, btn, colour ):
+	def waitForDB( self ):
+		# Waits for the database to finish writing all the photos and triggers.
 		self.dbWriterQ.put( ('flush',) )
 		self.dbWriterQ.join()
+		
+	def doUpdateAutoCapture( self, tStartCapture, count, btn, colour ):
+		self.waitForDB()
+
+		# Update missing trigger information.
+		# We do this here to avoid any database access delay at the start of the capture.
 		triggers = GlobalDatabase().getTriggers( tStartCapture, tStartCapture, count )
 		if triggers:
-			id = triggers[0].id
-			GlobalDatabase().initCaptureTriggerData( id )
-			self.refreshTriggers( iTriggerRow=999999, replace=True )
-			self.showLastTrigger()
-			self.onTriggerSelected( iTriggerSelect=self.triggerList.GetItemCount()-1 )
+			id = triggers[-1].id
+			self.updateTriggerRowID( id, GlobalDatabase().initCaptureTriggerData(id) )
+
+		# Reset the foreground colors to exit auto capture mode.
 		for b in (btn if isinstance(btn, list) else [btn]):
 			b.SetForegroundColour( colour )
 			wx.CallAfter( b.Refresh )
-
-	def onStartAutoCaptureAccel( self, event ):
-		self.onStartAutoCapture( event )
+		
+		# Explicitly call a refresh if we are out of the last capture.
+		if self.inCapture > 0:
+			self.inCapture -= 1
+		if self.inCapture == 0:
+			self.refreshTriggers()
 
 	def onStartAutoCapture( self, event, isSnapshot=False ):
 		tNow = now()
+		self.inCapture += 1
 		
 		# A snapshot is an auto-capture with one closest frame.
 		if isSnapshot:
@@ -1339,21 +1371,25 @@ class MainWin( wx.Frame ):
 			enableColour = snapshotEnableColour
 			disableColour = snapshotDisableColour
 			count = self.snapshotCount = getattr(self, 'snapshotCount', 0) + 1
-			closest_frames = 1
 			last_name = 'Snapshot'
+
+			closest_frames = 1								# Snapshot is one frame.
+			s_before = 0.0
+			s_after = 0.0
 		else:
 			btn = self.autoCapture
 			enableColour = autoCaptureEnableColour
 			disableColour = autoCaptureDisableColour
 			count = self.autoCaptureCount = getattr(self, 'autoCaptureCount', 0) + 1
-			closest_frames = self.closestFrames
 			last_name = 'Auto'
+
+			closest_frames = self.autoCaptureClosestFrames	# will zero if capturing by time interval.
+			s_before = 0.0	if closest_frames else self.tdCaptureBefore.total_seconds()
+			s_after = 0.0	if closest_frames else self.tdCaptureAfter.total_seconds()
 		
 		btn.SetForegroundColour( disableColour )
 		wx.CallAfter( btn.Refresh )
 		
-		s_before = self.tdCaptureBefore.total_seconds()
-		s_after = self.tdCaptureAfter.total_seconds()
 		self.requestQ.put( {
 				'time':				tNow,
 				's_before':			s_before,
@@ -1365,10 +1401,11 @@ class MainWin( wx.Frame ):
 			}
 		)
 		
-		wx.CallLater( int(CamServer.EstimateQuerySeconds(tNow, s_before, s_after, closest_frames, self.curFPS)*1000.0) + 80,
-			self.doUpdateAutoCapture, tNow, count, btn, enableColour
-		)
+		wx.CallLater( max(0, int(s_after*1000.0)) + 200, self.doUpdateAutoCapture, tNow, count, btn, enableColour )
 		
+	def onStartAutoCaptureAccel( self, event ):
+		self.onStartAutoCapture( event )
+
 	def onToggleCapture( self, event ):
 		self.capturing ^= True
 
@@ -1378,7 +1415,7 @@ class MainWin( wx.Frame ):
 		else:
 			self.onStopCapture( event )
 
-	def OnJoystickButton( self, event ):
+	def onJoystickButton( self, event ):
 		startCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON1 )
 		autoCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON2 )
 
@@ -1400,34 +1437,27 @@ class MainWin( wx.Frame ):
 			self.onStartAutoCapture( event )
 	
 	def onStartCapture( self, event ):
+		self.photoPanel.playStop()
+		
 		wx.BeginBusyCursor()
 		tNow = self.tStartCapture = now()
-		
-		event.GetEventObject().SetForegroundColour( captureDisableColour )
-		wx.CallAfter( event.GetEventObject().Refresh )
+		self.inCapture += 1
 		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		self.requestQ.put( {
 				'time':				tNow,
+				'ts_start':			tNow,
 				's_before':			0.0,			# seconds before 0.0
 				's_after':			60.0*10.0,		# seconds after a default end time.
 				'closest_frames':	0,
-				'ts_start':			tNow,
 				'bib':				self.captureCount,
 				'last_name':		'Capture',
 			}
 		)
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow} )
-	
-	def showLastTrigger( self ):
-		iTriggerRow = self.triggerList.GetItemCount() - 1
-		if iTriggerRow < 0:
-			return
-		self.triggerList.EnsureVisible( iTriggerRow )
-		for r in range(self.triggerList.GetItemCount()-1):
-			self.triggerList.Select(r, 0)
-		self.onTriggerSelected( iTriggerSelect=iTriggerRow )
-		self.triggerList.Select( iTriggerRow )		
+
+		event.GetEventObject().SetForegroundColour( captureDisableColour )
+		wx.CallAfter( event.GetEventObject().Refresh )		
 	
 	def onStopCapture( self, event ):
 		self.camInQ.put( {'cmd':'stop_capture'} )
@@ -1438,41 +1468,43 @@ class MainWin( wx.Frame ):
 
 		captureLatency = timedelta( seconds=0.0 )
 		
-		def postCapture():
-			# Update the capture trigger info.
-			triggers = GlobalDatabase().getTriggers( tStartCapture, tStartCapture, captureCount )
-			if triggers:
-				id = triggers[0].id
-				GlobalDatabase().updateTriggerBeforeAfter( id, 0.0, s_after )
-				GlobalDatabase().initCaptureTriggerData( id )
+		self.waitForDB()
 		
-			# Wait for the frame capture latency.
-			sleep( captureLatency.total_seconds() + 0.08 )
-			
-			# Flush all the photos to the database.
-			self.dbWriterQ.put( ('flush',) )
-			self.dbWriterQ.join()
-			
-			# Update the last trigger to show the photos.
-			wx.CallAfter( self.showLastTrigger )
-
-		# Update on a thread so we don't slow down the main loop.
-		thread = threading.Thread( target=postCapture )
-		thread.daemon = True
-		thread.start()
+		# Update the capture trigger info.
+		triggers = GlobalDatabase().getTriggers( tStartCapture, tStartCapture, captureCount )
+		if triggers:
+			id = triggers[0].id
+			GlobalDatabase().updateTriggerBeforeAfter( id, 0.0, s_after )
+			self.updateTriggerRowID( id, GlobalDatabase().initCaptureTriggerData(id) )
 
 		# Re-enable the UI.
 		event.GetEventObject().SetForegroundColour( captureEnableColour )
-		wx.CallAfter( event.GetEventObject().Refresh )
 		wx.EndBusyCursor()
+		wx.CallAfter( event.GetEventObject().Refresh )
+		
+		if self.inCapture > 0:
+			self.inCapture -= 1
+		# If this is the last capture, refresh the triggers.
+		if self.inCapture == 0:
+			self.refreshTriggers()
 
+	def showLastTrigger( self ):
+		iTriggerRow = self.triggerList.GetItemCount() - 1
+		if iTriggerRow < 0:
+			return
+		self.triggerList.EnsureVisible( iTriggerRow )
+		for r in range(self.triggerList.GetItemCount()-1):
+			self.triggerList.Select(r, 0)
+		self.onTriggerSelected( iTriggerSelect=iTriggerRow )
+		self.triggerList.Select( iTriggerRow )		
+	
 	def autoCaptureConfig( self, event ):
-		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds(), self.closestFrames )
+		self.autoCaptureDialog.set( self.tdCaptureBefore.total_seconds(), self.tdCaptureAfter.total_seconds(), self.autoCaptureClosestFrames )
 		if self.autoCaptureDialog.ShowModal() == wx.ID_OK:
-			s_before, s_after, closestFrames = self.autoCaptureDialog.get()
+			s_before, s_after, autoCaptureClosestFrames = self.autoCaptureDialog.get()
 			self.tdCaptureBefore = timedelta(seconds=s_before) if s_before is not None else tdCaptureBeforeDefault
 			self.tdCaptureAfter  = timedelta(seconds=s_after)  if s_after  is not None else tdCaptureAfterDefault
-			self.closestFrames = closestFrames
+			self.autoCaptureClosestFrames = autoCaptureClosestFrames
 			self.writeOptions()
 			self.updateAutoCaptureLabel()
  		
@@ -1484,10 +1516,19 @@ class MainWin( wx.Frame ):
 		self.focusDialog.Show()
 	
 	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
-		self.iTriggerSelect = event.Index if iTriggerSelect is None else iTriggerSelect
+		
+		# Determine which trigger we are updating (either specified or from the event).
+		if iTriggerSelect is None:
+			if event is not None:
+				self.iTriggerSelect = event.Index
+			else:
+				self.iTriggerSelect = sys.maxsize
+		else:
+			self.iTriggerSelect = iTriggerSelect
 		
 		if self.iTriggerSelect >= self.triggerList.GetItemCount():
 			if self.triggerList.GetItemCount() == 0:
+				# If there are no triggers to show, update to a blank screen.
 				self.ts = None
 				self.tsJpg = []
 				self.finishStrip.Set( self.tsJpg )
@@ -1496,10 +1537,10 @@ class MainWin( wx.Frame ):
 			else:
 				self.iTriggerSelect = self.triggerList.GetItemCount() - 1
 				
+		# Update the screen based on the new trigger.
 		with wx.BusyCursor():
 			self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
 			self.refreshPhotoPanel()
-			wx.Yield()
 			
 			triggerInfo = self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
 			self.ts = self.triggerInfo['ts']
@@ -1507,7 +1548,8 @@ class MainWin( wx.Frame ):
 			if s_before == 0.0 and s_after == 0.0:
 				s_before, s_after = tdCaptureBeforeDefault.total_seconds(), tdCaptureAfterDefault.total_seconds()
 			
-			# These database calls are slow.
+			# Get all the photos for this trigger from the database.
+			# This call can be slow.
 			self.ts = triggerInfo['ts']
 			if triggerInfo['closest_frames']:
 				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
@@ -1517,7 +1559,7 @@ class MainWin( wx.Frame ):
 			# Update the frame information.
 			if triggerInfo['frames'] != len(self.tsJpg):
 				triggerInfo['frames'] = len(self.tsJpg)
-				GlobalDatabase().updateTriggerPhotoCount( self.triggerInfo['id'], len(self.tsJpg) )
+				self.dbWriterQ.put( ('photoCount', self.triggerInfo['id'], len(self.tsJpg)) )
 				self.updateTriggerRow( self.iTriggerSelect, {'frames':len(self.tsJpg)} )
 			
 			# Update the main UI.
@@ -1587,10 +1629,6 @@ class MainWin( wx.Frame ):
 			print( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 	
-	def delayRefreshTriggers( self ):
-		if not hasattr(self, 'refreshTimer') or not self.refreshTimer.IsRunning():
-			self.resetTimer = wx.CallLater( 1000, self.refreshTriggers )
-
 	def startThreads( self ):
 		self.grabFrameOK = False
 		
@@ -1607,14 +1645,17 @@ class MainWin( wx.Frame ):
 			# wx.Exit()
 		
 		self.camInQ, self.camReader = CamServer.getCamServer( self.getCameraInfo() )
-		self.cameraThread = threading.Thread( target=self.processCamera )
-		self.cameraThread.daemon = True
+		self.cameraThread = threading.Thread( target=self.processCamera, daemon=True )
 		
-		self.eventThread = threading.Thread( target=self.processRequests )
-		self.eventThread.daemon = True
+		self.eventThread = threading.Thread( target=self.processRequests, daemon=True )
 		
-		self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), GlobalDatabase().fname) )
-		self.dbWriterThread.daemon = True
+		# self.dbInactivityUpdate is called when database activity ceases.
+		# This functions updates the trigger list, we don't need to worry about updating the UI.
+		self.dbWriterThread = threading.Thread(
+			target=DBWriter,
+			args=(self.dbWriterQ, lambda: wx.CallAfter(self.dbInactivityUpdate), GlobalDatabase().fname),
+			daemon=True
+		)
 		
 		self.cameraThread.start()
 		self.eventThread.start()
@@ -1635,8 +1676,7 @@ class MainWin( wx.Frame ):
 		
 		#---------------------------------------------------------------
 		def responseHandler( msg ):
-			for t, f in msg['ts_frames']:
-				self.dbWriterQ.put( ('photo', t, f) )
+			self.dbWriterQ.put( ('ts_frames', msg['ts_frames']) )
 		
 		#---------------------------------------------------------------
 		def updateHandler( msg ):
@@ -1706,9 +1746,6 @@ class MainWin( wx.Frame ):
 			handler( msg )
 		
 	def processRequests( self ):
-		def refresh():
-			self.dbWriterQ.put( ('flush',) )
-	
 		while True:
 			msg = self.requestQ.get()	# Blocking get.
 			
@@ -1716,15 +1753,19 @@ class MainWin( wx.Frame ):
 			advanceSeconds = msg.get('advanceSeconds', 0.0)
 			tSearch += timedelta(seconds=advanceSeconds)
 			
-			# Record this trigger.
+			closest_frames = msg.get('closest_frames', self.autoCaptureClosestFrames)
+			s_before = 0.0	if closest_frames else msg.get('s_before', self.tdCaptureBefore.total_seconds())	# Use the configured capture interval, not the default.
+			s_after  = 0.0	if closest_frames else msg.get('s_after', self.tdCaptureAfter.total_seconds())
+			
+			# Write this trigger to the database.
 			self.dbWriterQ.put( (
 					'trigger',
 					{
 						'ts':				tSearch - timedelta(seconds=advanceSeconds),
-						's_before':			msg.get('s_before', self.tdCaptureBefore.total_seconds()),	# Use the configured capture interval, not the default.
-						's_after':			msg.get('s_after', self.tdCaptureAfter.total_seconds()),
+						's_before':			s_before,
+						's_after':			s_after,
 						'ts_start':			msg.get('ts_start', None) or now(),
-						'closest_frames':	msg.get('closest_frames', self.closestFrames),
+						'closest_frames':	closest_frames,
 						'bib':				msg.get('bib', 99999),
 						'first_name':		msg.get('first_name','') or msg.get('firstName',''),
 						'last_name':		msg.get('last_name','') or msg.get('lastName',''),
@@ -1734,13 +1775,12 @@ class MainWin( wx.Frame ):
 					}
 				)
 			)
-			# Record the video frames for the trigger.
+			# Request the video frames required for the trigger.
 			tStart, tEnd = tSearch-self.tdCaptureBefore, tSearch+self.tdCaptureAfter
-			if self.closestFrames:
-				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':self.closestFrames} )
+			if closest_frames:
+				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':closest_frames} )
 			else:
 				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
-			wx.CallAfter( wx.CallLater, max(100, int(100+1000*(tEnd-now()).total_seconds())), refresh )
 	
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
@@ -1762,8 +1802,11 @@ class MainWin( wx.Frame ):
 				GlobalDatabase()
 			
 			self.dbWriterQ = Queue()
-			self.dbWriterThread = threading.Thread( target=DBWriter, args=(self.dbWriterQ, lambda: wx.CallAfter(self.delayRefreshTriggers), GlobalDatabase().fname) )
-			self.dbWriterThread.daemon = True
+			self.dbWriterThread = threading.Thread(
+				target=DBWriter,
+				args=(self.dbWriterQ, lambda: wx.CallAfter(self.dbInactivityUpdate), GlobalDatabase().fname),
+				daemon=True
+			)
 			self.dbWriterThread.start()
 	
 	def resetCamera( self, event=None ):
@@ -1855,7 +1898,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
-		self.config.WriteInt( 'ClosestFrames', self.closestFrames )
+		self.config.WriteInt( 'ClosestFrames', self.autoCaptureClosestFrames )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1875,7 +1918,7 @@ class MainWin( wx.Frame ):
 		except Exception:
 			pass
 		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
-		self.closestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
+		self.autoCaptureClosestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()
