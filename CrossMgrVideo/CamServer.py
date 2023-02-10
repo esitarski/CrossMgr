@@ -282,9 +282,9 @@ def CamServer( qIn, qOut, camInfo=None ):
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
-	qWriter = Queue()
-	Thread( target=CamServer, args=(qIn, qWriter, camInfo), name='CamServer', daemon=True ).start()
-	return qIn, qWriter
+	qOut = Queue()
+	Thread( target=CamServer, args=(qIn, qOut, camInfo), name='CamServer', daemon=True ).start()
+	return qIn, qOut
 	
 def callCamServer( qIn, cmd, **kwargs ):
 	kwargs['cmd'] = cmd
