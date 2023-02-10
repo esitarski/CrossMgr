@@ -761,7 +761,7 @@ def DBWriter( q, queueEmptyCB=None, fname=None ):
 	
 	def appendPhoto( t, f ):
 		if f is not None and not db.isDup( t ):
-			# If the photo is "bytes" assume it is already in jpeg encoding.
+			# If the photo is "bytes" assume it is already in jpeg encoding.  This should always be the case.
 			# Otherwise it is a numpy array and needs to be jpeg encoded before writing to the database.
 			tsJpgs.append( (t, sqlite3.Binary(f if isinstance(f, bytes) else CVUtil.frameToJPeg(f))) )
 			return True
@@ -776,9 +776,7 @@ def DBWriter( q, queueEmptyCB=None, fname=None ):
 		elif v[0] == 'ts_frames':
 			lenSave = len( tsJpgs )
 			for t, f in v[1]:
-				# Check if we need to give other threads a chance to run.  Converting bitmaps to jpgs is CPU intensive.
-				if appendPhoto(t, f) and (len(tsJpgs) - lenSave) % 50 == 0:	
-					sleep( 0 )
+				appendPhoto( t, f )
 			syncWhenEmpty = (lenSave != len(tsJpgs))
 		elif v[0] == 'trigger':
 			syncWhenEmpty = True
