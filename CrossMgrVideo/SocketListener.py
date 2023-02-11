@@ -11,7 +11,7 @@ def putTrigger( qRequest, info ):
 	# Ensure that any timestamps in the future are delayed until they are in the past.
 	dt = (now() - info['time']).total_seconds() - info.get('advanceSeconds',0.0)
 	if dt <= minDelay:
-		threading.Timer( dt, qRequest.put, (info,), daemon=True ).start()
+		threading.Timer( minDelay, qRequest.put, (info,) ).start()
 	else:
 		qRequest.put( info )
 

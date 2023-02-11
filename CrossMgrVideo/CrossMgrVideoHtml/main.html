@@ -127,8 +127,14 @@ table td.numeric, table th.numeric {
 	text-align:right;
 }
 
-table tr td.close-finish {
-	background-color:rgb(255, 213, 128);
+table tr td.close0-finish {
+	background-color:#E50000;
+}
+table tr td.close1-finish {
+	background-color:#D1D200;
+}
+table tr td.close2-finish {
+	background-color:#00BF00;
 }
 
 table tr td.has-view {
@@ -492,9 +498,9 @@ function triggerScrollToEnd() {
 	trigger_div.scrollTop = trigger_div.scrollHeight;
 }
 	
-const headers = ['Time', 'Bib', 'Last',       'First',      'Team',	'Wave', 'Race',      'Frames', 'View', 'Note'];
-const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
-const numeric = [true,   true,   false,       false,        false,  false,	false, 		 true,     true,   false];
+const headers = ['', 'Time', 'Bib', 'Last',       'First',      'Team',	'Wave', 'Race',      'Frames', 'View', 'Note'];
+const fields  = ['close', 'ts',	 'bib', 'last_name',  'first_name', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
+const numeric = [false,	false,   true,   false,       false,        false,  false,	false, 		 true,     true,   false];
 
 function showTriggers( triggers ) {
 	playStop();
@@ -521,18 +527,25 @@ function showTriggers( triggers ) {
 	
 	let tbody = document.createElement( 'tbody' );
 	table.appendChild( tbody );
+	
+	const closeFinishThreshold = 3.0/30.0;
+	function getCloseIndex( dt ) {
+		dt = Math.abs( dt );
+		if( dt < closeFinishThreshold/2.0 )
+			return 0;
+		if( dt <= closeFinishThreshold )
+			return 1;
+		return 2;
+	}
 
 	// Close finishes.
-	let closeFinishes = new Set();
-	if( triggers.length > 1 ) {
-		const closeFinishThreshold = 3.0/30.0;
-		for( let i = triggers.length-1; i >= 0; --i ) {
-			const j = (i > 0 ? i-1 : i+1);
-			if( Math.abs(triggers[i].ts - triggers[j].ts) < closeFinishThreshold ) {
-				closeFinishes.add( i );
-				closeFinishes.add( J );
-			}
-		}
+	for( let i = triggers.length-1; i >= 0; --i ) {
+		let close = 2;
+		if( i > 0 )
+			close = getCloseIndex( triggers[i].ts - triggers[i-1].ts );
+		if( i < triggers.length-1 )
+			close = Math.min( close, getCloseIndex( triggers[i].ts - triggers[i+1].ts ) );
+		triggers[i].close = close;
 	}
 
 	// Populate the table.
@@ -551,12 +564,19 @@ function showTriggers( triggers ) {
 			tr.appendChild( td );
 			if( headers[col] == 'View' )
 				td.innerHTML = trig.zoom_frame >= 0 ? 'Y' : '';
-			else
-				td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+			else {
+				if( fields[col] === 'ts' )
+					v = formatEpoch( trig.ts );
+				else if( fields[col] == 'close' )
+					v = "   ";
+				else
+					v = trig[fields[col]];
+				td.innerHTML = v;
+			}
+			if( fields[col] === 'close' )
+				td.classList.add( 'close' + trig.close + '-finish' );
 			if( numeric[col] )
 				td.classList.add( 'numeric' );
-			if( col == 0 && closeFinishes.has(i) )
-				td.classList.add( 'close-finish' );
 		}
 	}
 	triggersCur = triggers;
@@ -659,9 +679,16 @@ function updateOnScreenTriggerData() {
 	for( let col = 0; col < headers.length; ++col ) {
 		let td = tr.childNodes[col];
 		if( headers[col] == 'View' )
-			td.innerHTML = trig.zoom_frame ? 'Y' : '';
-		else
-			td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+			td.innerHTML = (trig.zoom_frame >= 0) ? 'Y' : '';
+		else {
+			if( fields[col] === 'ts' )
+				v = formatEpoch( trig.ts )
+			else if (fields[col] === 'close' )
+				v = ' ';
+			else
+				v = trig[fields[col]];
+			td.innerHTML = v;
+		}
 	}
 	
 	// Update the images page title.
