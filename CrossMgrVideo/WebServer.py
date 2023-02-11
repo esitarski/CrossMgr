@@ -147,7 +147,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 		content, gzip_content = None, None
 		try:
 			if up.path=='/':
-				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				query = { k:v[0] for k,v in parse_qs( up.query, keep_blank_values=True ).items() }
 				content = getMainPage( query.get('date') )
 				content_type = self.html_content
 				
@@ -166,7 +166,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				
 			elif up.path=='/triggers.js':
 				# Get all triggers for a given day.  Also support seaching for a bib.
-				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				query = { k:v[0] for k,v in parse_qs( up.query, keep_blank_values=True ).items() }
 				
 				if 'day' in query:
 					tsLower = datetime.datetime( *[int(v) for v in query['day'].split('-')] )	# Expected in YYYY-MM-DD format.
@@ -190,7 +190,8 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				
 			elif up.path=='/trigger_update.js':
 				# Update trigger values.
-				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				query = { k:v[0] for k,v in parse_qs( up.query, keep_blank_values=True ).items() }
+
 				try:
 					id = int(query.pop('id'))
 				except Exception as e:
@@ -209,7 +210,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				
 			elif up.path=='/trigger.js':
 				# Get trigger fields from the database.
-				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				query = { k:v[0] for k,v in parse_qs( up.query, keep_blank_values=True ).items() }
 				fields = {}
 				try:
 					id = int(query.pop('id'))
@@ -225,7 +226,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				
 			elif up.path=='/trigger_delete.js':
 				# Delete trigger.
-				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				query = { k:v[0] for k,v in parse_qs( up.query, keep_blank_values=True ).items() }
 				try:
 					id = int(query.pop('id'))
 				except Exception as e:
@@ -252,7 +253,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 				content_type = self.ico_content
 			
 			elif up.path=='/qrcode.html':
-				query = { k:v[0] for k,v in parse_qs( up.query ).items() }
+				query = { k:v[0] for k,v in parse_qs( up.query, keep_blank_values=True ).items() }
 				if 'url' in query:
 					url = query['url']
 				else:

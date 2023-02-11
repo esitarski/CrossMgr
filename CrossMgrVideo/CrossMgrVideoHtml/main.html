@@ -22,6 +22,14 @@ body { font-family: sans-serif; }
 .bigfont	{ font-size: 120%; }
 .biggerFont	{ font-size: 130%; }
 
+.form-label {
+	font-size: 100%;
+}
+
+.form-input {
+	font-size: 110%;
+}
+
 .hidden { display: none; }
 
 div label input {
@@ -279,7 +287,8 @@ function getJSON( url, handler ) {
 		}
 	};
 	xhr.onerror = function( e ) {
-		console.log( 'XMLHttpRequest Error: ' + e );
+		// console.log( 'XMLHttpRequest Error: ' + e );
+		alert( 'XMLHttpRequest Error: \n\n    ' + e );
 	};
 	xhr.open("GET", url, true);
 	xhr.send();
@@ -697,7 +706,7 @@ function updateOnScreenTriggerData() {
 
 //----------------------------------------------------------------------
 
-const skipFields = new Set( ['ts', 'frames', 'note', 'view'] );
+const skipFields = new Set( ['close', 'ts', 'frames', 'note', 'view'] );
 function updateFormFields() {
 	const trig = getTriggerCur();
 	
@@ -713,6 +722,7 @@ function updateFormFields() {
 			let label = document.createElement("label");
 			label.innerHTML = headers[i] + ':';
 			label.htmlFor = id;
+			label.className = 'form-label';
 			div.appendChild( label );
 		}
 		
@@ -731,6 +741,7 @@ function updateFormFields() {
 			input.hidden = true;
 		input.name = fields[i];
 		input.id = id;
+		input.className = 'form-input';
 		div.appendChild( input );
 		return input;
 	}
@@ -750,10 +761,10 @@ function updateForm() {
 	refreshTriggerFromDatabaseThen( updateFormFields );
 }
 
-function submitForm( e, submit ) {
+function submitForm( e, doSubmit ) {
 	e.preventDefault();
 	
-	if( !submit ) {
+	if( !doSubmit ) {
 		document.getElementById("id_images_tab_button").click();
 		return;
 	}
@@ -964,7 +975,7 @@ function OnLoad() {
 		</div>
 		<div id="id_form_buttons">
 			<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event, true)">OK</button>
-			<button onclick="submitForm(event, true)" style="margin-left: 2.5em;">Cancel</button>
+			<button onclick="submitForm(event, false)" style="margin-left: 2.5em;">Cancel</button>
 		</div>
 	</form>
 </div>
