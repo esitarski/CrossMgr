@@ -214,8 +214,8 @@ overflow:scroll;
     grid-template-areas: 
       "info note"
 	  "... button";
-  	grid-template-rows: 12em 2em;  
-  	grid-template-columns: 12em 1fr;
+  	grid-template-rows: 14em 2em;  
+  	grid-template-columns: 24em 1fr;
     grid-gap: .8em;
     background: #eee;
     padding: 1.2em;
@@ -227,7 +227,7 @@ overflow:scroll;
   .grid_form input {
     grid-area: info;
    	width: 100%;
-    padding: 1.1em;
+    padding: 0.55em;
     border: none;
     margin-bottom: 1em;
   }
@@ -967,15 +967,15 @@ function OnLoad() {
 </div>
 
 <div id="id_form_tab" class="tabcontent">
-	<form action="." id="id_form" class="grid_form" method="post">
+	<form action="." id="id_form" class="grid_form" method="post" onsubmit="submitForm(event, true)">
 		<p>
 		<div id="id_form_info">
 		</div>
 		<div id="id_form_note">
 		</div>
 		<div id="id_form_buttons">
-			<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event, true)">OK</button>
-			<button onclick="submitForm(event, false)" style="margin-left: 2.5em;">Cancel</button>
+			<button type="submit" form="id_form" style="margin-left: 2.5em; font-size:120%; background-color:#00DD00; border-radius: 8px;" class="btn">OK</button>
+			<button type="button" onclick="submitForm(event, false)" style="margin-left: 2.5em; font-size:120%; background-color:#EEEE00; border-radius: 8px;" class="btn">Cancel</button>
 		</div>
 	</form>
 </div>
@@ -993,3 +993,4 @@ function OnLoad() {
 </body>
 
 </html>
+
