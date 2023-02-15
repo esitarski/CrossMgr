@@ -487,7 +487,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					v = riderResults[rider][i]
 					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 	
-	riderResults = defaultdict( lambda : [(0,0,0,0)] * len(races) )
+	riderResults = defaultdict( lambda : [(0,999999,0,0)] * len(races) )	# (points, rr.rank, primePoints, 0) for each result.  default rank 999999 for missing result.
 	riderFinishes = defaultdict( lambda : [None] * len(races) )
 	if scoreByTime:
 	
