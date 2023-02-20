@@ -4,7 +4,9 @@ import io
 import os
 import sys
 import webbrowser
+import ftplib
 import ftputil
+import ftputil.session
 import paramiko
 from urllib.parse import quote
 import datetime
@@ -21,10 +23,10 @@ def lineno():
 	return inspect.currentframe().f_back.f_lineno
 	
 class CallCloseOnExit:
-	def __enter__(self, obj):
+	def __init__(self, obj):
 		self.obj = obj
-		return obj
-
+	def __enter__(self):
+		return self.obj
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		self.obj.close()
 
@@ -55,8 +57,35 @@ def sftp_mkdir_p( sftp, remote_directory ):
 	# Create new dirs starting from the last one that existed.
 	for i in range( i_dir_last, len(dirs_exist) ):
 		sftp.mkdir( '/'.join(dirs_exist[:i+1]) )
+		
+		
+class FtpWithPort(ftplib.FTP):
+	def __init__(self, host, user, passwd, port, timeout):
+		#Act like ftplib.FTP's constructor but connect to another port.
+		ftplib.FTP.__init__(self)
+		#self.set_debuglevel(2)
+		self.connect(host, port, timeout)
+		self.login(user, passwd)
 
-def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', useSftp=False, sftpPort=22, callback=None ):
+class FtpsWithPort(ftplib.FTP_TLS):
+	def __init__(self, host, user, passwd, port, timeout):
+		ftplib.FTP_TLS.__init__(self)
+		#self.set_debuglevel(2)
+		self.connect(host, port, timeout)
+		self.auth()
+		self.login(user, passwd)
+		#Switch to secure data connection.
+		self.prot_p()
+		
+	def ntransfercmd(self, cmd, rest=None):
+		conn, size = ftplib.FTP.ntransfercmd(self, cmd, rest)
+		if self._prot_p:
+			conn = self.context.wrap_socket(conn,
+											server_hostname=self.host,
+											session=self.sock.session)  #reuse ssl session
+		return conn, size
+		
+def FtpWriteFile( host, port, user='anonymous', passwd='anonymous@', timeout=30, serverPath='.', fname='', protocol='FTP', callback=None ):
 	
 	if isinstance(fname, str):
 		fname = [fname]
@@ -64,7 +93,7 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 	# Normalize serverPath.
 	serverPath = serverPath.strip().replace('\\', '/').rstrip('/')
 	
-	if not useSftp:
+	if protocol != 'SFTP':
 		# Stops ftputils from going into an infinite loop by removing leading slashes..
 		serverPath = serverPath.lstrip('/').lstrip('\\')
 	
@@ -85,22 +114,22 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 		return
 	'''
 	
-	if useSftp:
+	if protocol == 'SFTP':
 		with CallCloseOnExit(paramiko.SSHClient()) as ssh:
 			ssh.set_missing_host_key_policy( paramiko.AutoAddPolicy() )
 			ssh.load_system_host_keys()                  
-			ssh.connect( host, sftpPort, username, passwd )
+			ssh.connect( host, port, user, passwd )
 
 			with CallCloseOnExit(ssh.open_sftp()) as sftp:
 				sftp_mkdir_p( sftp, serverPath )
 				for i, f in enumerate(fname):
 					sftp.put(
-						filePath,
+						f,
 						serverPath + '/' + os.path.basename(f),
 						SftpCallback( callback, f, i ) if callback else None
 					)
-	else:
-		with ftputil.FTPHost( host, user, passwd ) as ftp_host:
+	elif protocol == 'FTPS':
+		with ftputil.FTPHost(host, user, passwd, port, timeout, session_factory=FtpsWithPort) as ftp_host:
 			ftp_host.makedirs( serverPath, exist_ok=True )
 			for i, f in enumerate(fname):
 				ftp_host.upload_if_newer(
@@ -108,6 +137,18 @@ def FtpWriteFile( host, user='anonymous', passwd='anonymous@', timeout=30, serve
 					serverPath + '/' + os.path.basename(f),
 					(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
 				)
+			ftp_host.close()
+			
+	else:  #default to unencrypted FTP
+		with ftputil.FTPHost(host, user, passwd, port, timeout, session_factory=FtpWithPort) as ftp_host:
+			ftp_host.makedirs( serverPath, exist_ok=True )
+			for i, f in enumerate(fname):
+				ftp_host.upload_if_newer(
+					f,
+					serverPath + '/' + os.path.basename(f),
+					(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
+				)
+			ftp_host.close()
 
 def FtpIsConfigured():
 	with Model.LockRace() as race:
@@ -126,10 +167,11 @@ def FtpUploadFile( fname=None, callback=None ):
 	
 	params = {
 		'host': 		getattr(race, 'ftpHost', '').strip().strip('\t'),	# Fix cut and paste problems.
+		'port':			getattr(race, 'ftpPort', 21),
 		'user':			getattr(race, 'ftpUser', ''),
 		'passwd':		getattr(race, 'ftpPassword', ''),
 		'serverPath':	getattr(race, 'ftpPath', ''),
-		'useSftp':		getattr(race, 'useSftp', False),
+		'protocol':		getattr(race, 'ftpProtocol', 'FTP'),
 		'fname':		fname or [],
 		'callback':		callback,
 	}
@@ -350,8 +392,8 @@ class FtpQRCodePrintout( wx.Printout ):
 
 #------------------------------------------------------------------------------------------------
 
-ftpFields = 	['ftpHost',	'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'useSftp',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
-ftpDefaults =	['',		'',			'',				'anonymous',	'anonymous@',	False,		False,					'http://',	False]
+ftpFields = 	['ftpHost',	'ftpPort', 'ftpPath',	'ftpPhotoPath',	'ftpUser',		'ftpPassword',	'ftpUploadDuringRace',	'urlPath', 'ftpUploadPhotos']
+ftpDefaults =	['',	21,	'',			'',				'anonymous',	'anonymous@',	False,						'http://',	False]
 
 def GetFtpPublish( isDialog=True ):
 	ParentClass = wx.Dialog if isDialog else wx.Panel
@@ -364,11 +406,17 @@ def GetFtpPublish( isDialog=True ):
 			else:
 				super().__init__( parent, id )
 							
+			self.protocol = 'FTP'
+			
 			fgs = wx.FlexGridSizer(vgap=4, hgap=4, rows=0, cols=2)
 			fgs.AddGrowableCol( 1, 1 )
 			
-			self.useSftp = wx.CheckBox( self, label=_("Use SFTP Protocol (on port 22)") )
+			self.useFtp = wx.RadioButton( self, label=_("FTP (unencrypted)"), style = wx.RB_GROUP )
+			self.useFtps = wx.RadioButton( self, label=_("FTPS (FTP with TLS)") )
+			self.useSftp = wx.RadioButton( self, label=_("SFTP (SSH file transfer)") )
+			self.Bind( wx.EVT_RADIOBUTTON,self.onSelectProtocol ) 
 			self.ftpHost = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
+			self.ftpPort = wx.lib.intctrl.IntCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER )
 			self.ftpPath = wx.TextCtrl( self, size=(256,-1), style=wx.TE_PROCESS_ENTER, value='' )
 			self.ftpUploadPhotos = wx.CheckBox( self, label=_("Upload Photos to Path") )
 			self.ftpUploadPhotos.Bind( wx.EVT_CHECKBOX, self.ftpUploadPhotosChanged )
@@ -393,11 +441,19 @@ def GetFtpPublish( isDialog=True ):
 				self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 				self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 			
+			fgs.Add( wx.StaticText( self, label = _("Protocol")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.useFtp, 1, flag=wx.TOP|wx.ALIGN_LEFT)
 			fgs.AddSpacer( 16 )
-			fgs.Add( self.useSftp )
+			fgs.Add( self.useFtps, 1, flag=wx.TOP|wx.ALIGN_LEFT)
+			fgs.AddSpacer( 16 )
+			fgs.Add( self.useSftp, 1, flag=wx.TOP|wx.ALIGN_LEFT)
+			
 			
 			fgs.Add( wx.StaticText( self, label = _("Host Name")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.ftpHost, 1, flag=wx.TOP|wx.ALIGN_LEFT|wx.EXPAND )
+			
+			fgs.Add( wx.StaticText( self, label = _("Port")), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
+			fgs.Add( self.ftpPort, 1, flag=wx.TOP|wx.ALIGN_LEFT|wx.EXPAND )
 			
 			fgs.Add( wx.StaticText( self, label = _("Upload files to Path")),  flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 			fgs.Add( self.ftpPath, 1, flag=wx.EXPAND )
@@ -459,6 +515,17 @@ def GetFtpPublish( isDialog=True ):
 					fgs.AddSpacer( 4 )
 				self.SetSizerAndFit( fgs )
 				fgs.Fit( self )
+				
+		def onSelectProtocol( self, event ):
+			if self.useSftp.GetValue():
+				self.protocol = 'SFTP'
+				self.ftpPort.SetValue(22)
+			elif self.useFtps.GetValue():
+				self.protocol = 'FTPS'
+				self.ftpPort.SetValue(21)
+			else:
+				self.protocol = 'FTP'
+				self.ftpPort.SetValue(21)
 
 		def onFtpTest( self, event ):
 			self.commit()
@@ -531,6 +598,7 @@ def GetFtpPublish( isDialog=True ):
 			else:
 				for f, v in zip(ftpFields, ftpDefaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
+				self.protocol = getattr(race, 'ftpProtocol', '')
 			self.urlPathChanged()
 			self.ftpUploadPhotosChanged()
 		
@@ -540,6 +608,7 @@ def GetFtpPublish( isDialog=True ):
 			if race:
 				for f in ftpFields:
 					setattr( race, f, getattr(self, f).GetValue() )
+				setattr( race, 'ftpProtocol', self.protocol)
 				race.urlFull = self.urlFull.GetLabel()
 			race.setChanged()
 		
