@@ -167,14 +167,15 @@ class Race:
 			self.raceName = raceName
 		
 	def getRaceName( self ):
-		#return RaceNameFromPath( self.fileName )
 		return self.raceName
 		
 	def postReadFix( self ):
 		if getattr( self, 'fname', None ):
 			self.fileName = getattr(self, 'fname')
 			delattr( self, 'fname' )
-				
+		if not hasattr( self, 'raceName' ):
+			self.raceName = RaceNameFromPath( self.fileName )
+		
 	def getFileName( self ):
 		return self.fileName
 		
