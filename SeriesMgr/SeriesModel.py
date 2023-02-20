@@ -156,14 +156,19 @@ class Race:
 	pureTeam = False	# True if the results are by pure teams, that is, no individual results.
 	teamPointStructure = None	# If specified, team points will be recomputed from the top individual results.
 	
-	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None ):
+	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None, raceName=None ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
 		self.teamPointStructure = teamPointStructure
 		self.grade = grade or 'A'
+		if raceName is None:
+			self.raceName = RaceNameFromPath( self.fileName )
+		else:
+			self.raceName = raceName
 		
 	def getRaceName( self ):
-		return RaceNameFromPath( self.fileName )
+		#return RaceNameFromPath( self.fileName )
+		return self.raceName
 		
 	def postReadFix( self ):
 		if getattr( self, 'fname', None ):
@@ -174,7 +179,7 @@ class Race:
 		return self.fileName
 		
 	def __repr__( self ):
-		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
+		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure', 'raceName'] )
 
 class Category:
 	name = ''
@@ -245,9 +250,11 @@ class SeriesModel:
 	aliasTeamLookup = {}
 
 	ftpHost = ''
+	ftpPort = 21
 	ftpPath = ''
 	ftpUser = ''
 	ftpPassword = ''
+	ftpProtocol = ''
 	urlPath = ''
 	
 	@property
@@ -301,7 +308,7 @@ class SeriesModel:
 		self.setChanged()
 	
 	def setRaces( self, raceList ):
-		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
+		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade, r.raceName) for r in self.races] == raceList:
 			return
 		
 		self.setChanged()
@@ -309,7 +316,7 @@ class SeriesModel:
 		racesSeen = set()
 		newRaces = []
 		ps = { p.name:p for p in self.pointStructures }
-		for fileName, pname, pteamname, grade in raceList:
+		for fileName, pname, pteamname, grade, racename in raceList:
 			fileName = fileName.strip()
 			if not fileName or fileName in racesSeen:
 				continue
@@ -321,7 +328,7 @@ class SeriesModel:
 			except KeyError:
 				continue
 			pt = ps.get( pteamname, None )
-			newRaces.append( Race(fileName, p, pt, grade) )
+			newRaces.append( Race(fileName, p, pt, grade, racename) )
 			
 		self.races = newRaces
 		for i, r in enumerate(self.races):
