@@ -12,6 +12,7 @@ import Model
 import HelpSearch
 from GpxParse import GpxParse
 import datetime
+import tzlocal
 from ReorderableGrid import ReorderableGrid
 import wx.grid as gridlib
 
@@ -79,7 +80,6 @@ class UseTimesPage(adv.WizardPageSimple):
 	
 	def __init__(self, parent):
 		super().__init__(parent)
-		tzinfo.utcoffset(dt)
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		self.noTimes = wx.StaticText(self, label = _('This GPX file does not contain times.\nCannot continue!') )
@@ -92,10 +92,11 @@ class UseTimesPage(adv.WizardPageSimple):
 		hbs.Add( self.proxFilterEntry, flag=wx.ALL, border = border )
 		vbs.Add(hbs)
 		
+		
 		hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.timeOffsetHeading = wx.StaticText(self, label = _("GPS time offset relative to race clock:") )
+		self.timeOffsetHeading = wx.StaticText(self, label = _("Race clock offset relative to GPS time (seconds):") )
 		hbs.Add( self.timeOffsetHeading, flag=wx.ALL, border = border )
-		self.timeOffsetEntry = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER, value="-3600" )  #fixme get this from local timezone?
+		self.timeOffsetEntry = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER, value="0" )
 		self.timeOffsetEntry.Bind( wx.EVT_TEXT_ENTER, self.onFilterEntry )
 		hbs.Add( self.timeOffsetEntry, flag=wx.ALL, border = border )
 		vbs.Add(hbs)
@@ -144,7 +145,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		for latLonEleTime in self.latLonEleTimes:
 			wallTime = latLonEleTime[3]
 			if isinstance( wallTime, datetime.datetime ):
-				wallTime -= timeOffset
+				wallTime += timeOffset
 				raceTime = wallTime - self.raceStartTime
 				if raceTime < datetime.timedelta():
 					raceTime = datetime.timedelta()
@@ -174,6 +175,7 @@ class UseTimesPage(adv.WizardPageSimple):
 					self.grid.SetCellAlignment(row, 5, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					self.grid.SetCellValue( row, 6, '{:.1f}'.format(bearing or 0) )
 					self.grid.SetCellAlignment(row, 6, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+					# fixme filter by lap length?
 					if (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300) and (not proxDecreasing and prevProxDecreasing):
 						laps += 1
 						for col in range(self.grid.GetNumberCols()):
@@ -203,6 +205,9 @@ class UseTimesPage(adv.WizardPageSimple):
 		self.riderBib = riderBib
 		self.latLonEleTimes = latLonEleTimes
 		self.raceStartTime = raceStartTime
+		local_tz = tzlocal.get_localzone()
+		tz_offset = int(raceStartTime.astimezone(local_tz).utcoffset().total_seconds())
+		self.timeOffsetEntry.SetValue( str(tz_offset) )
 		self.refresh()
 		
 #class SummaryPage(adv.WizardPageSimple):
