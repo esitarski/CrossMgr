@@ -44,5 +44,5 @@ def GpxParse( fname ):
 	return gpxCH.points
 
 if __name__ == '__main__':
-	points = GpxParse( 'bugs/GPX/GPXBug.gpx' )
+	points = GpxParse( 'GPX/circuit-violet-100-km.gpx' )
 	print( points )
