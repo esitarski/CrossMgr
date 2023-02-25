@@ -627,7 +627,7 @@ class MainWin( wx.Frame ):
 		
 		self.dataMgmtMenu.AppendSeparator()
 		
-		item = AppendMenuItemBitmap( self.dataMgmtMenu, wx.ID_ANY, _("&Import rider's times from GPX..."), _("Import rider's times from GPX"),
+		item = AppendMenuItemBitmap( self.dataMgmtMenu, wx.ID_ANY, _("&Import rider's times from GPX..."), _("Import Rider's Rimes from GPX"),
 			Utils.GetPngBitmap('gps-icon.png') )
 		self.Bind(wx.EVT_MENU, self.menuImportRiderTimesGpx, item )
 		
@@ -2406,20 +2406,19 @@ class MainWin( wx.Frame ):
 	def menuImportRiderTimesGpx( self, event ):
 		if self.fileName is None or len(self.fileName) < 4:
 			return
-		
 		if not Model.race:
 			return
 		race = Model.race
-		
 		rt = GpxTimesImport.GetRiderTimes( self, race )
-			
-		rt.show()
-		
-
-		race.setChanged()
-			
+		try:
+			bib, laps = rt.show()
+			for t in laps:
+				race.importTime( bib, t )
+				race.setChanged()
+		except TypeError:
+			#wizard has been cancelled
+			pass
 		self.refresh()
-		
 		
 	@logCall
 	def menuExportGpx( self, event=None ):

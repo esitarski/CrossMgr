@@ -76,7 +76,7 @@ class IntroPage(adv.WizardPageSimple):
 		return self.bibEntry.GetValue()
 
 class UseTimesPage(adv.WizardPageSimple):
-	headerNames = ['WallTime', 'RaceTime', 'Lat (°)', 'Long (°)', 'Distance\n(km)', 'Proximity\nto start (m)', 'Bearing\nfrom start (°)']
+	headerNames = ['Time of Day', 'Race\nTime', 'Lat (°)', 'Long (°)', 'Distance\n(km)', 'Proximity\nto start (m)', 'Bearing\nfrom finish (°)', 'Import\nlap']
 	
 	def __init__(self, parent):
 		super().__init__(parent)
@@ -85,7 +85,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		self.noTimes = wx.StaticText(self, label = _('This GPX file does not contain times.\nCannot continue!') )
 		vbs.Add( self.noTimes, flag=wx.ALL, border = border )
 		hbs = wx.BoxSizer(wx.HORIZONTAL)
-		self.proxFilterHeading = wx.StaticText(self, label = _("Filter by proximity to start (m):") )
+		self.proxFilterHeading = wx.StaticText(self, label = _("Filter by proximity to finish line (m):") )
 		hbs.Add( self.proxFilterHeading, flag=wx.ALL, border = border )
 		self.proxFilterEntry = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER, value="50" )
 		self.proxFilterEntry.Bind( wx.EVT_TEXT_ENTER, self.onFilterEntry )
@@ -105,18 +105,34 @@ class UseTimesPage(adv.WizardPageSimple):
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
 		self.grid.CreateGrid( 0, len(self.headerNames) )
+		self.grid.SetColFormatBool( 7 )
 		self.grid.SetColLabelSize( 64 )
 		self.grid.SetRowLabelSize( 0 )
 		self.grid.EnableReorderRows( False )
-		#self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
-		#self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellRightClick )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.doCellClick )
 		self.sortCol = None
 		
 		vbs.Add(self.grid, 1, flag=wx.EXPAND|wx.TOP|wx.ALL, border = 4)
 		
 		self.SetSizer( vbs )
+		
+	def doCellClick( self, event ):
+		if event.GetCol() == len(self.headerNames) -1:
+			col = len(self.headerNames) - 1
+			row = event.GetRow()
+			v = self.grid.GetCellValue( row, col )
+			if v == "":
+				self.grid.SetCellValue( row, col, "1" )
+			else:
+				self.grid.SetCellValue( row, col, "" )
+			
+
+	def doCellRightClick( self, event ):
+		# copy to clipboard option here?
+		pass
 	
-	def onFilterEntry( self, e ):
+	def onFilterEntry( self, event ):
 		self.refresh()
 	
 	def refresh( self ):
@@ -142,7 +158,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		prevBearing = 0
 		prevProx = 0
 		prevProxDecreasing = False
-		for latLonEleTime in self.latLonEleTimes:
+		for latLonEleTime in self.latLonEleTimes:   #fixme interpolate data points for < 1 pps GPX
 			wallTime = latLonEleTime[3]
 			if isinstance( wallTime, datetime.datetime ):
 				wallTime += timeOffset
@@ -175,19 +191,32 @@ class UseTimesPage(adv.WizardPageSimple):
 					self.grid.SetCellAlignment(row, 5, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					self.grid.SetCellValue( row, 6, '{:.1f}'.format(bearing or 0) )
 					self.grid.SetCellAlignment(row, 6, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
-					# fixme filter by lap length?
-					if (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300) and (not proxDecreasing and prevProxDecreasing):
-						laps += 1
-						for col in range(self.grid.GetNumberCols()):
-							self.grid.SetCellBackgroundColour( row, col, wx.Colour(255,255,0) )
-					elif (not proxDecreasing and prevProxDecreasing):
-						laps += 1
-						for col in range(self.grid.GetNumberCols()):
-							self.grid.SetCellBackgroundColour( row, col, wx.Colour(0,127,0) )
-					elif (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300):
-						laps += 1
-						for col in range(self.grid.GetNumberCols()):
-							self.grid.SetCellBackgroundColour( row, col, wx.Colour(255,0,0) )
+					self.grid.SetCellRenderer(row, 7, gridlib.GridCellBoolRenderer())
+					self.grid.SetCellEditor(row, 7, gridlib.GridCellBoolEditor())
+					self.grid.SetCellValue(row, 7, "")
+					if raceTime >= self.minPossibleLapTime:
+						# fixme filter by lap length?
+						setLap = False
+						if (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300) and (not proxDecreasing and prevProxDecreasing):
+							setLap = True
+							self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
+							self.grid.SetCellBackgroundColour( row, 6, wx.Colour(153, 205, 255) )
+						elif (not proxDecreasing and prevProxDecreasing):
+							setLap = True
+							self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
+						elif (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300):
+							setLap = True
+							self.grid.SetCellBackgroundColour( row, 6, wx.Colour(153, 205, 255) )
+						else:
+							self.grid.SetCellValue(row, 7, "")
+						if setLap:
+							self.grid.SetCellValue(row, 7, "1")
+							laps += 1
+							#if the previous lap is set, unset it
+							if row > 0:
+								prevSetLap = self.grid.GetCellValue( row - 1, 7 )
+								if prevSetLap == "1":
+									self.grid.SetCellValue( row - 1, 7, "" )
 					row += 1
 				prevLat = lat
 				prevLon = lon
@@ -199,75 +228,75 @@ class UseTimesPage(adv.WizardPageSimple):
 			self.noTimes.Hide()
 		self.grid.AutoSize()
 		self.GetSizer().Layout()
+		self.grid.EnableEditing(True)
 		
-	def setInfo( self, geoTrack, riderBib, latLonEleTimes, raceStartTime ):
+	def setInfo( self, geoTrack, riderBib, latLonEleTimes, raceStartTime, minPossibleLapTime = 0 ):
 		self.geoTrack = geoTrack
 		self.riderBib = riderBib
-		self.latLonEleTimes = latLonEleTimes
+		self.latLonEleTimes = latLonEleTimes  
 		self.raceStartTime = raceStartTime
+		self.minPossibleLapTime = datetime.timedelta( seconds=minPossibleLapTime )
 		local_tz = tzlocal.get_localzone()
 		tz_offset = int(raceStartTime.astimezone(local_tz).utcoffset().total_seconds())
 		self.timeOffsetEntry.SetValue( str(tz_offset) )
 		self.refresh()
 		
-#class SummaryPage(adv.WizardPageSimple):
-	#def __init__(self, parent):
-		#super().__init__(parent)
+	def getLapTimes( self ):
+		lapTimes = []
+		for row in range(self.grid.GetNumberRows()):
+			if self.grid.GetCellValue( row, len(self.headerNames) -1 ) == "1":
+				try:
+					dt = datetime.datetime.strptime(self.grid.GetCellValue( row, 1 ),'%H:%M:%S')
+					seconds = dt.second + dt.minute*60 + dt.hour*3600
+					lapTimes.append( seconds )
+				except ValueError:
+					pass
+		return lapTimes
 		
-		#self.distanceKm = None
-		#self.distanceMiles = None
+class SummaryPage(adv.WizardPageSimple):
+	def __init__(self, parent):
+		super().__init__(parent)
+		self.headerNames = ['RaceTime']
+		self.bib = 0
+		self.lapTimes = []
+		border = 4
+		vbs = wx.BoxSizer( wx.VERTICAL )
+		self.bibHeader = wx.StaticText( self )
+		vbs.Add( self.bibHeader, flag=wx.ALL, border = border )
+		self.fileName = wx.StaticText( self )
+		vbs.Add( self.fileName, flag=wx.ALL, border = border )
 		
-		#border = 4
-		#vbs = wx.BoxSizer( wx.VERTICAL )
-		#vbs.Add( wx.StaticText(self, label = '{}:'.format(_('Summary'))), flag=wx.ALL, border = border )
-		#vbs.Add( wx.StaticText(self, label = ' '), flag=wx.ALL, border = border )
-
-		#self.fileLabel = wx.StaticText( self, label = '{}:'.format(_('GPX File')) )
-		#self.fileName = wx.StaticText(self )
-
-		#self.numCoordsLabel = wx.StaticText( self, label = '{}:'.format(_('Number of Coords')) )
-		#self.numCoords = wx.StaticText(self )
-
-		#self.distanceLabel = wx.StaticText( self, label = '{}:'.format(_('Lap Length')) )
-		#self.distance = wx.TextCtrl(self, style=wx.TE_READONLY)
-
-		#self.totalElevationGainLabel = wx.StaticText( self, label = '{}:'.format(_('Total Elevation Gain')) )
-		#self.totalElevationGain = wx.TextCtrl(self, style=wx.TE_READONLY)
-
-		#self.courseTypeLabel = wx.StaticText( self, label = '{}:'.format(_('Course is')) )
-		#self.courseType = wx.TextCtrl(self, style=wx.TE_READONLY)
-
-		#self.setCategoryDistanceLabel = wx.StaticText( self )
-		#self.setCategoryDistanceCheckbox = wx.CheckBox( self, label = _('Set Category Distances to GPX Lap Length') )
-		#self.setCategoryDistanceCheckbox.SetValue( True )
-
-		#fbs = wx.FlexGridSizer( rows=0, cols=2, hgap=5, vgap=2 )
-		#fbs.AddGrowableCol( 1 )
-		
-		#labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
-		#fbs.AddMany( [(self.fileLabel, 0, labelAlign),			(self.fileName, 	1, wx.EXPAND|wx.GROW),
-					  #(self.numCoordsLabel, 0, labelAlign),		(self.numCoords, 	1, wx.EXPAND|wx.GROW),
-					  #(self.distanceLabel, 0, labelAlign),		(self.distance,		1, wx.EXPAND|wx.GROW),
-					  #(self.totalElevationGainLabel, 0, labelAlign),(self.totalElevationGain,		1, wx.EXPAND|wx.GROW),
-					  #(self.courseTypeLabel, 0, labelAlign),(self.courseType,		1, wx.EXPAND|wx.GROW),
-					  #(wx.StaticText(self), 0, labelAlign),			(wx.StaticText(self), 1, wx.EXPAND|wx.GROW),
-					  #(self.setCategoryDistanceLabel, 0, labelAlign), (self.setCategoryDistanceCheckbox, 1, wx.EXPAND|wx.GROW),
-					 #] )
-		
-		#vbs.Add( fbs )
-		
-		#self.SetSizer(vbs)
+		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
+		self.grid.DisableDragRowSize()
+		self.grid.CreateGrid( 0, len(self.headerNames) )
+		self.grid.SetColLabelSize( 64 )
+		self.grid.SetRowLabelSize( 0 )
+		self.grid.EnableReorderRows( False )
+		self.sortCol = None
+		for col, headerName in enumerate(self.headerNames):
+			self.grid.SetColLabelValue( col, headerName )
+			attr = gridlib.GridCellAttr()
+			attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
+			attr.SetReadOnly( True )
+			self.grid.SetColAttr( col, attr )
+		vbs.Add(self.grid, 1, flag=wx.EXPAND|wx.TOP|wx.ALL, border = 4)
+		self.SetSizer(vbs)
 	
-	#def setInfo( self, fileName, numCoords, distance, totalElevationGain, isPointToPoint ):
-		#self.fileName.SetLabel( fileName )
-		#self.numCoords.SetLabel( '{}'.format(numCoords) )
-		#self.distanceKm = distance
-		#self.distanceMiles = distance*0.621371
-		#self.distance.ChangeValue( '{:.3f} km, {:.3f} miles'.format(self.distanceKm, self.distanceMiles) )
-		#self.totalElevationGainM = totalElevationGain
-		#self.totalElevationGainFt = totalElevationGain*3.28084
-		#self.totalElevationGain.ChangeValue( '{:.0f} m, {:.0f} ft'.format(self.totalElevationGainM, self.totalElevationGainFt) )
-		#self.courseType.ChangeValue( _('Point to Point') if isPointToPoint else _('Loop') )
+	def setInfo( self, bib, riderName, fileName, lapTimes ):
+		self.bib = bib
+		self.bibHeader.SetLabel( str(len(lapTimes)) + ' lap times for rider #' + str(self.bib) + ' ' + riderName + ' will be imported from:' )
+		self.fileName.SetLabel( fileName )
+		self.lapTimes = lapTimes
+		row = 0
+		for lap in lapTimes:
+			td = datetime.timedelta(seconds = lap)
+			self.grid.InsertRows( pos=row+1, numRows=1)
+			self.grid.SetCellValue( row, 0, '{}'.format(td or '') )
+			self.grid.SetCellAlignment(row, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+			row += 1
+		self.grid.AutoSize()
+		self.GetSizer().Layout()
+		self.grid.EnableEditing(False)
 		
 class GetRiderTimes:
 	def __init__( self, parent, race = None):
@@ -283,21 +312,19 @@ class GetRiderTimes:
 		self.wizard.Create( parent, title = _('Import times from GPX file'), bitmap = bitmap )
 		
 		self.introPage		= IntroPage( self.wizard, self )
-		#self.fileNamePage	= FileNamePage( self.wizard )
 		self.useTimesPage	= UseTimesPage( self.wizard )
-		#self.summaryPage	= SummaryPage( self.wizard )
+		self.summaryPage	= SummaryPage( self.wizard )
 		
 		self.wizard.Bind( adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		self.wizard.Bind( adv.EVT_WIZARD_CANCEL, self.onCancel )
-		#self.wizard.Bind( adv.EVT_WIZARD_HELP,
-			#lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#import-course-in-gpx-format') )
+		self.wizard.Bind( adv.EVT_WIZARD_HELP,
+			lambda evt: HelpSearch.showHelp('Menu-DataMgmt.html#import-riders-times-from-gpx') )
 		
 		if self.geoTrack:
 			adv.WizardPageSimple.Chain( self.introPage, self.useTimesPage )
-			#adv.WizardPageSimple.Chain( self.fileNamePage, self.useTimesPage )
-			#adv.WizardPageSimple.Chain( self.useTimesPage, self.summaryPage )
+			adv.WizardPageSimple.Chain( self.useTimesPage, self.summaryPage )
 
-		self.wizard.SetPageSize( wx.Size(1024,800) )
+		self.wizard.SetPageSize( wx.Size(1032,800) )
 		self.wizard.GetPageAreaSizer().Add( self.introPage )
 		
 		
@@ -306,29 +333,15 @@ class GetRiderTimes:
 
 	def show( self ):
 		if self.wizard.RunWizard(self.introPage):
-			#return (
-				#self.geoTrack,
-				#self.geoTrackFName,
-				#self.summaryPage.distanceKm if self.summaryPage.setCategoryDistanceCheckbox.GetValue() else None
-			#)
-		#else:
-			#return self.geoTrackOriginal, self.geoTrackFNameOriginal, None
-			pass
+			return( self.bib, self.lapTimes )
 	
 	def onCancel( self, evt ):
 		page = evt.GetPage()
 		if page == self.introPage:
 			pass
-		elif page == self.fileNamePage:
-			pass
 		elif page == self.summaryPage:
 			pass
-	
-	def clearData( self ):
-		self.geoTrack = None
-		self.geoTrackFName = None
-		self.geoTrackOriginal = None
-		self.geoTrackFNameOriginal = None
+
 		
 	def onPageChanging( self, evt ):
 		isForward = evt.GetDirection()
@@ -394,21 +407,22 @@ class GetRiderTimes:
 				Utils.MessageOK( self.wizard, message=_('GPX file does not contain any time data!'), title=_('GPX error'), iconMask=wx.ICON_ERROR)
 				evt.Veto()
 				return
-			
-			#print ("The list is : " + str(latLonEleTimes))
-			
 			self.latLonEleTimes = latLonEleTimes
+			self.useTimesPage.setInfo( self.geoTrack, riderBib, latLonEleTimes, self.race.startTime, self.race.minPossibleLapTime )
 			
-			self.useTimesPage.setInfo( self.geoTrack, riderBib, latLonEleTimes, self.race.startTime )
-			
-			#self.geoTrack = geoTrack
-			#self.summaryPage.setInfo(	self.geoTrackFName, self.geoTrack.numPoints,
-										#self.geoTrack.lengthKm, self.geoTrack.totalElevationGainM,
-										#getattr( self.geoTrack, 'isPointToPoint', False) )
-			#self.useTimesPage.setInfo( self.geoTrackFName )
 			
 		elif page == self.useTimesPage:
-			pass
+			self.bib = self.introPage.getBib()
+			self.lapTimes = self.useTimesPage.getLapTimes()
+			if self.race is not None:
+				try:
+					externalInfo = self.race.excelLink.read()
+					info = externalInfo.get(int(self.bib), {})
+					riderName = ', '.join( n for n in [info.get('LastName', ''), info.get('FirstName', '')] if n )
+				except AttributeError:
+					riderName = ''
+			self.summaryPage.setInfo( self.bib, riderName, self.introPage.getFileName(), self.lapTimes )
+			
 		
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
