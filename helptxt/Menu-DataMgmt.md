@@ -93,6 +93,17 @@ The race must be in TimeTrial mode (see [Properties][], [TimeTrial][]) for start
 
 For more information about time trial mode, see [TimeTrial][].
 
+## Import Rider's Times from GPX...
+
+Wizard for extrapolating a rider's lap times from a GPX Track recorded by the rider during the race.  Useful if tag reads are missed, but the rider has a GPS recording.
+
+This requires a GPX course to be set in [Properties] in order to determine the coordinates of the finish line.  Note that the imported track must contain timestamps; beware of downloading tracks from Strava or similar route-sharing websites which strip this data.
+
+Trackpoints will be filtered by proximity to the finish line and listed.  Times where the rider passes close to the finish line will be highlighted, and can be manually selected or de-selected for import.
+The offset between the GPS receiver's recorded time (normally UTC) and CrossMgr's recorded time will be set automatically according to the local time zone, but this can be tweaked if there is a discrepency.
+
+For best results it is recommended that GPS receivers be configured to record trackpoints as frequently as possible (typically once per second), and that a reasonable effort is made to ensure the CrossMgr computer's real-time clock is accurate before starting the race.
+
 ## Import Categories from File...
 Read the categories from a previously exported Categories file.
 
