@@ -95,7 +95,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 	
-def getHtml( htmlfileName=None, seriesFileName=None ):
+def getHtml( htmlfileName=None,  hideCols=[], seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByPoints = model.scoreByPoints
 	scoreByTime = model.scoreByTime
@@ -304,6 +304,10 @@ table.points tr.odd {
 
 hr { clear: both; }
 
+.hidden {
+	display: none;
+}
+
 @media print {
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
@@ -359,13 +363,13 @@ function sortTable( table, col, reverse ) {
 	};
 	
 	var cmpFunc;
-	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
+	if( col == 0 || col == 2 || col == 3 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
-	else if( col >= 6 ) {				// Race Points/Time and Rank
+	else if( col >= 4 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
-			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
-			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
+			var x = parseRank( a.cells[4+(col-4)].textContent.trim() );
+			var y = parseRank( b.cells[4+(col-4)].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
@@ -464,8 +468,8 @@ function sortTableId( iTable, iCol ) {
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
 				
 				results = filterResults( results, scoreByPoints, scoreByTime )
-				
-				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
+				hideRaces = []
+				headerNames = HeaderNames + ['{}'.format(r[3].raceName) for r in races]
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -480,23 +484,29 @@ function sortTableId( iTable, iCol ) {
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
 									if col in ('Gap',):
 										colAttr['class'] = 'noprint'
+									if col in hideCols:
+										colAttr['class'] = colAttr.get('class', '') + ' hidden'
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
 										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
+									hideClass = ''
+									if r[1]  in hideCols:
+										hideRaces.append(iRace)  #list of race columns to hide when rendering points rows
+										hideClass = ' hidden'
 									with tag(html, 'th', {
-											'class':'centerAlign noprint',
-											#'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
+											'class':'centerAlign noprint' + hideClass,
+											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),  #I've re-enabled this and fixed the constants in sortTable() so it actually works- KW
 										} ):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+												write( '{}'.format(escape(r[3].raceName).replace('\n', '<br/>\n')) )
 										else:
-											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+											write( '{}'.format(escape(r[3].raceName).replace('\n', '<br/>\n')) )
 										if r[0]:
 											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
@@ -504,18 +514,19 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'tbody'):
 							for pos, (team, result, gap, rrs) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
-									with tag(html, 'td', {'class':'rightAlign'}):
+									with tag(html, 'td', {'class':'rightAlign' + (' hidden' if 'Pos' in hideCols else '')}):
 										write( '{}'.format(pos+1) )
-									with tag(html, 'td'):
+									with tag(html, 'td', {'class':'' + (' hidden' if 'Team' in hideCols else '')}):
 										write( '{}'.format(team or '') )
-									with tag(html, 'td', {'class':'rightAlign'}):
+									with tag(html, 'td', {'class':'rightAlign' + (' hidden' if 'Points' in hideCols else '')}):
 										write( '{}'.format(result or '') )
-									with tag(html, 'td', {'class':'rightAlign noprint'}):
+									with tag(html, 'td', {'class':'rightAlign noprint' + (' hidden' if 'Gap' in hideCols else '')}):
 										write( '{}'.format(gap or '') )
+									iRace = 0 #simple iterator, is there a more pythonesque way to do this?
 									for rt in rrs:
-										with tag(html, 'td', {'class': 'centerAlign noprint'}):
+										with tag(html, 'td', {'class': 'centerAlign noprint' + (' hidden' if iRace in hideRaces else '')}):
 											write( formatTeamResults(scoreByPoints, rt) )
-										
+										iRace += 1
 			#-----------------------------------------------------------------------------
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
@@ -628,7 +639,7 @@ class TeamResults(wx.Panel):
 		self.refreshButton.Bind( wx.EVT_BUTTON, self.onRefresh )
 		self.publishToHtml = wx.Button( self, label='Publish to Html' )
 		self.publishToHtml.Bind( wx.EVT_BUTTON, self.onPublishToHtml )
-		self.publishToFtp = wx.Button( self, label='Publish to Html with FTP' )
+		self.publishToFtp = wx.Button( self, label='Publish to Html with (S)FTP' )
 		self.publishToFtp.Bind( wx.EVT_BUTTON, self.onPublishToFtp )
 		self.publishToExcel = wx.Button( self, label='Publish to Excel' )
 		self.publishToExcel.Bind( wx.EVT_BUTTON, self.onPublishToExcel )
@@ -661,6 +672,7 @@ class TeamResults(wx.Panel):
 		self.grid.EnableReorderRows( False )
 		self.grid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
+		self.grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.onResultsColumnRightClick )
 		self.sortCol = None
 
 		self.setColNames(getHeaderNames())
@@ -761,7 +773,7 @@ class TeamResults(wx.Panel):
 	
 	def getGrid( self ):
 		return self.grid
-		
+
 	def getTitle( self ):
 		return self.showResults.GetStringSelection() + ' Series Results'
 	
@@ -816,7 +828,11 @@ class TeamResults(wx.Panel):
 		
 		results = filterResults( results, scoreByPoints, scoreByTime )
 		
-		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
+		headerNames = HeaderNames + ['{}\n{}'.format(r[3].raceName,r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
+		
+		#Show all columns
+		for c in range(self.grid.GetNumberCols()):
+			self.grid.ShowCol(c)
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
@@ -883,6 +899,30 @@ class TeamResults(wx.Panel):
 		
 		self.GetSizer().Layout()
 		
+	def onResultsColumnRightClick( self, event ):
+		# Create and display a popup menu of columns on right-click event
+		menu = wx.Menu()
+		menu.SetTitle( 'Show/Hide columns' )
+		for c in range(self.grid.GetNumberCols()):
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.grid.GetColLabelValue(c).strip() )
+			self.Bind(wx.EVT_MENU, self.onToggleResultsColumn)
+			if self.grid.IsColShown(c):
+				menu.Check( menuItem.GetId(), True )
+		self.PopupMenu(menu)
+		menu.Destroy()
+		
+	def onToggleResultsColumn( self, event ):
+		#find the column number
+		colLabels = []
+		for c in range(self.grid.GetNumberCols()):
+			colLabels.append(self.grid.GetColLabelValue(c).strip())
+		label = event.GetEventObject().FindItemById(event.GetId()).GetItemLabel()
+		c = colLabels.index(label)
+		if self.grid.IsColShown(c):
+			self.grid.HideCol(c)
+		else:
+			self.grid.ShowCol(c)
+		
 	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
 		
@@ -891,6 +931,7 @@ class TeamResults(wx.Panel):
 		scoreByPercent = model.scoreByPercent
 		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
+		hideCols = [self.grid.GetColLabelValue(c).strip() for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)]
 		
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
@@ -920,7 +961,12 @@ class TeamResults(wx.Panel):
 			
 			results = filterResults( results, scoreByPoints, scoreByTime )
 			
-			headerNames = HeaderNames + [r[1] for r in races]
+			headerNames = HeaderNames + [r[3].raceName for r in races]
+			
+			hideRaces = []
+			for iRace, r in enumerate(races):
+				if r[1] in hideCols:
+					hideRaces.append(iRace)
 			
 			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapper( ws )
@@ -946,17 +992,31 @@ class TeamResults(wx.Panel):
 																	) );
 				
 			rowCur += 2
-			for c, headerName in enumerate(headerNames):
-				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
+			c = 0
+			for headerName in headerNames:
+				if headerName not in hideCols:
+					wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
+					c += 1
 			rowCur += 1
 			
 			for pos, (team, points, gap, rrs) in enumerate(results):
-				wsFit.write( rowCur, 0, pos+1, numberStyle )
-				wsFit.write( rowCur, 1, team, textStyle )
-				wsFit.write( rowCur, 2, points, numberStyle )
-				wsFit.write( rowCur, 3, gap, numberStyle )
+				c = 0
+				if 'Pos' not in hideCols:
+					wsFit.write( rowCur, c, pos+1, numberStyle )
+					c += 1
+				if 'Team' not in hideCols:
+					wsFit.write( rowCur, c, team, textStyle )
+					c += 1
+				if 'Points' not in hideCols:
+					wsFit.write( rowCur, c, points, numberStyle )
+					c += 1
+				if 'Gap' not in hideCols:
+					wsFit.write( rowCur, c, gap, numberStyle )
+					c += 1
 				for q, rt in enumerate(rrs):
-					wsFit.write( rowCur, 4 + q, formatTeamResults(scoreByPoints, rt), centerStyle )
+					if q not in hideRaces:
+						wsFit.write( rowCur, c, formatTeamResults(scoreByPoints, rt), centerStyle )
+						c += 1
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
@@ -990,7 +1050,7 @@ class TeamResults(wx.Panel):
 		model.postPublishCmd = self.postPublishCmd.GetValue().strip()
 
 		try:
-			getHtml( htmlfileName )
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c).strip() for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 			webbrowser.open( htmlfileName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Html file written to:\n\n   {}'.format(htmlfileName), 'html Write')
 		except IOError:
@@ -1008,12 +1068,12 @@ class TeamResults(wx.Panel):
 		htmlfileName = getHtmlFileName()
 		
 		try:
-			getHtml( htmlfileName )
+			getHtml( htmlfileName, [self.grid.GetColLabelValue(c).strip() for c in range(self.grid.GetNumberCols()) if not self.grid.IsColShown(c)])
 		except IOError:
 			return
 		
 		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
-		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
+		with FtpWriteFile.FtpPublishDialog( self, html=html, team=True ) as dlg:
 			dlg.ShowModal()
 		self.callPostPublishCmd( htmlfileName )
 	

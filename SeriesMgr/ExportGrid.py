@@ -51,8 +51,8 @@ class ExportGrid:
 	def __init__( self, title, grid ):
 		self.title = title
 		self.grid = grid
-		self.colnames = [grid.GetColLabelValue(c) for c in range(grid.GetNumberCols())]
-		self.data = [ [grid.GetCellValue(r, c) for r in range(grid.GetNumberRows())] for c in range(grid.GetNumberCols()) ]
+		self.colnames = [grid.GetColLabelValue(c) for c in range(grid.GetNumberCols()) if grid.IsColShown(c)]
+		self.data = [ [grid.GetCellValue(r, c) for r in range(grid.GetNumberRows())] for c in range(grid.GetNumberCols()) if grid.IsColShown(c)]
 		
 		self.fontName = 'Helvetica'
 		self.fontSize = 16

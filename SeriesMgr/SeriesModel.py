@@ -156,14 +156,19 @@ class Race:
 	pureTeam = False	# True if the results are by pure teams, that is, no individual results.
 	teamPointStructure = None	# If specified, team points will be recomputed from the top individual results.
 	
-	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None ):
+	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None, raceName=None ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
 		self.teamPointStructure = teamPointStructure
 		self.grade = grade or 'A'
+		if raceName is None:
+			self.raceName = RaceNameFromPath( self.fileName )
+		else:
+			self.raceName = raceName
 		
 	def getRaceName( self ):
-		return RaceNameFromPath( self.fileName )
+		#return RaceNameFromPath( self.fileName )
+		return self.raceName
 		
 	def postReadFix( self ):
 		if getattr( self, 'fname', None ):
@@ -174,7 +179,7 @@ class Race:
 		return self.fileName
 		
 	def __repr__( self ):
-		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
+		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure', 'raceName'] )
 
 class Category:
 	name = ''
@@ -242,15 +247,19 @@ class SeriesModel:
 	
 	references = []
 	referenceLicenses = []
+	referenceMachines = []
 	referenceTeams = []
 	aliasLookup = {}
 	aliasLicenseLookup = {}
+	aliasMachineLookup = {}
 	aliasTeamLookup = {}
 
 	ftpHost = ''
+	ftpPort = 21
 	ftpPath = ''
 	ftpUser = ''
 	ftpPassword = ''
+	ftpProtocol = ''
 	urlPath = ''
 	
 	@property
@@ -304,7 +313,7 @@ class SeriesModel:
 		self.setChanged()
 	
 	def setRaces( self, raceList ):
-		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
+		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade, r.raceName) for r in self.races] == raceList:
 			return
 		
 		self.setChanged()
@@ -312,7 +321,7 @@ class SeriesModel:
 		racesSeen = set()
 		newRaces = []
 		ps = { p.name:p for p in self.pointStructures }
-		for fileName, pname, pteamname, grade in raceList:
+		for fileName, pname, pteamname, grade, racename in raceList:
 			fileName = fileName.strip()
 			if not fileName or fileName in racesSeen:
 				continue
@@ -324,7 +333,7 @@ class SeriesModel:
 			except KeyError:
 				continue
 			pt = ps.get( pteamname, None )
-			newRaces.append( Race(fileName, p, pt, grade) )
+			newRaces.append( Race(fileName, p, pt, grade, racename) )
 			
 		self.races = newRaces
 		for i, r in enumerate(self.races):
@@ -398,6 +407,39 @@ class SeriesModel:
 		#if updated:
 		#	memoize.clear()
 	
+	def setReferenceMachines( self, referenceMachines ):
+		dNew = dict( referenceMachines )
+		dExisting = dict( self.referenceMachines )
+		
+		changed = (len(dNew) != len(dExisting))
+		updated = False
+		
+		for name, aliases in dNew.items():
+			if name not in dExisting:
+				changed = True
+				if aliases:
+					updated = True
+			elif aliases != dExisting[name]:
+				changed = True
+				updated = True
+	
+		for name, aliases in dExisting.items():
+			if name not in dNew:
+				changed = True
+				if aliases:
+					updated = True
+				
+		if changed:
+			self.changed = changed
+			self.referenceMachines = referenceMachines
+			self.aliasMachineLookup = {}
+			for machine, aliases in self.referenceMachines:
+				for alias in aliases:
+					key = nameToAliasKey( alias )
+					self.aliasMachineLookup[key] = machine				
+	
+		#if updated:
+		#	memoize.clear()
 	
 	def setReferenceTeams( self, referenceTeams ):
 		dNew = dict( referenceTeams )
@@ -442,9 +484,12 @@ class SeriesModel:
 		key = Utils.removeDiacritic(license).upper()
 		return self.aliasLicenseLookup.get( key, key )
 	
+	def getReferenceMachine( self, machine ):
+		return self.aliasMachineLookup.get( nameToAliasKey(machine), machine )
+	
 	def getReferenceTeam( self, team ):
 		return self.aliasTeamLookup.get( nameToAliasKey(team), team )
-	
+    
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
 		if self.categorySequence or not isinstance(self.categories, dict):
