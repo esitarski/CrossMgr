@@ -10,6 +10,7 @@ import sys
 import time
 import datetime
 import traceback
+import secrets
 
 import Utils
 from Version import AppVerName
@@ -144,7 +145,7 @@ class MainWin( wx.Frame ):
 		impinjConfiguration = wx.StaticBox( self, label = 'Impinj Configuration' )
 		impinjConfigurationSizer = wx.StaticBoxSizer( impinjConfiguration, wx.HORIZONTAL )
 		gbs = wx.GridBagSizer( 4, 4 )
-		impinjConfigurationSizer.Add( gbs, flag = wx.ALL, border = 4 )
+		impinjConfigurationSizer.Add( gbs, flag=wx.ALL, border = 4 )
 		
 		iRow = 0
 		
@@ -174,7 +175,7 @@ class MainWin( wx.Frame ):
 		self.useStaticAddress = wx.RadioButton( self, label='IP:' )
 		gbs.Add( self.useStaticAddress, pos=(iRow,0), span=(1,1), flag=wx.ALIGN_CENTER_VERTICAL )
 		hb = wx.BoxSizer( wx.HORIZONTAL )
-		self.impinjHost = IpAddrCtrl( self, style = wx.TE_PROCESS_TAB, size=(120,-1) )
+		self.impinjHost = IpAddrCtrl( self, style=wx.TE_PROCESS_TAB, size=(120,-1) )
 		hb.Add( self.impinjHost )
 		hb.Add( wx.StaticText(self, label = ' : ' + '{}'.format(ImpinjInboundPort)), flag=wx.ALIGN_CENTER_VERTICAL )
 
@@ -191,6 +192,7 @@ class MainWin( wx.Frame ):
 
 		hh = wx.BoxSizer( wx.HORIZONTAL )
 		fgs = wx.FlexGridSizer( 2, 3, 2, 2 )
+		fgs.AddGrowableCol( 1 )
 		fgs.Add( wx.StaticText(self, label='Transmit Power:') )
 		self.transmitPower_dBm = wx.StaticText( self, label='Max', size=(40,-1), style=wx.ALIGN_RIGHT )
 		fgs.Add( self.transmitPower_dBm, flag=wx.LEFT, border=2 )
@@ -224,39 +226,54 @@ class MainWin( wx.Frame ):
 		self.statusBitmap = wx.StaticBitmap( self, wx.ID_ANY, self.attemptBitmap )
 		self.statusLabel = wx.StaticText( self, label = 'Connecting...' )
 		hs.Add( self.statusBitmap )
-		hs.Add( self.statusLabel, flag = wx.ALIGN_CENTRE_VERTICAL )
+		hs.Add( self.statusLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
 
 		self.resetButton = wx.Button( self, label = 'Reset Connection' )
 		self.resetButton.Bind( wx.EVT_BUTTON, self.doReset )
 		
-		statusVS.Add( hs, flag = wx.ALL|wx.ALIGN_CENTRE, border = 4 )
-		statusVS.Add( self.resetButton, flag = wx.ALL|wx.ALIGN_CENTRE, border = 4 )
+		statusVS.Add( hs, flag=wx.ALL|wx.ALIGN_CENTRE, border = 4 )
+		statusVS.Add( self.resetButton, flag=wx.ALL|wx.ALIGN_CENTRE, border = 4 )
 		
-		impinjConfigurationSizer.Add( statusVS, 1, flag = wx.EXPAND|wx.ALL, border = 4 )
+		impinjConfigurationSizer.Add( statusVS, 1, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
 		#-------------------------------------------------------------------------------------------------
 		
 		writeTags = wx.StaticBox( self, label = 'Write Tags' )
 		vs1 = wx.StaticBoxSizer( writeTags, wx.VERTICAL )
 
-		self.templateLabel = wx.StaticText( self, label = 'Template (0-9A-F, #### for number):' )
+		self.templateLabel = wx.StaticText( self, label = 'Template:' )
 		self.template = wx.TextCtrl( self, validator = TemplateValidator() )
 		self.template.SetMaxLength( self.EPCHexCharsMax )
 		self.template.Bind( wx.EVT_TEXT, self.onTextChange )
+		self.template.SetToolTip( 'Chars 0-9A-F.  Use #### to substitue number.  Eg. AB####' )
 		
 		self.numberLabel = wx.StaticText( self, label = 'Number:' )
-		self.number = wx.lib.intctrl.IntCtrl( self, min = 1, max = 99999999, allow_none = True, limited = True, value = 1 )
+		self.number = wx.lib.intctrl.IntCtrl( self, min=1, max=99999999, allow_none=True, limited=True, value=1 )
 		self.number.Bind( wx.EVT_TEXT, self.onTextChange )
+		self.number.SetToolTip( 'Current number' )
 		
 		self.incrementLabel = wx.StaticText( self, label = 'Increment by:' )
-		self.increment = wx.lib.intctrl.IntCtrl( self, min = 0, max = 99999999, limited = True, value = 1 )
+		self.increment = wx.lib.intctrl.IntCtrl( self, min=0, max=99999999, limited=True, value=1 )
+		self.increment.SetToolTip( 'Increment for next write' )
+		
+		fgs = wx.FlexGridSizer( 2, 2, 2 )
+		fgs.AddGrowableCol( 1 )
+		fgs.Add( self.templateLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.template, flag=wx.EXPAND )
+		fgs.Add( self.numberLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.number, flag=wx.EXPAND )
+		fgs.Add( self.incrementLabel, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		fgs.Add( self.increment, flag=wx.EXPAND )
+		
+		self.random = wx.CheckBox( self, label='Generate Random Tag' )
+		self.random.Bind( wx.EVT_CHECKBOX, lambda e: self.getWriteValue() )
 		
 		self.valueLabel = wx.StaticText( self, label = 'Next Value to Write:' )
-		self.value = wx.TextCtrl( self, style = wx.TE_READONLY )
+		self.value = wx.TextCtrl( self, style=wx.TE_READONLY )
 		self.value.SetMaxLength( self.EPCHexCharsMax )
 		self.value.SetBackgroundColour( wx.Colour(235,235,235) )
 		
-		self.writeSuccess = wx.Gauge( self, style = wx.GA_HORIZONTAL, range = 100 )
+		self.writeSuccess = wx.Gauge( self, style=wx.GA_HORIZONTAL, range = 100 )
 		
 		self.writeButton = wx.Button( self, label = 'Write (F1 or Space)' )
 		self.writeButton.Enabled = False
@@ -264,42 +281,40 @@ class MainWin( wx.Frame ):
 		
 		readTags = wx.StaticBox( self, label = 'Read Tags' )
 		vs2 = wx.StaticBoxSizer( readTags, wx.VERTICAL )
-		self.tags = wx.TextCtrl( self, style = wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_PROCESS_ENTER )
+		self.tags = wx.TextCtrl( self, style=wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_PROCESS_ENTER )
 		self.readButton = wx.Button( self, label = 'Read (F2)' )
 		self.readButton.Enabled = False
 		self.readButton.Bind( wx.EVT_BUTTON, self.onReadButton )
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		
-		labelBorderOptions = wx.TOP | wx.LEFT | wx.RIGHT
-		valueBorderOptions = wx.BOTTOM | wx.LEFT | wx.RIGHT
+		labelBorderOptions = wx.TOP|wx.LEFT|wx.RIGHT
+		valueBorderOptions = wx.BOTTOM|wx.LEFT|wx.RIGHT
 		border = 2
 		
-		vs1.Add( self.templateLabel, flag = labelBorderOptions, border = border )
-		vs1.Add( self.template, flag = wx.EXPAND|valueBorderOptions, border = border )
-		vs1.Add( self.numberLabel, flag = labelBorderOptions, border = border )
-		vs1.Add( self.number, flag = wx.EXPAND|valueBorderOptions, border = border )
-		vs1.Add( self.incrementLabel, flag = labelBorderOptions, border = border )
-		vs1.Add( self.increment, flag = wx.EXPAND|valueBorderOptions, border = border )
-		vs1.Add( self.valueLabel, flag = labelBorderOptions, border = border )
-		vs1.Add( self.value, flag = wx.EXPAND|valueBorderOptions, border = border )
-		vs1.Add( self.writeSuccess, 0, flag = wx.EXPAND|wx.ALL, border = border )
+		vs1.Add( fgs, flag=wx.EXPAND, border=border )
+		vs1.Add( wx.StaticLine( self, style=wx.LI_HORIZONTAL ), flag=wx.EXPAND, border=border )
+		vs1.Add( self.random, flag=wx.EXPAND|valueBorderOptions, border=border )
+		vs1.Add( wx.StaticLine( self, style=wx.LI_HORIZONTAL ), flag=wx.EXPAND, border=border )
+		vs1.Add( self.valueLabel, flag=labelBorderOptions, border=border )
+		vs1.Add( self.value, flag=wx.EXPAND|valueBorderOptions, border=border )
+		vs1.Add( self.writeSuccess, 0, flag=wx.EXPAND|wx.ALL, border=border )
 		vs1.AddStretchSpacer()
-		vs1.Add( self.writeButton, flag = wx.EXPAND|wx.ALL, border = border )
+		vs1.Add( self.writeButton, flag=wx.EXPAND|wx.ALL, border=border )
 		
-		vs2.Add( self.tags, 1, flag = wx.EXPAND|wx.ALL, border = border )
-		vs2.Add( self.readButton, flag = wx.EXPAND|wx.ALL, border = border )
+		vs2.Add( self.tags, 1, flag=wx.EXPAND|wx.ALL, border=border )
+		vs2.Add( self.readButton, flag=wx.EXPAND|wx.ALL, border=border )
 		
-		hs.Add( vs1, 1, flag = wx.EXPAND|wx.ALL, border = border )
-		hs.Add( vs2, 1, flag = wx.EXPAND|wx.ALL, border = border )
+		hs.Add( vs1, 1, flag=wx.EXPAND|wx.ALL, border=border )
+		hs.Add( vs2, 1, flag=wx.EXPAND|wx.ALL, border=border )
 		
 		hsTitle = wx.BoxSizer( wx.HORIZONTAL )
 		hsTitle.Add( self.title )
 		hsTitle.AddStretchSpacer()
-		hsTitle.Add( self.url, flag = wx.ALIGN_CENTRE_VERTICAL )
-		vsMain.Add( hsTitle, flag = wx.ALL|wx.EXPAND, border = border )
-		vsMain.Add( impinjConfigurationSizer, flag = wx.ALL|wx.EXPAND, border = border )
-		vsMain.Add( hs, 1, flag = wx.EXPAND )
+		hsTitle.Add( self.url, flag=wx.ALIGN_CENTRE_VERTICAL )
+		vsMain.Add( hsTitle, flag=wx.ALL|wx.EXPAND, border=border )
+		vsMain.Add( impinjConfigurationSizer, flag=wx.ALL|wx.EXPAND, border=border )
+		vsMain.Add( hs, 1, flag=wx.EXPAND )
 		
 		self.sb = self.CreateStatusBar()
 		
@@ -380,7 +395,7 @@ class MainWin( wx.Frame ):
 		if '#' not in template:
 			template = '#' + template
 		
-		while 1:
+		while True:
 			m = self.reTemplate.search( template )
 			if not m:
 				break
@@ -432,6 +447,7 @@ class MainWin( wx.Frame ):
 			self.tagWriter.Connect( self.receiveSensitivity_dB.GetLabel(), self.transmitPower_dBm.GetLabel() )
 		except Exception as e:
 			print("-"*60)
+			print( "Handing exception..." )
 			traceback.print_exc(file=sys.stdout)
 			print("-"*60)
 			
@@ -470,7 +486,7 @@ class MainWin( wx.Frame ):
 		else:
 			dlg = wx.MessageDialog(self, 'Auto Detect Failed.\nCheck that reader has power and is connected to the router.',
 									'Auto Detect Failed',
-									wx.OK | wx.ICON_INFORMATION )
+									wx.OK|wx.ICON_INFORMATION )
 			dlg.ShowModal()
 			dlg.Destroy()
 	
@@ -486,6 +502,7 @@ class MainWin( wx.Frame ):
 
 		self.config.Write( 'ReceiveSensitivity_dB', '{}'.format(self.receiveSensitivity_dB.GetLabel()) )
 		self.config.Write( 'TransmitPower_dBm', '{}'.format(self.transmitPower_dBm.GetLabel()) )
+		self.config.Write( 'Random', 'True' if self.random.GetValue() else 'False' )
 	
 	def readOptions( self ):
 		self.template.SetValue( self.config.Read('Template', '#AA{}'.format(datetime.datetime.now().year % 100)) )
@@ -500,15 +517,21 @@ class MainWin( wx.Frame ):
 		
 		self.receiveSensitivity_dB.SetLabel( self.config.Read('ReceiveSensitivity_dB', 'Max') )
 		self.transmitPower_dBm.SetLabel( self.config.Read('TransmitPower_dBm', 'Max') )
+		random = (self.config.Read('Random', 'False').upper()[:1] == 'T')
+		self.random.SetValue( random )
 	
 	def getWriteValue( self ):
-		f = self.getFormatStr().format( n = int(self.number.GetValue() or 0) ).lstrip('0')
+		if self.random.GetValue():
+			# Generate a secure random EPC code.  Ensure it does not have a leading zero.
+			f = secrets.choice('123456789ABCDEF') + ''.join(secrets.choice('0123456789ABCDEF') for _ in range(self.EPCHexCharsMax-1))
+		else:
+			f = self.getFormatStr().format( n = int(self.number.GetValue() or 0) ).lstrip('0')
 		if not f:
 			f = '0'
-		f = f[:self.EPCHexCharsMax]
+		f = f[:self.EPCHexCharsMax].upper()
 		self.value.SetValue( f )
 		return f
-		
+	
 	def setStatus( self, status ):
 		if status == self.StatusAttempt:
 			self.statusBitmap.SetBitmap( self.attemptBitmap )
@@ -590,7 +613,8 @@ class MainWin( wx.Frame ):
 			# This read follows a write.
 			# Check that the tag read matches the tag wrote.
 			if tagInventory and len(tagInventory) == 1 and self.getWriteValue() == tagInventory[0].split(',',2)[0]:
-				self.number.SetValue( self.number.GetValue() + self.increment.GetValue() )
+				if not self.random.GetValue():
+					self.number.SetValue( self.number.GetValue() + self.increment.GetValue() )
 				self.getWriteValue()
 				
 				self.tags.SetBackgroundColour( self.LightGreen )

@@ -22,6 +22,14 @@ body { font-family: sans-serif; }
 .bigfont	{ font-size: 120%; }
 .biggerFont	{ font-size: 130%; }
 
+.form-label {
+	font-size: 100%;
+}
+
+.form-input {
+	font-size: 110%;
+}
+
 .hidden { display: none; }
 
 div label input {
@@ -127,8 +135,14 @@ table td.numeric, table th.numeric {
 	text-align:right;
 }
 
-table tr td.close-finish {
-	background-color:rgb(255, 213, 128);
+table tr td.close0-finish {
+	background-color:#E50000;
+}
+table tr td.close1-finish {
+	background-color:#D1D200;
+}
+table tr td.close2-finish {
+	background-color:#00BF00;
 }
 
 table tr td.has-view {
@@ -200,8 +214,8 @@ overflow:scroll;
     grid-template-areas: 
       "info note"
 	  "... button";
-  	grid-template-rows: 12em 2em;  
-  	grid-template-columns: 12em 1fr;
+  	grid-template-rows: 14em 2em;  
+  	grid-template-columns: 24em 1fr;
     grid-gap: .8em;
     background: #eee;
     padding: 1.2em;
@@ -213,7 +227,7 @@ overflow:scroll;
   .grid_form input {
     grid-area: info;
    	width: 100%;
-    padding: 1.1em;
+    padding: 0.55em;
     border: none;
     margin-bottom: 1em;
   }
@@ -239,6 +253,32 @@ overflow:scroll;
   
 @media print { .noprint { display: none; } }
 
+.btn {
+  background: #3498db;
+  background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
+  background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+  background-image: -ms-linear-gradient(top, #3498db, #2980b9);
+  background-image: -o-linear-gradient(top, #3498db, #2980b9);
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  font-family: sans-serif;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 5px 10px 5px 10px;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: #3cb0fd;
+  background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
 </style>
 
 <script src="ScaledBitmap.js"></script>
@@ -273,7 +313,8 @@ function getJSON( url, handler ) {
 		}
 	};
 	xhr.onerror = function( e ) {
-		console.log( 'XMLHttpRequest Error: ' + e );
+		// console.log( 'XMLHttpRequest Error: ' + e );
+		alert( 'XMLHttpRequest Error: \n\n    ' + e );
 	};
 	xhr.open("GET", url, true);
 	xhr.send();
@@ -492,9 +533,9 @@ function triggerScrollToEnd() {
 	trigger_div.scrollTop = trigger_div.scrollHeight;
 }
 	
-const headers = ['Time', 'Bib', 'Last',       'First',      'Team',	'Wave', 'Race',      'Frames', 'View', 'Note'];
-const fields  = ['ts',	 'bib', 'last_name',  'first_name', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
-const numeric = [true,   true,   false,       false,        false,  false,	false, 		 true,     true,   false];
+const headers = ['', 'Time', 'Bib', 'Last',       'First',      'Team',	'Wave', 'Race',      'Frames', 'View', 'Note'];
+const fields  = ['close', 'ts',	 'bib', 'last_name',  'first_name', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
+const numeric = [false,	false,   true,   false,       false,        false,  false,	false, 		 true,     true,   false];
 
 function showTriggers( triggers ) {
 	playStop();
@@ -521,18 +562,25 @@ function showTriggers( triggers ) {
 	
 	let tbody = document.createElement( 'tbody' );
 	table.appendChild( tbody );
+	
+	const closeFinishThreshold = 3.0/30.0;
+	function getCloseIndex( dt ) {
+		dt = Math.abs( dt );
+		if( dt < closeFinishThreshold/2.0 )
+			return 0;
+		if( dt <= closeFinishThreshold )
+			return 1;
+		return 2;
+	}
 
 	// Close finishes.
-	let closeFinishes = new Set();
-	if( triggers.length > 1 ) {
-		const closeFinishThreshold = 3.0/30.0;
-		for( let i = triggers.length-1; i >= 0; --i ) {
-			const j = (i > 0 ? i-1 : i+1);
-			if( Math.abs(triggers[i].ts - triggers[j].ts) < closeFinishThreshold ) {
-				closeFinishes.add( i );
-				closeFinishes.add( J );
-			}
-		}
+	for( let i = triggers.length-1; i >= 0; --i ) {
+		let close = 2;
+		if( i > 0 )
+			close = getCloseIndex( triggers[i].ts - triggers[i-1].ts );
+		if( i < triggers.length-1 )
+			close = Math.min( close, getCloseIndex( triggers[i].ts - triggers[i+1].ts ) );
+		triggers[i].close = close;
 	}
 
 	// Populate the table.
@@ -551,12 +599,19 @@ function showTriggers( triggers ) {
 			tr.appendChild( td );
 			if( headers[col] == 'View' )
 				td.innerHTML = trig.zoom_frame >= 0 ? 'Y' : '';
-			else
-				td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+			else {
+				if( fields[col] === 'ts' )
+					v = formatEpoch( trig.ts );
+				else if( fields[col] == 'close' )
+					v = "   ";
+				else
+					v = trig[fields[col]];
+				td.innerHTML = v;
+			}
+			if( fields[col] === 'close' )
+				td.classList.add( 'close' + trig.close + '-finish' );
 			if( numeric[col] )
 				td.classList.add( 'numeric' );
-			if( col == 0 && closeFinishes.has(i) )
-				td.classList.add( 'close-finish' );
 		}
 	}
 	triggersCur = triggers;
@@ -659,9 +714,16 @@ function updateOnScreenTriggerData() {
 	for( let col = 0; col < headers.length; ++col ) {
 		let td = tr.childNodes[col];
 		if( headers[col] == 'View' )
-			td.innerHTML = trig.zoom_frame ? 'Y' : '';
-		else
-			td.innerHTML = (col == 0 ? formatEpoch( trig.ts ) : trig[fields[col]]);
+			td.innerHTML = (trig.zoom_frame >= 0) ? 'Y' : '';
+		else {
+			if( fields[col] === 'ts' )
+				v = formatEpoch( trig.ts )
+			else if (fields[col] === 'close' )
+				v = ' ';
+			else
+				v = trig[fields[col]];
+			td.innerHTML = v;
+		}
 	}
 	
 	// Update the images page title.
@@ -670,7 +732,7 @@ function updateOnScreenTriggerData() {
 
 //----------------------------------------------------------------------
 
-const skipFields = new Set( ['ts', 'frames', 'note', 'view'] );
+const skipFields = new Set( ['close', 'ts', 'frames', 'note', 'view'] );
 function updateFormFields() {
 	const trig = getTriggerCur();
 	
@@ -686,6 +748,7 @@ function updateFormFields() {
 			let label = document.createElement("label");
 			label.innerHTML = headers[i] + ':';
 			label.htmlFor = id;
+			label.className = 'form-label';
 			div.appendChild( label );
 		}
 		
@@ -704,6 +767,7 @@ function updateFormFields() {
 			input.hidden = true;
 		input.name = fields[i];
 		input.id = id;
+		input.className = 'form-input';
 		div.appendChild( input );
 		return input;
 	}
@@ -723,10 +787,10 @@ function updateForm() {
 	refreshTriggerFromDatabaseThen( updateFormFields );
 }
 
-function submitForm( e, submit ) {
+function submitForm( e, doSubmit ) {
 	e.preventDefault();
 	
-	if( !submit ) {
+	if( !doSubmit ) {
 		document.getElementById("id_images_tab_button").click();
 		return;
 	}
@@ -886,7 +950,7 @@ function OnLoad() {
 	<label for="trigger_date" style="font-size:150%">Date:</label>
 	<select name="trigger_date" id="id_trigger_date" onchange="updateTriggers()" style="font-size:150%">
 	</select>
-	<button onclick="updateTriggers();" style="margin-left: 2.5em; font-size:150%">&#x21bb; Refresh</button>
+	<button onclick="updateTriggers();" style="margin-left: 2.5em; font-size:110%" class="btn">&#x21bb; Refresh</button>
 	<a onclick="showQRCode();" style="margin-left: 2.5em;" title="QR Code"><img src="Ecommerce-Qr-Code-icon.png"/></a>	
 	<p></p>
 	<div id="id_triggers" class="scroll"></div>
@@ -929,15 +993,15 @@ function OnLoad() {
 </div>
 
 <div id="id_form_tab" class="tabcontent">
-	<form action="." id="id_form" class="grid_form" method="post">
+	<form action="." id="id_form" class="grid_form" method="post" onsubmit="submitForm(event, true)">
 		<p>
 		<div id="id_form_info">
 		</div>
 		<div id="id_form_note">
 		</div>
 		<div id="id_form_buttons">
-			<button type="submit" form="id_form_div" value="submit" style="margin-left: 2.5em;" onclick="submitForm(event, true)">OK</button>
-			<button onclick="submitForm(event, true)" style="margin-left: 2.5em;">Cancel</button>
+			<button type="submit" form="id_form" style="margin-left: 2.5em; font-size:120%;" class="btn">OK</button>
+			<button type="button" onclick="submitForm(event, false)" style="margin-left: 2.5em;" class="btn">Cancel</button>
 		</div>
 	</form>
 </div>
@@ -955,3 +1019,4 @@ function OnLoad() {
 </body>
 
 </html>
+

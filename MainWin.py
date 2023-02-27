@@ -4130,7 +4130,14 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				
 			# Only process times after the start of the race.
 			if race.isRunning() and race.startTime <= dt:
-				self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
+				#Always process times for mass start races and when timeTrialNoRFIDStart unset.
+				if not race.isTimeTrial or not race.timeTrialNoRFIDStart:
+					self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
+				else:
+					#Only process the time if the rider has already started
+					rider = race.getRider( num )
+					if rider.firstTime is not None:
+						self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 		
 		# Ensure that we don't update too often if riders arrive in a bunch.
 		if not self.callLaterProcessRfidRefresh:

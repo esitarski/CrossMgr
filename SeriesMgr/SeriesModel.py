@@ -74,7 +74,7 @@ class PointStructure:
 		
 	def __getitem__( self, rank ):
 		rank = int(rank)
-		return self.dnfPoints if rank == 999999 else self.pointsForPlace.get( rank, self.participationPoints )
+		return self.dnfPoints if rank == rankDNF else self.pointsForPlace.get( rank, self.participationPoints )
 	
 	def __len__( self ):
 		return len(self.pointsForPlace)
@@ -210,6 +210,11 @@ def nameToAliasKey( name ):
 	else:
 		# If characters are lost, the name contains non-roman characters.  Just return what we have.
 		return name.lower()
+
+# "Special" rank codes.
+rankDNF					= 999999
+rankDidNotParticipate	= 9999999
+rankUnknown				= 99999
 
 class SeriesModel:
 	DefaultPointStructureName = 'Regular'

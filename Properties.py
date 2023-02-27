@@ -327,9 +327,9 @@ class RaceOptionsProperties( wx.Panel ):
 class RfidProperties( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
 	iSkipFirstTagRead = 2
-	choices = [	_('Manual Start: Collect every chip.') + '  \n' + _('Does NOT restart race clock on first read.'),
-				_('Automatic Start: Reset start clock on first tag read.') + '  \n' + _('All riders get the start time of the first read.'),
-				_('Manual Start: Skip first tag read for all riders.') + '  \n' + _('Required when start run-up passes the finish on the first lap.')]
+	choices = [	_('Manual Start: Collect every RFID read.') + '\n' + _('Does NOT restart race clock on first read.'),
+				_('Automatic Start: Reset start clock on first RFID read.') + '\n' + _('All riders get the start time of the first read.'),
+				_('Manual Start: Skip first RFID read for all riders.') + '\n' + _('Required when start run-up passes the finish on the first lap.')]
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id )
@@ -344,11 +344,16 @@ class RfidProperties( wx.Panel ):
 		)
 		
 		self.chipTimingOptions.SetSelection( self.iResetStartClockOnFirstTag )
+
+		self.ignoreTTStart = wx.CheckBox(
+			self,
+			label = '{}\n{}'.format( _('Ignore RFID reads for unstarted time trial riders.'), ('Riders must be started manually, or by using a spreadsheet.'))
+		)
 		
 		hs = wx.BoxSizer( wx.HORIZONTAL )
+		hs.Add( wx.StaticText( self, label='{}:'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		self.chipReaderChoices = ChipReader.ChipReader.Choices
 		self.chipReaderType = wx.StaticText( self )
-		hs.Add( wx.StaticText( self, label='{}'.format(_('Reader Type')) ), flag=wx.ALIGN_CENTER_VERTICAL )
 		hs.Add( self.chipReaderType, flag=wx.LEFT, border=4)
 		
 		self.setupButton = wx.Button( self, label=_('Setup/Test Rfid Reader...') )
@@ -359,6 +364,7 @@ class RfidProperties( wx.Panel ):
 		
 		ms.Add( self.jchip, flag=wx.ALL, border=16 )
 		ms.Add( self.chipTimingOptions, flag=wx.ALL, border=4 )
+		ms.Add( self.ignoreTTStart, flag=wx.ALL, border=16 )
 		ms.Add( hs, flag=wx.ALL, border=4 )
 		ms.AddSpacer( 16 )
 		ms.Add( self.setupButton, flag=wx.ALL, border=4 )
@@ -377,6 +383,7 @@ class RfidProperties( wx.Panel ):
 		if not race:
 			return
 		self.jchip.SetValue( getattr(race, 'enableJChipIntegration', False) )
+		self.ignoreTTStart.SetValue( getattr(race, 'timeTrialNoRFIDStart', False) )
 		resetStartClockOnFirstTag = getattr(race, 'resetStartClockOnFirstTag', True)
 		skipFirstTagRead = getattr(race, 'skipFirstTagRead', False)
 		if resetStartClockOnFirstTag:
@@ -393,6 +400,7 @@ class RfidProperties( wx.Panel ):
 		if not race:
 			return
 		race.enableJChipIntegration = self.jchip.IsChecked()
+		race.timeTrialNoRFIDStart = self.ignoreTTStart.IsChecked()
 		iSelection = self.chipTimingOptions.GetSelection()
 		race.resetStartClockOnFirstTag	= bool(iSelection == self.iResetStartClockOnFirstTag)
 		race.skipFirstTagRead			= bool(iSelection == self.iSkipFirstTagRead)

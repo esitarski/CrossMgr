@@ -65,9 +65,10 @@ On race day:
 CrossMgr can be used for "informal" time trials - without a start list.
 
 With no start times, the first recorded time will start the rider's clock.
-Simply enter the bib number to start the rider.
+Simply enter the bib number to start the rider.  If you do not want RFID reads to start the rider, check the "Ignore RFID reads for unstarted time trial riders." checkbox in the RFID properties.
 
 Subsequent entries for that rider will count as usual (either the finish, or towards laps if the TT is multi-lap).
+
 
 ## Both Automatic Starts and Manual Starts
 
