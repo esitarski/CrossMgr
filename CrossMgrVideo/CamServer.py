@@ -31,7 +31,7 @@ def getCameraUsb( usbSuccess=None ):
 
 	q = queue.Queue()	
 	for usb in range(CameraUsbMax):
-		Thread(target=checkUsbPortForCamera, args=(q, usb) ).start()
+		Thread(target=checkUsbPortForCamera, args=(q, usb), daemon=True ).start()
 		
 	cameraUsb = []
 	for i in range(CameraUsbMax):
@@ -73,29 +73,8 @@ class VideoCaptureManager:
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
-transmitFramesMax = 6
 bufferSeconds = 8
 
-def EstimateQuerySeconds( ts, s_before, s_after, closest_frames, fps ):
-	t = now()
-	tEarliest = ts - timedelta(seconds=s_before)
-	tLatest = ts + timedelta(seconds=s_after)
-	if tEarliest > t:		# Request is completely after the current time.
-		return (tLatest - t).total_seconds()
-	
-	transmitRate = float(fps * transmitFramesMax)
-	sBefore = (t - tEarliest).total_seconds()
-	sAfter = (tLatest - t).total_seconds()
-	backlog = (sBefore + sAfter) * fps
-	
-	if t >= tLatest:		# Request is completely before the current time.
-		return backlog/transmitRate
-	
-	# Some part of the request is before the current time, some is after.
-	# The transmit rate may or may not be able to catch up.
-	backlogRemaining = backlog - sAfter * transmitRate	
-	return sAfter + max(0.0, backlogRemaining / transmitRate)
-	
 class TimeInterval:
 	def __init__( self, start, end ):
 		self.start, self.end = start, end
@@ -109,7 +88,12 @@ class TimeInterval:
 	def merge( self, ti ):
 		self.start, self.end = min(self.start, ti.start), max(self.end, ti.end)
 
-def CamServer( qIn, qWriter, camInfo=None ):
+def CamServer( qIn, qOut, camInfo=None ):
+	'''
+		Message processing for the camera.
+		This includes writing photos from the frame buffer as well as returning information about the camera itself.
+		All output is asyncronously written to qOut.
+	'''
 	sendUpdates = {}
 	tsSeen = FIFOCacheSet( 60*60 )		# Cache of times that have already been written to the database.
 	camInfo = camInfo or {}
@@ -119,8 +103,8 @@ def CamServer( qIn, qWriter, camInfo=None ):
 	
 	def backgroundGetCameraUsb( usbSuccess, camInfo ):
 		def get( usbSuccess, camInfo ):
-			qWriter.put( {'cmd':'cameraUsb', 'usb_available':getCameraUsb(usbSuccess), 'usb_cur':camInfo.get('usb',0)} )
-		Thread( target=get, args=(usbSuccess, camInfo) ).start()
+			qOut.put( {'cmd':'cameraUsb', 'usb_available':getCameraUsb(usbSuccess), 'usb_cur':camInfo.get('usb',0)} )
+		Thread( target=get, args=(usbSuccess, camInfo), daemon=True ).start()
 	
 	while True: 
 		with VideoCaptureManager(**camInfo) as (cap, retvals):
@@ -172,6 +156,7 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				while True:
 					#-------- start of message processing loop --------#
 					try:
+						# No need to timeout here.  Breaking to the frame capture prevents a busy loop.
 						m = qIn.get_nowait()
 					except Empty:
 						break
@@ -179,12 +164,15 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					cmd = m['cmd']
 					
 					if cmd == 'query':
+						#-----------------------------------------------
+						# Query frames in an interval.
+						#
 						tiCur = TimeInterval( m['tStart'], m['tEnd'] )
 						
 						# Process all frames before the current time.
 						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(tiCur.start, tiCur.end, tsSeen)) )
 						
-						# Add this query interval to the list, or merge with an existing interval if it overlaps.
+						# Add this query interval to the list, or expand the existing interval if it overlaps.
 						for ti in intervals:
 							if ti.overlaps( tiCur ):
 								ti.merge( tiCur )
@@ -193,6 +181,9 @@ def CamServer( qIn, qWriter, camInfo=None ):
 							intervals.append( tiCur )
 					
 					elif cmd == 'query_closest':
+						#-----------------------------------------------
+						# Query the closest frames to a given time.
+						#
 						if (ts - m['t']).total_seconds() < secondsPerFrame + captureLatency.total_seconds():
 							# Reschedule requests earlier than secondsPerFrame.
 							# This ensures that the buffer has a frame after the time, which might be the closest one.
@@ -202,11 +193,18 @@ def CamServer( qIn, qWriter, camInfo=None ):
 						backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFramesClosest(m['t'], m['closest_frames'], tsSeen)) )
 										
 					elif cmd == 'start_capture':
+						#-----------------------------------------------
+						# Start capturing frames.  Send frames from the buffer
+						# if tStart is in the past.
+						#
 						if 'tStart' in m:
 							tiCapture.start, tiCapture.end = m['tStart'], endOfTime
 							backlog.extend( (t, f) for t, f in zip(*fcb.getTimeFrames(tiCapture.start, tiCapture.end, tsSeen)) )
 					
 					elif cmd == 'stop_capture':
+						#-----------------------------------------------
+						# Stop capturing frames.
+						#
 						tiCapture.end = ts
 					
 					elif cmd == 'snapshot':
@@ -232,7 +230,10 @@ def CamServer( qIn, qWriter, camInfo=None ):
 						break
 					
 					elif cmd == 'terminate':
-						qWriter.put( {'cmd':'terminate'} )
+						#-----------------------------------------------
+						# Quit processing frames.
+						#
+						qOut.put( {'cmd':'terminate'} )
 						return
 					
 					else:
@@ -240,9 +241,9 @@ def CamServer( qIn, qWriter, camInfo=None ):
 						
 					#--------- end of message processing loop ---------#
 				
-				# Camera info.
+				# Send camera info.
 				if retvals:
-					qWriter.put( {'cmd':'info', 'retvals':retvals} )
+					qOut.put( {'cmd':'info', 'retvals':retvals} )
 					retvals = None
 				
 				# Check if we need to keep the current photo.
@@ -251,29 +252,26 @@ def CamServer( qIn, qWriter, camInfo=None ):
 					backlog.append( (tsFrame, frame) )
 
 				# Send the frames to the database for writing.
-				# Don't send too many frames at a time so we don't overwhelm the queue and lose frame rate.
-				# Always ensure that the most recent frame is sent so any update requests can be satisfied with the last frame.
 				if backlog:
-					backlogTransmitFrames = transmitFramesMax
-					qWriter.put( { 'cmd':'response', 'ts_frames': backlog[-backlogTransmitFrames:] } )
-					del backlog[-backlogTransmitFrames:]
+					qOut.put( { 'cmd':'response', 'ts_frames':backlog.copy() } )
+					backlog.clear()
 						
 				# Send status images.
 				for name, freq in sendUpdates.items():
 					if frameCount % freq == 0:
-						qWriter.put( {'cmd':'update', 'name':name, 'frame':opencv_frame} )	# Pass the raw frame so we don't have to convert it.
+						qOut.put( {'cmd':'update', 'name':name, 'frame':opencv_frame} )	# Pass the raw frame so we don't have to convert it.
 				frameCount += 1
 						
 				# Send snapshot message.
 				if doSnapshot:
 					if frame is not None:
-						qWriter.put( {'cmd':'snapshot', 'ts':ts, 'frame':frame} )
+						qOut.put( {'cmd':'snapshot', 'ts':ts, 'frame':frame} )
 					doSnapshot = False
 				
 				# Send fps message.
 				fpsFrameCount += bool( frame is not None )
 				if (ts - fpsStart).total_seconds() >= 3.0:
-					qWriter.put( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
+					qOut.put( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
 					fpsStart = ts
 					fpsFrameCount = 0
 					
@@ -284,10 +282,9 @@ def CamServer( qIn, qWriter, camInfo=None ):
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
-	qWriter = Queue()
-	thread = Thread( target=CamServer, args=(qIn, qWriter, camInfo), name='CamServer' )
-	thread.start()
-	return qIn, qWriter
+	qOut = Queue()
+	Thread( target=CamServer, args=(qIn, qOut, camInfo), name='CamServer', daemon=True ).start()
+	return qIn, qOut
 	
 def callCamServer( qIn, cmd, **kwargs ):
 	kwargs['cmd'] = cmd
@@ -313,7 +310,8 @@ if __name__ == '__main__':
 	qIn, qWriter = getCamServer( dict(usb=6, width=10000, height=10000, fps=30, fourcc="MJPG") )
 	qIn.put( {'cmd':'start_capture'} )
 	
-	Thread( target=handleMessages, args=(qWriter,) ).start()
+	thread = Thread( target=handleMessages, args=(qWriter,), daemon=True )
+	thread.start()
 	
 	time.sleep( 10000 )
 	

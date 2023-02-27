@@ -1112,6 +1112,7 @@ class Race:
 	estimateLapsDownFinishTime = False
 	
 	enableJChipIntegration = False
+	timeTrialNoRFIDStart = False
 	resetStartClockOnFirstTag = False
 	firstRecordedTime = None
 	skipFirstTagRead = False
