@@ -13,13 +13,13 @@ import HelpSearch
 from GpxParse import GpxParse
 import datetime
 import tzlocal
+import numpy
 from ReorderableGrid import ReorderableGrid
 import wx.grid as gridlib
 
 class IntroPage(adv.WizardPageSimple):
-	def __init__(self, parent, controller):
+	def __init__(self, parent, controller ):
 		super().__init__(parent)
-		
 		self.controller = controller
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
@@ -50,14 +50,20 @@ class IntroPage(adv.WizardPageSimple):
 		self.SetSizer( vbs )
 	
 	def setInfo( self, geoTrack, geoTrackFName ):
-		self.geoTrack = geoTrack
 		if geoTrack:
-			startLineLat = geoTrack.asCoordinates()[1];
+			startLineLat = geoTrack.asCoordinates()[1];  #list is lon, lat
 			startLineLon = geoTrack.asCoordinates()[0];
+			if getattr( geoTrack, 'isPointToPoint', False):
+				finishLineLat = geoTrack.asCoordinates()[-1]  #last element in list
+				finishLineLon = geoTrack.asCoordinates()[-2]  #penultimate element in list
+			else:  #course is a loop
+				finishLineLat = startLineLat
+				finishLineLon = startLineLon
 			s = '\n'.join( [
 					_('Course info:'),
 					'{}: "{}"'.format(('Imported from'), geoTrackFName),
-					'{}: {:.6f},{:.6f}'.format(_('Start Line coordinates'), startLineLat, startLineLon),
+					'{}: {:.6f},{:.6f}'.format(_('Start line coordinates'), startLineLat, startLineLon),
+					'{}: {:.6f},{:.6f}'.format(_('Finish line coordinates'), finishLineLat, finishLineLon),
 					'{}: {:.3f} km, {:.3f} {}'.format(_('Lap Length'), geoTrack.lengthKm, geoTrack.lengthMiles, _('miles'))
 				] )
 		else:
@@ -76,7 +82,7 @@ class IntroPage(adv.WizardPageSimple):
 		return self.bibEntry.GetValue()
 
 class UseTimesPage(adv.WizardPageSimple):
-	headerNames = ['Time of Day', 'Race\nTime', 'Lat (°)', 'Long (°)', 'Distance\n(km)', 'Proximity\nto start (m)', 'Bearing\nfrom finish (°)', 'Import\nlap']
+	headerNames = ['Time of Day\n(local)', 'Race\nTime', 'Lat (°)', 'Long (°)', 'Distance\n(km)', 'Proximity\nto start (m)', 'Bearing\n(°)', 'Import\nlap']
 	
 	def __init__(self, parent):
 		super().__init__(parent)
@@ -88,18 +94,21 @@ class UseTimesPage(adv.WizardPageSimple):
 		self.proxFilterHeading = wx.StaticText(self, label = _("Filter by proximity to finish line (m):") )
 		hbs.Add( self.proxFilterHeading, flag=wx.ALL, border = border )
 		self.proxFilterEntry = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER, value="50" )
-		self.proxFilterEntry.Bind( wx.EVT_TEXT_ENTER, self.onFilterEntry )
+		self.proxFilterEntry.Bind( wx.EVT_TEXT_ENTER, self.onChangeSetting )
 		hbs.Add( self.proxFilterEntry, flag=wx.ALL, border = border )
 		vbs.Add(hbs)
-		
 		
 		hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.timeOffsetHeading = wx.StaticText(self, label = _("Race clock offset relative to GPS time (seconds):") )
 		hbs.Add( self.timeOffsetHeading, flag=wx.ALL, border = border )
 		self.timeOffsetEntry = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER, value="0" )
-		self.timeOffsetEntry.Bind( wx.EVT_TEXT_ENTER, self.onFilterEntry )
+		self.timeOffsetEntry.Bind( wx.EVT_TEXT_ENTER, self.onChangeSetting )
 		hbs.Add( self.timeOffsetEntry, flag=wx.ALL, border = border )
 		vbs.Add(hbs)
+		
+		self.interpolateEntry = wx.CheckBox( self, label='Interpolate trackpoints', name='Interpolate')
+		self.interpolateEntry.Bind( wx.EVT_CHECKBOX, self.onChangeSetting )
+		vbs.Add( self.interpolateEntry, flag=wx.ALL, border = border )
 		
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
@@ -132,7 +141,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		# copy to clipboard option here?
 		pass
 	
-	def onFilterEntry( self, event ):
+	def onChangeSetting( self, event ):
 		self.refresh()
 	
 	def refresh( self ):
@@ -145,10 +154,13 @@ class UseTimesPage(adv.WizardPageSimple):
 			attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			attr.SetReadOnly( True )
 			self.grid.SetColAttr( col, attr )
-		
 		timeOffset = datetime.timedelta( seconds=float( self.timeOffsetEntry.GetValue() ) )
-		startLineLat = self.geoTrack.asCoordinates()[1]
-		startLineLon = self.geoTrack.asCoordinates()[0]
+		if getattr( self.geoTrack, 'isPointToPoint', False):
+			finishLineLat = geoTrack.asCoordinates()[-1]  #last element in list
+			finishLineLon = geoTrack.asCoordinates()[-2]  #penultimate element in list
+		else:  #course is a loop
+			startLineLat = self.geoTrack.asCoordinates()[1]
+			startLineLon = self.geoTrack.asCoordinates()[0]
 		proxFilter = float( self.proxFilterEntry.GetValue() )
 		row = 0
 		distance = 0
@@ -158,15 +170,20 @@ class UseTimesPage(adv.WizardPageSimple):
 		prevBearing = 0
 		prevProx = 0
 		prevProxDecreasing = False
-		for latLonEleTime in self.latLonEleTimes:   #fixme interpolate data points for < 1 pps GPX
-			wallTime = latLonEleTime[3]
+		latLonTimeInterpeds = []
+		if self.interpolateEntry.GetValue():
+			latLonTimeInterpeds = self.interpolatePoints(self.latLonEleTimes, step=1)
+		else:
+			latLonTimeInterpeds = self.interpolatePoints(self.latLonEleTimes, step=0)
+		for latLonTimeInterp in latLonTimeInterpeds:
+			wallTime = latLonTimeInterp[2]
 			if isinstance( wallTime, datetime.datetime ):
 				wallTime += timeOffset
 				raceTime = wallTime - self.raceStartTime
 				if raceTime < datetime.timedelta():
 					raceTime = datetime.timedelta()
-				lat = latLonEleTime[0]
-				lon = latLonEleTime[1]
+				lat = latLonTimeInterp[0]
+				lon = latLonTimeInterp[1]
 				distance += GreatCircleDistance( prevLat, prevLon, lat, lon )
 				prox = GreatCircleDistance( startLineLat, startLineLon, lat, lon )
 				bearing = CompassBearing( startLineLat, startLineLon, lat, lon )
@@ -179,7 +196,7 @@ class UseTimesPage(adv.WizardPageSimple):
 					self.grid.SetCellValue( row, 0, '{}'.format(wallTime or '') )
 					self.grid.SetCellAlignment(row, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					if raceTime > datetime.timedelta():
-						self.grid.SetCellValue( row, 1, '{}'.format(str(raceTime).split('.')[0]) )
+						self.grid.SetCellValue( row, 1, '{}.{:.0f}'.format( str(raceTime).split('.')[0], raceTime.microseconds//1000 ) )
 					self.grid.SetCellAlignment(row, 1, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					self.grid.SetCellValue( row, 2, '{:.6f}'.format(lat or 0) )
 					self.grid.SetCellAlignment(row, 2, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
@@ -194,8 +211,10 @@ class UseTimesPage(adv.WizardPageSimple):
 					self.grid.SetCellRenderer(row, 7, gridlib.GridCellBoolRenderer())
 					self.grid.SetCellEditor(row, 7, gridlib.GridCellBoolEditor())
 					self.grid.SetCellValue(row, 7, "")
+					if latLonTimeInterp[3]:  #point was interpolated, shade yellow to indicate fictional data
+						for col in range(self.grid.GetNumberCols() - 1):
+							self.grid.SetCellBackgroundColour( row, col, wx.Colour( 255, 255, 0 ) )
 					if raceTime >= self.minPossibleLapTime:
-						# fixme filter by lap length?
 						setLap = False
 						if (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300) and (not proxDecreasing and prevProxDecreasing):
 							setLap = True
@@ -230,6 +249,32 @@ class UseTimesPage(adv.WizardPageSimple):
 		self.GetSizer().Layout()
 		self.grid.EnableEditing(True)
 		
+	def interpolatePoints( self, latLonEleTimes, step = 0):
+		times = []
+		lats = []
+		lons = []
+		for latLonEleTime in latLonEleTimes:
+			if isinstance( latLonEleTime[3], datetime.datetime ):
+				lats.append(latLonEleTime[0])
+				lons.append(latLonEleTime[1])
+				times.append(latLonEleTime[3].timestamp())
+		if step > 0:  #simple linear interpolation, could be improved
+			startTime = times[0]
+			endTime = times[-1]
+			intervals = numpy.arange( startTime, endTime, step )
+			interpLats = numpy.interp(intervals, times, lats)
+			interpLons = numpy.interp(intervals, times, lons)
+		else: #if step is 0, don't interpolate
+			intervals = times
+			interpLats = lats
+			interpLons = lons
+		latLonTimeInterpeds = []
+		for i in range(len(intervals)):
+			interpolatedPoint = not (intervals[i] in times)
+			tup = (interpLats[i], interpLons[i], datetime.datetime.fromtimestamp(intervals[i]), interpolatedPoint)
+			latLonTimeInterpeds.append( tup )
+		return(latLonTimeInterpeds)
+		
 	def setInfo( self, geoTrack, riderBib, latLonEleTimes, raceStartTime, minPossibleLapTime = 0 ):
 		self.geoTrack = geoTrack
 		self.riderBib = riderBib
@@ -246,8 +291,8 @@ class UseTimesPage(adv.WizardPageSimple):
 		for row in range(self.grid.GetNumberRows()):
 			if self.grid.GetCellValue( row, len(self.headerNames) -1 ) == "1":
 				try:
-					dt = datetime.datetime.strptime(self.grid.GetCellValue( row, 1 ),'%H:%M:%S')
-					seconds = dt.second + dt.minute*60 + dt.hour*3600
+					dt = datetime.datetime.strptime(self.grid.GetCellValue( row, 1 ),'%H:%M:%S.%f')
+					seconds = dt.second + dt.minute*60 + dt.hour*3600 + dt.microsecond/1000000
 					lapTimes.append( seconds )
 				except ValueError:
 					pass
@@ -287,11 +332,13 @@ class SummaryPage(adv.WizardPageSimple):
 		self.bibHeader.SetLabel( str(len(lapTimes)) + ' lap times for rider #' + str(self.bib) + ' ' + riderName + ' will be imported from:' )
 		self.fileName.SetLabel( fileName )
 		self.lapTimes = lapTimes
+		if (self.grid.GetNumberRows() > 0):
+			self.grid.DeleteRows( 0, self.grid.GetNumberRows() )
 		row = 0
 		for lap in lapTimes:
 			td = datetime.timedelta(seconds = lap)
 			self.grid.InsertRows( pos=row+1, numRows=1)
-			self.grid.SetCellValue( row, 0, '{}'.format(td or '') )
+			self.grid.SetCellValue( row, 0, '{}.{:.0f}'.format( str(td).split('.')[0], td.microseconds//1000 ) )
 			self.grid.SetCellAlignment(row, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 			row += 1
 		self.grid.AutoSize()
@@ -324,7 +371,7 @@ class GetRiderTimes:
 			adv.WizardPageSimple.Chain( self.introPage, self.useTimesPage )
 			adv.WizardPageSimple.Chain( self.useTimesPage, self.summaryPage )
 
-		self.wizard.SetPageSize( wx.Size(1032,800) )
+		self.wizard.SetPageSize( wx.Size(1024,800) )
 		self.wizard.GetPageAreaSizer().Add( self.introPage )
 		
 		

@@ -2411,8 +2411,8 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		rt = GpxTimesImport.GetRiderTimes( self, race )
 		try:
-			bib, laps = rt.show()
-			for t in laps:
+			bib, lapTimes = rt.show()
+			for t in lapTimes:
 				race.importTime( bib, t )
 				race.setChanged()
 		except TypeError:

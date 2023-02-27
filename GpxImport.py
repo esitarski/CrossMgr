@@ -325,7 +325,7 @@ class GetGeoTrack:
 			
 		elif page == self.useTimesPage:
 			if self.useTimesPage.getUseTimes():
-				self.geoTrack.read( self.geoTrackFName, True )
+				self.geoTrack.read( self.geoTrackFName, useTimes = True, isPointToPoint = self.fileNamePage.getIsPointToPoint() )  #bugfix: Was not setting isPointToPoint  - KW
 		
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
