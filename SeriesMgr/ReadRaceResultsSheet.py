@@ -12,7 +12,7 @@ import Model
 from Excel import GetExcelReader
 
 #-----------------------------------------------------------------------------------------------------
-Fields = ['Bib#', 'Pos', 'Time', 'FirstName', 'LastName', 'Category', 'License', 'Team']
+Fields = ['Bib#', 'Pos', 'Time', 'FirstName', 'LastName', 'Category', 'License', 'Machine', 'Team']
 
 class FileNamePage(wx.adv.WizardPageSimple):
 	def __init__(self, parent):

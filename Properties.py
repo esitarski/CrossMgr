@@ -825,13 +825,13 @@ class BatchPublishProperties( wx.Panel ):
 		self.ftpCallback = ftpCallback
 		
 		if ftpCallback:
-			ftpBtn = wx.ToggleButton( self, label=_('Configure Ftp') )
+			ftpBtn = wx.ToggleButton( self, label=_('Configure FTP') )
 			ftpBtn.Bind( wx.EVT_TOGGLEBUTTON, ftpCallback )
 		else:
 			ftpBtn = None
 			
 		explain = [
-			wx.StaticText(self,label=_('Choose File Formats to Publish.  Select Ftp option to upload files to Ftp server.')),
+			wx.StaticText(self,label=_('Choose File Formats to Publish.  Select FTP option to upload files to (S)FTP server.')),
 		]
 		font = explain[0].GetFont()
 		fontUnderline = wx.FFont( font.GetPointSize(), font.GetFamily(), flags=wx.FONTFLAG_BOLD )
@@ -839,7 +839,7 @@ class BatchPublishProperties( wx.Panel ):
 		fgs = wx.FlexGridSizer( cols=4, rows=0, hgap=0, vgap=1 )
 		self.widget = []
 		
-		headers = [_('Format'), _('Ftp'), _('Note'), '']
+		headers = [_('Format'), _('FTP'), _('Note'), '']
 		for h in headers:
 			st = wx.StaticText(self, label=h)
 			st.SetFont( fontUnderline )
@@ -1273,7 +1273,7 @@ class Properties( wx.Panel ):
 			('raceOptionsProperties',	RaceOptionsProperties,		_('Race Options') ),
 			('rfidProperties',			RfidProperties,				_('RFID') ),
 			('webProperties',			WebProperties,				_('Web') ),
-			('ftpProperties',			FtpProperties,				_('FTP') ),
+			('ftpProperties',			FtpProperties,				_('(S)FTP') ),
 			('batchPublishProperties',	BatchPublishProperties,		_('Batch Publish') ),
 			('gpxProperties',			GPXProperties,				_('GPX') ),
 			('notesProperties',			NotesProperties,			_('Notes') ),

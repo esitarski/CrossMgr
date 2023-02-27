@@ -174,6 +174,7 @@ class Results( wx.Panel ):
 		self.labelGrid.DisableDragRowSize()
 		# put a tooltip on the cells in a column
 		self.labelGrid.GetGridWindow().Bind(wx.EVT_MOTION, self.onMouseOver)
+		#
 		
 		self.lapGrid = ColGrid.ColGrid( self.splitter, style=wx.BORDER_SUNKEN )
 		self.lapGrid.SetRowLabelSize( 0 )
@@ -195,6 +196,7 @@ class Results( wx.Panel ):
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doRightClick )
 		self.lapGrid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
 		self.labelGrid.Bind( wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.doLabelClick )
+		self.labelGrid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.onLabelColumnRightClick )
 		
 		bs = wx.BoxSizer(wx.VERTICAL)
 		#bs.Add(self.hbs)
@@ -386,6 +388,31 @@ class Results( wx.Panel ):
 			self.PopupMenu( menu )
 		except Exception as e:
 			Utils.writeLog( 'Results:doRightClick: {}'.format(e) )
+			
+	def onLabelColumnRightClick( self, event ):
+		# Create and display a popup menu of columns on right-click event
+		menu = wx.Menu()
+		menu.SetTitle( 'Show/Hide columns' )
+		for c in range( self.labelGrid.GetNumberCols() ):
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.labelGrid.GetColLabelValue( c ) )
+			self.Bind( wx.EVT_MENU, self.onToggleLabelColumn )
+			if self.labelGrid.IsColShown( c ):
+				menu.Check( menuItem.GetId(), True )
+		self.PopupMenu(menu)
+		menu.Destroy()
+		
+	def onToggleLabelColumn( self, event ):
+		#find the column number
+		colLabels = []
+		for c in range( self.labelGrid.GetNumberCols() ):
+			colLabels.append( self.labelGrid.GetColLabelValue( c ) )
+		label = event.GetEventObject().FindItemById( event.GetId() ).GetItemLabel()
+		c = colLabels.index( label )
+		with Model.LockRace() as race:
+			if self.labelGrid.IsColShown( c ):
+				self.labelGrid.HideCol( c )
+			else:
+				self.labelGrid.ShowCol( c )
 		
 	def OnPopupCorrect( self, event ):
 		CorrectNumber( self, self.entry )

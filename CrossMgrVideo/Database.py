@@ -60,7 +60,7 @@ def _createTable( c, table, fields ):
 class Database:
 
 	triggerFieldsAll = (
-		'id','ts','s_before','s_after','ts_start','closest_frames','bib','first_name','last_name','team','wave','race_name',
+		'id','ts','s_before','s_after','ts_start','closest_frames','bib','first_name','last_name','machine','team','wave','race_name',
 		'note','kmh','frames',
 		'finish_direction',
 		'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',
@@ -71,7 +71,7 @@ class Database:
 	triggerFieldsInput = tuple( triggerFieldsAllSet
 		- {'id', 'note', 'kmh', 'frames', 'finish_direction', 'zoom_frame', 'zoom_x', 'zoom_y', 'zoom_width', 'zoom_height',})	# Fields to compare for equality of triggers.
 	triggerFieldsUpdate = ('wave','race_name',)
-	triggerEditFields = ('bib', 'first_name', 'last_name', 'team', 'wave', 'race_name', 'note',)
+	triggerEditFields = ('bib', 'first_name', 'last_name', 'machine', 'team', 'wave', 'race_name', 'note',)
 	
 	@staticmethod
 	def isValidDatabase( fname ):
@@ -126,6 +126,8 @@ pragma mmap_size = 30000000000;'''
 				cols = cur.fetchall()
 				if cols:
 					col_names = {col[1] for col in cols}
+					if 'machine' not in col_names:
+						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN machine TEXT DEFAULT ""' )
 					if 'note' not in col_names:
 						self.conn.execute( 'ALTER TABLE trigger ADD COLUMN note TEXT DEFAULT ""' )
 					if 'kmh' not in col_names:
@@ -169,6 +171,7 @@ pragma mmap_size = 30000000000;'''
 						('bib', 'INTEGER', 'ASC', None),
 						('first_name', 'TEXT', 'ASC', None),
 						('last_name', 'TEXT', 'ASC', None),
+						('machine', 'TEXT', 'ASC', None),
 						('team', 'TEXT', 'ASC', None),
 						('wave', 'TEXT', 'ASC', None),
 						('race_name', 'TEXT', 'ASC', None),
