@@ -88,6 +88,8 @@ class AliasesLicense(wx.Panel):
 		model = SeriesModel.model
 		model.setReferenceLicenses( references )
 		
+	def getGrid( self ):
+		return self.grid
 #----------------------------------------------------------------------------
 
 class AliasesLicenseFrame(wx.Frame):

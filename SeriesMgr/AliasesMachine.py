@@ -5,34 +5,34 @@ import SeriesModel
 import Utils
 from AliasGrid import AliasGrid
 
-class AliasesTeam(wx.Panel):
+class AliasesMachine(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
 		
 		text =	(
-			'Team Aliases match alternate team names to the same team.\n'
-			'This can be more convenient than editing race results when the same team appears with a different spelling.\n'
+			'Machine Aliases match alternate machine names to the same machine.\n'
+			'This can be more convenient than editing race results when the same machine appears with a different spelling.\n'
 			'\n'
-			'To create a Team Alias, first press the "Add Reference Team" button.\n'
-			'The first column is the Team that will appear in Results.\n'
-			'The second column are the Team Aliases, separated by ";".  These are the alternate team names.\n'
-			'SeriesMgr will match all aliased Teams to the Reference Team in the Results.\n'
+			'To create a machine Alias, first press the "Add Reference Machine" button.\n'
+			'The first column is the Machine that will appear in Results.\n'
+			'The second column are the Machine Aliases, separated by ";".  These are the alternate machine names.\n'
+			'SeriesMgr will match all aliased Machines to the Reference Machine in the Results.\n'
 			'\n'
-			'For example, Reference Team="Cannondale pb Fortius", AliasesTeam="Cannondale; Cannondale Pro".  Results for the alternate Teams will appear as "Cannondale pb Fortius".\n'
+			'For example, Reference Machine="ICE Trike", AliasesMachine="Trice; ICE".  Results for the alternate Machines will appear as "ICE Trike".\n'
 			'\n'
-			'You can Copy-and-Paste Teams from the Results without retyping them.  Right-click and Copy the name in the Results page,'
-			'then Paste the Team into a Reference Team or Alias field.\n'
-			'Aliased Teams will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
-			'This allows you to configure many Teams without having to wait for the Results update after each change.\n'
+			'You can Copy-and-Paste Machines from the Results without retyping them.  Right-click and Copy the name in the Results page,'
+			'then Paste the Machine into a Reference Machine or Alias field.\n'
+			'Aliased Machines will not be applied until you press the "Refresh" button on the Results screen (or reload).\n'
+			'This allows you to configure many Machines without having to wait for the Results update after each change.\n'
 		)
 		
 		self.explain = wx.StaticText( self, label=text )
 		self.explain.SetFont( wx.Font((0,15), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False) )
 		
-		self.addButton = wx.Button( self, label='Add Reference Team' )
+		self.addButton = wx.Button( self, label='Add Reference Machine' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.onAddButton )
 		
-		headerNames = ('Team','Aliases separated by ";"')
+		headerNames = ('Machine','Aliases separated by ";"')
 		self.itemCur = None
 		self.grid = AliasGrid( self )
 		self.grid.CreateGrid( 0, len(headerNames) )
@@ -65,8 +65,8 @@ class AliasesTeam(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		
-		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.referenceTeams) )
-		for row, (reference, aliases) in enumerate(model.referenceTeams):
+		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.referenceMachines) )
+		for row, (reference, aliases) in enumerate(model.referenceMachines):
 			self.grid.SetCellValue( row, 0, reference )
 			self.grid.SetCellValue( row, 1, '; '.join(aliases) )
 			
@@ -86,26 +86,25 @@ class AliasesTeam(wx.Panel):
 		references.sort()
 		
 		model = SeriesModel.model
-		model.setReferenceTeams( references )
+		model.setReferenceMachines( references )
 		
 	def getGrid( self ):
 		return self.grid
-		
 #----------------------------------------------------------------------------
 
-class AliasesTeamFrame(wx.Frame):
+class AliasesMachineFrame(wx.Frame):
 	def __init__(self):
-		wx.Frame.__init__(self, None, title="AliasesTeam Test", size=(800,600) )
-		self.panel = AliasesTeam(self)
+		wx.Frame.__init__(self, None, title="Machine Aliases Test", size=(800,600) )
+		self.panel = AliasesMachine(self)
 		self.Show()
  
 if __name__ == "__main__":
 	app = wx.App(False)
 	model = SeriesModel.model
-	model.setReferenceTeams( [
-		['BC04567', ['BC1234', 'BC5678', 'BC445']],
-		['BC04567a', ['BC1234b', 'BC5678c', 'BC445d']],
+	model.setReferenceMachines( [
+		['ICE Trike', ['ICE', 'I.C.E.', 'Trice']],
+		['Windcheetah', ['Windy', 'Speedy']],
 	] )
-	frame = AliasesTeamFrame()
+	frame = AliasesMachineFrame()
 	frame.panel.refresh()
 	app.MainLoop()

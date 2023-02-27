@@ -86,7 +86,7 @@ def setDrawResources( dc, w, h ):
 	
 	drawResources.labelHeight = int(drawResources.bibHeight * 1.25 + 0.5) + int(drawResources.fontHeight * 1.25 + 0.5)
 
-def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', last_name='', team='', race_name='', kmh=None, mph=None ):
+def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', last_name='', machine='', team='', race_name='', kmh=None, mph=None ):
 	global drawResources
 	
 	if bitmap is None:
@@ -124,6 +124,7 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', 
 	if mph:
 		tsTxt += ', {:.2f}mph'.format(mph) if isinstance(mph, float) else str(kmh)
 	nameTxt = ' '.join( n for n in (first_name, last_name) if n )
+	nameTxt = ' - '.join( n for n in (nameTxt, machine) if n )
 	
 	frameWidth = 4
 	borderWidth = 1

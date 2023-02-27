@@ -34,6 +34,7 @@ with Utils.SuspendTranslation():
 	Fields = [
 		_('Bib#'),
 		_('LastName'), _('FirstName'),
+		_('Machine'),
 		_('Team'),
 		_('City'), _('State'), _('Prov'), _('StateProv'), _('Nat.'),
 		_('Category'), _('EventCategory'), _('Age'), _('Gender'),

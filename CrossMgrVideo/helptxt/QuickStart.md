@@ -211,7 +211,9 @@ Window containing the triggers.
 
 * Left-click: shows the photos associated with the trigger.
 * Right-click:  brings up an Edit... and Delete... menu.
-* Double-click:  brings up the Edit window.  This allows you to change the Bib, First, Last, Team, Wave, Race and Note of the trigger.
+* Double-click:  brings up the Edit window.  This allows you to change the Bib, First, Last, Machine, Team, Wave, Race and Note of the trigger.
+
+Columns can be hidden or shown by right-clicking on the header row.
 
 Triggers can be created manually with __Snapshot__, __Auto Capture__, __Capture__ or when connected to CrossMgr, from CrossMgr entries.  CrossMgr can be configured to create a trigger for every entry, or just the last entry in the race (see CrossMgr help for details on the Camera setup).
 
