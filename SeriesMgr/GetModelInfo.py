@@ -75,8 +75,6 @@ def safe_upper( f ):
 		return f
 
 class RaceResult:
-	rankDNF = 999999
-	
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1, pointsInput=None ):
 		self.firstName = str(firstName or '')
@@ -148,7 +146,7 @@ def ExtractRaceResults( r ):
 
 def toInt( n ):
 	if n == 'DNF':
-		return RaceResult.rankDNF
+		return SeriesModel.rankDNF
 	try:
 		return int(n.split()[0])
 	except:
@@ -217,13 +215,13 @@ def ExtractRaceResultsExcel( raceInSeries ):
 					pass
 				
 				if info['rank'] == 'DNF':
-					info['rank'] = RaceResult.rankDNF
+					info['rank'] = SeriesModel.rankDNF
 				
 				if not isinstance(info['rank'], int):
 					continue
 
 				if isUSAC and info['rank'] >= 999:
-					info['rank'] = RaceResult.rankDNF
+					info['rank'] = SeriesModel.rankDNF
 					
 				# Check for comma-separated name.
 				name = str(f('name', '')).strip()
@@ -366,7 +364,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries ):
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)			
-			info['rank'] = RaceResult.rankDNF if rr.status == DNF else pos
+			info['rank'] = SeriesModel.rankDNF if rr.status == DNF else pos
 			
 			if hasattr(rr, '_lastTimeOrig') or hasattr(rr, 'lastTime'):
 				info['tFinish'] = getattr(rr, '_lastTimeOrig', None) or getattr(rr,'lastTime')
@@ -487,14 +485,14 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 					v = riderResults[rider][i]
 					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 	
-	riderResults = defaultdict( lambda : [(0,999999,0,0)] * len(races) )	# (points, rr.rank, primePoints, 0) for each result.  default rank 999999 for missing result.
+	riderResults = defaultdict( lambda : [(0,SeriesModel.rankDidNotParticipate,0,0)] * len(races) )	# (points, rr.rank, primePoints, 0) for each result.
 	riderFinishes = defaultdict( lambda : [None] * len(races) )
 	if scoreByTime:
 	
 		raceLeader = { rr.raceInSeries: rr for rr in raceResults if rr.rank == 1 }
 		
 		# Get the individual results for each rider, and the total time.  Do not consider DNF riders as they have invalid times.
-		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
+		raceResults = [rr for rr in raceResults if rr.rank != SeriesModel.rankDNF]
 		
 		riderTFinish = defaultdict( float )
 		for rr in raceResults:
@@ -556,7 +554,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 	
 	elif scoreByPercent:
 		# Get the individual results for each rider as a percentage of the winner's time.  Ignore DNF riders.
-		raceResults = [rr for rr in raceResults if rr.rank != RaceResult.rankDNF]
+		raceResults = [rr for rr in raceResults if rr.rank != SeriesModel.rankDNF]
 
 		percentFormat = '{:.2f}'
 		riderPercentTotal = defaultdict( float )
@@ -641,7 +639,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			riderNameLicense[rider] = (rr.full_name, rr.license)
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
-			if rr.rank != RaceResult.rankDNF:
+			if rr.rank != SeriesModel.rankDNF:
 				riderResults[rider][raceSequence[rr.raceInSeries]] = (0, rr.rank, 0, 0)
 				riderFinishes[rider][raceSequence[rr.raceInSeries]] = rr.rank
 				riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)]
@@ -745,7 +743,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		riderOrder = [rider for rider, results in riderResults.items() if riderEventsCompleted[rider] >= mustHaveCompleted]
 		
 		# Sort by rider points - greatest number of points first.  Break ties with place count, then most recent result.
-		rankDNF = RaceResult.rankDNF
+		rankDNF = SeriesModel.rankDNF
 		riderOrder.sort(
 			key = lambda r:	[-riderPoints[r]] +
 							([-riderEventsCompleted[r]] if useMostEventsCompleted else []) +
@@ -865,7 +863,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 				teamRanks[raceInSeries][t] = rank
 
 		# Sort by team points - greatest number of points first.  Break ties with the number of place count by race grade, then the last result.
-		rankDNF = RaceResult.rankDNF
+		rankDNF = SeriesModel.rankDNF
 		teamOrder = list( teamName.keys() )
 		def getBestResults( t ):
 			return [-teamResultsPoints[r.raceInSeries][t] for r in reversed(races)]
@@ -906,7 +904,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 		for raceInSeries, teamParticipants in resultsByTeam.items():
 			for team, rrs in teamParticipants.items():
 				for rr in rrs:
-					if rr.rank == RaceResult.rankDNF:
+					if rr.rank == SeriesModel.rankDNF:
 						continue
 					rider = rr.key()
 					timeBonus = rr.timeBonus if considerPrimePointsOrTimeBonus else 0
@@ -929,7 +927,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 				teamEventsCompleted[team] += 1
 
 		# Sort by team time - least time first
-		rankDNF = RaceResult.rankDNF
+		rankDNF = SeriesModel.rankDNF
 		teamOrder = list( tn for tn in teamName.keys() if teamTime.get(tn,None) )
 		def getBestResults( t ):
 			results = []

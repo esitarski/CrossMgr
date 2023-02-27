@@ -522,8 +522,8 @@ class MainWin( wx.Frame ):
 	
 	def getWriteValue( self ):
 		if self.random.GetValue():
-			# Generate a secure random EPC code.
-			f = ''.join(secrets.choice('0123456789ABCDEF') for _ in range(self.EPCHexCharsMax))
+			# Generate a secure random EPC code.  Ensure it does not have a leading zero.
+			f = secrets.choice('123456789ABCDEF') + ''.join(secrets.choice('0123456789ABCDEF') for _ in range(self.EPCHexCharsMax-1))
 		else:
 			f = self.getFormatStr().format( n = int(self.number.GetValue() or 0) ).lstrip('0')
 		if not f:
