@@ -2404,9 +2404,10 @@ class MainWin( wx.Frame ):
 		
 	@logCall
 	def menuImportRiderTimesGpx( self, event ):
-		if self.fileName is None or len(self.fileName) < 4:
-			return
 		if not Model.race:
+			Utils.MessageOK(self, _("You must have a valid race."), _("No Valid Race"), iconMask=wx.ICON_ERROR)
+			return
+		if self.fileName is None or len(self.fileName) < 4:
 			return
 		race = Model.race
 		rt = GpxTimesImport.GetRiderTimes( self, race )
