@@ -23,12 +23,12 @@ class IntroPage(adv.WizardPageSimple):
 		self.controller = controller
 		border = 4
 		vbs = wx.BoxSizer( wx.VERTICAL )
-		vbs.Add( wx.StaticText(self, label = _("Import a GPX File containing a rider's laps.\nThe track must contain times as well as positions.")),
+		vbs.Add( wx.StaticText(self, label = _("Attempt to derive a rider's lap times from a GPX recording of the race...")),
 					flag=wx.ALL, border = border )
 		self.info = wx.TextCtrl(self, value = '\n\n\n\n\n\n', style=wx.TE_READONLY|wx.TE_MULTILINE, size=(-1,180))
 		vbs.Add( self.info, flag=wx.ALL|wx.EXPAND, border = border )
 		
-		self.fileHeading = wx.StaticText(self, label = _("Specify the GPX File containing the rider's recorded race:") )
+		self.fileHeading = wx.StaticText(self, label = _("Select the GPX File containing the rider's recording.\nThe track must contain timestamps as well as positions.") )
 		vbs.Add( self.fileHeading, flag=wx.ALL, border = border )
 		fileMask = [
 			'GPX Files (*.gpx)|*.gpx',
@@ -373,8 +373,6 @@ class GetRiderTimes:
 
 		self.wizard.SetPageSize( wx.Size(1024,800) )
 		self.wizard.GetPageAreaSizer().Add( self.introPage )
-		
-		
 		
 		self.introPage.setInfo( self.geoTrack, self.geoTrackFName )
 
