@@ -75,8 +75,6 @@ def safe_upper( f ):
 		return f
 
 class RaceResult:
-	rankDNF = 999999
-	
 	def __init__( self, firstName, lastName, license, machine, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
 					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1, pointsInput=None ):
 		self.firstName = str(firstName or '')
