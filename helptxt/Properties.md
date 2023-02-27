@@ -177,6 +177,13 @@ The idea behind this feature is that the riders are staged in a start area behin
 
 When using this feature, be sure to set the "First Lap Distance" in [Categories][] to compensate for the run-up distance.  This will ensure that the riders speeds are computed correctly.
 
+
+### Ignore RFID reads for unstarted time trial riders.  Riders must be started manually, or by using a spreadsheet.
+This option only affects time trials.  It ignores all tag reads for a rider until after they have started.
+
+This allows you to use the RFID system to record riders' lap/finish times without having to keep riders who are waiting to start out of range of the RFID reader.  Useful when there isn't room for a start area away from the finish line.
+
+
 ### Reader Type
 Either JChip/Impinj/Alien or RaceResult.  See [ChipReader][] for more details.
 

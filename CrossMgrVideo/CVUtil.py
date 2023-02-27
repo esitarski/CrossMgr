@@ -28,7 +28,7 @@ def getWidthHeight( o ):
 	raise TypeError( 'Unknown object type' )
 
 def isJpegBuf( buf ):
-	return isinstance(buf, bytes) and buf[:2] == bytes.fromhex('FFD8') and buf[-2:] == bytes.fromhex('FFD9')	# Check for jpeg magic values.
+	return isinstance(buf, bytes) and buf[:2] == b'\xff\xd8' and buf[-2:] == b'\xff\xd9'	# Check for jpeg magic values.
 
 def toFrame( o, updateCache=True ):
 	'''
@@ -104,6 +104,7 @@ def jpegToFrame( jpeg, updateCache=True ):
 	if jpeg in jpegFramesCache:
 		return jpegFramesCache[jpeg]
 	# frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
+	assert isJpegBuf(jpeg), 'Corrupt JPEG data'
 	frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
 	if updateCache:
 		jpegFramesCache[jpeg] = frame
