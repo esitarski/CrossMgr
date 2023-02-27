@@ -588,18 +588,18 @@ function sortTableId( iTable, iCol ) {
 						with tag(html, 'h2'):
 							write( 'TrueSkill' )
 						with tag(html, 'p'):
-							write( u"TrueSkill is a ranking method developed by Microsoft Research for the XBox.  ")
-							write( u"TrueSkill maintains an estimation of the skill of each competitor.  Every time a competitor races, the system accordingly changes the perceived skill of the competitor and acquires more confidence about this perception.  This is unlike a regular points system where a points can be accumulated through regular participation: not necessarily representing  overall racing ability.  ")
+							write( "TrueSkill is a ranking method developed by Microsoft Research for the XBox.  ")
+							write( "TrueSkill maintains an estimation of the skill of each competitor.  Every time a competitor races, the system accordingly changes the perceived skill of the competitor and acquires more confidence about this perception.  This is unlike a regular points system where a points can be accumulated through regular participation: not necessarily representing  overall racing ability.  ")
 						with tag(html, 'p'):
-							write( u"Results are shown above in the form RR (MM,VV).  Competitor skill is represented by a normally distributed random variable with estimated mean (MM) and variance (VV).  The mean is an estimation of the skill of the competitor and the variance represents how unsure the system is about it (bigger variance = more unsure).  Competitors all start with mean = 25 and variance = 25/3 which corresponds to a zero ranking (see below).  ")
+							write( "Results are shown above in the form RR (MM,VV).  Competitor skill is represented by a normally distributed random variable with estimated mean (MM) and variance (VV).  The mean is an estimation of the skill of the competitor and the variance represents how unsure the system is about it (bigger variance = more unsure).  Competitors all start with mean = 25 and variance = 25/3 which corresponds to a zero ranking (see below).  ")
 						with tag(html, 'p'):
-							write( u"The parameters of each distribution are updated based on the results from each race using a Bayesian approach.  The extent of updates depends on each player's variance and on how 'surprising' the outcome is to the system. Changes to scores are negligible when outcomes are expected, but can be large when favorites surprisingly do poorly or underdogs surprisingly do well.  ")
+							write( "The parameters of each distribution are updated based on the results from each race using a Bayesian approach.  The extent of updates depends on each player's variance and on how 'surprising' the outcome is to the system. Changes to scores are negligible when outcomes are expected, but can be large when favorites surprisingly do poorly or underdogs surprisingly do well.  ")
 						with tag(html, 'p'):
-							write( u"RR is the skill ranking defined by RR = MM - 3 * VV.  This is a conservative estimate of the 'actual skill', which is expected to be higher than the estimate 99.7% of the time.  " )
-							write( u"There is no meaning to positive or negative skill levels which are a result of the underlying mathematics.  The numbers are only meaningful relative to each other.  ")
+							write( "RR is the skill ranking defined by RR = MM - 3 * VV.  This is a conservative estimate of the 'actual skill', which is expected to be higher than the estimate 99.7% of the time.  " )
+							write( "There is no meaning to positive or negative skill levels which are a result of the underlying mathematics.  The numbers are only meaningful relative to each other.  ")
 						with tag(html, 'p'):
-							write( u"The TrueSkill score can be improved by 'consistently' (say, 2-3 times in a row) finishing ahead of higher ranked competitors.  ")
-							write( u"Repeatedly finishing with similarly ranked competitors will not change the score much as it isn't evidence of improvement.  ")
+							write( "The TrueSkill score can be improved by 'consistently' (say, 2-3 times in a row) finishing ahead of higher ranked competitors.  ")
+							write( "Repeatedly finishing with similarly ranked competitors will not change the score much as it isn't evidence of improvement.  ")
 						with tag(html, 'p'):
 							write("Full details ")
 							with tag(html, 'a', {'href': 'https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/'} ):
