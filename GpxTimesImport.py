@@ -14,6 +14,7 @@ from GpxParse import GpxParse
 import datetime
 import tzlocal
 import numpy
+import re
 from ReorderableGrid import ReorderableGrid
 import wx.grid as gridlib
 
@@ -37,7 +38,8 @@ class IntroPage(adv.WizardPageSimple):
 												labelText = 'GPX File:',
 												fileMode=wx.FD_OPEN,
 												fileMask='|'.join(fileMask),
-												startDirectory=Utils.getFileDir() )
+												startDirectory=Utils.getFileDir(),
+												changeCallback=self.fbbChange)
 		self.fbb.SetValue('')
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
 		hbs = wx.BoxSizer(wx.HORIZONTAL)
@@ -48,6 +50,25 @@ class IntroPage(adv.WizardPageSimple):
 		vbs.Add(hbs)
 		
 		self.SetSizer( vbs )
+		
+	def fbbChange( self, evt ):
+		#pre-populate the bib field if there's a rider number in the GPX filename
+		filename = os.path.basename(self.fbb.GetValue()).lower()
+		try:
+			splitat = filename.find('bib')+3
+			bib = re.split(r'\D+', filename[splitat:])[0]
+			self.bibEntry.SetValue( bib )
+			return
+		except ValueError:
+			pass
+		try:
+			splitat = filename.find('rider')+3
+			bib = re.split(r'\D+', filename[splitat:])[0]
+			self.bibEntry.SetValue( bib )
+			return
+		except ValueError:
+			pass
+		self.bibEntry.SetValue( '' )
 	
 	def setInfo( self, geoTrack, geoTrackFName ):
 		if geoTrack:
@@ -82,7 +103,7 @@ class IntroPage(adv.WizardPageSimple):
 		return self.bibEntry.GetValue()
 
 class UseTimesPage(adv.WizardPageSimple):
-	headerNames = ['Time of Day\n(local)', 'Race\nTime', 'Lat (°)', 'Long (°)', 'Distance\n(km)', 'Proximity\nto start (m)', 'Bearing\n(°)', 'Import\nlap']
+	headerNames = ['Time of Day\n(local)', 'Race\nTime', 'Lat (°)', 'Long (°)', 'Race\n(km)', 'Lap\n(km)', 'Proximity\nto start (m)', 'Bearing\n(°)', 'Import\nlap']
 	
 	def __init__(self, parent):
 		super().__init__(parent)
@@ -90,6 +111,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		vbs = wx.BoxSizer( wx.VERTICAL )
 		self.noTimes = wx.StaticText(self, label = _('This GPX file does not contain times.\nCannot continue!') )
 		vbs.Add( self.noTimes, flag=wx.ALL, border = border )
+		
 		hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.proxFilterHeading = wx.StaticText(self, label = _("Filter by proximity to finish line (m):") )
 		hbs.Add( self.proxFilterHeading, flag=wx.ALL, border = border )
@@ -108,6 +130,7 @@ class UseTimesPage(adv.WizardPageSimple):
 		
 		self.interpolateEntry = wx.CheckBox( self, label='Interpolate trackpoints', name='Interpolate')
 		self.interpolateEntry.Bind( wx.EVT_CHECKBOX, self.onChangeSetting )
+		self.interpolateEntry.SetValue( True )
 		vbs.Add( self.interpolateEntry, flag=wx.ALL, border = border )
 		
 		
@@ -135,6 +158,7 @@ class UseTimesPage(adv.WizardPageSimple):
 				self.grid.SetCellValue( row, col, "1" )
 			else:
 				self.grid.SetCellValue( row, col, "" )
+			self.updateLapDistances()
 			
 
 	def doCellRightClick( self, event ):
@@ -171,6 +195,8 @@ class UseTimesPage(adv.WizardPageSimple):
 		prevProx = 0
 		prevProxDecreasing = False
 		latLonTimeInterpeds = []
+		lastLapAtDistance = 0
+		lapDistance = 0
 		if self.interpolateEntry.GetValue():
 			latLonTimeInterpeds = self.interpolatePoints(self.latLonEleTimes, step=1)
 		else:
@@ -185,6 +211,7 @@ class UseTimesPage(adv.WizardPageSimple):
 				lat = latLonTimeInterp[0]
 				lon = latLonTimeInterp[1]
 				distance += GreatCircleDistance( prevLat, prevLon, lat, lon )
+				lapDistance = distance - lastLapAtDistance
 				prox = GreatCircleDistance( startLineLat, startLineLon, lat, lon )
 				bearing = CompassBearing( startLineLat, startLineLon, lat, lon )
 				if (prox - prevProx < 0):
@@ -196,7 +223,7 @@ class UseTimesPage(adv.WizardPageSimple):
 					self.grid.SetCellValue( row, 0, '{}'.format(wallTime or '') )
 					self.grid.SetCellAlignment(row, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					if raceTime > datetime.timedelta():
-						self.grid.SetCellValue( row, 1, '{}.{:.0f}'.format( str(raceTime).split('.')[0], raceTime.microseconds//1000 ) )
+						self.grid.SetCellValue( row, 1, '{}.{:03.0f}'.format( str(raceTime).split('.')[0], raceTime.microseconds//1000 ) )
 					self.grid.SetCellAlignment(row, 1, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					self.grid.SetCellValue( row, 2, '{:.6f}'.format(lat or 0) )
 					self.grid.SetCellAlignment(row, 2, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
@@ -204,51 +231,83 @@ class UseTimesPage(adv.WizardPageSimple):
 					self.grid.SetCellAlignment(row, 3, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 					self.grid.SetCellValue( row, 4, '{:.2f}'.format(distance/1000 or 0) )
 					self.grid.SetCellAlignment(row, 4, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
-					self.grid.SetCellValue( row, 5, '{:.2f}'.format(prox or 0) )
-					self.grid.SetCellAlignment(row, 5, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
-					self.grid.SetCellValue( row, 6, '{:.1f}'.format(bearing or 0) )
+					self.grid.SetCellValue( row, 5, '{:.2f}'.format(lapDistance/1000 or 0) )
+					self.grid.SetCellAlignment(row, 4, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+					self.grid.SetCellValue( row, 6, '{:.2f}'.format(prox or 0) )
 					self.grid.SetCellAlignment(row, 6, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
-					self.grid.SetCellRenderer(row, 7, gridlib.GridCellBoolRenderer())
-					self.grid.SetCellEditor(row, 7, gridlib.GridCellBoolEditor())
-					self.grid.SetCellValue(row, 7, "")
+					self.grid.SetCellValue( row, 7, '{:.1f}'.format(bearing or 0) )
+					self.grid.SetCellAlignment(row, 7, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+					self.grid.SetCellRenderer(row, len(self.headerNames)-1, gridlib.GridCellBoolRenderer())
+					self.grid.SetCellEditor(row, len(self.headerNames)-1, gridlib.GridCellBoolEditor())
+					self.grid.SetCellValue(row, len(self.headerNames)-1, "")
 					if latLonTimeInterp[3]:  #point was interpolated, shade yellow to indicate fictional data
 						for col in range(self.grid.GetNumberCols() - 1):
 							self.grid.SetCellBackgroundColour( row, col, wx.Colour( 255, 255, 0 ) )
+					withinMinLapLength = False
+					if (abs(self.geoTrack.lengthKm * 1000 - lapDistance)) < proxFilter:  #shade if we're within filter distance of lap length
+						self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
+						withinMinLapLength = True
 					if raceTime >= self.minPossibleLapTime:
+						#look for new laps and shade/select
 						setLap = False
 						if (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300) and (not proxDecreasing and prevProxDecreasing):
 							setLap = True
-							self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
 							self.grid.SetCellBackgroundColour( row, 6, wx.Colour(153, 205, 255) )
+							self.grid.SetCellBackgroundColour( row, 7, wx.Colour(153, 205, 255) )
 						elif (not proxDecreasing and prevProxDecreasing):
 							setLap = True
-							self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
+							self.grid.SetCellBackgroundColour( row, 6, wx.Colour(153, 205, 255) )
 						elif (abs(prevBearing - bearing) > 90 and abs(prevBearing - bearing) < 300):
 							setLap = True
-							self.grid.SetCellBackgroundColour( row, 6, wx.Colour(153, 205, 255) )
+							self.grid.SetCellBackgroundColour( row, 7, wx.Colour(153, 205, 255) )
 						else:
-							self.grid.SetCellValue(row, 7, "")
-						if setLap:
-							self.grid.SetCellValue(row, 7, "1")
+							self.grid.SetCellValue(row, len(self.headerNames)-1, "")
+						if setLap and withinMinLapLength:
+							self.grid.SetCellValue(row, len(self.headerNames)-1, "1")
+							lastLapAtDistance = distance
 							laps += 1
 							#if the previous lap is set, unset it
 							if row > 0:
-								prevSetLap = self.grid.GetCellValue( row - 1, 7 )
+								prevSetLap = self.grid.GetCellValue( row - 1, len(self.headerNames)-1 )
 								if prevSetLap == "1":
-									self.grid.SetCellValue( row - 1, 7, "" )
+									self.grid.SetCellValue( row - 1, len(self.headerNames)-1, "" )
 					row += 1
 				prevLat = lat
 				prevLon = lon
 				prevBearing = bearing
 				prevProx = prox
 				prevProxDecreasing = proxDecreasing
-				
 		if distance > 0:
 			self.noTimes.Hide()
 		self.grid.AutoSize()
 		self.GetSizer().Layout()
 		self.grid.EnableEditing(True)
+		self.grid.ForceRefresh()
 		
+	def updateLapDistances( self ):
+		proxFilter = float( self.proxFilterEntry.GetValue() )
+		lastLapAtKm = 0
+		lapDistance = 0
+		for row in range(self.grid.GetNumberRows()):
+			distance = float(self.grid.GetCellValue( row, 4 ) )
+			lapDistance = distance - lastLapAtKm
+			self.grid.SetCellValue( row, 5, '{:.2f}'.format(lapDistance or 0) )
+			self.grid.SetCellAlignment(row, 4, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+			if (abs(self.geoTrack.lengthKm - lapDistance)) < proxFilter/1000:
+				self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
+			else:
+				self.grid.SetCellBackgroundColour( row, 5, wx.Colour(255, 255, 255) )
+			if self.grid.GetCellValue( row, len(self.headerNames)-1 ):
+				lastLapAtKm = distance
+				if row > 0 and self.grid.GetCellValue( row -1, len(self.headerNames)-1 ):
+					self.grid.SetCellBackgroundColour( row -1, len(self.headerNames)-1, wx.Colour( 255, 165, 0 ) )
+					self.grid.SetCellBackgroundColour( row, len(self.headerNames)-1, wx.Colour( 255, 165, 0 ) )
+				else:
+					self.grid.SetCellBackgroundColour( row, len(self.headerNames)-1, wx.Colour(255, 255, 255) )
+			else:
+				self.grid.SetCellBackgroundColour( row, len(self.headerNames)-1, wx.Colour(255, 255, 255) )
+		self.grid.ForceRefresh()  #needed to make colour changes update
+			
 	def interpolatePoints( self, latLonEleTimes, step = 0):
 		times = []
 		lats = []
@@ -301,7 +360,7 @@ class UseTimesPage(adv.WizardPageSimple):
 class SummaryPage(adv.WizardPageSimple):
 	def __init__(self, parent):
 		super().__init__(parent)
-		self.headerNames = ['RaceTime']
+		self.headerNames = ['Race Time', 'Lap Time']
 		self.bib = 0
 		self.lapTimes = []
 		border = 4
@@ -310,6 +369,8 @@ class SummaryPage(adv.WizardPageSimple):
 		vbs.Add( self.bibHeader, flag=wx.ALL, border = border )
 		self.fileName = wx.StaticText( self )
 		vbs.Add( self.fileName, flag=wx.ALL, border = border )
+		self.closeTimesWarning = wx.StaticText(self, label = _('\nWARNING: Some of these lap times are smaller than the minimum possible lap time!') )
+		vbs.Add( self.closeTimesWarning, flag=wx.ALL, border = border )
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -327,23 +388,50 @@ class SummaryPage(adv.WizardPageSimple):
 		vbs.Add(self.grid, 1, flag=wx.EXPAND|wx.TOP|wx.ALL, border = 4)
 		self.SetSizer(vbs)
 	
-	def setInfo( self, bib, riderName, fileName, lapTimes ):
+	def setInfo( self, bib, riderName, fileName, lapTimes, raceStartTime, minPossibleLapTime ):
 		self.bib = bib
 		self.bibHeader.SetLabel( str(len(lapTimes)) + ' lap times for rider #' + str(self.bib) + ' ' + riderName + ' will be imported from:' )
 		self.fileName.SetLabel( fileName )
 		self.lapTimes = lapTimes
+		self.raceStartTime = raceStartTime
+		self.minPossibleLapTime = minPossibleLapTime
 		if (self.grid.GetNumberRows() > 0):
 			self.grid.DeleteRows( 0, self.grid.GetNumberRows() )
 		row = 0
+		prevLapTime = 0
+		closeLaps = False
 		for lap in lapTimes:
 			td = datetime.timedelta(seconds = lap)
+			ltd = datetime.timedelta(seconds = lap - prevLapTime)
 			self.grid.InsertRows( pos=row+1, numRows=1)
-			self.grid.SetCellValue( row, 0, '{}.{:.0f}'.format( str(td).split('.')[0], td.microseconds//1000 ) )
+			self.grid.SetCellValue( row, 0, '{}.{:03.0f}'.format( str(td).split('.')[0], td.microseconds//1000 ) )
 			self.grid.SetCellAlignment(row, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+			if row == 0:  #lap time == race time
+				self.grid.SetCellValue( row, 1, '{}.{:03.0f}'.format( str(td).split('.')[0], td.microseconds//1000 ) )
+				self.grid.SetCellAlignment(row, 1, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+				if lap < self.minPossibleLapTime:
+					self.grid.SetCellBackgroundColour( row, 1, wx.Colour( 153, 205, 255 ) )
+					closeLaps = True
+				else:
+					self.grid.SetCellBackgroundColour( row, 0, wx.Colour( 255, 255, 255 ) )
+			elif row > 0:
+				self.grid.SetCellValue( row, 1, '{}.{:03.0f}'.format( str(ltd).split('.')[0], ltd.microseconds//1000 ) )
+				self.grid.SetCellAlignment(row, 1, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+				if lap - prevLapTime < self.minPossibleLapTime:
+					self.grid.SetCellBackgroundColour( row, 1, wx.Colour( 153, 205, 255 ) )
+					closeLaps = True
+				else:
+					self.grid.SetCellBackgroundColour( row, 0, wx.Colour( 255, 255, 255 ) )
 			row += 1
+			prevLapTime = lap
+		if closeLaps:
+			self.closeTimesWarning.Show()
+		else:
+			self.closeTimesWarning.Hide()
 		self.grid.AutoSize()
 		self.GetSizer().Layout()
 		self.grid.EnableEditing(False)
+		self.grid.ForceRefresh()  #needed to make colour changes update
 		
 class GetRiderTimes:
 	def __init__( self, parent, race = None):
@@ -466,7 +554,7 @@ class GetRiderTimes:
 					riderName = ', '.join( n for n in [info.get('LastName', ''), info.get('FirstName', '')] if n )
 				except AttributeError:
 					riderName = ''
-			self.summaryPage.setInfo( self.bib, riderName, self.introPage.getFileName(), self.lapTimes )
+			self.summaryPage.setInfo( self.bib, riderName, self.introPage.getFileName(), self.lapTimes, self.race.startTime, self.race.minPossibleLapTime )
 			
 		
 	def onPageChanged( self, evt ):
