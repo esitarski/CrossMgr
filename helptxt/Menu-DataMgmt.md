@@ -95,14 +95,13 @@ For more information about time trial mode, see [TimeTrial][].
 
 ## Import Rider's Times from GPX...
 
-Wizard for extrapolating a rider's lap times from a GPX Track recorded by the rider during the race.  Useful if tag reads are missed, but the rider has a GPS recording.
+Wizard for extrapolating a rider's lap times from a GPX Track recorded by the rider during the race.  Useful if lap times are missed, but the rider has a GPS recording.  Concievably this could be used to time small races, if the finish order was recorded somehow.
 
 This requires a GPX course to be set in [Properties] in order to determine the coordinates of the finish line.  Note that the imported track must contain timestamps; beware of downloading tracks from Strava or similar route-sharing websites which strip this data.
 
-Trackpoints will be filtered by proximity to the finish line and listed.  Times where the rider passes close to the finish line will be highlighted, and can be manually selected or de-selected for import.
-The offset between the GPS receiver's recorded time (normally UTC) and CrossMgr's recorded time will be set automatically according to the local time zone, but this can be tweaked if there is a discrepency.
+Trackpoints will be filtered by proximity to the finish line and listed.  Times where the rider passes close to the finish line - or where the compass bearing from the finish line to the rider changes suddenly - will be highlighted in blue.  Times can be manually selected or de-selected for import.  The offset between the GPS receiver's recorded time (normally UTC) and CrossMgr's recorded time will be set automatically according to the local time zone, but this can be tweaked if there is a discrepency.  Trackpoints can be interpolated to increase the resolution of tracklogs with infrequent recording - these lines will be highlighted in yellow.
 
-For best results it is recommended that GPS receivers be configured to record trackpoints as frequently as possible (typically once per second), and that a reasonable effort is made to ensure the CrossMgr computer's real-time clock is accurate before starting the race.
+For best results it is recommended that GPS receivers be configured to record trackpoints as frequently as possible (one point per second is best for smaller tracks), and that a reasonable effort is made to ensure the CrossMgr computer's real-time clock is accurate before starting the race.
 
 ## Import Categories from File...
 Read the categories from a previously exported Categories file.
