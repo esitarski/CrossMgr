@@ -38,12 +38,12 @@ class IntroPage(adv.WizardPageSimple):
 												fileMode=wx.FD_OPEN,
 												fileMask='|'.join(fileMask),
 												startDirectory=Utils.getFileDir() )
-		self.fbb.SetValue('/home/kim/documents/programming/CrossMgr/CrossMgr-test/2022-10-16_Track_2022-10-16 133507.gpx')
+		self.fbb.SetValue('')
 		vbs.Add( self.fbb, flag=wx.ALL, border = border )
 		hbs = wx.BoxSizer(wx.HORIZONTAL)
 		self.bibHeading = wx.StaticText(self, label = _("Rider's bib number:") )
 		hbs.Add( self.bibHeading, flag=wx.ALL, border = border )
-		self.bibEntry = wx.TextCtrl( self, value="1" )
+		self.bibEntry = wx.TextCtrl( self, value="" )
 		hbs.Add( self.bibEntry, flag=wx.ALL, border = border )
 		vbs.Add(hbs)
 		
