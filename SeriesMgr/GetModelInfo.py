@@ -138,11 +138,11 @@ class RaceResult:
 	def __repr__( self ):
 		return ', '.join( '{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
 
-def ExtractRaceResults( r, getReference ):
+def ExtractRaceResults( r, seriesModel ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
-		return ExtractRaceResultsCrossMgr( r, getReference )
+		return ExtractRaceResultsCrossMgr( r, seriesModel )
 	else:
-		return ExtractRaceResultsExcel( r, getReference )
+		return ExtractRaceResultsExcel( r, seriesModel )
 
 def toInt( n ):
 	if n == 'DNF':
@@ -152,12 +152,12 @@ def toInt( n ):
 	except:
 		return n
 
-def ExtractRaceResultsExcel( raceInSeries, getReference ):
+def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
 	
-	getReferenceName = getReference['getReferenceName']
-	getReferenceLicense = getReference['getReferenceLicense']
-	getReferenceTeam = getReference['getReferenceTeam']
+	getReferenceName = seriesModel.getReferenceName
+	getReferenceLicense = seriesModel.getReferenceLicense
+	getReferenceTeam = seriesModel.getReferenceTeam
 		
 	excel = GetExcelReader( raceInSeries.getFileName() )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
@@ -281,7 +281,7 @@ def FixExcelSheetLocal( fileName, race ):
 			if newFileName:
 				race.excelLink.fileName = newFileName
 
-def ExtractRaceResultsCrossMgr( raceInSeries, getReference ):
+def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
 	
 	fileName = raceInSeries.getFileName()
@@ -309,10 +309,10 @@ def ExtractRaceResultsCrossMgr( raceInSeries, getReference ):
 	if race.licenseLinkTemplate:
 		ret['licenseLinkTemplate'] = race.licenseLinkTemplate
 	
-	getReferenceName = getReference['getReferenceName']
-	getReferenceLicense = getReference['getReferenceLicense']
-	getReferenceTeam = getReference['getReferenceTeam']
-	
+	getReferenceName = seriesModel.getReferenceName
+	getReferenceLicense = seriesModel.getReferenceLicense
+	getReferenceTeam = seriesModel.getReferenceTeam
+
 	Finisher = Model.Rider.Finisher
 	DNF = Model.Rider.DNF
 	acceptedStatus = { Finisher, DNF }
