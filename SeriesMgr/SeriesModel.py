@@ -3,9 +3,11 @@ import re
 import sys
 from html import escape
 import copy
+import time
 import operator
 import functools
 import datetime
+from multiprocessing import Pool
 import GetModelInfo
 from FileTrie import FileTrie
 from io import StringIO
@@ -581,20 +583,25 @@ class SeriesModel:
 	
 	@memoize
 	def _extractAllRaceResultsCore( self ):
+		# Extract all race results in parallel.
+		with Pool() as p:
+			p_results = p.map( GetModelInfo.ExtractRaceResults, self.races )
+		
+		# Combine all results and record errors.
 		raceResults = []
 		oldErrors = self.errors
 		self.errors = []
-		for r in self.races:
-			success, ex, results = GetModelInfo.ExtractRaceResults( r )
+		for (success, ex, results), r in zip(p_results, self.races):
 			if success:
 				raceResults.extend( results )
 			else:
 				self.errors.append( (r, ex) )
 		if oldErrors != self.errors:
 			self.changed = True
+			
 		self.harmonizeCategorySequence( raceResults )
 		return raceResults
-	
+
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
 		raceResults = self._extractAllRaceResultsCore()
 		if adjustForUpgrades:
