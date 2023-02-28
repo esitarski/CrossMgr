@@ -214,7 +214,7 @@ def nameToAliasKey( name ):
 # "Special" rank codes.
 rankDNF					= 999999
 rankDidNotParticipate	= 9999999
-rankUnknown				= 99999
+rankUnknown				= 99999999
 
 class SeriesModel:
 	DefaultPointStructureName = 'Regular'

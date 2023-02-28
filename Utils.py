@@ -498,8 +498,11 @@ def ordinal( value ):
 		except ValueError:
 			return '{}'.format(value)
 		
-	if value == 999999:
+	if value == 999999:				# rankDNF.
 		return translate('DNF')
+		
+	elif value > 999999:			# other rank codes.
+		return ''
 
 	return {
 		'fr': lambda v: '{}{}'.format(v, 'er' if v == 1 else 'e'),
