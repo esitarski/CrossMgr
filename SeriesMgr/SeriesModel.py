@@ -583,19 +583,24 @@ class SeriesModel:
 	
 	@memoize
 	def _extractAllRaceResultsCore( self ):
-		# Extract all race results in parallel.
+		# Create a structure for all the alias lookups to pass to the parallel processes.
+		getReference = {k:getattr(self, k) for k in ('getReferenceName', 'getReferenceLicense', 'getReferenceTeam')}
+		
+		# Extract all race results in parallel.  Arguments are the race info and the alias lookups.
 		with Pool() as p:
-			p_results = p.map( GetModelInfo.ExtractRaceResults, self.races )
+			p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,getReference) for r in self.races) )
 		
 		# Combine all results and record errors.
 		raceResults = []
 		oldErrors = self.errors
 		self.errors = []
-		for (success, ex, results), r in zip(p_results, self.races):
-			if success:
-				raceResults.extend( results )
+		for ret, r in zip(p_results, self.races):
+			if ret['success']:
+				raceResults.extend( ret['raceResults'] )
+				if ret['licenseLinkTemplate']:
+					self.licenseLinkTemplate = ret['licenseLinkTemplate']
 			else:
-				self.errors.append( (r, ex) )
+				self.errors.append( (r, ret['explanation']) )
 		if oldErrors != self.errors:
 			self.changed = True
 			
