@@ -61,6 +61,8 @@ class IntroPage(adv.WizardPageSimple):
 			return
 		except ValueError:
 			pass
+		except AttributeError:
+			pass
 		try:
 			splitat = filename.find('rider')+3
 			bib = re.split(r'\D+', filename[splitat:])[0]
@@ -68,7 +70,12 @@ class IntroPage(adv.WizardPageSimple):
 			return
 		except ValueError:
 			pass
-		self.bibEntry.SetValue( '' )
+		except AttributeError:
+			pass
+		try:
+			self.bibEntry.SetValue( '' )
+		except AttributeError:
+			pass
 	
 	def setInfo( self, geoTrack, geoTrackFName ):
 		if geoTrack:
@@ -247,6 +254,10 @@ class UseTimesPage(adv.WizardPageSimple):
 					if (abs(self.geoTrack.lengthKm * 1000 - lapDistance)) < proxFilter:  #shade if we're within filter distance of lap length
 						self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
 						withinMinLapLength = True
+					elif lastLapAtDistance == 0:
+						self.grid.SetCellBackgroundColour( row, 5, wx.Colour(255, 255, 255) )
+					else:
+						self.grid.SetCellBackgroundColour( row, 5, wx.Colour(255, 255, 0) )
 					if raceTime >= self.minPossibleLapTime:
 						#look for new laps and shade/select
 						setLap = False
@@ -292,11 +303,13 @@ class UseTimesPage(adv.WizardPageSimple):
 			distance = float(self.grid.GetCellValue( row, 4 ) )
 			lapDistance = distance - lastLapAtKm
 			self.grid.SetCellValue( row, 5, '{:.2f}'.format(lapDistance or 0) )
-			self.grid.SetCellAlignment(row, 4, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
+			self.grid.SetCellAlignment(row, 5, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE_VERTICAL)
 			if (abs(self.geoTrack.lengthKm - lapDistance)) < proxFilter/1000:
 				self.grid.SetCellBackgroundColour( row, 5, wx.Colour(153, 205, 255) )
-			else:
+			elif lastLapAtKm == 0:
 				self.grid.SetCellBackgroundColour( row, 5, wx.Colour(255, 255, 255) )
+			else:
+				self.grid.SetCellBackgroundColour( row, 5, wx.Colour(255, 255, 0) )
 			if self.grid.GetCellValue( row, len(self.headerNames)-1 ):
 				lastLapAtKm = distance
 				if row > 0 and self.grid.GetCellValue( row -1, len(self.headerNames)-1 ):
