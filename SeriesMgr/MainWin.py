@@ -695,6 +695,7 @@ table.results tr td.fastest{
 		# Check if we can find all race files.
 		for r in model.races:
 			if not os.path.isfile( r.fileName ):
+				dirname = os.path.dirname( r.fileName )
 				fname = os.path.basename( r.fileName )
 				break
 		else:
@@ -702,18 +703,21 @@ table.results tr td.fastest{
 			
 		if not Utils.MessageOKCancel(
 				self,
-				'Cannot find Race File:\n\n    "{}"\n\nSet new Root Folder?'.format(fname),
+				'Cannot find Race File:\n\n    "{}"\nin    "{}"\n\nSet new Root Folder?'.format(fname, dirname),
 				'Cannot find Race Files'
 				):
 			return False
 		
-		dlg = wx.DirDialog(
-			self,
-			message='Select Root Folder where Race Files can be Found under:',
-			defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
-		)
-		result = (dlg.ShowModal() == wx.ID_OK) and model.setRootFolder( dlg.GetPath() )
-		dlg.Destroy()
+		with wx.DirDialog(
+				self,
+				message='Select Root Folder where Race Files can be Found under:',
+				defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
+			) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				result = model.setRootFolder( dlg.GetPath() )
+			else:
+				result = False
+		
 		return result
 		
 	def openSeries( self, fileName ):
