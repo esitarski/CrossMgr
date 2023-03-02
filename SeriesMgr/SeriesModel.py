@@ -3,9 +3,11 @@ import re
 import sys
 from html import escape
 import copy
+import time
 import operator
 import functools
 import datetime
+from multiprocessing import Pool
 import GetModelInfo
 from FileTrie import FileTrie
 from io import StringIO
@@ -214,7 +216,7 @@ def nameToAliasKey( name ):
 # "Special" rank codes.
 rankDNF					= 999999
 rankDidNotParticipate	= 9999999
-rankUnknown				= 99999
+rankUnknown				= 99999999
 
 class SeriesModel:
 	DefaultPointStructureName = 'Regular'
@@ -583,20 +585,27 @@ class SeriesModel:
 	
 	@memoize
 	def _extractAllRaceResultsCore( self ):
+		# Extract all race results in parallel.  Arguments are the race info and this series (to get the alias lookups).
+		with Pool() as p:
+			p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
+		
+		# Combine all results and record errors.
 		raceResults = []
 		oldErrors = self.errors
 		self.errors = []
-		for r in self.races:
-			success, ex, results = GetModelInfo.ExtractRaceResults( r )
-			if success:
-				raceResults.extend( results )
+		for ret, r in zip(p_results, self.races):
+			if ret['success']:
+				raceResults.extend( ret['raceResults'] )
+				if ret['licenseLinkTemplate']:
+					self.licenseLinkTemplate = ret['licenseLinkTemplate']
 			else:
-				self.errors.append( (r, ex) )
+				self.errors.append( (r, ret['explanation']) )
 		if oldErrors != self.errors:
 			self.changed = True
+			
 		self.harmonizeCategorySequence( raceResults )
 		return raceResults
-	
+
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
 		raceResults = self._extractAllRaceResultsCore()
 		if adjustForUpgrades:

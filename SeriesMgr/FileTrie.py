@@ -63,9 +63,13 @@ class FileTrie:
 			node = v
 		
 		path.reverse()
-		if re.match( '^[a-zA-Z]:$', path[0] ):
-			path[0] += '\\'
-			
+		
+		if path:
+			if re.match( '^[a-zA-Z]:$', path[0] ):	# Add absolution path to drive.
+				path[0] += '\\'
+			elif not path[0]:						# Ensure absolution paths are created correctly on linux in python 3.
+				path[0] = os.sep
+
 		return os.path.join( *path )
 
 if __name__ == '__main__':
