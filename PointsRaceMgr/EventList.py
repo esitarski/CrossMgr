@@ -29,11 +29,11 @@ ID_DELETE_EVENT = wx.ID_NO
 
 class EventDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, title="Edit Race Event" ):
-		super().__init__( parent, id, title=title, style=wx.RESIZE_BORDER )
+		super().__init__( parent, id, title=title, style=wx.RESIZE_BORDER|wx.CAPTION|wx.CLOSE_BOX  )
 		
 		bigFont = wx.Font( (0,20), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
-		hbs = wx.BoxSizer(wx.VERTICAL)
+		hbs = wx.BoxSizer(wx.VERTICAL)	# Main sizer of the dialog.
 		
 		self.titleText = 'Event:'
 		self.title = wx.StaticText(self, label=self.titleText )
@@ -67,7 +67,7 @@ class EventDialog( wx.Dialog ):
 			ws.Add( self.choiceButtons[-1], flag=wx.LEFT, border=2 )
 		hbs.Add( ws, flag=wx.ALL, border=4 )
 				
-		ws = wx.GridSizer(1, 4, 2, 2)
+		ws = wx.GridSizer(1, 5, 2, 2)
 		for name, idEvent in Model.RaceEvent.States:
 			self.choiceButtons.append( Button(self, label=name) )
 			self.choiceButtons[-1].SetForegroundColour( stateColour )
@@ -87,13 +87,21 @@ class EventDialog( wx.Dialog ):
 		editSizer.Add( self.copyBtn, flag=wx.ALL, border=4 )
 		editSizer.Add( self.deleteBtn, flag=wx.ALL, border=4 )
 		hbs.Add( wx.StaticLine(self), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=2 )
-		hbs.Add( editSizer, flag=wx.EXPAND|wx.ALL, border=4 )
-		
-		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
+		hbs.Add( editSizer, flag=wx.ALL, border=4 )
+
+		#---------------------------------------------------------------
+		btnSizer = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
 		if btnSizer:
-			hbs.Add( wx.StaticLine(self), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=2 )
-			hbs.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
-		self.SetSizerAndFit( hbs )
+			hbs.AddStretchSpacer()
+			hbs.Add( btnSizer, flag=wx.EXPAND|wx.BOTTOM, border=4 )
+		
+		self.SetSizer( hbs )
+		wx.CallAfter( self.fixSize )
+	
+	def fixSize( self ):
+		s = self.GetSize()
+		self.SetSize( s.x, int(s.y*1.2) )
+		self.Layout()
 	
 	def refresh( self, event=None, rowCur=None ):
 		self.e = event or self.e
@@ -153,7 +161,7 @@ class EventList( wx.Panel ):
 		
 		self.eventDialog = EventDialog( self )
 		
-		self.SetDoubleBuffered(True)
+		self.SetDoubleBuffered( True )
 		self.SetBackgroundColour( wx.WHITE )
 		
 		bigFont = wx.Font( (0,20), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
@@ -185,7 +193,7 @@ class EventList( wx.Panel ):
 			ws.Add( self.choiceButtons[-1] )
 		hbs.Add( ws, flag=wx.ALL, border=4 )
 
-		ws = wx.GridSizer(1, 4, 2, 2)
+		ws = wx.GridSizer(2, 4, 2, 2)
 		for name, idEvent in Model.RaceEvent.States:
 			self.choiceButtons.append( Button(self, label=name) )
 			self.choiceButtons[-1].SetForegroundColour( stateColour )
@@ -217,7 +225,7 @@ class EventList( wx.Panel ):
 	
 	def onVerb( self, event, idEvent ):
 		bibText = self.bibText.GetValue().strip()
-		if bibText:
+		if bibText or idEvent == Model.RaceEvent.Compact:
 			self.addNewEvent( Model.RaceEvent(idEvent, bibText) )
 		self.bibText.SetValue( '' )
 		wx.CallAfter( self.bibText.SetFocus )

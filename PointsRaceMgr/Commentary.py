@@ -54,38 +54,62 @@ class Commentary( wx.Panel ):
 			return lines
 		
 		RaceEvent = Model.RaceEvent
-		
 		lines = []
 		self.sprintCount = 0
-		for e in race.events:
-			if   e.eventType == RaceEvent.Sprint:
-				self.sprintCount += 1
-				lines.append( 'Sprint {} Result:'.format(self.sprintCount) )
-				lines.extend( infoLinesSprint(self.sprintCount, e.bibs[:len(race.pointsForPlace)]) )
+		
+		def CommSprint( e ):
+			self.sprintCount += 1
+			lines.append( 'Sprint {} Result:'.format(self.sprintCount) )
+			lines.extend( infoLinesSprint(self.sprintCount, e.bibs[:len(race.pointsForPlace)]) )
+
+		def CommLapUp( e ):
+			lines.append( 'Gained a Lap:' )
+			lines.extend( infoLines(e.bibs, race.pointsForLapping) )
+
+		def CommLapDown( e ):
+			lines.append( 'Lost a Lap:' )
+			lines.extend( infoLines(e.bibs, -race.pointsForLapping) )
+
+		def CommFinish( e ):
+			lines.append( 'Finish:' )
+			self.sprintCount += 1
+			lines.extend( infoLinesSprint(self.sprintCount, e.bibs) )
+
+		def CommDNF( e ):
+			lines.append( 'DNF (Did Not Finish):' )
+			lines.extend( infoLines(e.bibs) )
 			
-			elif e.eventType == RaceEvent.LapUp:
-				lines.append( 'Gained a Lap:' )
-				lines.extend( infoLines(e.bibs, race.pointsForLapping) )
-			elif e.eventType == RaceEvent.LapDown:
-				lines.append( 'Lost a Lap:' )
-				lines.extend( infoLines(e.bibs, -race.pointsForLapping) )
-			elif e.eventType == RaceEvent.Finish:
-				lines.append( 'Finish:' )
-				self.sprintCount += 1
-				lines.extend( infoLinesSprint(self.sprintCount, e.bibs) )
-			elif e.eventType == RaceEvent.DNF:
-				lines.append( 'DNF (Did Not Finish):' )
-				lines.extend( infoLines(e.bibs) )
-			elif e.eventType == RaceEvent.DNS:
-				lines.append( 'DNS (Did Not Start):' )
-				lines.extend( infoLines(e.bibs) )
-			elif e.eventType == RaceEvent.PUL:
-				lines.append( 'PUL (Pulled by Race Officials):' )
-				lines.extend( infoLines(e.bibs) )
-			elif e.eventType == RaceEvent.DSQ:
-				lines.append( 'DSQ (Disqualified)' )
-				lines.extend( infoLines(e.bibs) )
-			lines.append( '' )
+		def CommDNS( e ):
+			lines.append( 'DNS (Did Not Start):' )
+			lines.extend( infoLines(e.bibs) )
+			
+		def CommPUL( e ):
+			lines.append( 'PUL (Pulled by Race Officials):' )
+			lines.extend( infoLines(e.bibs) )
+
+		def CommDSQ( e ):
+			lines.append( 'DSQ (Disqualified)' )
+			lines.extend( infoLines(e.bibs) )
+
+		def CommCompact( e ):
+			lines.append( 'Compact (all together)' )
+			
+		CommEventHandler = {
+			RaceEvent.Sprint:	CommSprint,
+			RaceEvent.LapUp:	CommLapUp,
+			RaceEvent.LapDown:	CommLapDown,
+			RaceEvent.Finish:	CommFinish,
+			RaceEvent.DNF:		CommDNF,
+			RaceEvent.DNS:		CommDNS,
+			RaceEvent.PUL:		CommPUL,
+			RaceEvent.DSQ:		CommDSQ,
+			RaceEvent.Compact:	CommCompact,
+		}
+		
+		for e in race.events:
+			if handler := CommEventHandler.get( e.eventType, None ):
+				handler( e )
+				lines.append( '' )
 		
 		return '\n'.join(lines)
 
