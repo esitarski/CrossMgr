@@ -219,8 +219,12 @@ class RaceEvent:
 	def bibStr( self ):
 		return ','.join( '{}'.format(b) for b in self.bibs).replace(',-', '=')
 
+	@staticmethod
+	def isStateEvent( eventType ):
+		return eventType >= RaceEvent.Break
+
 	def isState( self ):
-		return self.eventType >= self.Break
+		return RaceEvent.isStateEvent( self.eventType )
 	
 	@property
 	def eventTypeName( self ):

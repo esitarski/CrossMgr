@@ -77,26 +77,27 @@ class EventDialog( wx.Dialog ):
 		
 		hbs.Add( ws, flag=wx.ALL|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
 		
-		editSizer = wx.BoxSizer( wx.HORIZONTAL )
+		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.okBtn = wx.Button( self, id=wx.ID_OK )
+		self.okBtn.SetDefault()
 		self.copyBtn = wx.Button( self, label='Copy' )
 		self.copyBtn.Bind( wx.EVT_BUTTON, self.onCopy )
-		
 		self.deleteBtn = wx.Button( self, label='Delete' )
 		self.deleteBtn.Bind( wx.EVT_BUTTON, self.onDelete )
-		
-		editSizer.Add( self.copyBtn, flag=wx.ALL, border=4 )
-		editSizer.Add( self.deleteBtn, flag=wx.ALL, border=4 )
-		hbs.Add( wx.StaticLine(self), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=2 )
-		hbs.Add( editSizer, flag=wx.ALL, border=4 )
+		self.cancelBtn = wx.Button( self, id=wx.ID_CANCEL, label='Cancel' )
 
-		#---------------------------------------------------------------
-		btnSizer = self.CreateSeparatedButtonSizer( wx.OK|wx.CANCEL )
-		if btnSizer:
-			hbs.AddStretchSpacer()
-			hbs.Add( btnSizer, flag=wx.EXPAND|wx.BOTTOM, border=4 )
-		
+		btnSizer.Add( self.okBtn, flag=wx.ALL, border=4 )
+		btnSizer.AddStretchSpacer()
+		btnSizer.Add( self.copyBtn, flag=wx.ALL, border=4 )
+		btnSizer.AddStretchSpacer()
+		btnSizer.Add( self.deleteBtn, flag=wx.ALL, border=4 )
+		btnSizer.AddStretchSpacer()
+		btnSizer.Add( self.cancelBtn, flag=wx.ALL, border=4 )
+		hbs.Add( wx.StaticLine(self), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=2 )
+		hbs.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
+
 		self.SetSizer( hbs )
-		wx.CallAfter( self.fixSize )
+		# wx.CallAfter( self.fixSize )
 	
 	def fixSize( self ):
 		s = self.GetSize()
@@ -236,62 +237,62 @@ class EventList( wx.Panel ):
 		
 		rowCur = event.GetRow()
 		self.grid.SelectRow( rowCur )
-		eventCur = copy.deepcopy( race.events[rowCur] )
-		wasState = eventCur.isState()
 		
-		while True:
-			self.eventDialog.refresh( eventCur, rowCur)
-			self.eventDialog.CentreOnScreen()
+		eventCur = copy.deepcopy( race.events[rowCur] )
+		isStateOld = eventCur.isState()
+		eventTypeOld = eventCur.eventType
+		
+		self.eventDialog.refresh( eventCur, rowCur)
+		self.eventDialog.CentreOnScreen()
+		
+		result = self.eventDialog.ShowModal()
+		
+		if result == wx.ID_CANCEL:
+			return
 			
-			result = self.eventDialog.ShowModal()
-			
-			if result == wx.ID_CANCEL:
-				return
-			
-			if result == wx.ID_OK:
-				changed = self.eventDialog.commit()
-				isState = self.eventDialog.e.isState()
-				if wasState or isState:
-					# Move the state to the end to show most recent state.
-					# del race.events[rowCur]
-					race.events.append( self.eventDialog.e )
-					rowCur = len(race.events) - 1
-				else:
-					if not changed:
-						return
-					race.events[rowCur] = self.eventDialog.e
-					
-				race.setEvents( race.events )
-				(Utils.getMainWin() or self).refresh()
-				self.grid.MakeCellVisible( rowCur, 0 )
-				self.grid.SelectRow( rowCur )
-				return
-				
-			if result == ID_DELETE_EVENT:
-				events = race.events[:]
-				events.pop( rowCur )
-				race.setEvents( events )
-				rowCur = min( len(race.events)-1, rowCur )
-				if race.events:
-					self.grid.MakeCellVisible( rowCur, 0 )				
-					self.grid.SelectRow( rowCur )
-				(Utils.getMainWin() or self).refresh()
-				return
-
-			if result == ID_COPY_EVENT:
-				changed = self.eventDialog.commit()
-				if changed:
-					race.events[rowCur] = self.eventDialog.e
-				race.events.append( copy.deepcopy(race.events[rowCur]) )
-				race.setEvents( race.events )
-				
+		if result == wx.ID_OK:
+			changed = self.eventDialog.commit()
+			eventNew = self.eventDialog.e
+			eventTypeNew = eventNew.eventType
+			isStateNew = eventNew.isState()
+			if eventTypeOld != eventTypeNew:
+				# If the event type changed, create a new event.
+				race.events.append( eventNew )
 				rowCur = len(race.events) - 1
-				(Utils.getMainWin() or self).refresh()
-				self.grid.MakeCellVisible( rowCur, 0 )
+			else:
+				if not changed:
+					return
+				race.events[rowCur] = eventNew
 				
+			race.setEvents( race.events )
+			(Utils.getMainWin() or self).refresh()
+			self.grid.MakeCellVisible( rowCur, 0 )
+			self.grid.SelectRow( rowCur )
+			return
+			
+		if result == ID_DELETE_EVENT:
+			events = race.events.copy()
+			events.pop( rowCur )
+			race.setEvents( events )
+			rowCur = min( len(race.events)-1, rowCur )
+			if race.events:
+				self.grid.MakeCellVisible( rowCur, 0 )				
 				self.grid.SelectRow( rowCur )
-				eventCur = copy.deepcopy( race.events[rowCur] )
-				wasState = eventCur.isState()
+			(Utils.getMainWin() or self).refresh()
+			return
+
+		if result == ID_COPY_EVENT:
+			changed = self.eventDialog.commit()
+			eventNew = self.eventDialog.e
+			race.events.append( eventNew )
+			race.setEvents( race.events )
+			
+			rowCur = len(race.events) - 1
+			(Utils.getMainWin() or self).refresh()
+			self.grid.MakeCellVisible( rowCur, 0 )
+			
+			self.grid.SelectRow( rowCur )
+			return
 			
 	def editRow( self, row ):
 		class EditEventDuck:
@@ -332,7 +333,7 @@ class EventList( wx.Panel ):
 			self.grid.SetCellValue( row, 0, name )
 			self.grid.SetCellValue( row, 1, e.bibStr() )
 			
-			textColour = stateColour if e.isState() else wx.BLACK
+			textColour = stateColour if e.isState() else eventColour
 			self.grid.SetCellTextColour( row, 0, textColour )
 			self.grid.SetCellTextColour( row, 1, textColour )
 		
