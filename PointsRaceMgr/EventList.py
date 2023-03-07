@@ -331,6 +331,10 @@ class EventList( wx.Panel ):
 					
 			self.grid.SetCellValue( row, 0, name )
 			self.grid.SetCellValue( row, 1, e.bibStr() )
+			
+			textColour = stateColour if e.isState() else wx.BLACK
+			self.grid.SetCellTextColour( row, 0, textColour )
+			self.grid.SetCellTextColour( row, 1, textColour )
 		
 		self.grid.AutoSize()
 		self.grid.EndBatch()

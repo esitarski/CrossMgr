@@ -91,9 +91,6 @@ class Commentary( wx.Panel ):
 			lines.append( 'DSQ (Disqualified)' )
 			lines.extend( infoLines(e.bibs) )
 
-		def CommCompact( e ):
-			lines.append( 'Compact (all together)' )
-			
 		CommEventHandler = {
 			RaceEvent.Sprint:	CommSprint,
 			RaceEvent.LapUp:	CommLapUp,
@@ -103,7 +100,6 @@ class Commentary( wx.Panel ):
 			RaceEvent.DNS:		CommDNS,
 			RaceEvent.PUL:		CommPUL,
 			RaceEvent.DSQ:		CommDSQ,
-			RaceEvent.Compact:	CommCompact,
 		}
 		
 		for e in race.events:
