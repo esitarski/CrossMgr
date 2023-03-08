@@ -24,9 +24,6 @@ class EventListGrid( ReorderableGrid ):
 			wx.CallAfter( Utils.getMainWin().eventList.commitReorder )
 		return super().OnRearrangeEnd(evt)
 
-ID_COPY_EVENT = wx.ID_YES
-ID_DELETE_EVENT = wx.ID_NO
-
 class EventDialog( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, title="Edit Race Event" ):
 		super().__init__( parent, id, title=title, style=wx.RESIZE_BORDER|wx.CAPTION|wx.CLOSE_BOX  )
@@ -80,11 +77,11 @@ class EventDialog( wx.Dialog ):
 		btnSizer = wx.BoxSizer( wx.HORIZONTAL )
 		self.okBtn = wx.Button( self, id=wx.ID_OK )
 		self.okBtn.SetDefault()
-		self.copyBtn = wx.Button( self, label='Copy' )
-		self.copyBtn.Bind( wx.EVT_BUTTON, self.onCopy )
-		self.deleteBtn = wx.Button( self, label='Delete' )
+		self.copyBtn = wx.Button( self, id=wx.ID_NEW )
+		self.copyBtn.Bind( wx.EVT_BUTTON, self.onNew )
+		self.deleteBtn = wx.Button( self, id=wx.ID_DELETE )
 		self.deleteBtn.Bind( wx.EVT_BUTTON, self.onDelete )
-		self.cancelBtn = wx.Button( self, id=wx.ID_CANCEL, label='Cancel' )
+		self.cancelBtn = wx.Button( self, id=wx.ID_CANCEL )
 
 		btnSizer.Add( self.okBtn, flag=wx.ALL, border=4 )
 		btnSizer.AddStretchSpacer()
@@ -131,13 +128,13 @@ class EventDialog( wx.Dialog ):
 				btn.SetBackgroundColour( wx.NullColour )
 		self.EndModal( wx.ID_OK )
 		
-	def onCopy( self, event ):
-		self.EndModal( ID_COPY_EVENT )
+	def onNew( self, event ):
+		self.EndModal( wx.ID_COPY )
 		
 	def onDelete( self, event ):
 		with wx.MessageDialog( self, '{}\n\nConfirm Delete?'.format(self.titleText), 'Confirm Delete', style=wx.OK|wx.CANCEL ) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
-				self.EndModal( ID_DELETE_EVENT )
+				self.EndModal( wx.ID_DELETE )
 		
 	def commit( self ):
 		changed = False
@@ -270,7 +267,7 @@ class EventList( wx.Panel ):
 			self.grid.SelectRow( rowCur )
 			return
 			
-		if result == ID_DELETE_EVENT:
+		if result == wx.ID_DELETE:
 			events = race.events.copy()
 			events.pop( rowCur )
 			race.setEvents( events )
@@ -281,7 +278,7 @@ class EventList( wx.Panel ):
 			(Utils.getMainWin() or self).refresh()
 			return
 
-		if result == ID_COPY_EVENT:
+		if result == wx.ID_COPY:
 			changed = self.eventDialog.commit()
 			eventNew = self.eventDialog.e
 			race.events.append( eventNew )
