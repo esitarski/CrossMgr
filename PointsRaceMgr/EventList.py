@@ -94,12 +94,6 @@ class EventDialog( wx.Dialog ):
 		hbs.Add( btnSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 
 		self.SetSizer( hbs )
-		# wx.CallAfter( self.fixSize )
-	
-	def fixSize( self ):
-		s = self.GetSize()
-		self.SetSize( s.x, int(s.y*1.2) )
-		self.Layout()
 	
 	def refresh( self, event=None, rowCur=None ):
 		self.e = event or self.e
