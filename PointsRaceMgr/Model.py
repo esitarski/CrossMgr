@@ -149,7 +149,7 @@ class GetRank:
 			return '{}'.format(rank)
 		
 class RaceEvent:
-	DNS, DNF, PUL, DSQ, LapUp, LapDown, Sprint, Finish, Break, Chase, OTB, NML = tuple( range(12) )
+	DNS, DNF, PUL, DSQ, LapUp, LapDown, Sprint, Finish, Break, Chase, OTB, NML, Compact = tuple( range(13) )
 	
 	Events = (
 		('Sp', Sprint),
@@ -167,6 +167,7 @@ class RaceEvent:
 		('Chase', Chase),
 		('OTB', OTB),
 		('NML', NML),
+		('CMPCT', Compact),
 	)
 	EventName = {v:n for n,v in Events}
 	EventName.update( {v:n for n,v in States} )
@@ -218,8 +219,12 @@ class RaceEvent:
 	def bibStr( self ):
 		return ','.join( '{}'.format(b) for b in self.bibs).replace(',-', '=')
 
+	@staticmethod
+	def isStateEvent( eventType ):
+		return eventType >= RaceEvent.Break
+
 	def isState( self ):
-		return self.eventType >= self.Break
+		return RaceEvent.isStateEvent( self.eventType )
 	
 	@property
 	def eventTypeName( self ):
@@ -452,6 +457,7 @@ class Race:
 		self.events.append( RaceEvent(RaceEvent.LapUp, bibs=[13,14]) )
 		self.events.append( RaceEvent(RaceEvent.OTB, bibs=[14,15]) )
 		self.events.append( RaceEvent(RaceEvent.LapDown, bibs=[14,15]) )
+		self.events.append( RaceEvent(RaceEvent.Compact, bibs=[]) )
 		
 		def addTies( bibList ):
 			bibList = ','.join( '{}'.format(b*random.choice([-1,1,1,1])) for b in bibList )	# 0.2 probability of ties.
