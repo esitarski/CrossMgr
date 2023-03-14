@@ -281,7 +281,6 @@ class EventList( wx.Panel ):
 			rowCur = len(race.events) - 1
 			(Utils.getMainWin() or self).refresh()
 			self.grid.MakeCellVisible( rowCur, 0 )
-			
 			self.grid.SelectRow( rowCur )
 			return
 			
