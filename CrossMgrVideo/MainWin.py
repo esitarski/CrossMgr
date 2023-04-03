@@ -1314,7 +1314,7 @@ class MainWin( wx.Frame ):
 				'bib':				self.snapshotCount,
 				'first_name':		'',
 				'last_name':		'Snapshot',
-#				'machine':			'',
+				'machine':			'',
 				'team':				'',
 				'wave':				'',
 				'race_name':		'',
