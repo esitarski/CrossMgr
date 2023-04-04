@@ -165,7 +165,7 @@ class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 		
 		# Populate the list.
 		for row, d in enumerate(data):
-			index = self.list.InsertItem(888888, '{}'.format(d[0]), self.sm_rt)
+			index = self.list.InsertItem(self.list.GetItemCount(), '{}'.format(d[0]), self.sm_rt)
 			for i, v in enumerate(itertools.islice(d, 1, len(d))):
 				self.list.SetItem( index, i+1, '{}'.format(v) )
 			self.list.SetItemData( row, d[0] )		# This key links to the sort fields used by ColumnSorterMixin

@@ -272,7 +272,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		self.mapSummary.DeleteAllItems()
 		GetTranslation = _
 		for c, f in enumerate(Fields):
-			r = self.mapSummary.InsertItem( 999999, GetTranslation(f) )
+			r = self.mapSummary.InsertItem( self.mapSummary.GetItemCount(), GetTranslation(f) )
 			self.mapSummary.SetItem( r, 1, self.choices[c].GetStringSelection() )
 		
 	def getFieldCol( self ):

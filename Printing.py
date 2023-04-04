@@ -41,7 +41,7 @@ def getCatCountImagesCategoryList( parent ):
 				catCount[c] = race.catCount( c )
 				if catCount[c] == 0:
 					continue
-				index = list.InsertItem(999999, c.name, sm_rt)
+				index = list.InsertItem(list.GetItemCount(), c.name, sm_rt)
 				list.SetItem( index, 1, getattr(c, 'gender', 'Open') )
 				list.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
 				list.SetItem( index, 3, '{}'.format(catCount[c]) )

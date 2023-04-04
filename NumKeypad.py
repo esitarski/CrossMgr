@@ -635,7 +635,7 @@ class NumKeypad( wx.Panel ):
 		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.lapCountList.InsertItem( 999999, '{}'.format(row[0]) if row else '' )
+			r = self.lapCountList.InsertItem( elf.lapCountList.GetItemCount(), '{}'.format(row[0]) if row else '' )
 			for c in range(1, len(row)):
 				self.lapCountList.SetItem( r, c, '{}'.format(row[c]) )
 			if colour is not None:

@@ -421,7 +421,7 @@ class MainWin( wx.Frame ):
 			return
 			
 		def insert_source_info( source, errors, add_value_field=True ):
-			idx = self.sourceList.InsertItem( 999999, source.sheet_name )
+			idx = self.sourceList.InsertItem( self.sourceList.GetItemCount(), source.sheet_name )
 			fields = source.get_ordered_fields()
 			if add_value_field and source.get_cmp_policy_name():
 				fields = [source.get_cmp_policy_name()] + list(fields)
