@@ -1260,8 +1260,7 @@ class MainWin( wx.Frame ):
 			tsPrev = triggers[i-1].ts if i != 0 else (trig.ts - timedelta(days=1))
 			tsNext = triggers[i+1].ts if i < len(triggers)-1 else (trig.ts + timedelta(days=1))
 			deltaFinish = min( (trig.ts-tsPrev).total_seconds(), (tsNext-trig.ts).total_seconds() )
-			#row = self.triggerList.InsertItem( 999999, trig.ts.strftime('%H:%M:%S.%f')[:-3], getCloseFinishIndex(deltaFinish) )  #this seems to cause incorrect item order under Windows - KW
-	￼			row = self.triggerList.InsertItem( self.triggerList.GetItemCount(), trig.ts.strftime('%H:%M:%S.%f')[:-3], getCloseFinishIndex(deltaFinish) )  #always appends to the bottom of the list
+￼			row = self.triggerList.InsertItem( self.triggerList.GetItemCount(), trig.ts.strftime('%H:%M:%S.%f')[:-3], getCloseFinishIndex(deltaFinish) )
 			
 			self.updateTriggerRow( row, trig._asdict() )			
 			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
