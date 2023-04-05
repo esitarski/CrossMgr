@@ -34,7 +34,7 @@ class FtpWithPort(ftplib.FTP):
 class FtpsWithPort(ftplib.FTP_TLS):
 	def __init__(self, host, user, passwd, port, timeout):
 		ftplib.FTP_TLS.__init__(self)
-		#self.set_debuglevel(2)
+		#self.set_debuglevel(5)
 		self.connect(host, port, timeout)
 		self.auth()
 		self.login(user, passwd)
@@ -75,7 +75,13 @@ def FtpWriteFile( host, port, user = 'anonymous', passwd = 'anonymous@', timeout
 		if file is None:
 			file = open(fileName, 'rb')
 			fileOpened = True
-		ftps.storbinary( 'STOR {}'.format(os.path.basename(fileName)), file )
+		try:
+			ftps.storbinary( 'STOR {}'.format(os.path.basename(fileName)), file )
+		except ftplib.all_errors as e:
+			if 'EOF occurred in violation of protocol' in str(e):
+				Utils.writeLog( 'FtpWriteFile ignored \"' + str(e) + '\" as this can be non-fatal.  Check if the file exists on the server.')
+			else:
+				raise e
 		ftps.quit()
 		if fileOpened:
 			file.close()
@@ -250,9 +256,16 @@ class FtpPublishDialog( wx.Dialog ):
 			for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
 				getattr(self, f).SetValue( v )
 		else:
+			self.protocol = getattr(model, 'ftpProtocol', '')
+			if self.protocol == 'SFTP':
+				self.useSftp.SetValue(True)
+			elif self.protocol == 'FTPS':
+				self.useFtps.SetValue(True)
+			else:
+				self.useFtp.SetValue(True)
 			for f, v in zip(FtpPublishDialog.fields, FtpPublishDialog.defaults):
 				getattr(self, f).SetValue( getattr(model, f, v) )
-			self.protocol = getattr(model, 'ftpProtocol', '')
+			
 		self.urlPathChanged()
 	
 	def setModelAttr( self ):
@@ -263,9 +276,8 @@ class FtpPublishDialog( wx.Dialog ):
 			if getattr( model, f, None ) != value:
 				setattr( model, f, value )
 				model.setChanged()
-		if getattr( model, 'ftpProtocol', None ) != self.protocol:
-			setattr( model, 'ftpProtocol', self.protocol)
-			model.setChanged()
+		setattr( model, 'ftpProtocol', self.protocol)
+		model.setChanged()
 		model.urlFull = self.urlFull.GetLabel()
 	
 	def onOK( self, event ):
