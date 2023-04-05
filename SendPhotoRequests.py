@@ -41,7 +41,7 @@ def getRequest( race, dirName, bib, raceSeconds, externalInfo ):
 	info['wave'] = category.fullname if category else ''
 	try:
 		riderInfo = externalInfo[bib]
-		for a, b in (('firstName', 'FirstName'), ('lastName','LastName'), ('team', 'Team')):
+		for a, b in (('firstName', 'FirstName'), ('lastName','LastName'), ('machine', 'Machine'), ('team', 'Team')):
 			try:
 				info[a] = riderInfo[b]
 			except KeyError:
