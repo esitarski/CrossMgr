@@ -278,7 +278,7 @@ def CamServer( qIn, qOut, camInfo=None ):
 					# Remove stale intervals from list.
 					if intervals:
 						tsCutoff = now() - timedelta( seconds=6 )
-						intervals = [ti for ti in intervals if ti.end < tsCutoff]
+						intervals = [ti for ti in intervals if ti.end > tsCutoff]
 				
 def getCamServer( camInfo=None ):
 	qIn = Queue()
