@@ -1862,8 +1862,8 @@ class MainWin( wx.Frame ):
 		
 		payload = {}
 		payload['raceName'] = os.path.basename(self.fileName or '')[:-4]
-		iTeam = ReportFields.index('Team')
-		payload['infoFields'] = ReportFields[:iTeam] + ['Name'] + ReportFields[iTeam:]
+		iMachine = ReportFields.index('Machine')
+		payload['infoFields'] = ReportFields[:iMachine] + ['Name'] + ReportFields[iMachine:]
 		
 		payload['organizer']		= getattr(race, 'organizer', '')
 		payload['reverseDirection']	= getattr(race, 'reverseDirection', False)
