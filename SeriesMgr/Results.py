@@ -1049,7 +1049,7 @@ class Results(wx.Panel):
 						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
 						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
-						else '({})'.format(Utils.ordinal(rRank)) if rRank <= SeriesModel.rankRNF
+						else '({})'.format(Utils.ordinal(rRank)) if rRank <= SeriesModel.rankDNF
 						else '',
 						centerStyle
 				)
