@@ -8,6 +8,11 @@ import CVUtil
 _ = lambda x: x
 
 class WheelEdgesPage(adv.WizardPageSimple):
+	#sizes from https://www.bikecalc.com/wheel_size_math
+	sizes =     ['622-50', '622-40', '622-28', '622-25', '571-28', '584-28', '559-50', '559-40', '559-28', '507-28', '406-40', '406-28', '349-28']
+	diameters = [ 0.722,     0.702,    0.678,    0.672,   0.627,    0.640,    0.659,    0.639,    0.615,    0.563,    0.486,    0.462,    0.405 ]
+	defaultWheelSize = 2 #622-28
+	
 	def __init__(self, parent):
 		super().__init__(parent)
 		
@@ -23,19 +28,33 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		self.sbvl.Bind( wx.EVT_KEY_DOWN, self.onKeyDown )
 		
 		footerSizer = wx.BoxSizer( wx.HORIZONTAL )
-		
+		vbsSettings = wx.BoxSizer( wx.VERTICAL )
+		hbs = wx.BoxSizer( wx.HORIZONTAL )
 		self.timestamp = wx.StaticText(self, label='00:00:00.000')
 		self.timestamp.SetFont( wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
-		footerSizer.Add( self.timestamp, flag=wx.LEFT, border=2)
-		
+		hbs.Add( self.timestamp, flag=wx.LEFT, border=2)
 		self.frameLeft = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25C0' )
 		self.frameLeft.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(-1) )
 		self.frameRight = wx.Button( self, style=wx.BU_EXACTFIT, label='\u25B6' )
 		self.frameRight.Bind( wx.EVT_BUTTON, lambda e: self.changeFrame(1) )
 				
-		footerSizer.Add( self.frameLeft, flag=wx.LEFT, border=2)
-		footerSizer.Add( self.frameRight, flag=wx.LEFT, border=0)
-		footerSizer.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.LEFT|wx.TOP, border=2 )
+		hbs.Add( self.frameLeft, flag=wx.LEFT, border=2)
+		hbs.Add( self.frameRight, flag=wx.LEFT, border=0)
+		hbs.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.LEFT|wx.TOP, border=2 )
+		vbsSettings.Add( hbs, flag=wx.LEFT, border=2)
+		
+		hbs = wx.BoxSizer( wx.HORIZONTAL )
+		self.wheelSelector = wx.ComboBox( self, style=wx.TE_PROCESS_ENTER, choices=WheelEdgesPage.sizes )
+		self.wheelSelector.SetSelection(WheelEdgesPage.defaultWheelSize)
+		self.wheelSelector.Bind( wx.EVT_COMBOBOX, self.onselectWheel )
+		self.wheelSelector.Bind( wx.EVT_TEXT_ENTER, self.onEnterWheel )
+		hbs.Add( wx.StaticText(self, label = _('Select wheel size or enter diamter (mm):')), flag=wx.TOP|wx.LEFT|wx.RIGHT, border = border )
+		hbs.Add( self.wheelSelector, flag=wx.LEFT, border=2)
+		
+		vbsSettings.Add( hbs, flag=wx.LEFT, border=2)
+		
+		
+		footerSizer.Add( vbsSettings, flag=wx.LEFT, border=4 )
 		
 		vbsFooter = wx.BoxSizer( wx.VERTICAL )
 		vbsFooter.Add( wx.StaticText(self, label = _('1.  Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
@@ -76,6 +95,16 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		)
 		self.GetSizer().Layout()
 		
+	def onselectWheel( self, event ):
+		self.wheelDiameter = WheelEdgesPage.diameters[self.wheelSelector.GetSelection()]
+		self.setExplain()
+		pass
+		
+	def onEnterWheel( self, event ):
+		mm = float(self.wheelSelector.GetValue())
+		self.wheelDiameter = mm/1000
+		self.setExplain()
+		
 	@property
 	def t( self ):
 		return self.tsJpg[self.iPhoto1][0] if self.iPhoto1 is not None else None
@@ -84,14 +113,19 @@ class WheelEdgesPage(adv.WizardPageSimple):
 	def bitmap( self ):
 		return CVUtil.jpegToBitmap(self.tsJpg[self.iPhoto1][1]) if self.iPhoto1 is not None else None
 		
-	def Set( self, tsJpg, iPhoto1, iPhoto2, wheelDiameter ):
+	def Set( self, tsJpg, iPhoto1, iPhoto2, wheelDiameter=None ):
 		self.tsJpg, self.iPhoto1, self.iPhoto2 = tsJpg, iPhoto1, iPhoto2
-		self.wheelDiameter = wheelDiameter
+		if wheelDiameter:
+			self.wheelSelector.SetValue('{:3.0f}'.format(wheelDiameter*1000))
+			self.wheelDiameter = wheelDiameter
+		else:
+			self.wheelDiameter = WheelEdgesPage.diameters[self.wheelSelector.GetSelection()]
 		self.sbvl.SetBitmap( self.bitmap )
 		self.setExplain()
 	
 	def getWheelEdges( self ):
 		return self.sbvl.GetVerticalLines()
+	
 	
 class FrontWheelEdgePage(adv.WizardPageSimple):
 	def __init__(self, parent, getSpeed):
@@ -122,17 +156,18 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		self.speed.SetLabel( self.formatSpeed(kmh, mps, mph) )
 		self.GetSizer().Layout()
 		
-	def Set( self, t, bitmap, wheelDiameter ):
+	def Set( self, t, bitmap ):
 		self.t = t
-		self.wheelDiameter = wheelDiameter
 		self.sbvl.SetBitmap( bitmap )
 		self.onVerticalLines()
+		
+	def setWheelDiameter( self, wheelDiameter ):
+		self.wheelDiameter = wheelDiameter
 	
 	def getFrontWheelEdge( self ):
 		return self.sbvl.GetVerticalLines()[0]
 	
 class ComputeSpeed:
-	wheelDiameter = 0.678
 
 	def __init__( self, parent, size=wx.DefaultSize ):
 		self.wizard = adv.Wizard( parent, wx.ID_ANY, _('Compute Speed') )
@@ -148,6 +183,7 @@ class ComputeSpeed:
 
 		self.wizard.SetPageSize( size )
 		self.wizard.GetPageAreaSizer().Add( self.wheelEdgesPage )
+		self.wizard.GetPageAreaSizer().Add( self.frontWheelEdgePage )
 		self.wizard.FitToPage( self.wheelEdgesPage )
 	
 	def getSpeed( self ):
@@ -184,8 +220,8 @@ class ComputeSpeed:
 	
 	def Show( self, tsJpg, iPhoto1, iPhoto2, ts_start ):
 		self.tsJpg, self.iPhoto1, self.iPhoto2, self.ts_start = tsJpg, iPhoto1, iPhoto2, ts_start
-		self.wheelEdgesPage.Set( self.tsJpg, self.iPhoto1, self.iPhoto2, self.wheelDiameter )
-		self.frontWheelEdgePage.Set( self.t2, self.bitmap2, self.wheelDiameter )
+		self.wheelEdgesPage.Set( self.tsJpg, self.iPhoto1, self.iPhoto2 )
+		self.frontWheelEdgePage.Set( self.t2, self.bitmap2 )
 	
 		if self.wizard.RunWizard(self.wheelEdgesPage):
 			return self.getSpeed()
@@ -197,7 +233,9 @@ class ComputeSpeed:
 		if isForward:
 			page = evt.GetPage()
 			if page == self.wheelEdgesPage:
+				self.wheelDiameter = self.wheelEdgesPage.wheelDiameter
 				self.frontWheelEdgePage.sbvl.verticalLines = [self.wheelEdgesPage.sbvl.verticalLines[1]]
+				self.frontWheelEdgePage.setWheelDiameter(self.wheelDiameter)
 			
 	def onPageChanged( self, evt ):
 		isForward = evt.GetDirection()
