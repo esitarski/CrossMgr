@@ -31,7 +31,7 @@ from time import sleep
 import numpy as np
 from queue import Queue, Empty
 
-from datetime import datetime, timedelta, time
+from datetime import datetime, date, timedelta, time
 
 now = datetime.now
 
@@ -398,6 +398,7 @@ class MainWin( wx.Frame ):
 		self.autoCaptureClosestFrames = 0
 		
 		self.isShutdown = False
+		self.selectLatest = True
 
 		dataDir = Utils.getHomeDir()
 		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
@@ -617,7 +618,11 @@ class MainWin( wx.Frame ):
 		self.publishWebPage.Bind( wx.EVT_BUTTON, self.onPublishWebPage )
 		hsDate.Add( self.publishWebPage, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
 		
-		self.tsQueryLower = datetime(tQuery.year, tQuery.month, tQuery.day)
+		self.selectLatest = wx.CheckBox( self, label="Select latest" )
+		self.selectLatest.Bind (wx.EVT_CHECKBOX, self.onToggleSelectLatest )
+		hsDate.Add( self.selectLatest, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
+		
+		self.tsQueryLower = date(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
 		self.bibQuery = None
 		
@@ -1169,6 +1174,10 @@ class MainWin( wx.Frame ):
 		)
 		threading.Thread( target=publish_web_photos, args=args, name='publish_web', daemon=True ).start()
 		# write_photos( *args )
+		
+	def onToggleSelectLatest(self, event):
+		self.refreshTriggers()
+		self.writeOptions()
 	
 	def GetListCtrl( self ):
 		return self.triggerList
@@ -1232,6 +1241,19 @@ class MainWin( wx.Frame ):
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
+		elif self.tsQueryUpper < date(tNow.year, tNow.month, tNow.day): #if a historical date is selected
+			if self.selectLatest.GetValue():
+				#replace list with the current day's
+				replace = True
+				tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
+				tsUpper = tsLower + timedelta(days=1)
+				#reset query date to current day
+				self.tsQueryLower = date(tNow.year, tNow.month, tNow.day)
+				self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
+				wx.CallAfter( self.date.SetValue, wx.DateTime(tNow.day, tNow.month-1, tNow.year) )
+			else:
+				#if we're not selecting latest, leave the historical trigger list unchanged
+				return
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
@@ -1280,8 +1302,9 @@ class MainWin( wx.Frame ):
 			iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
 			
 		self.triggerList.EnsureVisible( iTriggerRow )
-		self.triggerList.Select( iTriggerRow )
-		wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
+		if self.selectLatest.GetValue():
+			self.triggerList.Select( iTriggerRow )
+			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
 
 	def dbInactivityUpdate( self ):
 		# Do actions when the database goes inactive.
@@ -1343,7 +1366,7 @@ class MainWin( wx.Frame ):
 		if self.inCapture == 0:
 			self.refreshTriggers()
 
-	def onStartAutoCapture( self, event, isSnapshot=False ):
+	def onStartAutoCapture( self, event, isSnapshot=False, joystick=False ):
 		tNow = now()
 		self.inCapture += 1
 		
@@ -1369,6 +1392,9 @@ class MainWin( wx.Frame ):
 			s_before = 0.0	if closest_frames else self.tdCaptureBefore.total_seconds()
 			s_after = 0.0	if closest_frames else self.tdCaptureAfter.total_seconds()
 		
+		first_name = 'Joystick' if joystick else None
+
+		
 		btn.SetForegroundColour( disableColour )
 		wx.CallAfter( btn.Refresh )
 		
@@ -1380,6 +1406,7 @@ class MainWin( wx.Frame ):
 				'ts_start':			tNow,
 				'bib':				count,
 				'last_name':		last_name,
+				'first_name':		first_name,
 			}
 		)
 		
@@ -1400,12 +1427,13 @@ class MainWin( wx.Frame ):
 	def onJoystickButton( self, event ):
 		startCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON1 )
 		autoCaptureBtn	= event.ButtonIsDown( wx.JOY_BUTTON2 )
+		snapshotBtn = event.ButtonIsDown( wx.JOY_BUTTON3 )
 
 		if startCaptureBtn:
 			if not self.capturing:
 				self.capturing = True
 				event.SetEventObject( self.capture )
-				self.onStartCapture( event )
+				self.onStartCapture( event, joystick=True )
 			return
 			
 		if not startCaptureBtn:
@@ -1416,14 +1444,20 @@ class MainWin( wx.Frame ):
 
 		if autoCaptureBtn:
 			event.SetEventObject( self.autoCapture )
-			self.onStartAutoCapture( event )
+			self.onStartAutoCapture( event, joystick=True )
+			
+		if snapshotBtn:
+			event.SetEventObject( self.autoCapture )
+			self.onStartAutoCapture( event, isSnapshot=True, joystick=True )
 	
-	def onStartCapture( self, event ):
+	def onStartCapture( self, event, joystick=False ):
 		self.photoPanel.playStop()
 		
 		wx.BeginBusyCursor()
 		tNow = self.tStartCapture = now()
 		self.inCapture += 1
+		
+		first_name = 'Joystick' if joystick else None
 		
 		self.captureCount = getattr(self, 'captureCount', 0) + 1
 		self.requestQ.put( {
@@ -1434,6 +1468,7 @@ class MainWin( wx.Frame ):
 				'closest_frames':	0,
 				'bib':				self.captureCount,
 				'last_name':		'Capture',
+				'first_name':		first_name,
 			}
 		)
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow} )
@@ -1881,6 +1916,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
 		self.config.WriteInt( 'ClosestFrames', self.autoCaptureClosestFrames )
+		self.config.WriteBool ('SelectLatest', self.selectLatest.GetValue() )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1901,6 +1937,7 @@ class MainWin( wx.Frame ):
 			pass
 		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
 		self.autoCaptureClosestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
+		self.selectLatest.SetValue( self.config.ReadBool( 'SelectLatest', True ) )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()

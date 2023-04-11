@@ -126,11 +126,15 @@ __CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it ke
 
 Takes a single snapshot and saves it to the database.
 
+__Snapshot__ can be triggered by a joystick.  Snapshot is triggered when the third joystick button is pressed.
+
 #### Auto Capture
 
 Captures frames as specified by the __Auto Capture__ dialog described above.
 
 __Auto Capture__ can be triggered by pressing the 'A' key or the Space Bar.
+
+__Auto Capture__ can be triggered by a joystick.  Auto Capture starts when the second joystick button is pressed.
 
 #### Capture
 
@@ -222,6 +226,10 @@ Publishes the photo closest to each Trigger time to a chosen folder.
 __Photo Web Page__
 
 Publishes the photo closest to each Trigger time to a chosen folder, but also creates an html page that can select each photo.  Once the photo is selected, it supports the same drag-and-drop Zoom capability of CrossMgrVideo.  Photos can be saved locally from the web page.
+
+__Select latest__
+
+If ticked, automatically selects the latest Trigger after it arrives.  If unticked the trigger list will update to show new triggers, but the currently selected trigger remains selected.
 
 ## Web Interface
 
