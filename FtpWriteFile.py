@@ -596,9 +596,17 @@ def GetFtpPublish( isDialog=True ):
 				for f, v in zip(ftpFields, ftpDefaults):
 					getattr(self, f).SetValue( v )
 			else:
+				self.protocol = getattr(race, 'ftpProtocol', '')
+				if self.protocol == 'SFTP':
+					self.useSftp.SetValue(True)
+				elif self.protocol == 'FTPS':
+					self.useFtps.SetValue(True)
+				else:
+					self.useFtp.SetValue(True)
 				for f, v in zip(ftpFields, ftpDefaults):
 					getattr(self, f).SetValue( getattr(race, f, v) )
-				self.protocol = getattr(race, 'ftpProtocol', '')
+
+				
 			self.urlPathChanged()
 			self.ftpUploadPhotosChanged()
 		
