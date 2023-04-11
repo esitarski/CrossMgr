@@ -30,6 +30,7 @@ import sqlite3
 from time import sleep
 import numpy as np
 from queue import Queue, Empty
+import ast
 
 from datetime import datetime, date, timedelta, time
 
@@ -635,11 +636,12 @@ class MainWin( wx.Frame ):
 		images.extend( [self.sm_up, self.sm_dn] )
 		self.triggerList.SetSmallImages( images )
 		
-		self.fieldCol = {f:c for c, f in enumerate('ts bib name team wave race_name frames view kmh mph note'.split())}
-		headers = ['Time', 'Bib', 'Name', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
+		self.fieldCol = {f:c for c, f in enumerate('ts bib name machine team wave race_name frames view kmh mph note'.split())}
+		self.fieldHeaders = ['Time', 'Bib', 'Name', 'Machine', 'Team', 'Wave', 'Race', 'Frames', 'View', 'km/h', 'mph', 'Note']
 		formatRightHeaders = {'Bib','Frames','km/h','mph'}
 		formatMiddleHeaders = {'View',}
-		for i, h in enumerate(headers):
+		self.hiddenTriggerCols = []
+		for i, h in enumerate(self.fieldHeaders):
 			if h in formatRightHeaders:
 				align = wx.LIST_FORMAT_RIGHT
 			elif h in formatMiddleHeaders:
@@ -654,6 +656,7 @@ class MainWin( wx.Frame ):
 		self.triggerList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onTriggerRightClick )
 		self.triggerList.Bind( wx.EVT_LIST_KEY_DOWN, self.onTriggerKey )
 		#self.triggerList.Bind( wx.EVT_LIST_DELETE_ITEM, self.onTriggerDelete )
+		self.triggerList.Bind( wx.EVT_LIST_COL_RIGHT_CLICK, self.onTriggerColumnRightClick )
 		
 		vsTriggers = wx.BoxSizer( wx.VERTICAL )
 		vsTriggers.Add( hsDate )
@@ -697,7 +700,7 @@ class MainWin( wx.Frame ):
 		self.messageThread = threading.Thread( target=self.showMessages, daemon=True )
 		self.messageThread.start()
 		
-		wx.CallLater( 300, self.refreshTriggers )
+		wx.CallLater( 300, self.refreshTriggers, selectLatest=True )
 		
 		# Add event handlers to the app as this is the last window to process events.
 		'''
@@ -1048,7 +1051,7 @@ class MainWin( wx.Frame ):
 				tsBest, jpgBest = GlobalDatabase().getBestTriggerPhoto( info['id'] )
 				if jpgBest is None:
 					continue
-				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+				args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'machine', 'team', 'race_name', 'kmh')}
 				try:
 					args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 				except Exception:
@@ -1064,7 +1067,7 @@ class MainWin( wx.Frame ):
 						info['first_name'],
 					)
 				)
-				comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+				comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'machine', 'team', 'race_name')} )
 				try:
 					with open(os.path.join(dirname, fname), 'wb') as f:
 						f.write( AddExifToJpeg(jpg, info['ts'], comment) )
@@ -1137,7 +1140,7 @@ class MainWin( wx.Frame ):
 
 						if jpgBest is None:
 							continue
-						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'team', 'race_name', 'kmh')}
+						args = {k:info[k] for k in ('ts', 'bib', 'first_name', 'last_name', 'machine', 'team', 'race_name', 'kmh')}
 						try:
 							args['raceSeconds'] = (info['ts'] - info['ts_start']).total_seconds()
 						except Exception:
@@ -1145,7 +1148,7 @@ class MainWin( wx.Frame ):
 						if isinstance(args['kmh'], str):
 							args['kmh'] = float( '0' + re.sub( '[^0-9.]', '', args['kmh'] ) )
 
-						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'team', 'race_name')} )
+						comment = json.dumps( {k:info[k] for k in ('bib', 'first_name', 'last_name', 'machine', 'team', 'race_name')} )
 						jpg = CVUtil.bitmapToJPeg( AddPhotoHeader(CVUtil.jpegToBitmap(jpgBest), **args) )
 						jpg = AddExifToJpeg( jpg, info['ts'], comment )
 
@@ -1193,7 +1196,11 @@ class MainWin( wx.Frame ):
 
 	def updateTriggerColumnWidths( self ):
 		for c in range(self.triggerList.GetColumnCount()):
-			self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
+			if not c in self.hiddenTriggerCols:
+				self.triggerList.SetColumnWidth(c, wx.LIST_AUTOSIZE_USEHEADER if c != self.iNoteCol else 100 )
+			else:
+				#if column is hidden, just set the width to zero
+				self.triggerList.SetColumnWidth( c, 0 )
 				
 	def updateTriggerRow( self, row, fields ):
 		''' Update the row in the UI only. '''
@@ -1231,18 +1238,21 @@ class MainWin( wx.Frame ):
 	def getTriggerInfo( self, row ):
 		return self.computeTriggerFields( GlobalDatabase().getTriggerFields(self.triggerList.GetItemData(row)) )
 	
-	def refreshTriggers( self, replace=False, iTriggerRow=None ):
+	def refreshTriggers( self, replace=False, iTriggerRow=None, selectLatest=None):
 		'''
 			Refreshes the trigger list from the database.
 			If any rows have zero frames, it fixes the number of frames by reading the database.
 		'''
 		tNow = now()
+		
+		if selectLatest == None:
+			selectLatest = self.selectLatest.GetValue()
 
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
 		elif self.tsQueryUpper < date(tNow.year, tNow.month, tNow.day): #if a historical date is selected
-			if self.selectLatest.GetValue():
+			if selectLatest:
 				#replace list with the current day's
 				replace = True
 				tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
@@ -1257,7 +1267,7 @@ class MainWin( wx.Frame ):
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
-
+			
 		# Read the triggers from the database before we repaint the screen to avoid flashing.
 		counts = GlobalDatabase().updateTriggerPhotoCountInterval( tsLower, tsUpper )
 		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )		
@@ -1268,7 +1278,7 @@ class MainWin( wx.Frame ):
 		self.finishStrip.Set( None )
 		
 		if replace:
-			self.tsMax = None
+			#self.tsMax = None  #this causes duplicate entries when not replacing
 			self.iTriggerSelect = None
 			self.triggerInfo = {}
 			self.triggerList.DeleteAllItems()
@@ -1283,7 +1293,6 @@ class MainWin( wx.Frame ):
 			tsNext = triggers[i+1].ts if i < len(triggers)-1 else (trig.ts + timedelta(days=1))
 			deltaFinish = min( (trig.ts-tsPrev).total_seconds(), (tsNext-trig.ts).total_seconds() )
 			row = self.triggerList.InsertItem( self.triggerList.GetItemCount(), trig.ts.strftime('%H:%M:%S.%f')[:-3], getCloseFinishIndex(deltaFinish) )
-			
 			self.updateTriggerRow( row, trig._asdict() )			
 			self.triggerList.SetItemData( row, trig.id )	# item data is the trigger id.
 			tsPrev = trig.ts
@@ -1302,7 +1311,7 @@ class MainWin( wx.Frame ):
 			iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
 			
 		self.triggerList.EnsureVisible( iTriggerRow )
-		if self.selectLatest.GetValue():
+		if selectLatest:
 			self.triggerList.Select( iTriggerRow )
 			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
 
@@ -1330,6 +1339,7 @@ class MainWin( wx.Frame ):
 				'bib':				self.snapshotCount,
 				'first_name':		'',
 				'last_name':		'Snapshot',
+				'machine':			'',
 				'team':				'',
 				'wave':				'',
 				'race_name':		'',
@@ -1637,6 +1647,29 @@ class MainWin( wx.Frame ):
 		self.iTriggerSelect = event.Index
 		self.doTriggerEdit()
 		
+	def onTriggerColumnRightClick( self, event ):
+		# Create and display a popup menu of columns on right-click event
+		menu = wx.Menu()
+		menu.SetTitle( 'Show/Hide columns' )
+		for c in range(self.triggerList.GetColumnCount()):
+			menuItem = menu.AppendCheckItem( wx.ID_ANY, self.fieldHeaders[c] )
+			self.Bind(wx.EVT_MENU, self.onToggleTriggerColumn)
+			if not c in self.hiddenTriggerCols:
+				menu.Check( menuItem.GetId(), True )
+		self.PopupMenu(menu)
+		menu.Destroy()
+		
+	def onToggleTriggerColumn( self, event ):
+		#find the column number
+		label = event.GetEventObject().FindItemById(event.GetId()).GetItemLabel()
+		c = self.fieldHeaders.index(label)
+		#add or remove from hidden columns and update width
+		if c in self.hiddenTriggerCols:
+			self.hiddenTriggerCols.remove( c )
+		else:
+			self.hiddenTriggerCols.append( c )
+		self.updateTriggerColumnWidths()
+		
 	def showMessages( self ):
 		while True:
 			message = self.messageQ.get()
@@ -1785,6 +1818,7 @@ class MainWin( wx.Frame ):
 						'bib':				msg.get('bib', 99999),
 						'first_name':		msg.get('first_name','') or msg.get('firstName',''),
 						'last_name':		msg.get('last_name','') or msg.get('lastName',''),
+						'machine':			msg.get('machine',''),
 						'team':				msg.get('team',''),
 						'wave':				msg.get('wave',''),
 						'race_name':		msg.get('race_name','') or msg.get('raceName',''),
@@ -1915,6 +1949,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsBefore', '{:.3f}'.format(self.tdCaptureBefore.total_seconds()) )
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
+		self.config.Write( 'HiddenTriggerCols', repr(self.hiddenTriggerCols) )
 		self.config.WriteInt( 'ClosestFrames', self.autoCaptureClosestFrames )
 		self.config.WriteBool ('SelectLatest', self.selectLatest.GetValue() )
 		self.config.Flush()
@@ -1936,6 +1971,7 @@ class MainWin( wx.Frame ):
 		except Exception:
 			pass
 		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
+		self.hiddenTriggerCols = ast.literal_eval( self.config.Read( 'HiddenTriggerCols', '[]' ) )
 		self.autoCaptureClosestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
 		self.selectLatest.SetValue( self.config.ReadBool( 'SelectLatest', True ) )
 		
