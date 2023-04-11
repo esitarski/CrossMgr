@@ -48,7 +48,7 @@ class WheelEdgesPage(adv.WizardPageSimple):
 		self.wheelSelector.SetSelection(WheelEdgesPage.defaultWheelSize)
 		self.wheelSelector.Bind( wx.EVT_COMBOBOX, self.onselectWheel )
 		self.wheelSelector.Bind( wx.EVT_TEXT_ENTER, self.onEnterWheel )
-		hbs.Add( wx.StaticText(self, label = _('Select wheel size or enter diamter (mm):')), flag=wx.TOP|wx.LEFT|wx.RIGHT, border = border )
+		hbs.Add( wx.StaticText(self, label = _('Select wheel size or enter diameter (mm):')), flag=wx.TOP|wx.LEFT|wx.RIGHT, border = border )
 		hbs.Add( self.wheelSelector, flag=wx.LEFT, border=2)
 		
 		vbsSettings.Add( hbs, flag=wx.LEFT, border=2)
