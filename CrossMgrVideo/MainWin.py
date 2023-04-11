@@ -697,7 +697,7 @@ class MainWin( wx.Frame ):
 		self.messageThread = threading.Thread( target=self.showMessages, daemon=True )
 		self.messageThread.start()
 		
-		wx.CallLater( 300, self.refreshTriggers )
+		wx.CallLater( 300, self.refreshTriggers, selectLatest=True )
 		
 		# Add event handlers to the app as this is the last window to process events.
 		'''
@@ -1231,18 +1231,21 @@ class MainWin( wx.Frame ):
 	def getTriggerInfo( self, row ):
 		return self.computeTriggerFields( GlobalDatabase().getTriggerFields(self.triggerList.GetItemData(row)) )
 	
-	def refreshTriggers( self, replace=False, iTriggerRow=None ):
+	def refreshTriggers( self, replace=False, iTriggerRow=None, selectLatest=None):
 		'''
 			Refreshes the trigger list from the database.
 			If any rows have zero frames, it fixes the number of frames by reading the database.
 		'''
 		tNow = now()
 
+		if selectLatest == None:
+			selectLatest = self.selectLatest.GetValue()
+
 		if replace:
 			tsLower = self.tsQueryLower
 			tsUpper = self.tsQueryUpper
 		elif self.tsQueryUpper < date(tNow.year, tNow.month, tNow.day): #if a historical date is selected
-			if self.selectLatest.GetValue():
+			if selectLatest:
 				#replace list with the current day's
 				replace = True
 				tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
@@ -1302,7 +1305,7 @@ class MainWin( wx.Frame ):
 			iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
 			
 		self.triggerList.EnsureVisible( iTriggerRow )
-		if self.selectLatest.GetValue():
+		if selectLatest:
 			self.triggerList.Select( iTriggerRow )
 			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
 
