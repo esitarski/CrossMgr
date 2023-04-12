@@ -386,6 +386,7 @@ class MainWin( wx.Frame ):
 		self.frameCount = 0
 		self.fpt = timedelta(seconds=0)
 		self.iTriggerSelect = None
+		self.iTriggerAdded = None
 		self.triggerInfo = None
 		self.tsMax = None
 		self.inCapture = 0	# Use an integer so we can support reentrant captures.
@@ -618,9 +619,9 @@ class MainWin( wx.Frame ):
 		self.publishWebPage.Bind( wx.EVT_BUTTON, self.onPublishWebPage )
 		hsDate.Add( self.publishWebPage, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
 		
-		self.selectLatest = wx.CheckBox( self, label="Select latest" )
-		self.selectLatest.Bind (wx.EVT_CHECKBOX, self.onToggleSelectLatest )
-		hsDate.Add( self.selectLatest, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
+		self.autoSelect = wx.Choice( self, choices=['Autoselect latest', 'Fast preview', 'Autoselect off'] )
+		self.autoSelect.Bind (wx.EVT_CHOICE, self.onAutoSelect )
+		hsDate.Add( self.autoSelect, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
 		
 		self.tsQueryLower = date(tQuery.year, tQuery.month, tQuery.day)
 		self.tsQueryUpper = self.tsQueryLower + timedelta(days=1)
@@ -1020,6 +1021,8 @@ class MainWin( wx.Frame ):
 		wx.CallAfter( self.photoPanel.doRestoreView, self.triggerInfo )
 		
 	def onNotebook( self, event ):
+		self.iTriggerAdded = None
+		self.onTriggerSelected()
 		self.refreshPhotoPanel()
 		
 	def onPublishPhotos( self, event ):
@@ -1175,8 +1178,14 @@ class MainWin( wx.Frame ):
 		threading.Thread( target=publish_web_photos, args=args, name='publish_web', daemon=True ).start()
 		# write_photos( *args )
 		
-	def onToggleSelectLatest(self, event):
-		self.refreshTriggers()
+	def onAutoSelect(self, event):
+		if self.autoSelect.GetCurrentSelection() == 0:
+			tNow = now()
+			self.tsQueryLower = date(tNow.year, tNow.month, tNow.day)
+			self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
+			wx.CallAfter( self.date.SetValue, wx.DateTime(tNow.day, tNow.month-1, tNow.year) )
+			self.iTriggerAdded = None
+			self.refreshTriggers(replace=True)
 		self.writeOptions()
 	
 	def GetListCtrl( self ):
@@ -1238,8 +1247,8 @@ class MainWin( wx.Frame ):
 		'''
 		tNow = now()
 
-		if selectLatest == None:
-			selectLatest = self.selectLatest.GetValue()
+		if selectLatest == None and self.autoSelect.GetSelection() < 2:
+			selectLatest = True
 
 		if replace:
 			tsLower = self.tsQueryLower
@@ -1306,8 +1315,10 @@ class MainWin( wx.Frame ):
 			
 		self.triggerList.EnsureVisible( iTriggerRow )
 		if selectLatest:
+			if not replace:
+				self.iTriggerAdded = iTriggerRow
 			self.triggerList.Select( iTriggerRow )
-			wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )
+			#wx.CallAfter( self.onTriggerSelected, iTriggerSelect=iTriggerRow or 0 )  # this appears to be unecessary as the Select() generates an event
 
 	def dbInactivityUpdate( self ):
 		# Do actions when the database goes inactive.
@@ -1534,8 +1545,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'send_update', 'name':'focus', 'freq':1} )
 		self.focusDialog.Show()
 	
-	def onTriggerSelected( self, event=None, iTriggerSelect=None ):
-		
+	def onTriggerSelected( self, event=None, iTriggerSelect=None, fastPreview=False):
 		# Determine which trigger we are updating (either specified or from the event).
 		if iTriggerSelect is None:
 			if event is not None:
@@ -1555,7 +1565,13 @@ class MainWin( wx.Frame ):
 				return
 			else:
 				self.iTriggerSelect = self.triggerList.GetItemCount() - 1
-				
+		
+		# If this is a newly added trigger, should we do a fast preview?
+		if self.iTriggerSelect == self.iTriggerAdded:
+			fastPreview = self.autoSelect.GetSelection() == 1
+		else:
+			self.iTriggerAdded = None
+			
 		# Update the screen based on the new trigger.
 		with wx.BusyCursor():
 			self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
@@ -1572,18 +1588,31 @@ class MainWin( wx.Frame ):
 			self.ts = triggerInfo['ts']
 			if triggerInfo['closest_frames']:
 				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
+			elif fastPreview:
+				# Only fetch a single frame; this is considerably faster
+				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, 1 )
 			else:
 				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			
 			# Update the frame information.
-			if triggerInfo['frames'] != len(self.tsJpg):
+			if not fastPreview and triggerInfo['frames'] != len(self.tsJpg):
 				triggerInfo['frames'] = len(self.tsJpg)
 				self.dbWriterQ.put( ('photoCount', self.triggerInfo['id'], len(self.tsJpg)) )
 				self.updateTriggerRow( self.iTriggerSelect, {'frames':len(self.tsJpg)} )
 			
 			# Update the main UI.
-			self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
-			self.refreshPhotoPanel()
+			if fastPreview:
+				# Switch to Images tab
+				if self.notebook.GetSelection() != 0:
+					self.notebook.ChangeSelection(0)  # This does not generate a page change event
+				# Directly draw the frame on the photoPanel without populating the finishStrip
+				self.photoPanel.set(1, None, self.tsJpg, self.fps, editCB=None, updateCB=None )
+				# De-select the trigger and clear self.iTriggerAdded so re-selecting the trigger causes a full fetch
+				self.triggerList.Select( -1, on=False )
+				self.iTriggerAdded = None
+			else:
+				self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
+				self.refreshPhotoPanel()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
@@ -1919,7 +1948,7 @@ class MainWin( wx.Frame ):
 		self.config.Write( 'SecondsAfter', '{:.3f}'.format(self.tdCaptureAfter.total_seconds()) )
 		self.config.WriteFloat( 'ZoomMagnification', self.finishStrip.GetZoomMagnification() )
 		self.config.WriteInt( 'ClosestFrames', self.autoCaptureClosestFrames )
-		self.config.WriteBool ('SelectLatest', self.selectLatest.GetValue() )
+		self.config.WriteInt ('AutoSelect', self.autoSelect.GetSelection() )
 		self.config.Flush()
 	
 	def readOptions( self ):
@@ -1940,7 +1969,7 @@ class MainWin( wx.Frame ):
 			pass
 		self.finishStrip.SetZoomMagnification( self.config.ReadFloat('ZoomMagnification', 0.5) )
 		self.autoCaptureClosestFrames = self.config.ReadInt( 'ClosestFrames', 0 )
-		self.selectLatest.SetValue( self.config.ReadBool( 'SelectLatest', True ) )
+		self.autoSelect.SetSelection( self.config.ReadInt( 'AutoSelect', 0 ) )
 		
 	def getCameraInfo( self ):
 		width, height = self.getCameraResolution()

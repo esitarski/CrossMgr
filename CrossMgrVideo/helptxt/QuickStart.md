@@ -227,9 +227,13 @@ __Photo Web Page__
 
 Publishes the photo closest to each Trigger time to a chosen folder, but also creates an html page that can select each photo.  Once the photo is selected, it supports the same drag-and-drop Zoom capability of CrossMgrVideo.  Photos can be saved locally from the web page.
 
-__Select latest__
+__Autoselect__
 
-If ticked, automatically selects the latest Trigger after it arrives.  If unticked the trigger list will update to show new triggers, but the currently selected trigger remains selected.
+Determines the behaviour when a new trigger is captured:
+
+* Autoselect latest: Selects the new trigger for analysis after it arrives.
+* Fast preview: Displays a single frame from the trigger as quickly as possible, for monitoring captures during a race.  (This is considerably faster than loading all the frames.)
+* Autoselect off: New triggers will be added to the list, but the current selection is unaffected.  Useful for examining existing triggers while a race is in progress.
 
 ## Web Interface
 
