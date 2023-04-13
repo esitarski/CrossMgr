@@ -533,9 +533,9 @@ function triggerScrollToEnd() {
 	trigger_div.scrollTop = trigger_div.scrollHeight;
 }
 	
-const headers = ['', 'Time', 'Bib', 'Last',       'First',      'Team',	'Wave', 'Race',      'Frames', 'View', 'Note'];
-const fields  = ['close', 'ts',	 'bib', 'last_name',  'first_name', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
-const numeric = [false,	false,   true,   false,       false,        false,  false,	false, 		 true,     true,   false];
+const headers = ['', 'Time', 'Bib', 'Last', 'First', 'Machine', 'Team',	'Wave', 'Race', 'Frames', 'View', 'Note'];
+const fields  = ['close', 'ts',	 'bib', 'last_name',  'first_name', 'machine', 'team',	'wave', 'race_name', 'frames', 'view', 'note'];
+const numeric = [false,	false, true, false, false, false, false, false, false,  true, true, false];
 
 function showTriggers( triggers ) {
 	playStop();
