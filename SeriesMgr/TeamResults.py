@@ -628,7 +628,7 @@ class TeamResults(wx.Panel):
 		self.refreshButton.Bind( wx.EVT_BUTTON, self.onRefresh )
 		self.publishToHtml = wx.Button( self, label='Publish to Html' )
 		self.publishToHtml.Bind( wx.EVT_BUTTON, self.onPublishToHtml )
-		self.publishToFtp = wx.Button( self, label='Publish to Html with FTP' )
+		self.publishToFtp = wx.Button( self, label='Publish to Html with (S)FTP' )
 		self.publishToFtp.Bind( wx.EVT_BUTTON, self.onPublishToFtp )
 		self.publishToExcel = wx.Button( self, label='Publish to Excel' )
 		self.publishToExcel.Bind( wx.EVT_BUTTON, self.onPublishToExcel )
@@ -1013,7 +1013,7 @@ class TeamResults(wx.Panel):
 			return
 		
 		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
-		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
+		with FtpWriteFile.FtpPublishDialog( self, html=html, team=True ) as dlg:
 			dlg.ShowModal()
 		self.callPostPublishCmd( htmlfileName )
 	
