@@ -132,11 +132,17 @@ def FtpWriteFile( host, port, user='anonymous', passwd='anonymous@', timeout=30,
 		with ftputil.FTPHost(host, user, passwd, port, timeout, session_factory=FtpsWithPort) as ftp_host:
 			ftp_host.makedirs( serverPath, exist_ok=True )
 			for i, f in enumerate(fname):
-				ftp_host.upload_if_newer(
-					f,
-					serverPath + '/' + os.path.basename(f),
-					(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
-				)
+				try:
+					ftp_host.upload_if_newer(
+						f,
+						serverPath + '/' + os.path.basename(f),
+						(lambda byteStr, fname=f, i=i: callback(byteStr, fname, i)) if callback else None
+					)
+				except ftplib.all_errors as e:
+					if 'EOF occurred in violation of protocol' in str(e):
+						Utils.writeLog( 'FtpWriteFile ignored \"' + str(e) + '\" as this can be non-fatal.  Check if the file exists on the server.')
+					else:
+						raise e
 			ftp_host.close()
 			
 	else:  #default to unencrypted FTP

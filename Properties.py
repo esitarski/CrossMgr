@@ -818,10 +818,10 @@ class TeamResultsProperties( wx.Panel ):
 
 #------------------------------------------------------------------------------------------------
 class BatchPublishProperties( wx.Panel ):
-	def __init__( self, parent, id=wx.ID_ANY, testCallback=None, ftpCallback=None ):
+	def __init__( self, parent, id=wx.ID_ANY, publishCallback=None, ftpCallback=None ):
 		super().__init__( parent, id )
 
-		self.testCallback = testCallback
+		self.publishCallback = publishCallback
 		self.ftpCallback = ftpCallback
 		
 		if ftpCallback:
@@ -862,10 +862,10 @@ class BatchPublishProperties( wx.Panel ):
 			else:
 				fgs.AddSpacer( 0 )
 				
-			testBtn = wx.Button( self, label=_('Publish') )
-			testBtn.Bind( wx.EVT_BUTTON, lambda event, iAttr=i: self.onTest(iAttr) )
-			fgs.Add( testBtn, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=8 )
-			self.widget.append( (attrCB, ftpCB, testBtn) )
+			publishBtn = wx.Button( self, label=_('Publish') )
+			publishBtn.Bind( wx.EVT_BUTTON, lambda event, iAttr=i: self.onPublish(iAttr) )
+			fgs.Add( publishBtn, flag=wx.LEFT|wx.ALIGN_CENTRE_VERTICAL, border=8 )
+			self.widget.append( (attrCB, ftpCB, publishBtn) )
 		
 		self.bikeRegChoice = wx.RadioBox(
 			self,
@@ -902,11 +902,11 @@ class BatchPublishProperties( wx.Panel ):
 		
 		self.SetSizer( vs )
 	
-	def onTest( self, iAttr ):
-		if self.testCallback:
-			self.testCallback()
+	def onPublish( self, iAttr ):
+		if self.publishCallback:
+			self.publishCallback()
 			
-		attrCB, ftpCB, testBtn = self.widget[iAttr]
+		attrCB, ftpCB, publishBtn = self.widget[iAttr]
 		doFtp = ftpCB and ftpCB.GetValue()
 		doBatchPublish( iAttr, silent=False )
 		
@@ -917,7 +917,7 @@ class BatchPublishProperties( wx.Panel ):
 		if attr.filecode:
 			fname = mainWin.getFormatFilename(attr.filecode)
 			if doFtp and race.urlFull and race.urlFull != 'http://':
-				webbrowser.open( os.path.basename(race.urlFull) + '/' + os.path.basename(fname), new = 0, autoraise = True )
+				webbrowser.open( race.urlFull, new = 0, autoraise = True )
 			else:
 				Utils.LaunchApplication( fname )
 		else:
@@ -927,32 +927,32 @@ class BatchPublishProperties( wx.Panel ):
 				return
 	
 	def onSelect( self, iAttr ):
-		attrCB, ftpCB, testBtn = self.widget[iAttr]
+		attrCB, ftpCB, publishBtn = self.widget[iAttr]
 		v = attrCB.GetValue()
 		if ftpCB:
 			ftpCB.Enable( v )
 			if not v:
 				ftpCB.SetValue( False )
-		testBtn.Enable( v )
+		publishBtn.Enable( v )
 		
 	def refresh( self ):
 		race = Model.race
 		for i, attr in enumerate(batchPublishAttr):
 			raceAttr = batchPublishRaceAttr[i]
-			attrCB, ftpCB, testBtn = self.widget[i]
+			attrCB, ftpCB, publishBtn = self.widget[i]
 			v = getattr( race, raceAttr, 0 )
 			if v & 1:
 				attrCB.SetValue( True )
 				if ftpCB:
 					ftpCB.Enable( True )
 					ftpCB.SetValue( v & 2 != 0 )
-				testBtn.Enable( True )
+				publishBtn.Enable( True )
 			else:
 				attrCB.SetValue( False )
 				if ftpCB:
 					ftpCB.SetValue( False )
 					ftpCB.Enable( False )
-				testBtn.Enable( False )
+				publishBtn.Enable( False )
 		self.bikeRegChoice.SetSelection( getattr(race, 'publishFormatBikeReg', 0) )
 		self.postPublishCmd.SetValue( race.postPublishCmd )
 	
@@ -960,7 +960,7 @@ class BatchPublishProperties( wx.Panel ):
 		race = Model.race
 		for i, attr in enumerate(batchPublishAttr):
 			raceAttr = batchPublishRaceAttr[i]
-			attrCB, ftpCB, testBtn = self.widget[i]
+			attrCB, ftpCB, publishBtn = self.widget[i]
 			setattr( race, raceAttr, 0 if not attrCB.GetValue() else (1 + (2 if ftpCB and ftpCB.GetValue() else 0)) )
 		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
 		race.postPublishCmd = self.postPublishCmd.GetValue().strip()
@@ -1076,7 +1076,7 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 		super().__init__( parent, id, _("Batch Publish Results"),
 					style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 					
-		self.batchPublishProperties = BatchPublishProperties(self, testCallback=self.commit, ftpCallback=self.onToggleFtp)
+		self.batchPublishProperties = BatchPublishProperties(self, publishCallback=self.commit, ftpCallback=self.onToggleFtp)
 		self.batchPublishProperties.refresh()
 		
 		self.ftp = FtpProperties( self, uploadNowButton=False )
