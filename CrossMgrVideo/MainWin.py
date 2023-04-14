@@ -399,7 +399,6 @@ class MainWin( wx.Frame ):
 		self.autoCaptureClosestFrames = 0
 		
 		self.isShutdown = False
-		self.selectLatest = True
 
 		dataDir = Utils.getHomeDir()
 		configFileName = os.path.join(dataDir, 'CrossMgrVideo.cfg')
