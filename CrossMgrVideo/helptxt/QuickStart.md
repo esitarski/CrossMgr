@@ -231,9 +231,12 @@ __Autoselect__
 
 Determines the behaviour when a new trigger is captured:
 
-* Autoselect latest: Selects the new trigger for analysis after it arrives.
-* Fast preview: Displays a single frame from the trigger as quickly as possible, for monitoring captures during a race.  (This is considerably faster than loading all the frames.)
-* Autoselect off: New triggers will be added to the list, but the current selection is unaffected.  Useful for examining existing triggers while a race is in progress.
+* __Autoselect latest__: Selects the new trigger for analysis after it arrives.
+* __Fast preview__: Displays a single frame from the trigger as quickly as possible, for monitoring captures during a race.  (This is considerably faster than loading all the frames.)
+* __Scroll triggers__: Scrolls the trigger list to make the new trigger visible, but does not affect the current selection.
+* __Autoselect off__: New triggers will be added to the list without scrolling.  The current selection is unaffected.  (Useful for examining existing triggers while a race is in progress.)
+
+In __Autoselect latest__ and __Fast preview__ modes, the current frame will be displayed during capture if the trigger arrives close enough to real time.  (RFID reads are likely to be too slow for this.)
 
 ## Web Interface
 
