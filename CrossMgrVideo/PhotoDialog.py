@@ -254,7 +254,16 @@ class PhotoPanel( wx.Panel ):
 		self.mph = self.kmh * 0.621371
 		self.pps = 2000.0
 		
+		self.tsPreview = None
+		
 		self.SetBitmap()
+		
+	def setPreview( self, bitmap=None, ts=None ):
+		if not bitmap:
+			return
+		self.clear()
+		self.scaledBitmap.SetBitmap( bitmap )
+		self.tsPreview = ts
 	
 	def setFrameIndex( self, i ):
 		self.iJpg = max( 0, min(i, len(self.tsJpg)-1) )
@@ -274,7 +283,7 @@ class PhotoPanel( wx.Panel ):
 	
 	def onRecenter( self, event=None ):
 		# Set to the photo closest to the trigger time.
-		if self.iJpg is not None:
+		if self.iJpg is not None and self.triggerInfo:
 			self.setFrameIndex( self.findFrameClosestToTrigger() )
 	
 	def changeFrame( self, frameDir ):
@@ -343,6 +352,7 @@ class PhotoPanel( wx.Panel ):
 		self.tsJpg = None
 		self.fps = None
 		self.editCB = None
+		self.tsPreview = None
 	
 	def onEdit( self, event ):
 		if self.editCB and self.triggerInfo:
@@ -502,17 +512,21 @@ class PhotoPanel( wx.Panel ):
 	
 	#-------------------------------------------------------------------
 	def drawCallback( self, dc, width, height ):
-		if self.jpg is None:
+		if self.jpg is None and self.tsPreview is None:
 			return None
 
 		# Add the frame timestamps and offset into.
-		text = []
-		tsCur = self.tsJpg[self.iJpg][0]
-		try:
-			tsTrigger = self.triggerInfo['ts']
-			text.append( '{:+.3f} TRG'.format( (tsCur - tsTrigger).total_seconds() ) )
-		except Exception as e:
-			pass
+		if self.tsPreview:
+			text = [ 'CAPTURING...' ]
+			tsCur = self.tsPreview
+		else:
+			text = []
+			tsCur = self.tsJpg[self.iJpg][0]
+			try:
+				tsTrigger = self.triggerInfo['ts']
+				text.append( '{:+.3f} TRG'.format( (tsCur - tsTrigger).total_seconds() ) )
+			except Exception as e:
+				pass
 		
 		text.append( tsCur.strftime('%H:%M:%S.%f')[:-3] )
 

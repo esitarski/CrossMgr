@@ -63,6 +63,9 @@ tdCaptureAfterDefault = timedelta(seconds=2.0)
 
 closeFinishThreshold = 3.0/30.0	# Time gap when two finishes are considered close.
 closeColors = ('E50000','D1D200','00BF00')
+capturePreviewThreshold = 0.1  # Preview capture if within this many seconds of realtime
+
+
 def getCloseFinishBitmaps( size=(16,16) ):
 	bm = []
 	dc = wx.MemoryDC()
@@ -397,6 +400,7 @@ class MainWin( wx.Frame ):
 		self.tdCaptureBefore = tdCaptureBeforeDefault
 		self.tdCaptureAfter = tdCaptureAfterDefault
 		self.autoCaptureClosestFrames = 0
+		self.lastCapturePreview = datetime.min
 		
 		self.isShutdown = False
 
@@ -618,7 +622,7 @@ class MainWin( wx.Frame ):
 		self.publishWebPage.Bind( wx.EVT_BUTTON, self.onPublishWebPage )
 		hsDate.Add( self.publishWebPage, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
 		
-		self.autoSelect = wx.Choice( self, choices=['Autoselect latest', 'Fast preview', 'Autoselect off'] )
+		self.autoSelect = wx.Choice( self, choices=['Autoselect latest', 'Fast preview', 'Scroll triggers', 'Autoselect off'] )
 		self.autoSelect.Bind (wx.EVT_CHOICE, self.onAutoSelect )
 		hsDate.Add( self.autoSelect, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=32 )
 		
@@ -952,9 +956,14 @@ class MainWin( wx.Frame ):
 			btn.SetFontToFitLabel()
 			wx.CallAfter( btn.Refresh )
 
-	def setQueryDate( self, d ):
+	def setQueryDate( self, d ):  # d is a datetime.date
 		self.tsQueryLower = d
 		self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
+		tNow = now()
+		if self.tsQueryUpper < date(tNow.year, tNow.month, tNow.day):  # if a historical date is selected...
+			self.autoSelect.SetSelection( 3 )  # Autoselect off
+		elif self.autoSelect.GetSelection() > 2:  # if we're selecting today's date and autoselect is off...
+			self.autoSelect.SetSelection( self.config.ReadInt( 'AutoSelect', 3 ) )  # revert to saved setting
 		self.refreshTriggers( True )
 		wx.CallAfter( self.date.SetValue, wx.DateTime(d.day, d.month-1, d.year) )
 		
@@ -963,7 +972,7 @@ class MainWin( wx.Frame ):
 		triggerDates.sort( reverse=True )
 		with DateSelectDialog( self, triggerDates ) as dlg:
 			if dlg.ShowModal() == wx.ID_OK and dlg.GetDate():
-				self.setQueryDate( dlg.GetDate() )
+				self.setQueryDate( dlg.GetDate() ) # dlg returns a datetime.date
 
 	def copyLogFileToClipboard( self, event ):
 		logFileName = getLogFileName()
@@ -992,8 +1001,8 @@ class MainWin( wx.Frame ):
 
 	def onQueryDateChanged( self, event ):
 		v = self.date.GetValue()
-		self.setQueryDate( datetime( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) )
-	
+		self.setQueryDate( date( v.GetYear(), v.GetMonth() + 1, v.GetDay() ) )  # this should be a date, not a datetime
+		
 	def onQueryBibChanged( self, event ):
 		self.bibQuery = self.bib.GetValue()
 		self.refreshTriggers( True )
@@ -1312,7 +1321,8 @@ class MainWin( wx.Frame ):
 		else:
 			iTriggerRow = min( max(0, iTriggerRow), self.triggerList.GetItemCount()-1 )
 			
-		self.triggerList.EnsureVisible( iTriggerRow )
+		if selectLatest or self.autoSelect.GetSelection() < 3:
+			self.triggerList.EnsureVisible( iTriggerRow )
 		if selectLatest:
 			if not replace:
 				self.iTriggerAdded = iTriggerRow
@@ -1487,6 +1497,7 @@ class MainWin( wx.Frame ):
 		self.camInQ.put( {'cmd':'start_capture', 'tStart':tNow} )
 
 		event.GetEventObject().SetForegroundColour( captureDisableColour )
+			
 		wx.CallAfter( event.GetEventObject().Refresh )		
 	
 	def onStopCapture( self, event ):
@@ -1828,6 +1839,16 @@ class MainWin( wx.Frame ):
 				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':closest_frames} )
 			else:
 				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
+			
+			# Do preview of capture in progress only if the trigger is within capturePreviewThreshold of realtime, otherwise there'll be nothing to see
+			if self.autoSelect.GetSelection() <= 1 and abs( now() - tSearch ) <= timedelta(seconds=capturePreviewThreshold):
+				if tSearch - self.lastCapturePreview >= timedelta(seconds=capturePreviewThreshold):  # Rate limit to capturePreviewThreshold
+					# Switch to Images tab
+					if self.notebook.GetSelection() != 0:
+						self.notebook.ChangeSelection(0)  # This does not generate a page change event
+					# Copy the current primaryBitmap directly into the photoPanel - avoids database access and decoding jpegs
+					self.photoPanel.setPreview( self.primaryBitmap.GetBitmap(), tSearch )
+					self.lastCapturePreview = tSearch
 	
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
