@@ -1701,9 +1701,13 @@ class MainWin( wx.Frame ):
 		if message:
 			cmd = message['cmd']
 			if cmd == 'capture':
-				ts = message['ts']
+				ts = message.get('ts', now())
+				bib = message.get('bib')
 				# Update status text
-				self.capturingText.SetLabel( 'Capturing:' )
+				if bib:
+					self.capturingText.SetLabel( 'Capturing #' + str(bib) + ':' )
+				else:
+					self.capturingText.SetLabel( 'Capturing:' )
 				self.capturingTime.SetLabel( ts.strftime('%H:%M:%S.%f')[:-3] )
 				# Do preview of capture in progress only if the trigger is within capturePreviewThreshold of realtime, otherwise there'll be nothing to see
 				if self.autoSelect.GetSelection() <= 1 and abs( now() - ts ) <= timedelta(seconds=capturePreviewThreshold):
@@ -1872,7 +1876,7 @@ class MainWin( wx.Frame ):
 				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
 				
 			# Notify of capture in progress
-			self.captureProgressQ.put( {'cmd':'capture', 'ts':tSearch} )
+			self.captureProgressQ.put( {'cmd':'capture', 'ts':tSearch, 'bib':msg.get('bib')} )
 			wx.CallAfter( self.refreshCaptureProgress )
 	
 	def shutdown( self ):
