@@ -1697,9 +1697,11 @@ class MainWin( wx.Frame ):
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
 			
 	def refreshCaptureProgress( self ):
-		message = self.captureProgressQ.get_nowait()
-		if message:
-			cmd = message['cmd']
+		# Append a sentinel object to the end of the queue so the iter knows when to stop
+		sentinel = object()
+		self.captureProgressQ.put( sentinel )
+		for message in iter( self.captureProgressQ.get_nowait, sentinel ):
+			cmd = message.get('cmd')
 			if cmd == 'capture':
 				ts = message.get('ts', now())
 				bib = message.get('bib')
