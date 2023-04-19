@@ -414,6 +414,7 @@ class MainWin( wx.Frame ):
 		self.requestQ = Queue()		# Select photos from photobuf.
 		self.dbWriterQ = Queue()	# Photos waiting to be written
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
+		self.captureProgressQ = Queue()	# Notification of captures in progress.
 		
 		#-------------------------------------------
 
@@ -668,7 +669,13 @@ class MainWin( wx.Frame ):
 		
 		border=2
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
-		row1Sizer.Add( self.primaryBitmap, flag=wx.ALL, border=border )
+		vbs = wx.BoxSizer (wx.VERTICAL)
+		vbs.Add( self.primaryBitmap, flag=wx.ALL, border=border )
+		self.capturingText =  wx.StaticText(self, label='Waiting for trigger...')
+		vbs.Add( self.capturingText, flag=wx.ALIGN_LEFT )
+		self.capturingTime =  wx.StaticText(self, label='')
+		vbs.Add( self.capturingTime, flag=wx.ALIGN_LEFT )
+		row1Sizer.Add( vbs, flag=wx.ALL, border=border )
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, flag=wx.EXPAND )
 				
@@ -1192,8 +1199,8 @@ class MainWin( wx.Frame ):
 			self.tsQueryLower = date(tNow.year, tNow.month, tNow.day)
 			self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
 			wx.CallAfter( self.date.SetValue, wx.DateTime(tNow.day, tNow.month-1, tNow.year) )
-			self.iTriggerAdded = None
-			self.refreshTriggers(replace=True)
+		self.iTriggerAdded = None
+		self.refreshTriggers(replace=True)
 		self.writeOptions()
 	
 	def GetListCtrl( self ):
@@ -1332,6 +1339,8 @@ class MainWin( wx.Frame ):
 	def dbInactivityUpdate( self ):
 		# Do actions when the database goes inactive.
 		if not self.inCapture:
+			self.captureProgressQ.put( { 'cmd':'idle', 'ts':now() } )
+			wx.CallAfter( self.refreshCaptureProgress )
 			self.refreshTriggers()
 
 	def Start( self ):
@@ -1686,6 +1695,28 @@ class MainWin( wx.Frame ):
 			cmd, info = message
 			print( 'Message:', '{}:  {}'.format(cmd, info) if cmd else info )
 			#wx.CallAfter( self.messageManager.write, '{}:  {}'.format(cmd, info) if cmd else info )
+			
+	def refreshCaptureProgress( self ):
+		message = self.captureProgressQ.get_nowait()
+		if message:
+			cmd = message['cmd']
+			if cmd == 'capture':
+				ts = message['ts']
+				# Update status text
+				self.capturingText.SetLabel( 'Capturing:' )
+				self.capturingTime.SetLabel( ts.strftime('%H:%M:%S.%f')[:-3] )
+				# Do preview of capture in progress only if the trigger is within capturePreviewThreshold of realtime, otherwise there'll be nothing to see
+				if self.autoSelect.GetSelection() <= 1 and abs( now() - ts ) <= timedelta(seconds=capturePreviewThreshold):
+					if ts - self.lastCapturePreview >= timedelta(seconds=capturePreviewThreshold):  # Rate limit to capturePreviewThreshold
+						# Switch to Images tab
+						if self.notebook.GetSelection() != 0:
+							self.notebook.ChangeSelection(0)  # This does not generate a page change event
+						# Copy the current primaryBitmap directly into the photoPanel - avoids database access and decoding jpegs
+						self.photoPanel.setPreview( self.primaryBitmap.GetBitmap(), ts )
+						self.lastCapturePreview = ts
+			elif cmd == 'idle':
+				self.capturingText.SetLabel( 'Waiting for trigger...' )
+				self.capturingTime.SetLabel( '' )
 	
 	def startThreads( self ):
 		self.grabFrameOK = False
@@ -1839,16 +1870,10 @@ class MainWin( wx.Frame ):
 				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':closest_frames} )
 			else:
 				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
-			
-			# Do preview of capture in progress only if the trigger is within capturePreviewThreshold of realtime, otherwise there'll be nothing to see
-			if self.autoSelect.GetSelection() <= 1 and abs( now() - tSearch ) <= timedelta(seconds=capturePreviewThreshold):
-				if tSearch - self.lastCapturePreview >= timedelta(seconds=capturePreviewThreshold):  # Rate limit to capturePreviewThreshold
-					# Switch to Images tab
-					if self.notebook.GetSelection() != 0:
-						self.notebook.ChangeSelection(0)  # This does not generate a page change event
-					# Copy the current primaryBitmap directly into the photoPanel - avoids database access and decoding jpegs
-					self.photoPanel.setPreview( self.primaryBitmap.GetBitmap(), tSearch )
-					self.lastCapturePreview = tSearch
+				
+			# Notify of capture in progress
+			self.captureProgressQ.put( {'cmd':'capture', 'ts':tSearch} )
+			wx.CallAfter( self.refreshCaptureProgress )
 	
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
