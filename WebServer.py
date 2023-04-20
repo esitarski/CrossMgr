@@ -1,6 +1,7 @@
 import os
 import io
 import re
+import wx
 import sys
 import gzip
 import glob
