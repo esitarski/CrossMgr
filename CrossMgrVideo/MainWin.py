@@ -1745,8 +1745,8 @@ class MainWin( wx.Frame ):
 						self.lastCapturePreview = now()
 			elif cmd == 'busy':
 				ts = message.get('ts', now())
-				self.capturingText.SetLabel( 'Busy...' )
-				self.capturingTime.SetLabel( ts.strftime('%H:%M:%S.%f')[:-3] )
+				self.capturingText.SetLabel( 'Capturing...' )
+				self.capturingTime.SetLabel( '' )
 			elif cmd == 'idle':
 				self.capturingText.SetLabel( 'Waiting for trigger...' )
 				self.capturingTime.SetLabel( '' )
