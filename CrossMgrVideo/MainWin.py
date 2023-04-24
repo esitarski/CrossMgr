@@ -422,6 +422,9 @@ class MainWin( wx.Frame ):
 		self.messageQ = Queue()		# Collection point for all status/failure messages.
 		self.captureProgressQ = Queue()	# Notification of captures in progress.
 		
+		self.pauseBitmap = Utils.getBitmap('pause.png') # Store these in memory so we can quickly swap them
+		self.recordBitmap = Utils.getBitmap('record.png')
+		
 		#-------------------------------------------
 
 		self.menuBar = wx.MenuBar(wx.MB_DOCKABLE)
@@ -677,10 +680,17 @@ class MainWin( wx.Frame ):
 		row1Sizer = wx.BoxSizer( wx.HORIZONTAL )
 		vbs = wx.BoxSizer (wx.VERTICAL)
 		vbs.Add( self.primaryBitmap, flag=wx.ALL, border=border )
+		
+		captureProgress = wx.BoxSizer( wx.HORIZONTAL )
+		self.capturingIcon = wx.StaticBitmap( self, bitmap=self.pauseBitmap )
+		captureProgress.Add( self.capturingIcon )
+		pts = wx.BoxSizer (wx.VERTICAL)
 		self.capturingText =  wx.StaticText(self, label='Waiting for trigger...')
-		vbs.Add( self.capturingText, flag=wx.ALIGN_LEFT )
+		pts.Add( self.capturingText, flag=wx.ALIGN_LEFT )
 		self.capturingTime =  wx.StaticText(self, label='')
-		vbs.Add( self.capturingTime, flag=wx.ALIGN_LEFT )
+		pts.Add( self.capturingTime, flag=wx.ALIGN_LEFT )
+		captureProgress.Add( pts, flag=wx.ALL, border=border )
+		vbs.Add(captureProgress, flag=wx.ALL, border=border )
 		row1Sizer.Add( vbs, flag=wx.ALL, border=border )
 		row1Sizer.Add( vsTriggers, 1, flag=wx.TOP|wx.BOTTOM|wx.RIGHT|wx.EXPAND, border=border )
 		mainSizer.Add( row1Sizer, flag=wx.EXPAND )
@@ -1737,6 +1747,8 @@ class MainWin( wx.Frame ):
 			if cmd == 'capture':
 				ts = message.get('ts', now())
 				bib = message.get('bib')
+				# Update the status icon
+				self.capturingIcon.SetBitmap( self.recordBitmap )
 				# Update status text
 				if bib:
 					self.capturingText.SetLabel( 'Capturing #' + str(bib) + ':' )
@@ -1754,9 +1766,13 @@ class MainWin( wx.Frame ):
 						self.lastCapturePreview = now()
 			elif cmd == 'busy':
 				ts = message.get('ts', now())
+				# Update the status text
 				self.capturingText.SetLabel( 'Capturing...' )
 				self.capturingTime.SetLabel( '' )
 			elif cmd == 'idle':
+				# Update the status icon
+				self.capturingIcon.SetBitmap( self.pauseBitmap )
+				# Update the status text
 				self.capturingText.SetLabel( 'Waiting for trigger...' )
 				self.capturingTime.SetLabel( '' )
 	
