@@ -612,11 +612,11 @@ class MainWin( wx.Frame ):
 		
 		hsDate.Add( wx.StaticText(self, label='Filter by Bib'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=12 )
 		self.bib = wx.lib.intctrl.IntCtrl( self, style=wx.TE_PROCESS_ENTER, size=(64,-1), min=1, allow_none=True, value=None )
-		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
+		self.bib.Bind( wx.EVT_TEXT, self.onQueryBibChanged )
 		hsDate.Add( self.bib, flag=wx.LEFT, border=2 )
 		
 		self.refreshBtn = wx.Button( self, label="Refresh" )
-		self.refreshBtn.Bind( wx.EVT_BUTTON, lambda event: self.refreshTriggers(replace=True) )
+		self.refreshBtn.Bind( wx.EVT_BUTTON, lambda event: self.refreshTriggers(replace=True, selectLatest=False) )
 		hsDate.Add( self.refreshBtn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=8 )
 		
 		self.publishPhotos = wx.Button( self, label="Publish Photos" )
@@ -977,7 +977,7 @@ class MainWin( wx.Frame ):
 			self.autoSelect.SetSelection( 3 )  # Autoselect off
 		elif self.autoSelect.GetSelection() > 2:  # if we're selecting today's date and autoselect is off...
 			self.autoSelect.SetSelection( self.config.ReadInt( 'AutoSelect', 3 ) )  # revert to saved setting
-		self.refreshTriggers( True )
+		self.refreshTriggers( replace=True, selectLatest=True )
 		wx.CallAfter( self.date.SetValue, wx.DateTime(d.day, d.month-1, d.year) )
 		
 	def onDateSelect( self, event ):
@@ -1018,7 +1018,11 @@ class MainWin( wx.Frame ):
 		
 	def onQueryBibChanged( self, event ):
 		self.bibQuery = self.bib.GetValue()
-		self.refreshTriggers( True )
+		if self.bibQuery:  # If filtering by bib
+			self.autoSelect.SetSelection( 3 )  # Autoselect off
+		elif self.autoSelect.GetSelection() > 2:  # If we're not filtering and autoselect is off...
+			self.autoSelect.SetSelection( self.config.ReadInt( 'AutoSelect', 3 ) )  # revert to saved setting
+		self.refreshTriggers( replace=True )
 		
 	def filterLastBibWave( self, infoList):
 		''' Filter out all photos but the last by bib and wave. '''
@@ -1206,7 +1210,7 @@ class MainWin( wx.Frame ):
 			self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
 			wx.CallAfter( self.date.SetValue, wx.DateTime(tNow.day, tNow.month-1, tNow.year) )
 		self.iTriggerAdded = None
-		self.refreshTriggers(replace=True)
+		self.refreshTriggers(replace=True, selectLatest=False)
 		self.writeOptions()
 	
 	def GetListCtrl( self ):
@@ -1276,11 +1280,11 @@ class MainWin( wx.Frame ):
 			tsUpper = self.tsQueryUpper
 		elif self.tsQueryUpper < date(tNow.year, tNow.month, tNow.day): #if a historical date is selected
 			if selectLatest:
-				#replace list with the current day's
+				# Replace list with the current day's
 				replace = True
 				tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 				tsUpper = tsLower + timedelta(days=1)
-				#reset query date to current day
+				# Reset query date to current day
 				self.tsQueryLower = date(tNow.year, tNow.month, tNow.day)
 				self.tsQueryUpper = self.tsQueryLower + timedelta( days=1 )
 				wx.CallAfter( self.date.SetValue, wx.DateTime(tNow.day, tNow.month-1, tNow.year) )
@@ -1290,7 +1294,12 @@ class MainWin( wx.Frame ):
 		else:
 			tsLower = (self.tsMax or datetime(tNow.year, tNow.month, tNow.day)) + timedelta(seconds=0.00001)
 			tsUpper = tsLower + timedelta(days=1)
-
+			
+		if selectLatest:
+			# Reset the bib filter
+			self.bib.ChangeValue(None)  # Does not generate an EVT_TEXT event
+			self.bibQuery = None
+		
 		# Read the triggers from the database before we repaint the screen to avoid flashing.
 		counts = GlobalDatabase().updateTriggerPhotoCountInterval( tsLower, tsUpper )
 		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )		
