@@ -1643,6 +1643,8 @@ class MainWin( wx.Frame ):
 			elif fastPreview:
 				# Only fetch a single frame; this is considerably faster
 				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, 1 )
+				if self.tsJpg[0][0] < self.ts - timedelta(seconds=s_before):  # If the closest frame in the database is historical, discard it
+					self.tsJpg = []
 			else:
 				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			
