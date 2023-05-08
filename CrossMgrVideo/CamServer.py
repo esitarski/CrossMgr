@@ -130,10 +130,15 @@ def CamServer( qIn, qOut, camInfo=None ):
 				# Read the frame.  If anything fails, keep going in the loop so we can reset with another camInfo.
 				if not cap.isOpened():
 					ret, frame = False, None
-					time.sleep( 0.5 )		# Keep going so we can get a camInfo to try again.
+					time.sleep( 2.0 )		# Keep going so we can get a camInfo to try again.
+					keepCapturing = False
 				else:						
 					try:
 						ret, frame = cap.read()
+						if not ret:  # Camera is probably disconnected, clean up and try again.
+							cap.release()
+							CVUtil.resetCache()
+							keepCapturing = False
 					except Exception as e:	# Potential out of memory error?
 						ret, frame = False, None
 					except KeyboardInterrupt:
