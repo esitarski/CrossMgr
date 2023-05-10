@@ -11,8 +11,7 @@ from ReadSignOnSheet	import ExcelLink
 globalRaceDBUrl = ''
 
 def RaceDBUrlDefault():
-	#return 'http://{}:8000/RaceDB'.format( Utils.GetDefaultHost() )
-	return globalRaceDBUrl or 'http://{}:8000/RaceDB'.format( '127.0.0.1' )
+	return globalRaceDBUrl or 'http://{}:8000/RaceDB'.format( 'www.localhost' )
 
 def fixUrl( url ):
 	global globalRaceDBUrl
