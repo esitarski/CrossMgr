@@ -20,11 +20,21 @@ def fixUrl( url ):
 		url = RaceDBUrlDefault()
 	if not (url.startswith('http://') or url.startswith('https://')):
 		url = 'http://' + url.lstrip('/')
-	url = url.replace('://', '://www.')
-	url = url.replace( 'www.www.', 'www.' )
-	url = url.rstrip('/')
+	url = url.rstrip( '/' )
+	
+	# check for missing subdomain
+	match = re.search( '(https?://)([^/]+)(.*)', url )
+	if match:
+		prefix = match.group(1)
+		base = match.group(2)
+		suffix = match.group(3)
+		if not base.endswith(':8000') and not base.endswith(':80') and base.count('.') != 2:
+			base = 'www.' + base
+		url = prefix + base + suffix
+		
 	if not url.endswith('/RaceDB'):
 		url += '/RaceDB'
+		
 	globalRaceDBUrl = url
 	return url
 
@@ -169,7 +179,6 @@ class RaceDB( wx.Dialog ):
 		hsMain.Add( vs1 )
 		hsMain.Add( vs2, 1, flag=wx.EXPAND )
 		self.SetSizer( hsMain )
-		#self.Fit()
 		
 		wx.CallAfter( self.refresh )
 
