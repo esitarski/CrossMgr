@@ -28,7 +28,7 @@ def fixUrl( url ):
 		prefix = match.group(1)
 		base = match.group(2)
 		suffix = match.group(3)
-		if not base.endswith(':8000') and not base.endswith(':80') and base.count('.') != 2:
+		if not base.startswith('www.') and base.count('.') != 2:
 			base = 'www.' + base
 		url = prefix + base + suffix
 		
