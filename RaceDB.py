@@ -21,8 +21,11 @@ def fixUrl( url ):
 		url = RaceDBUrlDefault()
 	if not (url.startswith('http://') or url.startswith('https://')):
 		url = 'http://' + url.lstrip('/')
-	url = url.split('RaceDB')[0] + 'RaceDB'
+	url = url.replace('://', '://www.')
+	url = url.replace( 'www.www.', 'www.' )
 	url = url.rstrip('/')
+	if not url.endswith('/RaceDB'):
+		url += '/RaceDB'
 	globalRaceDBUrl = url
 	return url
 
@@ -34,7 +37,8 @@ def GetRaceDBEvents( url = None, date=None ):
 	url += '/GetEvents'
 	if date:
 		url += date.strftime('/%Y-%m-%d')
-	req = requests.get( url + '/' )
+	url += '/'
+	req = requests.get( url )
 	events = req.json()
 	return events
 	
@@ -69,8 +73,8 @@ class URLDropTarget(wx.DropTarget):
 		return d
 
 class RaceDB( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(1100,500) ):
-		super().__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE, size=size, title=_('Open RaceDB Event'))
+	def __init__( self, parent, id=wx.ID_ANY, size=(1100,600) ):
+		super().__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.CLOSE_BOX, size=size, title=_('Open RaceDB Event'))
 		
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
@@ -166,8 +170,9 @@ class RaceDB( wx.Dialog ):
 		hsMain.Add( vs1 )
 		hsMain.Add( vs2, 1, flag=wx.EXPAND )
 		self.SetSizer( hsMain )
+		#self.Fit()
 		
-		self.refresh()
+		wx.CallAfter( self.refresh )
 
 	def onChange( self, event ):
 		wx.CallAfter( self.refresh )
