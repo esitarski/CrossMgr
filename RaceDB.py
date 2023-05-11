@@ -351,7 +351,7 @@ def PostEventCrossMgr( url ):
 	mainWin = Utils.getMainWin()
 	payload = mainWin.getBasePayload( publishOnly=False ) if mainWin else {}
 	response = requests.post( url, json=payload )
-	print( response.status_code, response.text )
+	# print( response.status_code, response.text )
 	return response.json()
 
 class RaceDBUpload( wx.Dialog ):
