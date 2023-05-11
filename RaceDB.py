@@ -19,7 +19,7 @@ def fixUrl( url ):
 	if not url:
 		url = RaceDBUrlDefault()
 	if not (url.startswith('http://') or url.startswith('https://')):
-		url = 'http://' + url.lstrip('/')
+		url = 'https://' + url.lstrip('/')
 	url = url.rstrip( '/' )
 	
 	# check for missing subdomain
@@ -347,19 +347,20 @@ class RaceDB( wx.Dialog ):
 
 #----------------------------------------------------------------------------------------------------------------------------
 def PostEventCrossMgr( url ):
-	url = (url or RaceDBUrlDefault()) + '/UploadCrossMgr'
+	url = (url or RaceDBUrlDefault()) + '/UploadCrossMgr/'
 	mainWin = Utils.getMainWin()
 	payload = mainWin.getBasePayload( publishOnly=False ) if mainWin else {}
-	req = requests.post( url + '/', json=payload )
-	return req.json()
+	response = requests.post( url, json=payload )
+	print( response.status_code, response.text )
+	return response.json()
 
 class RaceDBUpload( wx.Dialog ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(700,500) ):
-		super().__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE, size=size, title=_('Upload Results to RaceDB'))
+		super().__init__(parent, id, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER, size=size, title=_('Upload Results to RaceDB'))
 		
 		fontPixels = 20
 		font = wx.Font((0,fontPixels), wx.DEFAULT, wx.NORMAL, wx.NORMAL)
-		self.headerDefault = '{}\n{}'.format(_('Upload'),'')
+		self.headerDefault = '{}\n{}'.format(_('Upload'),'----')
 		self.header = wx.StaticText( self, label=self.headerDefault )
 		self.header.SetFont( font )
 		
@@ -374,8 +375,6 @@ class RaceDBUpload( wx.Dialog ):
 		self.raceDBUrl = wx.TextCtrl( self, value=RaceDBUrlDefault(), style=wx.TE_PROCESS_ENTER )
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
-		
-		self.uploadStatus = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER|wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_BESTWRAP)
 		
 		fgs = wx.FlexGridSizer( cols=2, rows=0, vgap=4, hgap=4 )
 		fgs.AddGrowableCol( 1, 1 )
@@ -395,6 +394,8 @@ class RaceDBUpload( wx.Dialog ):
 		hs.AddStretchSpacer()
 		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
 		
+		self.okButton.SetDefault()
+		
 		mainSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		vs1 = wx.BoxSizer( wx.VERTICAL )
@@ -403,12 +404,14 @@ class RaceDBUpload( wx.Dialog ):
 		vs1.Add( vsHeader, flag=wx.ALL|wx.EXPAND, border=8 )
 		vs1.Add( hs, flag=wx.ALL, border=4 )
 		
+		self.uploadStatus = wx.TextCtrl( self, style=wx.TE_PROCESS_ENTER|wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_BESTWRAP)
+		
 		mainSizer.Add( vs1 )
 		mainSizer.Add( self.uploadStatus, 1, flag=wx.ALL|wx.EXPAND, border=4 )
 		
 		self.SetSizer( mainSizer )
 		
-		self.refresh()
+		wx.CallAfter( self.refresh )
 
 	def fixUrl( self ):
 		url = fixUrl( self.raceDBUrl.GetValue() )
@@ -422,42 +425,44 @@ class RaceDBUpload( wx.Dialog ):
 		if race:
 			headerText = '{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
 		self.header.SetLabel( headerText )
+		self.Fit()
 		
 	def doUpload( self, event=None, silent=False ):
-		busy = wx.BusyCursor()
+		import traceback
 		
-		self.uploadStatus.SetValue( _("Starting Upload...") )
-		resultText = ''
-		
-		url = self.fixUrl()
-		try:
-			response = PostEventCrossMgr( url )
-		except Exception as e:
-			response = {'errors':['{}'.format(e)], 'warnings':[], 'info':[] }
-		
-		resultText = ''
-		if 'errors' in response or 'warnings' in response:
-			if 'errors' in response:
-				resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
+		with wx.BusyCursor():
 			
-			if 'warnings' in response:
-				resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+			self.uploadStatus.SetValue( _("Starting Upload...") )
+			resultText = ''
 			
-			if 'info' in response:
-				resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Info'), i) for i in response.get('info',[]) )			
-		
-		if 'errors' not in response:
-			if 'warnings' in response:
-				resultText += ('\n\n' if resultText else '') + _('Otherwise, Upload Successful.')
-			else:
-				resultText += ('\n\n' if resultText else '') + _('Upload Successful.')
-		
-		if resultText:
-			resultText = 'url="{}"'.format( url ) + '\n' + resultText
-		
-		self.uploadStatus.SetValue( resultText )
-		
-		del busy
+			url = self.fixUrl()
+			try:
+				response = PostEventCrossMgr( url )
+			except Exception as e:
+				response = {'errors':['{}'.format(traceback.format_exc())], 'warnings':[], 'info':[] }
+			
+			resultText = ''
+			if 'errors' in response or 'warnings' in response:
+				if 'errors' in response:
+					resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
+				
+				if 'warnings' in response:
+					resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
+				
+				if 'info' in response:
+					resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Info'), i) for i in response.get('info',[]) )			
+			
+			if 'errors' not in response:
+				if 'warnings' in response:
+					resultText += ('\n\n' if resultText else '') + _('Otherwise, Upload Successful.')
+				else:
+					resultText += ('\n\n' if resultText else '') + _('Upload Successful.')
+			
+			if resultText:
+				resultText = 'url="{}"'.format( url ) + '\n' + resultText
+			
+			self.uploadStatus.SetValue( resultText )
+			
 		if not silent:
 			Utils.MessageOK( self, '{}:\n\n{}'.format(_('RaceDB Upload Status'), resultText), _('RaceDB Upload Status') )
 	
