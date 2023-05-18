@@ -22,7 +22,7 @@ def working_directory(directory):
 		
 reImage = re.compile( r'src="\.\/images\/([^"]+)"' )
 def InlineImages( html ):
-	while 1:
+	while True:
 		match = reImage.search( html )
 		if not match:
 			break
@@ -37,7 +37,7 @@ def InlineImages( html ):
 	return html
 
 def getHelpFiles( dir='.' ):
-	for fname in glob.glob( dir + '/*.md' ):
+	for fname in sorted(glob.glob( dir + '/*.md' )):
 		if 'Links.md' in fname:
 			continue
 		yield fname

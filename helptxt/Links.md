@@ -50,3 +50,5 @@
 [USACycling]:		https://usacycling.org/
 [Chart Right-Click]: Chart.html#right-click
 [USB Webcam]:		Properties.html#use-usb-camera-photo-finish
+
+[CrossMgrIntegration]: CrossMgrIntegration.html
