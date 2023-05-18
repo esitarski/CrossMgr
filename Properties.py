@@ -1160,7 +1160,7 @@ class NotesProperties( wx.Panel ):
 		if not hasattr(self, 'men'):
 			self.menu = wx.Menu()
 			self.idVariable = {}
-			for v in sorted(race.getTemplateValues().keys() + ['Bib ', 'BibList ', 'BibTable ']):
+			for v in sorted(list(race.getTemplateValues().keys()) + ['Bib ', 'BibList ', 'BibTable ']):
 				v = '{=' + v + '}'
 				item = self.menu.Append( wx.ID_ANY, v )
 				self.Bind( wx.EVT_MENU, self.onInsertVariable, item )

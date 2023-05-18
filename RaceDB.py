@@ -6,12 +6,113 @@ import datetime
 import wx.dataview as dataview
 import Utils
 import Model
+import urllib.parse
 from ReadSignOnSheet	import ExcelLink
+
+import configparser
+
+def GetRaceDBConfigFile():
+	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaceDB.ini' )
+
+def SetRaceDBConfig( url, user, password ):
+	config = configparser.ConfigParser()
+	config['RaceDB'] = { 'url':url, 'user':user, 'password':password }
+	with open( GetRaceDBConfigFile(), 'w' ) as f:
+		config.write( f )
+
+def GetRaceDBConfig():
+	if not os.path.exists( GetRaceDBConfigFile() ):
+		return {}
+	config = configparser.ConfigParser()
+	try:
+		config.read( GetRaceDBConfigFile() )
+	except Exception as e:
+		return {}
+	try:
+		return config['RaceDB']
+	except Exception as e:
+		return {}
 
 globalRaceDBUrl = ''
 
+class RaceDBEditConfig( wx.Dialog ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(800,800) ):
+		super().__init__(parent, id, size=size, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER, title=_('RaceDB Config File'))
+		self.text = wx.TextCtrl( self, size=(500,500), style=wx.TE_MULTILINE )
+		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL|wx.APPLY|wx.HELP )
+		
+		template = wx.FindWindowById( wx.ID_APPLY, self )
+		template.SetLabel( _("Initialize Template") )
+		template.Bind( wx.EVT_BUTTON, self.doTemplate )
+		
+		save = wx.FindWindowById( wx.ID_HELP, self )
+		save.SetLabel( _("Save and Verify") )
+		save.Bind( wx.EVT_BUTTON, self.doSaveAndVerify )
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		vs.Add( self.text, 1, flag=wx.EXPAND|wx.ALL, border=4 )
+		vs.Add( btnSizer, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4  )
+		self.SetSizer( vs )
+	
+	def refresh( self ):
+		if not self.text.LoadFile( GetRaceDBConfigFile() ):
+			self.doTemplate()
+			
+	def save( self, event=None ):
+		self.text.SaveFile( GetRaceDBConfigFile() )
+
+	def doTemplate( self, event=None ):
+		template = '''[RaceDB]
+		
+# base url to access RaceDB (eg. racedb.ca)
+
+url=localhost:8000
+
+# password must match one of the passwords configured in RaceDB.  <= 32 chars
+
+password=<<password>>
+
+# user to be logged in the RaceDB accesses table (eg. crossmgr1).  <= 32 chars
+# the user is used for identity only and requires no configuration in RaceDB.
+
+user=<<username>>
+'''
+		self.text.SetValue( template )
+		
+	def doSaveAndVerify( self, event ):
+		self.save()
+		
+		global globalRaceDBUrl
+		globalRaceDBUrl = ''
+		try:
+			response = VerifyCrossMgr()
+		except Exception as e:
+			response = e
+		
+		try:
+			if not response['warnings'] and not response['errors']:
+				response = _("SUCCESS!  Connection to RaceDB server Verified")
+		except Exception:
+			pass
+		
+		with wx.MessageDialog(self, str(response), caption=_("RaceDB Verify"), style=wx.OK) as dlg:
+			dlg.ShowModal()
+
 def RaceDBUrlDefault():
+	config = GetRaceDBConfig()
+	try:
+		return config['url']
+	except Exception as e:
+		pass
 	return globalRaceDBUrl or 'http://{}:8000/RaceDB'.format( 'www.localhost' )
+
+def RaceDBUserPassword():
+	config = GetRaceDBConfig()
+	try:
+		return config.get('user',''), config['password']
+	except Exception as e:
+		pass
+	return '', ''
 
 def fixUrl( url ):
 	global globalRaceDBUrl
@@ -35,26 +136,41 @@ def fixUrl( url ):
 	if not url.endswith('/RaceDB'):
 		url += '/RaceDB'
 		
+	if 'localhost' in url:
+		url = url.replace( 'https', 'http' )
+		
 	globalRaceDBUrl = url
 	return url
 
 def CrossMgrFolderDefault():
 	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaces' )
 
+def AddUserPassword( url ):
+	# Add user and password as parameters to the url.
+	if not url.endswith('/'):
+		url += '/'
+	user, password = RaceDBUserPassword()
+	if user and password:
+		url = '{}?{}'.format( url, urllib.parse.urlencode({'user':user, 'password':password}) )
+	return url
+
 def GetRaceDBEvents( url = None, date=None ):
 	url = url or RaceDBUrlDefault()
+	url = url.rstrip( '/' )
 	url += '/GetEvents'
 	if date:
 		url += date.strftime('/%Y-%m-%d')
-	url += '/'
+	url = AddUserPassword( url + '/' )
 	req = requests.get( url )
 	events = req.json()
 	return events
 	
 def GetEventCrossMgr( url, eventId, eventType ):
 	url = url or RaceDBUrlDefault()
+	url = url.rstrip( '/' )
 	url +=['/EventMassStartCrossMgr','/EventTTCrossMgr'][eventType] + '/{}'.format(eventId)
-	req = requests.get( url + '/' )
+	url = AddUserPassword( url + '/' )
+	req = requests.get( url )
 	content_disposition = req.headers['content-disposition'].encode('latin-1').decode()
 	filename = content_disposition.split('=')[1].replace("'",'').replace('"','')
 	return filename, req.content
@@ -161,9 +277,14 @@ class RaceDB( wx.Dialog ):
 		self.okButton = wx.Button( self, label=_("Open Event") )
 		self.okButton.Bind( wx.EVT_BUTTON, self.doOK )
 		self.cancelButton = wx.Button( self, id=wx.ID_CANCEL )
+		
+		self.configButton = wx.Button( self, label=_("Config...") )
+		self.configButton.Bind( wx.EVT_BUTTON, self.doConfig )
+		
 		hs.Add( self.okButton )
 		hs.AddStretchSpacer()
-		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
+		hs.Add( self.configButton, flag=wx.LEFT, border=48 )
+		hs.Add( self.cancelButton, flag=wx.LEFT, border=48 )
 		
 		hsMain = wx.BoxSizer( wx.HORIZONTAL )
 		
@@ -189,6 +310,14 @@ class RaceDB( wx.Dialog ):
 		url = fixUrl( self.raceDBUrl.GetValue() )
 		self.raceDBUrl.SetValue( url )
 		return url
+		
+	def doConfig( self, event ):
+		with RaceDBEditConfig( self ) as dlg:
+			dlg.refresh()
+			if dlg.ShowModal() == wx.ID_OK:
+				self.raceDBUrl.SetValue('') 
+				self.fixUrl()
+				self.refresh()
 	
 	def doOK( self, event ):
 		if not self.dataSelect:
@@ -346,8 +475,18 @@ class RaceDB( wx.Dialog ):
 			self.tree.Expand( eventClosest )
 
 #----------------------------------------------------------------------------------------------------------------------------
-def PostEventCrossMgr( url ):
-	url = (url or RaceDBUrlDefault()) + '/UploadCrossMgr/'
+
+#----------------------------------------------------------------------------------------------------------------------------
+
+def VerifyCrossMgr( url=None ):
+	url = (url or fixUrl(RaceDBUrlDefault())) + '/VerifyCrossMgr/'
+	url = AddUserPassword( url )
+	response = requests.get( url )
+	return response.json()
+
+def PostEventCrossMgr( url=None ):
+	url = (url or fixUrl(RaceDBUrlDefault())) + '/UploadCrossMgr/'
+	url = AddUserPassword( url )
 	mainWin = Utils.getMainWin()
 	payload = mainWin.getBasePayload( publishOnly=False ) if mainWin else {}
 	response = requests.post( url, json=payload )
@@ -390,9 +529,14 @@ class RaceDBUpload( wx.Dialog ):
 		self.okButton = wx.Button( self, label=_("Upload") )
 		self.okButton.Bind( wx.EVT_BUTTON, self.doUpload )
 		self.cancelButton = wx.Button( self, id=wx.ID_CANCEL, label=_("Done") )
+		
+		self.configButton = wx.Button( self, label=_("Config...") )
+		self.configButton.Bind( wx.EVT_BUTTON, self.doConfig )
+		
 		hs.Add( self.okButton )
 		hs.AddStretchSpacer()
 		hs.Add( self.cancelButton, flag=wx.LEFT, border=4 )
+		hs.Add( self.configButton, flag=wx.LEFT, border=48 )
 		
 		self.okButton.SetDefault()
 		
@@ -426,6 +570,15 @@ class RaceDBUpload( wx.Dialog ):
 			headerText = '{}\n{} {}'.format(race.name, race.date, race.scheduledStart)
 		self.header.SetLabel( headerText )
 		self.Fit()
+		
+	def doConfig( self, event ):
+		global globalRaceDBUrl
+		with RaceDBEditConfig(self) as dlg:
+			dlg.refresh()
+			if dlg.ShowModal() == wx.ID_OK:
+				dlg.save()
+				globalRaceDBUrl = ''
+				self.fixUrl()
 		
 	def doUpload( self, event=None, silent=False ):
 		import traceback
@@ -470,8 +623,12 @@ if __name__ == '__main__':
 	if True:
 		app = wx.App(False)
 		mainWin = wx.Frame(None,title="CrossMan", size=(1000,400))
+		raceDB = RaceDB(mainWin)
+		raceDB.ShowModal()
+		'''
 		raceDBUpload = RaceDBUpload(mainWin)
 		raceDBUpload.ShowModal()
+		'''
 	
 	else:
 
