@@ -55,8 +55,11 @@ class RaceDBEditConfig( wx.Dialog ):
 		self.SetSizer( vs )
 	
 	def refresh( self ):
-		if not self.text.LoadFile( GetRaceDBConfigFile() ):
+		fname = GetRaceDBConfigFile()
+		if not os.path.exists( fname ):
 			self.doTemplate()
+		else:
+			self.text.LoadFile( GetRaceDBConfigFile() )
 			
 	def save( self, event=None ):
 		self.text.SaveFile( GetRaceDBConfigFile() )
