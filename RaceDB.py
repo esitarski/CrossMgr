@@ -489,9 +489,13 @@ def VerifyCrossMgr( url=None ):
 
 def PostEventCrossMgr( url=None ):
 	url = (url or fixUrl(RaceDBUrlDefault())) + '/UploadCrossMgr/'
-	url = AddUserPassword( url )
 	mainWin = Utils.getMainWin()
 	payload = mainWin.getBasePayload( publishOnly=False ) if mainWin else {}
+	
+	# Add credentials to the json payload.
+	user, password = RaceDBUserPassword()
+	payload['credentials'] = {'user':user, 'password':password}
+		
 	response = requests.post( url, json=payload )
 	# print( response.status_code, response.text )
 	return response.json()
@@ -597,26 +601,15 @@ class RaceDBUpload( wx.Dialog ):
 			except Exception as e:
 				response = {'errors':['{}'.format(traceback.format_exc())], 'warnings':[], 'info':[] }
 			
-			resultText = ''
-			if 'errors' in response or 'warnings' in response:
-				if 'errors' in response:
-					resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Error'), e) for e in response.get('errors',[]) )
-				
-				if 'warnings' in response:
-					resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Warning'),w) for w in response.get('warnings',[]) )
-				
-				if 'info' in response:
-					resultText += ('\n\n' if resultText else '') + '\n'.join( '{}: {}'.format(_('Info'), i) for i in response.get('info',[]) )			
+			errors		= response.get('errors',[])
+			warnings	= response.get('warnings',[])
+			info		= response.get('info',[])
 			
-			if 'errors' not in response:
-				if 'warnings' in response:
-					resultText += ('\n\n' if resultText else '') + _('Otherwise, Upload Successful.')
-				else:
-					resultText += ('\n\n' if resultText else '') + _('Upload Successful.')
-			
-			if resultText:
-				resultText = 'url="{}"'.format( url ) + '\n' + resultText
-			
+			resultText = 'url="{}"'.format( url )
+			for rtype, rlist in ((_('Error'), errors), (_('Warning'), warnings), (_('Info'), info)):
+				if rlist:
+					resultText += '\n\n' + '\n'.join( '{}: {}'.format(rtype, rval) for rval in rlist )
+						
 			self.uploadStatus.SetValue( resultText )
 			
 		if not silent:
