@@ -497,7 +497,7 @@ def PostEventCrossMgr( url=None ):
 	credentials = { k:str(v) for k,v in getInfo().items() }
 	credentials['user'], credentials['password'] = RaceDBUserPassword()
 	payload['credentials'] = credentials
-		
+	
 	response = requests.post( url, json=payload )
 	# print( response.status_code, response.text )
 	return response.json()
