@@ -8,6 +8,7 @@ import Utils
 import Model
 import urllib.parse
 from ReadSignOnSheet	import ExcelLink
+from AddExcelInfo		import getInfo
 
 import configparser
 
@@ -492,9 +493,10 @@ def PostEventCrossMgr( url=None ):
 	mainWin = Utils.getMainWin()
 	payload = mainWin.getBasePayload( publishOnly=False ) if mainWin else {}
 	
-	# Add credentials to the json payload.
-	user, password = RaceDBUserPassword()
-	payload['credentials'] = {'user':user, 'password':password}
+	# Add credentials to the json payload so RaceDB can verify the message.
+	credentials = { k:str(v) for k,v in getInfo().items() }
+	credentials['user'], credentials['password'] = RaceDBUserPassword()
+	payload['credentials'] = credentials
 		
 	response = requests.post( url, json=payload )
 	# print( response.status_code, response.text )
