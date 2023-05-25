@@ -3168,7 +3168,7 @@ class MainWin( wx.Frame ):
 
 		if race is None or not self.fileName:
 			Utils.MessageOK(self,	_('No race to upload.\n\nOpen a race, then upload it.'),
-												_('No race loaded') ):
+												_('No race loaded') )
 			return
 	
 		self.showResultsPage()	# Switch to a read-only view to force a commit.
