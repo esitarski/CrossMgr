@@ -3152,10 +3152,11 @@ class MainWin( wx.Frame ):
 	@property
 	def raceDBUploadDialog( self ):
 		try:
-			return self._raceDBUploadDialog
+			dlg = self._raceDBUploadDialog
 		except AttributeError:
-			self._raceDBUploadDialog = RaceDBUpload( self )
-			return self._raceDBUploadDialog
+			dlg = self._raceDBUploadDialog = RaceDBUpload( self )
+		dlg.refresh()
+		return dlg
 			
 	@logCall
 	def menuOpenRaceDB( self, event ):
@@ -3163,6 +3164,18 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuUploadRaceDB( self, event ):
+		race = Model.race
+
+		if race is None or not self.fileName:
+			Utils.MessageOK(self,	_('No race to upload.\n\nOpen a race, then upload it.'),
+												_('No race loaded') ):
+			return
+	
+		self.showResultsPage()	# Switch to a read-only view to force a commit.
+		self.updateLapCounter()
+		self.closeFindDialog()
+		self.refresh()
+
 		self.raceDBUploadDialog.ShowModal()
 
 	@logCall
