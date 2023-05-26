@@ -12,6 +12,7 @@ jobs:
     buildmac:
         name: MacOSX
         runs-on: macos-latest
+        timeout-minues: 60
         steps:
             - name: Show Environment
               run: set | grep GIT
@@ -40,6 +41,7 @@ jobs:
         name: Windows
         needs: buildmac
         runs-on: windows-latest
+        timeout-minues: 60
         steps:
             - name: Setup Python environment
               uses: actions/setup-python@v2
