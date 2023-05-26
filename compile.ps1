@@ -521,7 +521,7 @@ function FixDependencies($program)
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" "UpdateDependencies.py"
 		if ($? -eq $false)
 		{
-			Write-Host "Compile failed. Aborting..."
+			Write-Host "FixDependencies failed. Aborting..."
 			exit 1
 		}
 		Set-Location -Path '..'
