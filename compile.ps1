@@ -734,7 +734,7 @@ if ($pts -eq $true)
 }
 if ($call -eq $true)
 {
-	$programs += 'SprintMgr'
+	$programs += 'CallupSeedingMgr'
 }
 if ($spr -eq $true)
 {
