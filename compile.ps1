@@ -16,6 +16,7 @@ param (
 	[switch]$help = $false,
 	[string]$environ = "env",
 	[string]$pythonexe = "python3.10.exe",
+	
 	[switch]$cmgr = $false,
 	[switch]$cmgri = $false,
 	[switch]$trw = $false,
@@ -23,9 +24,11 @@ param (
 	[switch]$cmgra = $false,
 	[switch]$video = $false,
 	[switch]$pts = $false,
+	[switch]$call = $false,
 	[switch]$spr = $false,
 	[switch]$camera = $false,
 	[switch]$all = $false,
+	
 	[switch]$versioncmd = $false,
 	[switch]$setupenv = $false,
 	[switch]$clean = $false,
@@ -385,7 +388,6 @@ OutputDir=$releasepath
 		Set-Location -Path '..'
 		exit 1
 	}
-	
 }
 
 function EnvSetup($program)
@@ -497,7 +499,7 @@ function BuildAll($programs)
 	CheckEnvActive
 	if ($programs.Length -eq 0)
 	{
-		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts, -spr or -all required"
+		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts, -call, -spr or -all required"
 		exit 1
 	}
 	Cleanup
