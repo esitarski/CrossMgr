@@ -145,6 +145,22 @@ buildLocale() {
 	done
 }
 
+buildHelp() {
+	$PROGRAM=$1
+	cd "$PROGRAM"
+	if [ -d "$PROGRAM"HelpIndex ]
+	then
+		rm -rf "$PROGRAM"HelpIndex
+	fi
+	echo "Building Help for $PROGRAM ..."
+	python3 buildhelp.py
+	if [ $? -ne 0 ]; then
+		echo "Building help failed. Aborting..."
+		exit 1
+	fi
+	cd ..
+}
+
 copyAssets() {
 	PROGRAM=$1
 	getBuildDir $PROGRAM
@@ -177,6 +193,7 @@ copyAssets() {
 		cp -rv "${BUILDDIR}/${PROGRAM}Locale" $RESOURCEDIR
 	fi
 
+	# Build help files and indexes.
 	if [ "$PROGRAM" == "CrossMgr" ]; then
 		if [ -d CrossMgrHelpIndex ]
 		then
@@ -190,40 +207,15 @@ copyAssets() {
 		fi
 		cp -rv CrossMgrHelpIndex $RESOURCEDIR
 	fi
-	if [ "$PROGRAM" == "SeriesMgr" ]; then
-        cd SeriesMgr
-		if [ -d SeriesMgrHelpIndex ]
-		then
-			rm -rf SeriesMgrHelpIndex
+	
+	for p in SeriesMgr CallupSeedingMgr StageRaceGC; do
+		if [ "$p" == "$PROGRAM" ]; then
+			buildHelp $PROGRAM
+			break
 		fi
-		echo "Building Help for SeriesMgr ..."
-        #rm -f HelpIndex.py
-        #ln -s ../HelpIndex.py HelpIndex.py
-		python3 buildhelp.py
-		if [ $? -ne 0 ]; then
-			echo "Building help failed. Aborting..."
-			exit 1
-		fi
-        cd ..
-	fi
-	if [ "$PROGRAM" == "CallupSeedingMgr" ]; then
-        cd SeriesMgr
-		if [ -d CallupSeedingMgrHelpIndex ]
-		then
-			rm -rf CallupSeedingMgrHelpIndex
-		fi
-		echo "Building Help for CallupSeedingMgr ..."
-        #rm -f HelpIndex.py
-        #ln -s ../HelpIndex.py HelpIndex.py
-		python3 buildhelp.py
-		if [ $? -ne 0 ]; then
-			echo "Building help failed. Aborting..."
-			exit 1
-		fi
-        cd ..
-	fi
+	done
 
-	# Copy help files last to ensure they are built by now.
+	# Copy help files last to wait for them to be built by now.
 	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
 		echo "Copying HtmlDoc to $RESOURCEDIR"
 		cp -rv "${BUILDDIR}/${PROGRAM}HtmlDoc" $RESOURCEDIR
@@ -497,6 +489,7 @@ $0 [ -hcitywVqseCtaep: ]
  -q        - Build PointsRaceMgr
  -s        - Build SprintMgr
  -e        - Build CallupSeedingMgr
+ -g        - Build StageRaceGC
  -a        - Build all programs
 
  -d		   - Download AppImage builder
@@ -533,7 +526,7 @@ do
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="CallupSeedingMgr CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
+ 		    PROGRAMS="StageRaceGC CallupSeedingMgr CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
@@ -549,6 +542,8 @@ do
 		;;
 		e) PROGRAMS="$PROGRAMS CallupSeedingMgr"
 		;;
+		g) PROGRAMS="$PROGRAMS StageRaceGC"
+		;;
 		s) PROGRAMS="$PROGRAMS SprintMgr"
 		;;
 		V) PROGRAMS="$PROGRAMS CrossMgrVideo"
@@ -562,6 +557,7 @@ do
 			getVersion "PointsRaceMgr"
 			getVersion "SprintMgr"
 			getVersion "CallupSeedingMgr"
+			getVersion "StageRaceGC"
 		;;
 		C) 	cleanup
 		;;
@@ -648,6 +644,7 @@ do
 		   fixDependencies 'CrossMgrVideo'
 		   fixDependencies 'SprintMgr'
 		   fixDependencies 'CallupSeedingMgr'
+		   fixDependencies 'StageRaceGC'
 		;;
 		*) doHelp
 		;;
