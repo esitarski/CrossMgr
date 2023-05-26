@@ -17,7 +17,7 @@ jobs:
             - name: Show Environment
               run: set | grep GIT
             - name: Setup Python environment
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v4
               with:
                 python-version: 3.10.*
             - name: Checkout code
@@ -44,7 +44,7 @@ jobs:
         timeout-minutes: 120
         steps:
             - name: Setup Python environment
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v4
               with:
                 python-version: 3.10.*
             - name: Checkout code
@@ -80,7 +80,7 @@ jobs:
         #~ runs-on: ubuntu-latest
         #~ steps:
             #~ - name: Setup Python Environment
-              #~ uses: actions/setup-python@v2
+              #~ uses: actions/setup-python@v4
               #~ with:
                 #~ python-version: 3.10.*
             #~ - name: Checkout code
