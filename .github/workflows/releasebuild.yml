@@ -21,7 +21,8 @@ jobs:
               with:
                 python-version: 3.10.*
             - name: Checkout code
-              uses: actions/checkout@master
+              #uses: actions/checkout@master
+              uses: actions/checkout@v3
             - name: Setup Environment
               run: |
                 cd $GITHUB_WORKSPACE
@@ -48,7 +49,8 @@ jobs:
               with:
                 python-version: 3.10.*
             - name: Checkout code
-              uses: actions/checkout@master
+              #uses: actions/checkout@master
+              uses: actions/checkout@v3
             - name: Setup Environment
               shell: powershell
               run: |
@@ -84,7 +86,8 @@ jobs:
               #~ with:
                 #~ python-version: 3.10.*
             #~ - name: Checkout code
-              #~ uses: actions/checkout@master
+              ##~ uses: actions/checkout@master
+              #~ uses: actions/checkout@v3
             #~ - name: Linux Lib Install
               #~ run: |
                 #~ cd $GITHUB_WORKSPACE
