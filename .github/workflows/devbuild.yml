@@ -23,7 +23,10 @@ jobs:
               with:
                 python-version: 3.9.*
             - name: Checkout code
-              uses: actions/checkout@master
+              #uses: actions/checkout@master
+              uses: actions/checkout@v3
+              with:
+                repository: master
             - name: Setup Environment
               run: |
                 cd $GITHUB_WORKSPACE
@@ -36,7 +39,8 @@ jobs:
               uses: "marvinpinto/action-automatic-releases@latest"
               with:
                  repo_token: "${{ secrets.GITHUB_TOKEN }}"
-                 automatic_release_tag: "latest"
+                 #automatic_release_tag: "latest"
+                 automatic_release_tag: "make_latest"
                  prerelease: true
                  title: "Development Build"
                  files: release/*
@@ -51,7 +55,10 @@ jobs:
               with:
                 python-version: 3.10.*
             - name: Checkout code
-              uses: actions/checkout@master
+              #uses: actions/checkout@master
+              uses: actions/checkout@v3
+              with:
+                repository: master
             - name: Setup Environment
               shell: powershell
               run: |
@@ -66,7 +73,8 @@ jobs:
               uses: svenstaro/upload-release-action@v2
               with:
                 repo_token: ${{ secrets.GITHUB_TOKEN }}
-                automatic_release_tag: "latest"
+                #automatic_release_tag: "latest"
+                automatic_release_tag: "make_latest"
                 file: release/*
                 tag: latest
                 overwrite: true
