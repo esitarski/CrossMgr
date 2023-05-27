@@ -49,7 +49,6 @@ jobs:
               with:
                 python-version: 3.10.*
             - name: Checkout code
-              #uses: actions/checkout@master
               uses: actions/checkout@v3
             - name: Setup Environment
               shell: powershell
@@ -74,7 +73,7 @@ jobs:
                 automatic_release_tag: "latest"
                 file: release/*
                 tag: ${{ github.ref }}
-                overwrite: true
+                overwrite: false
                 file_glob: true
     #~ buildlinux:
         #~ name: Linux
