@@ -147,17 +147,21 @@ buildLocale() {
 
 buildHelp() {
 	PROGRAM=$1
+	
 	cd "$PROGRAM"
-	if [ -d "$PROGRAM"HelpIndex ]
-	then
-		rm -rf "$PROGRAM"HelpIndex
+	
+	if [ -f "buildhelp.py" ]; then	
+		if [ -d "$PROGRAM"HelpIndex ]; then
+			rm -rf "$PROGRAM"HelpIndex
+		fi
+		echo "Building Help for $PROGRAM ..."
+		python3 buildhelp.py
+		if [ $? -ne 0 ]; then
+			echo "Building help failed. Aborting..."
+			exit 1
+		fi
 	fi
-	echo "Building Help for $PROGRAM ..."
-	python3 buildhelp.py
-	if [ $? -ne 0 ]; then
-		echo "Building help failed. Aborting..."
-		exit 1
-	fi
+	
 	cd ..
 }
 
@@ -208,12 +212,7 @@ copyAssets() {
 		cp -rv CrossMgrHelpIndex $RESOURCEDIR
 	fi
 	
-	for p in SeriesMgr CallupSeedingMgr StageRaceGC; do
-		if [ "$p" == "$PROGRAM" ]; then
-			buildHelp $PROGRAM
-			break
-		fi
-	done
+	buildHelp $PROGRAM
 
 	# Copy help files last to wait for them to be built by now.
 	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then

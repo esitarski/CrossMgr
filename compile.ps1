@@ -213,17 +213,21 @@ function BuildLocale($program)
 function BuildHelp($program)
 {
 	Set-Location -Path $program
-	if (Test-Path "${program}HelpIndex")
+	if (Test-Path "buildhelp.py")
 	{
-		Remove-Item -Recurse -Force -Path "${program}HelpIndex"
-	}
-	Write-Host 'Building Help for ${program}...'
-	Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
-	if ($? -eq $false)
-	{
-		Write-Host "Help Build failed. Aborting..."
-		Set-Location -Path '..'
-		exit 1
+		if (Test-Path "${program}HelpIndex")
+		{
+			Remove-Item -Recurse -Force -Path "${program}HelpIndex"
+		}
+		
+		Write-Host 'Building Help for ${program}...'
+		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "buildhelp.py"
+		if ($? -eq $false)
+		{
+			Write-Host "Help Build failed. Aborting..."
+			Set-Location -Path '..'
+			exit 1
+		}
 	}
 	Set-Location -Path '..'
 }
@@ -268,10 +272,7 @@ function CopyAssets($program)
 		}
 		Copy-Item -Recurse -Force -Path "CrossMgrHelpIndex" -Destination "$resourcedir"
 	}
-	if ('SeriesMgr CallupSeedingMgr StageRaceGC'.contains( $program ))
-	{
-		BuildHelp( $program )
-	}
+	BuildHelp( $program )
 	
 	# Copy help files last to ensure they are built by now.
 	if (Test-Path "$builddir/${program}HtmlDoc")
