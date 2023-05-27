@@ -146,7 +146,7 @@ buildLocale() {
 }
 
 buildHelp() {
-	$PROGRAM=$1
+	PROGRAM=$1
 	cd "$PROGRAM"
 	if [ -d "$PROGRAM"HelpIndex ]
 	then
