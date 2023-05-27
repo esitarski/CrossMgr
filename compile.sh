@@ -154,10 +154,11 @@ buildHelp() {
 		if [ -d "$PROGRAM"HelpIndex ]; then
 			rm -rf "$PROGRAM"HelpIndex
 		fi
-		echo "Building Help for $PROGRAM ..."
+		echo "buildHelp: Building Help for $PROGRAM ..."
 		python3 buildhelp.py
 		if [ $? -ne 0 ]; then
-			echo "Building help failed. Aborting..."
+			echo "buildHelp: Building help failed. Aborting..."
+			cd ..
 			exit 1
 		fi
 	fi
@@ -203,16 +204,17 @@ copyAssets() {
 		then
 			rm -rf CrossMgrHelpIndex
 		fi
-		echo "Building Help for CrossMgr ..."
+		echo "mainline: Building Help for CrossMgr ..."
 		python3 buildhelp.py
 		if [ $? -ne 0 ]; then
-			echo "Building help failed. Aborting..."
+			echo "mainline: Building help failed. Aborting..."
 			exit 1
 		fi
 		cp -rv CrossMgrHelpIndex $RESOURCEDIR
+	else
+		buildHelp $PROGRAM
 	fi
 	
-	buildHelp $PROGRAM
 
 	# Copy help files last to wait for them to be built by now.
 	if [ -d "${BUILDDIR}/${PROGRAM}HtmlDoc" ]; then
