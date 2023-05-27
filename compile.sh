@@ -200,8 +200,7 @@ copyAssets() {
 
 	# Build help files and indexes.
 	if [ "$PROGRAM" == "CrossMgr" ]; then
-		if [ -d CrossMgrHelpIndex ]
-		then
+		if [ -d CrossMgrHelpIndex ]; then
 			rm -rf CrossMgrHelpIndex
 		fi
 		echo "mainline: Building Help for CrossMgr ..."
