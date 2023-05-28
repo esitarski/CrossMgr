@@ -70,7 +70,7 @@ jobs:
                 automatic_release_tag: "latest"
                 file: release/*
                 tag: latest
-                overwrite: false
+                overwrite: true
                 file_glob: true
     #~ buildlinux:
         #~ name: Linux
