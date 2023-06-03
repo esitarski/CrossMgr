@@ -29,7 +29,9 @@ import Model
 import Version
 import WebReader
 from GetResults import GetResultsRAM, GetResultsBaseline, GetRaceName
+from PhotoFinish		import okTakePhoto
 from Synchronizer import syncfunc
+from SendPhotoRequests import SendPhotoRequests
 
 # import LockLog
 # Lock, RLock = LockLog.Lock, LockLog.RLock
@@ -410,7 +412,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 						except Exception as e:
 							wx.CallAfter( Utils.writeLog, str(d) )
 							wx.CallAfter( Utils.logException, e, sys.exc_info() )
-					WebReader.SetData( data )
+					WebReader.SetData( data )					
 					wx.CallAfter( Utils.refresh )
 					
 				self.send_response( HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST )
@@ -432,7 +434,7 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 					data = []
 					for d in rfid_data['data']:
 						try:
-							data.append( (d['bib'], datetime.datetime.fromisoformat( d['t'] )) )
+							data.append( (int(d['bib']), datetime.datetime.fromisoformat(d['t'])) )
 						except Exception as e:
 							wx.CallAfter( Utils.writeLog, str(d) )
 							wx.CallAfter( Utils.logException, e, sys.exc_info() )
@@ -442,10 +444,16 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 						race = Model.race
 						if not race or not data:
 							return
+						data = [(num, (ts-race.startTime).total_seconds()) for num, ts in data]
 						for num, t in data:
 							race.addTime( num, t, False )
 						race.setChanged()
-						# OutputStreamer.writeNumTimes( data )
+						
+						if race.enableUSBCamera:
+							photoRequests = [(num, t) for num, t in data if okTakePhoto(num, t)]
+							if photoRequests:
+								success, error = SendPhotoRequests( photoRequests, includeFTP=False )
+							
 						Utils.refresh()
 						
 					wx.CallAfter( updateModel, data )

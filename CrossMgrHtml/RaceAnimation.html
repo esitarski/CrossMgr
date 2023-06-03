@@ -5229,7 +5229,7 @@ function LapChart( ) {
 			dc.setLineDash( [] );
 			var xLast = width;
 			for( var lap = lapsData.length - 1; lap >= 0; --lap ) {
-				var sLap = ' ' + (lap+1) + ' ';
+				var sLap = ' ' + (raceIsFinished ? (lapsData.length-lap) : (lap+1) ) + ' ';
 				var tWidth = dc.measureText(sLap).width;
 				var xMiddle = getX(lap) + lapWidth/2;
 				if( xMiddle + tWidth / 2 > xLast )
