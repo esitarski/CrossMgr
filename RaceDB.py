@@ -3,6 +3,7 @@ import os
 import wx
 import requests
 import datetime
+import platform
 import wx.dataview as dataview
 import Utils
 import Model
@@ -37,7 +38,7 @@ def GetRaceDBConfig():
 globalRaceDBUrl = ''
 
 class RaceDBEditConfig( wx.Dialog ):
-	def __init__( self, parent, id=wx.ID_ANY, size=(800,800) ):
+	def __init__( self, parent, id=wx.ID_ANY, size=(600,600) ):
 		super().__init__(parent, id, size=size, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER, title=_('RaceDB Config File'))
 		self.text = wx.TextCtrl( self, size=(500,500), style=wx.TE_MULTILINE )
 		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL|wx.APPLY|wx.HELP )
@@ -142,7 +143,8 @@ def fixUrl( url ):
 		
 	if 'localhost' in url:
 		url = url.replace( 'https', 'http' )
-		
+		if platform.system() == 'Windows':
+			url = url.replace('www.localhost', 'localhost')
 	globalRaceDBUrl = url
 	return url
 
