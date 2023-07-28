@@ -17,7 +17,6 @@ dependencies = [
 	'fpdf',
 	'natural-keys',
 	'xlwt',
-	'netifaces',
 	'whoosh',
 	'qrcode',
 	'tornado',
