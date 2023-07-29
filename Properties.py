@@ -1400,21 +1400,34 @@ class Properties( wx.Panel ):
 			os.makedirs( templatesFolder )
 		except Exception as e:
 			pass
-		fd = wx.FileDialog(
-			self,
-			defaultDir=templatesFolder,
-			message=_("Save as Template"),
-			wildcard="CrossMgr template files (*.cmnt)|*.cmnt",
-			style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT,
-		)
-		if fd.ShowModal() == wx.ID_OK:
-			template = Template.Template( Model.race )
+		with wx.FileDialog(
+				self,
+				defaultDir=templatesFolder,
+				message=_("Save as Template"),
+				wildcard="CrossMgr template files (*.cmnt)|*.cmnt",
+				style=wx.FD_SAVE,
+			) as fd:
+			
+			if fd.ShowModal() != wx.ID_OK:
+				return
+			
 			path = fd.GetPath()
+			if not path.endswith('.cmnt'):
+				path += '.cmnt'
+			
+			if os.path.isfile(path):
+				if not Utils.MessageOKCancel( self, '{}?\n\n{}'.format(_("Replace Existing Template"), path), _('Relace Template') ):
+					return
+			
+			template = Template.Template( Model.race )
 			try:
 				template.write( path )
 				race.templateFileName = path
 				self.refresh()
-				Utils.MessageOK( self, '{}\n\n{}'.format(_("Template Saved to"), path), _("Save Template Successful") )
+				message = '{}\n\n{}'.format(_("Template Saved to"), path)
+				if os.path.basename(path) == 'default.cmnt':
+					message += '\n\n{}'.format( _("Default template will be used for New races.") )
+				Utils.MessageOK( self, message, _("Save Template Successful") )
 			except Exception as e:
 				Utils.MessageOK( self, '{}\n\n{}\n{}'.format(_("Template Save Failure"), e, path), _("Template Save Failure"), wx.ICON_ERROR )
 	

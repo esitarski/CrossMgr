@@ -10,7 +10,6 @@ openpyxl
 pytz
 fpdf2
 xlwt
-netifaces
 whoosh
 qrcode
 tornado

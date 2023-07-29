@@ -5,7 +5,6 @@ import random
 import operator
 import datetime
 import requests
-from netifaces import interfaces, ifaddresses, AF_INET
 
 url = 'http://192.168.2.17:8765/'
 

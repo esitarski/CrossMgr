@@ -1,17 +1,17 @@
 import re
 import os
 import wx
+import wx.dataview as dataview
 import requests
 import datetime
 import platform
-import wx.dataview as dataview
+import configparser
+import urllib.parse
+
 import Utils
 import Model
-import urllib.parse
 from ReadSignOnSheet	import ExcelLink
 from AddExcelInfo		import getInfo
-
-import configparser
 
 def GetRaceDBConfigFile():
 	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaceDB.ini' )
@@ -174,7 +174,7 @@ def GetRaceDBEvents( url = None, date=None ):
 def GetEventCrossMgr( url, eventId, eventType ):
 	url = url or RaceDBUrlDefault()
 	url = url.rstrip( '/' )
-	url +=['/EventMassStartCrossMgr','/EventTTCrossMgr'][eventType] + '/{}'.format(eventId)
+	url += ('/EventMassStartCrossMgr','/EventTTCrossMgr')[eventType] + '/{}'.format(eventId)
 	url = AddUserPassword( url + '/' )
 	req = requests.get( url )
 	content_disposition = req.headers['content-disposition'].encode('latin-1').decode()
@@ -479,8 +479,6 @@ class RaceDB( wx.Dialog ):
 		if eventClosest:
 			self.tree.Select( eventClosest )
 			self.tree.Expand( eventClosest )
-
-#----------------------------------------------------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------------------------------------------------
 

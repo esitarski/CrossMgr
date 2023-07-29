@@ -1,6 +1,5 @@
 import sys
 import collections
-from netifaces import interfaces, ifaddresses, AF_INET
 
 isWindows = sys.platform.startswith('win')
 
@@ -742,26 +741,17 @@ def ValidFilename( fname ):
 	return ''.join( c for c in fname if c not in invalidFNameChars and ord(c) > 31 )
 
 def GetDefaultHost():
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	s.settimeout(0)
 	try:
-		DEFAULT_HOST = '127.0.0.1'
-		done = False
-		for ifaceName in interfaces():
-			if done == True:
-				break
-			ips = ifaddresses(ifaceName).setdefault(AF_INET)
-			if (ips != None):
-				for i in ips:
-					currentaddress = str(i['addr'])
-					# Only add real ips
-					if (currentaddress.startswith('127') == False and currentaddress.startswith('169') == False):
-						DEFAULT_HOST = currentaddress
-						done = True
-						break
+		s.connect(('10.254.254.254', 1))	# Doesn't have to be reachable
+		IP = s.getsockname()[0]
 	except Exception:
-		DEFAULT_HOST = '0.0.0.0'
+		IP = '127.0.0.1'
+	finally:
+		s.close()
+	return IP
 
-	return DEFAULT_HOST
-	
 if sys.platform == 'darwin':
 	webbrowser.register("chrome", None, webbrowser.MacOSXOSAScript('chrome'))
 
