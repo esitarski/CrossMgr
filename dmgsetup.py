@@ -1,5 +1,5 @@
+import os
 import plistlib
-import os, sys
 
 builddir = defines.get('builddir')
 if builddir:

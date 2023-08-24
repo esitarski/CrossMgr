@@ -1,9 +1,7 @@
 import wx
 import os
 import sys
-import math
 import getpass
-import operator
 
 import Utils
 from Utils				import logCall, logException

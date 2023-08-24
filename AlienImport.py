@@ -1,14 +1,9 @@
 import wx
 import io
 import re
-import math
-import Utils
 import Model
-import JChip
 from ChipImport import ChipImportDialog
 import datetime
-combine = datetime.datetime.combine
-import string
 
 def parseTagTime( line, lineNo, errors ):
 	fields = [f.strip() for f in line.split(',')]

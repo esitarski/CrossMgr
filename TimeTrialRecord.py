@@ -1,10 +1,8 @@
 import wx
 import wx.grid			as gridlib
-from wx.lib import masked
 from wx.grid import GridCellNumberEditor
 import wx.lib.buttons
 
-import math
 import Model
 import Utils
 from ReorderableGrid import ReorderableGrid
@@ -54,7 +52,6 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 		if val != self.startValue:
 			if val == self.Empty:
 				val = ''
-			changed = True
 			grid.GetTable().SetValue( row, col, val )
 		self.startValue = self.Empty
 		self._tc.SetValue( self.startValue )
@@ -172,7 +169,7 @@ class TimeTrialRecord( wx.Panel ):
 			race.photoCount += TakePhoto( 0, StrToSeconds(formatTime(t)) )
 	
 		# Grow the table to accomodate the next entry.
-		with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+		with gridlib.GridUpdateLocker(self.grid):
 			Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows()+1 )			
 			self.grid.SetCellValue( self.grid.GetNumberRows()-1, 0, formatTime(t) )
 			self.grid.AutoSize()
@@ -222,7 +219,7 @@ class TimeTrialRecord( wx.Panel ):
 				
 			wx.CallAfter( Utils.refresh )
 		
-		with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+		with gridlib.GridUpdateLocker(self.grid):
 			for row, tStr in enumerate(timesNoBibs):
 				self.grid.SetCellValue(row, 0, tStr )
 				self.grid.SetCellValue(row, 1, '' )
@@ -234,7 +231,7 @@ class TimeTrialRecord( wx.Panel ):
 	def doCleanup( self, event ):
 		timesBibs, timesNoBibs = self.getTimesBibs()
 
-		with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+		with gridlib.GridUpdateLocker(self.grid):
 			for row, (tStr, bib) in enumerate(timesBibs):
 				self.grid.SetCellValue(row, 0, tStr )
 				self.grid.SetCellValue(row, 1, str(bib) )

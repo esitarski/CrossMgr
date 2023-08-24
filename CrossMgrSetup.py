@@ -68,11 +68,11 @@ subprocess.call( [
 # wxHome = r'C:\Python27\Lib\site-packages\wx-3.0-msw\wx'
 # try:
 	# shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
-# except:
+# except Exception:
 	# pass
 # try:
 	# shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
-# except:
+# except Exception:
 	# pass
 
 # Add images and reference data to the distribution folder.
@@ -131,7 +131,7 @@ newExeName = 'CrossMgr_Setup_v' + vNum + '.exe'
 
 try:
 	os.remove( 'install\\' + newExeName )
-except:
+except Exception:
 	pass
 
 shutil.copy( 'install\\CrossMgr_Setup.exe', 'install\\' + newExeName )
@@ -144,7 +144,7 @@ newZipName = newExeName.replace( '.exe', '.zip' )
 
 try:
 	os.remove( newZipName )
-except:
+except Exception:
 	pass
 
 z = zipfile.ZipFile(newZipName, "w")

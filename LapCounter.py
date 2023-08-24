@@ -6,7 +6,6 @@ import datetime
 import Model
 import Utils
 
-from GetResults import GetResults
 from SetLaps import SetLaps
 
 defaultBackgroundColours = [

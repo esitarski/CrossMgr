@@ -1,7 +1,6 @@
 import wx
 import os
 import sys
-import time
 import Utils
 import Model
 import PhotoFinish
@@ -9,7 +8,7 @@ from FrameCircBuf import FrameCircBuf
 from datetime import datetime, timedelta
 import threading
 from Utils import logCall, logException
-from queue import Queue, Empty
+from queue import Queue
 import wx.lib.newevent
 
 now = datetime.now

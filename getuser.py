@@ -1,6 +1,7 @@
 import os
 
-class UserNotFound(Exception): pass
+class UserNotFound(Exception):
+    pass
 
 ### Windows ###
 if os.name == 'nt':
@@ -241,7 +242,8 @@ else:
     from os import getuid
 
     def lookup_username(uid=None):
-        if uid is None: uid = getuid()
+        if uid is None:
+            uid = getuid()
         try:
             return pwd.getpwuid(uid)[0]
         except (KeyError, TypeError):

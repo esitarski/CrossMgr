@@ -186,7 +186,7 @@ class URLDropTarget(wx.DropTarget):
 		super().__init__()
 		self.window = window
 		self.callback = callback
-		self.data = wx.URLDataObject();
+		self.data = wx.URLDataObject()
 		self.SetDataObject(self.data)
 
 	def OnDragOver(self, x, y, d):

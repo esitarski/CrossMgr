@@ -1,15 +1,15 @@
 import wx
 import sys
-import math
+from math import atan2, sin, cos
 import operator
-from bisect import bisect_left
 from collections import defaultdict
+from bisect import bisect_left
+
 import Model
 import Utils
 from GanttChartPanel import makeColourGradient, makePastelColours, lighterColour
 from GetResults import GetResults
 
-from math import atan2, sin, cos, pi
 def DrawArrowLine( dc, x0, y0, x1, y1, arrowFrom=True, arrowTo=True, arrowLength=16, arrowWidth=8 ):
 	'''
 		Draws a line with arrows in a regular wxPython DC.

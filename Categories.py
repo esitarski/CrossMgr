@@ -222,7 +222,7 @@ class CategoryIconRenderer(gridlib.GridCellRenderer):
 		return CategoryIconRenderer()
 
 class BitmapRenderer(wx.grid.PyGridCellRenderer):
-	def __init__( self, *argw, **kwargs ):
+	def __init__( self, *args, **kwargs ):
 		self.bmp = kwargs.pop( 'bmp' )
 		super().__init__( *args, **kwargs )
 	

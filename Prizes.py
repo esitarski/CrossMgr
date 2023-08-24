@@ -1,7 +1,6 @@
 import wx
 import os
-import sys
-import math
+
 import Utils
 import Model
 from GetResults import GetResults

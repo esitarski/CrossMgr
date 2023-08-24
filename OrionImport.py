@@ -1,6 +1,5 @@
 import wx
 import datetime
-import Utils
 import Model
 import JChip
 from ChipImport import ChipImportDialog

@@ -149,7 +149,7 @@ class Animation(wx.Control):
 		self.suspendAnimation = False
 	
 	def Animate( self, tRunning, tMax = None, tCur = 0.001 ):
-		self.StopAnimate();
+		self.StopAnimate()
 		self._initAnimation()
 		self.t = tCur
 		if not self.data:
@@ -166,7 +166,7 @@ class Animation(wx.Control):
 		self.timer.Start( int(1000.0/self.framesPerSecond), False )
 	
 	def StartAnimateRealtime( self ):
-		self.StopAnimate();
+		self.StopAnimate()
 		self._initAnimation()
 		self.speedup = 1.0
 		self.tMax = 999999
@@ -174,14 +174,14 @@ class Animation(wx.Control):
 	
 	def StopAnimate( self ):
 		if self.timer.IsRunning():
-			self.timer.Stop();
+			self.timer.Stop()
 	
 	def SetNumsToWatch( self, numsToWatch ):
 		self.numsToWatch = numsToWatch
 		self.Refresh()
 	
 	def SuspendAnimate( self ):
-		self.suspendAnimation = True;
+		self.suspendAnimation = True
 	
 	def IsAnimating( self ):
 		return not self.suspendAnimation and self.timer.IsRunning()
@@ -248,7 +248,7 @@ class Animation(wx.Control):
 				break
 				
 		if tCur is not None:
-			self.t = tCur;
+			self.t = tCur
 		self.Refresh()
 	
 	def SetOptions( self, reverseDirection = False, finishTop = False ):
@@ -641,7 +641,6 @@ class Animation(wx.Control):
 		pass
 		
 if __name__ == '__main__':
-	import locale
 	locale.setlocale(locale.LC_ALL,'fr_FR.UTF-8')
 
 	data = {}

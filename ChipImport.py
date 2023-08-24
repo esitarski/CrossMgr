@@ -255,7 +255,7 @@ class ChipImportDialog( wx.Dialog ):
 	def onOK( self, event ):
 		fname = self.chipDataFile.GetValue()
 		try:
-			with open(fname) as f:
+			with open( fname ):
 				pass
 		except IOError:
 			Utils.MessageOK( self, '{}:\n\n"{}"'.format(_('Could not open data file for import'), fname),

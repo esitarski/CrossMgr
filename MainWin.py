@@ -3108,14 +3108,14 @@ class MainWin( wx.Frame ):
 
 	@logCall
 	def menuOpen( self, event ):
-		dlg = wx.FileDialog( self, message=_("Choose a Race file"),
+		with wx.FileDialog( self, message=_("Choose a Race file"),
 							defaultFile = '',
 							defaultDir = Utils.getFileDir(),
 							wildcard = _('CrossMgr files (*.cmn)|*.cmn'),
-							style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
-		if dlg.ShowModal() == wx.ID_OK:
-			busy = wx.BusyCursor()
-			self.openRace( dlg.GetPath() )
+							style=wx.FD_OPEN | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				with wx.BusyCursor():
+					self.openRace( dlg.GetPath() )
 
 	def menuFileHistory( self, event ):
 		fileNum = event.GetId() - wx.ID_FILE1

@@ -1,8 +1,6 @@
 import wx
 import os
-import sys
 import xlwt
-import webbrowser
 from FitSheetWrapper import FitSheetWrapper
 import Utils
 import Model

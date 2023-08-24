@@ -1,6 +1,6 @@
 from socketserver import ThreadingMixIn
 import threading
-from queue import Queue, Empty
+from queue import Queue
 
 class ThreadPoolMixIn(ThreadingMixIn):
 	"""Mix-in class to handle requests in a thread pool.

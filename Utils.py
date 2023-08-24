@@ -8,7 +8,6 @@ isWindows = sys.platform.startswith('win')
 #
 import wx
 import os
-import io
 
 import wx.lib.agw.genericmessagedialog
 
@@ -220,15 +219,15 @@ def RemoveDisallowedSheetChars( sheetName ):
 
 class UniqueExcelSheetName():
 	def __init__( self ):
-		self.sheetNames = collections.defaultdict( int )
+		self.sheetNameCount = collections.defaultdict( int )
 		
 	def getSheetName( self, name ):
 		sheetName = RemoveDisallowedSheetChars( name )
 		while True:
-			self.sheetNames[sheetName] += 1
-			if self.sheetNames[sheetName] == 1:
+			self.sheetNameCount[sheetName] += 1
+			if self.sheetNameCount[sheetName] == 1:
 				return sheetName
-			suffix = '-{}'.format( sheetNameCount[sheetName] )
+			suffix = '-{}'.format( self.sheetNameCount[sheetName] )
 			sheetName = '{}{}'.format( sheetName[:31-len(suffix)], suffix )			
 	
 def removeDiacritic( s ):
@@ -277,7 +276,7 @@ else:	# Try Linux
 				shell=False, stdin=None, stdout=None, stderr=None,
 				close_fds=True,
 			)
-		except Exception as e:
+		except Exception:
 			pass
 		return True
 		
@@ -697,7 +696,7 @@ def LayoutChildResize( child ):
 def LayoutChildren( sizer ):
 	for c in sizer.GetChildren():
 		if isinstance(c, wx.Sizer):
-			LayoutDescending( c )
+			LayoutChildren( c )
 	sizer.Layout()
 
 def GetPngBitmap( fname ):
@@ -721,7 +720,7 @@ def ParsePhotoFName( fname ):
 	
 	try:
 		raceTime = float(hour)*(60.0*60.0) + float(minute)*60.0 + float(second) + float(decimal)/(10**len(decimal))
-	except Exception:
+	except Exception as e:
 		writeLog( 'ParsePhotoFName: raceTime fname="{}"'.format(fname) )
 		logException( e, sys.exc_info() )
 		raise

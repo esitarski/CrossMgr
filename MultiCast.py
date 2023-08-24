@@ -55,7 +55,7 @@ class MultiCastSender( threading.Thread ):
 			{ 'ts_sender': [tNow.year, tNow.month, tNow.day, tNow.hour, tNow.minute, tNow.second, tNow.microsecond] }
 		]
 		try:
-			sent = sock.sendto(ToJson(message).encode(), (multicast_group, multicast_port))
+			sock.sendto(ToJson(message).encode(), (multicast_group, multicast_port))
 		except Exception as e:
 			return receivers
 		
@@ -133,7 +133,7 @@ class MultiCastSender( threading.Thread ):
 			for message in messages:
 				if message[0] == 'trigger':
 					try:
-						sent = sock.sendto(ToJson([message[0], makeJSONCompatible(message[1])]).encode(), (multicast_group, multicast_port))
+						sock.sendto(ToJson([message[0], makeJSONCompatible(message[1])]).encode(), (multicast_group, multicast_port))
 					except Exception as e:
 						# print( 'MultiCastSender:', e )
 						pass

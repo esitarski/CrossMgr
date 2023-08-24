@@ -1,6 +1,5 @@
 import wx
 import os
-import sys
 import math
 import getpass
 import Utils
@@ -17,20 +16,20 @@ import Version
 def getCatCountImagesCategoryList( parent ):
 	il = wx.ImageList(16, 16)
 	sm_rt = il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallRightArrow.png'), wx.BITMAP_TYPE_PNG))
-	sm_up = il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
-	sm_dn = il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
+	# sm_up = il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallUpArrow.png'), wx.BITMAP_TYPE_PNG))
+	# sm_dn = il.Add(wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SmallDownArrow.png'), wx.BITMAP_TYPE_PNG ))
 	
-	list = AutoWidthListCtrl( parent, style = wx.LC_REPORT 
+	catList = AutoWidthListCtrl( parent, style = wx.LC_REPORT 
 									 | wx.BORDER_SUNKEN
 									 | wx.LC_HRULES
 	)
-	list.SetImageList(il, wx.IMAGE_LIST_SMALL)
+	catList.SetImageList(il, wx.IMAGE_LIST_SMALL)
 	
-	list.InsertColumn(0, _("Name"))
-	list.InsertColumn(1, _("Gender"))
-	list.InsertColumn(2, _("Type"))
-	list.InsertColumn(3, _("Count"), wx.LIST_FORMAT_RIGHT)
-	list.InsertColumn(4, '' )
+	catList.InsertColumn(0, _("Name"))
+	catList.InsertColumn(1, _("Gender"))
+	catList.InsertColumn(2, _("Type"))
+	catList.InsertColumn(3, _("Count"), wx.LIST_FORMAT_RIGHT)
+	catList.InsertColumn(4, '' )
 	
 	catCount = {}
 	race = Model.race
@@ -41,17 +40,17 @@ def getCatCountImagesCategoryList( parent ):
 				catCount[c] = race.catCount( c )
 				if catCount[c] == 0:
 					continue
-				index = list.InsertItem(list.GetItemCount(), c.name, sm_rt)
-				list.SetItem( index, 1, getattr(c, 'gender', 'Open') )
-				list.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
-				list.SetItem( index, 3, '{}'.format(catCount[c]) )
+				index = catList.InsertItem(catList.GetItemCount(), c.name, sm_rt)
+				catList.SetItem( index, 1, getattr(c, 'gender', 'Open') )
+				catList.SetItem( index, 2, [_('Start Wave'), _('Component'), _('Custom')][c.catType] )
+				catList.SetItem( index, 3, '{}'.format(catCount[c]) )
 	
 	for col in range(4+1):
-		list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
-	list.SetColumnWidth( 1, 64 )
-	list.SetColumnWidth( 3, 52 )
+		catList.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
+	catList.SetColumnWidth( 1, 64 )
+	catList.SetColumnWidth( 3, 52 )
 	
-	return catCount, il, list
+	return catCount, il, catList
 
 #----------------------------------------------------------------------
 

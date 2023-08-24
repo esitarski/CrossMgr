@@ -1,7 +1,5 @@
 import io
-import math
 import Utils
-import datetime
 import Model
 from GetResults import GetResults, GetCategoryDetails
 from ReadSignOnSheet import SyncExcelLink
@@ -113,7 +111,7 @@ def WebScorerExport( fname ):
 				
 				try:
 					finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
-				except Exception as e:
+				except Exception:
 					finishTime = ''
 				
 				# Rider Fields.

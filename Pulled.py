@@ -2,19 +2,15 @@ import wx
 import wx.grid			as gridlib
 import re
 import os
-import sys
-import math
-import operator
 from collections import defaultdict
+
 import Utils
 import Model
 from ReorderableGrid 	import ReorderableGrid
-from FinishStrip		import ShowFinishStrip
 from ReadSignOnSheet	import ExcelLink
 from FixCategories import FixCategories, SetCategory
 from GetResults			import GetResults, getPulledCmpTuple
 from RaceInputState import RaceInputState
-from Undo import undo
 
 def getRiderInfo( bib ):
 	race = Model.race

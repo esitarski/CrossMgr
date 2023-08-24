@@ -331,7 +331,7 @@ class Recommendations( wx.Panel ):
 							)
 							
 					elif rider.status in [Model.Rider.DNF, Model.Rider.Pulled]:
-						if rider.tStatus == None:
+						if rider.tStatus is None:
 							# Missing status times.
 							append( num, getName(num),
 									_('Time'),

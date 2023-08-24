@@ -1,5 +1,4 @@
 import json
-import Utils
 import Model
 from GeoAnimation import GpsPoint, GeoTrack
 from BatchPublishAttrs import batchPublishRaceAttr

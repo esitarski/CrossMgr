@@ -1,12 +1,9 @@
 import re
-import sys
 import datetime
 import threading
-from queue import Queue, Empty
+from queue import Queue
 import wx
 import wx.lib.mixins.listctrl as listmix
-
-import Utils
 
 class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 	def __init__(self, parent, id = wx.ID_ANY, pos=wx.DefaultPosition,

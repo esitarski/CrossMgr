@@ -106,7 +106,7 @@ def USACExport( workbook, sheet ):
 			
 			try:
 				finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0]) if rr.status == Model.Rider.Finisher else ''
-			except Exception as e:
+			except Exception:
 				finishTime = ''
 
 			for col, field in enumerate(USACFields):

@@ -2,10 +2,8 @@ import socket
 import sys
 import time
 import datetime
-import datetime
 now = datetime.datetime.now
 import atexit
-import subprocess
 import threading
 import re
 import wx
@@ -82,17 +80,17 @@ def AutoDetect( ultraPort=DEFAULT_PORT, callback=None ):
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			s.settimeout( 0.5 )
 			s.connect( (ultraHost, ultraPort) )
-		except Exception as e:
+		except Exception:
 			continue
 
 		try:
 			buffer = socketReadDelimited( s )
-		except Exception as e:
+		except Exception:
 			continue
 			
 		try:
 			s.close()
-		except Exception as e:
+		except Exception:
 			pass
 		
 		if buffer.startswith('Connected'):
@@ -113,11 +111,9 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	timeoutSecs = 5
 	delaySecs = 3
 	
-	readerTime = None
 	readerComputerTimeDiff = None
 	
 	s = None
-	passingsCur = 0
 	status = None
 	startOperation = None
 	
@@ -156,7 +152,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			try:
 				s.shutdown( socket.SHUT_RDWR )
 				s.close()
-			except Exception as e:
+			except Exception:
 				pass
 			time.sleep( delaySecs )
 		
@@ -216,7 +212,6 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 				break
 
 			tagTimes = []
-			errors = []
 			times = set()
 			for message in buffer.split( EOL ):
 				if not message:
