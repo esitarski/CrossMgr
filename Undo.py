@@ -37,7 +37,7 @@ class Undo:
 	def setState( self ):
 		if self.iUndo is None:
 			return
-		with Model.LockRace() as race:
+		with Model.LockRace():
 			raceNew = pickle.loads( self.undoStack[self.iUndo] )
 			Model.setRace( raceNew )
 		updateUndoStatus()

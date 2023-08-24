@@ -114,7 +114,7 @@ def ReadLIF( fname ):
 		# Check for trailing newline.
 		if not (s and s.endswith('\n')):
 			# Empty file or no newline.  File is likely being written.  Wait a little and try again.
-			time.sleep( 0.5 + random.random() );
+			time.sleep( 0.5 + random.random() )
 			continue
 			
 		raceStart = None
@@ -177,7 +177,7 @@ def Export( folder=None ):
 	# ID number, last name, first name, affiliation
 	fields = ('LastName', 'FirstName', 'Team')
 	with open(fnameBase + '.ppl', 'w', newline='') as f:
-		writer = csv.writer( f );
+		writer = csv.writer( f )
 		for id, info in sorted( externalInfo.items(), key=operator.itemgetter(0) ):
 			writer.writerow( [id] + [externalInfo.get(field,'') for field in fields] )
 

@@ -1,8 +1,8 @@
+import os
+import itertools
+
 import wx
 import wx.lib.mixins.listctrl as listmix
-import os
-import sys
-import itertools
 
 import Model
 import Utils

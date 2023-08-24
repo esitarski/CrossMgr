@@ -655,11 +655,11 @@ if __name__ == '__main__':
 	# Draw a keyboard with keybuttons.
 	# Define the key labels for each row.
 	keyRows = [
-		['Esc'] + ['F%d' % (i+1) for i in range(12)],
-		['%s\n%s' % (u,l) for u, l in zip('~!@#$%^&*()_+','`1234567890-=')] + ['Backspace'],
-		['Tab'] + [k for k in 'QWERTYUIOP'] + ['%s\n%s' % (u,l) for u, l in zip('{}|','[]\\')],
-		['Caps Lock'] + [k for k in 'ASDFGHJKL'] + ['%s\n%s' % (u,l) for u, l in zip(':"',';\'')] + ['Enter'],
-		['Shift'] + [k for k in 'ZXCVBNM'] + ['%s\n%s' % (u,l) for u, l in zip('<>?',',./')] + ['Shift'],
+		['Esc'] + ['F{}'.format(i+1) for i in range(12)],
+		['{}\n{}'.format(top,bottom) for top,bottom in zip('~!@#$%^&*()_+','`1234567890-=')] + ['Backspace'],
+		['Tab'] + [k for k in 'QWERTYUIOP'] + ['{}\n{}'.format(top,bottom) for top,bottom in zip('{}|','[]\\')],
+		['Caps Lock'] + [k for k in 'ASDFGHJKL'] + ['{}\n{}'.format(top,bottom) for top,bottom in zip(':"',';\'')] + ['Enter'],
+		['Shift'] + [k for k in 'ZXCVBNM'] + ['{}\n{}'.format(top,bottom) for top,bottom in zip('<>?',',./')] + ['Shift'],
 		['Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
 	]
 	# Specify width exceptions for certain keys.

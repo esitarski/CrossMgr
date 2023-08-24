@@ -1,11 +1,10 @@
 import wx
-import sys
 import math
-import Utils
+import datetime
+
 import Model
 import JChip
 from ChipImport import ChipImportDialog
-import datetime
 combine = datetime.datetime.combine
 
 sepTrans = str.maketrans( '/-:', '   ' )

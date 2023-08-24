@@ -429,7 +429,7 @@ while True:
 		try:
 			sock.send( message.encode() )
 			iMessage += 1
-		except Exception:
+		except Exception as e:
 			print( 'Error: {}  Attempting to reconnect...', e )
 			break
 		

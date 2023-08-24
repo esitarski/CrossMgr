@@ -389,7 +389,7 @@ class ImageDialog(wx.Dialog):
         self.set_dir = os.getcwd()
         self.set_file = None
 
-        if set_dir != None:
+        if set_dir is not None:
             if os.path.exists(set_dir):     # set to working directory if nothing set
                 self.set_dir = set_dir
 
@@ -681,7 +681,7 @@ class FindFiles:
                 path = path.upper()
                 value = i.upper()
 
-                if pattern.match(value) != None:
+                if pattern.match(value) is not None:
                     filelist.append(i)
         except Exception:
             pass
@@ -708,7 +708,7 @@ class FindFiles:
 
     def StripExt(self, file_nm):
         fl_fld = os.path.splitext(file_nm)
-        fl_name = fl_fld[0]
+        #fl_name = fl_fld[0]
         ext = fl_fld[1]
         return ext[1:]
 

@@ -776,7 +776,7 @@ class GeoAnimation(wx.Control):
 		self.suspendGeoAnimation = False
 	
 	def Animate( self, tRunning, tMax = None, tCur = 0.001 ):
-		self.StopAnimate();
+		self.StopAnimate()
 		self._initGeoAnimation()
 		self.t = tCur
 		if not self.data:
@@ -793,7 +793,7 @@ class GeoAnimation(wx.Control):
 		self.timer.Start( int(1000.0/self.framesPerSecond), False )
 	
 	def StartAnimateRealtime( self ):
-		self.StopAnimate();
+		self.StopAnimate()
 		self._initGeoAnimation()
 		self.speedup = 1.0
 		self.tMax = 999999
@@ -876,7 +876,7 @@ class GeoAnimation(wx.Control):
 				break
 				
 		if tCur is not None:
-			self.t = tCur;
+			self.t = tCur
 		self.tBannerLast = None
 		self.Refresh()
 	

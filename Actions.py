@@ -66,8 +66,6 @@ class StartRaceAtTime( wx.Dialog ):
 		super().__init__( parent, id, _("Start Race at Time:"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
-		font = wx.Font(24, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-		
 		self.startSeconds = None
 		self.timer = None
 		self.futureRaceTime = None
@@ -111,7 +109,7 @@ class StartRaceAtTime( wx.Dialog ):
 		self.pages.SetSelection( 0 )	# Record screen.
 		
 		self.countdown = CountdownClock( self, size=(400,400), tFuture=None )
-		self.countdown.SetBackgroundColour( wx.WHITE );
+		self.countdown.SetBackgroundColour( wx.WHITE )
 		self.Bind( EVT_COUNTDOWN, self.onCountdown )
 		
 		self.okBtn = wx.Button( self, wx.ID_OK, label=_('Start at Above Time') )
@@ -360,7 +358,7 @@ class Actions( wx.Panel ):
 				)
 				return
 			try:
-				i = next((i for i, field in enumerate(externalFields) if field.startswith('Tag')))
+				next((i for i, field in enumerate(externalFields) if field.startswith('Tag')))
 			except StopIteration:
 				Utils.MessageOK(
 					self,

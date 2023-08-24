@@ -14,7 +14,7 @@ for lang in languages:
 	dir = os.path.join(CrossMgrLocale,lang,'LC_MESSAGES')
 	try:
 		os.makedirs( dir )
-	except OSError as e:
+	except OSError:
 		if not os.path.isdir( dir ):
 			raise
 

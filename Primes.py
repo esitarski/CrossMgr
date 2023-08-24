@@ -1,17 +1,15 @@
 import wx
-from wx.lib.masked import NumCtrl
+from wx.grid import GridCellFloatEditor
 import os
-import sys
-import math
+
 import Utils
 import Model
-from ReorderableGrid import ReorderableGrid
+from ReorderableGrid 	import ReorderableGrid
 from FinishStrip		import ShowFinishStrip
 from ReadSignOnSheet	import ExcelLink
 from GetResults			import GetResults
-from RaceInputState import RaceInputState
-from Categories import TimeEditor
-from wx.grid import GridCellFloatEditor, GridCellNumberEditor
+from RaceInputState		import RaceInputState
+from Categories			import TimeEditor
 
 def getWinnerInfo( bib ):
 	race = Model.race

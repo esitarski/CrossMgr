@@ -1,8 +1,8 @@
 import wx
-import Utils
-import Model
-import string
 import re
+import string
+import Model
+
 from Animation import Animation
 from GeoAnimation import GeoAnimation
 from FixCategories import FixCategories
@@ -22,7 +22,7 @@ class NumListValidator(wx.Validator):
 
 		for x in val:
 			if x != ',' and x not in string.digits:
-				return False;
+				return False
 
 		return True
 

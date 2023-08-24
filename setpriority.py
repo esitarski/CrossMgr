@@ -12,7 +12,7 @@ def setpriority(pid=None,priority=1):
 							win32process.ABOVE_NORMAL_PRIORITY_CLASS,
 							win32process.HIGH_PRIORITY_CLASS,
 							win32process.REALTIME_PRIORITY_CLASS]
-		if pid == None:
+		if pid is None:
 			pid = win32api.GetCurrentProcessId()
 		handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
 		win32process.SetPriorityClass(handle, priorityclasses[priority])

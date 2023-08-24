@@ -16,8 +16,7 @@ import threading
 from urllib.parse import quote
 
 from urllib.request import url2pathname
-from queue import Queue, Empty
-from socketserver import ThreadingMixIn
+from queue import Queue
 
 from qrcode import QRCode
 from tornado.template import Template
@@ -167,7 +166,7 @@ class ContentBuffer:
 			
 		try:
 			mtime = os.path.getmtime( fnameFull )
-		except Exception as e:
+		except Exception:
 			self.fileCache.pop( fname, None )
 			return None
 			
@@ -179,7 +178,7 @@ class ContentBuffer:
 		try:
 			with open(fnameFull) as f:
 				content = f.read()
-		except Exception as e:
+		except Exception:
 			cache['status'] = self.ReadError
 			return cache
 			
@@ -375,7 +374,7 @@ def WriteHtmlIndexPage():
 	try:
 		with open(fname, 'rb') as f:	# Read as bytes as the index page is already utf-8 encoded.
 			previousContent = f.read()
-	except Exception as e:
+	except Exception:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
@@ -575,7 +574,7 @@ def WebServer():
 			server = CrossMgrServer(('', PORT_NUMBER), CrossMgrHandler)
 			server.init_thread_pool()
 			server.serve_forever( poll_interval = 2 )
-		except Exception as e:
+		except Exception:
 			server = None
 			time.sleep( 5 )
 
@@ -623,7 +622,7 @@ def WsServerLaunch():
 			wsServer = WebsocketServer( port=PORT_NUMBER + 1, host='' )
 			wsServer.set_fn_message_received( message_received )
 			wsServer.run_forever()
-		except Exception as e:
+		except Exception:
 			wsServer = None
 			time.sleep( 5 )
 
@@ -714,7 +713,7 @@ def WsLapCounterServerLaunch():
 			wsLapCounterServer = WebsocketServer( port=PORT_NUMBER + 2, host='' )
 			wsLapCounterServer.set_fn_new_client( lap_counter_new_client )
 			wsLapCounterServer.run_forever()
-		except Exception as e:
+		except Exception:
 			wsLapCounterServer = None
 			time.sleep( 5 )
 

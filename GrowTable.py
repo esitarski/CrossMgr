@@ -1,5 +1,4 @@
 import wx
-import Utils
 
 class GrowTable:
 	bold, alignLeft, alignCentre, alignRight, alignTop, alignMiddle, alignBottom = [1<<i for i in range(7)]

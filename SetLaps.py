@@ -1,10 +1,10 @@
 import wx
 import wx.lib.intctrl
-import Model
-import Utils
-import sys
 import bisect
 import datetime
+
+import Model
+import Utils
 from GetResults import GetResults
 
 class SetLaps( wx.Dialog ):
@@ -54,7 +54,7 @@ class SetLaps( wx.Dialog ):
 			if field is None:
 				for c in range(3):
 					self.fgs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.EXPAND )
-				continue;
+				continue
 			
 			self.fgs.Add( wx.StaticText(self, label=label + ': '), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 			for c in range(2):

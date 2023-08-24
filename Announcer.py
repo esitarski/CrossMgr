@@ -210,7 +210,7 @@ class Announcer( wx.Panel ):
 		v = category.fullname
 		try:
 			lapsToGo = len(leader.raceTimes) - 1 - (leaderLap or 0)
-		except Exception as e:
+		except Exception:
 			lapsToGo = None
 		if lapsToGo is not None:
 			if lapsToGo == 0:

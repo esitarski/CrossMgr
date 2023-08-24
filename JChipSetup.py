@@ -246,11 +246,11 @@ class JChipSetupDialog( wx.Dialog ):
 		autoDetect = [RaceResult.AutoDetect, Ultra.AutoDetect][selection-1]
 		
 		def getHost():
-			wait = wx.BusyCursor()
-			try:
-				return None, autoDetect(self.port.GetValue())
-			except Exception as e:
-				return e, None
+			with wx.BusyCursor():
+				try:
+					return None, autoDetect(self.port.GetValue())
+				except Exception as e:
+					return e, None
 		
 		error, readerHost = getHost()
 		if error:

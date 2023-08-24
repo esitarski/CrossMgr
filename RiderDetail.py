@@ -663,7 +663,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		with Model.LockRace() as race:
-			if not num in race:
+			if num not in race:
 				self.setRider( None )
 				self.refresh()
 				return
@@ -687,7 +687,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		with Model.LockRace() as race:
-			if not num in race:
+			if num not in race:
 				return
 		
 		with wx.TextEntryDialog( self, _("Rider's new number:"), _('New Number'), '{}'.format(self.num.GetValue()) ) as dlg:
@@ -731,7 +731,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		with Model.LockRace() as race:
-			if not num in race:
+			if num not in race:
 				return
 		
 		with wx.TextEntryDialog( self, _("Number to swap with:"), _('Swap Numbers'), '{}'.format(self.num.GetValue()) ) as dlg:
@@ -776,7 +776,7 @@ class RiderDetail( wx.Panel ):
 			return
 			
 		with Model.LockRace() as race:
-			if not num in race:
+			if num not in race:
 				return
 		
 		with wx.TextEntryDialog(
@@ -1428,7 +1428,7 @@ class RiderDetail( wx.Panel ):
 		status = self.statusOption.GetSelection()
 		relegatedPosition = self.relegatedPosition.GetValue()
 		
-		undo.pushState();
+		undo.pushState()
 		with Model.LockRace() as race:
 			# Allow new numbers to be added if status is DNS, DNF or DQ.
 			if race is None or (num not in race.riders and status not in [Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ]):

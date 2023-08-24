@@ -1,12 +1,10 @@
 import wx
 import os
-import sys
-import math
 import bisect
 import Utils
 import Model
 from ReadSignOnSheet	import ExcelLink
-from FixCategories import FixCategories, SetCategory
+from FixCategories import FixCategories
 from GetResults import GetResults
 from Histogram import Histogram
 

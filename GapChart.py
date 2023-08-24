@@ -1,5 +1,4 @@
 import wx
-import sys
 import Model
 import Utils
 from FixCategories import FixCategories, SetCategory

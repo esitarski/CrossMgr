@@ -10,7 +10,7 @@ def getInfo():
 	uname = platform.uname()
 	try:
 		user = lookup_username()
-	except Exception as e:
+	except Exception:
 		user = ''
 	info = {
 		'{}_AppVersion'.format(app):	Version.AppVerName,

@@ -6,11 +6,9 @@ import math
 import datetime
 import itertools
 from bisect import bisect_left
-import wx.lib.mixins.listctrl as listmix
-from copy import copy
 import pickle
-from operator import itemgetter, attrgetter
-from collections import defaultdict
+
+import wx.lib.mixins.listctrl as listmix
 
 import Utils
 import Model
