@@ -435,17 +435,11 @@ class Race:
 		return sorted( self.riders.values(), key=operator.methodcaller('getKey') )
 		
 	def setRiderInfo( self, riderInfo ):
-		self.isChangedFlag = (
-			len(self.riderInfo) != len(riderInfo) or
-			any(a != b for a, b in zip(self.riderInfo, riderInfo))
-		)
+		self.isChangedFlag |= (self.riderInfo != riderInfo)
 		self.riderInfo = riderInfo
 
 	def setEvents( self, events ):
-		self.isChangedFlag = (
-			len(self.events) != len(events) or
-			any(e1 != e2 for e1, e2 in zip(self.events, events))
-		)
+		self.isChangedFlag |= (self.events != events)
 		self.events = events
 		
 	def _populate( self ):
