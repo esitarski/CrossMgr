@@ -221,7 +221,8 @@ class MainWin( wx.Frame ):
 			return
 		try:
 			page.refresh()
-		except AttributeError:
+		except Exception as e:
+			traceback.print_exc()
 			pass
 
 	def setTitle( self ):
@@ -884,7 +885,8 @@ def MainLoop():
 	if fileName:
 		try:
 			mainWin.openRace( fileName )
-		except (IndexError, AttributeError, ValueError):
+		except (IndexError, AttributeError, ValueError) as e:
+			print( e )
 			pass
 
 	# Start processing events.

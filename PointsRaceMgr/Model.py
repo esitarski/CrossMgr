@@ -1,6 +1,7 @@
 import re
 import random
 import operator
+import itertools
 import datetime
 import sys
 from collections import namedtuple
@@ -329,6 +330,8 @@ class Race:
 		return sum( 1 for e in self.events if e.eventType == Sprint )
 	
 	def isDoublePoints( self, sprint ):
+		if not hasattr(self, 'doublePointsOnSprint'):
+			self.doublePointsOnSprint = set()
 		return sprint in self.doublePointsOnSprint or (self.doublePointsForLastSprint and sprint == self.getNumSprints())
 	
 	def getSprintLabel( self, sprint ):
@@ -388,6 +391,7 @@ class Race:
 		self.sprintCount = 0
 		pullSequenceCur = 0
 		for iEvent, e in enumerate(self.events):
+			
 			# Ensure the eventType matches the number of sprints.
 			if e.eventType == RaceEvent.Finish and self.sprintCount != numSprints-1:
 				e.eventType = RaceEvent.Sprint
@@ -407,15 +411,15 @@ class Race:
 					bibs = e.bibs
 				
 				for place, b in enumerate(bibs, 1):
-					# addSprintResult also updates the finishOrder.
+					# addSprintResult also updates the finishOrder and processes ties.
 					self.getRider(b).addSprintResult(self.sprintCount, place, bibs)
 
-				# Place all the pulled riders in reverse pull order after the finishers.
+				# Place all the pulled riders in reverse pull order after the finish order.
 				pulled = sorted( (r for r in self.riders.values() if r.pulled), key=operator.attrgetter('pullSequence'), reverse=True )
-				finishOrderMax = max( r.finishOrder for r in self.riders.values() )
+				finishOrderMax = max( (r.finishOrder for r in self.riders.values() if 0 < r.finishOrder < 1000), default=0 )
 				for place, r in enumerate(pulled, finishOrderMax+1):
 					r.finishOrder = place
-				for rPrev, rNext in operator.pairwise(pulled):
+				for rPrev, rNext in itertools.pairwise(pulled):
 					if rNext.pullSequence == rPrev.pullSequence:
 						rNext.finishOrder = rPrev.finishOrder						
 
