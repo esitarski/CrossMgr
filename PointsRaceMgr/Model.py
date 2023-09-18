@@ -419,6 +419,7 @@ class Race:
 				finishOrderMax = max( (r.finishOrder for r in self.riders.values() if 0 < r.finishOrder < 1000), default=0 )
 				for place, r in enumerate(pulled, finishOrderMax+1):
 					r.finishOrder = place
+				# Take pull ties into account by adjusting the finish order.
 				for rPrev, rNext in itertools.pairwise(pulled):
 					if rNext.pullSequence == rPrev.pullSequence:
 						rNext.finishOrder = rPrev.finishOrder						
