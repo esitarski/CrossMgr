@@ -207,7 +207,7 @@ class Configure( wx.Panel ):
 		self.configurePointsRaceOptions()
 		self.doublePointsForLastSprintCtrl.SetValue( False )
 		self.doublePointsOnSprintCtrl.SetValue( '' )
-		self.pointsForLappingCtrl.SetValue( 4 )
+		self.pointsForLappingCtrl.SetValue( 20 )
 		self.lapsCtrl.SetValue( 4*10 )
 		self.startLapsCtrl.SetValue( 5 )
 		self.sprintEveryCtrl.SetValue( 1 )
@@ -245,6 +245,18 @@ class Configure( wx.Panel ):
 		self.commit()
 		self.refresh()
 
+	def ConfigureScratchRace( self ):
+		self.rankByCtrl.SetSelection( Model.Race.RankByLapsPoints )
+		self.pointsForPlaceCtrl.SetValue( '' )
+		self.snowballCtrl.SetValue( False )
+		self.doublePointsForLastSprintCtrl.SetValue( False )
+		self.startLapsCtrl.SetValue( 0 )
+		self.pointsForLappingCtrl.SetValue( 1 )
+		self.lapsCtrl.SetValue( 100 )
+		self.sprintEveryCtrl.SetValue( 100 )
+		self.commit()
+		self.refresh()
+	
 	def onChange( self, event ):
 		self.commit()
 		if Utils.getMainWin():

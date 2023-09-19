@@ -86,14 +86,14 @@ class Rider:
 		
 	def getKey( self ):
 		if   race.rankBy == race.RankByPoints:
-			return (Rider.statusSortSeq[self.status], -self.pointsTotal, self.finishOrder, -self.pullSequence, self.num)
+			return (Rider.statusSortSeq[self.status], -self.pointsTotal, self.finishOrder, self.num)
 		elif race.rankBy == race.RankByLapsPoints:
-			return (Rider.statusSortSeq[self.status], -self.updown, -self.pointsTotal, self.finishOrder, -self.pullSequence, self.num)
+			return (Rider.statusSortSeq[self.status], -self.updown, -self.pointsTotal, self.finishOrder, self.num)
 		else:	# race.RankByLapsPointsNumWins
-			return (Rider.statusSortSeq[self.status], -self.updown, -self.pointsTotal, -self.numWins, self.finishOrder, -self.pullSequence, self.num)
+			return (Rider.statusSortSeq[self.status], -self.updown, -self.pointsTotal, -self.numWins, self.finishOrder, self.num)
 
 	def tiedWith( s, r ):
-		return s.getKey()[:-1] == r.getKey()[:-1]
+		return s.getKey()[:-1] == r.getKey()[:-1]	# Use all scoring criteria except bib number.
 	
 	@property
 	def pulled( self ):
