@@ -427,10 +427,10 @@ class Race:
 					self.getRider(b).addSprintResult( self.sprintCount, place, bibs )
 				
 			elif e.eventType == RaceEvent.LapUp:
-				for b in e.bibs:
+				for b in self.cleanNonFinishers(e.bibs):
 					self.getRider(b).addUpDown(1)
 			elif e.eventType == RaceEvent.LapDown:
-				for b in e.bibs:
+				for b in self.cleanNonFinishers(e.bibs):
 					self.getRider(b).addUpDown(-1)
 
 			elif e.eventType == RaceEvent.DNF:
