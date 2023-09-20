@@ -440,14 +440,21 @@ class Race:
 		# Post-process pulled riders.  Put them in reverse pull order in the finish order.
 		# Of course, points, +/- laps, etc. will be taken into account before finish order.
 		pulled = []
-		finishOrderMax = 0
+		non_pulled_finishers = []
 		for r in self.riders.values():
 			if r.status == Finisher:
 				if r.pulled:
 					pulled.append( r )
 				else:
-					finishOrderMax += 1
+					non_pulled_finishers.append( r )
+		
+		finishOrderMax = len(non_pulled_finishers)
 		if pulled:
+			# Fix up the existing finish order.
+			for r in non_pulled_finishers:
+				if r.finishOrder >= 1000:
+					r.finishOrder = finishOrderMax
+			
 			pulled.sort( key=operator.attrgetter('pullSequence'), reverse=True )
 			for place, r in enumerate(pulled, finishOrderMax+1):
 				r.finishOrder = place
