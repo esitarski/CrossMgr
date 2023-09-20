@@ -383,6 +383,7 @@ class Race:
 		Finisher = Rider.Finisher
 
 		self.riders = {}
+		self.isFinished = False
 		
 		for info in self.riderInfo:
 			r = self.getRider(info.bib)
@@ -415,6 +416,8 @@ class Race:
 				for place, b in enumerate(bibs, 1):
 					# addSprintResult also updates the finishOrder and processes ties.
 					self.getRider(b).addSprintResult(self.sprintCount, place, bibs)
+				
+				self.isFinished = False
 
 			elif e.eventType == RaceEvent.LapUp:
 				for b in e.bibs:
