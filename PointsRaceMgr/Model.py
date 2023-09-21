@@ -306,9 +306,14 @@ class Race:
 	def getDistanceStr( self ):
 		d = self.courseLength * self.laps
 		if d - int(d) < 0.001:
-			return '{:,}'.format(int(d)) + ['m','km'][self.courseLengthUnit]
+			text = '{:,}'.format(int(d)) + ['m','km'][self.courseLengthUnit]
 		else:
-			return '{:,.2f}'.format(d) + ['m','km'][self.courseLengthUnit]
+			text = '{:,.2f}'.format(d) + ['m','km'][self.courseLengthUnit]
+		if text.endswith( ',000m' ):
+			text = text[:-5] + 'km'
+		elif text.endswith( ',500m' ):
+			text = text[:-5] + '.5km'
+		return text
 	
 	def setattr( self, attr, v ):
 		if getattr(self, attr, None) != v:

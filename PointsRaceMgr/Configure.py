@@ -252,8 +252,8 @@ class Configure( wx.Panel ):
 		self.doublePointsForLastSprintCtrl.SetValue( False )
 		self.startLapsCtrl.SetValue( 0 )
 		self.pointsForLappingCtrl.SetValue( 1 )
-		self.lapsCtrl.SetValue( 100 )
-		self.sprintEveryCtrl.SetValue( 100 )
+		self.lapsCtrl.SetValue( 15*4 )
+		self.sprintEveryCtrl.SetValue( 15*4 )
 		self.commit()
 		self.refresh()
 	
@@ -269,7 +269,12 @@ class Configure( wx.Panel ):
 		if not race:
 			return
 
-		self.distanceCtrl.SetLabel( '{}, {} Sprints'.format(race.getDistanceStr(), race.getNumSprints()) )
+		sprints = race.getNumSprints()
+		if sprints == 1:
+			sprintLabel = 'Sprint'
+		else:
+			sprintLabel = 'Sprints'
+		self.distanceCtrl.SetLabel( '{}, {} {}'.format(race.getDistanceStr(), sprints, sprintLabel) )
 		self.gbs.Layout()
 
 	def commit( self ):
