@@ -37,10 +37,12 @@ class RankDetails( wx.Panel ):
 
 	def refresh( self ):
 		race = Model.race
-			
 		riders = race.getRiders() if race else []
 		
+		Finisher = Model.Rider.Finisher
+		
 		hasExistingPoints = any( rr.existingPoints for rr in riders )
+
 		hasNumWins = race.rankBy == race.RankByLapsPointsNumWins
 
 		pointsFmt = Utils.asInt if all(rr.pointsTotal == int(rr.pointsTotal) for rr in riders) else Utils.asFloat
@@ -104,7 +106,13 @@ class RankDetails( wx.Panel ):
 				col += 1
 				
 			# Finish order
-			self.grid.SetCellValue( row, col, '{}'.format(rr.finishOrder) if rr.finishOrder not in (0,1000) else '' )
+			text = ''
+			if rr.status == Finisher:
+				if rr.pulled:
+					text = 'Ⓟ {}'.format( rr.finishOrder )
+				elif race.isFinished:
+					text = '{}'.format( rr.finishOrder )
+			self.grid.SetCellValue( row, col, text )
 			col += 1
 		
 		self.grid.EndBatch()

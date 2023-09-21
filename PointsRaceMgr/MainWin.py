@@ -154,6 +154,12 @@ class MainWin( wx.Frame ):
 
 		self.configureMenu = wx.Menu()
 		
+		item = self.configureMenu.Append( wx.ID_ANY, "&Scratch", "Configure Scratch Race" )
+		self.Bind(wx.EVT_MENU, lambda e: self.configure.ConfigureScratchRace(), item )
+
+		item = self.configureMenu.Append( wx.ID_ANY, "&Tempo", "Configure UCI Tempo Points Race" )
+		self.Bind(wx.EVT_MENU, lambda e: self.configure.ConfigureTempoRace(), item )
+
 		item = self.configureMenu.Append( wx.ID_ANY, "&Points Race", "Configure Points Race" )
 		self.Bind(wx.EVT_MENU, lambda e: self.configure.ConfigurePointsRace(), item )
 		
@@ -162,15 +168,12 @@ class MainWin( wx.Frame ):
 		
 		self.configureMenu.AppendSeparator()
 		
-		item = self.configureMenu.Append( wx.ID_ANY, "&Tempo", "Configure UCI Tempo Points Race" )
-		self.Bind(wx.EVT_MENU, lambda e: self.configure.ConfigureTempoRace(), item )
-
-		item = self.configureMenu.Append( wx.ID_ANY, "&Tempo Top 2", "Configure Tempo Points Race Top 2" )
+		item = self.configureMenu.Append( wx.ID_ANY, "Tempo Top &2", "Configure Tempo Points Race Top 2" )
 		self.Bind(wx.EVT_MENU, lambda e: self.configure.ConfigureTempoTop2Race(), item )
 
 		self.configureMenu.AppendSeparator()
 		
-		item = self.configureMenu.Append( wx.ID_ANY, "&Snowball", "Configure Snowball Points Race" )
+		item = self.configureMenu.Append( wx.ID_ANY, "Snow&ball", "Configure Snowball Points Race" )
 		self.Bind(wx.EVT_MENU, lambda e: self.configure.ConfigureSnowballRace(), item )
 		
 		self.configureMenu.AppendSeparator()
@@ -221,7 +224,8 @@ class MainWin( wx.Frame ):
 			return
 		try:
 			page.refresh()
-		except AttributeError:
+		except Exception as e:
+			traceback.print_exc()
 			pass
 
 	def setTitle( self ):
@@ -538,18 +542,17 @@ hr { clear: both; }
 		self.commit()
 		self.refresh()
 		race = Model.race
-		if race.isChanged():
-			if not self.fileName:
-				ret = Utils.MessageYesNoCancel(self, 'Close:\n\nUnsaved changes!\nSave to a file?', 'Missing filename')
-				if ret == wx.ID_YES:
-					if not self.menuSaveAs():
-						event.StopPropagation()
-						return
-				elif ret == wx.ID_CANCEL:
+		if not self.fileName:
+			ret = Utils.MessageYesNoCancel(self, 'Unsaved changes!\n\nSave to a file?', 'Missing filename')
+			if ret == wx.ID_YES:
+				if not self.menuSaveAs():
 					event.StopPropagation()
 					return
-			else:
-				ret = Utils.MessageYesNoCancel(self, 'Close:\n\nUnsaved changes!\nSave changes before Exit?', 'Unsaved Changes')
+			elif ret == wx.ID_CANCEL:
+				event.StopPropagation()
+				return
+		elif race.isChanged():
+				ret = Utils.MessageYesNoCancel(self, 'Unsaved changes!\n\nSave changes before Exit?', 'Unsaved Changes')
 				if ret == wx.ID_YES:
 					self.writeRace()
 				elif ret == wx.ID_CANCEL:
@@ -885,7 +888,8 @@ def MainLoop():
 	if fileName:
 		try:
 			mainWin.openRace( fileName )
-		except (IndexError, AttributeError, ValueError):
+		except (IndexError, AttributeError, ValueError) as e:
+			print( e )
 			pass
 
 	# Start processing events.

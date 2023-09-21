@@ -207,7 +207,7 @@ class Configure( wx.Panel ):
 		self.configurePointsRaceOptions()
 		self.doublePointsForLastSprintCtrl.SetValue( False )
 		self.doublePointsOnSprintCtrl.SetValue( '' )
-		self.pointsForLappingCtrl.SetValue( 4 )
+		self.pointsForLappingCtrl.SetValue( 20 )
 		self.lapsCtrl.SetValue( 4*10 )
 		self.startLapsCtrl.SetValue( 5 )
 		self.sprintEveryCtrl.SetValue( 1 )
@@ -245,10 +245,22 @@ class Configure( wx.Panel ):
 		self.commit()
 		self.refresh()
 
+	def ConfigureScratchRace( self ):
+		self.rankByCtrl.SetSelection( Model.Race.RankByLapsPoints )
+		self.pointsForPlaceCtrl.SetValue( '' )
+		self.snowballCtrl.SetValue( False )
+		self.doublePointsForLastSprintCtrl.SetValue( False )
+		self.startLapsCtrl.SetValue( 0 )
+		self.pointsForLappingCtrl.SetValue( 1 )
+		self.lapsCtrl.SetValue( 15*4 )
+		self.sprintEveryCtrl.SetValue( 15*4 )
+		self.commit()
+		self.refresh()
+	
 	def onChange( self, event ):
 		self.commit()
 		if Utils.getMainWin():
-			Utils.getMainWin().refresh( False )	# False means don't include the Configure page.  This avoids an infinite loop.
+			Utils.getMainWin().refresh( False )	# False means don't commit the Configure page again.  This avoids an infinite loop.
 	
 	#--------------------------------------------------------------------------------------
 
@@ -257,7 +269,12 @@ class Configure( wx.Panel ):
 		if not race:
 			return
 
-		self.distanceCtrl.SetLabel( '{}, {} Sprints'.format(race.getDistanceStr(), race.getNumSprints()) )
+		sprints = race.getNumSprints()
+		if sprints == 1:
+			sprintLabel = 'Sprint'
+		else:
+			sprintLabel = 'Sprints'
+		self.distanceCtrl.SetLabel( '{}, {} {}'.format(race.getDistanceStr(), sprints, sprintLabel) )
 		self.gbs.Layout()
 
 	def commit( self ):
