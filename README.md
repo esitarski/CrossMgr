@@ -5,7 +5,7 @@
 
 Welcome to Cross Manager! Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
 
-In addition to the application help files, there is a tutorial for CrossMgr [here](/https://github.com/esitarski/CrossMgr/blob/master/CrossMgrTutorial.docx)
+In addition to the application help files, there is a tutorial for CrossMgr [here](https://github.com/esitarski/CrossMgr/blob/master/CrossMgrTutorial.docx)
 and an explanation of an RFID implementation using CrossMgrIpinj [here](https://github.com/esitarski/CrossMgr/blob/master/CrossMgrImpinj/CrossMgrImpinjReadme.docx).
 
 The software consists of a set of executables.  For Cyclocross, MTB CX, TimeTrial, Road and Criterium races, you will need:
@@ -169,4 +169,3 @@ Windows:
 You must be on the dev branch without any pending changes to make a release. If the version number of an application is to be incremented, it should be done in the dev branch, and checked in prior to making the release.
 
 A build can also be forced by tagging the master branch.  This is done with the -T option (Linux/Mac) and -tag (windows). You can only tag the master branch with this option.
-
