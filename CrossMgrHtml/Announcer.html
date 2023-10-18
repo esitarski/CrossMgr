@@ -159,8 +159,7 @@ Array.prototype.back = function() {
 
 Array.prototype.binSearch = function( v ) {
 	var L = this.length, i = -1, m;
-	while( L - i > 1 )
-	{
+	while( L - i > 1 ) {
 		if( this[m = ((L + i)>>1)] < v )
 			i = m;
 		else
@@ -271,8 +270,7 @@ function FormatTime( t ) {
 function FormatTimeGap( t )
 {
 	var tStr = '';
-	if( t < 0 )
-	{
+	if( t < 0 ) {
 		tStr = '-';
 		t = -t;
 	}

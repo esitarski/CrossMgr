@@ -3524,7 +3524,10 @@ class MainWin( wx.Frame ):
 			if dlg.ShowModal() != wx.ID_OK:
 				return
 			fname = dlg.GetPath()
-				
+		
+		if not fname.endswith('.brc'):
+			fname += '.brc'
+		
 		try:
 			with open(fname, 'w') as fp, Model.LockRace() as race:
 				race.exportCategories( fp )
