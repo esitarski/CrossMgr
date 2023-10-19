@@ -92,7 +92,7 @@ user=<<username>>
 		try:
 			response = VerifyCrossMgr()
 		except Exception as e:
-			response = e
+			response = e, getVerifyCrossMgrUrl()
 		
 		try:
 			if not response['warnings'] and not response['errors']:
@@ -145,6 +145,8 @@ def fixUrl( url ):
 		url = url.replace( 'https', 'http' )
 		if platform.system() == 'Windows':
 			url = url.replace('www.localhost', 'localhost')
+	elif re.search( '([0-9]{1,3}\.){3}[0-9]{1,3}', url ):	# If a pure ip address, change to http and remove subdomain.
+		url = url.replace( 'https://www.', 'http://' )
 	globalRaceDBUrl = url
 	return url
 
@@ -482,9 +484,13 @@ class RaceDB( wx.Dialog ):
 
 #----------------------------------------------------------------------------------------------------------------------------
 
-def VerifyCrossMgr( url=None ):
+def getVerifyCrossMgrUrl( url=None ):
 	url = (url or fixUrl(RaceDBUrlDefault())) + '/VerifyCrossMgr/'
 	url = AddUserPassword( url )
+	return url
+
+def VerifyCrossMgr( url=None ):
+	url = getVerifyCrossMgrUrl( url )
 	response = requests.get( url )
 	return response.json()
 
