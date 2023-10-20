@@ -96,6 +96,9 @@ except:
 
 if os.path.basename(dirName) == 'library.zip':
 	dirName = os.path.dirname(dirName)
+if not path.isdir( path.join(dirName, 'StageRaceGCImages') ):
+	dirName = os.path.dirname( dirName )
+	
 imageFolder = os.path.join(dirName, 'StageRaceGCImages')
 htmlDocFolder = os.path.join(dirName, 'StageRaceGCHtmlDoc')
 

@@ -66,7 +66,7 @@ function CheckPythonVersion
 		Remove-Item 'pyver.txt'
 		$version = $pythonver.Split(' ')[1]
 		$minor = $version.Split('.')[1]
-		if ($minor -ne '10')
+		if ($minor -lt '10')
 		{
 			Write-Host "Python 3.10.x required, and you have ", $version, "installed. Aborting..."
 			exit 1

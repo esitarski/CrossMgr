@@ -170,7 +170,7 @@ if 'WXMAC' in wx.Platform:
 		raise Exception("Resource Directory does not exist:" + dirName)
 else:
 	try:
-		dirName = os.path.dirname(os.path.abspath(__file__))
+		dirName = os.path.abspath(os.path.dirname(__file__))
 	except Exception as e:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
@@ -178,7 +178,9 @@ else:
 		dirName = os.path.dirname(dirName)
 	if 'CrossMgrVideo?' in os.path.basename(dirName):
 		dirName = os.path.dirname(dirName)
-
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrVideoImages') ):
+		dirName = os.path.dirname(dirName)
+        
 	if os.path.isdir( os.path.join(dirName, 'CrossMgrVideoImages') ):
 		pass
 	elif os.path.isdir( '/usr/local/CrossMgrVideoImages' ):
