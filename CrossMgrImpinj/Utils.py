@@ -101,6 +101,8 @@ else:
 		dirName = os.path.dirname(dirName)
 	if 'CrossMgrImpinj?' in os.path.basename(dirName):
 		dirName = os.path.dirname(dirName)
+	if not os.path.isdir( os.path.join(dirName, 'CrossMgrImpinjImages') ):
+		dirName = os.path.dirname(dirName)
 
 	if os.path.isdir( os.path.join(dirName, 'CrossMgrImpinjImages') ):
 		pass
