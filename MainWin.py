@@ -2704,6 +2704,7 @@ class MainWin( wx.Frame ):
 		
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
 		ApplyDefaultTemplate( race )
+		race.minutes = 60	# Ensure we start with a reasonable race minutes.
 		dlg.properties.refresh()
 		ret = dlg.ShowModal()
 		fileName = dlg.GetPath()

@@ -352,17 +352,27 @@ class Actions( wx.Panel ):
 			if not externalInfo:
 				Utils.MessageOK(
 					self,
-					'\n\n'.join( [_('Cannot Start. Excel Sheet read failure.'), _('The Excel file is either unconfigured or unreadable.')] ),
-					_('Excel Sheet Read '),
+					'\n\n'.join( [
+						_('Cannot Start.'), 
+						_('This race uses RFID.'),
+						_('An Excel file containing the Bibs and RFID tags is required, and it is either unconfigured or unreadable.'),
+						_('You must have a valid Excel file, or turn off the RFID option in "Properties|RFID" to enter bibs manually.'),
+						_('See CrosMgr Help "RFID" for more details.'),
+					] ),
+					_('Excel Sheet Read Error'),
 					wx.ICON_ERROR
 				)
 				return
-			try:
-				next((i for i, field in enumerate(externalFields) if field.startswith('Tag')))
-			except StopIteration:
+			if not any( field.startswith('Tag') for field in externalFields) or not any( field.startswith('Bib') for field in externalFields ):
 				Utils.MessageOK(
 					self,
-					'\n\n'.join( [_('Cannot Start.  Excel Sheet missing Tag column.'), _('The Excel file must contain a Tag column to use RFID.')] ),
+					'\n\n'.join( [
+						_('Cannot Start.'),
+						_('This race uses RFID.'),
+						_('The linked Excel file must have a Bib and Tag column.'),
+						_('You must fix your Excel file, or turn off the RFID option in "Properties|RFID".'),
+						_('See CrosMgr Help "RFID" for more details.'),
+					] ),
 					_('Excel Sheet missing Tag column'),
 					wx.ICON_ERROR
 				)
