@@ -28,15 +28,24 @@ class CorrectNumberDialog( wx.Dialog ):
 		bs.Add( wx.StaticText( self, label = '{}:'.format(_("Rider"))),  pos=(1,0), span=(1,1), border = border, flag=wx.LEFT|wx.TOP|wx.ALIGN_RIGHT|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.numEdit, pos=(1,1), span=(1,2), border = border, flag=wx.RIGHT|wx.TOP|wx.ALIGN_LEFT )
 		choices = ['{}:'.format(_("Race Time"))]
+		self.timeChoiceLastSelection = 0
 		race = Model.race
 		if race and race.startTime:
 			choices.append( _("24 hr Clock Time:") )
+			self.timeChoiceLastSelection = getattr(race, 'editRaceTimeOrClockTime', 0)
 		self.timeChoice = wx.Choice( self, -1, choices = choices )
-		self.timeChoiceLastSelection = 0
 		self.timeChoice.SetSelection( self.timeChoiceLastSelection )
 		self.timeChoice.Bind( wx.EVT_CHOICE, self.doTimeChoice, self.timeChoice )
-		# Set time edit in race time.
-		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=race.getRider(entry.num).riderTimeToRaceTime(entry.t) if race and race.startTime else entry.t, size=(120, -1) )
+		
+		# Get race time
+		t = race.getRider(entry.num).riderTimeToRaceTime(entry.t) if race and race.startTime else entry.t
+		if self.timeChoiceLastSelection:
+			# Race time to clock time
+			dtStart = Model.race.startTime
+			dt = dtStart + datetime.timedelta( seconds = t )
+			t = (dt - datetime.datetime(dtStart.year, dtStart.month, dtStart.day)).total_seconds()
+		self.timeMsEdit = HighPrecisionTimeEdit( self, seconds=t, size=(120, -1) )
+			
 				
 		bs.Add( self.timeChoice,  pos=(2,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.ALIGN_CENTRE_VERTICAL )
 		bs.Add( self.timeMsEdit, pos=(2,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.ALIGN_LEFT )
@@ -78,6 +87,7 @@ class CorrectNumberDialog( wx.Dialog ):
 		
 		self.timeMsEdit.SetSeconds( t )
 		self.timeChoiceLastSelection = iSelection
+		Model.race.editRaceTimeOrClockTime = iSelection  # Save last selection for next time
 		
 	def onOK( self, event ):
 		# This gets confusing.
