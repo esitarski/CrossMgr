@@ -422,6 +422,7 @@ class NumKeypad( wx.Panel ):
 			return
 			
 		categories = race.getCategories( startWaveOnly=True )
+		categories_index = { c:i for i,c in enumerate(categories) }
 		noLap = ''
 		tCur = race.curRaceTime() if race.isRunning() else None
 		
@@ -444,9 +445,8 @@ class NumKeypad( wx.Panel ):
 			return
 
 		Finisher = Model.Rider.Finisher
-		raceTimes = []
-		leader = []
-		categoryRaceTimes = {}
+		leader = [c.fullname for c in categories]
+		raceTimes = [[] for i in range(len(leader))]
 		categories_seen = set()
 		getCategory = race.getCategory
 		leaderCategory = None
@@ -472,25 +472,26 @@ class NumKeypad( wx.Panel ):
 				pass
 		
 		for rr in results:
-			if rr.status != Finisher or not rr.raceTimes:
+			if rr.status != Finisher or not rr.raceTimes or len(rr.raceTimes) < 2:
 				continue
 			category = getCategory( rr.num )
+			if not category:
+				continue
+			catIndex = categories_index[category]
+			
 			if category in categories_seen:
-				# This is not the leader if we have seen this category before.
+				# This is not the leader as we have seen a rider in this category before.
 				# Update the red lantern time.
-				newRaceTimes = categoryRaceTimes[category]
-				if rr.raceTimes[-1] > newRaceTimes[-1]:
-					newRaceTimes[-1] = rr.raceTimes[-1]
+				raceTimes[catIndex][-1] = max( raceTimes[catIndex][-1], rr.raceTimes[-1] )
 				continue
 			
 			if not leaderCategory:
 				leaderCategory = category
 			categories_seen.add( category )
-			leader.append( '{} {}'.format(category.fullname if category else '<{}>'.format(_('Missing')), rr.num) )
+			leader[catIndex] = '{} {}'.format(category.fullname, rr.num)
 			
-			# Add a copy of the race times.  Append the leader's last time as the current red lantern.
-			raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
-			categoryRaceTimes[category] = raceTimes[-1]
+			# Add a copy of the race times.  Add the leader's last time as the current red lantern.
+			raceTimes[catIndex] = rr.raceTimes + [rr.raceTimes[-1]]
 			
 			# Find the next expected lap arrival.
 			try:
@@ -533,6 +534,7 @@ class NumKeypad( wx.Panel ):
 				elif category in self.lapReminder:
 					del self.lapReminder[category]
 		
+		# Ensure that the raceTime and leader are sorted the same as the Categories are defined.
 		self.raceHUD.SetData( raceTimes, leader, tCur if race.isRunning() else None )
 		if Utils.mainWin:
 			Utils.mainWin.updateLapCounter( lapCounter )

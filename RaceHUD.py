@@ -48,7 +48,6 @@ class RaceHUD(wx.Control):
 		if leftClickFunc:
 			self.SetCursor( wx.Cursor(wx.CURSOR_LEFT_BUTTON) )
 		
-
 	def resetDimensions(self):
 		self.xLeft = self.xRight = self.xMult = self.hudHeight = self.iRaceTimesHover = self.iLapHover = None
 
@@ -70,8 +69,9 @@ class RaceHUD(wx.Control):
 		return True
 		
 	def SetData( self, raceTimes = None, leader = None, nowTime = None ):
-		self.raceTimes = raceTimes if raceTimes and len(raceTimes[0]) >= 2 and raceTimes[0][-1] >= raceTimes[0][-2] else None
-		self.leader = leader
+		self.leader = leader			# List of the category names.
+		# Race times for the category leader.  The last time is the last rider expected to finish.
+		self.raceTimes = [rt if not rt or len(rt)>=2 else [] for rt in (raceTimes or [])]
 		self.nowTime = nowTime
 		
 		maxRaceTimes = 16
@@ -103,14 +103,12 @@ class RaceHUD(wx.Control):
 		iLapHover = None
 		yTop = 0
 		for i, raceTimes in enumerate(self.raceTimes):
-			if not raceTimes:
-				continue
 			if yTop <= y < yTop + self.hudHeight:
 				iRaceTimesHover = i
 				break
 			yTop += self.hudHeight
 
-		if iRaceTimesHover is None:
+		if iRaceTimesHover is None or not self.raceTimes[iRaceTimesHover]:
 			if self.iRaceTimesHover != iRaceTimesHover:
 				wx.CallAfter( self.Refresh )
 			self.iRaceTimesHover = None
@@ -136,9 +134,7 @@ class RaceHUD(wx.Control):
 		iRaceTimesHover = None
 		yTop = 0
 		for i, raceTimes in enumerate(self.raceTimes):
-			if not raceTimes:
-				continue
-			if yTop <= y < yTop + self.hudHeight:
+			if raceTimes and yTop <= y < yTop + self.hudHeight:
 				iRaceTimesHover = i
 				break
 			yTop += self.hudHeight
@@ -173,7 +169,7 @@ class RaceHUD(wx.Control):
 			dc.SetPen( wx.BLACK_DASHED_PEN )
 			dc.DrawLine( 0, height//2, width, height//2 )
 		
-		if not self.raceTimes or not self.raceTimes[0] or len(self.raceTimes[0]) < 4 or tooSmall:
+		if not self.leader or tooSmall:
 			self.empty = True
 			if tooSmall:
 				drawTooSmall()
@@ -214,154 +210,156 @@ class RaceHUD(wx.Control):
 			drawTooSmall()
 			return
 
-		xMult = self.xMult = (xRight - xLeft) / float(max(rt[-1] if rt else 0 for rt in self.raceTimes))
+		xMult = self.xMult = (xRight - xLeft) / max(1.0, float(max(rt[-1] if rt else 0 for rt in self.raceTimes)))
 
 		yTop = 0
 		for iRaceTimes, (leader, raceTimes) in enumerate(zip(self.leader, self.raceTimes)):
-			if not raceTimes:
-				continue
-				
-			nowTime = min( (self.nowTime or raceTimes[-1]), raceTimes[-1] )
-		
-			# Draw the legend.
 			dc.SetFont( fontLegend )
 			textWidth, textHeight = dc.GetTextExtent( '0:00:00' )
 			hMiddle = textHeight + tickHeight
-			dc.DrawLine( xLeft, round(yTop + hMiddle), round(xLeft + raceTimes[-1] * xMult), round(yTop + hMiddle) )
-			dc.DrawLine( xLeft, round(yTop + hMiddle - tickHeight), xLeft, round(yTop + hMiddle + tickHeight) )
 
-			lapMax = len(raceTimes) - 2
-			xTextRight = 10000000
-			for i in range(len(raceTimes)-1, -1, -1):
-				t = raceTimes[i]
-				x = xLeft + round( t * xMult )
-				dc.DrawLine( x, round(yTop + hMiddle - tickHeight), x, round(yTop + hMiddle + tickHeight) )
-				if t != raceTimes[-1]:
-					n = '{}'.format(lapMax-i)
-					textWidth, textHeight = dc.GetTextExtent( n )
-					xTextNew = round(x - textWidth / 2)
-					if xTextNew + textWidth <= xTextRight:
-						dc.DrawText( n, xTextNew, round(yTop + hMiddle + tickHeight) )
-						xTextRight = xTextNew - zeroCharWidth/3
-		
-			# Draw the progress bar.
-			transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
-			ctx = wx.GraphicsContext.Create(dc)
-			ctx.SetPen( wx.Pen(wx.WHITE, 1, style = wx.TRANSPARENT ) )
-			dd = int(dy * 0.3)
-			
-			yCur = int(hMiddle - dy / 2)
-			xCur = (nowTime - raceTimes[0]) * xMult
-			xStart = raceTimes[0] * xMult + xLeft
-			b1 = ctx.CreateLinearGradientBrush( 0, yTop + yCur,      0, yTop + yCur + dd + 1, self.colour,        self.lighterColour )
-			b2 = ctx.CreateLinearGradientBrush( 0, yTop + yCur + dd, 0, yTop + yCur + dy    , self.lighterColour, self.colour )
-			ctx.SetBrush(b1)
-			ctx.DrawRectangle(xStart, yTop + yCur, xCur, dd + 1)
-			
-			ctx.SetBrush(b2)
-			ctx.DrawRectangle(xStart, yTop + yCur + dd, xCur, dy-dd )
-			
-			# Draw an outline around the progress bar.
-			ctx.SetPen( wx.Pen(wx.Colour(128,128,128)) )
-			ctx.SetBrush( wx.TRANSPARENT_BRUSH )
-			ctx.DrawRectangle( xStart, yTop + hMiddle - dy / 2, xCur, dy )
-			
-			# Draw checkered flag
-			dc.SetFont( fontLegend )
-			t = raceTimes[-2]
-			tCur = Utils.formatTime( t )
-			textWidth, textHeight = dc.GetTextExtent( tCur )
-			x = xLeft + int( t * xMult )
-			dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth() - 1, round(yTop + hMiddle - self.checkeredFlag.GetHeight() / 2), False )
-			dc.DrawText( tCur, round(x - textWidth - textHeight / 8), round(yTop + hMiddle - tickHeight - textHeight) )
-			
-			# Draw broom.
-			t = raceTimes[-1]
-			tCur = Utils.formatTime( t )
-			textWidth, textHeight = dc.GetTextExtent( tCur )
-			x = xLeft + int( t * xMult )
-			dc.DrawBitmap( self.broom, x + 3, round(yTop + hMiddle - self.broom.GetHeight() / 2), False )
-			dc.DrawText( tCur, round(x + textHeight / 8), round(yTop + hMiddle - tickHeight - textHeight) )
-			
-			# Draw indicator for the finish time.
-			iRadius = dy / 3
-			x = xLeft + int( raceTimes[-2] * xMult )
-			ctx.SetBrush( wx.Brush(wx.Colour(0,255,0)) )
-			ctx.DrawEllipse( round(x - iRadius / 2), round(yTop + hMiddle - tickHeight - iRadius/4), round(iRadius), round(iRadius) )
-			
-			# Draw indicator for the last rider on course.
-			x = xLeft + int( raceTimes[-1] * xMult )
-			ctx.SetBrush( wx.Brush(wx.Colour(255,0,0)) )
-			ctx.DrawEllipse( round(x - iRadius / 2), round(yTop + hMiddle - tickHeight - iRadius/4), round(iRadius), round(iRadius) )
-			
-			ctx.SetPen( wx.BLACK_PEN )
-			
-			# Draw the time to the leader's next lap (or the broom if the race is over).
-			dc.SetFont( fontRaceTime )
-			nextLap = bisect.bisect_left( raceTimes, nowTime )
-			if nextLap < len(raceTimes):
-				t = raceTimes[nextLap] - nowTime
-				tToLeader = t
-				tCur = Utils.formatTime( t )
-				if tCur[0] == '0':
-					tCur = tCur[1:]
-				textWidth, textHeight = dc.GetTextExtent( tCur )
-				t = nowTime
-				x = xLeft + round( t * xMult )
-				x = max( x - textWidth - textHeight / 8, xLeft + 2 )
-				dc.DrawText( tCur, round(x), round(yTop + hMiddle - textHeight / 2) )
-				
-				if (
-						(nextLap == len(raceTimes)-2 and tToLeader > 15) or
-						(nextLap == len(raceTimes)-3 and tToLeader < 15)
-					):
-					x -= self.bell.GetWidth() + textHeight / 8
-					if x >= xLeft:
-						dc.DrawBitmap( self.bell, round(x), round(yTop + hMiddle - self.bell.GetHeight() / 2) )
-			
 			# Draw the leader.
-			if leader is not None:
+			if leader:
 				leaderText = '{}'.format(leader)
 				dc.SetFont( fontLegend if legendHeight > raceTimeHeight else fontRaceTime )
 				textWidth, textHeight = dc.GetTextExtent( leaderText )
 				dc.DrawText( leaderText, round(xLeft - textWidth - textHeight / 8), round(yTop + hMiddle - textHeight / 2) )
+				
+			nowTime = min( (self.nowTime or raceTimes[-1]), raceTimes[-1] ) if raceTimes else self.nowTime
+		
+			if not raceTimes:
+				# Draw the legend lines only.
+				dc.DrawLine( xLeft, round(yTop + hMiddle), xRight, round(yTop + hMiddle) )
+				dc.DrawLine( xLeft, round(yTop + hMiddle - tickHeight), xLeft, round(yTop + hMiddle + tickHeight) )
+			else:
+				# Draw the legend.
+				dc.DrawLine( xLeft, round(yTop + hMiddle), round(xLeft + raceTimes[-1] * xMult), round(yTop + hMiddle) )
+				dc.DrawLine( xLeft, round(yTop + hMiddle - tickHeight), xLeft, round(yTop + hMiddle + tickHeight) )
+
+				lapMax = len(raceTimes) - 2
+				xTextRight = 10000000
+				for i in range(len(raceTimes)-1, -1, -1):
+					t = raceTimes[i]
+					x = xLeft + round( t * xMult )
+					dc.DrawLine( x, round(yTop + hMiddle - tickHeight), x, round(yTop + hMiddle + tickHeight) )
+					if t != raceTimes[-1]:
+						n = '{}'.format(lapMax-i)
+						textWidth, textHeight = dc.GetTextExtent( n )
+						xTextNew = round(x - textWidth / 2)
+						if xTextNew + textWidth <= xTextRight:
+							dc.DrawText( n, xTextNew, round(yTop + hMiddle + tickHeight) )
+							xTextRight = xTextNew - zeroCharWidth/3
+		
+				# Draw the progress bar.
+				transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
+				ctx = wx.GraphicsContext.Create(dc)
+				ctx.SetPen( wx.Pen(wx.WHITE, 1, style = wx.TRANSPARENT ) )
+				dd = int(dy * 0.3)
+				
+				yCur = int(hMiddle - dy / 2)
+				xCur = (nowTime - raceTimes[0]) * xMult
+				xStart = raceTimes[0] * xMult + xLeft
+				b1 = ctx.CreateLinearGradientBrush( 0, yTop + yCur,      0, yTop + yCur + dd + 1, self.colour,        self.lighterColour )
+				b2 = ctx.CreateLinearGradientBrush( 0, yTop + yCur + dd, 0, yTop + yCur + dy    , self.lighterColour, self.colour )
+				ctx.SetBrush(b1)
+				ctx.DrawRectangle(xStart, yTop + yCur, xCur, dd + 1)
+				
+				ctx.SetBrush(b2)
+				ctx.DrawRectangle(xStart, yTop + yCur + dd, xCur, dy-dd )
+				
+				# Draw an outline around the progress bar.
+				ctx.SetPen( wx.Pen(wx.Colour(128,128,128)) )
+				ctx.SetBrush( wx.TRANSPARENT_BRUSH )
+				ctx.DrawRectangle( xStart, yTop + hMiddle - dy / 2, xCur, dy )
+				
+				# Draw checkered flag
+				dc.SetFont( fontLegend )
+				t = raceTimes[-2]
+				tCur = Utils.formatTime( t )
+				textWidth, textHeight = dc.GetTextExtent( tCur )
+				x = xLeft + int( t * xMult )
+				dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth() - 1, round(yTop + hMiddle - self.checkeredFlag.GetHeight() / 2), False )
+				dc.DrawText( tCur, round(x - textWidth - textHeight / 8), round(yTop + hMiddle - tickHeight - textHeight) )
+				
+				# Draw broom.
+				t = raceTimes[-1]
+				tCur = Utils.formatTime( t )
+				textWidth, textHeight = dc.GetTextExtent( tCur )
+				x = xLeft + int( t * xMult )
+				dc.DrawBitmap( self.broom, x + 3, round(yTop + hMiddle - self.broom.GetHeight() / 2), False )
+				dc.DrawText( tCur, round(x + textHeight / 8), round(yTop + hMiddle - tickHeight - textHeight) )
+				
+				# Draw indicator for the finish time.
+				iRadius = dy / 3
+				x = xLeft + int( raceTimes[-2] * xMult )
+				ctx.SetBrush( wx.Brush(wx.Colour(0,255,0)) )
+				ctx.DrawEllipse( round(x - iRadius / 2), round(yTop + hMiddle - tickHeight - iRadius/4), round(iRadius), round(iRadius) )
+				
+				# Draw indicator for the last rider on course.
+				x = xLeft + int( raceTimes[-1] * xMult )
+				ctx.SetBrush( wx.Brush(wx.Colour(255,0,0)) )
+				ctx.DrawEllipse( round(x - iRadius / 2), round(yTop + hMiddle - tickHeight - iRadius/4), round(iRadius), round(iRadius) )
+				
+				ctx.SetPen( wx.BLACK_PEN )
+				
+				# Draw the time to the leader's next lap (or the broom if the race is over).
+				dc.SetFont( fontRaceTime )
+				nextLap = bisect.bisect_left( raceTimes, nowTime )
+				if nextLap < len(raceTimes):
+					t = raceTimes[nextLap] - nowTime
+					tToLeader = t
+					tCur = Utils.formatTime( t )
+					if tCur[0] == '0':
+						tCur = tCur[1:]
+					textWidth, textHeight = dc.GetTextExtent( tCur )
+					t = nowTime
+					x = xLeft + round( t * xMult )
+					x = max( x - textWidth - textHeight / 8, xLeft + 2 )
+					dc.DrawText( tCur, round(x), round(yTop + hMiddle - textHeight / 2) )
+					
+					if (
+							(nextLap == len(raceTimes)-2 and tToLeader > 15) or
+							(nextLap == len(raceTimes)-3 and tToLeader < 15)
+						):
+						x -= self.bell.GetWidth() + textHeight / 8
+						if x >= xLeft:
+							dc.DrawBitmap( self.bell, round(x), round(yTop + hMiddle - self.bell.GetHeight() / 2) )
 			
 			yTop += hudHeight
 		
 		if self.iRaceTimesHover is not None and self.lapInfoFunc:
 			yTop = 0
 			for iRaceTimes, (leader, raceTimes) in enumerate(zip(self.leader, self.raceTimes)):
-				if not raceTimes:
-					continue
 				if iRaceTimes == self.iRaceTimesHover:
-					tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
-					info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
-					hoverLineHeight = min(20, max( 16, hudHeight//len(info) ) )
-					fontHover = wx.Font( (0,round(hoverLineHeight * 0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-					dc.SetFont( fontHover )
-					labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
-					valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)
-					hoverBorderHeight = dc.GetTextExtent('  ')[1]//3
-					hoverBorderWidth = dc.GetTextExtent('  ')[0]
-					hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(' ')[0]
-					hoverHeight = hoverLineHeight * len(info)
-					xHover = xLeft + int( tCur * xMult ) - hoverWidth
-					if xHover < 0:
-						xHover = 0
-					yHover = yTop + (hudHeight - hoverHeight)//2 - hoverBorderHeight
-					if yHover < 0:
-						yHover = 0
-					elif yHover + hoverHeight + hoverBorderHeight*2 > height:
-						yHover = height - hoverHeight + hoverBorderHeight*2
-					dc.SetBrush( wx.WHITE_BRUSH )
-					render.DrawPushButton( self, dc, (
-							xHover - hoverBorderWidth, yHover - hoverBorderHeight,
-							hoverWidth + hoverBorderWidth*2, hoverHeight + hoverBorderHeight*2
-						), wx.CONTROL_ISDEFAULT )
-					for label, value in info:
-						dc.DrawText( label, round(xHover+labelHoverWidth-dc.GetTextExtent(label)[0]), round(yHover) )
-						dc.DrawText( value, round(xHover+hoverWidth-valueHoverWidth), round(yHover) )
-						yHover += hoverLineHeight
+					if raceTimes:
+						tCur, tNext = raceTimes[self.iLapHover-1:self.iLapHover+1]
+						info = self.lapInfoFunc( self.iLapHover, len(raceTimes)-2, tCur, tNext, leader )
+						hoverLineHeight = min(20, max( 16, hudHeight//len(info) ) )
+						fontHover = wx.Font( (0,round(hoverLineHeight * 0.85)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+						dc.SetFont( fontHover )
+						labelHoverWidth = max(dc.GetTextExtent(label)[0] for label, value in info)
+						valueHoverWidth = max(dc.GetTextExtent(value)[0] for label, value in info)
+						hoverBorderHeight = dc.GetTextExtent('  ')[1]//3
+						hoverBorderWidth = dc.GetTextExtent('  ')[0]
+						hoverWidth = labelHoverWidth + valueHoverWidth + dc.GetTextExtent(' ')[0]
+						hoverHeight = hoverLineHeight * len(info)
+						xHover = xLeft + int( tCur * xMult ) - hoverWidth
+						if xHover < 0:
+							xHover = 0
+						yHover = yTop + (hudHeight - hoverHeight)//2 - hoverBorderHeight
+						if yHover < 0:
+							yHover = 0
+						elif yHover + hoverHeight + hoverBorderHeight*2 > height:
+							yHover = height - hoverHeight + hoverBorderHeight*2
+						dc.SetBrush( wx.WHITE_BRUSH )
+						render.DrawPushButton( self, dc, (
+								xHover - hoverBorderWidth, yHover - hoverBorderHeight,
+								hoverWidth + hoverBorderWidth*2, hoverHeight + hoverBorderHeight*2
+							), wx.CONTROL_ISDEFAULT )
+						for label, value in info:
+							dc.DrawText( label, round(xHover+labelHoverWidth-dc.GetTextExtent(label)[0]), round(yHover) )
+							dc.DrawText( value, round(xHover+hoverWidth-valueHoverWidth), round(yHover) )
+							yHover += hoverLineHeight
 				yTop += hudHeight
 			
 	def OnEraseBackground(self, event):
