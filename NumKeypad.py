@@ -437,13 +437,13 @@ class NumKeypad( wx.Panel ):
 		lapCounter = [getNoDataCategoryLap(category) for category in categories]
 		categoryToLapCounterIndex = {category:i for i, category in enumerate(categories)}
 
-		results = GetResults( None )
-		if tCur is None or not results:
+		if tCur is None:
 			self.raceHUD.SetData()
 			if Utils.mainWin:
 				Utils.mainWin.updateLapCounter(lapCounter)
 			return
 
+		results = GetResults( None )
 		Finisher = Model.Rider.Finisher
 		leader = [c.fullname for c in categories]
 		raceTimes = [[] for i in range(len(leader))]
