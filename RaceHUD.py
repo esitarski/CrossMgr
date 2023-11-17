@@ -69,20 +69,18 @@ class RaceHUD(wx.Control):
 		return True
 		
 	def SetData( self, raceTimes = None, leader = None, nowTime = None ):
-		self.leader = leader			# List of the category names.
+		self.leader = leader or []				# List of the category names.
 		# Race times for the category leader.  The last time is the last rider expected to finish.
 		self.raceTimes = [rt if not rt or len(rt)>=2 else [] for rt in (raceTimes or [])]
 		self.nowTime = nowTime
 		
 		maxRaceTimes = 16
-		if self.raceTimes:
-			self.raceTimes = self.raceTimes[:maxRaceTimes]
-		if self.leader:
-			self.leader = self.leader[:maxRaceTimes]
+		self.raceTimes = self.raceTimes[:maxRaceTimes]
+		self.leader = self.leader[:maxRaceTimes]
 		self.Refresh()
 	
 	def GetLaps( self ):
-		return [max(0,len(rt)-2) for rt in self.raceTimes] if self.raceTimes else []
+		return [max(0,len(rt)-2) for rt in self.raceTimes]
 	
 	def OnLeave(self, event):
 		if self.iRaceTimesHover is not None:
@@ -99,14 +97,11 @@ class RaceHUD(wx.Control):
 			event.Skip()
 			return
 		
-		iRaceTimesHover = None
 		iLapHover = None
-		yTop = 0
-		for i, raceTimes in enumerate(self.raceTimes):
-			if yTop <= y < yTop + self.hudHeight:
-				iRaceTimesHover = i
-				break
-			yTop += self.hudHeight
+		
+		iRaceTimesHover = int( y / self.hudHeight )
+		if iRaceTimesHover >= len(self.raceTimes):
+			iRaceTimesHover = None
 
 		if iRaceTimesHover is None or not self.raceTimes[iRaceTimesHover]:
 			if self.iRaceTimesHover != iRaceTimesHover:
@@ -131,13 +126,9 @@ class RaceHUD(wx.Control):
 			
 		x, y = event.GetX(), event.GetY()
 		
-		iRaceTimesHover = None
-		yTop = 0
-		for i, raceTimes in enumerate(self.raceTimes):
-			if raceTimes and yTop <= y < yTop + self.hudHeight:
-				iRaceTimesHover = i
-				break
-			yTop += self.hudHeight
+		iRaceTimesHover = int( y / self.hudHeight )
+		if iRaceTimesHover >= len(self.raceTimes):
+			iRaceTimesHover = None
 		
 		if iRaceTimesHover is not None:
 			wx.CallAfter( self.leftClickFunc, iRaceTimesHover )
