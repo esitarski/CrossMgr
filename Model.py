@@ -1123,7 +1123,7 @@ class Race:
 	autocorrectLapsDefault = True
 	
 	allCategoriesHaveRaceLapsDefined = False
-	allCategoriesFinishAfterFastestRidersLastLap = True
+	allCategoriesFinishAfterFastestRidersLastLap = False
 	
 	enableUSBCamera = False
 	photosAtRaceEndOnly = False
