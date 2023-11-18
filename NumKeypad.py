@@ -12,7 +12,7 @@ from collections import defaultdict
 
 import Utils
 from Utils import SetLabel
-from GetResults import GetResults, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult, IsRiderOnCourse
+from GetResults import GetResults, GetResultsWithData, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult, IsRiderOnCourse
 import Model
 from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
@@ -443,13 +443,8 @@ class NumKeypad( wx.Panel ):
 				Utils.mainWin.updateLapCounter(lapCounter)
 			return
 
-		results = GetResults( None )
 		Finisher = Model.Rider.Finisher
-		leader = [c.fullname for c in categories]
-		raceTimes = [[] for i in range(len(leader))]
-		categories_seen = set()
-		getCategory = race.getCategory
-		leaderCategory = None
+		leaderCategory = categories[0] if categories else None
 		
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
@@ -471,68 +466,70 @@ class NumKeypad( wx.Panel ):
 			except (KeyError, IndexError):
 				pass
 		
-		for rr in results:
-			if rr.status != Finisher or not rr.raceTimes or len(rr.raceTimes) < 2:
-				continue
-			category = getCategory( rr.num )
-			if not category:
-				continue
-			catIndex = categories_index[category]
-			
-			if category in categories_seen:
-				# This is not the leader as we have seen a rider in this category before.
-				# Update the red lantern time.
-				raceTimes[catIndex][-1] = max( raceTimes[catIndex][-1], rr.raceTimes[-1] )
-				continue
-			
-			if not leaderCategory:
-				leaderCategory = category
-			categories_seen.add( category )
-			leader[catIndex] = '{} {}'.format(category.fullname, rr.num)
-			
-			# Add a copy of the race times.  Add the leader's last time as the current red lantern.
-			raceTimes[catIndex] = rr.raceTimes + [rr.raceTimes[-1]]
-			
-			# Find the next expected lap arrival.
-			try:
-				lapCur = bisect.bisect_left( rr.raceTimes, tCur )
-				# Time before leader's arrival.
-				tLeaderArrival = rr.raceTimes[lapCur] - tCur
-			except IndexError:
-				# At the end of the race, use the leader's race time.
-				# Make sure it is a recorded time, not a projected time.
-				try:
-					tLapStart = rr.raceTimes[-2] if rr.interp[-1] else rr.raceTimes[-1]
-				except Exception:
-					tLapStart = None
+		leader = [c.fullname for c in categories]
+		raceTimes = [[] for i in range(len(leader))]
+		for catIndex, category in enumerate(categories):
+			isLeader = True
+			for rr in GetResultsWithData(category):
+				if rr.status != Finisher or not rr.raceTimes or len(rr.raceTimes) < 2:
+					continue
 				
-				setLapCounter(
-					leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1,
-					tLapStart = tLapStart
-				)
-				continue
-			
-			if lapCur <= 1:
-				tLapStart = race.categoryStartOffset(category)
-			else:
-				lapPrev = lapCur-1
-				# Make sure we use an actual recorded time - not a projected time.
-				# A projected time is possible if the leader has a slow lap.
-				if rr.interp[lapPrev]:
-					lapPrev -= 1
+				if not isLeader:
+					# Update the fastest lap times, which may not be the current leader's time.
+					catRaceTimes = raceTimes[catIndex]
+					for i, t in enumerate(rr.raceTimes):
+						catRaceTimes[i] = min( catRaceTimes[i], t )
+					
+					# Update the red lantern time.
+					catRaceTimes[-1] = max( catRaceTimes[-1], rr.raceTimes[-1] )
+					continue
+
+				isLeader = False				
+				leader[catIndex] = '{} {}'.format(category.fullname, rr.num)
+				
+				# Add a copy of the race times.  Add the leader's last time as the current red lantern.
+				raceTimes[catIndex] = list(rr.raceTimes + [rr.raceTimes[-1]])
+				
+				# Find the next expected lap arrival.
 				try:
-					tLapStart = rr.raceTimes[lapPrev] if lapPrev else race.categoryStartOffset(category)
+					lapCur = bisect.bisect_left( rr.raceTimes, tCur )
+					# Time before leader's arrival.
+					tLeaderArrival = rr.raceTimes[lapCur] - tCur
 				except IndexError:
-					tLapStart = None
-			
-			setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeaderArrival, tLapStart )
-			
-			if tLeaderArrival is not None:
-				if 0.0 <= tLeaderArrival <= 3.0:
-					if category not in self.lapReminder:
-						self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
-				elif category in self.lapReminder:
-					del self.lapReminder[category]
+					# At the end of the race, use the leader's race time.
+					# Make sure it is a recorded time, not a projected time.
+					try:
+						tLapStart = rr.raceTimes[-2] if rr.interp[-1] else rr.raceTimes[-1]
+					except Exception:
+						tLapStart = None
+					
+					setLapCounter(
+						leaderCategory, category, len(rr.raceTimes)-1, len(rr.raceTimes)-1,
+						tLapStart = tLapStart
+					)
+					continue
+				
+				if lapCur <= 1:
+					tLapStart = race.categoryStartOffset(category)
+				else:
+					lapPrev = lapCur-1
+					# Make sure we use an actual recorded time - not a projected time.
+					# A projected time is possible if the leader has a slow lap.
+					if rr.interp[lapPrev]:
+						lapPrev -= 1
+					try:
+						tLapStart = rr.raceTimes[lapPrev] if lapPrev else race.categoryStartOffset(category)
+					except IndexError:
+						tLapStart = None
+				
+				setLapCounter( leaderCategory, category, lapCur, len(rr.raceTimes), tLeaderArrival, tLapStart )
+				
+				if tLeaderArrival is not None:
+					if 0.0 <= tLeaderArrival <= 3.0:
+						if category not in self.lapReminder:
+							self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
+					elif category in self.lapReminder:
+						del self.lapReminder[category]
 		
 		# Ensure that the raceTime and leader are sorted the same as the Categories are defined.
 		self.raceHUD.SetData( raceTimes, leader, tCur if race.isRunning() else None )
