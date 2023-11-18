@@ -1450,9 +1450,13 @@ class MainWin( wx.Frame ):
 	def menuPlayback( self, event ):
 		if not Model.race:
 			return
-		self.writeRace()
 		if not Model.race.isFinished():
 			return
+		
+		self.showPage( self.iResultsPage )
+		self.refreshAll()
+		self.writeRace()
+		
 		if not Utils.MessageOKCancel(self, '{}\n\n{}?'.format(_('Playback this race in real-time.'), _('Continue')), _("Playback") ):
 			return
 		
