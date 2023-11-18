@@ -31,9 +31,8 @@ def SetNoDataDNS():
 		for num in externalInfo.keys():
 			rider = race.getRider( num )
 			if rider.status == NP:
-				if rider.times:
-					rider.status = Finisher
-					isChanged = True
+				rider.status = Finisher if rider.times else DNS
+				isChanged = True
 			elif rider.status == Finisher:
 				if not rider.times:
 					rider.status = DNS
