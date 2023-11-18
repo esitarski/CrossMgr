@@ -592,35 +592,35 @@ class NumKeypad( wx.Panel ):
 		
 		onCourseCatLap = defaultdict( lambda: defaultdict(int) )
 		
-		results = GetResults( None )
+		catLapsMax = {}
+		resultNums = set()
+		for category in race.getCategories( startWaveOnly=True ):
+			for rr in GetResultsWithData( category ):
+				resultNums.add( rr.num )
+				if category not in catLapsMax:
+					catLapsMax[category] = max( race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
+				if not IsRiderOnCourse(rr.num, t, rr):
+					continue
+				
+				tSearch = t
+				if race.isTimeTrial:
+					try:
+						tSearch -= race.riders[rr.num].firstTime
+					except Exception:
+						pass
+				lap = min( catLapsMax[category], max( 1, bisect.bisect_left(rr.raceTimes, tSearch) ) )
+				onCourseCatLap[category][lap] += 1
+		
+		# Add riders who have started but not yet finished.
 		if race.isTimeTrial:
-			# Add riders who have started but not yet finished.
 			pass
-		elif race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(results) != len(race.riders):
+		elif race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(resultNums) != len(race.riders):
 			# Add rider entries who have been read by RFID but have not completed the first lap.
-			resultNums = set( rr.num for rr in results )
 			for a in race.riders.values():
 				if a.status == Finisher and a.firstTime is not None and a.num not in resultNums:
 					category = getCategory( a.num )
 					if category and t >= a.firstTime and t >= race.getStartOffset(a.num):
 						onCourseCatLap[category][1] += 1
-		
-		catLapsMax = {}
-		for rr in results:
-			category = getCategory( rr.num )
-			if category not in catLapsMax:
-				catLapsMax[category] = max( race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
-			if not IsRiderOnCourse(rr.num, t, rr):
-				continue
-			
-			tSearch = t
-			if race.isTimeTrial:
-				try:
-					tSearch -= race.riders[rr.num].firstTime
-				except Exception:
-					pass
-			lap = min( catLapsMax[category], max( 1, bisect.bisect_left(rr.raceTimes, tSearch) ) )
-			onCourseCatLap[category][lap] += 1
 		
 		if not onCourseCatLap:
 			return
