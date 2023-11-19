@@ -466,7 +466,6 @@ class NumKeypad( wx.Panel ):
 			except (KeyError, IndexError):
 				pass
 		
-		minLocal, maxLocal = min, max
 		leader = [c.fullname for c in categories]
 		raceTimes = [[] for i in range(len(leader))]
 		for catIndex, category in enumerate(categories):
@@ -479,10 +478,10 @@ class NumKeypad( wx.Panel ):
 					if rank <= 10:
 						# Update the fastest lap times, which may not be the current leader's time.
 						for i, t in enumerate(rr.raceTimes):
-							catRaceTimes[i] = minLocal( catRaceTimes[i], t )
+							catRaceTimes[i] = min( catRaceTimes[i], t )
 					
 					# Update the last rider finish time.
-					catRaceTimes[-1] = maxLocal( catRaceTimes[-1], rr.raceTimes[-1] )
+					catRaceTimes[-1] = max( catRaceTimes[-1], rr.raceTimes[-1] )
 					continue
 
 				leader[catIndex] = '{} {}'.format(category.fullname, rr.num)
