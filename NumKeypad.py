@@ -422,7 +422,6 @@ class NumKeypad( wx.Panel ):
 			return
 			
 		categories = race.getCategories( startWaveOnly=True )
-		categories_index = { c:i for i,c in enumerate(categories) }
 		noLap = ''
 		tCur = race.curRaceTime() if race.isRunning() else None
 		
@@ -467,7 +466,7 @@ class NumKeypad( wx.Panel ):
 				pass
 		
 		leader = [c.fullname for c in categories]
-		raceTimes = [[] for i in range(len(leader))]
+		raceTimes = [[] for c in categories]
 		for catIndex, category in enumerate(categories):
 			for rank, rr in enumerate(GetResultsWithData(category), 1):
 				if rr.status != Finisher or not rr.raceTimes or len(rr.raceTimes) < 2:
