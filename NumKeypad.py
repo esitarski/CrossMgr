@@ -466,29 +466,29 @@ class NumKeypad( wx.Panel ):
 			except (KeyError, IndexError):
 				pass
 		
+		minLocal, maxLocal = min, max
 		leader = [c.fullname for c in categories]
 		raceTimes = [[] for i in range(len(leader))]
 		for catIndex, category in enumerate(categories):
-			isLeader = True
-			for rr in GetResultsWithData(category):
+			for rank, rr in enumerate(GetResultsWithData(category), 1):
 				if rr.status != Finisher or not rr.raceTimes or len(rr.raceTimes) < 2:
 					continue
 				
-				if not isLeader:
-					# Update the fastest lap times, which may not be the current leader's time.
+				if rank > 1:
 					catRaceTimes = raceTimes[catIndex]
-					for i, t in enumerate(rr.raceTimes):
-						catRaceTimes[i] = min( catRaceTimes[i], t )
+					if rank <= 10:
+						# Update the fastest lap times, which may not be the current leader's time.
+						for i, t in enumerate(rr.raceTimes):
+							catRaceTimes[i] = minLocal( catRaceTimes[i], t )
 					
-					# Update the red lantern time.
-					catRaceTimes[-1] = max( catRaceTimes[-1], rr.raceTimes[-1] )
+					# Update the last rider finish time.
+					catRaceTimes[-1] = maxLocal( catRaceTimes[-1], rr.raceTimes[-1] )
 					continue
 
-				isLeader = False				
 				leader[catIndex] = '{} {}'.format(category.fullname, rr.num)
 				
-				# Add a copy of the race times.  Add the leader's last time as the current red lantern.
-				raceTimes[catIndex] = list(rr.raceTimes + [rr.raceTimes[-1]])
+				# Add a copy of the race times.  Set the leader's last time as the current last rider finish.
+				raceTimes[catIndex] = rr.raceTimes + [rr.raceTimes[-1]]
 				
 				# Find the next expected lap arrival.
 				try:
