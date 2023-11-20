@@ -810,14 +810,14 @@ class RiderDetail( wx.Panel ):
 			)
 			return
 			
-		if Utils.MessageOKCancel( self, '{}\n\n   {} \u21D0 {}.'.format(_('Confirm Merge times'), num, newNum), _("Merge Times") ):
+		if Utils.MessageOKCancel( self, '{}\n\n   {} \u21E6 {}.'.format(_('Confirm Merge Rider Times'), num, newNum), _("Merge Times") ):
 			undo.pushState()
 			rider = race.riders.get( num, None )
 			riderMerge = race.riders.get( newNum, None )
 			if rider and riderMerge:
 				rider.times = sorted( set(rider.times) | set(riderMerge.times) )
 		
-			if Utils.MessageYesNo( self, '{}: {}: {}'.format(_('Bib'), newNum, _("Delete Source Rider")), _("Delete Source Rider") ):
+			if Utils.MessageYesNo( self, '{}'.format(newNum), _("Delete 'From' Rider") ):
 				race.deleteRider( newNum )
 			
 			self.refresh()
