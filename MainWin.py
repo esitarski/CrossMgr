@@ -3275,8 +3275,10 @@ class MainWin( wx.Frame ):
 		race.raceNum = 1
 		race.organizer = 'Edward Sitarski'
 		race.memo = ''
-		race.simulation = True	# Flag this as a simulation race.
 		ApplyDefaultTemplate( race )
+		
+		race.simulation = True		# Flag this as a simulation race.
+		#race.setNoDataDNS = True	# Show all entries in the spreadsheet as NP or DNS.
 		
 		fName = os.path.join( simulationDir, race.getFileName() )
 		if userConfirm:

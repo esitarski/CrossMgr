@@ -390,13 +390,12 @@ class LapCounter( wx.Panel ):
 		dc.SetPen( wx.TRANSPARENT_PEN )
 		
 		def getFontSizeToFit( text, w, h ):
-			w = int( w * 0.9 )
-			h = int( h * 0.9 )
+			w, h = max( 1, int(w * 0.9) ), max( 1, int(h * 0.9) )
 			fontSize = h
 			dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			wText, hText = dc.GetTextExtent( text )
 			if wText > w:
-				fontSize = int( fontSize * w / wText )
+				fontSize = max( 1, int(fontSize * w / wText) )
 				dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 			return fontSize
 

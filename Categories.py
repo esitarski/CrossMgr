@@ -476,6 +476,7 @@ class Categories( wx.Panel ):
 			return
 		if not Utils.MessageOK( self, _('Set the GPX distance for all Categories?'), _('Set GPX Distance'), wx.ICON_QUESTION ):
 			return
+		self.commit()	# Commit any current changes on the screen.
 		distance = geoTrack.lengthKm if race.distanceUnit == Model.Race.UnitKm else geoTrack.lengthMiles
 		for category in race.getCategories():
 			category.distance = distance
@@ -642,7 +643,7 @@ and remove them from other categories.'''),
 				return
 			response = dlg.GetValue()
 
-		undo.pushState()
+		self.commit()
 		response = re.sub( '[^0-9,]', '', response.replace(' ', ',') )
 		with Model.LockRace() as race:
 			for numException in response.split(','):

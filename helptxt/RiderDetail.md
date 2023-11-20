@@ -187,6 +187,7 @@ Action|Description
 Delete Rider from Race...|Delete this rider, and all associated entries, from the race.  Useful if you typed in a wrong number at some point and you want to get rid of it.
 Change Rider's Number...|Change the number of this rider.  Useful is the rider got the wrong number at registration and needs to be consitent, say,  in a series.
 Swap Number with Other Rider...|Swap this rider's number with another rider's number.  Useful if two riders got their numbers switched at registration.
+Merge Rider Times...|Merge times from another rider.  Includes the option to delete the other rider from the race.
 Copy Rider Times to New Number...|Copies this rider's times to a new number.  Useful if, say, you have a rider who's number fell off, and you have no entries for him/her.  In this case, choose another rider that was racing closely to the missing rider, copy the entries, the make some manual edits to the copy to get the finish order correct.
 Change Rider Start Wave Time...|Use this option if a rider started in the wrong start wave by mistake, and you still want to rank the rider by time.  It allows you to add (if the rider started in an earlier wave) or subtract (if the rider started in a later wave) a time adjustment on every lap.  This can only be done after the race is Finished.
 
