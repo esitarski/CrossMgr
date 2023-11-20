@@ -4,11 +4,20 @@
 # Tools
 
 ## Change Race Start Time...
-Allows you to change the Start Time of the race.  This is very useful if you start the race after the actual start time.  You can change the race start time before you enter times, while you are entering times, after you have entered all the times, or after you have finished the race.  Any times you have entered will be automatically adjusted based on the new race start time.
+Allows you to change the Start Time of the race.  This is very useful if you start the race after the actual start time.
+
+This is also convenient if you are busy starting a race and are away from CrossMgr.  Go ahead and start the race, then start CrossMgr, then change its Start Time.
+
+You can change the race start time before you enter times, while you are entering times, after you have entered all the times, or after you have finished the race.  Any times you have entered will be automatically adjusted based on the new race start time.
 
 This is particularly convenient for a point-to-point race.  You don't need to have CrossMgr running when the race is started - just make a note of the time.  Then, at the finish, start a CrossMgr race and change the start time.
 
-This is also convenient if you are busy starting a race and are away from CrossMgr.  Go ahead and start the race, then start CrossMgr, then change its Start Time.
+There are 4 ways to change the race start time:
+
+1. __Set Stopwatch Race Time__:  Change the start by synchronizing with an external stopwatch.  To use this feature, set the value to 10s ahead of the stopwatch you want to sychronize with.  Just as the stopwatch catches up to the time you entered, press OK.
+1. __Set at Time of Day__: Sets the start of the race to the given time of day.
+1. __Start Earlier by__: Adjusts the start earlier by a time offset.
+1. __Start Later by__: Adjusts the start later by a time offset.
 
 You cannot change the start time of a Time Trial race.
 

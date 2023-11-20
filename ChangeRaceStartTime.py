@@ -28,7 +28,8 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			label = wx.StaticText( self, label = _('Set Stopwatch Race Time:') )
 			bs.Add( label, pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.TOP|wx.ALIGN_CENTRE_VERTICAL )
 			
-			self.raceStopwatchTimeEdit = HighPrecisionTimeEdit( self, display_milliseconds=False, seconds = 0.0, size=(timeNowEditWidth,-1) )
+			seconds = int( race.curRaceTime() ) + 10
+			self.raceStopwatchTimeEdit = HighPrecisionTimeEdit( self, display_milliseconds=False, seconds=seconds, size=(timeNowEditWidth,-1) )
 			self.raceStopwatchTimeEdit.SetMinSize( (timeNowEditWidth, -1) )
 			bs.Add( self.raceStopwatchTimeEdit, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.TOP|wx.ALIGN_LEFT )
 			
@@ -37,6 +38,23 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			bs.Add( self.setRaceStopwatchTime, pos=(row,2), span=(1,1), border = border, flag=wx.ALL )
 			row += 1
 		
+		#---------------------------------------------------------------
+
+		self.timeLabel = wx.StaticText( self, label = _('Start at Time of Day (24hr clock):') )
+		bs.Add( self.timeLabel, pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.TOP|wx.ALIGN_CENTRE_VERTICAL )
+		
+		timeNowEditWidth = 127
+		seconds = (race.startTime - race.startTime.replace(hour=row, minute=row, second=0)).total_seconds()
+		self.timeNowEdit = HighPrecisionTimeEdit( self, seconds = seconds, size=(timeNowEditWidth,-1) )
+		self.timeNowEdit.SetMinSize( (timeNowEditWidth, -1) )
+		bs.Add( self.timeNowEdit, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.TOP|wx.ALIGN_LEFT )
+		
+		self.setTime = wx.Button( self, id=wx.ID_OK )
+		self.setTime.Bind( wx.EVT_BUTTON, self.onSetTime )
+		bs.Add( self.setTime, pos=(row,2), span=(1,1), border = border, flag=wx.ALL )
+
+		row += 1
+
 		#---------------------------------------------------------------
 
 		label = wx.StaticText( self, label = _('Start Earlier by:') )
@@ -65,39 +83,23 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 		bs.Add( self.setTimeLater, pos=(row,2), span=(1,1), border = border, flag=wx.ALL )
 		row += 1
 		
-		#---------------------------------------------------------------
-
-		self.timeLabel = wx.StaticText( self, label = _('Start at Time of Day (24hr clock):') )
-		bs.Add( self.timeLabel, pos=(row,0), span=(1,1), border = border, flag=wx.ALIGN_RIGHT|wx.LEFT|wx.BOTTOM|wx.TOP|wx.ALIGN_CENTRE_VERTICAL )
-		
-		timeNowEditWidth = 127
-		seconds = (race.startTime - race.startTime.replace(hour=row, minute=row, second=0)).total_seconds()
-		self.timeNowEdit = HighPrecisionTimeEdit( self, seconds = seconds, size=(timeNowEditWidth,-1) )
-		self.timeNowEdit.SetMinSize( (timeNowEditWidth, -1) )
-		bs.Add( self.timeNowEdit, pos=(row,1), span=(1,1), border = border, flag=wx.RIGHT|wx.BOTTOM|wx.TOP|wx.ALIGN_LEFT )
-		
-		self.setTime = wx.Button( self, id=wx.ID_OK )
-		self.setTime.Bind( wx.EVT_BUTTON, self.onSetTime )
-		bs.Add( self.setTime, pos=(row,2), span=(1,1), border = border, flag=wx.ALL )
-
-		row += 1
 		
 		#---------------------------------------------------------------
 		
 		self.cancelBtn = wx.Button( self, wx.ID_CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, self.cancelBtn )
 		bs.Add( self.cancelBtn, pos=(row, 1), span=(1,1), border = border, flag=wx.ALL )
-		
-		self.SetSizerAndFit(bs)
+
+		self.SetSizerAndFit( bs )
 		bs.Fit( self )
-		
+
 		self.CentreOnParent(wx.BOTH)
 		wx.CallAfter( self.SetFocus )
 		
 	def onSetRaceStopwatchTime( self, event ):
 		race = Model.race
 		if race and race.startTime:
-			self.onOK( event, race.startTime - datetime.timedelta(seconds=self.curRaceTime()-self.raceStopwatchTimeEdit.GetSeconds()) )
+			self.onOK( event, race.startTime - datetime.timedelta(seconds=race.curRaceTime()-self.raceStopwatchTimeEdit.GetSeconds()) )
 
 	def onSetTimeEarlier( self, event ):
 		race = Model.race

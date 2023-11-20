@@ -234,6 +234,8 @@ class RiderDetail( wx.Panel ):
 		self.Bind( wx.EVT_MENU, self.onChangeNumber, item )
 		item = self.menu.Append( wx.ID_ANY, _('&Swap Number with Other Rider...'), _("Swap this rider's number with another rider's number") )
 		self.Bind( wx.EVT_MENU, self.onSwapNumber, item )
+		item = self.menu.Append( wx.ID_ANY, _('&Merge Rider Times...'), _("Merge this rider's time with another rider") )
+		self.Bind( wx.EVT_MENU, self.onMergeRiderTimes, item )
 		item = self.menu.Append( wx.ID_ANY, _('C&opy Rider Times to New Number...'), _("Copy these rider's times to another number") )
 		self.Bind( wx.EVT_MENU, self.onCopyRider, item )
 		item = self.menu.Append( wx.ID_ANY, _('Change Start W&ave Time...'), _("Fix lap times if the rider started in the wrong start wave") )
@@ -491,10 +493,10 @@ class RiderDetail( wx.Panel ):
 				(_('Add Missing Last Lap'),	_('Add Missing Last Lap'),	self.OnPopupAddMissingLastLap, allCases),
 				(None, None, None, None),
 				(_('Pull After Lap') + '...',_('Pull After lap'),	self.OnPopupPull, allCases),
-				(_('DNF After Lap') + '...',	_('DNF After lap'),	self.OnPopupDNF, allCases),
+				(_('DNF After Lap') + '...', _('DNF After lap'),	self.OnPopupDNF, allCases),
 				(None, None, None, None),
 				(_('Correct') + '...',		_('Change number or lap time') + '...',	self.OnPopupCorrect, interpCase),
-				(_('Shift') + '...',			_('Move lap time earlier/later') + '...',	self.OnPopupShift, interpCase),
+				(_('Shift') + '...',		_('Move lap time earlier/later') + '...',	self.OnPopupShift, interpCase),
 				(_('Delete') + '...',		_('Delete lap time(s)') + '...',	self.OnPopupDelete, nonInterpCase),
 				(None, None, None, None),
 				(_('Note') + '...',			_('Add/Edit lap note'),	self.OnPopupNote, nonInterpCase),
@@ -765,6 +767,62 @@ class RiderDetail( wx.Panel ):
 			wx.CallAfter( Utils.refreshForecastHistory )
 			wx.CallAfter( Utils.refresh )
 
+	def onMergeRiderTimes( self, event ):
+		race = Model.race
+		if not race:
+			return
+			
+		if race.isTimeTrial:
+			Utils.MessageOK(
+				self,
+				_("Cannot merge times in time trial."),
+				_('Cannot Merge Rider Times'),
+				iconMask = wx.ICON_ERROR
+			)
+			return
+			
+		try:
+			num = int(self.num.GetValue())
+		except Exception:
+			return
+			
+		if num not in race:
+			return
+		
+		with wx.TextEntryDialog( self, _("Number to merge times with:"), _('Merge Times'), '{}'.format(self.num.GetValue()) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			newNum = dlg.GetValue()
+			
+		try:
+			newNum = int(re.sub( '[^0-9]', '', newNum))
+		except ValueError:
+			return
+			
+		if newNum not in race.riders:
+			Utils.MessageOK(
+				self,
+				'{}\n{}'.format(
+					_("Cannot merge."),
+					_("The rider to merge with is not in the race."),
+				),
+				_('Cannot Merge Rider Times'), iconMask = wx.ICON_ERROR
+			)
+			return
+			
+		if Utils.MessageOKCancel( self, '{}\n\n   {} \u21D0 {}.'.format(_('Confirm Merge times'), num, newNum), _("Merge Times") ):
+			undo.pushState()
+			rider = race.riders.get( num, None )
+			riderMerge = race.riders.get( newNum, None )
+			if rider and riderMerge:
+				rider.times = sorted( set(rider.times) | set(riderMerge.times) )
+		
+			if Utils.MessageYesNo( self, '{}: {}: {}'.format(_('Bib'), newNum, _("Delete Source Rider")), _("Delete Source Rider") ):
+				race.deleteRider( newNum )
+			
+			self.refresh()
+			wx.CallAfter( Utils.refreshForecastHistory )
+			wx.CallAfter( Utils.refresh )
 		
 	def onCopyRider( self, event ):
 		if not Model.race:
@@ -1545,7 +1603,7 @@ def ShowRiderDetailDialog( parent, num = None ):
 if __name__ == '__main__':
 	race = Model.newRace()
 	race._populate()
-	race.isTimeTrial = True
+	#race.isTimeTrial = True
 	
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
