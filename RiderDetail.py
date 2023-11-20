@@ -817,7 +817,7 @@ class RiderDetail( wx.Panel ):
 			if rider and riderMerge:
 				rider.times = sorted( set(rider.times) | set(riderMerge.times) )
 		
-			if Utils.MessageYesNo( self, '{}'.format(newNum), _("Delete 'From' Rider") ):
+			if Utils.MessageYesNo( self, '{}\n\n{}'.format(_("Delete 'From' Rider"), newNum), _("Delete 'From' Rider") ):
 				race.deleteRider( newNum )
 			
 			self.refresh()
