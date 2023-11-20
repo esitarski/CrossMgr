@@ -436,14 +436,14 @@ class NumKeypad( wx.Panel ):
 		lapCounter = [getNoDataCategoryLap(category) for category in categories]
 		categoryToLapCounterIndex = {category:i for i, category in enumerate(categories)}
 
-		if tCur is None:
+		if tCur is None or not categories:
 			self.raceHUD.SetData()
 			if Utils.mainWin:
 				Utils.mainWin.updateLapCounter(lapCounter)
 			return
 
 		Finisher = Model.Rider.Finisher
-		leaderCategory = categories[0] if categories else None
+		leaderCategory = categories[0]
 		
 		secondsBeforeLeaderToFlipLapCounter = race.secondsBeforeLeaderToFlipLapCounter + 1.0
 		
@@ -465,28 +465,34 @@ class NumKeypad( wx.Panel ):
 			except (KeyError, IndexError):
 				pass
 		
-		leader = [c.fullname for c in categories]
-		raceTimes = [[] for c in categories]
-		for catIndex, category in enumerate(categories):
-			for rank, rr in enumerate(GetResultsWithData(category), 1):
+		leader, raceTimes = [], []
+		for category in categories:
+			results = GetResultsWithData( category )
+			if not results or not results[0].status == Finisher or not results[0].raceTimes:
+				leader.append( category.fullname )
+				raceTimes.append( [] )
+				continue
+			
+			leader.append( '{} [{}]'.format(category.fullname, results[0].num) )
+			for rank, rr in enumerate(results, 1):
 				if rr.status != Finisher or not rr.raceTimes or len(rr.raceTimes) < 2:
-					continue
+					break
 				
 				if rank > 1:
-					catRaceTimes = raceTimes[catIndex]
+					catRaceTimes = raceTimes[-1]
 					if rank <= 10:
 						# Update the fastest lap times, which may not be the current leader's time.
 						for i, t in enumerate(rr.raceTimes):
-							catRaceTimes[i] = min( catRaceTimes[i], t )
+							if t < catRaceTimes[i]:
+								catRaceTimes[i] = t
 					
 					# Update the last rider finish time.
-					catRaceTimes[-1] = max( catRaceTimes[-1], rr.raceTimes[-1] )
+					if rr.raceTimes[-1] > catRaceTimes[-1]:
+						catRaceTimes[-1] = rr.raceTimes[-1]
 					continue
 
-				leader[catIndex] = '{} {}'.format(category.fullname, rr.num)
-				
 				# Add a copy of the race times.  Set the leader's last time as the current last rider finish.
-				raceTimes[catIndex] = rr.raceTimes + [rr.raceTimes[-1]]
+				raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
 				
 				# Find the next expected lap arrival.
 				try:
