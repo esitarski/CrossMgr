@@ -33,10 +33,6 @@ def SetNoDataDNS():
 			if rider.status == NP:
 				rider.status = Finisher if rider.times else DNS
 				isChanged = True
-			elif rider.status == Finisher:
-				if not rider.times:
-					rider.status = DNS
-					isChanged = True
 	
 	if isChanged:
 		race.setChanged()
