@@ -73,7 +73,7 @@ class RiderResult:
 					return '🏁 '
 				if self.raceTimes[-3] <= t:
 					return '🔔 '
-			except IndexError:
+			except Exception:
 				pass
 		return ''
 		
@@ -84,7 +84,7 @@ class RiderResult:
 					return '🏁 '
 				if self.raceTimes[-2] <= t:
 					return '🔔 '
-			except IndexError:
+			except Exception:
 				pass
 		return ''
 		
