@@ -16,6 +16,7 @@ def SetNoDataDNS():
 	isChanged = False
 	
 	if race.isRunning():
+		race.fixedRaceFinishDNS = False
 		for num in externalInfo.keys():
 			rider = race.getRider( num )
 			if rider.status == NP:
@@ -28,11 +29,16 @@ def SetNoDataDNS():
 					isChanged = True
 	
 	elif race.isFinished():
-		for num in externalInfo.keys():
-			rider = race.getRider( num )
-			if rider.status == NP:
-				rider.status = Finisher if rider.times else DNS
-				isChanged = True
+		if not getattr(race, 'fixedRaceFinishDNS', False):
+			race.fixedRaceFinishDNS = True
+			for num in externalInfo.keys():
+				rider = race.getRider( num )
+				if rider.status == NP:
+					rider.status = Finisher if rider.times else DNS
+					isChanged = True
+
+	elif race.isUnstarted():
+		race.fixedRaceFinishDNS = False
 	
 	if isChanged:
 		race.setChanged()

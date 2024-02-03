@@ -12,7 +12,7 @@ import datetime
 #------------------------------------------------------------------------------------------------
 class CorrectNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		super().__init__( parent, id, "Correct Number",
+		super().__init__( parent, id, _("Correct Number"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -146,7 +146,7 @@ class CorrectNumberDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class ShiftNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		super().__init__( parent, id, "Shift Time",
+		super().__init__( parent, id, _("Shift Time"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -220,7 +220,7 @@ class ShiftNumberDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class InsertNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		super().__init__( parent, id, "Insert Number",
+		super().__init__( parent, id, _("Insert Number"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry
@@ -281,7 +281,7 @@ class InsertNumberDialog( wx.Dialog ):
 #------------------------------------------------------------------------------------------------
 class SplitNumberDialog( wx.Dialog ):
 	def __init__( self, parent, entry, id = wx.ID_ANY ):
-		super().__init__( parent, id, "Split Number",
+		super().__init__( parent, id, _("Split Number"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 						
 		self.entry = entry

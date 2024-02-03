@@ -3341,8 +3341,8 @@ class MainWin( wx.Frame ):
 		self.simulateSeen = set()
 		categories = getattr( self, 'categories', None )
 		if not categories:
-			categories = [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'gender':'Men'},
-							{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'gender':'Women', 'raceMinutes':6}]
+			categories = [	{'name':'Junior', 'catStr':'100-199', 'startOffset':'00:00', 'distance':0.5, 'firstLapDistance':0.0, 'gender':'Men'},
+							{'name':'Senior', 'catStr':'200-299', 'startOffset':'00:10', 'distance':0.5, 'firstLapDistance':0.0, 'gender':'Women', 'raceMinutes':6}]
 		if race.isTimeTrial:
 			for c in categories:
 				c.pop( 'raceMinutes', None )
@@ -3350,6 +3350,9 @@ class MainWin( wx.Frame ):
 			categories[0]['numLaps'] = 3
 			categories[1]['numLaps'] = 2
 			race.setCategories( categories )
+			for c in race.getCategories():
+				c.distance = 0.5;
+				c.firstLapDistance = 0.0;
 			
 			scheduledStart = datetime.datetime.now() + datetime.timedelta(seconds=120)
 			scheduledStart -= datetime.timedelta( seconds=scheduledStart.second ) + datetime.timedelta( seconds=scheduledStart.microsecond/1000000.0 ) 
@@ -3382,6 +3385,9 @@ class MainWin( wx.Frame ):
 			race.scheduledStart = '{:02d}:{:02d}'.format(scheduledStart.hour, scheduledStart.minute)
 			
 			race.setCategories( categories )
+			for c in race.getCategories():
+				c.distance = 0.5;
+				c.firstLapDistance = 0.0;
 			self.lapTimes = [(t + race.getStartOffset(num), num) for t, num in self.lapTimes]
 			if race.enableJChipIntegration and race.resetStartClockOnFirstTag:
 				self.lapTimes.extend( (race.getStartOffset(num) + 2.0*random.random(), num) for num in set(tn[1] for tn in self.lapTimes) )

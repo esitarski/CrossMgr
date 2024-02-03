@@ -28,7 +28,7 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	
 	tCur = race.lastRaceTime()
 	
-	expected, recorded = [], []
+	expected, recorded, resultsIndex = [], [], {}
 	
 	results = GetResults( None )
 	
@@ -53,9 +53,10 @@ def getExpectedRecorded( tCutoff=0.0 ):
 					expected.append( e )
 				else:
 					recorded.append( e )
-				
+	
 	lapMin = 1
 	for rr in results:
+		resultsIndex[rr.num] = rr
 		if not rr.raceTimes or rr.status != Finisher:
 			continue
 		offset = (getattr(rr,'startTime',None) or 0.0) if race.isTimeTrial else 0.0
@@ -86,7 +87,7 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	
 	expected.sort( key=Entry.key )
 	recorded.sort( key=Entry.key )
-	return expected, recorded
+	return expected, recorded, resultsIndex
 	
 # Define columns for recorded and expected grids.
 iRecordedNumCol, iRecordedNoteCol, iRecordedTimeCol, iRecordedGapCol, iRecordedLapCol, iRecordedNameCol, iRecordedWaveCol, iRecordedColMax = range(8)
@@ -564,7 +565,7 @@ class ForecastHistory( wx.Panel ):
 		tRace = race.curRaceTime()
 		tRaceLength = race.minutes * 60.0
 		
-		expected, recorded = getExpectedRecorded()
+		expected, recorded, resultsIndex = getExpectedRecorded()
 		
 		isTimeTrial = race.isTimeTrial
 		if isTimeTrial:
@@ -645,6 +646,7 @@ class ForecastHistory( wx.Panel ):
 		data[iExpectedTimeCol] = [formatTime(getT(e) - tRace) if (e.lap or 0) > 0
 			else ('[{}]'.format(formatTime(max(0.0, getT(e) - tRace + 0.99999999)))) for e in expected]
 		data[iExpectedLapCol] = ['{}'.format(e.lap) if (e.lap or 0) > 0 else '' for e in expected]
+		
 		def getNoteExpected( e ):
 			if (e.lap or 0) == 0:
 				return _('Start')
@@ -655,13 +657,14 @@ class ForecastHistory( wx.Panel ):
 				position = prevRiderPosition.get(e.num, -1)
 				
 			if position == 1:
-				return _('Lead')
+				return resultsIndex[e.num].getExpectedLapChar(tRace) + _('Lead')
 			elif e.t < tMissing:
 				return _('miss')
 			elif position >= 0:
-				return Utils.ordinal(position)
+				return resultsIndex[e.num].getExpectedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
+		
 		data[iExpectedNoteCol] = [getNoteExpected(e) for e in expected]
 		def getName( e ):
 			info = externalInfo.get(e.num, {})
@@ -718,6 +721,7 @@ class ForecastHistory( wx.Panel ):
 			('{}'.format(formatTimeGap(e.t)) if e.t is not None else ' ') if e.isGap() else
 			'[{}]'.format(formatTime(e.t)) for e in recorded]
 		data[iRecordedLapCol] = ['{}'.format(e.lap) if e.lap else ' ' for e in recorded]
+		
 		def getNoteHistory( e ):
 			if e.isGap():
 				return '{}'.format(e.groupCount)
@@ -727,11 +731,12 @@ class ForecastHistory( wx.Panel ):
 
 			position = nextRiderPosition.get(e.num, -1)
 			if position == 1:
-				return _('Lead')
+				return resultsIndex[e.num].getRecordedLapChar(tRace) + _('Lead')
 			elif position >= 0:
-				return Utils.ordinal(position)
+				return resultsIndex[e.num].getRecordedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
+		
 		data[iRecordedNoteCol] = [getNoteHistory(e) for e in recorded]
 		def getGapHistory( e ):
 			if (e.lap or 0) == 0:

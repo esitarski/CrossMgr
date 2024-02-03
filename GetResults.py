@@ -66,6 +66,28 @@ class RiderResult:
 		self.interp		= interp
 		self.lastInterp = False
 		
+	def getExpectedLapChar( self, t ):
+		if self.status == Model.Rider.Finisher:
+			try:
+				if self.raceTimes[-2] <= t:
+					return '🏁 '
+				if self.raceTimes[-3] <= t:
+					return '🔔 '
+			except IndexError:
+				pass
+		return ''
+		
+	def getRecordedLapChar( self, t ):
+		if self.status == Model.Rider.Finisher:
+			try:
+				if self.raceTimes[-1] <= t:
+					return '🏁 '
+				if self.raceTimes[-2] <= t:
+					return '🔔 '
+			except IndexError:
+				pass
+		return ''
+		
 	_reMissingName = re.compile( '^, |, $' )
 	def full_name( self ):
 		return self._reMissingName.sub( '', '{}, {}'.format(getattr(self, 'LastName', ''), getattr(self,'FirstName', '')), 1 )
