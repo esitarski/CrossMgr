@@ -77,7 +77,7 @@ def CompileHelp( dir = '.' ):
 		with io.open('Links.md', 'r') as f:
 			links = f.read()
 			
-		for fname in glob.glob("./*.txt"):
+		for fname in glob.glob("./*.md"):
 			six.print_( fname, '...' )
 			with io.open(fname, 'r') as f:
 				input = StringIO()

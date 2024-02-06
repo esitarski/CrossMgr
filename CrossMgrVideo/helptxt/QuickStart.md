@@ -120,17 +120,23 @@ If Capture is __by Seconds__:
 For example, say __Capture Seconds before Trigger__=0.5 and __Capture Seconds after Trigger__=2.0 and the __AUTO CAPTURE__ button is pressed at 14:07:21.0.
 __CrossMgrVideo__ will capture video from 14:07:20.5 to 14:07:22.
 
-__CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it keeps a 10-second buffer 
+__CrossMgrVideo__ can capture video up to 10 seconds "in the past" because it keeps a 10-second buffer
+
+* __Sequential bib for captures__: If selected, manual/joystick captures will be given a sequential bib number.  Otherwise the bib field is left blank (useful when real bib numbers are being provided by CrossMgr).
 
 #### Snapshot
 
 Takes a single snapshot and saves it to the database.
+
+__Snapshot__ can be triggered by a joystick.  Snapshot is triggered when the third joystick button is pressed.
 
 #### Auto Capture
 
 Captures frames as specified by the __Auto Capture__ dialog described above.
 
 __Auto Capture__ can be triggered by pressing the 'A' key or the Space Bar.
+
+__Auto Capture__ can be triggered by a joystick.  Auto Capture starts when the second joystick button is pressed.
 
 #### Capture
 
@@ -199,6 +205,10 @@ It is important to look at the Camera window to ensure that the camera is still 
 
 To you have a manual lense and need to focus the camera, press the __Focus...__ button or click in the camera window.  This brings up a much larger window and allows you to see the camera image in much more detail.
 
+#### Capture progress
+
+Immediately below the camera window shows whether a capture is currently being written to the database in the background.  The bib number and timestamp refer to the last capture that was started (which may not necessarily be the last one to finish).  If nothing is currently being written, this will read "__Waiting for trigger...__".  As the trigger list is only updated after all writes are complete, this provides a real-time indicaiton that CrossMgrVideo is processing captures.
+
 #### Triggers
 
 __Show Triggers for__
@@ -222,6 +232,17 @@ Publishes the photo closest to each Trigger time to a chosen folder.
 __Photo Web Page__
 
 Publishes the photo closest to each Trigger time to a chosen folder, but also creates an html page that can select each photo.  Once the photo is selected, it supports the same drag-and-drop Zoom capability of CrossMgrVideo.  Photos can be saved locally from the web page.
+
+__Autoselect__
+
+Determines the behaviour when a new trigger is captured:
+
+* __Autoselect latest__: Selects the new trigger for analysis after it arrives.
+* __Fast preview__: Displays a single frame from the trigger as quickly as possible, for monitoring captures during a race.  (This is considerably faster than loading all the frames.)
+* __Scroll triggers__: Scrolls the trigger list to make the new trigger visible, but does not affect the current selection.
+* __Autoselect off__: New triggers will be added to the list without scrolling.  The current selection is unaffected.  (Useful for examining existing triggers while a race is in progress.)
+
+In __Autoselect latest__ and __Fast preview__ modes, the current frame will be displayed in the image pane during capture if the trigger arrives close enough to real time for the rider to be in frame.  (RFID reads are likely to be processed too slowly for this.)
 
 ## Web Interface
 

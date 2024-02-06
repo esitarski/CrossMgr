@@ -130,10 +130,15 @@ def CamServer( qIn, qOut, camInfo=None ):
 				# Read the frame.  If anything fails, keep going in the loop so we can reset with another camInfo.
 				if not cap.isOpened():
 					ret, frame = False, None
-					time.sleep( 0.5 )		# Keep going so we can get a camInfo to try again.
+					time.sleep( 2.0 )		# Keep going so we can get a camInfo to try again.
+					keepCapturing = False
 				else:						
 					try:
 						ret, frame = cap.read()
+						if not ret:  # Camera is probably disconnected, clean up and try again.
+							cap.release()
+							CVUtil.resetCache()
+							keepCapturing = False
 					except Exception as e:	# Potential out of memory error?
 						ret, frame = False, None
 					except KeyboardInterrupt:
@@ -271,9 +276,14 @@ def CamServer( qIn, qOut, camInfo=None ):
 				# Send fps message.
 				fpsFrameCount += bool( frame is not None )
 				if (ts - fpsStart).total_seconds() >= 3.0:
-					qOut.put( {'cmd':'fps', 'fps_actual':fpsFrameCount / (ts - fpsStart).total_seconds()} )
+					fps = fpsFrameCount / (ts - fpsStart).total_seconds()
+					qOut.put( {'cmd':'fps', 'fps_actual':fps} )
 					fpsStart = ts
 					fpsFrameCount = 0
+					# Adjust status image freqency to account for framerate, aiming for 6 updates per second
+					freq = int((fps+0.5)/6)
+					if freq > 0:
+						sendUpdates['primary'] = freq
 					
 					# Remove stale intervals from list.
 					if intervals:
