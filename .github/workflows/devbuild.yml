@@ -8,6 +8,10 @@ on:
         - .grenrc.yml
 
 name: DevelopmentBuild
+
+runs:
+    using 'node20'
+
 jobs:
     buildmac:
         name: MacOSX
