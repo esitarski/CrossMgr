@@ -12,9 +12,6 @@ on:
 
 name: CrossMgr_Build
 
-runs:
-    using 'node20'
-
 jobs:
     buildmac:
         name: MacOSX
