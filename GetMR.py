@@ -42,8 +42,8 @@ def getCategoryAttr( category ):
 		('categoryType',		['StartWave', 'Component', 'Custom'][category.catType]),
 	])
 	
-ignoreAttr = { 'lastTimeOrig', 'raceCat', 'interp', 'gapValue', 'raceTimes' }
 attrSub = { 'num': 'bib' }
+ignoreAttr = { 'lastTimeOrig', 'raceCat', 'interp', 'gapValue', 'raceTimes' }
 def getRaceResultsAttr( rr ):
 	attrs = {}
 	for attr, value in rr.__dict__.items():
