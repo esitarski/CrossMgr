@@ -18,12 +18,12 @@ jobs:
             - name: Show Environment
               run: set | grep GIT
             - name: Setup Python environment
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
               with:
                 python-version: 3.10.*
             - name: Checkout code
               #uses: actions/checkout@master
-              uses: actions/checkout@v5
+              uses: actions/checkout@v4
             - name: Setup Environment
               run: |
                 cd $GITHUB_WORKSPACE
@@ -46,11 +46,11 @@ jobs:
         timeout-minutes: 120
         steps:
             - name: Setup Python environment
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
               with:
                 python-version: 3.10.*
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Setup Environment
               shell: powershell
               run: |
@@ -79,15 +79,15 @@ jobs:
     #~ buildlinux:
         #~ name: Linux
         #~ needs: buildmac
-        #~ runs-on: ubuntu-latest
+        #~ runs-on:  ubuntu-latest
         #~ steps:
             #~ - name: Setup Python Environment
-              #~ uses: actions/setup-python@v4
+              #~ uses: actions/setup-python@v5git opu
               #~ with:
                 #~ python-version: 3.10.*
             #~ - name: Checkout code
               ##~ uses: actions/checkout@master
-              #~ uses: actions/checkout@v3
+              #~ uses: actions/checkout@v4
             #~ - name: Linux Lib Install
               #~ run: |
                 #~ cd $GITHUB_WORKSPACE
