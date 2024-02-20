@@ -9,9 +9,6 @@ on:
 
 name: ReleaseBuild
 
-runs:
-    using 'node20'
-
 jobs:
     buildmac:
         name: MacOSX
