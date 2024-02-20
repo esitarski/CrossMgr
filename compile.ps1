@@ -15,7 +15,7 @@
 param (
 	[switch]$help = $false,
 	[string]$environ = "env",
-	[string]$pythonexe = "python3.10.exe",
+	[string]$pythonexe = "python3.exe",
 	
 	[switch]$cmgr = $false,
 	[switch]$cmgri = $false,

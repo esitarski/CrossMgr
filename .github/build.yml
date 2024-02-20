@@ -11,6 +11,7 @@ on:
         - .grenrc.yml
 
 name: CrossMgr_Build
+
 jobs:
     buildmac:
         name: MacOSX
@@ -20,12 +21,12 @@ jobs:
             - name: Display Ref
               uses: hmarr/debug-action
             - name: Setup Python environment
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
               with:
                 python-version: 3.10.*
             - name: Checkout code
               #uses: actions/checkout@master
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Setup Environment
               run: |
                 cd $GITHUB_WORKSPACE
@@ -56,12 +57,12 @@ jobs:
         #~ runs-on: ubuntu-20.04
         #~ steps:
             #~ - name: Setup Python environment
-              #~ uses: actions/setup-python@v4
+              #~ uses: actions/setup-python@v5
               #~ with:
                 #~ python-version: 3.10.*
             #~ - name: Checkout code
               ##~ uses: actions/checkout@master
-              #~ uses: actions/checkout@v3
+              #~ uses: actions/checkout@v4
             #~ - name: Linux Lib Install
               #~ run: |
                 #~ cd $GITHUB_WORKSPACE
@@ -97,12 +98,12 @@ jobs:
         timeout-minutes: 120
         steps:
             - name: Setup Python environment
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
              with:
                 python-version: 3.10.*
             - name: Checkout code
               #uses: actions/checkout@master
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Setup Environment
               shell: powershell
               run: |

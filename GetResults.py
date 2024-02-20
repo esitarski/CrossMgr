@@ -50,6 +50,10 @@ def toInt( n ):
 		return 99999
 	
 class RiderResult:
+	# By default, all the fields in this structure are used as attributes.
+	# Except fields that start with '_', or fields that are in "ignoreAttr", which is used by a number of functions to extract attributes.
+	# Make sure that all local functions start with '_' to avoid them being picked up as attributes.
+	
 	def __init__( self, num, status, lastTime, raceCat, lapTimes, raceTimes, interp ):
 		self.num		= num
 		self.status		= status
@@ -66,7 +70,7 @@ class RiderResult:
 		self.interp		= interp
 		self.lastInterp = False
 		
-	def getExpectedLapChar( self, t ):
+	def _getExpectedLapChar( self, t ):
 		if self.status == Model.Rider.Finisher:
 			try:
 				if self.raceTimes[-2] <= t:
@@ -77,7 +81,7 @@ class RiderResult:
 				pass
 		return ''
 		
-	def getRecordedLapChar( self, t ):
+	def _getRecordedLapChar( self, t ):
 		if self.status == Model.Rider.Finisher:
 			try:
 				if self.raceTimes[-1] <= t:

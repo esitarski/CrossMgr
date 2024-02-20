@@ -657,11 +657,11 @@ class ForecastHistory( wx.Panel ):
 				position = prevRiderPosition.get(e.num, -1)
 				
 			if position == 1:
-				return resultsIndex[e.num].getExpectedLapChar(tRace) + _('Lead')
+				return resultsIndex[e.num]._getExpectedLapChar(tRace) + _('Lead')
 			elif e.t < tMissing:
 				return _('miss')
 			elif position >= 0:
-				return resultsIndex[e.num].getExpectedLapChar(tRace) + Utils.ordinal(position)
+				return resultsIndex[e.num]._getExpectedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
 		
@@ -731,9 +731,9 @@ class ForecastHistory( wx.Panel ):
 
 			position = nextRiderPosition.get(e.num, -1)
 			if position == 1:
-				return resultsIndex[e.num].getRecordedLapChar(tRace) + _('Lead')
+				return resultsIndex[e.num]._getRecordedLapChar(tRace) + _('Lead')
 			elif position >= 0:
-				return resultsIndex[e.num].getRecordedLapChar(tRace) + Utils.ordinal(position)
+				return resultsIndex[e.num]._getRecordedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
 		

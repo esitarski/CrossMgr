@@ -6,10 +6,10 @@ ENVDIR=env
 LINUXDEPLOY=linuxdeploy-plugin-appimage-x86_64.AppImage
 
 if [ "$OSNAME" == "Darwin" ]; then
-	PYTHONVER="python3.10"
+	PYTHONVER="python3"
 fi
 if [ "$OSNAME" == "Linux" ]; then
-	PYTHONVER="python3.10"
+	PYTHONVER="python3"
 fi
 
 getBuildDir() {
