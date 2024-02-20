@@ -1,0 +1,5 @@
+name: 'CrossMgr Metadata Actions'
+author: 'Edward Sitarski'
+description: 'configure for running CrossMgr builds'
+runs:
+    using: 'node20'
