@@ -1709,17 +1709,21 @@ def ChangeProperties( parent ):
 				
 		except (NameError, AttributeError, TypeError):
 			pass
-	
+
+def HasDefaultTemplate():
+	return os.path.isfile( os.path.join( GetTemplatesFolder(), 'default.cmnt' ) )
+
 def ApplyDefaultTemplate( race ):
 	if not race:
-		return
+		return False
 	fname = os.path.join( GetTemplatesFolder(), 'default.cmnt' )
 	template = Template.Template()
 	try:
 		template.read( fname )
 	except Exception:
-		return
+		return False
 	template.toRace( race )
+	return True
 
 if __name__ == '__main__':
 	race = Model.newRace()
