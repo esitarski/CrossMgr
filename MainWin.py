@@ -49,7 +49,7 @@ from History			import History
 from RiderDetail		import RiderDetail
 from Results			import Results
 from Categories			import Categories, PrintCategories
-from Properties			import Properties, PropertiesDialog, ChangeProperties, ApplyDefaultTemplate, BatchPublishPropertiesDialog, doBatchPublish
+from Properties			import Properties, PropertiesDialog, ChangeProperties, HasDefaultTemplate, ApplyDefaultTemplate, BatchPublishPropertiesDialog, doBatchPublish
 from Recommendations	import Recommendations
 from RaceAnimation		import RaceAnimation
 from Search				import SearchDialog
@@ -2735,7 +2735,8 @@ class MainWin( wx.Frame ):
 			race.excelLink = excelLink
 		
 		dlg = PropertiesDialog(self, title=_('Configure Race'), style=wx.DEFAULT_DIALOG_STYLE )
-		ApplyDefaultTemplate( race )
+		if HasDefaultTemplate() and Utils.MessageYesNo(self, _("Apply Default Template?"), _("Apply Default Template?")):
+			ApplyDefaultTemplate( race )
 		race.minutes = 60	# Ensure we start with a reasonable race minutes.
 		dlg.properties.refresh()
 		ret = dlg.ShowModal()
@@ -2920,7 +2921,8 @@ class MainWin( wx.Frame ):
 		Model.newRace()
 		race = Model.race
 		race.lastOpened = now()
-		ApplyDefaultTemplate( race )
+		if HasDefaultTemplate() and Utils.MessageYesNo(self, _("Apply Default Template?"), _("Apply Default Template?")):
+			ApplyDefaultTemplate( race )
 		
 		# Create the link to the RaceDB excel sheet.
 		try:
@@ -3275,7 +3277,6 @@ class MainWin( wx.Frame ):
 		race.raceNum = 1
 		race.organizer = 'Edward Sitarski'
 		race.memo = ''
-		ApplyDefaultTemplate( race )
 		
 		race.simulation = True		# Flag this as a simulation race.
 		#race.setNoDataDNS = True	# Show all entries in the spreadsheet as NP or DNS.
