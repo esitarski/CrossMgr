@@ -1,4 +1,5 @@
 import os
+import re
 import math
 import pickle
 import datetime
@@ -74,9 +75,22 @@ def safe_upper( f ):
 	except:
 		return f
 
+def fix_uci_id( uci_id ):
+	uci_id = str(uci_id or '').strip()
+	if uci_id.endswith('.0'):	# Correct if the uci_id is a floating point number.
+		uci_id = uci_id[-2:]
+	uci_id = re.sub( '[^0-9]', '', uci_id )
+	return uci_id
+	'''
+	# Check for valid UCI id.
+	if len(uci_id) == 11 and sum( int(d) for d in uci_id[:9] ) % 97 == int(uci_id[9:]):
+		return uci_id
+	return None
+	'''
+
 class RaceResult:
 	def __init__( self, firstName, lastName, license, team, categoryName, raceName, raceDate, raceFileName, bib, rank, raceOrganizer,
-					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1, pointsInput=None ):
+					raceURL=None, raceInSeries=None, tFinish=None, tProjected=None, primePoints=0, timeBonus=0, laps=1, pointsInput=None, uci_id=None ):
 		self.firstName = str(firstName or '')
 		self.lastName = str(lastName or '')
 		
@@ -84,6 +98,7 @@ class RaceResult:
 		if isinstance(self.license, float) and int(self.license) == self.license:
 			self.license = int(self.license)
 		self.license = str(self.license)
+		self.uci_id = fix_uci_id( uci_id )
 		
 		self.team = str(team or '')
 		
@@ -168,10 +183,25 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 		if sfa[0] == 'pos':
 			posHeader = set( a.lower() for a in sfa[1] )
 			break
+	
+	# Check if this is a UCI Dataride spreadsheet.	
+	uciDatarideSheets = {'General', 'Reference', 'Country Reference'}
+	isUCIDataride = any( (s.strip() in uciDatarideSheets) for s in excel.sheet_names() )
+	if isUCIDataride:
+		# Get the category name as the directory name.
+		uciCategoryName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
+	else:
+		uciCategoryName = None
+	
 	for sheetName in excel.sheet_names():
 		hasPointsInput, defaultPointsInput = False, None
 		fm = None
 		categoryNameSheet = sheetName.strip()
+		if isUCIDataride:
+			if categoryNameSheet in uciDatarideSheets:
+				continue
+			categoryNameSheet = uciCategoryName
+		
 		for row in excel.iter_list(sheetName):
 			if fm:
 				f = fm.finder( row )
@@ -187,8 +217,9 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					'firstName':	str(f('first_name','')).strip(),
 					'lastName'	:	str(f('last_name','')).strip(),
 					'license':		str(f('license_code','')).strip(),
+					'uci_id':		f('uci_id',''),
 					'team':			str(f('team','')).strip(),
-					'categoryName': f('category_code',None),
+					'categoryName': categoryNameSheet if isUCIDataride else f('category_code',None),
 					'laps':			f('laps',1),
 					'pointsInput':	f('points',defaultPointsInput),
 				}
@@ -340,7 +371,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 				'raceURL':		raceURL,
 				'raceInSeries':	raceInSeries,
 			}
-			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('team', 'Team')]:
+			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('uci_id', 'UCIID'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
 				
 			if not info['firstName'] and not info['lastName']:

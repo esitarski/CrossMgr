@@ -255,6 +255,8 @@ class SeriesModel:
 	ftpPassword = ''
 	urlPath = ''
 	
+	uciIdKey = False			# If true, use the uci_id for id only (not name).
+	
 	@property
 	def scoreByPoints( self ):
 		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)
