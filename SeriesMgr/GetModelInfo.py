@@ -127,19 +127,32 @@ class RaceResult:
 	@property
 	def teamIsValid( self ):
 		return self.team and self.team.lower() not in {'no team', 'no-team', 'independent'}
-		
+	
+	'''
 	def keySort( self ):
-		fields = ['categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName']
+		if SeriesModel.model.uciIdKey:
+			fields = 'categoryName', 'lastName', 'firstName', 'uci_id', 'raceDate', 'raceName'
+		else:
+			fields = 'categoryName', 'lastName', 'firstName', 'license', 'raceDate', 'raceName'
 		return tuple( safe_upper(getattr(self, a)) for a in fields )
 		
 	def keyMatch( self ):
-		fields = ['categoryName', 'lastName', 'firstName', 'license']
+		if SeriesModel.model.uciIdKey:
+			fields = 'categoryName', 'lastName', 'firstName', 'uci_id'
+		else:
+			fields = 'categoryName', 'lastName', 'firstName', 'license'
 		return tuple( safe_upper(getattr(self, a)) for a in fields )
+	'''
 		
 	def key( self ):
-		k = self.full_name.upper()
-		s = Utils.removeDiacritic(k)	# If the full name has characters that have no ascii representation, return it as-is.
-		return (s if len(s) == len(k) else k, Utils.removeDiacritic(self.license))
+		if SeriesModel.model.riderKey == SeriesModel.KeyByUciId:
+			return self.uci_id
+		elif SeriesModel.model.riderKey == SeriesModel.KeyByLicense:
+			return self.license
+		else:
+			k = self.full_name.upper()
+			s = Utils.removeDiacritic(k)		# If the full name has characters that have no ascii representation, return it as-is.
+			return (s if len(s) == len(k) else k, Utils.removeDiacritic(self.license))
 		
 	def keyTeam( self ):
 		k = self.team.upper()

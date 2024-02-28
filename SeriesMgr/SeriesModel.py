@@ -255,7 +255,9 @@ class SeriesModel:
 	ftpPassword = ''
 	urlPath = ''
 	
-	uciIdKey = False			# If true, use the uci_id for id only (not name).
+	# Control how to identify riders: name, uciid or license.
+	KeyByName, KeyByUciId, KeyByLicense = list(range(3))
+	riderKey = KeyByName
 	
 	@property
 	def scoreByPoints( self ):
