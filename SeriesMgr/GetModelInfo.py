@@ -145,9 +145,9 @@ class RaceResult:
 	'''
 		
 	def key( self ):
-		if SeriesModel.model.riderKey == SeriesModel.KeyByUciId:
+		if SeriesModel.model.riderKey == SeriesModel.SeriesModel.KeyByUciId:
 			return self.uci_id
-		elif SeriesModel.model.riderKey == SeriesModel.KeyByLicense:
+		elif SeriesModel.model.riderKey == SeriesModel.SeriesModel.KeyByLicense:
 			return self.license
 		else:
 			k = self.full_name.upper()

@@ -778,7 +778,7 @@ class TeamResults(wx.Panel):
 		self.categoryChoice.SetSelection( iCurSelection )
 		self.GetSizer().Layout()
 
-	def refresh( self ):
+	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
 		HeaderNames = getHeaderNames()
 		scoreByPoints = model.scoreByPoints
@@ -786,8 +786,11 @@ class TeamResults(wx.Panel):
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
-		with wx.BusyCursor() as wait:
-			self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
+		if backgroundUpdate:
+			self.raceResults = []
+		else:
+			with wx.BusyCursor() as wait:
+				self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 		
 		if not self.raceResults:
 			Utils.AdjustGridSize( self.grid, rowsRequired=0 )

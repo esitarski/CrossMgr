@@ -35,12 +35,13 @@ class Options(wx.Panel):
 		self.riderKey.SetSelection( SeriesModel.SeriesModel.KeyByName )
 		bsizer.Add( self.riderKey )
 		bsizer.Add( wx.StaticText(self, label='''
-The CrossMgr or Spreadsheet data must include the fields you are using to match.
+The CrossMgr or Spreadsheet results must include the fields you are using to match.
 If you have missing UCI ID or License fields, the safest option is to match
 using First and Last Name.'''
 		))
 		
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
+		
 		#--------------------------------------------------------------------------
 		
 		self.SetSizer(sizer)

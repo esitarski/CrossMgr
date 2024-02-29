@@ -587,6 +587,10 @@ class SeriesModel:
 	
 	@memoize
 	def _extractAllRaceResultsCore( self ):
+		#import traceback
+		#print( '**************************************************' )
+		#traceback.print_stack()
+		
 		# Extract all race results in parallel.  Arguments are the race info and this series (to get the alias lookups).
 		with Pool() as p:
 			p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
