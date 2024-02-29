@@ -183,6 +183,11 @@ def toInt( n ):
 def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
 	
+	if not os.path.exists( raceInSeries.getFileName() ):
+		ret['success'] = False
+		ret['explanation'] = 'File not found'
+		return ret
+	
 	getReferenceName = seriesModel.getReferenceName
 	getReferenceLicense = seriesModel.getReferenceLicense
 	getReferenceTeam = seriesModel.getReferenceTeam
