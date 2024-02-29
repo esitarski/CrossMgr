@@ -145,7 +145,7 @@ class Counter():
 		Counter.count += 1
 		return Counter.count
 	def __exit__(self, type, value, traceback):
-		Counter.count += 1
+		Counter.count -= 1
 		
 #----------------------------------------------------------------------------------
 
