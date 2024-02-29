@@ -141,11 +141,21 @@ def ShowTipAtStartup():
 
 class Counter():
 	count = 0
+	lock = threading.Lock()
+	
 	def __enter__(self):
-		Counter.count += 1
-		return Counter.count
+		with Counter.lock:
+			Counter.count += 1
+			return Counter.count
+	
 	def __exit__(self, type, value, traceback):
-		Counter.count -= 1
+		with Counter.lock:
+			Counter.count -= 1
+
+	@staticmethod
+	def getCount():
+		with Counter.lock:
+			return Counter.count
 		
 #----------------------------------------------------------------------------------
 
@@ -908,7 +918,7 @@ table.results tr td.fastest{
 		self.refreshCurrentPage()
 
 	def callPageRefresh( self, i ):
-		if Counter.count and self.attrClassName[self.notebook.GetSelection()][0] in self.backgroundUpdatePages:
+		if Counter.getCount() and self.attrClassName[self.notebook.GetSelection()][0] in self.backgroundUpdatePages:
 			# Don't update the page while a background update is running.
 			# The page will be updated when the update finishes.
 			return
