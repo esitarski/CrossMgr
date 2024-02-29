@@ -909,7 +909,8 @@ table.results tr td.fastest{
 
 	def callPageRefresh( self, i ):
 		if Counter.count and self.attrClassName[self.notebook.GetSelection()][0] in self.backgroundUpdatePages:
-			# Don't update the page when a background update is running.
+			# Don't update the page while a background update is running.
+			# The page will be updated when the update finishes.
 			return
 		try:
 			self.pages[i].refresh()
