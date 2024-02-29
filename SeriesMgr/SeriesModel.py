@@ -314,7 +314,7 @@ class SeriesModel:
 	
 	def setRaces( self, raceList ):
 		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
-			return
+			return False
 		
 		self.setChanged()
 		
@@ -338,6 +338,7 @@ class SeriesModel:
 		self.races = newRaces
 		for i, r in enumerate(self.races):
 			r.iSequence = i
+		return True
 		
 	def setReferences( self, references ):
 		dNew = dict( references )
