@@ -788,15 +788,15 @@ class TeamResults(wx.Panel):
 		
 		if backgroundUpdate:
 			self.raceResults = []
+			self.categoryChoice.SetItems( [] )
 		else:
 			with wx.BusyCursor() as wait:
 				self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
+			self.fixCategories()
 		
 		if not self.raceResults:
 			Utils.AdjustGridSize( self.grid, rowsRequired=0 )
 			return			
-		
-		self.fixCategories()
 		
 		categoryName = self.categoryChoice.GetStringSelection()
 		if not categoryName or not (scoreByPoints or scoreByTime):

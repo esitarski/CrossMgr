@@ -877,11 +877,12 @@ class Results(wx.Panel):
 		
 		if backgroundUpdate:
 			self.raceResults = []
+			self.categoryChoice.SetItems( [] )
 		else:
 			with wx.BusyCursor() as wait:
 				self.raceResults = model.extractAllRaceResults()
+			self.fixCategories()
 		
-		self.fixCategories()
 		self.grid.ClearGrid()
 		
 		categoryName = self.categoryChoice.GetStringSelection()
