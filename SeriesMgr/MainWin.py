@@ -952,7 +952,7 @@ table.results tr td.fastest{
 		t = threading.Thread( target=backgroundRefresh, name='refreshResultsBackground' )
 		t.start()
 		
-		pagesToSkip = self.backgroundUpdatePages.union( set(self.attrClassName[self.notebook.GetSelection()][0],) )
+		pagesToSkip = self.backgroundUpdatePages | { self.attrClassName[self.notebook.GetSelection()][0] }
 		for i, p in enumerate(self.pages):
 			if self.attrClassName[i][0] not in pagesToSkip:
 				self.callPageRefresh( i )
