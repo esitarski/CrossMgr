@@ -495,14 +495,16 @@ def GetPotentialDuplicateFullNames( riderNameLicense ):
 	return {full_name for full_name, licenses in nameLicense.items() if len(licenses) > 1}
 			
 def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
-	scoreByTime = SeriesModel.model.scoreByTime
-	scoreByPercent = SeriesModel.model.scoreByPercent
-	scoreByTrueSkill = SeriesModel.model.scoreByTrueSkill
-	bestResultsToConsider = SeriesModel.model.bestResultsToConsider
-	mustHaveCompleted = SeriesModel.model.mustHaveCompleted
-	showLastToFirst = SeriesModel.model.showLastToFirst
-	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
-	scoreByPointsInput = SeriesModel.model.scoreByPointsInput
+	model = SeriesModel.model
+	
+	scoreByTime						= model.scoreByTime
+	scoreByPercent					= model.scoreByPercent
+	scoreByTrueSkill				= model.scoreByTrueSkill
+	bestResultsToConsider			= model.bestResultsToConsider
+	mustHaveCompleted				= model.mustHaveCompleted
+	showLastToFirst					= model.showLastToFirst
+	considerPrimePointsOrTimeBonus	= model.considerPrimePointsOrTimeBonus
+	scoreByPointsInput				= model.scoreByPointsInput
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -510,11 +512,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		return [], [], set()
 		
 	# Create a map for race filenames to grade.
-	raceGrade = { race.getFileName():race.grade for race in SeriesModel.model.races }
-	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
+	raceGrade = { race.getFileName():race.grade for race in model.races }
+	gradesUsed = sorted( set(race.grade for race in model.races) )
 		
 	# Assign a sequence number to the races in the specified order.
-	for i, r in enumerate(SeriesModel.model.races):
+	for i, r in enumerate(model.races):
 		r.iSequence = i
 		
 	# Get all races for this category.
