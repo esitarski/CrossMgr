@@ -14,6 +14,7 @@ import locale
 import traceback
 import xlwt
 import base64
+import threading
 
 FontSize = 20
 
@@ -137,7 +138,27 @@ def ShowTipAtStartup():
 		pass
 
 #----------------------------------------------------------------------------------
+
+class Counter():
+	count = 0
+	lock = threading.Lock()
+	
+	def __enter__(self):
+		with Counter.lock:
+			Counter.count += 1
+			return Counter.count
+	
+	def __exit__(self, type, value, traceback):
+		with Counter.lock:
+			Counter.count -= 1
+
+	@staticmethod
+	def getCount():
+		with Counter.lock:
+			return Counter.count
 		
+#----------------------------------------------------------------------------------
+
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id=wx.ID_ANY, title='', size=(200,200) ):
 		wx.Frame.__init__(self, parent, id, title, size=size)
@@ -275,6 +296,9 @@ class MainWin( wx.Frame ):
 			addPage( getattr(self, a), n )
 			
 		self.notebook.SetSelection( 0 )
+		
+		# Pages that are updated in background.
+		self.backgroundUpdatePages = {'results', 'teamResults', 'categorySequence'}
 		
 		#-----------------------------------------------------------------------
 		self.helpMenu = wx.Menu()
@@ -894,6 +918,10 @@ table.results tr td.fastest{
 		self.refreshCurrentPage()
 
 	def callPageRefresh( self, i ):
+		if Counter.getCount() and self.attrClassName[self.notebook.GetSelection()][0] in self.backgroundUpdatePages:
+			# Don't update the page while a background update is running.
+			# The page will be updated when the update finishes.
+			return
 		try:
 			self.pages[i].refresh()
 		except (AttributeError, IndexError) as e:
@@ -913,11 +941,31 @@ table.results tr td.fastest{
 
 	def refreshAll( self ):
 		self.refresh()
-		iSelect = self.notebook.GetSelection()
+		
+		model = SeriesModel.model
+		
+		self.results.refresh( backgroundUpdate=True )
+		self.teamResults.refresh( backgroundUpdate=True )
+		self.categorySequence.refresh( backgroundUpdate=True )
+		
+		# Use a thread to update Results and TeamResults.
+		# This eliminates user timeouts.
+		def backgroundRefresh():
+			with Counter():
+				raceResults = model.extractAllRaceResults()
+				wx.CallAfter( self.results.refresh )
+				wx.CallAfter( self.teamResults.refresh )
+				wx.CallAfter( self.categorySequence.refresh )
+				wx.CallAfter( wx.EndBusyCursor )	# End the busy cursor at the end of the thread.
+		
+		wx.BeginBusyCursor()	# Start a busy cursor befpre we start the thread.
+		t = threading.Thread( target=backgroundRefresh, name='refreshResultsBackground' )
+		t.start()
+		
+		pagesToSkip = self.backgroundUpdatePages | { self.attrClassName[self.notebook.GetSelection()][0] }
 		for i, p in enumerate(self.pages):
-			if i != iSelect:
+			if self.attrClassName[i][0] not in pagesToSkip:
 				self.callPageRefresh( i )
-		self.setTitle()
 
 	def readResetAll( self ):
 		for p in self.pages:

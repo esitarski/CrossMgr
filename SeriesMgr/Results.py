@@ -866,20 +866,23 @@ class Results(wx.Panel):
 		self.categoryChoice.SetSelection( iCurSelection )
 		self.GetSizer().Layout()
 
-	def refresh( self ):
+	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
 		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
 		
-		model = SeriesModel.model
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
-		with wx.BusyCursor() as wait:
-			self.raceResults = model.extractAllRaceResults()
+		if backgroundUpdate:
+			self.raceResults = []
+			self.categoryChoice.SetItems( [] )
+		else:
+			with wx.BusyCursor() as wait:
+				self.raceResults = model.extractAllRaceResults()
+			self.fixCategories()
 		
-		self.fixCategories()
 		self.grid.ClearGrid()
 		
 		categoryName = self.categoryChoice.GetStringSelection()

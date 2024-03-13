@@ -176,9 +176,9 @@ class Announcer( wx.Panel ):
 		race = Model.race
 		if race and race.isRunning():
 			tRace = race.curRaceTime()
-			self.expected, self.recorded, _ = getExpectedRecorded()
+			self.expected, self.recorded, resultsIndex = getExpectedRecorded()
 		else:
-			self.expected = self.recorded = []
+			self.expected, self.recorded, resultsIndex = [], [], {}
 		self.resetTimer()
 		
 		tRace = race.lastRaceTime()

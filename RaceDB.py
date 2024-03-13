@@ -146,7 +146,8 @@ def fixUrl( url ):
 		if platform.system() == 'Windows':
 			url = url.replace('www.localhost', 'localhost')
 	elif re.search( '([0-9]{1,3}\.){3}[0-9]{1,3}', url ):	# If a pure ip address, change to http and remove subdomain.
-		url = url.replace( 'https://www.', 'http://' )
+		url = url.replace( 'https://www.', 'http://' ).replace( 'http://www.', 'http://' )
+	
 	globalRaceDBUrl = url
 	return url
 

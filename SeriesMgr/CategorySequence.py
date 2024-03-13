@@ -80,10 +80,15 @@ class CategorySequence(wx.Panel):
 		self.Layout()
 		self.Refresh()
 	
-	def refresh( self ):
+	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
-		model.extractAllRaceResults()	# Also harmonizes the categorySequence
-		categoryList = model.getCategoriesSorted()
+		
+		if backgroundUpdate:
+			categoryList = []
+		else:
+			with wx.BusyCursor() as wait:
+				model.extractAllRaceResults()	# Also harmonizes the categorySequence
+				categoryList = model.getCategoriesSorted()
 		
 		Utils.AdjustGridSize( self.grid, len(categoryList) )
 		for row, c in enumerate(categoryList):
