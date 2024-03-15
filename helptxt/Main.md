@@ -42,6 +42,8 @@ Get started with CrossMgr now!
 
 ## [Para-Cycling][]
 
+## [WebIntegration][]
+
 ## [FAQ][]
 
 
