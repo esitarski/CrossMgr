@@ -37,7 +37,7 @@ The design prevents/minimizes data loss.  It is likely that many CrossMgr users 
 Not so with the web interface.  CrossMgr acts as a web server, and accepts http POST messages from an external client.
 It is up to your client implementation to buffer reads and send them again after the network connection is restored.
 
-__No Automatic Update Batching___
+__No Automatic Update Batching__
 
 CrossMgr automatically batches update messages together to improve responsiveness (if necessary).
 One-at-a-time updates from an RFID reader can freeze the CrossMgr user interface.

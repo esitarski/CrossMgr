@@ -42,7 +42,7 @@ Get started with CrossMgr now!
 
 ## [Para-Cycling][]
 
-## [WebInegration][]
+## [WebIntegration][]
 
 ## [FAQ][]
 
