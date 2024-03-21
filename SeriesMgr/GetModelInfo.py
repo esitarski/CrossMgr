@@ -240,9 +240,16 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					'categoryName': categoryNameSheet if isUCIDataride else f('category_code',None),
 					'laps':			f('laps',1),
 					'pointsInput':	f('points',defaultPointsInput),
+					'irl':			f('irl',None),
 				}
 				
 				info['rank'] = str(info['rank']).strip()
+				
+				# Handle the status in the irl column.
+				if not info['rank'] and info['irl'] in {'DQ', 'DSQ', 'DNS', 'DNF'}:
+					info['rank'] = info['irl']
+				info.pop('irl', None)
+				
 				if not info['rank']:	# If missing rank, assume end of input.
 					break
 				
@@ -265,9 +272,11 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				except ValueError:
 					pass
 				
+				# Handle DNF status by assigning special rank.
 				if info['rank'] == 'DNF':
 					info['rank'] = SeriesModel.rankDNF
 				
+				# For all other status, ignore the result.
 				if not isinstance(info['rank'], int):
 					continue
 
