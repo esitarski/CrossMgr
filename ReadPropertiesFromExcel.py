@@ -6,7 +6,7 @@ import scramble
 
 sheetName = '--CrossMgr-Properties'
 
-def ReadPropertiesFromExcel( reader ):
+def ReadPropertiesFromExcel( reader, raceHasStartTime=False ):
 	race = Model.race
 	if not race or sheetName not in reader.sheet_names():
 		return False
@@ -44,6 +44,9 @@ def ReadPropertiesFromExcel( reader ):
 		('Email',			'email', 			's'),
 		('Google Maps API Key','googleMapsApiKey','s'),
 	)
+	# List of fields not to update if the race is underway.
+	# These are left under CrossMgr control.
+	ignoreFields = {'ftpUploadDuringRace', '__rfidOption__'} if raceHasStartTime else set()
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
 	FieldType = { a: t for h, a, t in HeadersFields }
@@ -85,15 +88,16 @@ def ReadPropertiesFromExcel( reader ):
 				if not reStartTime.match(v or ''):
 					v = None
 			elif a == '__rfidOption__':
-				if v == 0:		# Manual start.
-					race.resetStartClockOnFirstTag = False
-					race.skipFirstTagRead = False
-				elif v == 1:	# Automatic start.
-					race.resetStartClockOnFirstTag = True
-					race.skipFirstTagRead = False
-				elif v == 2:	# Manual start with first read skip.
-					race.resetStartClockOnFirstTag = False
-					race.skipFirstTagRead = True
+				if a not in ignoreFields:
+					if v == 0:		# Manual start.
+						race.resetStartClockOnFirstTag = False
+						race.skipFirstTagRead = False
+					elif v == 1:	# Automatic start.
+						race.resetStartClockOnFirstTag = True
+						race.skipFirstTagRead = False
+					elif v == 2:	# Manual start with first read skip.
+						race.resetStartClockOnFirstTag = False
+						race.skipFirstTagRead = True
 				v = None
 			elif a == 'ftpPassword':
 				try:
@@ -102,7 +106,7 @@ def ReadPropertiesFromExcel( reader ):
 					Utils.logException( e, sys.exc_info() )
 					continue
 			
-			if v != '' and v is not None:
+			if v != '' and v is not None and a not in ignoreFields:
 				setattr( race, a, v )
 		
 		return True

@@ -3,7 +3,7 @@ import Model
 
 sheetName = '--CrossMgr-Categories'
 
-def ReadCategoriesFromExcel( reader ):
+def ReadCategoriesFromExcel( reader, raceHasStartTime=False ):
 	race = Model.race
 	if not race or sheetName not in reader.sheet_names():
 		return False
@@ -21,6 +21,9 @@ def ReadCategoriesFromExcel( reader ):
 		('Upload',			'uploadFlag'),
 		('Series',			'seriesFlag'),
 	)
+	# List of fields not to update if the race is underway.
+	# These are left under CrossMgr control.
+	ignoreFields = ['startOffset', 'numLaps', 'raceMinutes', 'distance'] if raceHasStartTime else []
 
 	HeadersToFields = dict( (k, v) for k, v in HeadersFields )
 	HeaderSet = set( k for k, v in HeadersFields )
@@ -57,6 +60,9 @@ def ReadCategoriesFromExcel( reader ):
 			if catField is not None:
 				catRow[catField] = row[c]
 		
+		for f in ignoreFields:
+			cateRow.pop( f, None )
+		
 		categories.append( catRow )
 	
 	if categories:
@@ -64,7 +70,11 @@ def ReadCategoriesFromExcel( reader ):
 			race.setCategories( race.mergeExistingCategoryAttributes(categories) )
 			race.adjustAllCategoryWaveNumbers()
 			if raceMinutesMax > 0:
-				race.minutes = raceMinutesMax
+				if raceHasStartTime:
+					if raceMinutesMax > race.minutes:
+						race.minutes = raceMinutesMax
+				else:
+					race.minutes = raceMinutesMax
 			return True
 		except Exception as e:
 			Utils.writeLog( 'ReadCategoriesFromExcel: error: {}'.format(e) )

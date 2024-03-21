@@ -928,10 +928,10 @@ class ExcelLink:
 		except AttributeError:
 			pass
 		
-		# Do not read properties or categories after the race has started to avoid overwriting local changes.
+		# Do not read certain properties or categories fields after the race has started to avoid overwriting local changes.
 		if Model.race and Model.race.startTime:
-			self.hasPropertiesSheet = False
-			self.hasCategoriesSheet = False
+			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader, bool(Model.race.startTime) )
+			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader, bool(Model.race.startTime) )
 			UnmatchedTagsUpdate()
 		else:
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
