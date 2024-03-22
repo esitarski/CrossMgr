@@ -232,7 +232,7 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					'raceInSeries': raceInSeries,					
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
-					'tFinish':		f('time',0.0) || f('result',0.0),
+					'tFinish':		f('time',0.0) or f('result',0.0),
 					'firstName':	str(f('first_name','')).strip(),
 					'lastName'	:	str(f('last_name','')).strip(),
 					'license':		str(f('license_code','')).strip(),
