@@ -449,10 +449,14 @@ class SeriesModel:
 		return alias if alias is not None else (lastName, firstName)
 	
 	def getReferenceLicense( self, license ):
+		if license is None:
+			return license
 		key = Utils.removeDiacritic(license).upper()
 		return self.aliasLicenseLookup.get( key, key )
 	
 	def getReferenceTeam( self, team ):
+		if team is None:
+			return team
 		return self.aliasTeamLookup.get( nameToAliasKey(team), team )
 	
 	def fixCategories( self ):
