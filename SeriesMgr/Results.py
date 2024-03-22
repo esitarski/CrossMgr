@@ -30,8 +30,12 @@ HeaderNamesTemplate = ['Pos', 'Name', 'License', 'UCI ID', 'Team']
 def getHeaderNames():
 	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points', 'Gap']
 
+def isUCIID( uci_id ):
+	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
+	return len(uci_id == 11) and sum( int(c) for c in uci_id[:9] ) % 97 == int(uci_id[9:] )
+
 def formatUCIID( uci_id ):
-	uci_id = uci_id or ''
+	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
 	return ' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3 ) )
 
 #----------------------------------------------------------------------------------
@@ -77,7 +81,7 @@ def getHtmlFileName():
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
 
-def fixHeaderNames( HeaderNames, results ):
+def fixHeaderNames( results ):
 	hasTeam, hasLicense, hasUCIID = True, True, True
 	toRemove = set()
 	if not any( team for name, license, uci_id, team, points, gap, racePoints in results ):
@@ -89,7 +93,12 @@ def fixHeaderNames( HeaderNames, results ):
 	if not any( uci_id for name, license, uci_id, team, points, gap, racePoints in results ):
 		toRemove.add( 'UCI ID' )
 		hasUCIID = False
-	return [h for h in HeaderNames if h not in toRemove], hasTeam, hasLicense, hasUCIID
+	return [h for h in getHeaderNames() if h not in toRemove], hasTeam, hasLicense, hasUCIID
+
+def filterValidResults( results ):
+	# name, license, uci_id, team, points
+	#   0      1       2       3      4
+	return [rr for rr in results if toFloat(rr[4]) > 0.0]
 
 def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
@@ -106,7 +115,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
-	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
 	if not seriesFileName:
@@ -307,6 +315,10 @@ select {
 
 hr { clear: both; }
 
+.nowrap {
+	white-space: nowrap;
+}
+
 @media print {
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
@@ -463,10 +475,10 @@ function sortTableId( iTable, iCol ) {
 					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if toFloat(rr[4]) > 0.0]
 				
-				headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( HeaderNames, results )
-				headerNames.extend( '{}'.format(r[1]) for r in races )
+				results = filterValidResults( results )
+				headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
+				# Do not add the race names (these are added diretly in the table).
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -490,9 +502,9 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', {
 											'class':'leftBorder centerAlign noprint',
 											'colspan': 2,
-											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
+											'onclick': 'sortTableId({}, {})'.format(iTable, len(headerNames) + iRace),
 										} ):
-										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
+										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(headerNames) + iRace)) ):
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
@@ -522,7 +534,7 @@ function sortTableId( iTable, iCol ) {
 											else:
 												write( '{}'.format(license or '') )
 									if hasUCIID:
-										with tag(html, 'td'):
+										with tag(html, 'td', {'class':'nowrap'}):
 											write( '{}'.format( formatUCIID(uci_id)) )
 									if hasTeam:
 										with tag(html, 'td'):
@@ -767,7 +779,7 @@ class Results(wx.Panel):
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
 		self.sortCol = None
 
-		self.setColNames(getHeaderNames())
+		self.setColNames( getHeaderNames() )
 
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
@@ -895,7 +907,6 @@ class Results(wx.Panel):
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
 		scoreByTrueSkill = model.scoreByTrueSkill
-		HeaderNames = getHeaderNames()
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
@@ -923,8 +934,8 @@ class Results(wx.Panel):
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
 		
-		results = [rr for rr in results if toFloat(rr[4]) > 0.0]
-		headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( HeaderNames, results )
+		results = filterValidResults( results )
+		headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
 		headerNames.extend( '{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races )
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
@@ -1038,9 +1049,9 @@ class Results(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if toFloat(rr[4]) > 0.0]
 			
-			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( HeaderNames, results )
+			results = filterValidResults( results )
+			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
 			headerNames.extend( '{}'.format(r[1]) for r in races )
 			
 			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
