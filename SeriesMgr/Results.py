@@ -478,7 +478,7 @@ function sortTableId( iTable, iCol ) {
 				
 				results = filterValidResults( results )
 				headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
-				# Do not add the race names (these are added diretly in the table).
+				# Do not add the race names (these are added directly below in the <thead> section).
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
