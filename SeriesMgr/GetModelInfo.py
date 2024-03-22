@@ -202,12 +202,13 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 			posHeader = set( a.lower() for a in sfa[1] )
 			break
 	
-	# Check if this is a UCI Dataride spreadsheet.	
+	# Check if this is a UCI Dataride spreadsheet
+	folderName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
 	uciDatarideSheets = {'General', 'Reference', 'Country Reference'}
 	isUCIDataride = any( (s.strip() in uciDatarideSheets) for s in excel.sheet_names() )
 	if isUCIDataride:
 		# Get the category name as the directory name.
-		uciCategoryName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
+		uciCategoryName = folderName
 	else:
 		uciCategoryName = None
 	
@@ -231,40 +232,45 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					'raceInSeries': raceInSeries,					
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
-					'tFinish':		f('time',0.0),
+					'tFinish':		f('time',0.0) || f('result',0.0),
 					'firstName':	str(f('first_name','')).strip(),
 					'lastName'	:	str(f('last_name','')).strip(),
 					'license':		str(f('license_code','')).strip(),
 					'uci_id':		f('uci_id',''),
 					'team':			str(f('team','')).strip(),
-					'categoryName': categoryNameSheet if isUCIDataride else f('category_code',None),
+					'categoryName': f('category_code',None),
 					'laps':			f('laps',1),
 					'pointsInput':	f('points',defaultPointsInput),
-					'irl':			f('irl',None),
+					'irm':			f('irm',None),
 				}
 				
 				info['rank'] = str(info['rank']).strip()
 				
-				# Handle the status in the irl column.
-				if not info['rank'] and info['irl'] in {'DQ', 'DSQ', 'DNS', 'DNF'}:
-					info['rank'] = info['irl']
-				info.pop('irl', None)
+				# Handle the status in the irm column.
+				if not info['rank'] and info['irm'] in {'DQ', 'DSQ', 'DNS', 'DNF'}:
+					info['rank'] = info['irm']
+				info.pop('irm', None)
 				
 				if not info['rank']:	# If missing rank, assume end of input.
 					break
 				
 				isUSAC = False
 				if info['categoryName'] is None:
-					# Hack for USAC cycling input spreadsheet.
-					cn = str(f('category_name','')).strip()
-					if cn and categoryNameSheet.startswith('Sheet'):
-						isUSAC = True
-						g = str(f('gender', '')).strip()
-						if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
-							cn += ' ({})'.format( 'Women' if g.upper() in 'FW' else 'Men' )
-						info['categoryName'] = cn
+					if isUCIDataride:
+						info['categoryName'] = uciCategoryName
+					elif sheetName == 'Results' and 'irm' in fm:
+						info['categoryName'] = folderName			# Case of Dataride Results-only sheet.
 					else:
-						info['categoryName'] = categoryNameSheet
+						# Hack for USAC cycling input spreadsheet.
+						cn = str(f('category_name','')).strip()
+						if cn and categoryNameSheet.startswith('Sheet'):
+							isUSAC = True
+							g = str(f('gender', '')).strip()
+							if g and cn.startswith('CAT') and not (cn.endswith(' F') or cn.endswith(' M')):
+								cn += ' ({})'.format( 'Women' if g.upper() in 'FW' else 'Men' )
+							info['categoryName'] = cn
+						else:
+							info['categoryName'] = categoryNameSheet
 				info['categoryName'] = str(info['categoryName']).strip()
 				
 				try:
