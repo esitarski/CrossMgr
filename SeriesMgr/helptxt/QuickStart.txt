@@ -16,39 +16,44 @@ SeriesMgr reads CrossMgr race files directly.  It also reads Excel spreadsheets.
 
 ## Rider Identification
 
-SeriesMgr can match riders by First, Last name, license code or UCI ID.
+Rider Identification is critical to how SeriesMgr works.
+It has to accumulate results from multiple events for the same rider, and it needs a way to unqiuely identify riders across events.
 
-### Matching by First and Last name
+SeriesMgr can match riders by First/Last name, License Code or UCI ID.
+
+### Match by First and Last name
 
 On the __Properties__ page, set __Input Options__ to "Use First and Last Names to identify riders".
 
-SeriesMgr uses __First Name__ and __Last Name__.
+These fields __must__ be headers on the first row of the CrossMgr or Spreadsheet input.
 
-These fields __must__ be headers on the first row of the CrossMgr or Spreadsheet input.  Upper/lower case does not matter.
+The __First Name__, __Last Name__ (ignoring case/accents) all must match *exactly* for a result to be considered from the same rider.
+For example, "James Smith", "Jim Smith", "Jimmy Smith" and "J. Smith" will be treated as different riders as SeriesMgr can only match by the text.
 
-To be considered a match, the __First Name__, __Last Name__ (ignoring case) all must match *exactly* for a result to be considered from the same rider.  For example, "James Smith", "Jim Smith", "Jimmy Smith" and "J. Smith" will all be treated as different riders.
+SeriesMgr also supports __aliases__ for names, teams and licenses.  Aliases allow you to map common misspellings/alternate spellings to a standard name.
 
-If you don't have a __License__ and want to use name only, you must still have a __License__ column in the input, but the values can be blank.
+The fundamental limitation of First/Last Name match is that it doesn't work when two or more riders have the same name.
 
-However, be aware that without a __License__ field you might get two people with the same name (eg. two Jim Smiths).  Because SeriesMgr cannot tell them apart, it will combine their results!
+When this happens, you have two options:
 
-Of course, you can still differentiate the names (for example, change one "Jim Smith" to "James Smith").  You must do this in the race input as there is no way to fix this up after the fact.
+1. Differentiate the two riders by adding 1, 2, etc. to the last name, or by adding a unique middle initial to first name.  You will have to do this in every input file.
+1. Use a unique License Code, or UCI ID for identification (UCI IDs are guaranteed to be unique).
 
-SeriesMgr also supports __aliaes__ for names, teams and licenses.  Aliases allow you to map common misspellings/alternate spellings to a standard name.
+### Match by License Code
 
-### Matching by License Code
+On the __Properties__ page, set __Input Options__ to __Use License to identify riders__.
+There must be a __License__ field in all inputs, and all riders must have a unique license code for this to work.
 
-On the __Properties__ page, set __Input Options__ to "Use License to identify riders".
-There must be a "License" header.
+### Match by UCI ID
 
-### Matching by UCI ID
-
-On the __Properties__ page, set __Input Options__ to "Use UCI ID to identify riders".
-There must be a __UCI ID__ column.  
+On the __Properties__ page, set __Input Options__ to __Use UCI ID to identify riders__.
+There must be a __UCI ID__ field in all inputs, and all riders must have a UCI ID for this to work.
 
 ## Category Identification
 
-For CrossMgr races, the rider's category comes from the CrossMgr Categories screen based on the bib number ranges.  To control which Categories are considered in SeriesMgr, set the flag in the CrossMgr Categories screen.  For example, if you have a Beginner category you don't want to consider in a Series (or a Custom category, etc), make sure to uncheck the Series flag.
+For CrossMgr races, the rider's category comes from the CrossMgr Categories screen based on the bib number ranges.
+To control which Categories are considered in SeriesMgr, set the flag in the CrossMgr Categories screen.
+For example, if you have a Beginner category you don't want to consider in a Series (or a Custom category, etc), make sure to uncheck the Series flag.
 
 For spreadsheet races, SeriesMgr uses a __Race Category__ column or, if missing, the Excel Sheet name.  If using the Sheet name, all results in that sheet will be taken to be in that Category.
 
@@ -89,13 +94,14 @@ For example, you could assign 10,8,6,5,4,3,2,1 as the points assigned for the te
 
 ## CrossMgr Races
 
-These require the CrossMgr race file (.cmn) __and__ the accompanying Excel sheet containing the rider data.  Both files should be in the same folder, but only add the CrossMgr race file to SeriesMgr.
+SeriesMgr accepts CrossMgr races file (.cmn) __and__ the accompanying Excel sheet containing the rider data.
+Both files must be in the same folder.  Only add the CrossMgr race file (*.cmn) to SeriesMgr.
 
 It is a good practice to open each CrossMgr race beforehand to ensure that its Excel file is accessible and the results are shown properly.
 
 ## Excel Races
 
-SeriesMgr supports race results in Excel (either .xls or .xlsx).  SeriesMgr will also read Excel sheets in USAC upload format as well as UCI Dataride format.
+SeriesMgr supports race results in Excel (.xlsx).  SeriesMgr will also read Excel sheets in USAC upload format as well as UCI Dataride format.
 
 1. Starting form the top of the sheet, SeriesMgr looks for a cell in the first column that is one of 'Pos','Pos.','Rank', 'Rider Place' or 'Place'.  This is the __Header Row__.  Rows about the __Header Row__ are ignored.
 1. The __Header Row__ can contain other header values as described in the table below.  Unrecognized headers are ignored.  Upper/lower case does not matter.
@@ -113,7 +119,11 @@ SeriesMgr supports race results in Excel (either .xls or .xlsx).  SeriesMgr will
 | 'UCI ID','UCIID','UCI_ID'| Optional | Rider's UCI ID
 | 'Race Category','RaceCategory','Race_Category' | Optional | Rider Category.  If not present, the Category will be taken from the Excel Sheet name (1).  If a UCI Dataride file, the Category will be name of the folder the file is in.
 | 'Team','Team Name','TeamName','Rider Team','Club','Club Name','ClubName','Rider Club','Rider Club/Team' | Optional | Rider's team name.
-| 'Time','Tm.','Rider Time' | Finish Time
+| 'Time','Tm.','Rider Time' | Optional | Finish Time
+| 'Result' | Optional | UCI Dataride Result.  Assumed to be the rider's finish time.
+| 'IRM' | Optional | UCI Dataride status.  Blank (finisher), DSQ, DNF, DNS or LAP
+
+__Time__ or __Result__ must be present if the series is computed by Time or Percent Time.
 
 # Scoring Criteria Screen
 
@@ -138,7 +148,8 @@ __Note 3:__ TrueSkill is a technique to find the "best" competitor in a series. 
 Or, say A has won 9 of a 12-race series and B wins the last 3.  TrueSkill will rank B ahead of A because she consistently beat A.
 This contrasts with a series scored by Points, where A's wins earn her a greater number of points than B.
 
-Or, if a rider consistently finishes in the same group, his score will not increase as he has not improved relative to other riders.  This contrasts with a series scored by Points where the rider will earn points for participating iregardless of unchanging fitness or skills.
+Or, if a rider consistently finishes in the same group, his score will not increase as he has not improved relative to other riders.
+This contrasts with a series scored by Points where the rider will earn points for participating iregardless of unchanging fitness or skills.
 
 For full details, see [here](https://www.microsoft.com/en-us/research/project/trueskill-ranking-system/).
 
@@ -155,12 +166,16 @@ If you wish to set a Minimum number of events before a Rider's should be include
 
 ## Tie Breaking Rules
 
-The options available to break ties are fairly straightforward.
+The options available to break ties are fairly self-explanitory.
+
+Note: when scoring by top N __Best__ results, and SeriesMgr must use the last result to break a tie, it will use the rider's last result even if
+the last result is not one of the top N __Best__ results.  It's goal is to use the most recent performance to break the tie.
 
 An exception is Grades.  Grades are specified by Race in the __Races__ screen.
 __Grades__ can have values A-Z.  Results for a higher grade race take precedence over results for a lower-grade race in tie breaking.
 
-For example, say riders A and B are tied in every way, but finished A=1, B=2 in the Regional Championship.  If you set the Regional Championship race to Grade A and all other races to Grade B, that race will "take priority" in the number of 1st place finishes to break the tie.
+For example, say riders A and B are tied in every way, but finished A=1, B=2 in the Regional Championship.
+If you set the Regional Championship race to Grade A and all other races to Grade B, that race will "take priority" in the number of 1st place finishes to break the tie.
 
 __Note:__ __Grades__ only apply when breaking ties for series scored by Points.
 
@@ -177,7 +192,8 @@ __Participation__ is the number of points earned for finishing a race (non-DNF).
 
 # Category Options Screen
 
-This screen allows you to change the sequence of the Categories in the output.  You can also control which categories are published, as well as the top N riders considered for the team results, or whether the Nth team member's result is to be used.
+This screen allows you to change the sequence of the Categories in the output.
+You can also control which categories are published, as well as the top N riders considered for the team results, or whether the Nth team member's result is to be used.
 
 # Upgrades Screen
 
@@ -213,6 +229,7 @@ The __Post Publish Cmd__ is a command that is run after the publish.  This allow
 
 Similar to individual results, but for teams.
 
-SeriesMgr treats blank team names, or teams with the value "Independent"/"Ind."/"Ind" (case independent) differently.  Specifically, it treats these entries all as "Independent" and will not accumulate points for them.
+SeriesMgr treats blank team names, or teams with the value "Independent"/"Ind."/"Ind" (case independent) differently.
+Specifically, it treats these entries all as "Independent" and will not accumulate team points for them.
 
 For example, all independent riders (or riders without a team) it will not show up under team "Independent".

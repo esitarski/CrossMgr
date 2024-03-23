@@ -26,9 +26,17 @@ import platform
 
 reNoDigits = re.compile( '[^0-9]' )
 
-HeaderNamesTemplate = ['Pos', 'Name', 'License', 'Team']
+HeaderNamesTemplate = ['Pos', 'Name', 'License', 'UCI ID', 'Team']
 def getHeaderNames():
 	return HeaderNamesTemplate + ['Total Time' if SeriesModel.model.scoreByTime else 'Points', 'Gap']
+
+def isUCIID( uci_id ):
+	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
+	return len(uci_id == 11) and sum( int(c) for c in uci_id[:9] ) % 97 == int(uci_id[9:] )
+
+def formatUCIID( uci_id ):
+	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
+	return ' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3 ) )
 
 #----------------------------------------------------------------------------------
 
@@ -72,7 +80,26 @@ def getHtmlFileName():
 	fileName		= os.path.basename( os.path.splitext(modelFileName)[0] + '.html' )
 	defaultPath = os.path.dirname( modelFileName )
 	return os.path.join( defaultPath, fileName )
-	
+
+def fixHeaderNames( results ):
+	hasTeam, hasLicense, hasUCIID = True, True, True
+	toRemove = set()
+	if not any( team for name, license, uci_id, team, points, gap, racePoints in results ):
+		toRemove.add( 'Team' )
+		hasTeam = False
+	if not any( license for name, license, uci_id, team, points, gap, racePoints in results ):
+		toRemove.add( 'License' )
+		hasLicense = False
+	if not any( uci_id for name, license, uci_id, team, points, gap, racePoints in results ):
+		toRemove.add( 'UCI ID' )
+		hasUCIID = False
+	return [h for h in getHeaderNames() if h not in toRemove], hasTeam, hasLicense, hasUCIID
+
+def filterValidResults( results ):
+	# name, license, uci_id, team, points
+	#   0      1       2       3      4
+	return [rr for rr in results if toFloat(rr[4]) > 0.0]
+
 def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByTime = model.scoreByTime
@@ -88,7 +115,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
-	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
 	if not seriesFileName:
@@ -289,6 +315,10 @@ select {
 
 hr { clear: both; }
 
+.nowrap {
+	white-space: nowrap;
+}
+
 @media print {
 	.noprint { display: none; }
 	.title { page-break-after: avoid; }
@@ -445,9 +475,10 @@ function sortTableId( iTable, iCol ) {
 					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
-				results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 				
-				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
+				results = filterValidResults( results )
+				headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
+				# Do not add the race names (these are added directly below in the <thead> section).
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -458,7 +489,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
-								for iHeader, col in enumerate(HeaderNames):
+								for iHeader, col in enumerate(headerNames):
 									colAttr = { 'onclick': 'sortTableId({}, {})'.format(iTable, iHeader) }
 									if col in ('License', 'Gap'):
 										colAttr['class'] = 'noprint'
@@ -471,9 +502,9 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', {
 											'class':'leftBorder centerAlign noprint',
 											'colspan': 2,
-											'onclick': 'sortTableId({}, {})'.format(iTable, len(HeaderNames) + iRace),
+											'onclick': 'sortTableId({}, {})'.format(iTable, len(headerNames) + iRace),
 										} ):
-										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(HeaderNames) + iRace)) ):
+										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(headerNames) + iRace)) ):
 											pass
 										if r[2]:
 											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
@@ -489,20 +520,25 @@ function sortTableId( iTable, iCol ) {
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( 'Top {}'.format(len(r[3].pointStructure)) )
 						with tag(html, 'tbody'):
-							for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
+							for pos, (name, license, uci_id, team, points, gap, racePoints) in enumerate(results):
 								with tag(html, 'tr', {'class':'odd'} if pos % 2 == 1 else {} ):
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(pos+1) )
 									with tag(html, 'td'):
 										write( '{}'.format(name or '') )
-									with tag(html, 'td', {'class':'noprint'}):
-										if licenseLinkTemplate and license:
-											with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+									if hasLicense:
+										with tag(html, 'td', {'class':'noprint'}):
+											if licenseLinkTemplate and license:
+												with tag(html, 'a', {'href':'{}{}'.format(licenseLinkTemplate, license), 'target':'_blank'}):
+													write( '{}'.format(license or '') )
+											else:
 												write( '{}'.format(license or '') )
-										else:
-											write( '{}'.format(license or '') )
-									with tag(html, 'td'):
-										write( '{}'.format(team or '') )
+									if hasUCIID:
+										with tag(html, 'td', {'class':'nowrap'}):
+											write( '{}'.format( formatUCIID(uci_id)) )
+									if hasTeam:
+										with tag(html, 'td'):
+											write( '{}'.format(team or '') )
 									with tag(html, 'td', {'class':'rightAlign'}):
 										write( '{}'.format(points or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
@@ -743,7 +779,7 @@ class Results(wx.Panel):
 		self.grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doCellClick )
 		self.sortCol = None
 
-		self.setColNames(getHeaderNames())
+		self.setColNames( getHeaderNames() )
 
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		
@@ -871,7 +907,6 @@ class Results(wx.Panel):
 		scoreByTime = model.scoreByTime
 		scoreByPercent = model.scoreByPercent
 		scoreByTrueSkill = model.scoreByTrueSkill
-		HeaderNames = getHeaderNames()
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
@@ -899,23 +934,29 @@ class Results(wx.Panel):
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
 		
-		results = [rr for rr in results if toFloat(rr[3]) > 0.0]
-		
-		headerNames = HeaderNames + ['{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races]
+		results = filterValidResults( results )
+		headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
+		headerNames.extend( '{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races )
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
 		self.setColNames( headerNames )
 		
-		for row, (name, license, team, points, gap, racePoints) in enumerate(results):
-			self.grid.SetCellValue( row, 0, '{}'.format(row+1) )
-			self.grid.SetCellValue( row, 1, '{}'.format(name or '') )
-			self.grid.SetCellBackgroundColour( row, 1, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			self.grid.SetCellValue( row, 2, '{}'.format(license or '') )
-			self.grid.SetCellValue( row, 3, '{}'.format(team or '') )
-			self.grid.SetCellValue( row, 4, '{}'.format(points) )
-			self.grid.SetCellValue( row, 5, '{}'.format(gap) )
+		for row, (name, license, uci_id, team, points, gap, racePoints) in enumerate(results):
+			iCol = 0
+			self.grid.SetCellValue( row, iCol, '{}'.format(row+1) ); iCol += 1
+			self.grid.SetCellValue( row, iCol, '{}'.format(name or '') )
+			self.grid.SetCellBackgroundColour( row, iCol, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
+			iCol += 1
+			if hasLicense:
+				self.grid.SetCellValue( row, iCol, '{}'.format(license or '') ); iCol += 1
+			if hasUCIID:
+				self.grid.SetCellValue( row, iCol, formatUCIID(uci_id) ); iCol += 1
+			if hasTeam:
+				self.grid.SetCellValue( row, iCol, '{}'.format(team or '') ); iCol += 1
+			self.grid.SetCellValue( row, iCol, '{}'.format(points) ); iCol += 1
+			self.grid.SetCellValue( row, iCol, '{}'.format(gap) ); iCol += 1
 			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-				self.grid.SetCellValue( row, 6 + q,
+				self.grid.SetCellValue( row, iCol + q,
 					'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
 					else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 					else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
@@ -1008,9 +1049,10 @@ class Results(wx.Panel):
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
-			results = [rr for rr in results if toFloat(rr[3]) > 0.0]
 			
-			headerNames = HeaderNames + [r[1] for r in races]
+			results = filterValidResults( results )
+			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
+			headerNames.extend( '{}'.format(r[1]) for r in races )
 			
 			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapper( ws )
@@ -1040,15 +1082,20 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, c, headerName, labelStyle, bold = True )
 			rowCur += 1
 			
-			for pos, (name, license, team, points, gap, racePoints) in enumerate(results):
-				wsFit.write( rowCur, 0, pos+1, numberStyle )
-				wsFit.write( rowCur, 1, name, textStyle )
-				wsFit.write( rowCur, 2, license, textStyle )
-				wsFit.write( rowCur, 3, team, textStyle )
-				wsFit.write( rowCur, 4, points, numberStyle )
-				wsFit.write( rowCur, 5, gap, numberStyle )
+			for pos, (name, license, uci_id, team, points, gap, racePoints) in enumerate(results):
+				iCol = 0
+				wsFit.write( rowCur, iCol, pos+1, numberStyle ); iCol += 1
+				wsFit.write( rowCur, iCol, name, textStyle ); iCol += 1
+				if hasLicense:
+					wsFit.write( rowCur, iCol, license, textStyle ); iCol += 1
+				if hasLicense:
+					wsFit.write( rowCur, iCol, foratUCIID(uci_id), textStyle ); iCol += 1
+				if hasTeam:
+					wsFit.write( rowCur, iCol, team, textStyle ); iCol += 1
+				wsFit.write( rowCur, iCol, points, numberStyle ); iCol += 1
+				wsFit.write( rowCur, iCol, gap, numberStyle ); iCol += 1
 				for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-					wsFit.write( rowCur, 6 + q,
+					wsFit.write( rowCur, iCol + q,
 						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
 						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
 						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
