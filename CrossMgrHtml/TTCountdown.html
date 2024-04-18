@@ -164,7 +164,7 @@ function SetStartedBackground( forceUpdate ) {
 
 var maxNext = 8000;
 var resetSecond = 20;
-var enableBeeps = true;
+var enableBeeps = false;
 var turnOnSoundFlag = 12;	// Make a low sound to turn on the browser audio.  Otherwise the first beep will be late.
 var beepTimes = [resetSecond, turnOnSoundFlag, 10, 5, 4, 3, 2, 1, 0, -3];
 
@@ -439,11 +439,10 @@ function openFullscreen() {
 function initiateSound() {
 	if( enableBeeps )
 		return;
+	enableBeeps = true;
 	
 	let beep_btn = document.getElementById('beep-btn')
-	beep_btn.innerHTML = '';
-	beep_btn.className = '';
-	beep_btn.removeEventListener( 'click', initiateSound );
+	beep_btn.hidden = true;
 
 	openFullscreen();
 	
@@ -451,9 +450,8 @@ function initiateSound() {
 	audioCtx.resume();
 	
 	// Play some beeps to set the volume.
-	for( let i = 0; i < 8; ++i )
-		setTimeout(function() { playBeep(i%4); }, 250*i);
-	enableBeeps = true;
+	for( let i = 0; i < 5; ++i )
+		setTimeout(function() { playBeep(i%5); }, 250*i);
 }
 
 // Use Cristian's Algorithm (https://en.wikipedia.org/wiki/Cristian%27s_algorithm).
@@ -576,12 +574,7 @@ function onload() {
 	
 	// The first sound must be triggered by a user action.
 	isDevice = true;
-	enableBeeps = false;
 	let countdown_clock = document.getElementById('countdown-clock');
-	let beep_btn = document.getElementById('beep-btn');
-	beep_btn.innerHTML = 'Press for Beeps';
-	beep_btn.className = 'btn';
-	beep_btn.addEventListener( 'mousedown', initiateSound );
 	
 	tServer = ServerDate();
 	if( raceStartTuple != null ) {
@@ -738,7 +731,7 @@ function onload() {
 	<span id="team-starting">CrossMgr Time Trial Starter</span>
 </div>
 <div id="countdown-clock-div">
-	<span id="beep-btn"></span><br/>
+	<button id="beep-btn" class="btn" onmousedown="initiateSound();">Press for Beeps</button><br/>
 	<span id="countdown-clock">&nbsp;&nbsp;</span>
 </div>
 <div id="rider-next">
