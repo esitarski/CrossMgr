@@ -624,7 +624,7 @@ class Competition:
 							rrCount += 1
 							e.others[i] = '{}RR_{}_{}'.format(rrCount, iSystem+1, i+2)	# Label is nnRR_ro_fo where nn=unique#, ro=round, fo=finishOrder
 					
-				print( 'Event:', ' - '.join(e.composition), ' -> ', e.winner, e.others )
+				# print( 'Event:', ' - '.join(e.composition), ' -> ', e.winner, e.others )
 			
 				for c in e.composition:
 					assert c not in inLabels, '{}-{} c={}, outLabels={}'.format(e.competition.name, e.system.name, c, ','.join( sorted(outLabels) ))

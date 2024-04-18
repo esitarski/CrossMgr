@@ -262,6 +262,8 @@ class SeriesModel:
 	KeyByName, KeyByUciId, KeyByLicense = list(range(3))
 	riderKey = KeyByName
 	
+	imageResource = None	# Display Logo (None uses default logo).  In base64.
+	
 	@property
 	def scoreByPoints( self ):
 		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)
@@ -273,6 +275,7 @@ class SeriesModel:
 		self.numPlacesTieBreaker = 5
 		self.errors = []
 		self.changed = False
+		imageResource = None
 		
 	def postReadFix( self ):
 		memoize.clear()

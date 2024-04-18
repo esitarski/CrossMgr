@@ -2,10 +2,47 @@ import wx
 import wx.grid as gridlib
 import wx.lib.agw.floatspin as FS
 import os
+import io
 import re
 import sys
+import base64
 import SeriesModel
 import Utils
+
+def fileToResource( fname ):
+	# Get the file type.
+	ext = os.path.splitext( fname )[1:].lower()
+	# Convert the file contents to base64.
+	with open(fname, 'rb') as f:
+		b64 = base64.encode( f.read() )
+	return 'data:image/{};base64,{}'.format( ext, b64.decode('utf-9') )
+	
+ext_to_bmp_type = {
+	'bmp': wx.BITMAP_TYPE_BMP, # Load a Windows bitmap file.
+	'gif': wx.BITMAP_TYPE_GIF, # Load a GIF bitmap file.
+	'jpeg': wx.BITMAP_TYPE_JPEG, # Load a JPEG bitmap file.
+	'jpg': wx.BITMAP_TYPE_JPEG, # Load a JPEG bitmap file.
+	'png': wx.BITMAP_TYPE_PNG, # Load a PNG bitmap file.
+}
+	
+def resourceToImage( imageResource ):
+	header, data = imageResource.split( ';', 1 )
+	bitmap_type = ext_to_bmp_type[header.split( '/', 1 )[1]]
+	b64 = base64.decode( data.split( ',', 1 )[1] )
+	return wx.Image( io.BytesIO(b64), bitmap_type )
+
+def getBitmap( model ):
+	if model.imageResource is None:
+		image = wx.Image( os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png') )
+	else:
+		image = resourceToImage( model.imageResource )
+	return wx.Bitmap( image )
+
+def getImageResource( model ):
+	if model.imageResource:
+		return model.imageResource
+	else:
+		return fileToResource( os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png') )
 
 class Options(wx.Panel):
 	def __init__(self, parent):
