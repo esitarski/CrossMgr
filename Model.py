@@ -1849,11 +1849,15 @@ class Race:
 		return crl
 		
 	def isOutsideTimeBound( self, num ):
+		if self.isTimeTrial:
+			return False, False
+		
+		# Returns boolean tuple (Outside80TimeBound, OutsideEarlyPullTimebound)
 		category = self.getCategory( num )
 		
 		rule80Time = self.getRule80CountdownTime(category)
 		if not rule80Time:
-			return False
+			return False, False
 			
 		try:
 			leaderTimes = self.getCategoryTimesNums()[category][0]
@@ -1861,7 +1865,7 @@ class Race:
 			leaderTimes = self.getLeaderTimesNums()[0]
 			
 		if not leaderTimes:
-			return False
+			return False, False
 			
 		# Get the time the leader started this lap.
 		t = self.curRaceTime()
@@ -1869,15 +1873,24 @@ class Race:
 		leaderTime = leaderTimes[leaderLap]
 
 		# Get the rider time for the same lap.
+		# No special case here.  if the rider has been lapped, the lap time difference will exceed rule80Time.
 		entries = self.interpolate()
 		i = bisect.bisect_left( entries, Entry(num = 0, lap = leaderLap, t = leaderTime, interp = False) )
 		try:
 			riderTime = next((e.t for e in itertools.islice(entries, i, len(entries)) if e.num == num and e.lap == leaderLap))
 		except StopIteration:
-			return False
+			return False, False
 		
-		# Check if the difference exceeds the rule80 time.
-		return riderTime - leaderTime > rule80Time
+		# Get the specified number of laps for this category.  If none, don't compute early pull time.
+		raceLaps = self.getNumLapsFromCategory( category )
+		earlyPullTime = min( rule80Time, rule80Time * leaderLap / raceLaps ) if raceLaps and (leaderLap >= 2 and raceLaps - 3 <= leaderLap < raceLaps) else math.inf
+		
+		# print( "Category={}, leaderLap={}, laps={}, rule80Time={:.2f}, earlyPullTime={:.2f}".format( category.name, leaderLap, raceLaps, rule80Time, earlyPullTime) )
+
+		# Check if the difference exceeds the rule80 time and the early pull time (pro-rated rule80 time).
+		outsideRule80 = (riderTime - leaderTime > rule80Time)
+		#return outsideRule80, outsideRule80 or (riderTime - leaderTime > earlyPullTime)
+		return outsideRule80, False
 
 	def getCatPrevNextLeaders( self, t ):
 		''' Return a dict accessed by number referring to category. '''

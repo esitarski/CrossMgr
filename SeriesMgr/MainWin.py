@@ -756,7 +756,7 @@ table.results tr td.fastest{
 			with open(fileName, 'rb') as fp:
 				try:
 					SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
-				except:
+				except Exception as e:
 					fp.seek( 0 )
 					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', errors='replace' ).load()
 		except IOError:
@@ -1062,7 +1062,10 @@ def MainLoop():
 	fileName = args.filename
 	
 	# Try to load a series.
-	if fileName and fileName.lower().endswith('.smn'):
+	if fileName:
+		if os.path.splitext( fileName )[1] != '.smn':
+			print( 'Cannot open non SeriesMgr file "{}".  Aborting.'.format( filename ), file=sys.stderr )
+			sys.exit( 1 )
 		try:
 			mainWin.openSeries( fileName )
 		except (IndexError, AttributeError, ValueError):

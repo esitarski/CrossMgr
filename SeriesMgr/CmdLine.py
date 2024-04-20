@@ -6,15 +6,21 @@ import SeriesModel
 import Results
 import pickle
 
-def CmdLine( args ):	
+def CmdLine( args ):
+	import pdb; pdb.set_trace()
+	
 	seriesFileName = None
 	if args.series:
 		seriesFileName = args.series
+		ext = os.path.splitext( seriesFileName )
+		if ext != '.smn':
+			print( 'series file "{}" lacks .smn extension.'.format(seriesFileName), file=sys.stderr )
+			return 1
 		try:
 			with open(seriesFileName, 'rb') as fp:
 				SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
 		except IOError:
-			print( 'cannot open series file "{}".'.format(seriesFileName) )
+			print( 'cannot open series file "{}".'.format(seriesFileName), file=sys.stderr )
 			return 1
 		SeriesModel.model.postReadFix()
 
@@ -42,7 +48,7 @@ def CmdLine( args ):
 			else:
 				fileName = components[0]
 			if not any( fileName.endswith(suffix) for suffix in ('.xlsx', 'xlsm', '.xls') ):
-				print( 'unrecognized file suffix "{}".'.format(fileName) )
+				print( 'unrecognized file suffix "{}".'.format(fileName), file=sys.stderr )
 				return 2
 				
 		pointStructures = None
@@ -52,7 +58,7 @@ def CmdLine( args ):
 				break
 				
 		if pointStructures is None:
-			print( 'cannot find points structure "{}".'.format(pointStructuresName) )
+			print( 'cannot find points structure "{}".'.format(pointStructuresName), file=sys.stderr )
 			return 3
 		
 		races.append( SeriesModel.Race(fileName, pointStructures) )
@@ -67,7 +73,8 @@ def CmdLine( args ):
 		score_by_points, score_by_time, score_by_percent = False, False, True
 		
 	output_file = args.output or ((os.path.splitext(args.series)[0] + '.html') if args.series else 'SeriesMgr.html')
-	with open( output_file, 'w' ) as f:
+	results = SeriesModel.model.extractAllRaceResults()
+	with open( output_file, 'w', encoding='utf8' ) as f:
 		f.write( Results.getHtml(seriesFileName) )
 	
 	return 0

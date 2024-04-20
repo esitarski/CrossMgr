@@ -155,6 +155,7 @@ class ForecastHistory( wx.Panel ):
 		self.entryCur = None
 		self.orangeColour = wx.Colour(255, 165,   0)
 		self.redColour    = wx.Colour(255,  51,  51)
+		self.yellowColour = wx.Colour(255, 255, 102)
 		self.groupColour  = wx.Colour(220, 220, 220)
 
 		self.callFutureRefresh = None
@@ -625,9 +626,9 @@ class ForecastHistory( wx.Panel ):
 		#------------------------------------------------------------------
 		# Highlight the leaders in the expected list.
 		iBeforeLeader = None
-		# Highlight the leader by category.
+		# Highlight the leader by category.  Also highlight missing riders, riders outside of 80%, rider eligible for early pull.
 		catNextTime = {}
-		outsideTimeBound = set()
+		outsideTimeBound, outsideEarlyPull = set(), set()
 		for r, e in enumerate(expected):
 			if e.num in nextCatLeaders:
 				backgroundColour[(r, iExpectedNoteCol)] = wx.GREEN
@@ -635,10 +636,15 @@ class ForecastHistory( wx.Panel ):
 				if e.num == leaderNext:
 					backgroundColour[(r, iExpectedNumCol)] = wx.GREEN
 					iBeforeLeader = r
-			elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-				backgroundColour[(r, iExpectedNoteCol)] = self.redColour
-				textColour[(r, iExpectedNoteCol)] = wx.WHITE
-				outsideTimeBound.add( e.num )
+			elif tRace < tRaceLength:
+				isOutsideTimeBound, isOutsideEarlyPull = race.isOutsideTimeBound(e.num)
+				if isOutsideTimeBound:
+					backgroundColour[(r, iExpectedNoteCol)] = self.redColour
+					textColour[(r, iExpectedNoteCol)] = wx.WHITE
+					outsideTimeBound.add( e.num )
+				elif isOutsideEarlyPull:
+					backgroundColour[(r, iExpectedNoteCol)] = self.yellowColour
+					outsideEarlyPull.add( e.num )
 		
 		data = [None] * iExpectedColMax
 		data[iExpectedNumCol] = ['{}'.format(e.num) for e in expected]
@@ -661,7 +667,7 @@ class ForecastHistory( wx.Panel ):
 			elif e.t < tMissing:
 				return _('miss')
 			elif position >= 0:
-				return resultsIndex[e.num]._getExpectedLapChar(tRace) + Utils.ordinal(position)
+				return ('⌦ ' if e.num in outsideEarlyPull else '') + resultsIndex[e.num]._getExpectedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
 		
@@ -699,7 +705,7 @@ class ForecastHistory( wx.Panel ):
 			
 		backgroundColour = {}
 		textColour = {}
-		outsideTimeBound = set()
+		outsideTimeBound, outsideEarlyPull = set(), set()
 		# Highlight the leader in the recorded list.
 		for r, e in enumerate(recorded):
 			if e.isGap():
@@ -709,10 +715,15 @@ class ForecastHistory( wx.Panel ):
 				backgroundColour[(r, iRecordedNoteCol)] = wx.GREEN
 				if e.num == leaderPrev:
 					backgroundColour[(r, iRecordedNumCol)] = wx.GREEN
-			elif tRace < tRaceLength and race.isOutsideTimeBound(e.num):
-				backgroundColour[(r, iRecordedNoteCol)] = self.redColour
-				textColour[(r, iRecordedNoteCol)] = wx.WHITE
-				outsideTimeBound.add( e.num )
+			elif tRace < tRaceLength:
+				isOutsidetimeBound, isOutsideEarlyPull = race.isOutsideTimeBound(e.num)
+				if isOutsidetimeBound:
+					backgroundColour[(r, iRecordedNoteCol)] = self.redColour
+					textColour[(r, iRecordedNoteCol)] = wx.WHITE
+					outsideTimeBound.add( e.num )
+				elif isOutsideEarlyPull:
+					backgroundColour[(r, iRecordedNoteCol)] = self.yellowColour
+					outsideEarlyPull.add( e.num )
 								
 		data = [None] * iRecordedColMax
 		data[iRecordedNumCol] = ['{}{}'.format(e.num,"\u2190" if IsRiderFinished(e.num, e.t) else '') if e.num > 0 else ' ' for e in recorded]
@@ -733,7 +744,7 @@ class ForecastHistory( wx.Panel ):
 			if position == 1:
 				return resultsIndex[e.num]._getRecordedLapChar(tRace) + _('Lead')
 			elif position >= 0:
-				return resultsIndex[e.num]._getRecordedLapChar(tRace) + Utils.ordinal(position)
+				return ('⌦ ' if e.num in outsideEarlyPull else '') + resultsIndex[e.num]._getRecordedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
 		
