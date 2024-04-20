@@ -66,7 +66,7 @@ def CompileHelp( dir = '.' ):
 			
 		for fname in getHelpFiles():
 			print( fname, '...' )
-			with open(fname, 'r') as f:
+			with open(fname, 'r', encoding='utf8') as f:
 				input = io.StringIO()
 				input.write( links )
 				input.write( f.read() )
@@ -79,7 +79,7 @@ def CompileHelp( dir = '.' ):
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
 				html = InlineImages( html )
-			with open( os.path.splitext(fname)[0] + '.html', 'w' ) as f:
+			with open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf8' ) as f:
 				f.write( prolog )
 				f.write( html )
 				f.write( epilog )
