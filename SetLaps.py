@@ -6,6 +6,7 @@ import datetime
 import Model
 import Utils
 from GetResults import GetResults
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 
 class SetLaps( wx.Dialog ):
 	updateInterval = 5314
@@ -77,8 +78,18 @@ class SetLaps( wx.Dialog ):
 		hs.Add( self.scheduledRaceDuration )
 		vs.Add( hs, flag=wx.ALL, border=8 )
 		
+		# Add the fields for the early bell.
+		for c in range(3):
+			self.fgs.Add( wx.StaticLine(self, style=wx.LI_HORIZONTAL), flag=wx.EXPAND )
+		self.fgs.Add( wx.StaticText(self, label=_('Early Bell')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.earlyBellTime = HighPrecisionTimeEdit( self, allow_none=True, display_milliseconds=False )
+		self.fgs.Add( self.earlyBellTime, flag=wx.ALIGN_CENTER_VERTICAL )
+		self.earlyBellTimeButton = wx.Button( self, label=_('Tap for NOW') )
+		self.earlyBellTimeButton.Bind( wx.EVT_LEFT_DOWN, self.setEarlyBellTime )
+		self.fgs.Add( self.earlyBellTimeButton, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		
 		vs.Add( self.fgs, flag=wx.ALL, border=8 )
-
+		
 		btnSizer = self.CreateButtonSizer( wx.OK|wx.CANCEL )
 		self.Bind( wx.EVT_BUTTON, self.onOK, id=wx.ID_OK )
 		self.Bind( wx.EVT_BUTTON, self.onCancel, id=wx.ID_CANCEL )
@@ -90,8 +101,13 @@ class SetLaps( wx.Dialog ):
 		self.updateTimer = wx.CallLater( self.updateInterval, self.onUpdateTimer )
 		self.update()
 		self.SetSizerAndFit( vs )
-		
-	def update( self ):
+	
+	def setEarlyBellTime( self, event ):
+		race = Model.getRace()
+		if race and race.isRunning():
+			self.earlyBellTime.SetSeconds( race.curRaceTime() )
+	
+	def update( self, fromTimer=False ):
 		Finisher = Model.Rider.Finisher
 		race = Model.getRace()
 		
@@ -161,11 +177,15 @@ class SetLaps( wx.Dialog ):
 		# Update the proposed race information from the results we took earlier.
 		updateColumn( results, 1 )
 		
+		# Update the earlyBellTime.
+		if not fromTimer:
+			self.earlyBellTime.SetSeconds( self.category.earlyBellTime )
+		
 		# Ensure that updated text is size adjusted.
 		self.fgs.Layout()
 
 	def onUpdateTimer( self ):
-		self.update()
+		self.update( fromTimer=True )
 		self.updateTimer.Start( self.updateInterval )
 
 	def onNewRaceLaps( self, event ):
@@ -174,6 +194,7 @@ class SetLaps( wx.Dialog ):
 	def onOK( self, event ):
 		self.updateTimer.Stop()
 		self.category._numLaps = self.column[1].raceLaps.GetValue()
+		self.category.earlyBellTime = self.earlyBellTime.GetSeconds()
 		race = Model.getRace()
 		if race:
 			race.setChanged()
@@ -186,7 +207,7 @@ class SetLaps( wx.Dialog ):
 
 if __name__ == '__main__':
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan SetLaps", size=(1000,400))
+	mainWin = wx.Frame(None,title="CrossMan SetLaps", size=(1000,500))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
 	race._populate()

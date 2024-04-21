@@ -178,6 +178,10 @@ For additional information, hover the mouse over the lap.  This will show more s
 
 ### Set Laps from the Lap Chart
 
-To modify the number of laps during the race, click anywhere on the Progress bars.
+To modify the number of laps during the race, click anywhere on the Progress bars (or Start Wave labels).
 
-This opens the __Set Laps__ dialog which makes it easy to change the number of laps during a race.  For more details, see [SetLaps][].
+This opens the __Set Laps__ dialog which makes it easy to change the number of laps during a race.
+This dialog shows the estimated finish times based on the number of laps, and allows you to meaningfully pick the number of laps.
+
+The __Set Laps__ dialog is also the easiest way to set the __Early Bell Time__.
+For more details, see [SetLaps][].

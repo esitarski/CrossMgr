@@ -46,7 +46,7 @@ class RaceHUD(wx.Control):
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
 		
 		if leftClickFunc:
-			self.SetCursor( wx.Cursor(wx.CURSOR_LEFT_BUTTON) )
+			self.SetCursor( wx.Cursor(wx.CURSOR_CROSS) )
 		
 	def resetDimensions(self):
 		self.xLeft = self.xRight = self.xMult = self.hudHeight = self.iRaceTimesHover = self.iLapHover = None

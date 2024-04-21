@@ -364,19 +364,27 @@ def _GetResultsCore( category ):
 			else:
 				laps = bisect_left( times, cutoffTime, hi=len(times)-1 )
 			
-			times = times[:laps+1]
-			interp = interp[:laps+1]
+			del times[laps+1:]
+			del interp[laps+1:]
 		else:
 			laps = 0
-			times = []
-			interp = []
+			times.clear()
+			interp.clear()
+
+		# Apply the early bell time.  Early bell time signifies the beginning of the last lap for all riders.
+		if riderCategory.earlyBellTime and not race.isTimeTrial:
+			try:
+				while riderCategory.earlyBellTime <= times[-2]:
+					times.pop()
+					interp.pop()
+					laps -= 1
+			except IndexError:
+				pass
 		
+		# Get the last time on record for the rider.
 		lastTime = rider.tStatus
 		if not lastTime:
-			if times:
-				lastTime = times[-1]
-			else:
-				lastTime = 0.0
+			lastTime = times[-1] if times else 0.0
 		
 		status = Finisher if rider.status in rankStatus else rider.status
 		if isTimeTrial and not lastTime and rider.status == Finisher:
