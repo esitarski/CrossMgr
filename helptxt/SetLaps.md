@@ -34,11 +34,15 @@ Laps To Go|Laps to go for the winner.
 Laps Total|Laps Elapsed + Laps to Go.
 Early Bell Time|Race time of the __Early Bell__ (see Notes). The can be set with the __Tap for NOW__ button.
 
-__Notes:__  If no __Race Laps__ is specified for a Start Wave, CrossMgr will run the race on time (see [Categories][] for details).
-If __Race Laps__ is set, CrossMgr will run the race according to the Race Laps and will not calculate the laps based on __Race Minutes__.
+__Notes:__  If __Race Laps__ is unspecified for a Start Wave, CrossMgr will run the race on time (see [Categories][] for details).
+If __Race Laps__ is set, CrossMgr will run the race according to the Race Laps and will ignore __Race Minutes__.
 
 If the __Early Bell Time__ is set, all riders after this time will be treated as if they on their last lap.
 To disable __Early Bell Time__, delete it and press __OK__.
+
+__Early Bell Time__ is a great way to keep a competition on schedule.  Consider setting __Early Bell Time__ about three quarters through the 2nd last lap.
+Any riders after the __Early Bell Time__ will get the bell and start their last lap (potentially doing one lap less).
+Riders who are out of contention know they have one lap to go.
 
 Pressing __OK__ from __Set Laps__ will apply any changes.  The race [Record][] and [LapCounter][] will update immediately.
 If the __Early Bell Time__ is set, the Bell and Finish Flag icons will update.
