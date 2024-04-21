@@ -161,6 +161,8 @@ class Category:
 	
 	lappedRidersMustContinue = False
 	
+	earlyBellTime = None		# Time of the early bell.  In race seconds.
+	
 	prizes = []
 	
 	MaxBib = 999999
@@ -250,12 +252,12 @@ class Category:
 					mask = cp.ljust(len(mask), '.')
 		return mask
 
-	def __init__( self, active = True, name = 'Category 100-199', catStr = '100-199', startOffset = '00:00:00',
-						numLaps = None, sequence = 0,
-						raceLaps = None, raceMinutes = None,
-						distance = None, distanceType = None, firstLapDistance = None,
-						gender = 'Open', lappedRidersMustContinue = False,
-						catType = CatWave, publishFlag = True, uploadFlag = True, seriesFlag = True ):
+	def __init__( self, active=True, name='Category 100-199', catStr='100-199', startOffset='00:00:00',
+						numLaps=None, sequence=0,
+						raceLaps=None, raceMinutes=None,
+						distance=None, distanceType=None, firstLapDistance=None,
+						gender='Open', lappedRidersMustContinue=False,
+						catType=CatWave, publishFlag=True, uploadFlag=True, seriesFlag=True, earlyBellTime=None ):
 		
 		self.name = '{}'.format(name).strip()
 		self.catStr = '{}'.format(catStr).strip()
@@ -277,10 +279,27 @@ class Category:
 		def toBool( v ):
 			return '{}'.format(v).strip()[:1] in 'TtYy1'
 		
+		def toRaceTime( x ):
+			if x is None:
+				return None
+			if isinstance(x, str):
+				try:
+					secs = Utils.StrToSeconds(x)
+				except Exception:
+					secs = None
+				return secs or None
+			try:
+				return float(x) or None
+			except Exception:
+				pass
+			return None
+		
 		self.active = toBool( active )
 		self.publishFlag = toBool( publishFlag )
 		self.uploadFlag = toBool( uploadFlag )
 		self.seriesFlag = toBool( seriesFlag )
+		
+		self.earlyBellTime = toRaceTime( earlyBellTime )	# In race time seconds.
 			
 		try:
 			self._numLaps = int(numLaps)
@@ -1850,14 +1869,15 @@ class Race:
 		
 	def isOutsideTimeBound( self, num ):
 		if self.isTimeTrial:
-			return False, False
+			return False
 		
-		# Returns boolean tuple (Outside80TimeBound, OutsideEarlyPullTimebound)
 		category = self.getCategory( num )
+		if not category:
+			return False
 		
 		rule80Time = self.getRule80CountdownTime(category)
 		if not rule80Time:
-			return False, False
+			return False
 			
 		try:
 			leaderTimes = self.getCategoryTimesNums()[category][0]
@@ -1865,7 +1885,7 @@ class Race:
 			leaderTimes = self.getLeaderTimesNums()[0]
 			
 		if not leaderTimes:
-			return False, False
+			return False
 			
 		# Get the time the leader started this lap.
 		t = self.curRaceTime()
@@ -1879,18 +1899,10 @@ class Race:
 		try:
 			riderTime = next((e.t for e in itertools.islice(entries, i, len(entries)) if e.num == num and e.lap == leaderLap))
 		except StopIteration:
-			return False, False
+			return False
 		
-		# Get the specified number of laps for this category.  If none, don't compute early pull time.
-		raceLaps = self.getNumLapsFromCategory( category )
-		earlyPullTime = min( rule80Time, rule80Time * leaderLap / raceLaps ) if raceLaps and (leaderLap >= 2 and raceLaps - 3 <= leaderLap < raceLaps) else math.inf
-		
-		# print( "Category={}, leaderLap={}, laps={}, rule80Time={:.2f}, earlyPullTime={:.2f}".format( category.name, leaderLap, raceLaps, rule80Time, earlyPullTime) )
-
-		# Check if the difference exceeds the rule80 time and the early pull time (pro-rated rule80 time).
-		outsideRule80 = (riderTime - leaderTime > rule80Time)
-		#return outsideRule80, outsideRule80 or (riderTime - leaderTime > earlyPullTime)
-		return outsideRule80, False
+		# Check if the difference exceeds the rule80 time.
+		return riderTime - leaderTime > rule80Time
 
 	def getCatPrevNextLeaders( self, t ):
 		''' Return a dict accessed by number referring to category. '''

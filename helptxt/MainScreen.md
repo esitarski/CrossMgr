@@ -19,33 +19,10 @@ Shows the numbers of riders expected to arrive.  The columns in the table are as
 Column|Description
 :-----|:----------
 Bib|The rider's number
-Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.  Riders eligible for "Early Pull" are shown in yellow with a pull symbol (⌦).  Riders starting their laps lap have a bell (🔔).  Riders finishing has a finish flag (🏁).
+Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.  Riders starting their last lap have a bell (🔔).  Riders finishing has a finish flag (🏁).
 Lap|Shows the lap the rider is currently on.
 ETA|Shows the Estimated Time of Arrival of the rider
 Name|Shows the rider's name.  Requires configuring the [External Excel][] sheet.
-
-__Early Pull__
-
-__Early Pull__ is a method of managing the 80% zone at the finish line when then 80% rule is in effect (MTB and Cyclocross),.
-The rider is pulled after crossing the finish line and recording a final time, rather than pulling from an 80% zone.
-This reduces the complexity of managing 80% pulled riders as no communication or coordination is required from officials in an 80% zone.
-
-When doing early pull at the finish line, we cannot use the 80% time directly.  Rather, we need to adjust this time based on the number of laps remaining in the race.
-This is done as follows:
-
-EarlyPullTime = 80PercentTime * (RaceLaps - CurrentLap) / RaceLaps
-
-For example, say a race was 10 laps and the 80PercentTime is 8 minutes.  When the leader starts the 2 to go lap, the EarlyPullTime = 8 minutes * (10-2)/10 = 6.4 minutes.
-So, when the lap counter reads 2 to go, riders behind the leader by 6.4 minutes (or longer) should be pulled after they cross the finish line.
-
-In this example, CrossMgr will indicate all riders who are 6.4 minutes behind the leader as elibigle for early pull with 2 to go.
-
-The idea here is that __Early Pull__ is a time that projects where a rider will be when the leader finishes.
-
-__Early Pull__ can also be used for an Early Bell strategy where indicated riders are given the bell at 2 to go.
-
-__Early Pull__ is only enabled when the number of laps for a category is set explicitly and not computed from a race time.
-This can be done from the [Categories][] page, or more easily from the [Record][] page.
 
 ## Click anywhere on the Row
 Enters that number.  Eliminates retyping the number in Record screen.
@@ -67,7 +44,7 @@ The columns in the table are as follows:
 Column|Description
 :-----|:----------
 Bib|The rider's number
-Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.  Riders eligible for "Early Pull" are shown in yellow with a pull symbol (⌦).  Riders starting their laps lap have a bell (🔔).  Riders finishing has a finish flag (🏁).  See the __Expected__ section above for details about __Early Pull__.
+Note|Shows the riders position by category.  Leaders are highlighted in green.  The Race Leader is highlighted with a full green bar.  Riders outside of the 80% time rule are shown in red.  Riders starting their laps lap have a bell (🔔).  Riders finishing has a finish flag (🏁).
 Lap|Shows the lap the rider is currently on.
 Time|Shows the recorded time
 Name|Shows the rider's name.  Requires linking an [External Excel][] sheet.

@@ -83,6 +83,7 @@ There are many features available in CrossMgr that you can use as you feel more 
 1. Publish results live during a race.  See [File/Publish HTML Results with FTP...](Menu-File.html#publish-html-results-with-ftp) for details.  Look at the "Automatically Upload Results During Race" feature.
 1. Use CrossMgr for Time Trials.  See [Time Trial Mode](Properties.html#time-trial-mode).
 1. Use a Chip Timing system system.  See [ChipReader][].
+1. Use the __Early Bell__ feature to keep your competition schedule on time.  See [SetLaps][] and [Categories][] for details.
 1. Use a USB Camera to capture finishes.
 
 Remember: press [CTRL+H](Main.html) on each screen to find out what it does and how it works.  Review [CrossMgrTutorial.doc.](https://www.sites.google.com/site/crossmgrsoftware/file-cabinet).

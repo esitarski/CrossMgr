@@ -1,14 +1,12 @@
-import markdown
-import glob
 import os
 import re
 import io
-import six
+import glob
 import base64
-import zipfile
 import shutil
+import zipfile
+import markdown
 import datetime
-StringIO = six.StringIO
 from contextlib import contextmanager
 
 HtmlDocFolder = 'CrossMgrVideoHtmlDoc'
@@ -30,12 +28,12 @@ def fileOlderThan( srcFile, transFile ):
 
 reImage = re.compile( r'src="\.\/images\/([^"]+)"' )
 def InlineImages( html ):
-	while 1:
+	while True:
 		match = reImage.search( html )
 		if not match:
 			break
 		fname = match.group(1)
-		with io.open(os.path.join('images',fname), 'r') as f:
+		with open(os.path.join('images',fname), 'rb') as f:
 			b64 = base64.b64encode( f.read() )
 		sReplace = 'src="data:image/{};base64,{}'.format(
 			os.path.splitext(fname)[1][1:],
@@ -63,24 +61,24 @@ def CompileHelp( dir = '.' ):
 				output_format='html5'
 		)
 
-		with io.open('markdown.css', 'r') as f:
+		with open('markdown.css', 'r', encoding='utf8') as f:
 			style = f.read()
-		with io.open('prolog.html', 'r') as f:
+		with open('prolog.html', 'r', encoding='utf8') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
-		with io.open('epilog.html', 'r') as f:
+		with open('epilog.html', 'r', encoding='utf8') as f:
 			epilog = f.read().replace('YYYY','{}'.format(datetime.datetime.now().year))
 
 		contentDiv = '<div class="content">'
 		
-		with io.open('Links.md', 'r') as f:
+		with open('Links.md', 'r', encoding='utf8') as f:
 			links = f.read()
 			
 		for fname in glob.glob("./*.txt"):
-			six.print_( fname, '...' )
-			with io.open(fname, 'r') as f:
-				input = StringIO()
+			print( fname, '...' )
+			with open(fname, 'r', encoding='utf8') as f:
+				input = io.StringIO()
 				input.write( links )
 				input.write( f.read() )
 				
@@ -92,7 +90,7 @@ def CompileHelp( dir = '.' ):
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
 				html = InlineImages( html )
-			with io.open( os.path.splitext(fname)[0] + '.html', 'w',) as f:
+			with open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf8') as f:
 				f.write( prolog )
 				f.write( html )
 				f.write( epilog )

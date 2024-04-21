@@ -175,6 +175,7 @@ class ForecastHistory( wx.Panel ):
 		self.expectedGrid.SetDefaultCellBackgroundColour( wx.Colour(230,255,255) )
 		self.Bind( wx.grid.EVT_GRID_SELECT_CELL, self.doExpectedSelect, self.expectedGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doExpectedPopup, self.expectedGrid )	
+		self.expectedGrid.SetCursor( wx.Cursor(wx.CURSOR_CROSS) )
 				
 		self.lgHistory = LabelGrid( self.splitter, style=wx.BORDER_SUNKEN,
 			colnames=recordedColnames, leftAlignCols=[iRecordedNameCol,iRecordedWaveCol] )
@@ -183,6 +184,7 @@ class ForecastHistory( wx.Panel ):
 		self.historyGrid = self.lgHistory.grid
 		self.Bind( wx.grid.EVT_GRID_CELL_LEFT_DCLICK, self.doNumDrilldown, self.historyGrid )
 		self.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.doHistoryPopup, self.historyGrid )
+		self.historyGrid.SetCursor( wx.Cursor(wx.CURSOR_CROSS) )
 		
 		self.splitter.SetMinimumPaneSize( 4 )
 		self.splitter.SetSashGravity( 0.5 )
@@ -626,9 +628,9 @@ class ForecastHistory( wx.Panel ):
 		#------------------------------------------------------------------
 		# Highlight the leaders in the expected list.
 		iBeforeLeader = None
-		# Highlight the leader by category.  Also highlight missing riders, riders outside of 80%, rider eligible for early pull.
+		# Highlight the leader by category.  Also highlight missing and riders outside of 80%.
 		catNextTime = {}
-		outsideTimeBound, outsideEarlyPull = set(), set()
+		outsideTimeBound = set()
 		for r, e in enumerate(expected):
 			if e.num in nextCatLeaders:
 				backgroundColour[(r, iExpectedNoteCol)] = wx.GREEN
@@ -637,14 +639,10 @@ class ForecastHistory( wx.Panel ):
 					backgroundColour[(r, iExpectedNumCol)] = wx.GREEN
 					iBeforeLeader = r
 			elif tRace < tRaceLength:
-				isOutsideTimeBound, isOutsideEarlyPull = race.isOutsideTimeBound(e.num)
-				if isOutsideTimeBound:
+				if race.isOutsideTimeBound(e.num):
 					backgroundColour[(r, iExpectedNoteCol)] = self.redColour
 					textColour[(r, iExpectedNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
-				elif isOutsideEarlyPull:
-					backgroundColour[(r, iExpectedNoteCol)] = self.yellowColour
-					outsideEarlyPull.add( e.num )
 		
 		data = [None] * iExpectedColMax
 		data[iExpectedNumCol] = ['{}'.format(e.num) for e in expected]
@@ -667,7 +665,7 @@ class ForecastHistory( wx.Panel ):
 			elif e.t < tMissing:
 				return _('miss')
 			elif position >= 0:
-				return ('⌦ ' if e.num in outsideEarlyPull else '') + resultsIndex[e.num]._getExpectedLapChar(tRace) + Utils.ordinal(position)
+				return resultsIndex[e.num]._getExpectedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
 		
@@ -705,7 +703,7 @@ class ForecastHistory( wx.Panel ):
 			
 		backgroundColour = {}
 		textColour = {}
-		outsideTimeBound, outsideEarlyPull = set(), set()
+		outsideTimeBound = set()
 		# Highlight the leader in the recorded list.
 		for r, e in enumerate(recorded):
 			if e.isGap():
@@ -716,14 +714,10 @@ class ForecastHistory( wx.Panel ):
 				if e.num == leaderPrev:
 					backgroundColour[(r, iRecordedNumCol)] = wx.GREEN
 			elif tRace < tRaceLength:
-				isOutsidetimeBound, isOutsideEarlyPull = race.isOutsideTimeBound(e.num)
-				if isOutsidetimeBound:
+				if race.isOutsideTimeBound(e.num):
 					backgroundColour[(r, iRecordedNoteCol)] = self.redColour
 					textColour[(r, iRecordedNoteCol)] = wx.WHITE
 					outsideTimeBound.add( e.num )
-				elif isOutsideEarlyPull:
-					backgroundColour[(r, iRecordedNoteCol)] = self.yellowColour
-					outsideEarlyPull.add( e.num )
 								
 		data = [None] * iRecordedColMax
 		data[iRecordedNumCol] = ['{}{}'.format(e.num,"\u2190" if IsRiderFinished(e.num, e.t) else '') if e.num > 0 else ' ' for e in recorded]
@@ -744,7 +738,7 @@ class ForecastHistory( wx.Panel ):
 			if position == 1:
 				return resultsIndex[e.num]._getRecordedLapChar(tRace) + _('Lead')
 			elif position >= 0:
-				return ('⌦ ' if e.num in outsideEarlyPull else '') + resultsIndex[e.num]._getRecordedLapChar(tRace) + Utils.ordinal(position)
+				return resultsIndex[e.num]._getRecordedLapChar(tRace) + Utils.ordinal(position)
 			else:
 				return ' '
 		

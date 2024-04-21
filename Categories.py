@@ -328,6 +328,7 @@ class Categories( wx.Panel ):
 			(_('First\nLap\nDist.'),	'firstLapDistance'),
 			(_('80%\nLap\nTime'),		'rule80Time'),
 			(_('CrossMgr\nEstimated\nLaps'),	'suggestedLaps'),
+			(_('Early\nBell\nTime'),	'earlyBellTime'),
 			(_('Publish'),				'publishFlag'),
 			(_('Upload'),				'uploadFlag'),
 			(_('Series'),				'seriesFlag'),
@@ -389,6 +390,11 @@ class Categories( wx.Panel ):
 				self.choiceCols.add( col )
 				
 			elif fieldName == 'startOffset':
+				attr.SetEditor( TimeEditor() )
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.dependentCols.add( col )
+				
+			elif fieldName == 'earlyBellTime':
 				attr.SetEditor( TimeEditor() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
@@ -652,16 +658,20 @@ and remove them from other categories.'''),
 		self.state.reset()
 		self.refresh()
 		
-	def _setRow( self, r, active, name, catStr, startOffset = '00:00:00',
-					numLaps = None, raceMinutes = None,
-					lappedRidersMustContinue = False,
-					distance = None, distanceType = None,
-					firstLapDistance = None, gender = None,
-					catType = Model.Category.CatWave,
-					publishFlag = True, uploadFlag = True, seriesFlag = True, ):
+	def _setRow( self, r, active, name, catStr, startOffset='00:00:00',
+					numLaps=None, raceMinutes=None,
+					lappedRidersMustContinue=False,
+					distance=None, distanceType=None,
+					firstLapDistance=None, gender=None,
+					catType=Model.Category.CatWave,
+					earlyBellTime='',
+					publishFlag=True, uploadFlag=True, seriesFlag=True, ):
 					
-		if len(startOffset) < len('00:00:00'):
+		while len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
+		earlyBellTime = earlyBellTime or ''
+		if isinstance( earlyBellTime, (float, int) ):
+			earlyBellTime = Utils.formatTime( float(earlyBellTime) )
 			
 		GetTranslation = _
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
@@ -681,6 +691,7 @@ and remove them from other categories.'''),
 		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3n}'.format(distance)) if distance else '' )
 		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
 		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3n}'.format(firstLapDistance)) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['earlyBellTime'], earlyBellTime )
 		self.grid.SetCellValue( r, self.iCol['publishFlag'], '1' if publishFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
 		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
@@ -817,23 +828,25 @@ and remove them from other categories.'''),
 			self.grid.AppendRows( len(categories) )
 			
 			for r, cat in enumerate(categories):
-				self._setRow(	r=r,
-								active				= cat.active,
-								name				= cat.name,
-								gender				= getattr(cat, 'gender', None),
-								catStr				= cat.catStr,
-								catType				= cat.catType,
-								startOffset			= cat.startOffset,
-								numLaps				= cat._numLaps,
-								raceMinutes			= cat.raceMinutes,
-								lappedRidersMustContinue = getattr(cat, 'lappedRidersMustContinue', False),
-								distance			= getattr(cat, 'distance', None),
-								distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
-								firstLapDistance	= getattr(cat, 'firstLapDistance', None),
-								publishFlag			= cat.publishFlag,
-								uploadFlag			= cat.uploadFlag,
-								seriesFlag			= cat.seriesFlag,
-							)
+				self._setRow(
+					r=r,
+					active				= cat.active,
+					name				= cat.name,
+					gender				= getattr(cat, 'gender', None),
+					catStr				= cat.catStr,
+					catType				= cat.catType,
+					startOffset			= cat.startOffset,
+					numLaps				= cat._numLaps,
+					raceMinutes			= cat.raceMinutes,
+					lappedRidersMustContinue = getattr(cat, 'lappedRidersMustContinue', False),
+					distance			= getattr(cat, 'distance', None),
+					distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
+					firstLapDistance	= getattr(cat, 'firstLapDistance', None),
+					earlyBellTime		= Utils.formatTime(cat.earlyBellTime, highPrecision=False, forceHours=True) if cat.earlyBellTime else '',
+					publishFlag			= cat.publishFlag,
+					uploadFlag			= cat.uploadFlag,
+					seriesFlag			= cat.seriesFlag,
+				)
 				
 			self.doAutosize()
 			self.fixCells()
