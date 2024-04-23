@@ -21,6 +21,8 @@ Diamond|Indicates a CrossMgr auto-corrected time that did not appear in the orig
 Star|Indicates a User Edit of the original input.  Changes made by users are logged and timestamped (see RiderDetail).
 Red Circle|Indicates a duplicate time.  Although rare, times may be entered more than once for the same lap.  For example, a number caller might turn around see the numbers on the backs of riders and call the same number twice.  CrossMgr's Auto-Correct will take care of these, but you will see them if you turn Auto-Correct off.  To fix this situation manually, delete one of the duplicates.  A time is considered a duplicate if it results in a lap that is less than 15 seconds.
 
+The __Early Bell Time__ (when used) is shown as a vertical red line.  All riders in a category will start their last lap after the __Early Bell Time__.
+
 # Controls
 ## Category
 Selects the Category of the chart.  Category "All" will show results as if all riders were in the same category.  This is useful for comparing against manually generated results for the race as a whole.

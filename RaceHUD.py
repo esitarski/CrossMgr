@@ -20,6 +20,7 @@ class RaceHUD(wx.Control):
 		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.raceTimes = None	# Last time is red lantern.
+		self.earlyBellTime = None
 		self.leader = None
 		self.nowTime = None
 		self.getNowTimeCallback = None
@@ -68,8 +69,9 @@ class RaceHUD(wx.Control):
 	def ShouldInheritColours(self):
 		return True
 		
-	def SetData( self, raceTimes = None, leader = None, nowTime = None ):
-		self.leader = leader or []				# List of the category names.
+	def SetData( self, raceTimes=None, leader=None, nowTime=None, earlyBellTime=None ):
+		self.leader = leader or []					# List of the category names.
+		self.earlyBellTime = earlyBellTime or []	# Early bell times per category.
 		# Race times for the category leader.  The last time is the last rider expected to finish.
 		self.raceTimes = [rt if not rt or len(rt)>=2 else [] for rt in (raceTimes or [])]
 		self.nowTime = nowTime
@@ -77,6 +79,7 @@ class RaceHUD(wx.Control):
 		maxRaceTimes = 16
 		self.raceTimes = self.raceTimes[:maxRaceTimes]
 		self.leader = self.leader[:maxRaceTimes]
+		self.earlyBellTime = self.earlyBellTime[:maxRaceTimes]
 		self.Refresh()
 	
 	def GetLaps( self ):
@@ -291,6 +294,15 @@ class RaceHUD(wx.Control):
 				ctx.SetBrush( wx.Brush(wx.Colour(255,0,0)) )
 				ctx.DrawEllipse( round(x - iRadius / 2), round(yTop + hMiddle - tickHeight - iRadius/4), round(iRadius), round(iRadius) )
 				
+				# Draw early bell time.
+				try:
+					ebt = self.earlyBellTime[iRaceTimes]
+				except (TypeError, IndexError):
+					ebt = None
+				if ebt:
+					x = xLeft + int( ebt * xMult )
+					dc.DrawBitmap( self.bell, round(x), round(yTop + hMiddle - self.bell.GetHeight()*1.5) )
+								
 				ctx.SetPen( wx.BLACK_PEN )
 				
 				# Draw the time to the leader's next lap (or the broom if the race is over).
@@ -396,12 +408,12 @@ if __name__ == '__main__':
 	t = 55*60
 	tVar = t * 0.15
 	data = GetData()
-	RaceHUD.SetData( data, leader = [20,120], nowTime = data[0][3] - 13.0 - 30)
+	RaceHUD.SetData( data, leader = [20,120], nowTime = data[0][3] - 13.0 - 30, earlyBellTime=[d[-5] for d in data])
 
 	startTime = datetime.datetime.now() - datetime.timedelta( seconds = 20 )
 	def updateTime():
 		nowTime = (datetime.datetime.now() - startTime).total_seconds() / 2
-		RaceHUD.SetData( data, leader = [20,120], nowTime = nowTime )
+		RaceHUD.SetData( data, leader = [20,120], nowTime = nowTime, earlyBellTime=[d[-5] for d in data] )
 		if nowTime < data[-1][-1]:
 			wx.CallLater( 1000, updateTime )
 

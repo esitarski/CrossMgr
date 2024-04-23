@@ -176,6 +176,8 @@ Use this display to manage lap counters by category.  It allows you to easily se
 
 For additional information, hover the mouse over the lap.  This will show more start/end times and lap time.
 
+The __Early Bell Time__ is also shown as a small bell (when set).  See below for information about the __Early Bell Time__ and the [SetLaps][] dialog.
+
 ### Set Laps from the Lap Chart
 
 To modify the number of laps during the race, click anywhere on the Progress bars (or Start Wave labels).
