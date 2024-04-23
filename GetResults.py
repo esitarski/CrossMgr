@@ -372,9 +372,9 @@ def _GetResultsCore( category ):
 			interp.clear()
 
 		# Apply the early bell time.  Early bell time signifies the beginning of the last lap for all riders.
-		if riderCategory.earlyBellTime and not race.isTimeTrial:
+		if riderCategory.earlyBellTime and not race.isTimeTrial and times:
 			try:
-				while riderCategory.earlyBellTime <= times[-2]:
+				while times[-3] >= riderCategory.earlyBellTime:
 					times.pop()
 					interp.pop()
 					laps -= 1

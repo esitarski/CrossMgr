@@ -671,7 +671,7 @@ and remove them from other categories.'''),
 			startOffset = '00:' + startOffset
 		earlyBellTime = earlyBellTime or ''
 		if isinstance( earlyBellTime, (float, int) ):
-			earlyBellTime = Utils.formatTime( float(earlyBellTime) )
+			earlyBellTime = Utils.formatTime( float(earlyBellTime) ) if earlyBellTime else ''
 			
 		GetTranslation = _
 		gender = gender if gender in ['Men', 'Women'] else 'Open'
