@@ -563,6 +563,7 @@ class Gantt( wx.Panel ):
 		headerSet = set()
 		if race.groupByStartWave and not category:
 			results = []
+			earlyBellTimes = []
 			for c in sorted(race.getCategories(), key=lambda x:x.getStartOffsetSecs()):
 				catResults = GetResults(c)
 				if not catResults:
@@ -571,10 +572,15 @@ class Gantt( wx.Panel ):
 				rr = RiderResult( num='', status=Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
 				rr.FirstName = c.fullname
 				headerSet.add( rr.FirstName )
+				
 				results.append( rr )
+				earlyBellTimes.append( None )
+				
 				results.extend( list(catResults) )
+				earlyBellTimes.extend( c.earlyBellTime if r.status == Finisher else None for r in catResults )
 		else:
 			results = GetResults( category )
+			earlyBellTimes = [category.earlyBellTime if r.status == Finisher else None for r in results]
 		
 		if race.showFullNamesInChart:
 			def getLabel( r ):
@@ -608,6 +614,7 @@ class Gantt( wx.Panel ):
 								getattr( Model.race, 'lapNote', None),
 								headerSet = headerSet,
 								status = status,
+								earlyBellTimes = earlyBellTimes,
 		)
 		self.updateStats( results )
 	

@@ -151,7 +151,7 @@ class GanttChartPanel(wx.Panel):
 
 	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(),
 					numTimeInfo = None, lapNote = None, status = None,
-					headerSet = None ):
+					headerSet = None, earlyBellTimes = None ):
 		"""
 		* data is a list of lists.  Each list is a list of times.
 		* labels are the names of the series.  Optional.
@@ -164,6 +164,7 @@ class GanttChartPanel(wx.Panel):
 		self.numTimeInfo = numTimeInfo
 		self.lapNote = lapNote
 		self.headerSet = headerSet or set()
+		self.earlyBellTimes = earlyBellTimes
 		if data and any( s for s in data ):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
@@ -179,6 +180,7 @@ class GanttChartPanel(wx.Panel):
 			self.nowTime = nowTime
 			
 		self.interp = interp
+		self.earlyBellTimes = earlyBellTimes or []
 		self.Refresh()
 	
 	def OnPaint(self, event ):
@@ -495,6 +497,9 @@ class GanttChartPanel(wx.Panel):
 		penBar.SetJoin( wx.JOIN_MITER )
 		dc.SetPen( penBar )
 		
+		penEBT = wx.Pen( wx.Colour(230,0,0), 3 )
+		penEBT.SetCap( wx.CAP_BUTT )
+		
 		brushBar = wx.Brush( wx.BLACK )
 		transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
 		
@@ -624,6 +629,12 @@ class GanttChartPanel(wx.Panel):
 			brushBar.SetColour( wx.WHITE )
 			dc.SetBrush( brushBar )
 			dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
+			
+			# Draw the early bell line.
+			if self.earlyBellTimes and self.earlyBellTimes[i]:
+				ebtX = tToX( self.earlyBellTimes[i] )
+				dc.SetPen( penEBT )
+				dc.DrawLine( ebtX, yLast, ebtX, yLast+dy )
 			
 			# Draw the label on both ends.
 			if self.greyOutSet and i in self.greyOutSet:
