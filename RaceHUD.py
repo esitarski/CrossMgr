@@ -275,7 +275,7 @@ class RaceHUD(wx.Control):
 				dc.DrawBitmap( self.checkeredFlag, x - self.checkeredFlag.GetWidth() - 1, round(yTop + hMiddle - self.checkeredFlag.GetHeight() / 2), False )
 				dc.DrawText( tCur, round(x - textWidth - textHeight / 8), round(yTop + hMiddle - tickHeight - textHeight) )
 				
-				# Draw broom.
+				# Draw the broom.
 				t = raceTimes[-1]
 				tCur = Utils.formatTime( t )
 				textWidth, textHeight = dc.GetTextExtent( tCur )
@@ -300,8 +300,12 @@ class RaceHUD(wx.Control):
 				except (TypeError, IndexError):
 					ebt = None
 				if ebt:
-					x = xLeft + int( ebt * xMult )
-					dc.DrawBitmap( self.bell, round(x), round(yTop + hMiddle - self.bell.GetHeight()*1.5) )
+					x = round(xLeft + ebt * xMult )
+					dc.DrawBitmap( self.bell, x, round(yTop + hMiddle - self.bell.GetHeight()*1.5) )
+					penSave = dc.GetPen()
+					dc.SetPen( wx.Pen(wx.Colour(220,0,0), 3) )
+					dc.DrawLine( x, round(yTop + hMiddle - tickHeight), x, round(yTop + hMiddle + tickHeight) )
+					dc.SetPen( penSave )
 								
 				ctx.SetPen( wx.BLACK_PEN )
 				

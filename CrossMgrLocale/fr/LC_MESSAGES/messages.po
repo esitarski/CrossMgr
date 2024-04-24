@@ -976,6 +976,14 @@ msgstr "Nom2:"
 msgid "Bib"
 msgstr "Dossard"
 
+#: Setup.py
+msgid "Early Bell Time"
+msgstr "Heure de cloche anticipée"
+
+#: Setup.py
+msgid "Early Bell"
+msgstr "Cloche anticipée"
+
 #: EditEntry.py:404
 msgid "Clock Time"
 msgstr "Temps d'horloge"
