@@ -11,7 +11,7 @@ from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 class SetLaps( wx.Dialog ):
 	updateInterval = 5314
 	
-	def __init__( self, parent, category, id = wx.ID_ANY ):
+	def __init__( self, parent, category, id=wx.ID_ANY ):
 		super().__init__( parent, id, _("Set Laps"),
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
