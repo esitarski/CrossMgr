@@ -27,12 +27,13 @@ class EarlyBellDialog( wx.Dialog ):
 		nes.Add( self.earlyBellTimeLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
 		nes.Add( self.earlyBellTime, 1, flag=wx.LEFT|wx.EXPAND, border=4 )
 		
-		bs = self.CreateButtonSizer( wx.OK | wx.CANCEL )
+		bs = self.CreateSeparatedButtonSizer( wx.OK | wx.CANCEL )
 		
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
 		mainSizer.Add( title, flag=wx.ALL|wx.EXPAND, border=4 )
 		mainSizer.Add( nes, flag=wx.ALL|wx.EXPAND, border=4 )
-		mainSizer.Add( bs, flag=wx.ALL|wx.EXPAND, border=4 )
+		if bs:
+			mainSizer.Add( bs, flag=wx.ALL|wx.EXPAND, border=4 )
 
 		self.SetSizerAndFit( mainSizer )
 		
