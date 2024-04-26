@@ -755,20 +755,24 @@ class GanttChartPanel(wx.Panel):
 			if not self.minimizeLabels:
 				dc.DrawText( nowTimeStr, x - labelWidth // 2, yLast + 2 )
 		
-		# Draw the vertical line tracker.
-		if xLeft <= self.xMove < xRight:
+		# Draw the cursor crosshair.
+		if self.moveIRider is not None and xLeft <= self.xMove < xRight:
 			x = self.xMove
 			self.tCursor = self.xToT( self.xMove )
 			
 			tStr = Utils.formatTime( self.tCursor )
 			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )
 			
-			ctColour = '#CF9FFF'
+			# Draw the vertical and horizontal lines.
+			ctColour = '#3F3F3F'
+			ctTextColour = wx.WHITE
+			
 			dc.SetPen( wx.Pen(ctColour, 3) )
 			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
-			dc.SetPen( wx.Pen(wx.WHITE, 1) )
-			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			if self.data[self.moveIRider]:
+				dc.DrawLine( xLeft-4, self.yMove, xRight+4, self.yMove )
 			
+			# Draw the time text.
 			dc.SetBrush( wx.Brush(ctColour) )
 			dc.SetPen( wx.Pen(ctColour,1) )
 			rect = wx.Rect( x - labelWidth//2-2, 0, labelWidth+4, labelHeight )
@@ -777,7 +781,7 @@ class GanttChartPanel(wx.Panel):
 				rect.SetY( yLast+2 )
 				dc.DrawRectangle( rect )
 
-			dc.SetTextForeground( wx.BLACK )
+			dc.SetTextForeground( ctTextColour )
 			dc.DrawText( tStr, x - labelWidth // 2, 0 )
 			if not self.minimizeLabels:
 				dc.DrawText( tStr, x - labelWidth // 2, yLast + 2 )			
