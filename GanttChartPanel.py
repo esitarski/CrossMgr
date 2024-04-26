@@ -231,7 +231,7 @@ class GanttChartPanel(wx.Panel):
 		self.xMove, self.yMove = event.GetPosition()
 		redrawRequired = (self.moveIRider is not None)
 		self.moveIRider, self.moveLap = None, None
-		self.moveTimer.Start( 100, True )
+		self.moveTimer.Start( 25, True )	# If the timer is already running, it will be stopped and restarted.
 	
 	def OnMoveTimer( self, event ):
 		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
@@ -303,6 +303,7 @@ class GanttChartPanel(wx.Panel):
 		dc.Clear()
 		
 		tooSmall = (width < 50 or height < 24)
+		self.tCursor = None
 		
 		if not self.data or self.dataMax == 0 or tooSmall:
 			self.empty = True
@@ -417,6 +418,7 @@ class GanttChartPanel(wx.Panel):
 		fontLegend = wx.Font( (0,int(barHeight*.75)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 		fontNote = wx.Font( (0,int(barHeight*.8)), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
 
+		self.fontLegend = fontLegend
 		dc.SetFont( fontLegend )
 		textWidth, textHeight = dc.GetTextExtent( '00:00' if self.dataMax < 60*60 else '00:00:00' )
 			
@@ -516,9 +518,11 @@ class GanttChartPanel(wx.Panel):
 		
 		tLeaderLast = None
 		dy = 0
-		
+
 		def tToX( t ):
 			return int(labelsWidthLeft + (t-tAdjust) * xFactor)
+		# Set inverse function to get from screen x coords to time.
+		self.xToT = lambda x: (x-labelsWidthLeft) / xFactor + tAdjust
 		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
@@ -729,7 +733,7 @@ class GanttChartPanel(wx.Panel):
 		# Draw the now timeline.
 		timeLineTime = self.nowTime if self.nowTime and self.nowTime < self.dataMax else tLeaderLast
 		nowTimeStr = Utils.formatTime( timeLineTime )
-		labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )	
+		labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )
 		x = int(labelsWidthLeft + (timeLineTime - tAdjust) * xFactor)
 		if xLeft <= x < xRight:			
 			ntColour = '#339966'
@@ -750,6 +754,37 @@ class GanttChartPanel(wx.Panel):
 			dc.DrawText( nowTimeStr, x - labelWidth // 2, 0 )
 			if not self.minimizeLabels:
 				dc.DrawText( nowTimeStr, x - labelWidth // 2, yLast + 2 )
+		
+		# Draw the cursor crosshair.
+		if self.moveIRider is not None and xLeft <= self.xMove < xRight:
+			x = self.xMove
+			self.tCursor = self.xToT( self.xMove )
+			
+			tStr = Utils.formatTime( self.tCursor )
+			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )
+			
+			# Draw the vertical and horizontal lines.
+			ctColour = '#3F3F3F'
+			ctTextColour = wx.WHITE
+			
+			dc.SetPen( wx.Pen(ctColour, 3) )
+			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
+			if self.data[self.moveIRider]:
+				dc.DrawLine( xLeft-4, self.yMove, xRight+4, self.yMove )
+			
+			# Draw the time text.
+			dc.SetBrush( wx.Brush(ctColour) )
+			dc.SetPen( wx.Pen(ctColour,1) )
+			rect = wx.Rect( x - labelWidth//2-2, 0, labelWidth+4, labelHeight )
+			dc.DrawRectangle( rect )
+			if not self.minimizeLabels:
+				rect.SetY( yLast+2 )
+				dc.DrawRectangle( rect )
+
+			dc.SetTextForeground( ctTextColour )
+			dc.DrawText( tStr, x - labelWidth // 2, 0 )
+			if not self.minimizeLabels:
+				dc.DrawText( tStr, x - labelWidth // 2, yLast + 2 )			
 		
 		# Store the drawing scale parameters.
 		self.xFactor = xFactor

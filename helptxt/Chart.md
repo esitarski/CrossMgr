@@ -60,6 +60,18 @@ Swap with Rider before|Swap current rider's finish time with preceeding rider's 
 Swap with Rider after|Swap current rider's finish time with the following rider's finish time
 Show Lap Details...|Shows the details of the lap.  This includes the lap start, end, time, time down, and any reasons for changes to the start or end of the lap.
 RiderDetail|Opens RiderDetail dialog for current rider
+Set Early Bell Time|Opens a Dialog to set the Early Bell Time for this category at the time under the cursor.
 Results|Jumps to Results tab with current rider highlighed
 
 Remember, Ctrl-Z is undo!  (Ctrl-Y is redo).
+
+__Notes:__
+
+__Set Early Bell Time:__  Allows you to set the __Early Bell Time__ directly from the display.
+The Early Bell Time is the time when all all riders in a category are given the bell.
+
+The Chart screen makes it easy to decide when to schedule an Early Bell.  Check if there is a
+natural break between riders in contention (who you wish to finish a lap early) and riders who are close to the leader in the Start Wave.
+Move the cursor to where you want the Early Bell time, select __Set Early Bell Time__, and click OK.
+To remove an __Early Bell Time__, set it to blank.
+

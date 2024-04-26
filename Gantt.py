@@ -8,8 +8,38 @@ from GetResults import GetResults, RidersCanSwap, RiderResult
 from Undo import undo
 import EditEntry
 from NumberEntryDialog import NumberEntryDialog
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from bisect import bisect_right
 
+class EarlyBellDialog( wx.Dialog ):
+	def __init__( self, parent, category, earlyBellTime=None, id=wx.ID_ANY ):
+		super().__init__( parent, id, _("Early Bell Time"),
+						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL|wx.STAY_ON_TOP )
+
+		title = wx.StaticText(self, label=category.fullname)
+		title.SetFont( wx.Font( wx.FontInfo(14) ) )
+
+		self.earlyBellTimeLabel = wx.StaticText(self, label=_('Early Bell Time'))
+		self.earlyBellTime = HighPrecisionTimeEdit( self, allow_none=True, display_milliseconds=False )
+		self.earlyBellTime.SetSeconds( earlyBellTime or None )
+
+		nes = wx.BoxSizer( wx.HORIZONTAL )
+		nes.Add( self.earlyBellTimeLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		nes.Add( self.earlyBellTime, 1, flag=wx.LEFT|wx.EXPAND, border=4 )
+		
+		bs = self.CreateSeparatedButtonSizer( wx.OK | wx.CANCEL )
+		
+		mainSizer = wx.BoxSizer( wx.VERTICAL )
+		mainSizer.Add( title, flag=wx.ALL|wx.EXPAND, border=4 )
+		mainSizer.Add( nes, flag=wx.ALL|wx.EXPAND, border=4 )
+		if bs:
+			mainSizer.Add( bs, flag=wx.ALL|wx.EXPAND, border=4 )
+
+		self.SetSizerAndFit( mainSizer )
+		
+	def GetEarlyBellTime( self ):
+		return self.earlyBellTime.GetSeconds()
+		
 def UpdateSetNum( num ):
 	if num is None:
 		return
@@ -143,6 +173,7 @@ class Gantt( wx.Panel ):
 				(None, None, None, None),
 				(_('RiderDetail') + '...',			_('Show RiderDetail Dialog'),	self.OnPopupRiderDetail, allCases),
 				(_('Results'), 						_('Switch to Results tab'),		self.OnPopupResults, allCases),
+				(_('Set Early Bell') + '...', 		_('Set Early Bell Time'),		self.OnPopupEarlyBell, allCases),
 			]
 			
 			self.splitMenuInfo = [
@@ -501,6 +532,22 @@ class Gantt( wx.Panel ):
 		mainWin.photoDialog.Show( True )
 		mainWin.photoDialog.refresh( self.numSelect, self.entryEnd.t if self.entryEnd else None )
 		
+	def OnPopupEarlyBell( self, event ):
+		race = Model.race
+		if not race or not self.numSelect:
+			return
+		category = race.getCategory( self.numSelect )
+		if not category:
+			return
+		earlyBellTime = getattr( self.ganttChart, 'tCursor', None )
+		if not earlyBellTime:
+			return
+		with EarlyBellDialog( self, category=category, earlyBellTime=earlyBellTime ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK and category.earlyBellTime != dlg.GetEarlyBellTime():
+				category.earlyBellTime = dlg.GetEarlyBellTime()
+				race.setChanged()
+				wx.CallAfter( Utils.getMainWin().refreshAll )
+			
 	def updateStats( self, results ):
 		s = ''
 		if results:
