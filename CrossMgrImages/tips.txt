@@ -19,13 +19,13 @@ When you get a chance, watch the Race Animation during a race.
 You can upload a .gpx file into CrossMgr of the race course.  CrossMgr will use this file to show the race as part of its results.
 Race results are always current during a race.
 Try watching the Race Animation after a race.
-Try watching different numbers to reveal race strategy in a Race Animation.
+Try highlighting different numbers in Race Animation to reveal race strategy.
 Use Function keys to switch screens.  Press the Function Key with the same number as the screen.
 During a race, check off expected numbers as they come up on the Expected screen instead of retyping them in.
 CrossMgr manual input accepts minimum digits based on the Category number ranges.\nFor example, if there is one Category with numbers in the range 200-299, it is unnecessary to enter the leading "2" - entering the last two digits are sufficient.\nCrossMgr knows to automatically add the leading "2".
 Donating to CrossMgr helps make it better.\nSee sites.google.com/site/crossmgrsoftware for details.\nYour support is greatly appreciated.
 Try double-clicking on numbers in the Results and Passings pages.
-"Splitting" an entry in the Chart screen allows you to add splits to a lap entry.\nThis is how you correct for missed numbers.
+"Splitting" a lap on the Chart screen allows you to add missing time to a lap entry (right-button click).\nThis is how you correct for missed numbers.
 If there is a separate start area, always run the first lap so that it is longer than the other laps.\nCrossMgr will adjust its calculations.
 See how others are using CrossMgr.\nDo a web search for "powered by crossmgr" and look at results from races around the world.
 Try to get as many numbers as you can, but don't worry if you miss a few.\nCrossMgr will "fill in the gaps" after it has built up a profile about each rider.
@@ -35,12 +35,13 @@ Try toggling the display options in Results and Passings to see additional infor
 CrossMgr continues a run after a race is started even if the program is closed and the computer is shut down.\nWhen re-opened, the race will resume where just where it left off.\nTry it sometime!
 Don't bring an expensive computer to a bike race.\nGet a cheap (used) computer that you don't mind if it ends up in a puddle.
 CrossMgr is available on Windows, Mac and Linux.
-You can change the race Categories and number ranges at any time: before, during and after a race.
+You can change the race Categories and number ranges at any time: before, during and after a race.  Resuls will update automatically.
 Consider running CrossMgr with two people at the same time for backup.
 CrossMgr correctly estimates the number of laps in a race even if the 1st lap is not the same time/distance as the rest of the race.
+CrossMgr uses robust, predictive analytics to predict rider arrival times.
 Donations to CrossMgr help pay for computers and RFID readers that make it better.\nYour support is greatly appreciated.
 Try an external keypad for entering numbers on a laptop.  This works much better than a regular keyboard.
-Don't worry if you can't enter every number.  CrossMgr will project missing entries automatically.
+Don't worry if you can't enter every number during manual input.  CrossMgr can correct many missing entries automatically.  You can also fix missing entries by adding Splits frmo the Chart screen (right-button).
 Use HTML export to publish web-ready results.
 You can publish to Excel to create an Excel sheet with the results.\nReformat the results in Excel anyway you like, then publish to the web.
 CrossMgr supports UCI Dataride Excel format.  See Help Dataride for details.
@@ -52,8 +53,7 @@ The number of laps can be changed during a race by clicking on the Category bar 
 You can change the number of laps before, during or after a race - no input is lost.
 HTML output can show Race Time (splits) as well as Lap Time.
 CrossMgr is free to use with riders under age 17.
-SHIFT+F1 or CTRL+h will show help on any screen.
-CTRL+z is Undo, CTRL+y is Redo.  Undo capability is only available after the race has been Finished.
+CTRL+z is Undo, CTRL+y is Redo.  Undo capability is only available after the race has been Finished (this is to prevent undoing race input).
 CrossMgr is used at 1,000's of events around the world anually.
 CrossMgr can publish results in real-time while a race is running.  See Files|Publish HTML results with FTP...
 CrossMgr shows its corrections in Yellow.  It shows your edits in Orange.
@@ -73,3 +73,4 @@ CrossMgr supports a live Announcer web page.  This page has all the essential in
 CrossMgr is fully integrated with RaceDB, a race management database system.
 CrossMgr can publish directly to CrossResults and RaceResults.
 CrossMgr supports many RFID readers, including RaceResult and native Impinj (LLRP-compatible) readers.
+See how CrossMgr features work by running a Simulation (Tools|Simulation).\nThe Simulation enters data automatically and is a great way to see how any feature works.
