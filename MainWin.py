@@ -138,7 +138,7 @@ threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Th
 '''
 #----------------------------------------------------------------------------------
 
-def ShowSplashScreen():
+def ShowSplashScreen( nextCallback = None ):
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CrossMgrSplash.png'), wx.BITMAP_TYPE_PNG )
 	
 	# Write in the version number into the bitmap.
@@ -155,32 +155,38 @@ def ShowSplashScreen():
 	dc.SelectObject( wx.NullBitmap )
 	
 	showSeconds = 2.5
-	adv.SplashScreen(bitmap, adv.SPLASH_CENTRE_ON_SCREEN|adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	ss = adv.SplashScreen(bitmap, adv.SPLASH_CENTRE_ON_SCREEN|adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	ss.Show()
+	if nextCallback:
+		def cb( event ):
+			event.Skip()
+			ss.Hide()
+			wx.CallAfter( nextCallback )
+			
+		ss.Bind( wx.EVT_CLOSE, cb )
 			
 #----------------------------------------------------------------------------------
 
 class MyTipProvider( adv.TipProvider ):
 	def __init__( self, fname, tipNo = None ):
-		self.tips = []
 		try:
-			with open(fname) as f:
-				for line in f:
-					line = line.strip()
-					if line and line[0] != '#':
-						self.tips.append( line )
-			if tipNo is None:
-				tipNo = (int(round(time.time() * 1000)) * 13) % (len(self.tips) - 1)
+			with open(fname, encoding='utf8') as f:
+				tipStr = f.read()
 		except Exception:
-			pass
-		if tipNo is None:
-			tipNo = 0
-		self.tipNo = tipNo
-		wx.PyTipProvider.__init__( self, self.tipNo )
+			tipStr = ''
+			
+		self.tips = [t.strip() for t in tipStr.split('\n')]
+		self.tips = [t for t in self.tips if t and not t.startswith('#')]
+		self.iTips = list( range(len(self.tips)) )
+		random.shuffle( self.iTips )
+		
+		self.tipNo = tipNo if tipNo is not None else (int(round(time.time() * 1000)) * 13) % (len(self.tips) - 1)
+		super().__init__( self.tipNo )
 			
 	def GetCurrentTip( self ):
 		if self.tipNo < 0 or self.tipNo >= len(self.tips):
 			self.tipNo = 0
-		return self.tipNo
+		return self.iTips[self.tipNo]
 		
 	def GetTip( self ):
 		if not self.tips:
@@ -209,22 +215,16 @@ class MyTipProvider( adv.TipProvider ):
 
 def ShowTipAtStartup():
 	mainWin = Utils.getMainWin()
-	if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
-		return
+	#if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
+	#	return
 	
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	try:
 		provider = MyTipProvider( tipFile )
-		'''
-		if VersionMgr.isUpgradeRecommended():
-			provider.tipNo = 0
-		else:
-			provider.DeleteFirstTip()
-		'''
-		showTipAtStartup = wx.ShowTip( None, provider, True )
+		showTipAtStartup = wx.adv.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
-	except Exception:
+	except Exception as e:
 		pass
 
 class SimulateDialog(wx.Dialog):
@@ -4388,8 +4388,7 @@ def MainLoop():
 	#tbicon.SetIcon( icon, "CrossMgr" )
 
 	if args.verbose:
-		ShowSplashScreen()
-		ShowTipAtStartup()
+		wx.CallLater( 500, ShowSplashScreen, ShowTipAtStartup )
 	
 	mainWin.forecastHistory.setSash()
 	
