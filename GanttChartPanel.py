@@ -799,7 +799,7 @@ if __name__ == '__main__':
 	def GetData():
 		data = []
 		interp = []
-		for i in range(100):
+		for i in range(1000):
 			data.append( [t + i*10.0 for t in range(0, 60*60 * 24 * 2, 7*60)] )
 			if i % 5 == 1:
 				data[-1].insert( (i//3) + 1, data[-1][i//3] + 0.05 )
