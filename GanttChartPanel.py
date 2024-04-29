@@ -231,7 +231,7 @@ class GanttChartPanel(wx.Panel):
 		self.xMove, self.yMove = event.GetPosition()
 		redrawRequired = (self.moveIRider is not None)
 		self.moveIRider, self.moveLap = None, None
-		self.moveTimer.Start( 25, True )	# If the timer is already running, it will be stopped and restarted.
+		self.moveTimer.Start( 40, True )	# If the timer is already running, it will be stopped and restarted.
 	
 	def OnMoveTimer( self, event ):
 		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
