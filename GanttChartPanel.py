@@ -519,10 +519,9 @@ class GanttChartPanel(wx.Panel):
 		tLeaderLast = None
 		dy = 0
 
-		def tToX( t ):
-			return int(labelsWidthLeft + (t-tAdjust) * xFactor)
+		tToX = lambda t: int(labelsWidthLeft + (t-tAdjust) * xFactor)
 		# Set inverse function to get from screen x coords to time.
-		self.xToT = lambda x: (x-labelsWidthLeft) / xFactor + tAdjust
+		xToT = lambda x: (x-labelsWidthLeft) / xFactor + tAdjust
 		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
@@ -668,7 +667,7 @@ class GanttChartPanel(wx.Panel):
 					if statusTextWidth and self.status[i]:
 						dc.DrawText( self.status[i], width - statusTextWidth + statusTextSpace, yLast )
 
-			if '{}'.format(self.numSelect) == '{}'.format(numFromLabel(self.labels[i])):
+			if f'{self.numSelect}' == f'{numFromLabel(self.labels[i])}':
 				yHighlight = yCur
 
 			yLast = yCur
@@ -758,7 +757,7 @@ class GanttChartPanel(wx.Panel):
 		# Draw the cursor crosshair.
 		if self.moveIRider is not None and xLeft <= self.xMove < xRight:
 			x = self.xMove
-			self.tCursor = self.xToT( self.xMove )
+			self.tCursor = xToT( self.xMove )
 			
 			tStr = Utils.formatTime( self.tCursor )
 			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )
