@@ -223,9 +223,8 @@ class GanttChartPanel(wx.Panel):
 		if iRider is None:
 			return
 		self.numSelect = numFromLabel( self.labels[iRider] )
-		if self.numSelect is not None:
-			if self.dClickCallback:
-				self.dClickCallback( self.numSelect )
+		if self.numSelect is not None and self.dClickCallback:
+			self.dClickCallback( self.numSelect )
 	
 	def OnMove( self, event ):
 		# Set a timer to update the screen a few milliseconds after the mouse stops moving.
