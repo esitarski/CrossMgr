@@ -228,12 +228,13 @@ class GanttChartPanel(wx.Panel):
 				self.dClickCallback( self.numSelect )
 	
 	def OnMove( self, event ):
-		self.xMove, self.yMove = event.GetPosition()
-		redrawRequired = (self.moveIRider is not None)
-		self.moveIRider, self.moveLap = None, None
-		self.moveTimer.Start( 40, True )	# If the timer is already running, it will be stopped and restarted.
+		# Set a timer to update the screen a few milliseconds after the mouse stops moving.
+		# This prevents redraw performance problems.
+		self.moveTimer.Start( 25, True )	# If the timer is already running, it will be stopped and restarted.
 	
 	def OnMoveTimer( self, event ):
+		# Get latest mouse coordinates to eliminate last-minute movement errors.
+		self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
 		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
 		self.Refresh()
 	
@@ -541,8 +542,7 @@ class GanttChartPanel(wx.Panel):
 			tTooShort = 9.0	# If a lap is shorter than 9 seconds, consider it a duplicate entry.
 			
 			# Quickly find the first visible gantt chart rectangle.
-			jStart = max( 0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1 )
-			for j in range(jStart, len(s)):
+			for j in range(max(0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1), len(s)):
 				if xLast >= xRight:
 					break
 				t = s[j]
@@ -562,12 +562,10 @@ class GanttChartPanel(wx.Panel):
 					dd = int(dy * 0.3)
 					ic = j % len(self.colours)
 					
-					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic])
-					ctx.SetBrush(b1)
-					ctx.DrawRectangle(xLast, yLast     , xCur - xLast + 1, dd + 1)
+					ctx.SetBrush( ctx.CreateLinearGradientBrush(0, yLast, 0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic]) )
+					ctx.DrawRectangle(xLast, yLast, xCur - xLast + 1, dd + 1)
 					
-					b2 = ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic])
-					ctx.SetBrush(b2)
+					ctx.SetBrush( ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic]) )
 					ctx.DrawRectangle(xLast, yLast + dd, xCur - xLast + 1, dy-dd )
 					
 					dc.SetBrush( transparentBrush )
