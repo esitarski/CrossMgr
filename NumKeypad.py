@@ -255,14 +255,12 @@ def getCategoryStats():
 				
 			if status == Finisher:
 				if rr.raceTimes:
-					lastTime = rr.raceTimes[-1]
-					interp = rr.interp[-1]
+					lastTime, interp = rr.raceTimes[-1], rr.interp[-1]
 					if isTimeTrial:
-						# Correct for the time trial start time.
-						lastTime += firstTime or 0.0
+						# Adjust to the time trial start time.
+						lastTime += firstTime
 				else:
-					lastTime = 0.0
-					interp = True
+					lastTime, interp = 0.0, True
 				
 				if lastTime <= lastRaceTime and (not interp if isRunning else False):
 					finished += 1
