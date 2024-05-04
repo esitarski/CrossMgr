@@ -262,7 +262,7 @@ def getCategoryStats():
 				else:
 					lastTime, interp = 0.0, True
 				
-				if lastTime <= lastRaceTime and (not interp if isRunning else False):
+				if lastTime <= lastRaceTime and (not interp if isRunning else True):
 					finished += 1
 				else:
 					onCourse += 1
