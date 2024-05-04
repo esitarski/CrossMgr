@@ -527,7 +527,7 @@ class GanttChartPanel(wx.Panel):
 			# Record the leader's last x position.
 			if tLeaderLast is None:
 				tLeaderLast = s[-1] if s else 0.0
-			if not( iDataShowStart <= i < iDataShowEnd ):
+			if not ( iDataShowStart <= i < iDataShowEnd ):
 				continue
 			
 			try:

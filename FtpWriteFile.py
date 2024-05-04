@@ -192,7 +192,7 @@ class RealTimeFtpPublish:
 
 	def publishEntry( self, publishNow = False ):
 		'''
-		This function attempts to publish race results with low latency but without wasting bandwidth.
+		This function attempts to publish competiton results with low latency but without wasting bandwidth.
 		It was inspired by TCP/IP and double-exponential backoff.
 		
 		When we get a new entry, we schedule an update in the future to give time for more entries to accumulate.
