@@ -70,7 +70,7 @@ icons = {
 	'AnnouncerIconSrc': readBase64('announcer.png'),
 }
 
-with open(os.path.join(Utils.getHtmlFolder(), 'Index.html')) as f:
+with open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf8') as f:
 	indexTemplate = Template( f.read() )
 
 PORT_NUMBER = 8765
@@ -96,12 +96,12 @@ def getCurrentTTCountdownHtml():
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
 
-with open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html')) as f:
+with open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf8') as f:
 	lapCounterTemplate = f.read().encode()
 def getLapCounterHtml():
 	return lapCounterTemplate
 	
-with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html')) as f:
+with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf8') as f:
 	announcerHTML = f.read().encode()
 def getAnnouncerHtml():
 	return announcerHTML
@@ -176,7 +176,7 @@ class ContentBuffer:
 			
 		cache['status'] = self.Changed
 		try:
-			with open(fnameFull) as f:
+			with open(fnameFull, encoding='utf8') as f:
 				content = f.read()
 		except Exception:
 			cache['status'] = self.ReadError

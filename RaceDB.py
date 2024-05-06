@@ -19,7 +19,7 @@ def GetRaceDBConfigFile():
 def SetRaceDBConfig( url, user, password ):
 	config = configparser.ConfigParser()
 	config['RaceDB'] = { 'url':url, 'user':user, 'password':password }
-	with open( GetRaceDBConfigFile(), 'w' ) as f:
+	with open( GetRaceDBConfigFile(), 'w', encoding='utf8' ) as f:
 		config.write( f )
 
 def GetRaceDBConfig():

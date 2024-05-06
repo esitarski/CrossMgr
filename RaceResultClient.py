@@ -306,7 +306,7 @@ wb = None
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with open('RaceResultTest.csv', 'w') as f:
+with open('RaceResultTest.csv', 'w', encoding='utf8') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '%d,%s\n' % (n, tag[n]) )

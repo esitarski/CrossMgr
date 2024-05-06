@@ -37,7 +37,7 @@ class HelpHandler( BaseHTTPRequestHandler ):
 			else:
 				file = url2pathname(os.path.basename(up.path.split('#')[0]))
 				fname = os.path.join( Utils.getHelpFolder(), file )
-				with open(fname, 'r') as fp:
+				with open(fname, 'r', encoding='utf8') as fp:
 					content = fp.read()
 				content_type = self.html_content
 		except Exception as e:

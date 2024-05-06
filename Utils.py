@@ -840,7 +840,7 @@ if __name__ == '__main__':
 	
 	hd = getHomeDir()
 	fn = os.path.join(hd, 'Test.txt')
-	with open( fn, 'w' ) as fp:
+	with open( fn, 'w', encoding='utf8' ) as fp:
 		print(  'successfully opened: ' + fn )
 
 cameraError = None

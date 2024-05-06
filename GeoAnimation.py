@@ -402,14 +402,14 @@ class GeoTrack:
 		return CreateGPX( courseName, self.gpsPoints )
 	
 	def writeGPXFile( self, fname ):
-		with io.open( fname, 'w') as fp:
+		with open( fname, 'w', encoding='utf8') as fp:
 			self.getGPX( os.path.splitext(os.path.basename(fname))[0] ).writexml(fp, indent="", addindent=" ", newl="\n", encoding='utf-8')
 	
 	def readElevation( self, fname ):
 		header = None
 		distance, elevation = [], []
 		iDistance, iElevation =  None, None
-		with io.open(fname, 'r') as fp:
+		with open(fname, 'r', encoding='utf8') as fp:
 			for line in fp:
 				fields = [f.strip() for f in line.split(',')]
 				if not header:
@@ -1306,7 +1306,7 @@ if __name__ == '__main__':
 	zf.writestr( 'track.kml', geoTrack.asKmlTour('Race Track') )
 	zf.close()
 	
-	with open('track.kml', 'w') as f:
+	with open('track.kml', 'w', encoding='utf8') as f:
 		f.write( geoTrack.asKmlTour('Race Track') )
 		
 	#sys.exit()

@@ -28,7 +28,7 @@ def Server( q, fname ):
 	while keepGoing:
 		# Read all available messages from the queue.
 		messages = []
-		while 1:
+		while True:
 			try:
 				m = q.get( not messages )
 				if m == terminateMessage:
@@ -42,7 +42,7 @@ def Server( q, fname ):
 		# Write all messages to the stream file.
 		if messages:
 			try:
-				with io.open(fname, 'a') as f:
+				with open(fname, 'a', encoding='utf8') as f:
 					f.write( ''.join(messages) )
 				for m in messages:
 					q.task_done()

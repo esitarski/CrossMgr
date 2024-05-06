@@ -308,6 +308,6 @@ if __name__ == '__main__':
 	print( test2 )
 	
 	
-	with io.open( 'Checklist.rson', 'r', encoding = 'UTF-8' ) as fp:
+	with open( 'Checklist.rson', 'r', encoding='utf8' ) as fp:
 		v = loads( fp.read() )
 		pprint.pprint( v )

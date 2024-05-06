@@ -175,7 +175,7 @@ for fname in glob.glob( '*.*' ):
 	
 	contents = removeTabs( contents )
 	contents.replace( '\r\n', '\n' )
-	with io.open(os.path.join(srcDir, fname), 'w') as f:
+	with open(os.path.join(srcDir, fname), 'w', encoding='utf8') as f:
 		f.write( contents )
 
 print( 'Adding script to bin dir..' )
@@ -219,12 +219,12 @@ setup = {
 	],
 }
 
-with open(os.path.join(pypiDir,'setup.py'), 'w') as f:
+with open(os.path.join(pypiDir,'setup.py'), 'w', encoding='utf8') as f:
 	f.write( 'from distutils.core import setup\n' )
 	f.write( 'setup(\n' )
 	for key, value in setup.items():
 		f.write( '    {}={},\n'.format(key, repr(value)) )
-	f.write( "    long_description=open('README.txt').read(),\n" )
+	f.write( "    long_description=open('README.txt').read(encoding='utf8'),\n" )
 	f.write( ')\n' )
 
 print( 'Creating install package...' )

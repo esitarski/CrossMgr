@@ -15,7 +15,7 @@ def ParseHtmlPayload( fname=None, content=None ):
 
 	if not content:
 		try:
-			with io.open(fname) as f:
+			with open(fname, encoding='utf8') as f:
 				content = f.read()
 		except Exception as e:
 			return {'success':False, 'error':e, 'payload':None}
