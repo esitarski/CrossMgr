@@ -3,6 +3,12 @@
 
 # What's New in CrossMgr
 
+## May 4, 2024
+
+Re-factored the Riders on Course table on the Record page.
+This display was simplified to show the riders on course for all categories, and for each category
+It also breaks down of the status of the riders (Starters, Finished, DNF, Pulled, etc.).
+
 ## Apr, 2024
 
 Added Early Bell features.  All riders after the Early Bell will be on their last lap.
@@ -25,7 +31,6 @@ __Set Laps__ allows you to easily change the number of laps while the race is ru
 If provides all information about the current number of laps and the new proposed number including the winner's time and the time of the last rider on course (taking potential lapping into account, of course).
 
 See [SetLaps][] for details.
-
 
 
 ## July 15, 2021

@@ -275,11 +275,10 @@ def getCategoryStats():
 			
 		finishedAll += finished
 		onCourseAll += onCourse
-		for k,v in stats.items():
+		for k, v in stats.items():
 			statsAll[k] += v
 	
-	statsStrAll = getStatsStr( finishedAll, onCourseAll, statsAll )
-	categoryStats[0] = (_('All'), statsStrAll )
+	categoryStats[0] = ( _('All'), getStatsStr(finishedAll, onCourseAll, statsAll) )
 	return categoryStats
 
 class NumKeypad( wx.Panel ):

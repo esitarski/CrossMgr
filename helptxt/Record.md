@@ -159,7 +159,8 @@ Clock|The current time of day.
 
 ## Riders on Course
 
-This display shows the total riders on course, a breakdown of the riders by category, and a count of which riders are on each lap.
+This display shows the riders on course for all categories, and for each category
+It also breaks down of the status of the riders (Starters, Finished, DNF, Pulled, etc.).
 
 ## Race Lap Chart
 
