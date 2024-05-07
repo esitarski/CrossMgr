@@ -48,7 +48,7 @@ class memoize:
 	
 	@classmethod
 	def clear( cls ):
-		cls.cache = {}
+		cls.cache.clear()
    
 	def __init__(self, func):
 		# print( 'memoize:', func.__name__ )
@@ -65,7 +65,7 @@ class memoize:
 				return value
 		except TypeError:
 			with self.rlock:
-				# uncachable -- for instance, passing a list as an argument.
+				# uncachable -- for instance, passing a list as an argument (unhashable objects).
 				# Better to not cache than to blow up entirely.
 				return self.func(*args)
 		with self.rlock:
@@ -1578,9 +1578,17 @@ class Race:
 		return tBest, rBest
 
 	@memoize
+	def groupRidersByCategory( self ):
+		rc = defaultdict( list )
+		getCategory = self.getCategory
+		for r in self.riders.values():
+			rc[getCategory(r.num)].append( r )				
+		return rc
+
+	@memoize
 	def getBestLapTime( self, lap ):
 		try:
-			return min( (r.getBestLapTime(lap), n) for n, r in self.riders.items() )
+			return min( (r.getBestLapTime(lap), n) for n, r in self.riders.items() )[1]
 		except ValueError:
 			return 0.0
 	

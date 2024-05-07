@@ -349,12 +349,13 @@ def _GetResultsCore( category ):
 	offsetSeconds = {cat: cat.getStartOffsetSecs() for cat in ([category] if category else race.getCategories())}
 	offsetSeconds[None] = 0.0
 	
-	for rider in list(race.riders.values()):
-		riderCategory = getCategory( rider.num )
-		
-		# Skip riders without a category as well as riders that don't match the given category.
-		if not riderCategory or (category and riderCategory != category):
-			continue
+	for rider in (race.groupRidersByCategory()[category].copy() if category else list(race.riders.values())):
+		if category:
+			riderCategory = category
+		else:
+			riderCategory = getCategory( rider.num )			
+			if not riderCategory:
+				continue
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
 		
