@@ -216,7 +216,7 @@ class Gantt( wx.Panel ):
 		
 		self.numBefore, self.numAfter = None, None
 		for iRow, attr in [(self.iRow - 1, 'numBefore'), (self.iRow + 1, 'numAfter')]:
-			if not(0 <= iRow < len(self.ganttChart.labels)):
+			if not (0 <= iRow < len(self.ganttChart.labels)):
 				continue
 			numAdjacent = GanttChartPanel.numFromLabel(self.ganttChart.labels[iRow])
 			if RidersCanSwap( riderResults, num, numAdjacent ):
@@ -461,7 +461,6 @@ class Gantt( wx.Panel ):
 			tLapStart = self.entryStart.t
 			tLapEnd = self.entryEnd.t
 			
-			iLap = self.entryStart.lap
 			try:
 				leaderNum = GanttChartPanel.numFromLabel( self.ganttChart.labels[0] )
 				leaderEntries = race.getRider(leaderNum).interpolate()

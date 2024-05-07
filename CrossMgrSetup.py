@@ -117,6 +117,7 @@ def make_inno_version():
 	with io.open('inno_setup.txt', 'w', encoding='utf-8') as f:
 		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
+
 make_inno_version()
 
 cmd = '"' + inno + '" ' + 'CrossMgr.iss'

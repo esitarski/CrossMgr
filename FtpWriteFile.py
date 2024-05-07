@@ -11,7 +11,6 @@ import threading
 
 import Utils
 import Model
-import HelpSearch
 from ExportGrid import getHeaderBitmap, drawQRCode
 from WebServer import WriteHtmlIndexPage
 
@@ -296,7 +295,6 @@ class FtpQRCodePrintout( wx.Printout ):
 		borderPix = int(max(widthPix, heightPix) / 20)
 		
 		widthFieldPix = widthPix - borderPix * 2
-		heightFieldPix = heightPix - borderPix * 2
 		
 		xPix = borderPix
 		yPix = borderPix
@@ -327,7 +325,7 @@ class FtpQRCodePrintout( wx.Printout ):
 		drawMultiLineText( dc, title, xPix + graphicWidth + graphicBorder, yPix )
 		yPix += graphicHeight + borderPix
 		
-		heightFieldPix = heightPix - yPix - borderPix
+		heightPix - yPix - borderPix
 		url = getattr( race, 'urlFull', '' )
 		if url.startswith( 'http://' ):
 			url = quote( url[7:] )

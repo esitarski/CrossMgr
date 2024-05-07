@@ -299,7 +299,6 @@ class GanttChartPanel(wx.Panel):
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		greyBrush = wx.Brush( wx.Colour(196,196,196), wx.SOLID )
 		lightGreyBrush = wx.Brush( wx.Colour(220,220,220), wx.SOLID )
-		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
@@ -335,7 +334,6 @@ class GanttChartPanel(wx.Panel):
 			
 		textWidthLeftMax += statusTextWidth
 		
-		maxBibWidth = textWidthLeftMax
 		textWidthRightMax = 0
 		for label in self.labels:
 			if label not in self.headerSet:
@@ -378,7 +376,6 @@ class GanttChartPanel(wx.Panel):
 			
 		iDataShowStart = self.verticalSB.GetThumbPosition() if self.verticalSB.IsShown() else 0
 		iDataShowEnd = iDataShowStart + self.verticalSB.GetThumbSize() + 1 if self.verticalSB.IsShown() else len(self.data)
-		tShowStart = self.horizontalSB.GetThumbPosition() if self.horizontalSB.IsShown() else 0
 
 		dc.SetFont( fontBarLabel )
 

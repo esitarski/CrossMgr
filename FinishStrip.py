@@ -212,7 +212,6 @@ class FinishStrip( wx.Panel ):
 		
 		dc.SetPen( wx.WHITE_PEN )
 		widthWin, heightWin = self.GetClientSize()
-		widthWinHalf = widthWin // 2
 		
 		xTimeLine = self.getXTimeLine()
 		text = formatTime( self.tDrawStart + (x - xTimeLine) / float(self.scaledPixelsPerSec) * (-1.0 if self.leftToRight else 1.0) )
@@ -275,7 +274,6 @@ class FinishStrip( wx.Panel ):
 		widthPhoto -= xClip * 2		
 		widthPhotoHalf = widthPhoto // 2
 		widthWin, heightWin = self.GetClientSize()
-		widthWinHalf = widthWin // 2
 		
 		xTimeLine = self.getXTimeLine()
 		

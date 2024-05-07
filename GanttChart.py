@@ -173,7 +173,7 @@ class GanttChart(wx.Control):
 		if getattr(self, 'iRiderLast', -1) == iRider and getattr(self, 'iLapLast', -1) == iLap:
 			self.iRiderLast = -1
 			self.iLapLast = -1
-			if getattr(self, 'lastClickTime', None) != None:
+			if getattr(self, 'lastClickTime', None) is not None:
 				dt = datetime.datetime.now() - getattr(self, 'lastClickTime')
 				if dt.total_seconds() < 0.5 and self.dClickCallback:
 					self.dClickCallback( self.numSelect )
@@ -193,13 +193,17 @@ class GanttChart(wx.Control):
 
 		tLapStart = self.data[iRider][iLap-1]
 		tLapEnd = self.data[iRider][iLap]
-		bip = BarInfoPopup(self, wx.SIMPLE_BORDER,
-								'{}: {}  {}: {}\n{}:  {} {}: {}\n{}: {}'.format(
-								_('Rider'), self.labels[iRider] if self.labels else '{}'.format(iRider),
-								_('Lap'), iLap,
-								_('Lap Start'), Utils.formatTime(tLapStart),
-								_('Lap End'), Utils.formatTime(tLapEnd),
-								_('Lap Time'), Utils.formatTime(tLapEnd - tLapStart)))
+		bip = BarInfoPopup(
+			self,
+			wx.SIMPLE_BORDER,
+			'{}: {}  {}: {}\n{}:  {} {}: {}\n{}: {}'.format(
+				_('Rider'), self.labels[iRider] if self.labels else '{}'.format(iRider),
+				_('Lap'), iLap,
+				_('Lap Start'), Utils.formatTime(tLapStart),
+				_('Lap End'), Utils.formatTime(tLapEnd),
+				_('Lap Time'), Utils.formatTime(tLapEnd - tLapStart)
+			)
+		)
 
 		xPos, yPos = event.GetPosition()
 		width, height = bip.GetClientSize()
@@ -234,7 +238,6 @@ class GanttChart(wx.Control):
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
-		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
@@ -267,12 +270,10 @@ class GanttChart(wx.Control):
 			legendSep = 0
 		labelsWidthLeft = textWidthLeftMax + legendSep
 		labelsWidthRight = textWidthRightMax + legendSep
-		drawLabels = self.showLabels
 			
 		if labelsWidthLeft > width / 2:
 			labelsWidthLeft = 0
 			labelsWidthRight = 0
-			drawLabels = False
 
 		xLeft = labelsWidthLeft
 		xRight = width - labelsWidthRight

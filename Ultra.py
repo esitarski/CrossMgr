@@ -114,8 +114,6 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	readerComputerTimeDiff = None
 	
 	s = None
-	status = None
-	startOperation = None
 	
 	def qLog( category, message ):
 		q.put( (category, message) )

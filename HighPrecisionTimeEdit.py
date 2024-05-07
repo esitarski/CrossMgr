@@ -47,6 +47,7 @@ def getSeconds( v, display_seconds, display_milliseconds ):
 # Masked controls still don't work on anything but Windows.  Sigh :(
 if platform.system() == 'Windows':
 	import wx.lib.masked as masked
+	
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = '##:##:##.###'
 		validRegex   = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'

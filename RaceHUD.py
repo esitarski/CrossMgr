@@ -127,7 +127,7 @@ class RaceHUD(wx.Control):
 			event.Skip()
 			return
 			
-		x, y = event.GetX(), event.GetY()
+		y = event.GetY()
 		
 		iRaceTimesHover = int( y / self.hudHeight )
 		if iRaceTimesHover >= len(self.raceTimes):
@@ -151,7 +151,6 @@ class RaceHUD(wx.Control):
 		
 		backColour = self.GetBackgroundColour()
 		backBrush = wx.Brush(backColour, wx.SOLID)
-		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
@@ -245,7 +244,6 @@ class RaceHUD(wx.Control):
 							xTextRight = xTextNew - zeroCharWidth/3
 		
 				# Draw the progress bar.
-				transparentBrush = wx.Brush( wx.WHITE, style = wx.TRANSPARENT )
 				ctx = wx.GraphicsContext.Create(dc)
 				ctx.SetPen( wx.Pen(wx.WHITE, 1, style = wx.TRANSPARENT ) )
 				dd = int(dy * 0.3)
@@ -398,6 +396,7 @@ if __name__ == '__main__':
 		return info
 	
 	multiple = 10
+	
 	def GetData():
 		return [
 			[t for t in range(0, 300*multiple, 32)],
@@ -415,6 +414,7 @@ if __name__ == '__main__':
 	RaceHUD.SetData( data, leader = [20,120], nowTime = data[0][3] - 13.0 - 30, earlyBellTime=[d[-5] for d in data])
 
 	startTime = datetime.datetime.now() - datetime.timedelta( seconds = 20 )
+	
 	def updateTime():
 		nowTime = (datetime.datetime.now() - startTime).total_seconds() / 2
 		RaceHUD.SetData( data, leader = [20,120], nowTime = nowTime, earlyBellTime=[d[-5] for d in data] )

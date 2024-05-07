@@ -1,0 +1,45 @@
+E302
+E201
+F821 undefined name '_'
+E202
+E274
+E272
+E271
+E221
+E222
+E231
+E101
+E203
+W191
+E305 expected 2 blank lines after class or function definition, found 1
+W293 blank line contains whitespace
+E231 missing whitespace after ','
+E251 unexpected spaces around keyword / parameter equals
+E227 missing whitespace around bitwise or shift operator
+E501 line too long
+E261 at least two spaces before inline comment
+E124 closing bracket does not match visual indentation
+E223 tab before operator
+W291 trailing whitespace
+E228 missing whitespace around modulo operator
+E128 continuation line under-indented for visual indent
+E265 block comment should start with '# '
+E273 tab after keyword
+E128 continuation line under-indented for visual indent
+E203 whitespace before ':'
+E731 do not assign a lambda expression, use a def
+W391 blank line at end of file
+F841 local variable 'e' is assigned to but never used
+W605
+E303
+E306
+E402
+E116
+E131
+E353
+E224
+E117
+E127
+E701
+E225
+E211

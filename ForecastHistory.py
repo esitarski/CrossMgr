@@ -1,20 +1,16 @@
 import wx
-import sys
 import bisect
 import operator
-import itertools
+
 import Utils
 import Model
-from Utils import formatTime, formatTimeGap, SetLabel
-from Utils import logException
+from Utils import formatTime, formatTimeGap
 import ColGrid
-import StatusBar
 import OutputStreamer
 import NumKeypad
 from PhotoFinish import TakePhoto, okTakePhoto
 from GetResults import GetResults, GetResultsWithData, IsRiderFinished
-from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry, DoDNS, DoDNF, DoPull
-from FixCategories import SetCategory
+from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry
 from FtpWriteFile import realTimeFtpPublish
 from GridHoverRow import AugmentGridHoverRow
 

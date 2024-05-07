@@ -344,12 +344,16 @@ def _GetResultsCore( category ):
 	
 	highPrecision = Model.highPrecisionTimes()
 	getCategory = race.getCategory
+	
+	# Cache the startOffsetSecs for all required categories.
+	offsetSeconds = {cat: cat.getStartOffsetSecs() for cat in ([category] if category else race.getCategories())}
+	offsetSeconds[None] = 0.0
+	
 	for rider in list(race.riders.values()):
 		riderCategory = getCategory( rider.num )
 		
-		if category and riderCategory != category:
-			continue
-		if not riderCategory:
+		# Skip riders without a category as well as riders that don't match the given category.
+		if not riderCategory or (category and riderCategory != category):
 			continue
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
@@ -359,7 +363,7 @@ def _GetResultsCore( category ):
 		interp = [e.interp for e in riderTimes]
 		
 		if len(times) >= 2:
-			times[0] = min(riderCategory.getStartOffsetSecs() if riderCategory else 0, times[1])
+			times[0] = min(offsetSeconds[riderCategory], times[1])
 			if isTimeTrial or riderCategory and categoryWinningLaps.get(riderCategory, None) and riderCategory.lappedRidersMustContinue:
 				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:
@@ -391,11 +395,13 @@ def _GetResultsCore( category ):
 		status = Finisher if rider.status in rankStatus else rider.status
 		if isTimeTrial and not lastTime and rider.status == Finisher:
 			status = NP
-		rr = RiderResult(	rider.num, status, lastTime,
-							riderCategory.fullname,
-							[times[i] - times[i-1] for i in range(1, len(times))],
-							times,
-							interp )
+		rr = RiderResult(
+			rider.num, status, lastTime,
+			riderCategory.fullname,
+			[times[i] - times[i-1] for i in range(1, len(times))],
+			times,
+			interp
+		)
 		
 		if isTimeTrial:
 			rr.startTime = rider.firstTime
@@ -740,7 +746,7 @@ def GetResults( category ):
 	# If the spreadsheet changed, clear the cache to update the results with new data.
 	try:
 		excelLink = Model.race.excelLink
-		externalInfo = excelLink.read()
+		excelLink.read()
 		if excelLink.readFromFile:
 			Model.resetCache()
 	except Exception as e:
