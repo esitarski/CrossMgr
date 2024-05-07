@@ -40,16 +40,19 @@ class memoize:
 	If called later with the same arguments, the cached value is returned, and
 	not re-evaluated.
 	
-	Does NOT work with kwargs.
-	Each function paramater must be hashable (for example, cannot be list).
+	Each function parameter must be hashable.
+	For example, passing a list as a argument won't work).
+	Does NOT accept kwargs.  Positiona arguments only.
 	"""
    
+    # Class-level cache and reentrant lock.    
 	cache = {}
-	rlock = threading.RLock()
+	rlock = threading.RLock()	# Recursive lock so we don't lock up if cached functions call each other.
 	
 	@classmethod
 	def clear( cls ):
-		cls.cache.clear()
+		with cls.rlock:
+			cls.cache.clear()
    
 	def __init__(self, func):
 		# print( 'memoize:', func.__name__ )
@@ -57,19 +60,19 @@ class memoize:
 		
 	def __call__(self, *args):
 		# print( self.func.__name__, args )
-		try:
-			return memoize.cache[(self.func.__name__, *args)]
-		except KeyError:
-			with self.rlock:
+		with self.rlock:
+			try:
+				return memoize.cache[(self.func.__name__, *args)]
+			except KeyError:
+				# The value is not in the cache.  Add it, and return the value.
 				value = memoize.cache[(self.func.__name__, *args)] = self.func(*args)
 				return value
-		except TypeError:
-			with self.rlock:
-				# uncachable -- for instance, passing a list as a paramater (unhashable objects).
-				# Better to ignore the cache so that we don't blow up.
-				return self.func(*args)
-		with self.rlock:
-			return self.func(*args)
+			except TypeError:
+				# One of the parameters is unhashable and indexing fails.
+				pass
+			
+		# Something went wrong.  Just call the function without caching.
+		return self.func(*args)
 			
 	def __repr__(self):
 		""" Return the function's docstring. """
