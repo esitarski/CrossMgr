@@ -41,6 +41,7 @@ class memoize:
 	not re-evaluated.
 	
 	Does NOT work with kwargs.
+	Each paramater must be hashable (for example, cannot be list).
 	"""
    
 	cache = {}
@@ -57,15 +58,14 @@ class memoize:
 	def __call__(self, *args):
 		# print( self.func.__name__, args )
 		try:
-			return memoize.cache[self.func.__name__][args]
+			return memoize.cache[(self.func.__name__, *args)]
 		except KeyError:
 			with self.rlock:
-				value = self.func(*args)
-				memoize.cache.setdefault(self.func.__name__, {})[args] = value
+				value = memoize.cache[(self.func.__name__, *args)] = self.func(*args)
 				return value
 		except TypeError:
 			with self.rlock:
-				# uncachable -- for instance, passing a list as an argument (unhashable objects).
+				# uncachable -- for instance, passing a list as a paramater (unhashable objects).
 				# Better to not cache than to blow up entirely.
 				return self.func(*args)
 		with self.rlock:
