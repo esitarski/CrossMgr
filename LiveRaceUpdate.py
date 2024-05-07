@@ -74,8 +74,8 @@ class SynchronizedRaceData:
 		self.baselinePending = False
 	
 	def processRAM( self, message ):
-		applyRAM( self.info, message['infoRAM'] );
-		applyRAM( self.categoryDetails, message['categoryRAM'] );
+		applyRAM( self.info, message['infoRAM'] )
+		applyRAM( self.categoryDetails, message['categoryRAM'] )
 		self.setRaceState( message )
 
 	def printTop( self ):

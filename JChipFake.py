@@ -7,7 +7,7 @@ import time
 import socket
 import datetime
 import threading
-from queue import Queue, Empty
+from queue import Queue
 
 #------------------------------------------------------------------------------	
 # CrossMgr's port.

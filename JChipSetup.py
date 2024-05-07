@@ -1,7 +1,5 @@
 import re
-import sys
 import socket
-import datetime
 
 import wx
 import wx.lib.intctrl

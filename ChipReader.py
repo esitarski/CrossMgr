@@ -1,4 +1,3 @@
-import Utils
 import JChip
 import RaceResult
 import Ultra

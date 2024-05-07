@@ -98,47 +98,47 @@ class HelpSearch( wx.Panel ):
 		showHelp( href )
 		
 	def doSearch( self, event = None ):
-		busy = wx.BusyCursor()
-		text = self.search.GetValue()
-		
-		f = StringIO()
-		try:
-			ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
-		except Exception as e:
-			Utils.logException( e, sys.exc_info() )
-			ix = None
+		with wx.BusyCursor():
+			text = self.search.GetValue()
 			
-		f.write( '<html>\n' )
-		
-		if ix is not None:
-			with ix.searcher() as searcher:
-				query = QueryParser('content', ix.schema).parse(text)
-				results = searcher.search(query, limit=20)
+			f = StringIO()
+			try:
+				ix = open_dir( Utils.getHelpIndexFolder(), readonly=True )
+			except Exception as e:
+				Utils.logException( e, sys.exc_info() )
+				ix = None
 				
-				# Allow larger fragments
-				results.formatter.maxchars = 300
-				# Show more context before and after
-				results.formatter.surround = 50
-				
-				f.write( '<table>\n' )
-				for i, hit in enumerate(results):
-					file = os.path.splitext(hit['path'].split('#')[0])[0]
-					url = getHelpURL( os.path.basename(hit['path']) )
-					if not file.startswith('Menu'):
-						section = '{}: {}'.format(file, hit['section'])
-					else:
-						section = 'Menu: {}'.format( hit['section'] )
-					f.write( '''<tr>
-							<td valign="top">
-								<font size=+1><a href="{url}">{section}</a></font><br></br>
-								{content}
-								<font size=+1><br></br></font>
-							</td>
-						</tr>\n'''.format(url=url, section=section, content=hit.highlights('content') ) )
-				f.write( '</table>\n' )
-			ix.close()
-		
-		f.write( '</html>\n' )
+			f.write( '<html>\n' )
+			
+			if ix is not None:
+				with ix.searcher() as searcher:
+					query = QueryParser('content', ix.schema).parse(text)
+					results = searcher.search(query, limit=20)
+					
+					# Allow larger fragments
+					results.formatter.maxchars = 300
+					# Show more context before and after
+					results.formatter.surround = 50
+					
+					f.write( '<table>\n' )
+					for i, hit in enumerate(results):
+						file = os.path.splitext(hit['path'].split('#')[0])[0]
+						url = getHelpURL( os.path.basename(hit['path']) )
+						if not file.startswith('Menu'):
+							section = '{}: {}'.format(file, hit['section'])
+						else:
+							section = 'Menu: {}'.format( hit['section'] )
+						f.write( '''<tr>
+								<td valign="top">
+									<font size=+1><a href="{url}">{section}</a></font><br></br>
+									{content}
+									<font size=+1><br></br></font>
+								</td>
+							</tr>\n'''.format(url=url, section=section, content=hit.highlights('content') ) )
+					f.write( '</table>\n' )
+				ix.close()
+			
+			f.write( '</html>\n' )
 		
 		self.html.SetPage( f.getvalue() )
 	

@@ -157,6 +157,7 @@ class CountdownClock(wx.Control):
 		# Draw the metal ring
 		#
 		r = radius * 1.0/0.9
+		
 		def drawCircle( x, y, r ):
 			ctx.DrawEllipse( x - r, y - r, r * 2, r * 2 )
 		
@@ -199,8 +200,7 @@ class CountdownClock(wx.Control):
 				xCenter + rIn * tCos60Local[i], yCenter + rIn * tSin60Local[i],
 				xCenter + rOutTicks * tCos60Local[i], yCenter + rOutTicks * tSin60Local[i]
 			)
-			
-		
+				
 		if self.tFuture is None:
 			return
 			

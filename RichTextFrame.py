@@ -200,7 +200,7 @@ class RichTextFrame(wx.Frame):
 		self.CreateStatusBar()
 		self.SetStatusText("Welcome to wx.richtext.RichTextCtrl!")
 
-		self.rtc = rt.RichTextCtrl(self, style=wx.VSCROLL|wx.HSCROLL|wx.NO_BORDER);
+		self.rtc = rt.RichTextCtrl(self, style=wx.VSCROLL|wx.HSCROLL|wx.NO_BORDER)
 		wx.CallAfter(self.rtc.SetFocus)
 
 		self.rtc.Freeze()
@@ -363,8 +363,8 @@ class RichTextFrame(wx.Frame):
 		self.rtc.BeginStyle(urlStyle)
 		self.rtc.BeginURL("http://wxPython.org/")
 		self.rtc.WriteText("The wxPython Web Site")
-		self.rtc.EndURL();
-		self.rtc.EndStyle();
+		self.rtc.EndURL()
+		self.rtc.EndStyle()
 		self.rtc.WriteText(". Click on the URL to generate an event.")
 
 		self.rtc.Bind(wx.EVT_TEXT_URL, self.OnURL)
@@ -449,17 +449,17 @@ class RichTextFrame(wx.Frame):
 			self.textAttr.SetFontFaceName(fontFace)
 		if fontSize:
 			self.textAttr.SetFontSize(fontSize)
-		if fontBold != None:
+		if fontBold is not None:
 			if fontBold:
 				self.textAttr.SetFontWeight(wx.FONTWEIGHT_BOLD)
 			else:
 				self.textAttr.SetFontWeight(wx.FONTWEIGHT_NORMAL)
-		if fontItalic != None:
+		if fontItalic is not None:
 			if fontItalic:
 				self.textAttr.SetFontStyle(wx.FONTSTYLE_ITALIC)
 			else:
 				self.textAttr.SetFontStyle(wx.FONTSTYLE_NORMAL)
-		if fontUnderline != None:
+		if fontUnderline is not None:
 			if fontUnderline:
 				self.textAttr.SetFontUnderlined(True)
 			else:
@@ -613,7 +613,7 @@ class RichTextFrame(wx.Frame):
 			if self.rtc.HasSelection():
 				r = self.rtc.GetSelectionRange()
 
-			attr.SetParagraphSpacingAfter(attr.GetParagraphSpacingAfter() + 20);
+			attr.SetParagraphSpacingAfter(attr.GetParagraphSpacingAfter() + 20)
 			attr.SetFlags(rt.TEXT_ATTR_PARA_SPACING_AFTER)
 			self.rtc.SetStyle(r, attr)
 
@@ -628,7 +628,7 @@ class RichTextFrame(wx.Frame):
 				r = self.rtc.GetSelectionRange()
 
 			if attr.GetParagraphSpacingAfter() >= 20:
-				attr.SetParagraphSpacingAfter(attr.GetParagraphSpacingAfter() - 20);
+				attr.SetParagraphSpacingAfter(attr.GetParagraphSpacingAfter() - 20)
 				attr.SetFlags(rt.TEXT_ATTR_PARA_SPACING_AFTER)
 				self.rtc.SetStyle(r, attr)
 

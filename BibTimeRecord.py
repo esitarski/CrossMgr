@@ -1,6 +1,5 @@
 import wx
 import wx.grid			as gridlib
-from wx.grid import GridCellNumberEditor
 import wx.lib.buttons
 
 import Model
@@ -199,7 +198,6 @@ class BibTimeRecord( wx.Panel ):
 			return None
 		
 	def doPopup( self, event ):
-		r = event.GetRow()
 		if not hasattr(self, 'bibTimePopupInfo'):
 			self.bibTimePopupInfo = [
 				('{}...'.format(_('Delete')),	self.OnPopupDelete),

@@ -6,11 +6,10 @@ import sys
 import copy
 import Utils
 import itertools
-import operator
 from datetime import timedelta, datetime
 from collections import deque, defaultdict
 
-from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
+from ReadSignOnSheet import IgnoreFields, NumericFields
 from SetNoDataDNS import SetNoDataDNS
 statusSortSeq = Model.Rider.statusSortSeq
 
@@ -93,10 +92,12 @@ class RiderResult:
 		return ''
 		
 	_reMissingName = re.compile( '^, |, $' )
+	
 	def full_name( self ):
 		return self._reMissingName.sub( '', '{}, {}'.format(getattr(self, 'LastName', ''), getattr(self,'FirstName', '')), 1 )
 		
 	_reMissingShortName = re.compile( '^, |, $' )
+	
 	def short_name( self, maxLen=20 ):
 		lastName = getattr(self, 'LastName', '')
 		if len(lastName) + 3 >= maxLen:
@@ -1034,10 +1035,11 @@ def GetRaceName():
 versionCountStart = 10000
 versionCount = versionCountStart
 resultsBaseline = { 'cmd': 'baseline', 'categoryDetails':{}, 'info':{}, 'reference':{} }
+
 def getReferenceInfo():
 	global versionCount
 	race = Model.race
-	tLastRaceTime = race.lastRaceTime() if race else 0.0;
+	tLastRaceTime = race.lastRaceTime() if race else 0.0
 	tNow = datetime.now()	
 	return {
 		'versionCount': versionCount,

@@ -1,5 +1,4 @@
 import operator
-import Utils
 import Model
 
 def PrologMatchingCategory():

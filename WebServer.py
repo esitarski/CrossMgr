@@ -461,7 +461,8 @@ class CrossMgrHandler( BaseHTTPRequestHandler ):
 				self.end_headers()
 				
 			else:
-				assert( 'Unrecognized POST' )
+				assert 'Unrecognized POST'
+		
 		except Exception as e:
 			self.send_error(501,'Error: {} {}\n{}'.format(self.path, e, traceback.format_exc()))
 			return

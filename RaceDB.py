@@ -10,7 +10,6 @@ import urllib.parse
 
 import Utils
 import Model
-from ReadSignOnSheet	import ExcelLink
 from AddExcelInfo		import getInfo
 
 def GetRaceDBConfigFile():

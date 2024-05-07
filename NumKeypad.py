@@ -1,18 +1,16 @@
 import wx
 import os
 import sys
-import copy
 import bisect
 import datetime
 import wx.lib.intctrl
 import wx.lib.buttons
-import wx.lib.agw.flatnotebook as flatnotebook
 
 from collections import defaultdict
 
 import Utils
 from Utils import SetLabel
-from GetResults import GetResults, GetResultsWithData, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult, IsRiderOnCourse
+from GetResults import GetResults, GetResultsWithData, GetLastRider
 import Model
 from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
@@ -216,7 +214,6 @@ def getCategoryStats():
 	isTimeTrial = race.isTimeTrial
 	lastRaceTime = race.lastRaceTime()
 	Finisher = Model.Rider.Finisher
-	Pulled = Model.Rider.Pulled
 	DNS = Model.Rider.DNS
 	NP = Model.Rider.NP
 	
@@ -251,7 +248,7 @@ def getCategoryStats():
 					status = Finisher		# Consider started riders as Finishers, not NP.
 			else:
 				if status == Finisher:
-					status = rider.status	# Set status back to Pulled if this rider was Pulled.
+					status = rider.status	# Set status back to the original status (will set back to Pulled).
 				
 			if status == Finisher:
 				if rr.raceTimes:
@@ -525,7 +522,7 @@ class NumKeypad( wx.Panel ):
 		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeaderArrival=sys.float_info.max, tLapStart=None ):
 			if not category:
 				return
-			if not(category == leaderCategory or race.getNumLapsFromCategory(category)):
+			if not (category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			
 			lapsToGo = max( 0, lapMax - lapCur )
@@ -535,6 +532,7 @@ class NumKeypad( wx.Panel ):
 				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
 			else:
 				v = ('{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
+			
 			try:
 				lapCounter[categoryToLapCounterIndex[category]] = v
 			except (KeyError, IndexError):
@@ -656,6 +654,7 @@ class NumKeypad( wx.Panel ):
 				pass
 	
 	raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
+	
 	def refreshLaps( self ):
 		wx.CallAfter( self.refreshRaceHUD )
 	

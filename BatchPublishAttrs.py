@@ -1,6 +1,5 @@
 import os
 from collections import namedtuple
-import Utils
 
 BatchAttr = namedtuple('BatchAttr', 'name uiname filecode func ftp note getFName')
 

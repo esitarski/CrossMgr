@@ -1,15 +1,11 @@
 import os
 import re
-import io
 import wx
 from html import escape
-import sys
-import math
-from math import radians, degrees, sin, cos, asin, sqrt, atan2, exp, modf, pi
+from math import radians, degrees, sin, cos, asin, sqrt, atan2, modf, pi, floor
 import random
 import bisect
 import datetime
-import getpass
 import socket
 from Version import AppVerName
 from Animation import GetLapRatio
@@ -206,7 +202,7 @@ def CompassBearing(lat1, lon1, lat2, lon2):
 	lat1 = radians(lat1)
 	lat2 = radians(lat2)
 
-	diffLong = math.radians(lon2 - lon1)
+	diffLong = radians(lon2 - lon1)
 
 	x = sin(diffLong) * cos(lat2)
 	y = cos(lat1) * sin(lat2) - (sin(lat1) * cos(lat2) * cos(diffLong))
@@ -677,9 +673,10 @@ class GeoTrack:
 		self.x = xBorder + x
 		self.yBottom = y + height
 		
-shapes = [ [(cos(a), -sin(a)) \
-					for a in (q*(2.0*pi/i)+pi/2.0+(2.0*pi/(i*2.0) if i % 2 == 0 else 0)\
-						for q in range(i))] for i in range(3,9)]
+shapes = [ [(cos(a), -sin(a))
+				for a in (q*(2.0*pi/i)+pi/2.0+(2.0*pi/(i*2.0) if i % 2 == 0 else 0)
+					for q in range(i))] for i in range(3,9)]
+
 def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(int(p*radius+x), int(q*radius+y)) for p,q in shapes[num % len(shapes)] ] )
 	
@@ -933,7 +930,7 @@ class GeoAnimation(wx.Control):
 				firstLapRatio = info['flr']
 				p = float(tSearch - raceTimes[i-1]) / float(raceTimes[i] - raceTimes[i-1])
 				p = 1.0 - firstLapRatio + p * firstLapRatio
-				p -= math.floor(p) - 1.0
+				p -= floor(p) - 1.0
 			else:
 				p = i + float(tSearch - raceTimes[i-1]) / float(raceTimes[i] - raceTimes[i-1])
 			

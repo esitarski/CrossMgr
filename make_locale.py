@@ -1,9 +1,7 @@
 import os
-import subprocess
-import errno
 import glob
 import shutil
-import io
+import subprocess
 
 cmd = ['pybabel']
 

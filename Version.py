@@ -1,1 +1,1 @@
-AppVerName="CrossMgr 3.1.53-private"
+AppVerName="CrossMgr 3.1.54-private"

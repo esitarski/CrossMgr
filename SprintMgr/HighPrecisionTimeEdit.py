@@ -107,7 +107,6 @@ else:
 			self.SetSize( (sz.width+border, sz.height+border) )
 
 	class HighPrecisionTimeEdit( wx.TextCtrl ):
-		defaultValue = '00:00:00.000'
 		emptyValue   = ''
 
 		def __init__( self, parent, id=wx.ID_ANY, seconds=None, value=None, display_seconds=True, display_milliseconds=True, allow_none=False, style=0, size=wx.DefaultSize ):
@@ -117,10 +116,14 @@ else:
 			self.allow_none = allow_none
 			self.display_seconds = display_seconds
 			self.display_milliseconds = display_seconds and display_milliseconds
-			if not display_seconds:
-				self.defaultValue = '00:00'
-			elif not display_milliseconds:
-				self.defaultValue = '00:00:00'
+			if self.allow_none:
+				self.defaultValue = ''
+			else:
+				self.defaultValue = '00:00:00.000'
+				if not display_seconds:
+					self.defaultValue = '00:00'
+				elif not display_milliseconds:
+					self.defaultValue = '00:00:00'
 			value = self.defaultValue if value is None else reNonTimeChars.sub( '', '{}'.format(value) )
 			super().__init__(
 				parent, id,
@@ -128,8 +131,8 @@ else:
 				style		= style & ~(wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.TE_PASSWORD),
 				size        = size,
 			)
-			seconds = seconds if seconds is not None else valueToSecs( value, self.display_seconds, self.display_milliseconds )
-			self.SetSeconds( seconds )
+			if value is None and seconds is not None:
+				self.SetSeconds( seconds )
 			self.Bind(wx.EVT_CHAR, self.onKeypress)
 			self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
 			self.Bind(wx.EVT_LEFT_DCLICK, self.onDoubleClick)
@@ -194,7 +197,7 @@ else:
 			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
 			
 		def SetSeconds( self, secs ):
-			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
+			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) or '' )
 			
 		def SetValue( self, v ):
 			if self.allow_none and v is None:

@@ -118,6 +118,7 @@ class SuspendTranslation:
 	def __enter__(self):
 		self._Save = builtins.__dict__['_']
 		builtins.__dict__['_'] = lambda x: x
+	
 	def __exit__(self, type, value, traceback):
 		builtins.__dict__['_'] = self._Save
 
@@ -246,6 +247,7 @@ def GetFileName( rDate, rName, rNum, rMemo ):
 # Attempt at portable sound player.
 if sys.platform.startswith('win'):
 	soundCache = {}
+	
 	def Play( soundFile ):
 		global soundCache
 		soundFile = os.path.join( imageFolder, soundFile )
@@ -257,6 +259,7 @@ if sys.platform.startswith('win'):
 		return soundCache[soundFile].Play()
 			
 elif sys.platform.startswith('darwin'):
+	
 	def Play( soundFile ):
 		try:
 			subprocess.Popen(
@@ -269,6 +272,7 @@ elif sys.platform.startswith('darwin'):
 		return True
 		
 else:	# Try Linux
+	
 	def Play( soundFile ):
 		try:
 			subprocess.Popen(
@@ -570,7 +574,6 @@ def approximateMatch( s1, s2 ):
 	
 #------------------------------------------------------------------------
 PlatformName = platform.system()
-from Version import AppVerName
 AppVer = 'v' + AppVerName.split(' ')[1]
 def writeLog( message ):
 	try:

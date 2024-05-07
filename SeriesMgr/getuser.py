@@ -3,7 +3,7 @@ import os
 class UserNotFound(Exception):
     pass
 
-### Windows ###
+# Windows
 if os.name == 'nt':
     import ctypes
     from ctypes import windll, wintypes
@@ -45,60 +45,60 @@ if os.name == 'nt':
         MaximumAllowed      = 0x2000000
 
     class TokenInformationClass:    # [5]
-        User,\
-        Groups,\
-        Privileges,\
-        Owner,\
-        PrimaryGroup,\
-        DefaultDacl,\
-        Source,\
-        Type,\
-        ImpersonationLevel,\
-        Statistics,\
-        RestrictedSids,\
-        SessionId,\
-        GroupsAndPrivileges,\
-        SessionReference,\
-        SandBoxInert,\
-        AuditPolicy,\
-        Origin,\
-        ElevationType,\
-        LinkedToken,\
-        Elevation,\
-        HasRestrictions,\
-        AccessInformation,\
-        VirtualizationAllowed,\
-        VirtualizationEnabled,\
-        IntegrityLevel,\
-        UIAccess,\
-        MandatoryPolicy,\
-        LogonSid,\
-        IsAppContainer,\
-        Capabilities,\
-        AppContainerSid,\
-        AppContainerNumber,\
-        UserClaimAttributes,\
-        DeviceClaimAttributes,\
-        RestrictedUserClaimAttributes,\
-        RestrictedDeviceClaimAttributes,\
-        DeviceGroups,\
-        RestrictedDeviceGroups,\
-        SecurityAttributes,\
-        IsRestricted,\
-        = range(1, 41)
+        (User,
+        Groups,
+        Privileges,
+        Owner,
+        PrimaryGroup,
+        DefaultDacl,
+        Source,
+        Type,
+        ImpersonationLevel,
+        Statistics,
+        RestrictedSids,
+        SessionId,
+        GroupsAndPrivileges,
+        SessionReference,
+        SandBoxInert,
+        AuditPolicy,
+        Origin,
+        ElevationType,
+        LinkedToken,
+        Elevation,
+        HasRestrictions,
+        AccessInformation,
+        VirtualizationAllowed,
+        VirtualizationEnabled,
+        IntegrityLevel,
+        UIAccess,
+        MandatoryPolicy,
+        LogonSid,
+        IsAppContainer,
+        Capabilities,
+        AppContainerSid,
+        AppContainerNumber,
+        UserClaimAttributes,
+        DeviceClaimAttributes,
+        RestrictedUserClaimAttributes,
+        RestrictedDeviceClaimAttributes,
+        DeviceGroups,
+        RestrictedDeviceGroups,
+        SecurityAttributes,
+        IsRestricted,
+        ) = range(1, 41)
 
     class SidNameUse:   # [6]
-        TypeUser,\
-        TypeGroup,\
-        TypeDomain,\
-        TypeAlias,\
-        TypeWellKnownGroup,\
-        TypeDeletedAccount,\
-        TypeInvalid,\
-        TypeUnknown,\
-        TypeComputer,\
-        TypeLabel,\
-        = range(1, 11)
+        (TypeUser,
+        TypeGroup,
+        TypeDomain,
+        TypeAlias,
+        TypeWellKnownGroup,
+        TypeDeletedAccount,
+        TypeInvalid,
+        TypeUnknown,
+        TypeComputer,
+        TypeLabel,
+        ) = range(1, 11)
 
     # Type declarations
     pSID = wintypes.HANDLE
@@ -236,7 +236,7 @@ if os.name == 'nt':
 
         return name.value
 
-### Posix ###
+# Posix
 else:
     import pwd
     from os import getuid

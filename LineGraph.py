@@ -150,7 +150,7 @@ class LineGraph(wx.Control):
 				dc.SetPen(pen)
 				w, h = dc.GetTextExtent(lab)
 				x -= w
-				dc.DrawText( lab, x, y );
+				dc.DrawText( lab, x, y )
 				x -= legendLength + legendLabelSep
 				dc.DrawLine( x, y + textHeight/2, x + legendLength, y + textHeight/2 )
 				x -= legendSep
@@ -164,7 +164,7 @@ class LineGraph(wx.Control):
 		d = intervals[bisect.bisect_left(intervals, d, 0, len(intervals)-1)]
 		for i in range(d-1, self.seriesMax, d):
 			x = xLeft + i * thick
-			dc.DrawLine( x, yBottom+2, x, yTop );
+			dc.DrawLine( x, yBottom+2, x, yTop )
 			s = '{}'.format(i+1)
 			w, h = dc.GetTextExtent(s)
 			dc.DrawText( s, round(x - w/2), yBottom + 4)
@@ -220,9 +220,9 @@ class LineGraph(wx.Control):
 				points.append( wx.Point(round(x), round(y)) )
 				x += thick
 			if len(points) >= 2:
-				dc.DrawLines( points );
+				dc.DrawLines( points )
 			elif len(points) == 1:
-				dc.DrawLines( [points[0], wx.Point(points[0].x,points[0].y)] );
+				dc.DrawLines( [points[0], wx.Point(points[0].x,points[0].y)] )
 				
 			# Draw indicators for interpolated values.
 			ctx.SetPen( wx.Pen( wx.Colour(128,128,128), 1 ) )

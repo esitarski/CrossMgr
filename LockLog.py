@@ -32,7 +32,7 @@ class Lock:
 		for f in self.print_stack():
 			self.log.debug( f )
 		ret = self.lock.acquire(blocking)
-		if ret == True:
+		if ret:
 			self.log.debug("{0} **** acquired {1}".format(
 				self.context(), self.name))
 		else:

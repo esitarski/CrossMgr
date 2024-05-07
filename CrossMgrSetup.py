@@ -1,7 +1,5 @@
-#from distutils.core import setup
 import os
 import io
-import sys
 import shutil
 import zipfile
 import datetime

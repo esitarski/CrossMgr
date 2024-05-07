@@ -1,7 +1,6 @@
 import wx
 import wx.grid
 import wx.lib.intctrl as intctrl
-import wx.lib.masked as masked
 import re
 import bisect
 import random

@@ -2,7 +2,6 @@ import wx
 import os
 import re
 import xlwt
-import xlsxwriter
 import uuid
 import datetime
 import Utils
@@ -273,7 +272,7 @@ class ExportGrid:
 		font = self._getFontToFit( widthFieldPix, heightFieldPix, lambda font: self._getDataSizeTuple(dc, font) )
 		dc.SetFont( font )
 		wSpace, hSpace = dc.GetMultiLineTextExtent( '    ' )
-		textHeight = lh = dc.GetTextExtent( 'Py' )[1]
+		textHeight = dc.GetTextExtent( 'Py' )[1]
 		
 		# Get the row slice for each column.
 		dataDraw = [col[rowDrawStart:rowDrawStart+rowDrawCount] for col in self.data]
@@ -890,7 +889,7 @@ class ExportGrid:
 			lapsMax = len(leader.lapTimes or [])
 			
 		if leader.lapTimes and showLapTimes:
-			self.colnames.extend( ['{} {}'.format(_('Lap'),lap) for lap in range(1, lapsMax+1) \
+			self.colnames.extend( ['{} {}'.format(_('Lap'),lap) for lap in range(1, lapsMax+1)
 					if lap % showLapsFrequency == 0 or lap == 1 or lap == lapsMax] )
 		
 		self.setTimeCols()

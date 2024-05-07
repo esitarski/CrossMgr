@@ -326,6 +326,7 @@ class LapCounter( wx.Panel ):
 		return '{}{}:{:02d}'.format( over, minutes, seconds )
 	
 	MaxLabels = 6
+	
 	def tessellate( self, numLabels ):
 		width, height = self.GetSize()
 		if numLabels == 1:

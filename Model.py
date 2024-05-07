@@ -11,16 +11,13 @@ import datetime
 import itertools
 import functools
 import operator
-import traceback
 import threading
 from os.path import commonprefix
 from collections import defaultdict
 
 import Utils
-import LapStats
 import Version
 from BatchPublishAttrs import setDefaultRaceAttr
-import minimal_intervals
 import SetRangeMerge
 from InSortedIntervalList import InSortedIntervalList
 
@@ -577,6 +574,7 @@ class Entry:
 	@property
 	def gap( self ):
 		return self.t
+	
 	@gap.setter
 	def gap( self, gt ):
 		self.t = gt
@@ -584,6 +582,7 @@ class Entry:
 	@property
 	def groupCount( self ):
 		return -self.num
+	
 	@groupCount.setter
 	def groupCount( self, gc ):
 		self.num = -gc
@@ -903,7 +902,7 @@ class Rider:
 		if not iTimes:
 			return self.getEntries( [] )
 
-		lapTimes = [tb-ta for tb, ta in (zip(iTimes[2:], iTimes[1:]) if len(iTimes) > 1 else zip(iTimes[1:], iTimes))]
+		# lapTimes = [tb-ta for tb, ta in (zip(iTimes[2:], iTimes[1:]) if len(iTimes) > 1 else zip(iTimes[1:], iTimes))]
 		
 		# Flag that these are not interpolated times.
 		expected = self.getExpectedLapTime( iTimes )
@@ -914,9 +913,6 @@ class Rider:
 			# Check for missing lap data and fill it in.
 			pDown, pUp = 1.0-Rider.pMin, Rider.pMax-1.0
 			missingMinMax = [(missing, expected * (missing-pDown), expected * (missing+pUp)) for missing in range(2, 5)]
-			
-			# lapStats = LapStats.LapStats( lapTimes )
-			# missingMinMax = lapStats.probable_lap_ranges( 5, 0.75 )
 			
 			for j in range(len(iTimes)-1, 0, -1):	# Traverse backwards so we can add missing times as we go.
 				tDur = iTimes[j][0] - iTimes[j-1][0]
@@ -1559,7 +1555,7 @@ class Race:
 		return True
 	
 	def deleteTime( self, num, t ):
-		if not num in self.riders:
+		if num not in self.riders:
 			return
 		rider = self.riders[num]
 		rider.deleteTime( t )
@@ -2134,7 +2130,7 @@ class Race:
 		allInactive = True
 		for t in nameStrTuples:
 			args = dict( t )
-			if not 'name' in args or not args['name']:
+			if 'name' not in args or not args['name']:
 				continue
 			if '{}'.format(args.get('active', '1')).strip().upper() in '1YT':
 				allInactive = False
@@ -2145,7 +2141,7 @@ class Race:
 		waveCategory = None
 		for t in nameStrTuples:
 			args = dict( t )
-			if not 'name' in args or not args['name']:
+			if 'name' not in args or not args['name']:
 				continue
 			args['sequence'] = i
 			if allInactive:
@@ -2178,7 +2174,7 @@ class Race:
 				originalName = category.name
 				for count in range(1, 999):
 					category.name = '{} {}({})'.format(originalName, _('Copy'), count)
-					if not category.fullname in newCategories:
+					if category.fullname not in newCategories:
 						break
 			newCategories[category.fullname] = category
 			i += 1
