@@ -40,15 +40,19 @@ class memoize:
 	If called later with the same arguments, the cached value is returned, and
 	not re-evaluated.
 	
-	Does NOT work with kwargs.
+	Each function parameter must be hashable.
+	For example, passing a list as a argument won't work).
+	Does NOT accept kwargs.  Positiona arguments only.
 	"""
    
+    # Class-level cache and reentrant lock.    
 	cache = {}
-	rlock = threading.RLock()
+	rlock = threading.RLock()	# Recursive lock so we don't lock up if cached functions call each other.
 	
 	@classmethod
 	def clear( cls ):
-		cls.cache.clear()
+		with cls.rlock:
+			cls.cache.clear()
    
 	def __init__(self, func):
 		# print( 'memoize:', func.__name__ )
@@ -56,27 +60,26 @@ class memoize:
 		
 	def __call__(self, *args):
 		# print( self.func.__name__, args )
-		try:
-			return memoize.cache[self.func.__name__][args]
-		except KeyError:
-			with self.rlock:
-				value = self.func(*args)
-				memoize.cache.setdefault(self.func.__name__, {})[args] = value
-				return value
-		except TypeError:
-			with self.rlock:
-				# uncachable -- for instance, passing a list as an argument (unhashable objects).
-				# Better to not cache than to blow up entirely.
-				return self.func(*args)
 		with self.rlock:
-			return self.func(*args)
+			try:
+				return memoize.cache[(self.func.__name__, *args)]
+			except KeyError:
+				# The value is not in the cache.  Add it, and return the value.
+				value = memoize.cache[(self.func.__name__, *args)] = self.func(*args)
+				return value
+			except TypeError:
+				# One of the parameters is unhashable and indexing fails.
+				pass
+			
+		# Something went wrong.  Just call the function without caching.
+		return self.func(*args)
 			
 	def __repr__(self):
-		"""Return the function's docstring."""
+		""" Return the function's docstring. """
 		return self.func.__doc__
 		
 	def __get__(self, obj, objtype):
-		"""Support instance methods."""
+		""" Support instance methods. """
 		return functools.partial(self.__call__, obj)
 
 #------------------------------------------------------------------------------
