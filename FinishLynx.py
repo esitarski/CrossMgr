@@ -7,7 +7,6 @@ import time
 import operator
 import datetime
 import random
-from collections import defaultdict
 
 import Model
 import Utils

@@ -4,10 +4,8 @@ import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import os
 import re
-import sys
 from html import escape
 import copy
-import string
 from io import StringIO
 import Utils
 from Utils import tag

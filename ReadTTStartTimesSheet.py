@@ -1,13 +1,11 @@
 import wx
 import os
-import sys
 import copy
 import datetime
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.adv as adv
 import Utils
-import traceback
 import Model
 from Undo import undo
 from Excel import GetExcelReader
@@ -316,9 +314,6 @@ class GetExcelTTStartTimeLink:
 						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + '\n' + _('Check the Excel format.'),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
-		
-	def onPageChanged( self, evt ):
-		isForward = evt.GetDirection()
 		
 #----------------------------------------------------------------------------------
 class ExcelLink:

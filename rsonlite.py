@@ -86,6 +86,7 @@ class RsonToken(str):
         self.line = line
         self.col = col
         return self
+    
     def __add__(self, other):
         return RsonToken(str(self) + other, self.line, self.col)
 
@@ -290,11 +291,10 @@ def simpleparse(source, stringparse=stringparse, stddict=stddict):
                 curdict = stddict()
                 result.append(curdict)
             curdict[key] = recurse(value)
-        return result
+        return result 
     return recurse(source if isinstance(source, list) else loads(source))
 
 if __name__ == '__main__':
-	import io
 	import pprint
 	
 	teststr = '''
@@ -308,6 +308,6 @@ if __name__ == '__main__':
 	print( test2 )
 	
 	
-	with io.open( 'Checklist.rson', 'r', encoding = 'UTF-8' ) as fp:
+	with open( 'Checklist.rson', 'r', encoding='utf8' ) as fp:
 		v = loads( fp.read() )
 		pprint.pprint( v )

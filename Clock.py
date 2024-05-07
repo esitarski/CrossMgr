@@ -136,6 +136,7 @@ class Clock(wx.Control):
 		# Draw the metal ring
 		#
 		r = radius * 1.0/0.9
+		
 		def drawCircle( x, y, r ):
 			ctx.DrawEllipse( x - r, y - r, r * 2, r * 2 )
 		

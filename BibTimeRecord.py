@@ -1,16 +1,12 @@
 import wx
 import wx.grid			as gridlib
-from wx.grid import GridCellNumberEditor
 import wx.lib.buttons
 
 import Model
 import Utils
 from ReorderableGrid import ReorderableGrid
-from PhotoFinish import TakePhoto
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
-from SendPhotoRequests import SendRenameRequests
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
-import OutputStreamer
 
 class BibTimeRecord( wx.Panel ):
 	def __init__( self, parent, controller, id = wx.ID_ANY ):
@@ -126,7 +122,7 @@ class BibTimeRecord( wx.Panel ):
 		race = Model.race
 		if race and race.isRunning():
 			nums = getRiderNumsFromText( self.numEdit.GetValue() )
-			with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+			with gridlib.GridUpdateLocker(self.grid):
 				Utils.AdjustGridSize( self.grid, rowsRequired=self.grid.GetNumberRows() + len(nums) )
 				for iRow, num in enumerate(nums, self.grid.GetNumberRows() - len(nums)):
 					self.grid.SetCellValue( iRow, 0, str(num) )
@@ -181,7 +177,7 @@ class BibTimeRecord( wx.Panel ):
 			self.numEdit.SetValue( '' )
 				
 		if self.grid.GetNumberRows() != len(valuesToKeep):
-			with gridlib.GridUpdateLocker(self.grid) as gridLocker:
+			with gridlib.GridUpdateLocker(self.grid):
 				Utils.AdjustGridSize( self.grid, rowsRequired=len(valuesToKeep) )
 				for row, value in enumerate(valuesToKeep):
 					self.grid.SetCellValue( row, 0, value )
@@ -199,7 +195,6 @@ class BibTimeRecord( wx.Panel ):
 			return None
 		
 	def doPopup( self, event ):
-		r = event.GetRow()
 		if not hasattr(self, 'bibTimePopupInfo'):
 			self.bibTimePopupInfo = [
 				('{}...'.format(_('Delete')),	self.OnPopupDelete),

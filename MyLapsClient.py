@@ -298,7 +298,7 @@ print( 'Created MyLapsTest.xls.' )
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with open('MyLapsTest.csv', 'w') as f:
+with open('MyLapsTest.csv', 'w', encoding='utf8') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '{},{}\n'.format(n, tag[n]) )
@@ -308,7 +308,10 @@ sendDate = True
 #------------------------------------------------------------------------------	
 # Function to format number, lap and time in MyLaps format
 # Z413A35 10:11:16.4433 10  10000      C7
+
+CR = '\n'
 count = 0
+
 def formatMessage( n, lap, t ):
 	global count
 	message = "DJ%s %s 10  %05X      C7%s%s" % (

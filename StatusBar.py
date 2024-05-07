@@ -182,7 +182,7 @@ class StatusBar(wx.Control):
 			xCenter, yCenter = width//2, radius
 			lineHeight = 2 * int(radius * 0.25)
 			lineWidth = 2 * int(radius * 0.70)
-			sep = 4
+			
 			ctx = wx.GraphicsContext.Create( dc )
 			ctx.SetPen( wx.GREY_PEN )
 			ctx.SetBrush( wx.GREY_BRUSH )

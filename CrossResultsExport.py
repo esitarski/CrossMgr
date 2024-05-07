@@ -1,12 +1,9 @@
-import io
 import csv
-import math
 import Utils
 import datetime
 import Model
-from GetResults import GetResults, GetCategoryDetails
+from GetResults import GetResults
 from ReadSignOnSheet import SyncExcelLink
-from UCIExcel import formatUciId
 
 def formatTimeGap( secs, forceHours=False ):
 	return Utils.formatTimeGap(
@@ -74,7 +71,7 @@ def CrossResultsExport( fname ):
 	
 	lapHeaders = ['lap'] * maxLaps
 			
-	with io.open(fname, 'w', encoding='utf-8', newline='') as csvFile:
+	with open(fname, 'w', encoding='utf-8', newline='') as csvFile:
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
 		csvWriter.writerow( crossResultsFields + lapHeaders )
 		

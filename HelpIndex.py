@@ -42,7 +42,7 @@ def BuildHelpIndex():
 
 	# Extract content sections from the html pages.
 	for f in glob.iglob( os.path.join(htmlDocDir, '*.html') ):
-		doc = BeautifulSoup( open(f).read(), 'html.parser' )
+		doc = BeautifulSoup( open(f, encoding='utf8').read(), 'html.parser' )
 		div = doc.find('div', class_='content')
 		if not div:
 			continue
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 	from whoosh.qparser import QueryParser
 	ix = open_dir( indexDir, readonly=True )
 
-	with ix.searcher() as searcher, open('search.html', 'w') as f:
+	with ix.searcher() as searcher, open('search.html', 'w', encoding='utf8') as f:
 		query = QueryParser('content', ix.schema).parse('fastest lap')
 		results = searcher.search(query, limit=20)
 		f.write( '<table><tr><th></th><th align="left">Section</th><th align="left">Match</th></tr>\n' )

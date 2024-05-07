@@ -7,7 +7,7 @@ from bisect import bisect_left
 
 import Model
 import Utils
-from GanttChartPanel import makeColourGradient, makePastelColours, lighterColour
+from GanttChartPanel import makeColourGradient
 from GetResults import GetResults
 
 def DrawArrowLine( dc, x0, y0, x1, y1, arrowFrom=True, arrowTo=True, arrowLength=16, arrowWidth=8 ):
@@ -202,6 +202,7 @@ class GapChartPanel(wx.Panel):
 			self.moveTimer.StartOnce( 50 )
 			
 	intervals = (1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60) + tuple(24*60*60*k for k in range(1,200))
+	
 	def Draw( self, dc ):
 		size = self.GetClientSize()
 		width = size.width
@@ -271,7 +272,7 @@ class GapChartPanel(wx.Panel):
 		# Width of the drawing field.		
 		self.xLeft = xLeft = border + scaleTextHeight + border//2 + tickTextWidth + border//2
 		self.xRight = xRight = width - 3*border - maxLabelWidth
-		xMost = xRight - int((xRight - xLeft) / (self.maxLaps-1))
+		xRight - int((xRight - xLeft) / (self.maxLaps-1))
 
 		# Vertical axis label.
 		tWidth, tHeight = dc.GetTextExtent( _('Gap') )

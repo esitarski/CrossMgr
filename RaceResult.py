@@ -1,20 +1,20 @@
-import socket 
-import sys
-import time
-import datetime
-import atexit
-import subprocess
-import threading
 import re
 import wx
+import sys
+import time
+import socket 
+import atexit
+import datetime
+import threading
 import wx.lib.newevent
+
 import Utils
 import Model
 from threading import Thread as Process
 from queue import Queue, Empty
 import JChip
 from RaceResultImport import parseTagTime
-from Utils import logCall, logException
+from Utils import logException
 
 ChipReaderEvent, EVT_CHIP_READER = JChip.ChipReaderEvent, JChip.EVT_CHIP_READER
 
@@ -120,7 +120,6 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	s = None
 	passingsCur = 0
 	status = None
-	startOperation = None
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
@@ -170,7 +169,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			s.connect( (HOST, PORT) )
 		except Exception as e:
 			qLog( 'connection', '{}: {}'.format(_('Connection to RaceResult reader failed'), e) )
-			s, status, startOperation = None, None, None
+			s, status = None, None
 			
 			qLog( 'connection', '{}'.format(_('Attempting AutoDetect...')) )
 			HOST_AUTO = AutoDetect( callback = autoDetectCallback )

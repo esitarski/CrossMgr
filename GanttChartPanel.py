@@ -223,17 +223,17 @@ class GanttChartPanel(wx.Panel):
 		if iRider is None:
 			return
 		self.numSelect = numFromLabel( self.labels[iRider] )
-		if self.numSelect is not None:
-			if self.dClickCallback:
-				self.dClickCallback( self.numSelect )
+		if self.numSelect is not None and self.dClickCallback:
+			self.dClickCallback( self.numSelect )
 	
 	def OnMove( self, event ):
-		self.xMove, self.yMove = event.GetPosition()
-		redrawRequired = (self.moveIRider is not None)
-		self.moveIRider, self.moveLap = None, None
-		self.moveTimer.Start( 40, True )	# If the timer is already running, it will be stopped and restarted.
+		# Set a timer to update the screen a few milliseconds after the mouse stops moving.
+		# This prevents redraw performance problems.
+		self.moveTimer.Start( 25, True )	# If the timer is already running, it will be stopped and restarted.
 	
 	def OnMoveTimer( self, event ):
+		# Get latest mouse coordinates to eliminate last-minute movement errors.
+		self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
 		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
 		self.Refresh()
 	
@@ -283,6 +283,7 @@ class GanttChartPanel(wx.Panel):
 			rClickCallback( xPos, yPos, self.numSelect, iRider, iLap )
 
 	intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60] + [24*60*60*k for k in range(1,200)]
+	
 	def Draw( self, dc ):
 		size = self.GetClientSize()
 		width = size.width
@@ -298,7 +299,6 @@ class GanttChartPanel(wx.Panel):
 		backBrush = wx.Brush(backColour, wx.SOLID)
 		greyBrush = wx.Brush( wx.Colour(196,196,196), wx.SOLID )
 		lightGreyBrush = wx.Brush( wx.Colour(220,220,220), wx.SOLID )
-		backPen = wx.Pen(backColour, 0)
 		dc.SetBackground(backBrush)
 		dc.Clear()
 		
@@ -334,7 +334,6 @@ class GanttChartPanel(wx.Panel):
 			
 		textWidthLeftMax += statusTextWidth
 		
-		maxBibWidth = textWidthLeftMax
 		textWidthRightMax = 0
 		for label in self.labels:
 			if label not in self.headerSet:
@@ -377,7 +376,6 @@ class GanttChartPanel(wx.Panel):
 			
 		iDataShowStart = self.verticalSB.GetThumbPosition() if self.verticalSB.IsShown() else 0
 		iDataShowEnd = iDataShowStart + self.verticalSB.GetThumbSize() + 1 if self.verticalSB.IsShown() else len(self.data)
-		tShowStart = self.horizontalSB.GetThumbPosition() if self.horizontalSB.IsShown() else 0
 
 		dc.SetFont( fontBarLabel )
 
@@ -527,7 +525,7 @@ class GanttChartPanel(wx.Panel):
 			# Record the leader's last x position.
 			if tLeaderLast is None:
 				tLeaderLast = s[-1] if s else 0.0
-			if not( iDataShowStart <= i < iDataShowEnd ):
+			if not ( iDataShowStart <= i < iDataShowEnd ):
 				continue
 			
 			try:
@@ -541,8 +539,7 @@ class GanttChartPanel(wx.Panel):
 			tTooShort = 9.0	# If a lap is shorter than 9 seconds, consider it a duplicate entry.
 			
 			# Quickly find the first visible gantt chart rectangle.
-			jStart = max( 0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1 )
-			for j in range(jStart, len(s)):
+			for j in range(max(0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1), len(s)):
 				if xLast >= xRight:
 					break
 				t = s[j]
@@ -562,12 +559,10 @@ class GanttChartPanel(wx.Panel):
 					dd = int(dy * 0.3)
 					ic = j % len(self.colours)
 					
-					b1 = ctx.CreateLinearGradientBrush(0, yLast,      0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic])
-					ctx.SetBrush(b1)
-					ctx.DrawRectangle(xLast, yLast     , xCur - xLast + 1, dd + 1)
+					ctx.SetBrush( ctx.CreateLinearGradientBrush(0, yLast, 0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic]) )
+					ctx.DrawRectangle(xLast, yLast, xCur - xLast + 1, dd + 1)
 					
-					b2 = ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic])
-					ctx.SetBrush(b2)
+					ctx.SetBrush( ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic]) )
 					ctx.DrawRectangle(xLast, yLast + dd, xCur - xLast + 1, dy-dd )
 					
 					dc.SetBrush( transparentBrush )

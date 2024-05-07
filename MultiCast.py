@@ -282,6 +282,7 @@ if __name__ == '__main__':
 		receiver.join()
 	else:
 		print( 'Sender:' )
+		
 		def receiverCallback( receivers ):
 			print( 'receivers:' )
 			for r in receivers:

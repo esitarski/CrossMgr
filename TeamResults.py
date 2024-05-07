@@ -11,9 +11,9 @@ from pdf import PDF
 import xlsxwriter
 
 from ReorderableGrid import ReorderableGrid
-from FixCategories import FixCategories, SetCategory
+from FixCategories import FixCategories
 from GetTeamResults			import GetTeamResults
-from ReadSignOnSheet import GetExcelLink, ExcelLink
+from ReadSignOnSheet import ExcelLink
 from RaceInputState import RaceInputState
 import Version
 

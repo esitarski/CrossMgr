@@ -44,10 +44,8 @@ class PDF( fpdf.FPDF ):
 		'''
 		text = normalize_text( text )
 		
-		lineFactor = 1.15
 		fs = height
 		self.set_font_size( fs )
-		t_height = fs
 		t_width = self.get_string_width( text )
 		if t_width > width:
 			fs *= width / float(t_width)

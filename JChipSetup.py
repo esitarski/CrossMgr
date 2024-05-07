@@ -1,7 +1,5 @@
 import re
-import sys
 import socket
-import datetime
 
 import wx
 import wx.lib.intctrl
@@ -282,7 +280,7 @@ class JChipSetupDialog( wx.Dialog ):
 			tagNums = GetTagNums()
 		
 		tag, dt = event.tagTimes[-1]
-		num = tagNums.get(tag, None)
+		#num = tagNums.get(tag, None)
 
 	def testJChipToggle( self, event ):
 		self.commit()
@@ -393,7 +391,6 @@ class JChipSetupDialog( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 		
 if __name__ == '__main__':
-	import WebServer
 	print( GetAllIps() )
 	#sys.exit()
 	app = wx.App(False)

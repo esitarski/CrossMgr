@@ -1,18 +1,16 @@
 import wx
 import os
 import sys
-import copy
 import bisect
 import datetime
 import wx.lib.intctrl
 import wx.lib.buttons
-import wx.lib.agw.flatnotebook as flatnotebook
 
 from collections import defaultdict
 
 import Utils
 from Utils import SetLabel
-from GetResults import GetResults, GetResultsWithData, GetLastFinisherTime, GetLeaderFinishTime, GetLastRider, RiderResult, IsRiderOnCourse
+from GetResults import GetResults, GetResultsWithData, GetLastRider
 import Model
 from RaceHUD import RaceHUD
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
@@ -207,6 +205,79 @@ def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 		info.append( ('', '{:.02f} {}'.format(sLap, 'km/h')) )
 	return info
 
+def getCategoryStats():
+	race = Model.race
+	if not race:
+		return []
+	
+	isRunning = race.isRunning()
+	isTimeTrial = race.isTimeTrial
+	lastRaceTime = race.lastRaceTime()
+	Finisher = Model.Rider.Finisher
+	DNS = Model.Rider.DNS
+	NP = Model.Rider.NP
+	
+	statusSortSeq = Model.Rider.statusSortSeq
+	statusNames = Model.Rider.statusNames
+
+	finishedAll, onCourseAll, statsAll = 0, 0, defaultdict( int )
+	
+	def getStatsStr( finished, onCourse, stats ):
+		total = finished + onCourse + sum( stats.values() )
+		if total:
+			b = ['{}({})'.format(_('Starters'), total)]
+			if finished:
+				b.append( '{}({})'.format(_('Finished'), finished) )
+			b.extend( '{}({})'.format(statusNames[k], v) for k,v in sorted(stats.items(), key = lambda x: statusSortSeq[x[0]]) )
+			return '{}({}) = {}'.format( _('OnCourse'), onCourse, ' - '.join( b ) )
+		else:
+			return ''
+
+	categoryStats = [(_('All'), '')]
+	for category in race.getCategories():
+		finished, onCourse, stats = 0, 0, defaultdict( int )
+		for rr in GetResults( category ):
+			status = rr.status
+			if status == DNS:
+				continue
+			
+			rider = race.riders[rr.num]
+			firstTime = rider.firstTime or 0.0
+			if isTimeTrial:
+				if status == NP and lastRaceTime >= firstTime:
+					status = Finisher		# Consider started riders as Finishers, not NP.
+			else:
+				if status == Finisher:
+					status = rider.status	# Set status back to the original status (will set back to Pulled).
+				
+			if status == Finisher:
+				if rr.raceTimes:
+					lastTime, interp = rr.raceTimes[-1], rr.interp[-1]
+					if isTimeTrial:
+						# Adjust to the time trial start time.
+						lastTime += firstTime
+				else:
+					lastTime, interp = 0.0, True
+				
+				if lastTime <= lastRaceTime and (not interp if isRunning else True):
+					finished += 1
+				else:
+					onCourse += 1
+			else:
+				stats[status] += 1
+				
+		statsStr  = getStatsStr(finished, onCourse, stats)
+		if statsStr:
+			categoryStats.append( (f'{category.fullname}', statsStr) )
+			
+		finishedAll += finished
+		onCourseAll += onCourse
+		for k, v in stats.items():
+			statsAll[k] += v
+	
+	categoryStats[0] = ( _('All'), getStatsStr(finishedAll, onCourseAll, statsAll) )
+	return categoryStats
+
 class NumKeypad( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__(parent, id)
@@ -350,12 +421,13 @@ class NumKeypad( wx.Panel ):
 		rcVertical = wx.BoxSizer( wx.VERTICAL )
 		rcVertical.AddSpacer( 32 )
 
-		self.lapCountList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
-		self.lapCountList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		self.lapCountList.AppendColumn( _('Category'),	wx.LIST_FORMAT_LEFT,	140 )
-		self.lapCountList.AppendColumn( _('On Course'),		wx.LIST_FORMAT_RIGHT, 90 )
-		self.lapCountList.AppendColumn( '',				wx.LIST_FORMAT_LEFT,	90 )
-		rcVertical.Add( self.lapCountList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
+		self.categoryStatsList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
+		self.categoryStatsList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		self.categoryStatsList.AppendColumn( _('Category'),	wx.LIST_FORMAT_LEFT,	140 )
+		self.categoryStatsList.AppendColumn( _('Composition'), wx.LIST_FORMAT_LEFT,	130 )
+		self.categoryStatsList.SetColumnWidth( 0, wx.LIST_AUTOSIZE_USEHEADER )
+		self.categoryStatsList.SetColumnWidth( 1, wx.LIST_AUTOSIZE_USEHEADER )
+		rcVertical.Add( self.categoryStatsList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
 		
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
 		self.horizontalMainSizer = horizontalMainSizer
@@ -450,7 +522,7 @@ class NumKeypad( wx.Panel ):
 		def setLapCounter( leaderCategory, category, lapCur, lapMax, tLeaderArrival=sys.float_info.max, tLapStart=None ):
 			if not category:
 				return
-			if not(category == leaderCategory or race.getNumLapsFromCategory(category)):
+			if not (category == leaderCategory or race.getNumLapsFromCategory(category)):
 				return
 			
 			lapsToGo = max( 0, lapMax - lapCur )
@@ -460,6 +532,7 @@ class NumKeypad( wx.Panel ):
 				v = ('{}'.format(max(0,lapsToGo-1)), False, tLapStart)		# Flip lap counter before leader.
 			else:
 				v = ('{}'.format(lapsToGo), False, tLapStart)				# Show current lap.
+			
 			try:
 				lapCounter[categoryToLapCounterIndex[category]] = v
 			except (KeyError, IndexError):
@@ -581,101 +654,41 @@ class NumKeypad( wx.Panel ):
 				pass
 	
 	raceMessage = { 0:_("Finishers Arriving"), 1:_("Ring Bell"), 2:_("Prepare Bell") }
+	
 	def refreshLaps( self ):
 		wx.CallAfter( self.refreshRaceHUD )
 	
-	def refreshRiderLapCountList( self ):
-		self.lapCountList.DeleteAllItems()
+	def refreshRiderCategoryStatsList( self ):
+		self.categoryStatsList.DeleteAllItems()
 		race = Model.race
-		if not race or not race.isRunning():
+		if not race:
 			return
-		
-		Finisher = Model.Rider.Finisher
-		NP = Model.Rider.NP
-		getCategory = race.getCategory
-		t = race.curRaceTime()
-		
-		onCourseCatLap = defaultdict( lambda: defaultdict(int) )
-		
-		catLapsMax = {}
-		resultNums = set()
-		for category in race.getCategories( startWaveOnly=True ):
-			for rr in GetResultsWithData( category ):
-				resultNums.add( rr.num )
-				if category not in catLapsMax:
-					catLapsMax[category] = max( race.getNumLapsFromCategory(category) or 1, len(rr.raceTimes)-1 )
-				if not IsRiderOnCourse(rr.num, t, rr):
-					continue
-				
-				tSearch = t
-				if race.isTimeTrial:
-					try:
-						tSearch -= race.riders[rr.num].firstTime
-					except Exception:
-						pass
-				lap = min( catLapsMax[category], max( 1, bisect.bisect_left(rr.raceTimes, tSearch) ) )
-				onCourseCatLap[category][lap] += 1
-		
-		# Add riders who have started but not yet finished.
-		if race.isTimeTrial:
-			pass
-		elif race.enableJChipIntegration and race.resetStartClockOnFirstTag and len(resultNums) != len(race.riders):
-			# Add rider entries who have been read by RFID but have not completed the first lap.
-			for a in race.riders.values():
-				if a.status == Finisher and a.firstTime is not None and a.num not in resultNums:
-					category = getCategory( a.num )
-					if category and t >= a.firstTime and t >= race.getStartOffset(a.num):
-						onCourseCatLap[category][1] += 1
-		
-		if not onCourseCatLap:
-			return
-			
-		onCourseCat = {}
-		catLapList = []
-		for category, lapCounts in onCourseCatLap.items():
-			onCourseCat[category] = sum( lapCounts.values() )
-			for lap, count in lapCounts.items():
-				catLapList.append( (category, lap, count) )			
-		catLapList.sort( key=lambda x: (x[0].getStartOffsetSecs(), x[0].fullname, -x[1]) )
 		
 		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.lapCountList.InsertItem( self.lapCountList.GetItemCount(), '{}'.format(row[0]) if row else '' )
+			r = self.categoryStatsList.InsertItem( self.categoryStatsList.GetItemCount(), '{}'.format(row[0]) if row else '' )
 			for c in range(1, len(row)):
-				self.lapCountList.SetItem( r, c, '{}'.format(row[c]) )
+				self.categoryStatsList.SetItem( r, c, '{}'.format(row[c]) )
 			if colour is not None:
-				item = self.lapCountList.GetItem( r )
+				item = self.categoryStatsList.GetItem( r )
 				item.SetTextColour( colour )
-				self.lapCountList.SetItem( item )
+				self.categoryStatsList.SetItem( item )
 			if bold is not None:
-				item = self.lapCountList.GetItem( r )
-				font = self.lapCountList.GetFont()
+				item = self.categoryStatsList.GetItem( r )
+				font = self.categoryStatsList.GetFont()
 				font.SetWeight( wx.FONTWEIGHT_BOLD )
 				item.SetFont( font )
-				self.lapCountList.SetItem( item )
+				self.categoryStatsList.SetItem( item )
 			return r
 		
-		appendListRow( (
-							_('All'),
-							'{}'.format(sum(count for count in onCourseCat.values())),
-							'',
-						),
-						colour=wx.BLUE,
-						bold=True )
-
-		lastCategory = None
-		for category, lap, count in catLapList:
-			if category != lastCategory:
-				categoryLaps = catLapsMax[category]
-				appendListRow(
-					(
-						category.fullname,
-						'{}'.format(onCourseCat[category]),
-						('({} {})'.format(categoryLaps if categoryLaps < 1000 else '', _('laps') if categoryLaps > 1 else _('lap'))),
-					),
-					bold = True,
-				)
-			appendListRow( ('', count, '({} {})'.format( _('on lap'), lap ) ) )
-			lastCategory = category
+		for catStat in getCategoryStats():
+			if catStat[0] == _('All'):
+				colour, bold = wx.BLUE, None
+			else:
+				colour = bold = None
+			appendListRow( catStat, colour, bold )
+			
+		self.categoryStatsList.SetColumnWidth( 0, wx.LIST_AUTOSIZE_USEHEADER )
+		self.categoryStatsList.SetColumnWidth( 1, wx.LIST_AUTOSIZE_USEHEADER )
 
 	def refreshLastRiderOnCourse( self ):
 		race = Model.race
@@ -728,7 +741,7 @@ class NumKeypad( wx.Panel ):
 		
 	def refreshInputUpdate( self ):
 		self.refreshLaps()
-		self.refreshRiderLapCountList()
+		self.refreshRiderCategoryStatsList()
 		self.refreshLastRiderOnCourse()
 
 	def refresh( self ):

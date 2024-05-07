@@ -8,8 +8,8 @@ import datetime
 import Utils
 from Utils import fld
 
-shapes = [ [(math.cos(a), -math.sin(a)) \
-					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)\
+shapes = [ [(math.cos(a), -math.sin(a))
+					for a in (q*(2.0*math.pi/i)+math.pi/2.0+(2.0*math.pi/(i*2.0) if i % 2 == 0 else 0)
 						for q in range(i))] for i in range(3,9)]
 def DrawShape( dc, num, x, y, radius ):
 	dc.DrawPolygon( [ wx.Point(int(p*radius+x), int(q*radius+y)) for p,q in shapes[num % len(shapes)] ] )
@@ -19,8 +19,8 @@ def GetLapRatio( leaderRaceTimes, tCur, iLapHint ):
 	if maxLaps < 1:
 		return 0, 0.0
 		
-	if 0 <= iLapHint < maxLaps and \
-			leaderRaceTimes[iLapHint] <= tCur < leaderRaceTimes[iLapHint+1]:
+	if (0 <= iLapHint < maxLaps and
+			leaderRaceTimes[iLapHint] <= tCur < leaderRaceTimes[iLapHint+1]):
 		lapRatio = (tCur - leaderRaceTimes[iLapHint]) / (leaderRaceTimes[iLapHint + 1] - leaderRaceTimes[iLapHint])
 	elif tCur <= leaderRaceTimes[0]:
 		iLapHint = 0
@@ -113,8 +113,8 @@ class Animation(wx.Control):
 		for r in k:
 			for g in k:
 				for b in k:
-					if  sum( abs(c - t) for c, t in zip([r,g,b],trackRGB) ) > 80 and \
-						sum( c for c in [r,g,b] ) > 64:
+					if (sum( abs(c - t) for c, t in zip([r,g,b],trackRGB) ) > 80 and
+						sum( c for c in [r,g,b] ) > 64 ):
 						self.colours.append( wx.Colour(r, g, b) )
 		random.seed( 1234 )
 		random.shuffle( self.colours )

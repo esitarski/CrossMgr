@@ -293,12 +293,14 @@ if __name__ == '__main__':
 	
 	print( 'taking photos at random intervals' )
 	timer = None
+	
 	def TestPhoto():
 		print( 'Snap! {:.3f} fps'.format(vb.getFrameRate()) )
 		vb.takePhoto( 101, (now() - tRef).total_seconds() )
 		timer.Start( random.random() * 2000, oneShot = True )
 	
 	timer = CallbackTimer( TestPhoto )
+	
 	def StartTest():
 		timer.Start( random.random() * 2000, oneShot = True )
 		

@@ -8,7 +8,6 @@ import Utils
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from PhotoFinish import TakePhoto
-from SendPhotoRequests import SendRenameRequests
 import OutputStreamer
 
 def formatTime( secs ):
@@ -27,6 +26,7 @@ def StrToSeconds( tStr ):
 	
 class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 	Empty = '00:00:00.000'
+	
 	def __init__(self):
 		self._tc = None
 		self.startValue = self.Empty

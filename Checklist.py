@@ -1,7 +1,6 @@
+import os
 import wx
 import wx.dataview
-import io
-import os
 import rsonlite
 import Model
 import Utils
@@ -22,7 +21,7 @@ _processRequirementLookup = {
 	'RaceStatus'.lower():	_checkRaceStatus,
 	'TimeTrial'.lower(): 	lambda race, v: race.isTimeTrial == _toBool(v),
 	'ChipReader'.lower(): 	lambda race, v: race.enableJChipIntegration == _toBool(v),
-	'Camera'.lower(): 		lambda race, v: race.enableUSBCamera ==_toBool(v),
+	'Camera'.lower(): 		lambda race, v: race.enableUSBCamera == _toBool(v),
 }
 
 class Task:

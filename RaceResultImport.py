@@ -1,6 +1,5 @@
 import wx
 import datetime
-import Utils
 import Model
 from ChipImport import ChipImportDialog
 

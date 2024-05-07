@@ -1,4 +1,3 @@
-import Utils
 import Model
 
 def SetNoDataDNS():

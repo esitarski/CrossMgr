@@ -1,8 +1,7 @@
 from math import floor
+
 import Model
-import Utils
-import datetime
-from GetResults import GetResults, GetCategoryDetails
+from GetResults import GetResults
 from FitSheetWrapper import FitSheetWrapperXLSX
 from ReadSignOnSheet import SyncExcelLink
 from UCIExcel import formatUciId

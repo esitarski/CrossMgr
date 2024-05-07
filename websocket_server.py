@@ -234,7 +234,7 @@ class WebSocketHandler(StreamRequestHandler):
 		except ValueError:
 			b1, b2 = 0, 0
 
-		fin    = b1 & FIN
+		# fin    = b1 & FIN
 		opcode = b1 & OPCODE
 		masked = b2 & MASKED
 		payload_length = b2 & PAYLOAD_LEN
@@ -374,7 +374,7 @@ def encode_to_UTF8(data):
 		logger.error("Could not encode data to UTF-8 -- %s" % e)
 		return False
 	except Exception as e:
-		raise(e)
+		raise e
 		return False
 
 
@@ -384,4 +384,4 @@ def try_decode_UTF8(data):
 	except UnicodeDecodeError:
 		return False
 	except Exception as e:
-		raise(e)
+		raise e

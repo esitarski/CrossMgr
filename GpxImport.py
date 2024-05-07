@@ -4,11 +4,9 @@ import sys
 import wx
 import wx.adv as adv
 import wx.lib.filebrowsebutton as filebrowse
-import traceback
 import Utils
 from Utils import logException
 from GeoAnimation import GeoTrack, GpxHasTimes
-import Model
 import HelpSearch
 
 class IntroPage(adv.WizardPageSimple):
@@ -326,7 +324,3 @@ class GetGeoTrack:
 		elif page == self.useTimesPage:
 			if self.useTimesPage.getUseTimes():
 				self.geoTrack.read( self.geoTrackFName, True )
-		
-	def onPageChanged( self, evt ):
-		isForward = evt.GetDirection()
-

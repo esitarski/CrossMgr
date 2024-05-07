@@ -114,8 +114,6 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 	readerComputerTimeDiff = None
 	
 	s = None
-	status = None
-	startOperation = None
 	
 	def qLog( category, message ):
 		q.put( (category, message) )
@@ -164,7 +162,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			s.connect( (HOST, PORT) )
 		except Exception as e:
 			qLog( 'connection', '{}: {}'.format(_('Connection to Ultra reader failed'), e) )
-			s, status, startOperation = None, None, None
+			s = None
 			
 			qLog( 'connection', '{}'.format(_('Attempting AutoDetect...')) )
 			HOST_AUTO = AutoDetect( callback = autoDetectCallback )

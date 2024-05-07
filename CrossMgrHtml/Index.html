@@ -8,7 +8,7 @@
 <meta name="author" content="Edward Sitarski">
 <meta name="copyright" content="Edward Sitarski, 2011-{{datetime.datetime.now().year}}">
 <meta name="generator" content="CrossMgr">  
-<meta name="keywords" content="CrossMgr, Cycling, Race, Results"> 
+<meta name="keywords" content="CrossMgr, Cycling, Race, Competition, Results"> 
 <title id="idTitle">Results</title>
 <style type="text/css">
 body {
@@ -113,13 +113,13 @@ function onLoad() {
 <body onload="onLoad()">
 <img id="idImgHeader" alt="CrossMgr Logo" onclick="location.reload(true)" style="cursor: pointer;" src="{{logoSrc}}">
 {% if share %}
-	&nbsp;&nbsp;&nbsp;<a href="./CurrentResults.html"><img class="results_current" title="Current Race Results">&nbsp;Current Race Results</a>
-	&nbsp;&nbsp;&nbsp;<a href="./PreviousResults.html"><img class="results_previous" title="Previous Race Results">&nbsp;Previous Race Results</a>
+	&nbsp;&nbsp;&nbsp;<a href="./CurrentResults.html"><img class="results_current" title="Current Results">&nbsp;Current Results</a>
+	&nbsp;&nbsp;&nbsp;<a href="./PreviousResults.html"><img class="results_previous" title="Previous Results">&nbsp;Previous Results</a>
 	&nbsp;&nbsp;&nbsp;<a href="./Announcer.html"><img class="announcer" title="Announcer">&nbsp;Announcer</a>
 	&nbsp;&nbsp;&nbsp;<a href="./LapCounter.html"><img class="lapcounter" title="Lap Counter">&nbsp;Lap Counter</a>
 	&nbsp;&nbsp;&nbsp;<a href="./qrcode.html"><img class="qrcode">&nbsp;Share</a>
 {% end %}
-<h1>Race Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
+<h1>Competition Results<br/><span style="font-size: 80%">{% if organizer %}by {% end %}{{organizer}}</span></h1>
 <ol>
 {% if not info %}
 	<h2>Results will be available shortly.<br/>Wait a few minutes, then press the Image above to Refresh.</h2>

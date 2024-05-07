@@ -1,6 +1,5 @@
 import wx
 import datetime
-import Utils
 import Model
 from ChipImport import ChipImportDialog
 
@@ -55,7 +54,7 @@ def IpicoImportDialog( parent, id = wx.ID_ANY ):
 if __name__ == '__main__':
 	errors = []
 	for fname in ['Ipico/FS_LS.rtf']:
-		with open(fname) as f:
+		with open(fname, encoding='utf8') as f:
 			for i, line in enumerate(f):
 				print( parseTagTime( line, i, errors ) )
 			print( errors )

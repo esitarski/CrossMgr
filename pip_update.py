@@ -9,7 +9,7 @@ def pip_update():
 	UBUNTU_RELEASE = ''
 	os_release_file = '/etc/os-release'
 	if os.path.exists( os_release_file ):
-		with open( os_release_file ) as f:
+		with open( os_release_file, encoding='utf8' ) as f:
 			for line in f:
 				line = line.strip()
 				if line.startswith('VERSION_ID'):
@@ -18,7 +18,7 @@ def pip_update():
 
 	# Update all the requirements.
 	fname = 'requirements.txt'
-	with open(fname) as f:
+	with open(fname, encoding='utf8') as f:
 		for package in f:
 			package = package.strip()
 			if UBUNTU_RELEASE and 'wxPython' in package:

@@ -6,11 +6,10 @@ import sys
 import copy
 import Utils
 import itertools
-import operator
 from datetime import timedelta, datetime
 from collections import deque, defaultdict
 
-from ReadSignOnSheet import IgnoreFields, NumericFields, SyncExcelLink
+from ReadSignOnSheet import IgnoreFields, NumericFields
 from SetNoDataDNS import SetNoDataDNS
 statusSortSeq = Model.Rider.statusSortSeq
 
@@ -93,10 +92,12 @@ class RiderResult:
 		return ''
 		
 	_reMissingName = re.compile( '^, |, $' )
+	
 	def full_name( self ):
 		return self._reMissingName.sub( '', '{}, {}'.format(getattr(self, 'LastName', ''), getattr(self,'FirstName', '')), 1 )
 		
 	_reMissingShortName = re.compile( '^, |, $' )
+	
 	def short_name( self, maxLen=20 ):
 		lastName = getattr(self, 'LastName', '')
 		if len(lastName) + 3 >= maxLen:
@@ -343,13 +344,18 @@ def _GetResultsCore( category ):
 	
 	highPrecision = Model.highPrecisionTimes()
 	getCategory = race.getCategory
-	for rider in list(race.riders.values()):
-		riderCategory = getCategory( rider.num )
-		
-		if category and riderCategory != category:
-			continue
-		if not riderCategory:
-			continue
+	
+	# Cache the startOffsetSecs for all required categories.
+	offsetSeconds = {cat: cat.getStartOffsetSecs() for cat in ([category] if category else race.getCategories())}
+	offsetSeconds[None] = 0.0
+	
+	for rider in (race.groupRidersByCategory()[category].copy() if category else list(race.riders.values())):
+		if category:
+			riderCategory = category
+		else:
+			riderCategory = getCategory( rider.num )			
+			if not riderCategory:
+				continue
 		
 		cutoffTime = categoryWinningTime.get(riderCategory, raceSeconds)
 		
@@ -358,7 +364,7 @@ def _GetResultsCore( category ):
 		interp = [e.interp for e in riderTimes]
 		
 		if len(times) >= 2:
-			times[0] = min(riderCategory.getStartOffsetSecs() if riderCategory else 0, times[1])
+			times[0] = min(offsetSeconds[riderCategory], times[1])
 			if isTimeTrial or riderCategory and categoryWinningLaps.get(riderCategory, None) and riderCategory.lappedRidersMustContinue:
 				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:
@@ -390,11 +396,13 @@ def _GetResultsCore( category ):
 		status = Finisher if rider.status in rankStatus else rider.status
 		if isTimeTrial and not lastTime and rider.status == Finisher:
 			status = NP
-		rr = RiderResult(	rider.num, status, lastTime,
-							riderCategory.fullname,
-							[times[i] - times[i-1] for i in range(1, len(times))],
-							times,
-							interp )
+		rr = RiderResult(
+			rider.num, status, lastTime,
+			riderCategory.fullname,
+			[times[i] - times[i-1] for i in range(1, len(times))],
+			times,
+			interp
+		)
 		
 		if isTimeTrial:
 			rr.startTime = rider.firstTime
@@ -739,7 +747,7 @@ def GetResults( category ):
 	# If the spreadsheet changed, clear the cache to update the results with new data.
 	try:
 		excelLink = Model.race.excelLink
-		externalInfo = excelLink.read()
+		excelLink.read()
 		if excelLink.readFromFile:
 			Model.resetCache()
 	except Exception as e:
@@ -1034,10 +1042,11 @@ def GetRaceName():
 versionCountStart = 10000
 versionCount = versionCountStart
 resultsBaseline = { 'cmd': 'baseline', 'categoryDetails':{}, 'info':{}, 'reference':{} }
+
 def getReferenceInfo():
 	global versionCount
 	race = Model.race
-	tLastRaceTime = race.lastRaceTime() if race else 0.0;
+	tLastRaceTime = race.lastRaceTime() if race else 0.0
 	tNow = datetime.now()	
 	return {
 		'versionCount': versionCount,

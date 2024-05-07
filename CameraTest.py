@@ -1,11 +1,8 @@
 import wx
-import time
 import datetime
-import threading
-from queue import Queue, Empty
 import Utils
 import Model
-from PhotoFinish import SnapPhoto
+from PhotoFinish import SetCameraState
 
 now = datetime.datetime.now
 
@@ -91,7 +88,8 @@ class CameraTestDialog( wx.Dialog ):
 		
 	def updatePhoto( self, event ):
 		tNow = now()
-		cameraImage = SnapPhoto()
+		#cameraImage = SnapPhoto()
+		cameraImage = None
 		if not cameraImage:
 			self.status.SetLabel( Utils.cameraError if Utils.cameraError else _("Camera Failed: Unknown Error.") )
 			return

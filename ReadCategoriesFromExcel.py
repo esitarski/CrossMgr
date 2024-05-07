@@ -61,7 +61,7 @@ def ReadCategoriesFromExcel( reader, raceHasStartTime=False ):
 				catRow[catField] = row[c]
 		
 		for f in ignoreFields:
-			cateRow.pop( f, None )
+			catRow.pop( f, None )
 		
 		categories.append( catRow )
 	

@@ -1,25 +1,23 @@
-import Utils
-import Model
-from Undo import undo
 import wx
 import re
 import os
 import wx.lib.intctrl as intctrl
-import wx.lib.masked.numctrl as numctrl
 import wx.lib.agw.flatnotebook as flatnotebook
 import glob
 import webbrowser
 import threading
-import datetime
 import subprocess
 import platform
 from RaceInputState import RaceInputState
+import Utils
+import Model
+from Undo import undo
 import ImageIO
 from SetGraphic			import SetGraphicDialog
 from FtpWriteFile import FtpProperties, FtpUploadFile, FtpIsConfigured, FtpPublishDialog
 from FtpUploadProgress import FtpUploadProgress
 from LapCounter import LapCounterProperties
-from GeoAnimation import GeoAnimation, GeoTrack
+from GeoAnimation import GeoAnimation
 from GpxImport import GetGeoTrack
 from TemplateSubstitute import TemplateSubstitute
 import Template
@@ -36,8 +34,7 @@ def GetTemplatesFolder():
 	return os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 
 def addToFGS( fgs, labelFieldBatchPublish ):
-	row = 0
-	for i, (item, column, flag) in enumerate(labelFieldBatchPublish):
+	for item, column, flag in labelFieldBatchPublish:
 		if not item:
 			continue
 		if column == 1:
@@ -1005,7 +1002,7 @@ def doBatchPublish( iAttr=None, silent=True, cmdline=False ):
 					('Ftp is Not Configured')
 				)):
 			with FtpPublishDialog( mainWin ) as dlg:
-				ret = dlg.ShowModal()
+				dlg.ShowModal()
 		
 		if not silent:
 			class FtpThread( threading.Thread ):
@@ -1048,7 +1045,7 @@ def doBatchPublish( iAttr=None, silent=True, cmdline=False ):
 		else:
 			cmd = ' '.join( [postPublishCmd, files] )
 
-		Utils.writeLog( '{}:\n'.format( _('Post Publish Cmd'), cmd ) )
+		Utils.writeLog( '{}: {}\n'.format( _('Post Publish Cmd'), cmd ) )
 		
 		try:
 			subprocess.check_call( cmd, shell=True )
@@ -1090,7 +1087,6 @@ class BatchPublishPropertiesDialog( wx.Dialog ):
 		self.cancelBtn = wx.Button( self, id=wx.ID_CANCEL )
 		self.cancelBtn.Bind( wx.EVT_BUTTON, self.onCancel )
 
-		border = 4
 		hb = wx.BoxSizer( wx.HORIZONTAL )
 		hb.Add( self.okBtn )
 		hb.Add( self.saveBtn, border = 60, flag=wx.LEFT )
@@ -1210,8 +1206,6 @@ class FilesProperties( wx.Panel ):
 		
 		labelAlign = wx.ALIGN_RIGHT | wx.ALIGN_CENTRE_VERTICAL
 		fieldAlign = wx.EXPAND
-		
-		blank = lambda : wx.StaticText( self, label='' )
 		
 		labelFieldBatchPublish = [
 			(self.fileNameLabel,		0, labelAlign),		(self.fileName,			1, fieldAlign),
@@ -1344,7 +1338,6 @@ class Properties( wx.Panel ):
 		event.Skip()	# Required to properly repaint the screen.
 	
 	def commitButtonCallback( self, event ):
-		mainWin = Utils.getMainWin()
 		if Model.race:
 			wx.CallAfter( self.commit )
 		else:
@@ -1699,7 +1692,6 @@ def ChangeProperties( parent ):
 				raise NameError('User Cancel')
 				
 			mainWin = Utils.getMainWin()
-			dir = os.path.dirname( mainWin.fileName )
 			
 			propertiesDialog.properties.refresh()
 			Model.resetCache()

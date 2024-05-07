@@ -24,16 +24,15 @@ allName = _('All')
 def getExportGrid():
 	race = Model.race
 	try:
-		externalInfo = race.excelLink.read()
+		race.excelLink.read()
 	except Exception:
-		externalInfo = {}
+		pass
 	
 	GetTranslation = _
 	allZeroStarters = True
 	with UnstartedRaceWrapper():
 		catMap = { c.fullname:c for c in race.getCategories( startWaveOnly=False ) }
 		catDetails = GetCategoryDetails( False, True )
-		catDetailsMap = { cd['name']:cd for cd in catDetails }
 		
 		title = '\n'.join( [_('Categories'), race.title, race.scheduledStart + ' ' + _('Start on') + ' ' + Utils.formatDate(race.date)] )
 		colnames = [_('Start Time'), _('Category'), _('Gender'), _('Numbers'), _('Laps'), _('Distance'), _('Starters')]
@@ -885,12 +884,12 @@ if __name__ == '__main__':
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-#							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
-							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
-							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
-							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
-							{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men'},
-						] )
+		# {'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
+		{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
+		{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
+		{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
+		{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men'},
+	] )
 	categories = Categories(mainWin)
 	categories.refresh()
 	categories.grid.SetCellValue( 0, categories.iCol['distance'], '10,2' )

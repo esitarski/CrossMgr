@@ -106,12 +106,12 @@ class Template:
 			self.fromRace( race )
 		
 	def write( self, fname ):
-		with open( fname, 'w' ) as fp:
+		with open( fname, 'w', encoding='utf8' ) as fp:
 			json.dump( self.template, fp, indent=1, sort_keys=True )
 		self.fileName = fname
 		
 	def read( self, fname ):
-		with open( fname, 'r' ) as fp:
+		with open( fname, 'r', encoding='utf8' ) as fp:
 			self.template = json.load( fp )
 		self.fileName = fname
 	

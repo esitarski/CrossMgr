@@ -7,7 +7,6 @@ import Utils
 import Model
 from GetResults import GetResults
 from ForecastHistory import getExpectedRecorded
-from GanttChartPanel import lighterColour
 
 green = wx.Colour( 0, 200, 0 )
 blue = wx.Colour( 0, 0, 200 )
@@ -95,6 +94,7 @@ class Announcer( wx.Panel ):
 			'#6AA661,#6EAC65,#72B268,#76B86C,#7BBE70,#7FC574,#83CB77,#87D17B,#8CD87F,#90DE83,#95E587,#99EB8B,#9EF28F,#A2F893,#A7FF96'.split(',')
 		)
 	]
+	
 	def createGreenScale( self, alertETA ):
 		self.colourMap = {}
 		for i in range(alertETA):
@@ -147,7 +147,6 @@ class Announcer( wx.Panel ):
 		else:
 			self.tExpected = [None] * len(self.tExpected)
 		
-		backgroundColour = wx.WHITE
 		iCol = self.iCol['ETA']
 		for row, et in enumerate(self.tExpected):
 			if row >= self.grid.GetNumberRows():

@@ -1,17 +1,16 @@
-import wx
-import wx.lib.intctrl
 import io
 import os
-import sys
+import wx
+import wx.lib.intctrl
 import webbrowser
 import ftputil
 import paramiko
 from urllib.parse import quote
 import datetime
 import threading
+
 import Utils
 import Model
-import HelpSearch
 from ExportGrid import getHeaderBitmap, drawQRCode
 from WebServer import WriteHtmlIndexPage
 
@@ -192,7 +191,7 @@ class RealTimeFtpPublish:
 
 	def publishEntry( self, publishNow = False ):
 		'''
-		This function attempts to publish race results with low latency but without wasting bandwidth.
+		This function attempts to publish competiton results with low latency but without wasting bandwidth.
 		It was inspired by TCP/IP and double-exponential backoff.
 		
 		When we get a new entry, we schedule an update in the future to give time for more entries to accumulate.
@@ -296,7 +295,6 @@ class FtpQRCodePrintout( wx.Printout ):
 		borderPix = int(max(widthPix, heightPix) / 20)
 		
 		widthFieldPix = widthPix - borderPix * 2
-		heightFieldPix = heightPix - borderPix * 2
 		
 		xPix = borderPix
 		yPix = borderPix
@@ -327,7 +325,7 @@ class FtpQRCodePrintout( wx.Printout ):
 		drawMultiLineText( dc, title, xPix + graphicWidth + graphicBorder, yPix )
 		yPix += graphicHeight + borderPix
 		
-		heightFieldPix = heightPix - yPix - borderPix
+		heightPix - yPix - borderPix
 		url = getattr( race, 'urlFull', '' )
 		if url.startswith( 'http://' ):
 			url = quote( url[7:] )
@@ -463,9 +461,8 @@ def GetFtpPublish( isDialog=True ):
 		def onFtpTest( self, event ):
 			self.commit()
 			if Utils.MessageYesNo(self, "Are you sure you want to Test Now? This can take several minutes and you will not be able to do anything until complete?", "Test Upload"):
-				busy = wx.BusyInfo('Uploading...', self)
-				result = FtpTest()
-				del busy
+				with wx.BusyInfo('Uploading...', self):
+					result = FtpTest()
 				if result:
 					Utils.MessageOK(self, '{}\n\n{}\n'.format(_("Ftp Test Failed"), result), _("Ftp Test Failed"), iconMask=wx.ICON_ERROR)
 				else:
@@ -475,9 +472,8 @@ def GetFtpPublish( isDialog=True ):
 		def onFtpUploadNow( self, event ):
 			self.commit()
 			if Utils.MessageYesNo(self, "Are you sure you want to Upload Now? This can take several minutes and you will not be able to do anything until complete?", "Upload Now"):
-				busy = wx.BusyInfo('Uploading...', self)
-				FtpUploadNow( self )
-				del busy
+				with wx.BusyInfo('Uploading...', self):
+					FtpUploadNow( self )
 		
 		def onPrint( self, event ):
 			race = Model.race
