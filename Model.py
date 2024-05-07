@@ -41,7 +41,7 @@ class memoize:
 	not re-evaluated.
 	
 	Does NOT work with kwargs.
-	Each paramater must be hashable (for example, cannot be list).
+	Each function paramater must be hashable (for example, cannot be list).
 	"""
    
 	cache = {}
@@ -66,17 +66,17 @@ class memoize:
 		except TypeError:
 			with self.rlock:
 				# uncachable -- for instance, passing a list as a paramater (unhashable objects).
-				# Better to not cache than to blow up entirely.
+				# Better to ignore the cache so that we don't blow up.
 				return self.func(*args)
 		with self.rlock:
 			return self.func(*args)
 			
 	def __repr__(self):
-		"""Return the function's docstring."""
+		""" Return the function's docstring. """
 		return self.func.__doc__
 		
 	def __get__(self, obj, objtype):
-		"""Support instance methods."""
+		""" Support instance methods. """
 		return functools.partial(self.__call__, obj)
 
 #------------------------------------------------------------------------------
