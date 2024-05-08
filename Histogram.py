@@ -273,7 +273,7 @@ class Histogram(wx.Control):
 			else:
 				t = int(t)
 				if t < 60*60:
-					s = '{}:{:02d}'.format((t/60), t%60)
+					s = '{}:{:02d}'.format((t//60), t%60)
 				else:
 					s = '{}:{:02d}:{:02d}'.format(t//(60*60), (t//60)%60, t%60)
 
