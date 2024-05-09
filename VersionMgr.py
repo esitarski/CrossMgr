@@ -33,7 +33,7 @@ def isUpgradeRecommended( fname = None ):
 				verMax = tuple( int(n) for n in line.split('.') )
 
 			# Get the current version.
-			verCur = tuple( int(n) for n in re.search(" (\d+\.\d+)", Version.AppVerName).group(1).split('.') )
+			verCur = tuple( int(n) for n in re.search(r" (\d+\.\d+)", Version.AppVerName).group(1).split('.') )
 			
 			if verCur < verMax:
 				return True
@@ -62,7 +62,7 @@ def updateVersionCache( fname = None ):
 		
 	try:
 		# Get all the zip files from the downloads page.
-		reZipFile = re.compile( "CrossMgr[^'.]*\.zip" )
+		reZipFile = re.compile( r"CrossMgr[^'.]*\.zip" )
 		zips = set()
 
 		p = urllib.request.urlopen(urlRoot + '/file-cabinet').read()
@@ -71,7 +71,7 @@ def updateVersionCache( fname = None ):
 				zips.add( m )
 		
 		# Extract the version number from the zip files.
-		reVersion = re.compile( "_v(\d+_\d+)" )
+		reVersion = re.compile( r"_v(\d+_\d+)" )
 		vers = []
 		for zip in zips:
 			try:

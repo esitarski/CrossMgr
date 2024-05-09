@@ -4,7 +4,7 @@ import platform
 import datetime
 import Utils
 
-reNonTimeChars = re.compile('[^0-9:.]')
+reNonTimeChars = re.compile(r'[^0-9:.]')
 
 def secsToValue( secs, allow_none, display_seconds, display_milliseconds ):
 	if secs is None and allow_none:
@@ -50,7 +50,7 @@ if platform.system() == 'Windows':
 	
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
 		mask         = '##:##:##.###'
-		validRegex   = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'
+		validRegex   = r'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'
 
 		def __init__( self, parent, id=wx.ID_ANY, seconds=None, display_seconds=True, display_milliseconds=True, value=None, allow_none=False, style=0, size=wx.DefaultSize ):
 			# Utils.writeLog( 'HighPrecisionTimeEdit: Windows' )
@@ -60,10 +60,10 @@ if platform.system() == 'Windows':
 			self.display_milliseconds = display_seconds and display_milliseconds
 			if not display_seconds:
 				self.mask       = '##:##'
-				self.validRegex = '[0-9][0-9]:[0-5][0-9]'
+				self.validRegex = r'[0-9][0-9]:[0-5][0-9]'
 			elif not display_milliseconds:
 				self.mask       = '##:##:##'
-				self.validRegex = '[0-9][0-9]:[0-5][0-9]:[0-5][0-9]'			
+				self.validRegex = r'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]'			
 			
 			self.defaultValue = self.mask.replace('#', '0')
 			self.emptyValue   = self.mask.replace('#', ' ')
@@ -168,7 +168,7 @@ else:
 					self.SetValue(self.text_data)
 					return
 				else:
-					WarnTip = TextBoxTipPopup(self, wx.SIMPLE_BORDER,"Incorrect time format on the clipboard")
+					WarnTip = TextBoxTipPopup(self, wx.SIMPLE_BORDER, "Incorrect time format on the clipboard")
 					xPos, yPos = self.GetPosition()
 					height = WarnTip.GetClientSize()[1]
 					pos = self.ClientToScreen( (xPos - xPos, yPos - yPos + height) )

@@ -364,7 +364,7 @@ def _GetResultsCore( category ):
 		interp = [e.interp for e in riderTimes]
 		
 		if len(times) >= 2:
-			times[0] = min(offsetSeconds[riderCategory], times[1])
+			times[0] = min( offsetSeconds[riderCategory], times[1] )
 			if isTimeTrial or riderCategory and categoryWinningLaps.get(riderCategory, None) and riderCategory.lappedRidersMustContinue:
 				laps = min( categoryWinningLaps[riderCategory], len(times)-1 )
 			else:

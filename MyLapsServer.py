@@ -22,7 +22,7 @@ def sendReaderEvent( tagTimes ):
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
 combine = datetime.datetime.combine
-reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
+reTimeChars = re.compile( r'^\d\d:\d\d:\d\d\.\d+' )
 
 dateToday = datetime.date.today()
 tSameCount = 0

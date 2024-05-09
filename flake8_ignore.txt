@@ -30,7 +30,6 @@ E203 whitespace before ':'
 E731 do not assign a lambda expression, use a def
 W391 blank line at end of file
 F841 local variable 'e' is assigned to but never used
-W605
 E303
 E306
 E402

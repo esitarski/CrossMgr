@@ -333,11 +333,11 @@ class WebSocketHandler(StreamRequestHandler):
 
 	def handshake(self):
 		message = self.request.recv(1024).decode().strip()
-		upgrade = re.search('\nupgrade[\s]*:[\s]*websocket', message.lower())
+		upgrade = re.search('\nupgrade[\\s]*:[\\s]*websocket', message.lower())
 		if not upgrade:
 			self.keep_alive = False
 			return
-		key = re.search('\n[sS]ec-[wW]eb[sS]ocket-[kK]ey[\s]*:[\s]*(.*)\r\n', message)
+		key = re.search('\n[sS]ec-[wW]eb[sS]ocket-[kK]ey[\\s]*:[\\s]*(.*)\r\n', message)
 		if key:
 			key = key.group(1)
 		else:

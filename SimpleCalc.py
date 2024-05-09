@@ -6,12 +6,11 @@ tokError = 'e'
 tokEnd = '$'
 
 reTime = re.compile(
-	'(?:[0-9]+:[0-5][0-9]:[0-5][0-9])|(?:[0-5]?[0-9]:[0-5][0-9])(?:\.[0-9]+)?' )
-	# ------[HHH]H:MM:SS--------------   ------[M]M:SS---------  ---[.ddddddd]---
-reNum = re.compile(
-	'[0-9]*\.?[0-9]+' )
-	# [ddd][.]d[ddd]
-reWhitespace = re.compile( '[ \r\t]+' )
+	r'(?:[0-9]+:[0-5][0-9]:[0-5][0-9])|(?:[0-5]?[0-9]:[0-5][0-9])(?:\.[0-9]+)?' )
+	 # ------[HHH]H:MM:SS--------------   ------[M]M:SS---------  ---[.ddddddd]---
+reNum = re.compile( r'[0-9]*\.?[0-9]+' )
+
+reWhitespace = re.compile( r'\s+' )
 singleCharTokens = set( c for c in '+-*/()' )
 
 class TimeEvalError( Exception ):
@@ -194,19 +193,19 @@ def testEval( ss  ):
 	re = TimeEval()
 	try:
 		x = formatTime( re.eval(ss) )
-		print(  ss, '=', x )
+		print( ss, '=', x )
 	except TimeEvalEmptyExpressionError:
-		print(  'empty expression' )
+		print( 'empty expression' )
 	except (TimeEvalSyntaxError, TimeEvalDivideByZeroError) as e:
-		print(  ss )
-		print(  ' ' * e.i + '^' )
-		print(  ' ' * e.i + '|' )
-		print(  ' ' * e.i + '+---' + e.error )
+		print( ss )
+		print( ' ' * e.i + '^' )
+		print( ' ' * e.i + '|' )
+		print( ' ' * e.i + '+---' + e.error )
 	print( '--------------------------------------------------------------------' )
 
 if __name__ == '__main__':
 	testEval( '' )
-	testEval( '3.1415926 * 3.1415926' )
+	testEval( '    3.1415926 * 3.1415926' )
 	testEval( '-1:00:00' )
 	testEval( '30:00 - -30:00' )
 	testEval( '1:00:00 / 12' )

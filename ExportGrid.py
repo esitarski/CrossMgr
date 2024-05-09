@@ -519,7 +519,7 @@ class ExportGrid:
 		
 		# Put CrossMgr branding at the bottom of the page.
 		yFooter = heightPix - borderPix + int(h*1.8) - h
-		m = re.search( ' \([^)]+\) ', self.brandText )
+		m = re.search( r' \([^)]+\) ', self.brandText )
 		urlStart, urlEnd = m.start() + 2, m.end() - 2
 		bt = [self.brandText[:urlStart], self.brandText[urlStart:urlEnd], self.brandText[urlEnd:]]
 		

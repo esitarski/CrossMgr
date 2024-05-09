@@ -1,7 +1,7 @@
 import re
 from ReadSignOnSheet import BibInfo
 
-reVariable = re.compile( '\{=[^}]+\}' )
+reVariable = re.compile( r'\{=[^}]+\}' )
 
 def TemplateSubstitute( s, keyValues ):
 	bibInfo = BibInfo()

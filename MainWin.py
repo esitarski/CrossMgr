@@ -1670,7 +1670,7 @@ class MainWin( wx.Frame ):
 				for catName, category in getRaceCategories():
 					if catName == 'All' or not category.publishFlag:
 						continue
-					safeCatName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))		
+					safeCatName = re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))		
 					xlFNames.append( os.path.join( path, 'UCI-StartList-{}-{}.xlsx'.format(fname, safeCatName) ) )
 					xlFNames.append( os.path.join( path, 'UCI-Results-{}-{}.xlsx'.format(fname, safeCatName) ) )
 				return xlFNames
@@ -1873,10 +1873,10 @@ class MainWin( wx.Frame ):
 			return Model.race.email
 		return self.config.Read('email', '')
 	
-	reLeadingWhitespace = re.compile( r'^[ \t]+', re.MULTILINE )
-	reComments = re.compile( r'// .*$', re.MULTILINE )
-	reBlankLines = re.compile( r'\n+' )
-	reTestCode = re.compile( '/\*\(-\*/.*?/\*-\)\*/', re.MULTILINE )	# Use non-greedy match.
+	reLeadingWhitespace = re.compile( '^[ \t]+', re.MULTILINE )
+	reComments = re.compile( '// .*$', re.MULTILINE )
+	reBlankLines = re.compile( '\n+' )
+	reTestCode = re.compile( r'/\*\(-\*/.*?/\*-\)\*/', re.MULTILINE )	# Use non-greedy match.
 	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
 	reFloatList = re.compile( r'([+-]?[0-9]+\.[0-9]+,\s*)+([+-]?[0-9]+\.[0-9]+)', re.MULTILINE )
 	reBoolList = re.compile( r'((true|false),\s*)+(true|false)', re.MULTILINE )
@@ -3742,7 +3742,7 @@ class MainWin( wx.Frame ):
 		for catName, category in raceCategories:
 			if catName == 'All' or not category.uploadFlag:
 				continue
-			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
+			sheetName = re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
 			sheetName = sheetName[:31]
 			sheetCur = wb.add_sheet( sheetName )
 			UCIExport( sheetCur, category )

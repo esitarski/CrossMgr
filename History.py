@@ -4,6 +4,7 @@ import re
 import sys
 from string import Template
 import operator
+
 import Model
 import Utils
 import ColGrid

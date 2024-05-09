@@ -16,10 +16,10 @@ import xml.etree.ElementTree
 import xml.etree.cElementTree
 import xml.dom
 import xml.dom.minidom
-from GpxParse import GpxParse
 import collections
 from getuser import lookup_username
 import zipfile
+from GpxParse import GpxParse
 
 def LineNormal( x1, y1, x2, y2, normLen ):
 	''' Returns the coords of a normal line passing through x1, y1 of length normLen. '''

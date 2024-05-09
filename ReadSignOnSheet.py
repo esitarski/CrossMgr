@@ -722,7 +722,7 @@ class ExcelLink:
 		except Exception:
 			return False
 	
-	reVersionField = re.compile( '^(.+) \(([0-9]+)\)\.(?:xls|xlsx|xlsm)$', re.IGNORECASE )
+	reVersionField = re.compile( r'^(.+) \(([0-9]+)\)\.(?:xls|xlsx|xlsm)$', re.IGNORECASE )
 	def getMostRecentFilename( self ):
 		dirname, basename = os.path.split(self.fileName)
 		
@@ -972,7 +972,7 @@ def SyncExcelLink( race ):
 
 #-----------------------------------------------------------------------------------------------------
 
-reSeparators = re.compile( r'[,;:.]+' )
+reSeparators = re.compile( '[,;:.]+' )
 class BibInfo:
 	AllFields = (
 		'Name',

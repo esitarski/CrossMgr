@@ -68,7 +68,7 @@ class CategoryPredicate:
 			isMatch = (self.ageRange[0] <= age <= self.ageRange[1])
 		return isMatch
 		
-	badRangeCharsRE = re.compile( '[^0-9,\-]' )
+	badRangeCharsRE = re.compile( '[^0-9,-]' )
 	nonDigits = re.compile( '[^0-9]' )
 
 	def _getStr( self ):

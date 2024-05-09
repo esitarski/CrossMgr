@@ -262,7 +262,7 @@ class Histogram(wx.Control):
 				dc.SetPen( pen )
 		
 		# draw the baseline
-		dc.SetPen(wx.Pen('black', 2))
+		dc.SetPen(wx.Pen(wx.BLACK, 2))
 		dc.DrawLine(xLeft-tickBorder, yBottom, xRight+tickBorder, yBottom)
 		
 		# draw the hoverhelp
@@ -291,7 +291,7 @@ class Histogram(wx.Control):
 			if rHover.GetBottom() > height:
 				rHover.SetY( height - rHover.GetHeight() )
 			
-			dc.SetPen( wx.Pen('black', 1) )
+			dc.SetPen( wx.Pen(wx.BLACK, 1) )
 			dc.SetBrush( wx.Brush(wx.Colour(255,255,153)) )
 			dc.DrawRectangle( rHover )
 			

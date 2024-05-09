@@ -142,7 +142,7 @@ class Category:
 	DistanceByLap = 0
 	DistanceByRace = 1
 
-	badRangeCharsRE = re.compile( '[^0-9,\-]' )
+	badRangeCharsRE = re.compile( '[^0-9,-]' )
 	
 	active = True
 	CatWave = 0

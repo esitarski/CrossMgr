@@ -23,7 +23,7 @@ def formatTimeGap( secs ):
 		separateWithQuotes=False,
 	)
 
-reHighPrecision = re.compile( '^.*\.[0-9][0-9]"$' )
+reHighPrecision = re.compile( r'^.*\.[0-9][0-9]"$' )
 
 def UCIExport( sheet, cat ):
 	race = Model.race
