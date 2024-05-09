@@ -107,7 +107,7 @@ def ReadLIF( fname ):
 		return record
 
 	for i in range(3):
-		with open(fname) as f:
+		with open(fname, encoding='utf8') as f:
 			s = f.read()
 			
 		# Check for trailing newline.
@@ -175,20 +175,20 @@ def Export( folder=None ):
 	# Create the people reference file.
 	# ID number, last name, first name, affiliation
 	fields = ('LastName', 'FirstName', 'Team')
-	with open(fnameBase + '.ppl', 'w', newline='') as f:
+	with open(fnameBase + '.ppl', 'w', newline='', encoding='utf8') as f:
 		writer = csv.writer( f )
 		for id, info in sorted( externalInfo.items(), key=operator.itemgetter(0) ):
 			writer.writerow( [id] + [externalInfo.get(field,'') for field in fields] )
 
 	# Event number, round number, heat number, event name
 	# <tab, space or comma>ID, lane # lane=0 as there are no assigned lanes.
-	with open(fnameBase + '.evt', 'w') as f:
+	with open(fnameBase + '.evt', 'w', encoding='utf8') as f:
 		f.write( '1,1,1,{}\n'.format( os.path.splitext(race.getFileName(includeMemo=False))[0] ) )
 		for id in sorted( externalInfo.keys() ):
 			f.write( ',{},0\n'.format(id) )
 	
 	# event number, round number, heat number
-	with open(fnameBase + '.sch', 'w') as f:
+	with open(fnameBase + '.sch', 'w', encoding='utf8') as f:
 		f.write( '1,1,1\n' )
 
 #-----------------------------------------------------------------------

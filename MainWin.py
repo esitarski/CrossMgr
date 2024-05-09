@@ -2209,7 +2209,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = self.getFormatFilename('html')
 		try:
-			with open(fname, 'w') as fp:
+			with open(fname, 'w', encoding='utf8') as fp:
 				fp.write( html )
 			if not silent:
 				Utils.LaunchApplication( fname )
@@ -3306,7 +3306,7 @@ class MainWin( wx.Frame ):
 		
 		# Test if we can write something there.
 		try:
-			with open(fName, 'w') as fp:
+			with open(fName, 'w'):
 				pass
 		except IOError:
 			Utils.MessageOK(self, '{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
