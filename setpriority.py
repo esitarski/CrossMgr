@@ -4,7 +4,9 @@ def setpriority(pid=None,priority=1):
 		python process but can take any valid process ID. """
 
 	try:
-		import win32api,win32process,win32con
+		import win32api
+		import win32process
+		import win32con
 		
 		priorityclasses = [	win32process.IDLE_PRIORITY_CLASS,
 							win32process.BELOW_NORMAL_PRIORITY_CLASS,

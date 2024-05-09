@@ -399,7 +399,7 @@ class GeoTrack:
 	
 	def writeGPXFile( self, fname ):
 		with open( fname, 'w', encoding='utf8') as fp:
-			self.getGPX( os.path.splitext(os.path.basename(fname))[0] ).writexml(fp, indent="", addindent=" ", newl="\n", encoding='utf-8')
+			self.getGPX( os.path.splitext(os.path.basename(fname))[0] ).writexml(fp, indent="", addindent=" ", newl="\n", encoding='utf8')
 	
 	def readElevation( self, fname ):
 		header = None

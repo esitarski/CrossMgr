@@ -192,7 +192,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime, test ):
 				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
-			# This socket is a data socket.  Get the data.  Assume utf-8 encoding.
+			# This socket is a data socket.  Get the data.  Assume utf8 encoding.
 			try:
 				data = s.recv( 4096 )
 			except Exception as e:

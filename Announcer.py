@@ -175,9 +175,9 @@ class Announcer( wx.Panel ):
 		race = Model.race
 		if race and race.isRunning():
 			tRace = race.curRaceTime()
-			self.expected, self.recorded, resultsIndex = getExpectedRecorded()
+			self.expected, self.recorded = getExpectedRecorded()[:2]
 		else:
-			self.expected, self.recorded, resultsIndex = [], [], {}
+			self.expected, self.recorded = [], []
 		self.resetTimer()
 		
 		tRace = race.lastRaceTime()
@@ -254,7 +254,6 @@ class Announcer( wx.Panel ):
 				bibETA[rr.num] = eta
 				if row > 0 and not isTimeTrial:
 					try:
-						numPrev = results[row-1].num
 						if abs(abs(eta - bibETA[results[row-1].num]) < 1.0):
 							iGroup -= 1
 					except Exception:

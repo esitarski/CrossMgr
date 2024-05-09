@@ -34,10 +34,10 @@ subprocess.call( cmd + ["extract", "-o", pot, dir] )
 
 shutil.rmtree( dir )
 
-with open(pot, 'r', encoding='utf-8') as f:
+with open(pot, 'r', encoding='utf8') as f:
 	contents = f.read()
 contents = contents.replace( 'locale_src/', '' )
-with open(pot, 'w', encoding='utf-8') as f:
+with open(pot, 'w', encoding='utf8') as f:
 	f.write( contents )
 
 for lang in languages:

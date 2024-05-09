@@ -272,15 +272,13 @@ class JChipSetupDialog( wx.Dialog ):
 		if not event.tagTimes:
 			return
 			
-		tagNums = {}
 		race = Model.race
 		if race:
 			if not race.enableUSBCamera:
 				return
-			tagNums = GetTagNums()
+			GetTagNums()
 		
 		tag, dt = event.tagTimes[-1]
-		#num = tagNums.get(tag, None)
 
 	def testJChipToggle( self, event ):
 		self.commit()

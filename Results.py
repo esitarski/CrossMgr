@@ -2,6 +2,7 @@ import wx
 import re
 import os
 import sys
+
 import Model
 import Utils
 import ColGrid
@@ -10,7 +11,7 @@ from FixCategories import FixCategories, SetCategory
 from GetResults import GetResults, RidersCanSwap
 from ExportGrid import ExportGrid
 from RiderDetail import ShowRiderDetailDialog
-from EditEntry import CorrectNumber, ShiftNumber, InsertNumber, DeleteEntry, SwapEntry
+from EditEntry import CorrectNumber, ShiftNumber, DeleteEntry, SwapEntry
 from Undo import undo
 import Flags
 

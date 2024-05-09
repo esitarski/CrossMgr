@@ -1,13 +1,11 @@
 import os
-import wx
 import sys
-import math
 import shutil
 
 from GetResults import GetResults
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 import Utils
-from Utils				import logCall, logException
+from Utils				import logException
 import Model
 
 def formatTime( secs ):

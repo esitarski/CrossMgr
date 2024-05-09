@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-import shutil
 import os
-import io
 import stat
 import glob
+import shutil
 import datetime
 import subprocess
 from Version import AppVerName
@@ -32,7 +31,7 @@ def removeTabs( buf, tabStop = 4 ):
 
 def writeToFile( s, fname ):
 	print( 'creating', fname, '...' )
-	with io.open(os.path.join(pypiDir,fname), 'w', encoding='utf-8') as f:
+	with open(os.path.join(pypiDir,fname), 'w', encoding='utf8') as f:
 		f.write( s )
 
 #-----------------------------------------------------------------------
@@ -155,7 +154,7 @@ for fname in glob.glob( '*.*' ):
 	if not (fname.endswith('.py') or fname.endswith('.pyw')):
 		continue
 	print( '   ', fname, '...' )
-	with open(fname, 'r', encoding='utf-8') as f:
+	with open(fname, 'r', encoding='utf8') as f:
 		contents = f.read()
 	if contents.startswith('import'):
 		p = 0

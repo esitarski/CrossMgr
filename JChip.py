@@ -200,7 +200,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			if not readerReadBytes[s].endswith( CRByte ):
 				continue	# Missing delimiter - need to get more data.
 				
-			# The buffer is delimited.  Decode from utf-8.  Process the messages.
+			# The buffer is delimited.  Decode from utf8.  Process the messages.
 			tagTimes = []
 			lines = readerReadBytes[s].decode().split( CR )
 			readerReadBytes[s] = b''

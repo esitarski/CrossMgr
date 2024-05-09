@@ -1,6 +1,5 @@
 import csv
 import Utils
-import datetime
 import Model
 from GetResults import GetResults
 from ReadSignOnSheet import SyncExcelLink
@@ -20,6 +19,7 @@ CrossResultsFields = (
 	('Team',		'Team'),
 	('License',		'License'),
 )
+
 lenCrossResultsFields = len(CrossResultsFields)
 
 def CrossResultsExport( fname ):
@@ -51,7 +51,6 @@ def CrossResultsExport( fname ):
 	crossResultsFields = [CrossResultsFields[i][0] for i in range(len(hasField)) if hasField[i]]
 	
 	year, month, day = race.date.split( '-' )
-	raceDate = datetime.date( year = int(year), month = int(month), day = int(day) ).strftime( '%m/%d/%Y' )
 	
 	def toInt( n ):
 		try:
@@ -71,7 +70,7 @@ def CrossResultsExport( fname ):
 	
 	lapHeaders = ['lap'] * maxLaps
 			
-	with open(fname, 'w', encoding='utf-8', newline='') as csvFile:
+	with open(fname, 'w', encoding='utf8', newline='') as csvFile:
 		csvWriter = csv.writer( csvFile, delimiter = ',', lineterminator = '\n' )
 		csvWriter.writerow( crossResultsFields + lapHeaders )
 		

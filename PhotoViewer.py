@@ -1,17 +1,9 @@
-import Model
-import Utils
-import ReadSignOnSheet
-from PhotoFinish import GetPhotoFName, TakePhoto
-from FinishStrip import ShowFinishStrip
-from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
-from LaunchFileBrowser import LaunchFileBrowser
-
 import wx
 import wx.lib.agw
 import wx.lib.agw.thumbnailctrl as TC
 try:
 	import wx.lib.agw.scrolledthumbnail as SC
-except:
+except Exception:
 	SC = None
 
 import os
@@ -20,6 +12,15 @@ import math
 import types
 import threading
 import datetime
+
+import Model
+import Utils
+import ReadSignOnSheet
+
+from PhotoFinish import GetPhotoFName, TakePhoto
+from FinishStrip import ShowFinishStrip
+from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
+from LaunchFileBrowser import LaunchFileBrowser
 
 TestDir = r'C:\Users\Edward Sitarski\Documents\2013-02-07-test-r1-_Photos'
 

@@ -1,4 +1,3 @@
-import io
 import os
 import time
 import atexit
@@ -159,7 +158,7 @@ def ReadStreamFile( fname = None ):
 	finishTime = None
 	numTimes = []
 	try:
-		with io.open(fname, 'r', encoding='utf-8') as f:
+		with open(fname, 'r', encoding='utf8') as f:
 			for line in f:
 				line = line.strip()
 				if not line or line[0] == '#':
