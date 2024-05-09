@@ -668,7 +668,7 @@ class GeoTrack:
 		mult = min( width / self.xMax, height / self.yMax )
 		w, h = self.xMax * mult, self.yMax * mult
 		xBorder = (width - w) / 2.0
-		yBorder = (height - h) / 2.0
+		#yBorder = (height - h) / 2.0
 		self.mult = mult
 		self.x = xBorder + x
 		self.yBottom = y + height
@@ -1089,7 +1089,6 @@ class GeoAnimation(wx.Control):
 			dc.DrawPolygon( drawPointsInt )
 		
 		# Draw a finish line.
-		finishLineLength = laneWidth * 2
 		if isPointToPoint:
 			x1, y1, x2, y2 = LineNormal( drawPoints[-1][0], drawPoints[-1][1], drawPoints[-2][0], drawPoints[-2][1], laneWidth * 2 )
 		else:
@@ -1182,7 +1181,7 @@ class GeoAnimation(wx.Control):
 		for num, position in topFew.items():
 			leaders[position] = num
 		
-		yTop = height - self.infoLines * tHeight
+		height - self.infoLines * tHeight
 		
 		tWidth, tHeight = dc.GetTextExtent( '999' )
 		yCur = tHeight+textVSpace*1.6
@@ -1190,9 +1189,9 @@ class GeoAnimation(wx.Control):
 		# Draw the race time
 		secs = int( self.t )
 		if secs < 60*60:
-			tStr = '%d:%02d ' % ((secs // 60)%60, secs % 60 )
+			tStr = '{:d}:{:02d} '.format( (secs // 60)%60, secs % 60 )
 		else:
-			tStr = '%d:%02d:%02d ' % (secs // (60*60), (secs // 60)%60, secs % 60 )
+			tStr = '{:d}:{:02d}:{:02d} '.format( secs // (60*60), (secs // 60)%60, secs % 60 )
 		tWidth = dc.GetTextExtent( tStr )[0]
 		dc.DrawText( tStr, int(width - tWidth), int(yCur) )
 		yCur += tHeight

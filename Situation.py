@@ -12,9 +12,9 @@ import wx.lib.mixins.listctrl as listmix
 
 import Utils
 import Model
-from ReadSignOnSheet	import ResetExcelLinkCache, SyncExcelLink
+from ReadSignOnSheet import ResetExcelLinkCache, SyncExcelLink
 from GetResults import GetResults, TimeDifference
-from FixCategories import FixCategories, SetCategory
+from FixCategories import FixCategories
 from RiderDetail import ShowRiderDetailDialog
 from Undo import undo
 
@@ -78,7 +78,6 @@ def GetSituationGaps( category=None, t=None ):
 		t = race.lastRaceTime() if not race.isRunning() else (datetime.datetime.now() - race.startTime).total_seconds()
 	
 	# Collect the race times from the results data.
-	Finisher = Model.Rider.Finisher
 	raceTimes, riderName = {}, {}
 	for rr in GetResults(category):
 		if not (rr.raceTimes and len(rr.raceTimes) >= 2) or rr._lastTimeOrig < t:
@@ -103,9 +102,9 @@ def GetSituationGaps( category=None, t=None ):
 	leaderPosition, leaderSpeed, leaderRaceTimes = psLeader[0], psLeader[1], raceTimes[psLeader[2]]
 	
 	try:
-		externalInfo = race.excelLink.read()
+		race.excelLink.read()
 	except Exception:
-		externalInfo = {}
+		pass
 	
 	def getInfo( bib, lapsDown ):
 		name = riderName[bib]
@@ -322,7 +321,7 @@ class SituationPanel(wx.Panel):
 		lastWidth = GetGroupTextExtent( groups[-1] )[0]
 		
 		xRight = width - border - lastWidth
-		yBottom = height - border
+		# yBottom = height - border
 		
 		gapMax = groups[-1][-1][0] - groups[0][0][0] if groups and groups[0] else 0.0
 		xScale = (xRight - xLeft) / (gapMax if gapMax else 1.0) * self.zoom
