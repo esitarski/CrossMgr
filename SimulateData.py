@@ -23,7 +23,6 @@ def SimulateData( riders=None, laps=None ):
 
 	var = mean/20.0		# Variance between riders.
 	lapsTotal = int(raceMinutes * 60 / mean + 3)
-	raceTime = mean * lapsTotal
 	errorPercent = 1.0/25.0
 
 	for nMid in (10,100,200,500,1000,2000,5000,10000,20000,50000):
@@ -74,7 +73,6 @@ def SimulateData( riders=None, laps=None ):
 	
 	# Find the next unique arrival of all finishers.
 	lastLapFinishers = []
-	tStop = raceMinutes * 60.0
 	numSeen = set()
 	for t, n in afterLeaderFinishEvents:
 		if n not in numSeen:

@@ -12,9 +12,9 @@ class RangeCheck:
 		self.include = set()
 		self.exclude = set()
 
-		s = re.sub( '[^\d,-]', '', s )
-		s = re.sub( '-+', '-', s )
-		s = re.sub( ',+', ',', s )
+		s = re.sub( r'[^\d,-]', '', s )
+		s = re.sub( r'-+', '-', s )
+		s = re.sub( r',+', ',', s )
 		ranges = s.split( ',' )
 		for r in ranges:
 			try:
@@ -86,9 +86,9 @@ class RangeCheck:
 					nLast = n
 				elif n != nLast + 1:
 					if nLast != nFirst:
-						ranges.append( '%d-%d' % (nFirst, nLast) )
+						ranges.append( f'{nFirst}-{nLast}' )
 					else:
-						ranges.append( '%d' % nFirst )
+						ranges.append( f'{nFirst}' )
 					nFirst = n
 				nLast = n
 			
@@ -102,16 +102,16 @@ class RangeCheck:
 					nLast = n
 				elif n != nLast + 1:
 					if nLast != nFirst:
-						ranges.append( '-%d-%d' % (nFirst, nLast) )
+						ranges.append( f'-{nFirst}-{nLast}' )
 					else:
-						ranges.append( '-%d' % nFirst )
+						ranges.append( f'-{nFirst}' )
 					nFirst = n
 				nLast = n
 		
 		return ','.join( ranges )
 		
 	def __repr__( self ):
-		return 'RangeCheck("%s")' % self.__str__()
+		return f'RangeCheck("{self.__str__()}")'
 		
 if __name__ == '__main__':
 	r = RangeCheck( '--100-200-300,,,-,100-199,-120-130,asdfasdf,-161,-21' )

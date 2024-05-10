@@ -1,17 +1,20 @@
-import socket
-import sys
-import time
-import datetime
-import atexit
-import re
-import os
 import wx
 import wx.lib.newevent
-import Utils
-import Model
+import os
+import re
+
+import sys
+import time
+import atexit
 import select
+import socket
+import datetime
+
 from threading import Thread as Process
 from queue import Queue, Empty
+
+import Utils
+import Model
 
 ChipReaderEvent, EVT_CHIP_READER = wx.lib.newevent.NewEvent()
 
@@ -23,9 +26,9 @@ def sendReaderEvent( tagTimes ):
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
 combine = datetime.datetime.combine
-reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
+reTimeChars = re.compile( r'^\d\d:\d\d:\d\d\.\d+' )
 
-CR = u'\r'			# JChip delimiter
+CR = '\r'			# JChip delimiter
 CRByte = b'\r'
 
 dateToday = datetime.date.today()
@@ -197,7 +200,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			if not readerReadBytes[s].endswith( CRByte ):
 				continue	# Missing delimiter - need to get more data.
 				
-			# The buffer is delimited.  Decode from utf-8.  Process the messages.
+			# The buffer is delimited.  Decode from utf8.  Process the messages.
 			tagTimes = []
 			lines = readerReadBytes[s].decode().split( CR )
 			readerReadBytes[s] = b''

@@ -692,19 +692,18 @@ class FindFiles:
 
     def MakeRegex(self, pattern):
         import re
-        f = ""  # Set up a regex for file names
-
+        r = []
         for ch in pattern:
             if ch == "*":
-                f = f + ".*"
+                r.append( ".*" )
             elif ch == ".":
-                f = f + "\."
+                r.append( r"\." )
             elif ch == "?":
-                f = f + "."
+                r.append( "." )
             else:
-                f = f + ch
-
-        return re.compile(f+'$')
+                r.append( ch )
+        r.append( '$' )
+        return re.compile( ''.join(r) )
 
     def StripExt(self, file_nm):
         fl_fld = os.path.splitext(file_nm)

@@ -3,7 +3,7 @@ import Model
 import Utils
 import datetime
 from GetResults import GetResults, GetCategoryDetails
-from FitSheetWrapper import FitSheetWrapper, FitSheetWrapperXLSX
+from FitSheetWrapper import FitSheetWrapper
 from ReadSignOnSheet import SyncExcelLink
 
 USACFields = (
@@ -33,7 +33,6 @@ def toInt( n ):
 		return int(n.split()[0])
 	except Exception:
 		return n
-
 	
 def USACExport( workbook, sheet ):
 	race = Model.race

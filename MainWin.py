@@ -7,12 +7,12 @@ import json
 import glob
 import shutil
 import random
-import datetime
-import operator
-import webbrowser
-import platform
 import zipfile
 import hashlib
+import datetime
+import operator
+import platform
+import webbrowser
 
 import wx
 import wx.adv as adv
@@ -64,7 +64,6 @@ from FtpWriteFile		import realTimeFtpPublish
 from SetAutoCorrect		import SetAutoCorrectDialog
 from DNSManager			import DNSManagerDialog
 from USACExport			import USACExport
-from UCIExport			import UCIExport
 from UCIExcel			import UCIExcel
 from VTTAExport			import VTTAExport
 from JPResultsExport	import JPResultsExport
@@ -105,9 +104,8 @@ import Version
 from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, ExcelLink, ReportFields, SyncExcelLink, IsValidRaceDBExcel, GetTagNums
 from SetGraphic			import SetGraphicDialog
 from GetResults			import GetCategoryDetails, UnstartedRaceWrapper, GetLapDetails, GetAnimationData, ResetVersionRAM
-from PhotoFinish		import DeletePhotos, okTakePhoto
+from PhotoFinish		import okTakePhoto
 from SendPhotoRequests	import SendPhotoRequests
-from PhotoViewer		import PhotoViewerDialog
 from ReadTTStartTimesSheet import ImportTTStartTimes, AutoImportTTStartTimes
 from TemplateSubstitute import TemplateSubstitute
 from GetMatchingExcelFile import GetMatchingExcelFile
@@ -121,7 +119,6 @@ from ModuleUnpickler import ModuleUnpickler
 
 now = datetime.datetime.now
 
-import traceback
 '''
 # Monkey patch threading so we can see where each thread gets started.
 import traceback
@@ -129,9 +126,9 @@ import types
 threading_start = threading.Thread.start
 def loggingThreadStart( self, *args, **kwargs ):
 	threading_start( self, *args, **kwargs )
-	print self
+	print( self )
 	traceback.print_stack()
-	print '----------------------------------'
+	print( '----------------------------------' )
 threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Thread)
 '''
 #----------------------------------------------------------------------------------
@@ -1670,7 +1667,7 @@ class MainWin( wx.Frame ):
 				for catName, category in getRaceCategories():
 					if catName == 'All' or not category.publishFlag:
 						continue
-					safeCatName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))		
+					safeCatName = re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))		
 					xlFNames.append( os.path.join( path, 'UCI-StartList-{}-{}.xlsx'.format(fname, safeCatName) ) )
 					xlFNames.append( os.path.join( path, 'UCI-Results-{}-{}.xlsx'.format(fname, safeCatName) ) )
 				return xlFNames
@@ -1873,13 +1870,14 @@ class MainWin( wx.Frame ):
 			return Model.race.email
 		return self.config.Read('email', '')
 	
-	reLeadingWhitespace = re.compile( r'^[ \t]+', re.MULTILINE )
-	reComments = re.compile( r'// .*$', re.MULTILINE )
-	reBlankLines = re.compile( r'\n+' )
-	reTestCode = re.compile( '/\*\(-\*/.*?/\*-\)\*/', re.MULTILINE )	# Use non-greedy match.
+	reLeadingWhitespace = re.compile( '^[ \t]+', re.MULTILINE )
+	reComments = re.compile( '// .*$', re.MULTILINE )
+	reBlankLines = re.compile( '\n+' )
+	reTestCode = re.compile( r'/\*\(-\*/.*?/\*-\)\*/', re.MULTILINE )	# Use non-greedy match.
 	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
 	reFloatList = re.compile( r'([+-]?[0-9]+\.[0-9]+,\s*)+([+-]?[0-9]+\.[0-9]+)', re.MULTILINE )
 	reBoolList = re.compile( r'((true|false),\s*)+(true|false)', re.MULTILINE )
+	reTagTrailingWhitespace = re.compile( r'>\s+', re.MULTILINE|re.UNICODE )
 	
 	def cleanHtml( self, html ):
 		# Remove leading whitespace, comments, consecutive blank lines and test code to save space.
@@ -1929,8 +1927,8 @@ class MainWin( wx.Frame ):
 			payload['raceNotes']	= notes
 		else:
 			notes = TemplateSubstitute( escape(notes), race.getTemplateValues() )
-			notes = self.reTagTrainingSpaces.sub( '>', notes ).replace( '</table>', '</table><br/>' )
-			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
+			notes = self.reTagTrailingWhitespace.sub( '>', notes ).replace( '</table>', '</table><br/>' )
+			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')	# Replace angle brackets so they don't interfere with the regular html.
 			payload['raceNotes']	= notes
 		if race.startTime:
 			raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
@@ -1944,8 +1942,6 @@ class MainWin( wx.Frame ):
 		payload['catDetails']			= GetCategoryDetails( True, publishOnly )
 		
 		return payload
-	
-	reTagTrainingSpaces = re.compile( '>\s+', re.MULTILINE|re.UNICODE )
 	
 	def addResultsToHtmlStr( self, html ):
 		html = self.cleanHtml( html )
@@ -2160,7 +2156,7 @@ class MainWin( wx.Frame ):
 			try:
 				iStart = html.index( 'src="data:image/png' )
 				iEnd = html.index( '"/>', iStart )
-				html = ''.join( [html[:iStart], 'src="%s"' % graphicBase64, html[iEnd+1:]] )
+				html = ''.join( [html[:iStart], 'src="{}"'.format(graphicBase64), html[iEnd+1:]] )
 			except ValueError:
 				pass
 		return html
@@ -2211,7 +2207,7 @@ class MainWin( wx.Frame ):
 		# Write out the results.
 		fname = self.getFormatFilename('html')
 		try:
-			with open(fname, 'w') as fp:
+			with open(fname, 'w', encoding='utf8') as fp:
 				fp.write( html )
 			if not silent:
 				Utils.LaunchApplication( fname )
@@ -2449,7 +2445,7 @@ class MainWin( wx.Frame ):
 		fname = os.path.splitext(self.fileName)[0] + 'Course.gpx'
 		
 		doc = geoTrack.getGPX( os.path.splitext(os.path.basename(fname))[0] )
-		xml = doc.toprettyxml( indent = '', encoding = 'utf-8' )
+		xml = doc.toprettyxml( indent = '', encoding = 'utf8' )
 		doc.unlink()
 		try:
 			with open(fname, 'w', encoding='utf8') as f:
@@ -3308,7 +3304,7 @@ class MainWin( wx.Frame ):
 		
 		# Test if we can write something there.
 		try:
-			with open(fName, 'w') as fp:
+			with open(fName, 'w'):
 				pass
 		except IOError:
 			Utils.MessageOK(self, '{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)
@@ -3742,7 +3738,7 @@ class MainWin( wx.Frame ):
 		for catName, category in raceCategories:
 			if catName == 'All' or not category.uploadFlag:
 				continue
-			sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
+			sheetName = re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
 			sheetName = sheetName[:31]
 			sheetCur = wb.add_sheet( sheetName )
 			UCIExport( sheetCur, category )

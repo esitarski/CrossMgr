@@ -1,5 +1,4 @@
 import os
-import io
 import re
 import sys
 import math
@@ -142,7 +141,7 @@ class Category:
 	DistanceByLap = 0
 	DistanceByRace = 1
 
-	badRangeCharsRE = re.compile( '[^0-9,\-]' )
+	badRangeCharsRE = re.compile( '[^0-9,-]' )
 	
 	active = True
 	CatWave = 0
@@ -259,12 +258,12 @@ class Category:
 						gender='Open', lappedRidersMustContinue=False,
 						catType=CatWave, publishFlag=True, uploadFlag=True, seriesFlag=True, earlyBellTime=None ):
 		
-		self.name = '{}'.format(name).strip()
-		self.catStr = '{}'.format(catStr).strip()
+		self.name = f'{name}'.strip()
+		self.catStr = f'{catStr}'.strip()
 		self.startOffset = startOffset if startOffset else '00:00:00'
 		
 		self.catType = self.CatWave
-		catType = '{}'.format(catType).strip().lower()
+		catType = f'{catType}'.strip().lower()
 		try:
 			self.catType = int(catType)
 		except ValueError:
@@ -277,7 +276,7 @@ class Category:
 				pass
 		
 		def toBool( v ):
-			return '{}'.format(v).strip()[:1] in 'TtYy1'
+			return f'{v}'.strip()[:1] in 'TtYy1'
 		
 		def toRaceTime( x ):
 			if x is None:
@@ -341,8 +340,9 @@ class Category:
 			self.firstLapDistance = None
 			
 		self.gender = 'Open'
+		gender = gender or 'Open'
 		try:
-			genderFirstChar = '{}'.format(gender or 'Open').strip()[:1].lower()
+			genderFirstChar = f'{gender}'.strip()[:1].lower()
 			if genderFirstChar in 'muh':
 				self.gender = 'Men'
 			elif genderFirstChar in 'wfld':
@@ -350,10 +350,8 @@ class Category:
 		except Exception:
 			pass
 			
-		self.lappedRidersMustContinue = False
-		lappedRidersMustContinue = '{}'.format(lappedRidersMustContinue).strip()
-		if lappedRidersMustContinue[:1] in 'TtYy1':
-			self.lappedRidersMustContinue = True
+		lappedRidersMustContinue = f'{lappedRidersMustContinue}'.strip()
+		self.lappedRidersMustContinue = (lappedRidersMustContinue[:1] in 'TtYy1')
 
 	def __setstate( self, d ):
 		self.__dict__.update(d)
@@ -2742,7 +2740,7 @@ def getCurrentHtml():
 		return None
 	htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 	try:
-		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+		with open(htmlFile, 'r', encoding='utf8') as fp:
 			html = fp.read()
 		return Utils.mainWin.addResultsToHtmlStr( html )
 	except Exception as e:
@@ -2754,7 +2752,7 @@ def getCurrentTTCountdownHtml():
 		return None
 	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTCountdown.html')
 	try:
-		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+		with open(htmlFile, 'r', encoding='utf8') as fp:
 			html = fp.read()
 		return Utils.mainWin.addTTStartToHtmlStr( html )
 	except Exception as e:
@@ -2766,7 +2764,7 @@ def getCurrentTTStartListHtml():
 		return None
 	htmlFile = os.path.join(Utils.getHtmlFolder(), 'TTStartList.html')
 	try:
-		with io.open(htmlFile, 'r', encoding='utf-8') as fp:
+		with open(htmlFile, 'r', encoding='utf8') as fp:
 			html = fp.read()
 		return Utils.mainWin.addTTStartToHtmlStr( html )
 	except Exception as e:
@@ -2785,7 +2783,7 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 	else:
 		fname = os.path.splitext(Utils.getFileName())[0] + '.html'
 		try:
-			with io.open(fname, 'w', encoding='utf-8') as fp:
+			with open(fname, 'w', encoding='utf8') as fp:
 				fp.write( html )
 		except Exception as e:
 			success = False
@@ -2794,7 +2792,7 @@ def writeModelUpdate( includeExcel=True, includePDF=True ):
 	if html:
 		fname = os.path.splitext(Utils.getFileName())[0] + '_TTCountdown.html'
 		try:
-			with io.open(fname, 'w', encoding='utf-8') as fp:
+			with open(fname, 'w', encoding='utf8') as fp:
 				fp.write( html )
 		except Exception as e:
 			success = False

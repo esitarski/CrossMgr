@@ -303,7 +303,7 @@ print( 'Created JChipTest.xls.' )
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
 #
-with open('JChipTest.csv', 'w') as f:
+with open('JChipTest.csv', 'w', encoding='utf8') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
 		f.write( '{},{}\n'.format(n, tag[n]) )

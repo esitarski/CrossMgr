@@ -99,9 +99,9 @@ def gettoks(source):
 
     # Use "regular" strings, whatever that means for the given Python
     if isinstance(source, unicode):
-        source = source.encode('utf-8', 'replace')
+        source = source.encode('utf8', 'replace')
     elif not isinstance(source, basestring):
-        source = source.decode('utf-8', 'replace')
+        source = source.decode('utf8', 'replace')
 
     # Convert MS-DOS or Mac line endings to the one true way, and
     # prefix the source with a linefeed to simplify the tokenization.

@@ -630,7 +630,6 @@ class RiderDetail( wx.Panel ):
 			
 		lap = self.eventRow + 1
 		race = Model.race
-		rider = race.riders[num]
 			
 		race.lapNote = getattr(race, 'lapNote', {})
 		with wx.TextEntryDialog( self, '{}: {}: {}: {}'.format(_("Bib"), num, _("Note on Lap"), lap), _("Lap Note"),
@@ -1241,7 +1240,7 @@ class RiderDetail( wx.Panel ):
 					'adjustTime']:
 			getattr( self, w ).Show( False )
 		
-		tagNums = GetTagNums()
+		GetTagNums()
 		
 		highPrecisionTimes = Model.highPrecisionTimes()
 		with Model.LockRace() as race:
@@ -1291,7 +1290,6 @@ class RiderDetail( wx.Panel ):
 				self.category.AppendItems( [c.fullname for c in categories] + [' '] )
 				self.category.SetSelection( len(categories) )
 				
-			catName = category.fullname if category else ''
 			#--------------------------------------------------------------------------------------
 			if num not in race.riders:
 				return

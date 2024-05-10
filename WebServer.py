@@ -372,21 +372,21 @@ def getIndexPage( share=True ):
 def WriteHtmlIndexPage():
 	fname = os.path.join( os.path.dirname(Utils.getFileName()), 'index.html' )
 	try:
-		with open(fname, 'rb') as f:	# Read as bytes as the index page is already utf-8 encoded.
+		with open(fname, 'rb') as f:	# Read as bytes as the index page is already utf8 encoded.
 			previousContent = f.read()
 	except Exception:
 		previousContent = ''
 	
 	content = getIndexPage(share=False)
 	if content != previousContent:
-		with open(fname, 'wb') as f:	# Write as bytes as the index page is already utf-8 encoded.
+		with open(fname, 'wb') as f:	# Write as bytes as the index page is already utf8 encoded.
 			f.write( getIndexPage(share=False) )
 	return fname
 
 class CrossMgrHandler( BaseHTTPRequestHandler ):
 	html_content = 'text/html; charset=utf-8'
 	json_content = 'application/json'
-	reLapCounterHtml = re.compile( r'^\/LapCounter[0-9A-Z-]*\.html$' )
+	reLapCounterHtml = re.compile( r'^/LapCounter[0-9A-Z-]*\.html$' )
 	
 	def do_POST( self ):
 		up = urllib.parse.urlparse( self.path )

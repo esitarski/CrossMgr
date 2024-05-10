@@ -52,7 +52,6 @@ class TimeEditor(gridlib.GridCellEditor):
 		self._tc.SetFocus()
 		
 	def EndEdit( self, row, col, grid, value = None ):
-		changed = False
 		val = self._tc.GetValue()
 		val = re.sub( '[^0-9.:]', '', val )
 		s = 0.0
@@ -64,7 +63,6 @@ class TimeEditor(gridlib.GridCellEditor):
 				pass
 		val = Utils.formatTime( s, highPrecision=True ) if s else ''
 		if val != self.startValue:
-			changed = True
 			grid.GetTable().SetValue( row, col, val )
 		
 	def Reset( self ):
@@ -103,16 +101,15 @@ class Pulled( wx.Panel ):
 		self.colNameFields = (
 			(_('Laps to Go'),			'lapsToGo',			'i'),
 			('    ' + _('Bib'),			'pulledBib',		'i'),
-			('Name',					'pulledName',		's'),
-			('Team',					'pulledTeam',		's'),
-			('Component',				'pulledComponent',	's'),
-			('Error',					'pulledError',		's'),
+			(_('Name'),					'pulledName',		's'),
+			(_('Team'),					'pulledTeam',		's'),
+			(_('Component'),			'pulledComponent',	's'),
+			(_('Error'),				'pulledError',		's'),
 		)
 		self.colnames = [colName for colName, fieldName, dataType in self.colNameFields]
 		self.iCol = dict( (fieldName, i) for i, (colName, fieldName, dataType) in enumerate(self.colNameFields) if fieldName )
 		self.grid = ReorderableGrid( self )
 		self.grid.CreateGrid( 0, len(self.colNameFields) )
-		GetTranslation = _
 		for col, (colName, fieldName, dataType) in enumerate(self.colNameFields):
 			self.grid.SetColLabelValue( col, colName )
 			attr = wx.grid.GridCellAttr()
@@ -210,7 +207,6 @@ class Pulled( wx.Panel ):
 	def onCellChange( self, event ):
 		row, col = event.GetRow(), event.GetCol()
 		colName = self.colNameFields[col][1]
-		GetTranslation = _
 
 		if colName == 'pulledBib' or colName == 'lapsToGo':
 			bib = int( '0' + re.sub( '[^0-9]', '', self.grid.GetCellValue(row, self.iCol['pulledBib'])) )
@@ -345,7 +341,6 @@ class Pulled( wx.Panel ):
 		if not success:
 			return False
 		race, category, results, laps = info
-		rule80LapTime = race.getRule80LapTime( category )
 		
 		changed = False
 		Finisher, Pulled = Model.Rider.Finisher, Model.Rider.Pulled

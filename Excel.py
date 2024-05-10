@@ -8,7 +8,6 @@ import unicodedata
 import xml.etree.ElementTree
 from mmap import mmap, ACCESS_READ
 
-
 def toAscii( s ):
 	if s is None:
 		return ''

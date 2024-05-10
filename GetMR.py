@@ -87,7 +87,7 @@ def GetXML():
 				else:
 					ET.SubElement( entryE, k ).text = '{}'.format(v)
 				
-	return ET.tostring(eventE, 'utf-8')
+	return ET.tostring(eventE, 'utf8')
 	
 def GetJSON():
 	race = Model.race

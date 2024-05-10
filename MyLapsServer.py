@@ -22,7 +22,7 @@ def sendReaderEvent( tagTimes ):
 		wx.PostEvent( readerEventWindow, ChipReaderEvent(tagTimes = tagTimes) )
 
 combine = datetime.datetime.combine
-reTimeChars = re.compile( '^\d\d:\d\d:\d\d\.\d+' )
+reTimeChars = re.compile( r'^\d\d:\d\d:\d\d\.\d+' )
 
 dateToday = datetime.date.today()
 tSameCount = 0
@@ -192,7 +192,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime, test ):
 				qLog( 'connection', 'established {}'.format(addr) )
 				continue
 			
-			# This socket is a data socket.  Get the data.  Assume utf-8 encoding.
+			# This socket is a data socket.  Get the data.  Assume utf8 encoding.
 			try:
 				data = s.recv( 4096 )
 			except Exception as e:

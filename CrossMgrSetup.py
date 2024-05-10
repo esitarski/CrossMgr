@@ -1,5 +1,4 @@
 import os
-import io
 import shutil
 import zipfile
 import datetime
@@ -51,7 +50,7 @@ subprocess.call( [
 	#'--debug',
 	
 	'CrossMgr.pyw',
-	'--icon=CrossMgrImages\CrossMgr.ico',
+	r'--icon=CrossMgrImages\CrossMgr.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -80,7 +79,7 @@ def copyDir( d ):
 		shutil.rmtree( destD )
 	shutil.copytree( d, destD, ignore=shutil.ignore_patterns('*.db') )
 			
-for dir in ['CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex']: 
+for dir in ('CrossMgrImages', 'data', 'CrossMgrHtml', 'CrossMgrHtmlDoc', 'CrossMgrHelpIndex'):
 	copyDir( dir )
 
 # Copy the locale.
@@ -114,7 +113,7 @@ def make_inno_version():
 		'AppUpdatesURL':		"http://www.sites.google.com/site/crossmgrsoftware/downloads/",
 		'VersionInfoVersion':	AppVerName.split()[1],
 	}
-	with io.open('inno_setup.txt', 'w', encoding='utf-8') as f:
+	with open('inno_setup.txt', 'w', encoding='utf8') as f:
 		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
 

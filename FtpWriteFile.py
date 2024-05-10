@@ -1,4 +1,3 @@
-import io
 import os
 import wx
 import wx.lib.intctrl
@@ -158,7 +157,7 @@ def FtpWriteRaceHTML():
 	
 	try:
 		fname = os.path.splitext(Utils.getFileName())[0] + '.html'
-		with io.open(fname, 'w', encoding='utf-8') as fp:
+		with open(fname, 'w', encoding='utf8') as fp:
 			fp.write( html )
 		html = None
 	except Exception as e:

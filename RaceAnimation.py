@@ -206,9 +206,9 @@ class RaceAnimation( wx.Panel ):
 	
 	def onUpdateWatch( self, event ):
 		value = self.watch.GetValue()
-		value = re.sub( ' ', ',', value )
-		value = re.sub( '[^\d,]', '', value )
-		value = re.sub( ',+', ',', value )
+		value = re.sub( r' ', ',', value )
+		value = re.sub( r'[^\d,]', '', value )
+		value = re.sub( r',+', ',', value )
 		try:
 			numsToWatch = set( int(n) for n in value.split(',') )
 		except Exception:

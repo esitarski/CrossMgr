@@ -51,7 +51,7 @@ class HelpHandler( BaseHTTPRequestHandler ):
 			self.send_header( 'Pragma', 'no-cache' )
 			self.send_header( 'Expires', '0' )
 		self.end_headers()
-		self.wfile.write( content if isinstance(content,bytes) else content.encode('utf-8', 'replace') )
+		self.wfile.write( content if isinstance(content,bytes) else content.encode('utf8', 'replace') )
 	
 	def log_message(self, format, *args):
 		return
