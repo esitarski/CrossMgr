@@ -216,7 +216,7 @@ def RemoveDisallowedFilenameChars( filename ):
 
 def RemoveDisallowedSheetChars( sheetName ):
 	sheetName = unicodedata.normalize('NFKD', '{}'.format(sheetName)).encode('ASCII', 'ignore').decode()
-	return re.sub('[+!#$%&+~`".:;|\\\\/?*\[\] ]+', ' ', sheetName)[:31]		# four backslashes required to match one backslash in re.
+	return re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', sheetName)[:31]
 
 class UniqueExcelSheetName():
 	def __init__( self ):

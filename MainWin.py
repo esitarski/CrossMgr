@@ -7,12 +7,12 @@ import json
 import glob
 import shutil
 import random
-import datetime
-import operator
-import webbrowser
-import platform
 import zipfile
 import hashlib
+import datetime
+import operator
+import platform
+import webbrowser
 
 import wx
 import wx.adv as adv
@@ -119,7 +119,6 @@ from ModuleUnpickler import ModuleUnpickler
 
 now = datetime.datetime.now
 
-import traceback
 '''
 # Monkey patch threading so we can see where each thread gets started.
 import traceback
@@ -127,9 +126,9 @@ import types
 threading_start = threading.Thread.start
 def loggingThreadStart( self, *args, **kwargs ):
 	threading_start( self, *args, **kwargs )
-	print self
+	print( self )
 	traceback.print_stack()
-	print '----------------------------------'
+	print( '----------------------------------' )
 threading.Thread.start = types.MethodType(loggingThreadStart, None, threading.Thread)
 '''
 #----------------------------------------------------------------------------------
@@ -1878,6 +1877,7 @@ class MainWin( wx.Frame ):
 	reRemoveTags = re.compile( r'\<html\>|\</html\>|\<body\>|\</body\>|\<head\>|\</head\>', re.I )
 	reFloatList = re.compile( r'([+-]?[0-9]+\.[0-9]+,\s*)+([+-]?[0-9]+\.[0-9]+)', re.MULTILINE )
 	reBoolList = re.compile( r'((true|false),\s*)+(true|false)', re.MULTILINE )
+	reTagTrailingWhitespace = re.compile( r'>\s+', re.MULTILINE|re.UNICODE )
 	
 	def cleanHtml( self, html ):
 		# Remove leading whitespace, comments, consecutive blank lines and test code to save space.
@@ -1927,8 +1927,8 @@ class MainWin( wx.Frame ):
 			payload['raceNotes']	= notes
 		else:
 			notes = TemplateSubstitute( escape(notes), race.getTemplateValues() )
-			notes = self.reTagTrailingSpaces.sub( '>', notes ).replace( '</table>', '</table><br/>' )
-			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')
+			notes = self.reTagTrailingWhitespace.sub( '>', notes ).replace( '</table>', '</table><br/>' )
+			notes = notes.replace('<', '{-{').replace( '>', '}-}' ).replace('\n','{-{br/}-}')	# Replace angle brackets so they don't interfere with the regular html.
 			payload['raceNotes']	= notes
 		if race.startTime:
 			raceStartTime = (race.startTime - race.startTime.replace( hour=0, minute=0, second=0 )).total_seconds()
@@ -1942,8 +1942,6 @@ class MainWin( wx.Frame ):
 		payload['catDetails']			= GetCategoryDetails( True, publishOnly )
 		
 		return payload
-	
-	reTagTrailingSpaces = re.compile( r'>\s+', re.MULTILINE|re.UNICODE )
 	
 	def addResultsToHtmlStr( self, html ):
 		html = self.cleanHtml( html )
