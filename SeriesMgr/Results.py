@@ -97,9 +97,9 @@ def fixHeaderNames( results ):
 
 def translateHeader( h ):
 	translations = {
-		'Team': 'Team\nÉquipe',
-		'Gap': 'Gap\nÉcart',
-		'Name': 'Name\nNom',
+		'Team': 'Team/Équipe',
+		'Gap': 'Gap/Écart',
+		'Name': 'Name/Nom',
 	}
 	return translations.get( h, h )
 
