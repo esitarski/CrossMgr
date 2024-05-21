@@ -95,6 +95,14 @@ def fixHeaderNames( results ):
 		hasUCIID = False
 	return [h for h in getHeaderNames() if h not in toRemove], hasTeam, hasLicense, hasUCIID
 
+def translateHeader( h ):
+	translations = {
+		'Team': 'Team\nÉquipe',
+		'Gap': 'Gap\nÉcart',
+		'Name': 'Name\nNom',
+	}
+	return translations.get( h, h )
+
 def filterValidResults( results ):
 	# name, license, uci_id, team, points
 	#   0      1       2       3      4
@@ -114,6 +122,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	categoryNames = model.getCategoryNamesSortedPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
+	categoryDisplayNames = model.getCategoryDisplayNames()
 	
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 
@@ -131,7 +140,10 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 			pointsStructuresList.append( race.pointStructure )
 		pointsStructures[race.pointStructure].append( race )
 	
-	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	
+	def ordinal( x ):
+		return f'{x}'
 	
 	def write( s ):
 		html.write( '{}'.format(s) )
@@ -451,22 +463,20 @@ function sortTableId( iTable, iCol ) {
 							write( escape(model.name) )
 						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
 							if model.organizer:
-								write( 'by {}'.format(escape(model.organizer)) )
+								write( '{}'.format(escape(model.organizer)) )
 							with tag(html, 'span', {'style': 'font-size: 60%'}):
 								write( '&nbsp;' * 5 )
-								write( ' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
+								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
 
 			with tag(html, 'h3' ):
 				with tag(html, 'label', {'for':'categoryselect'} ):
-					write( 'Category' + ':' )
+					write( 'Cat' + ':' )
 				with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
 					with tag(html, 'option', {'value':-1} ):
-						with tag(html, 'span'):
-							write( 'All' )
+						write( '---' )
 					for iTable, categoryName in enumerate(categoryNames):
 						with tag(html, 'option', {'value':iTable} ):
-							with tag(html, 'span'):
-								write( '{}'.format(escape(categoryName)) )
+							write( '{}'.format(escape(categoryDisplayNames[categoryName])) )
 			
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
 			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
@@ -487,7 +497,7 @@ function sortTableId( iTable, iCol ) {
 					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( escape(categoryName) )
+						write( escape(categoryDisplayNames[categoryName]) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -498,7 +508,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
+										write( '{}'.format(escape(translateHeader(col)).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -556,16 +566,16 @@ function sortTableId( iTable, iCol ) {
 										if rRank <= SeriesModel.rankDNF:
 											if rPrimePoints:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( '({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
+													write( '({})&nbsp;+{}'.format(ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:
 												with tag(html, 'td', {'class':'rank noprint'}):
 													write( '({})&nbsp;-{}'.format(
-														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
+														ordinal(rRank).replace(' ', '&nbsp;'),
 														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
 													)
 											else:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( '({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+													write( '({})'.format(ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
 											with tag(html, 'td', {'class':'noprint'}):
 												pass
@@ -1074,7 +1084,7 @@ class Results(wx.Panel):
 			ws.write_merge( rowCur, rowCur, 0, 8, model.name, headerStyle )
 			rowCur += 1
 			if model.organizer:
-				ws.write_merge( rowCur, rowCur, 0, 8, 'by {}'.format(model.organizer), headerStyle )
+				ws.write_merge( rowCur, rowCur, 0, 8, '{}'.format(model.organizer), headerStyle )
 				rowCur += 1
 			rowCur += 1
 			colCur = 0
@@ -1093,8 +1103,8 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, iCol, name, textStyle ); iCol += 1
 				if hasLicense:
 					wsFit.write( rowCur, iCol, license, textStyle ); iCol += 1
-				if hasLicense:
-					wsFit.write( rowCur, iCol, foratUCIID(uci_id), textStyle ); iCol += 1
+				if hasUCIID:
+					wsFit.write( rowCur, iCol, formatUCIID(uci_id), textStyle ); iCol += 1
 				if hasTeam:
 					wsFit.write( rowCur, iCol, team, textStyle ); iCol += 1
 				wsFit.write( rowCur, iCol, points, numberStyle ); iCol += 1

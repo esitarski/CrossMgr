@@ -194,14 +194,16 @@ class Race:
 
 class Category:
 	name = ''
+	longName = ''
 	iSequence = 0
 	publish = False
 	teamN = 3
 	useNthScore = False
 	teamPublish = False
 	
-	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore=False, teamPublish=True ):
+	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore=False, teamPublish=True, longName='' ):
 		self.name = name
+		self.longName = longName
 		self.iSequence = iSequence
 		self.publish = publish
 		self.teamN = teamN
@@ -215,9 +217,10 @@ class Category:
 		return self.__dict__ != other.__dict__
 		
 	def __repr__( self ):
-		return 'Category(name="{}", iSequence={}, publish={}, teamN={}, useNthScore={}, teamPublish={})'.format(
-			self.name, self.iSequence, self.publish, self.teamN, self.useNthScore, self.teamPublish
-		)
+		return f'Category(name="{self.name}", iSequence={self.iSequence}, publish={self.publish}, teamN={self.teamN}, useNthScore={self.useNthScore}, teamPublish={self.teamPublish})'
+		
+	def getName( self ):
+		return self.longName or self.name
 
 def nameToAliasKey( name ):
 	no_accent_name = Utils.removeDiacritic( name )
@@ -543,7 +546,10 @@ class SeriesModel:
 	
 	def getCategoryNamesSortedTeamPublish( self ):
 		return [c.name for c in self.getCategoriesSortedTeamPublish()]
-		
+	
+	def getCategoryDisplayNames( self ):
+		return {c.name:c.getName() for c in self.getCategoriesSorted()}
+	
 	def getTeamN( self, categoryName ):
 		self.fixCategories()
 		try:

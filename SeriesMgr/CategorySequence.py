@@ -11,10 +11,11 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class CategorySequence(wx.Panel):
 	CategoryCol = 0
-	PublishCol = 1
-	TeamNCol = 2
-	UseNthScoreCol = 3
-	TeamPublishCol = 4
+	LongNameCol = 1
+	PublishCol = 2
+	TeamNCol = 3
+	UseNthScoreCol = 4
+	TeamPublishCol = 5
 
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -29,7 +30,7 @@ class CategorySequence(wx.Panel):
 			] )
 		)
 		
-		self.headerNames = ['Category', 'Ind. Publish', 'Team N', 'Use Nth Result Only', 'Team Publish']
+		self.headerNames = ['Category', 'Long Name', 'Ind. Publish', 'Team N', 'Use Nth Result Only', 'Team Publish']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -42,6 +43,8 @@ class CategorySequence(wx.Panel):
 			attr = gridlib.GridCellAttr()
 			if col == self.CategoryCol:
 				attr.SetReadOnly( True )
+			elif col == self.LongNameCol:
+				attr.SetReadOnly( False )
 			elif col in (self.PublishCol, self.UseNthScoreCol, self.TeamPublishCol):
 				editor = gridlib.GridCellBoolEditor()
 				editor.UseStringValues( '1', '0' )
@@ -93,6 +96,7 @@ class CategorySequence(wx.Panel):
 		Utils.AdjustGridSize( self.grid, len(categoryList) )
 		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
+			self.grid.SetCellValue( row, self.LongNameCol, c.longName )
 			self.grid.SetCellValue( row, self.PublishCol, '01'[int(c.publish)] )
 			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
 			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
@@ -105,7 +109,8 @@ class CategorySequence(wx.Panel):
 		categories = []
 		for row in range(self.grid.GetNumberRows()):
 			c = Category(
-				name=gc(row, self.CategoryCol),
+				name=gc(row, self.CategoryCol).strip(),
+				longName = gc(row, self.LongNameCol).strip(),
 				iSequence=row,
 				publish=gc(row, self.PublishCol) == '1',
 				teamN=max(1, int(gc(row, self.TeamNCol))),
