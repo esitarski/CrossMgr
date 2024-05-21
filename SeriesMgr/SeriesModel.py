@@ -53,14 +53,20 @@ class memoize:
 		# Support instance methods.
 		return functools.partial(self.__call__, obj)
 
-def RaceNameFromPath( p ):
-	raceName = os.path.basename( p )
-	raceName = os.path.splitext( raceName )[0]
-	while raceName.endswith('-'):
-		raceName = raceName[:-1]
-	raceName = raceName.replace( '-', ' ' )
-	raceName = raceName.replace( ' ', '-', 2 )
-	return raceName
+def RaceNameFromPath( p, isUCIDataride=False ):
+	if isUCIDataride:
+		folderName = os.path.basename( os.path.dirname(p) )
+		baseFileName = os.path.splitext( os.path.basename(p) )[0]
+		raceName = '/'.join( folderName, baseFileName )
+		return raceName
+	else:
+		raceName = os.path.basename( p )
+		raceName = os.path.splitext( raceName )[0]
+		while raceName.endswith('-'):
+			raceName = raceName[:-1]
+		raceName = raceName.replace( '-', ' ' )
+		raceName = raceName.replace( ' ', '-' )
+		return raceName
 
 class PointStructure:
 
@@ -473,7 +479,7 @@ class SeriesModel:
 		if team is None:
 			return team
 		team = self.aliasTeamLookup.get( nameToAliasKey(team), team )
-		if team.lower() in {'independent', 'ind', 'none', 'no team'}:
+		if team.lower() in {'independent', 'ind.', 'ind', 'none', 'no team'}:
 			return ''
 		return team
 	

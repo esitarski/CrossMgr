@@ -5,6 +5,13 @@ import SeriesModel
 import Utils
 from AliasGrid import AliasGrid
 
+import unicodedata
+def stripAccentsCase( n ):
+	try:
+		return unicodedata.normalize("NFD",n).lower()
+	except Exception:
+		return n
+
 class AliasesTeam(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -66,7 +73,7 @@ class AliasesTeam(wx.Panel):
 		model = SeriesModel.model
 		
 		Utils.AdjustGridSize( self.grid, rowsRequired=len(model.referenceTeams) )
-		for row, (reference, aliases) in enumerate(model.referenceTeams):
+		for row, (reference, aliases) in enumerate(sorted( model.referenceTeams, key=lambda ra: stripAccentsCase(ra[0])) ):
 			self.grid.SetCellValue( row, 0, reference )
 			self.grid.SetCellValue( row, 1, '; '.join(aliases) )
 			
@@ -81,9 +88,9 @@ class AliasesTeam(wx.Panel):
 			reference = self.grid.GetCellValue( row, 0 ).strip()
 			if reference:
 				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]
-				references.append( (reference, sorted( a for a in aliases if a )) )
+				references.append( (reference, sorted( (a for a in aliases if a), key=stripAccentCase )) )
 		
-		references.sort()
+		references.sort( key=lambda ra: stripAccentsCase(ra[0]) )
 		
 		model = SeriesModel.model
 		model.setReferenceTeams( references )

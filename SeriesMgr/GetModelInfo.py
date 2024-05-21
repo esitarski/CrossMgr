@@ -188,7 +188,6 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 		ret['explanation'] = 'File not found'
 		return ret
 	
-	excel = GetExcelReader( raceInSeries.getFileName() )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
 	raceResults = []
 	
@@ -200,11 +199,15 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 	
 	# Check if this is a UCI Dataride spreadsheet
 	folderName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
+	baseFileName = os.path.splitext( os.path.basename( raceInSeries.getFileName() ) )[0]
+	
+	excel = GetExcelReader( raceInSeries.getFileName() )
 	uciDatarideSheets = {'General', 'Reference', 'Country Reference'}
 	isUCIDataride = any( (s.strip() in uciDatarideSheets) for s in excel.sheet_names() )
 	if isUCIDataride:
-		# Get the category name as the directory name.
-		uciCategoryName = folderName
+		uciCategoryName = baseFileName	# Category name is the directory.
+		raceName = folderName			# Race name is the base file name.
+		raceInSeries.isUCIDataride = isUCIDataride
 	else:
 		uciCategoryName = None
 		

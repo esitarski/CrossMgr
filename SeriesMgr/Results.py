@@ -468,6 +468,8 @@ function sortTableId( iTable, iCol ) {
 							with tag(html, 'span'):
 								write( '{}'.format(escape(categoryName)) )
 			
+			hasPrimePoints = any( rr.primePoints for rr in raceResults )
+			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
@@ -572,15 +574,17 @@ function sortTableId( iTable, iCol ) {
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
 					if scoreByTime:
-						with tag(html, 'strong'):
-							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( '-MM:SS' )
-						write( ' - {}'.format( 'Time Bonus subtracted from Finish Time.') )
+						if hasTimeBonus:
+							with tag(html, 'strong'):
+								with tag(html, 'span', {'style':'font-style: italic;'}):
+									write( '-MM:SS' )
+							write( ' - {}'.format( 'Time Bonus subtracted from Finish Time.') )
 					elif not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
-						with tag(html, 'strong'):
-							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( '+N' )
-						write( ' - {}'.format( 'Bonus Points added to Points for Place.') )
+						if hasPrimePoints:
+							with tag(html, 'strong'):
+								with tag(html, 'span', {'style':'font-style: italic;'}):
+									write( '+N' )
+							write( ' - {}'.format( 'Bonus Points added to Points for Place.') )
 					
 			if bestResultsToConsider > 0 and not scoreByTrueSkill:
 				with tag(html, 'p', {'class':'noprint'}):
@@ -629,6 +633,7 @@ function sortTableId( iTable, iCol ) {
 				
 			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 				with tag(html, 'div', {'class':'noprint'} ):
+					'''
 					with tag(html, 'p'):
 						pass
 					with tag(html, 'hr'):
@@ -657,7 +662,7 @@ function sortTableId( iTable, iCol ) {
 								pass
 							with tag(html, 'td'):
 								pass
-						
+					'''
 					#-----------------------------------------------------------------------------
 					
 					with tag(html, 'p'):
