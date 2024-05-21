@@ -372,23 +372,21 @@ class MainWin( wx.Frame ):
 	
 	def menuSetGraphic( self, event ):
 		imgPath = self.getGraphicFName()
-		dlg = SetGraphicDialog( self, graphic = imgPath )
-		if dlg.ShowModal() == wx.ID_OK:
-			imgPath = dlg.GetValue()
-			self.config.Write( 'graphic', imgPath )
-			self.config.Flush()
-		dlg.Destroy()
+		with SetGraphicDialog( self, graphic=imgPath ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				imgPath = dlg.GetValue()
+				self.config.Write( 'graphic', imgPath )
+				self.config.Flush()
 
 	def menuSetRootFolder( self, event ):
-		dlg = wx.DirDialog(
-			self,
-			message='Set Root Folder where All Race Files can be Found',
-			defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
-		)
-		if dlg.ShowModal() == wx.ID_OK:
-			SeriesModel.model.setRootFolder( dlg.GetPath() )
-			self.refreshAll()
-		dlg.Destroy()
+		with wx.DirDialog(
+				self,
+				message='Set Root Folder where All Race Files can be Found',
+				defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
+			) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				SeriesModel.model.setRootFolder( dlg.GetPath() )
+				wx.CallAfter( self.refreshAll )
 
 	def menuDeleteAllRaces( self, event ):
 		if Utils.MessageOKCancel(self, "Delete All Races\n\nThere is no undo.   Continue?", "Delete All Races"):
@@ -397,14 +395,12 @@ class MainWin( wx.Frame ):
 		
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		dlg = wx.PageSetupDialog(self, psdd)
-		dlg.ShowModal()
-
-		# this makes a copy of the wx.PrintData instead of just saving
-		# a reference to the one inside the PrintDialogData that will
-		# be destroyed when the dialog is destroyed
-		self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
-		dlg.Destroy()
+		with wx.PageSetupDialog(self, psdd) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				# this makes a copy of the wx.PrintData instead of just saving
+				# a reference to the one inside the PrintDialogData that will
+				# be destroyed when the dialog is destroyed
+				self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
 
 	def getTitle( self ):
 		model = SeriesModel.model
@@ -457,15 +453,12 @@ class MainWin( wx.Frame ):
 		pdd.EnablePageNumbers( 0 )
 		pdd.EnableHelp( 0 )
 		
-		printer = wx.Printer(pdd)
-
-		if not printer.Print(self, printout, True):
-			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
-		else:
-			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
-
-		printout.Destroy()
+		with wx.Printer(pdd) as printer:
+			if not printer.Print(self, printout, True):
+				if printer.GetLastError() == wx.PRINTER_ERROR:
+					Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
+			else:
+				self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
 	#--------------------------------------------------------------------------------------------
 
@@ -489,13 +482,12 @@ class MainWin( wx.Frame ):
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
 		xlfileName = self.fileName[:-4] + '-' + pageTitle + '.xls'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlfileName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlfileName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) ) as dlg:
+			if ret != wx.ID_OK:
+				return
+			ret = dlg.ShowModal()
+			dName = dlg.GetPath()
 
 		xlfileName = os.path.join( dName, os.path.basename(xlfileName) )
 
@@ -536,13 +528,11 @@ class MainWin( wx.Frame ):
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
 		htmlfileName = self.fileName[:-4] + '-' + pageTitle + '.html'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(htmlfileName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlfileName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(htmlfileName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlfileName) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			dName = dlg.GetPath()
 
 		htmlfileName = os.path.join( dName, os.path.basename(htmlfileName) )
 
@@ -691,8 +681,14 @@ table.results tr td.fastest{
 			self.setTitle()
 			return
 		model = SeriesModel.model
+		
+		# Make the race file name relative to the series file name.
+		model.racesFullToRelative( self.fileName )
 		with open(self.fileName, 'wb') as fp:
 			pickle.dump( model, fp, 2 )
+		# Reset back to full file names.
+		model.racesRelativeToFull( self.fileName )
+		
 		model.setChanged( False )
 		self.setTitle()
 
@@ -765,6 +761,7 @@ table.results tr td.fastest{
 		
 		SeriesModel.model.postReadFix()
 		self.fileName = fileName
+		SeriesModel.model.racesRelativeToFull( self.fileName )
 		self.updateRecentFiles()
 		
 		SeriesModel.model.setChanged( self.fixPaths() )
@@ -811,16 +808,13 @@ table.results tr td.fastest{
 		self.SetTitle( title )
 			
 	def menuSaveAs( self, event ):
-		dlg = wx.FileDialog( self, message="Choose a file for your Series",
+		with wx.FileDialog( self, message="Choose a file for your Series",
 							defaultFile = '',
 							wildcard = 'SeriesMgr files (*.smn)|*.smn',
-							style=wx.FD_SAVE | wx.FD_CHANGE_DIR )
-		response = dlg.ShowModal()
-		if response == wx.ID_OK:
+							style=wx.FD_SAVE | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			fileName = dlg.GetPath()
-		dlg.Destroy()
-		if response != wx.ID_OK:
-			return
 		
 		if not fileName.endswith('.smn'):
 			fileName += '.smn'

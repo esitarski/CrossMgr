@@ -126,7 +126,7 @@ class RaceResult:
 	
 	@property
 	def teamIsValid( self ):
-		return self.team and self.team.lower() not in {'no team', 'no-team', 'independent'}
+		return self.team and self.team.lower() not in {'no team', 'no-team', 'independent', 'independant', 'none'}
 	
 	'''
 	def keySort( self ):
@@ -188,10 +188,6 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 		ret['explanation'] = 'File not found'
 		return ret
 	
-	getReferenceName = seriesModel.getReferenceName
-	getReferenceLicense = seriesModel.getReferenceLicense
-	getReferenceTeam = seriesModel.getReferenceTeam
-		
 	excel = GetExcelReader( raceInSeries.getFileName() )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
 	raceResults = []
@@ -300,9 +296,6 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				if not info['firstName'] and not info['lastName']:
 					continue
 				
-				info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
-				info['license'] = getReferenceLicense(info['license'])
-				info['team'] = getReferenceTeam(info['team'])
 				if info['team'] == 'None':
 					info['team'] = ''
 				
@@ -375,10 +368,6 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 	if race.licenseLinkTemplate:
 		ret['licenseLinkTemplate'] = race.licenseLinkTemplate
 	
-	getReferenceName = seriesModel.getReferenceName
-	getReferenceLicense = seriesModel.getReferenceLicense
-	getReferenceTeam = seriesModel.getReferenceTeam
-
 	Finisher = Model.Rider.Finisher
 	DNF = Model.Rider.DNF
 	acceptedStatus = { Finisher, DNF }
@@ -413,9 +402,6 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 				continue				
 
 			info['categoryName'] = category.fullname
-			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
-			info['license'] = getReferenceLicense(info['license'])
-			info['team'] = getReferenceTeam(info['team'])
 			info['laps'] = rr.laps
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
@@ -538,7 +524,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 	# Get all races for this category.
 	races = set( (rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
-	races = sorted( races, key = lambda r: r[3].iSequence )
+	races = sorted( races, key = lambda r: getattr(r[3], 'iSequence', 0) )
 	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
 	
 	riderEventsCompleted = defaultdict( int )
@@ -871,13 +857,9 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
 	pureTeam = { race.getFileName() for race in SeriesModel.model.races if race.pureTeam }
 		
-	# Assign a sequence number to the races in the specified order.
-	for i, r in enumerate(SeriesModel.model.races):
-		r.iSequence = i
-		
 	# Get all races for this category.
 	races = set( RaceTuple(rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
-	races = sorted( races, key = operator.attrgetter('raceInSeries.iSequence') )
+	races = sorted( races, key = lambda r: getattr(r[3], 'iSequence', 0) )
 	raceSequence = dict( (r.raceInSeries, i) for i, r in enumerate(races) )
 	
 	def asInt( v ):

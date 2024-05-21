@@ -2891,7 +2891,7 @@ class MainWin( wx.Frame ):
 		if excelLink:
 			race.excelLink = excelLink
 		
-		self.setActiveCategories()
+		# self.setActiveCategories()	# Set the Active flag on all categories.
 		self.setNumSelect( None )
 		self.writeRace()
 		self.showPage(self.iActionsPage)

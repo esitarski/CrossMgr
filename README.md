@@ -70,7 +70,9 @@ Re-enable GateKeeper from the terminal as follows:
 
     sudo spctl --master-enable
 
-Some Mac OSX versions accept pressing CTRL before clicking on the app for the first time, and then clicking open. The app is a non-signed program that MacOSX will not open otherwise. This is only require the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
+Some Mac OSX versions accept pressing CTRL before clicking on the app for the first time, and then clicking open.
+The app is non-signed and MacOSX may not open it otherwise.
+This is only required the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
 
 CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process.
 

@@ -300,7 +300,7 @@ function startIntervalTimer() {
 
 function replaceChildrenWithChild( element, child ) {
 	while( element.firstChild )
-	  element.removeChild( element.lastChild );
+		element.removeChild( element.lastChild );
 	element.appendChild( child );
 }
 
@@ -342,7 +342,7 @@ function updateCountdown() {
 		let dataSpan = document.createElement( 'SPAN' );
 		dataSpan.style.whiteSpace = "nowrap";
 		let firstField = true;
-		for( let f = 3; f < btgNext.startEntry.length; ++f )
+		for( let f = 3; f < btgNext.startEntry.length; ++f ) {
 			if( btgNext.startEntry[f] ) {
 				let flag = GetFlagImage( btgNext.startEntry[f] );
 				if( flag ) {
@@ -354,6 +354,7 @@ function updateCountdown() {
 				dataSpan.appendChild( document.createTextNode( ((firstField || flag) ? ' ' : ', ') + Abbreviate(text)) );
 				firstField = false;
 			}
+		}
 		replaceChildrenWithChild( team_starting, dataSpan );
 		
 		let rider_next = document.getElementById('rider-next');

@@ -41,8 +41,6 @@ class Races(wx.Panel):
 			] )
 		)
 		
-		
-		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )

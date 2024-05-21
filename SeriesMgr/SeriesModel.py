@@ -13,6 +13,7 @@ import GetModelInfo
 from FileTrie import FileTrie
 from io import StringIO
 import Utils
+from RelativePath import FullToRelative, RelativeToFull
 
 #----------------------------------------------------------------------
 class memoize:
@@ -25,7 +26,7 @@ class memoize:
 	
 	@classmethod
 	def clear( cls ):
-		cls.cache = {}
+		cls.cache.clear()
    
 	def __init__(self, func):
 		# print( 'memoize:', func.__name__ )
@@ -45,11 +46,11 @@ class memoize:
 			return self.func(*args)
 			
 	def __repr__(self):
-		"""Return the function's docstring."""
+		# Return the function's docstring.
 		return self.func.__doc__
 		
 	def __get__(self, obj, objtype):
-		"""Support instance methods."""
+		# Support instance methods.
 		return functools.partial(self.__call__, obj)
 
 def RaceNameFromPath( p ):
@@ -175,6 +176,12 @@ class Race:
 				
 	def getFileName( self ):
 		return self.fileName
+		
+	def fullToRelative( self, source ):
+		self.fileName = FullToRelative( source, self.fileName )
+		
+	def relativeToFull( self, source ):
+		self.fileName = RelativeToFull( source, self.fileName )
 		
 	def __repr__( self ):
 		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
@@ -315,6 +322,18 @@ class SeriesModel:
 		self.pointStructures = newPointStructures
 		self.setChanged()
 	
+	def racesFullToRelative( self, source ):
+		# source = os.path.abspath( source )
+		# for r in self.races:
+		#	r.fullToRelative( source )
+		pass
+	
+	def racesRelativeToFull( self, source ):
+		# source = os.path.abspath( source )
+		# for r in self.races:
+		#	r.relativeToFull( source )
+		pass
+	
 	def setRaces( self, raceList ):
 		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
 			return False
@@ -407,11 +426,7 @@ class SeriesModel:
 				for alias in aliases:
 					key = Utils.removeDiacritic(alias).upper()
 					self.aliasLicenseLookup[key] = license				
-	
-		#if updated:
-		#	memoize.clear()
-	
-	
+		
 	def setReferenceTeams( self, referenceTeams ):
 		dNew = dict( referenceTeams )
 		dExisting = dict( self.referenceTeams )
@@ -443,9 +458,6 @@ class SeriesModel:
 					key = nameToAliasKey( alias )
 					self.aliasTeamLookup[key] = Team				
 	
-		#if updated:
-		#	memoize.clear()
-	
 	def getReferenceName( self, lastName, firstName ):
 		key = (nameToAliasKey(lastName), nameToAliasKey(firstName))
 		alias = self.aliasLookup.get( key, None )
@@ -460,7 +472,10 @@ class SeriesModel:
 	def getReferenceTeam( self, team ):
 		if team is None:
 			return team
-		return self.aliasTeamLookup.get( nameToAliasKey(team), team )
+		team = self.aliasTeamLookup.get( nameToAliasKey(team), team )
+		if team.lower() in {'independent', 'ind', 'none', 'no team'}:
+			return ''
+		return team
 	
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
@@ -621,11 +636,28 @@ class SeriesModel:
 		return raceResults
 
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
-		raceResults = self._extractAllRaceResultsCore()
-		if adjustForUpgrades:
-			raceResults = copy.deepcopy( raceResults )
-			GetModelInfo.AdjustForUpgrades( raceResults )
+		# Get a copy of the potenially cached race results.
+		raceResults = copy.deepcopy( self._extractAllRaceResultsCore() )
 		
+		# Assign a sequence number to the races in the specified order.
+		# Track the race filename so we can consolidate the race objects after the deep copy.
+		raceFromFileName = {}
+		for i, r in enumerate(self.races):
+			r.iSequence = i
+			raceFromFileName[r.fileName] = r
+
+		# Fix up all aliases.
+		for rr in raceResults:
+			rr.firstName, rr.lastName = self.getReferenceName( rr.firstName, rr.lastName )
+			rr.license = self.getReferenceLicense( rr.license )
+			rr.team = self.getReferenceTeam( rr.team )
+			rr.raceFileName = rr.raceInSeries.fileName
+			rr.raceInSeries = raceFromFileName.get( rr.raceInSeries.fileName, rr.raceInSeries )	# Normalize the deepcopied raceInSeries.
+		
+		if adjustForUpgrades:
+			GetModelInfo.AdjustForUpgrades( raceResults )
+			
+		# Filter by requested races.
 		rt = { r.fileName for r in self.races
 				if r.resultsType == Race.IndividualAndTeamResults or
 					(isIndividual and r.resultsType == Race.IndividualResultsOnly) or
