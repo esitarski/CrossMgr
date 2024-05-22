@@ -60,7 +60,7 @@ class Options(wx.Panel):
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
 		#--------------------------------------------------------------------------
-		box = wx.StaticBox( self, -1, _("Input Options") )
+		box = wx.StaticBox( self, -1, _("Input Key Options") )
 		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
 		
 		self.riderKey = wx.Choice( self, choices=[
@@ -79,22 +79,42 @@ using First and Last Name.'''
 		
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		
+		sizer.Add( wx.StaticLine(self), flag=wx.TOP|wx.BOTTOM, border = 4 )
+		
+		#--------------------------------------------------------------------------
+		box = wx.StaticBox( self, -1, _("Team Results Option") )
+		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
+		
+		self.teamResultsOption = wx.Choice( self, choices=[
+				_("Show Team Results by Category Only"),
+				_("Show Combined Category Team Results Only"),
+				_("Show Combined and Category Team Results"),
+			]
+		)
+		self.teamResultsOption.SetSelection( 0 )
+		bsizer.Add( self.teamResultsOption )
+		
+		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		#--------------------------------------------------------------------------
 		
-		self.SetSizer(sizer)
+		self.SetSizer( sizer )
 						
 	def refresh( self ):
 		model = SeriesModel.model
 		self.showLastToFirst.SetValue( model.showLastToFirst )
-		self.riderKey.SetSelection( model.uciIdKey )
+		self.riderKey.SetSelection( model.riderKey )
+		self.teamResultsOption.SetSelection( model.teamResultsOption )
 	
 	def commit( self ):
 		model = SeriesModel.model
 		if model.showLastToFirst != self.showLastToFirst.GetValue():
 			model.showLastToFirst = self.showLastToFirst.GetValue()
 			model.changed = True
-		if model.riderKey != self.uciIdKey.GetSelection():
-			model.riderKey = self.uciIdKey.GetSelection()
+		if model.riderKey != self.riderKey.GetSelection():
+			model.riderKey = self.riderKey.GetSelection()
+			model.changed = True
+		if model.teamResultsOption != self.teamResultsOption.GetSelection():
+			model.teamResultsOption = self.teamResultsOption.GetSelection()
 			model.changed = True
 		
 ########################################################################

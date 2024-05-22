@@ -105,11 +105,14 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	categoryNames = model.getCategoryNamesSortedTeamPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
+	
+	if model.teamResultsOption == SeriesModel.SeriesModel.AllTeamResults:
+		categoryNames = categoryNames + ['']
+	elif model.teamResultsOption == SeriesModel.SeriesModel.CombinedTeamResultsOnly:
+		categoryNames = ['']
+	
 	categoryDisplayNames = model.getCategoryDisplayNames()
-	
-	if True:
-		categoryNames = [''] + categoryNames
-	
+
 	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
 	teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
@@ -361,17 +364,17 @@ function sortTable( table, col, reverse ) {
 	};
 	
 	var cmpFunc;
-	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
+	if( col == 0 || col == 2 || col == 3 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
-	else if( col >= 6 ) {				// Race Points/Time and Rank
+	else if( col >= 4 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
 			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
 			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
-	else {								// Rider data field.
+	else {								// Team data field.
 		cmpFunc = function( a, b ) {
 		   return MakeCmpStable( a, b, a.cells[col].textContent.trim().localeCompare(b.cells[col].textContent.trim()) );
 		};
@@ -443,23 +446,24 @@ function sortTableId( iTable, iCol ) {
 								write( '&nbsp;' * 5 )
 								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
 
-			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
-				with tag(html, 'label', {'class':'green'} ):
-					with tag(html, 'input', {
-							'type':"radio",
-							'name':"categorySelect",
-							'checked':"true",
-							'onclick':"selectCategory(-1);"} ):
-						with tag(html, 'span'):
-							write( '---' )
-				for iTable, categoryName in enumerate(categoryNames):
+			if (categoryNames[0] and len(categoryNames) > 1) or (not categoryNames[0] and len(categoryNames) > 2):
+				with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
 					with tag(html, 'label', {'class':'green'} ):
 						with tag(html, 'input', {
 								'type':"radio",
 								'name':"categorySelect",
-								'onclick':"selectCategory({});".format(iTable)} ):
+								'checked':"true",
+								'onclick':"selectCategory(-1);"} ):
 							with tag(html, 'span'):
-								write( '{}'.format(escape(categoryDisplayNames.get(categoryName,'Combined/Combinées'))) )
+								write( '---' )
+					for iTable, categoryName in enumerate(categoryNames):
+						with tag(html, 'label', {'class':'green'} ):
+							with tag(html, 'input', {
+									'type':"radio",
+									'name':"categorySelect",
+									'onclick':"selectCategory({});".format(iTable)} ):
+								with tag(html, 'span'):
+									write( '{}'.format(escape(categoryDisplayNames.get(categoryName,'Combined/Combinées'))) )
 			
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
 			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
@@ -782,6 +786,11 @@ class TeamResults(wx.Panel):
 	def fixCategories( self ):
 		model = SeriesModel.model
 		categoryNames = model.getCategoryNamesSortedTeamPublish()
+		if model.teamResultsOption == SeriesModel.SeriesModel.AllTeamResults:
+			categoryNames = categoryNames + ['--Combined--']
+		elif model.teamResultsOption == SeriesModel.SeriesModel.CombinedTeamResultsOnly:
+			categoryNames = ['--Combined--']
+		
 		lastSelection = self.categoryChoice.GetStringSelection()
 		self.categoryChoice.SetItems( categoryNames )
 		iCurSelection = 0
@@ -814,7 +823,7 @@ class TeamResults(wx.Panel):
 		
 		categoryName = self.categoryChoice.GetStringSelection()
 		if not categoryName or not (scoreByPoints or scoreByTime):
-			Utils.AdjustGridSize( self.grid, rowsRequired=0)
+			Utils.AdjustGridSize( self.grid, rowsRequired=0 )
 			return
 		
 		self.grid.ClearGrid()
@@ -823,7 +832,7 @@ class TeamResults(wx.Panel):
 		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 
 		results, races = GetModelInfo.GetCategoryResultsTeam(
-			categoryName,
+			categoryName if categoryName != '--Combined--' else '',
 			self.raceResults,
 			pointsForRank,
 			teamPointsForRank,

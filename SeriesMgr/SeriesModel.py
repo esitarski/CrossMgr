@@ -280,6 +280,9 @@ class SeriesModel:
 	
 	imageResource = None	# Display Logo (None uses default logo).  In base64.
 	
+	CategoryTeamResultsOnly, CombinedTeamResultsOnly, AllTeamResults = list( range(3) )
+	teamResultsOption = CategoryTeamResultsOnly
+	
 	@property
 	def scoreByPoints( self ):
 		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)
