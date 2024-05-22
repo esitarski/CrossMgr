@@ -781,13 +781,12 @@ table.results tr td.fastest{
 					Utils.MessageOK(self, 'Write Failed.  Series NOT saved..\n\n    "{}"'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
 					return
 				
-		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
+		with wx.FileDialog( self, message="Choose a file for your Competition",
 							defaultFile = '',
 							wildcard = 'SeriesMgr files (*.smn)|*.smn',
-							style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
-		if dlg.ShowModal() == wx.ID_OK:
-			self.openSeries( dlg.GetPath() )
-		dlg.Destroy()
+							style=wx.FD_OPEN | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				self.openSeries( dlg.GetPath() )
 
 	def menuSave( self, event ):
 		if not self.fileName:

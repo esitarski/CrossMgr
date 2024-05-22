@@ -587,6 +587,15 @@ class SeriesModel:
 	
 	def addRace( self, name ):
 		race = Race( name, self.pointStructures[0] )
+		
+		# Check if this race name matches an existing one and use the same pointsStructure.
+		# This works for UCIDataride spreadsheets.
+		for r in reversed(self.races):
+			if r.getRaceName() == race.getRaceName():
+				race.pointStructure = r.pointStructure
+				race.teamPointStructure = r.teamPointStructure
+				break
+		
 		self.races.append( race )
 		self.setChanged()
 		
@@ -626,11 +635,11 @@ class SeriesModel:
 	@memoize
 	def _extractAllRaceResultsCore( self ):
 		with modelUpdateLock:	
-			# Extract all race results in parallel.  Arguments are the race info and this series (to get the alias lookups).
+			# Extract all race results in parallel.  Arguments are the race info and this series.
 			with Pool() as p:
 				p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
 			
-			# Combine all results and record errors.
+			# Combine all results and record any errors.
 			raceResults = []
 			oldErrors = self.errors
 			self.errors = []
@@ -658,7 +667,7 @@ class SeriesModel:
 			r.iSequence = i
 			raceFromFileName[r.fileName] = r
 
-		# Fix up all aliases.
+		# Apply all aliases.
 		for rr in raceResults:
 			rr.firstName, rr.lastName = self.getReferenceName( rr.firstName, rr.lastName )
 			rr.license = self.getReferenceLicense( rr.license )

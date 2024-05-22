@@ -93,29 +93,26 @@ class Sequence(wx.Panel):
 			return
 			
 		row = event.GetRow()
-		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
+		with wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
 					wildcard = self.wildcard,
-					style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
-		ret = dlg.ShowModal()
-		fileName = ''
-		if ret == wx.ID_OK:
-			fileName = dlg.GetPath()
-			self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fileName) )
-			self.grid.SetCellValue( row, self.RaceFileCol, fileName )
-		dlg.Destroy()
+					style=wx.FD_OPEN | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				fileName = dlg.GetPath()
+				self.grid.SetCellValue( row, self.RaceCol, SeriesModel.RaceNameFromPath(fileName) )
+				self.grid.SetCellValue( row, self.RaceFileCol, fileName )
+		
 		self.commit()
 	
 	def doAddRace( self, event ):
-		dlg = wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
+		with wx.FileDialog( self, message="Choose a CrossMgr or Excel file",
 					defaultFile = '',
 					wildcard = self.wildcard,
-					style=wx.FD_OPEN | wx.FD_CHANGE_DIR | wx.FD_MULTIPLE )
-		ret = dlg.ShowModal()
-		if ret == wx.ID_OK:
-			for fileName in dlg.GetPaths():
-				SeriesModel.model.addRace( fileName )
-		dlg.Destroy()
+					style=wx.FD_OPEN | wx.FD_CHANGE_DIR | wx.FD_MULTIPLE ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				for fileName in dlg.GetPaths():
+					SeriesModel.model.addRace( fileName )
+		
 		self.refresh()
 		
 	def doRemoveRace( self, event ):

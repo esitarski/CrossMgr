@@ -93,8 +93,14 @@ class Aliases(wx.Panel):
 			if reference:
 				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]
 				aliases = [self.getName(a) for a in aliases if a]
-				aliases = [a for a in aliases if a]
-				references.append( (reference, aliases) )
+				
+				aliases_unique = []
+				seen = set()
+				for a in aliases:
+					if a and a not in seen:
+						seen.add( a )
+						aliases_unique.append( a )
+				references.append( (reference, aliases_unique) )
 		
 		references.sort()
 		

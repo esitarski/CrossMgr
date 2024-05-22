@@ -80,7 +80,7 @@ class AliasesLicense(wx.Panel):
 		for row in range(self.grid.GetNumberRows()):
 			reference = self.grid.GetCellValue( row, 0 ).strip()
 			if reference:
-				aliases = [a.strip() for a in self.grid.GetCellValue(row, 1).split(';')]
+				aliases = set( a.strip() for a in self.grid.GetCellValue(row, 1).split(';') )
 				references.append( (reference, sorted( a for a in aliases if a )) )
 		
 		references.sort()

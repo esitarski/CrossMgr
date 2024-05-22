@@ -23,6 +23,10 @@ from Excel				import GetExcelReader
 from FieldMap			import standard_field_map, standard_field_aliases
 from GetMatchingExcelFile import GetMatchingExcelFile
 
+class DeepDict(defaultdict):
+	def __call__(self):
+		return DeepDict(self.default_factory)
+
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
 		secs = 0
@@ -840,6 +844,76 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 RaceTuple = namedtuple('RaceTuple', ['date', 'name', 'url', 'raceInSeries'] )
 ResultTuple = namedtuple('ResultTuple', ['points', 'time', 'rank', 'primePoints', 'timeBonus', 'rr'] )
 
+def GetAllCategoryResultsTeam( raceResults, pointsForRank ):
+	showLastToFirst = SeriesModel.model.showLastToFirst
+	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
+	
+	# Get all results for this category.
+	raceResults = [rr for rr in raceResults if rr.teamIsValid]
+	if not raceResults:
+		return [], []
+		
+	# Get all races for this category.
+	raceNameSequence = {rr.raceName:rr.raceInSeries.iSequence for rr in raceResults}
+	raceNames = sorted( set( rr.raceName for rr in raceResults ), key=lambda name: raceNameSequence[name], reverse=True )
+	raceNameIndex = { rn:i for i, rn in enumerate(raceNames) }
+	raceNameToRaceTuple = {}
+	for rr in raceResults:
+		if rr.raceName not in raceNameToRaceTuple:
+			raceNameToRaceTuple[rr.raceName] = RaceTuple(None, rr.raceName, None, rr.raceInSeries)
+	
+	def asInt( v ):
+		return int(v) if int(v) == v else v
+	
+	# Get the best points result by raceName, keyTeam and categoryName.
+	teamName = {}
+	
+	bestResultsByTeamRaceCategory = defaultdict( lambda:defaultdict( lambda:defaultdict(int) ) )
+	teamResultsPoints = defaultdict( lambda: [0] * len(raceNames)  )
+	for rr in raceResults:
+		primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
+		earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
+		pointsNew = asInt( earnedPoints )
+		
+		pointsCur = bestResultsByTeamRaceCategory[rr.keyTeam()][rr.raceName][rr.categoryName]
+		if pointsNew > pointsCur:
+			bestResultsByTeamRaceCategory[rr.keyTeam()][rr.raceName][rr.categoryName] = pointsNew
+			teamResultsPoints[rr.keyTeam()][raceNameIndex[rr.raceName]] += pointsNew - pointsCur
+		teamName[rr.keyTeam()] = rr.team
+	
+	# Get the total results by keyTeam for all races.
+	teamPoints = {}
+	for keyTeam, bestResultsByRace in teamResultsPoints.items():
+		teamPoints[keyTeam] = sum( bestResultsByRace )
+	
+	# Transform into a list of keyTeam, pointsTotal sorted by decreasing points.
+	# Break ties with most recent results.
+	teamOrder = [
+		keyTeam for keyTeam, totalPoints in sorted(teamPoints.items(), key=lambda e: [e[1]] + teamResultsPoints[e[0]], reverse=True)
+	]
+	
+	# Compute the points gap.
+	teamGap = {}
+	if teamOrder:
+		leader = teamOrder[0]
+		leaderPoints = teamPoints[leader]
+		teamGap = { t : leaderPoints - teamPoints[t] for t in teamOrder }
+		teamGap = { t : str(gap) if gap else '' for t, gap in teamGap.items() }
+	
+	# Reverse the race order if required for display.
+	if not showLastToFirst:
+		raceNames.reverse()
+	
+	# List of:
+	# team, points, gap, [list of teamResultsPoints for each race in series]
+	# Note: only the team results are returned - the individual results are not returned.
+	categoryResult = [
+		[teamName[t], teamPoints[t], teamGap[t]] + [[(teamResultsPoints[t][raceNameIndex[rn]], []) for rn in raceNames]]
+		for t in teamOrder
+	]
+	
+	return categoryResult, [raceNameToRaceTuple[rn] for rn in raceNames]
+
 def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
 	scoreByPoints = SeriesModel.model.scoreByPoints
 	scoreByTime = SeriesModel.model.scoreByTime
@@ -849,6 +923,9 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 	
 	showLastToFirst = SeriesModel.model.showLastToFirst
 	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
+	
+	if scoreByPoints and not categoryName:
+		return GetAllCategoryResultsTeam( raceResults, pointsForRank )
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and rr.teamIsValid]

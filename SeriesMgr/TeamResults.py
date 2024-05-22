@@ -1,14 +1,19 @@
+import re
 import wx
 import wx.grid as gridlib
 
 import os
-import io
 from html import escape
 from urllib.parse import quote
 import sys
 import urllib
 import base64
 import datetime
+
+import xlwt
+import platform
+import webbrowser
+import subprocess
 
 import Utils
 import SeriesModel
@@ -17,13 +22,6 @@ from ReorderableGrid import ReorderableGrid
 from FitSheetWrapper import FitSheetWrapper
 import FtpWriteFile
 from ExportGrid import tag
-
-import xlwt
-import io
-import re
-import webbrowser
-import subprocess
-import platform
 
 reNoDigits = re.compile( '[^0-9]' )
 
@@ -70,7 +68,7 @@ def getHeaderGraphicBase64():
 		if b64:
 			return b64
 	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
-	with io.open(graphicFName, 'rb') as f:
+	with open(graphicFName, 'rb') as f:
 		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
 
 def formatTeamResults( scoreByPoints, rt ):
@@ -78,7 +76,7 @@ def formatTeamResults( scoreByPoints, rt ):
 		# The first value is the team score.  Subsequent values are the individual ranks.
 		if not rt[0]:
 			return '';
-		return '{} ({})'.format(rt[0], Utils.ordinal(rt[1]))
+		return '{}'.format(rt[0])
 	else:
 		rt = [r for r in rt if r.time]
 		if not rt:
@@ -107,6 +105,10 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	categoryNames = model.getCategoryNamesSortedTeamPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
+	categoryDisplayNames = model.getCategoryDisplayNames()
+	
+	if True:
+		categoryNames = [''] + categoryNames
 	
 	HeaderNames = getHeaderNames()
 	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
@@ -124,7 +126,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 			pointsStructuresList.append( race.pointStructure )
 		pointsStructures[race.pointStructure].append( race )
 	
-	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
 	def write( s ):
 		html.write( '{}'.format(s) )
@@ -434,9 +436,13 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
 							write( escape(model.name + ' Team Results') )
-						if model.organizer:
-							with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
-								write( 'by {}'.format(escape(model.organizer)) )
+						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+							if model.organizer:
+								write( '{}'.format(escape(model.organizer)) )
+							with tag(html, 'span', {'style': 'font-size: 60%'}):
+								write( '&nbsp;' * 5 )
+								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
+
 			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
 				with tag(html, 'label', {'class':'green'} ):
 					with tag(html, 'input', {
@@ -445,7 +451,7 @@ function sortTableId( iTable, iCol ) {
 							'checked':"true",
 							'onclick':"selectCategory(-1);"} ):
 						with tag(html, 'span'):
-							write( 'All' )
+							write( '---' )
 				for iTable, categoryName in enumerate(categoryNames):
 					with tag(html, 'label', {'class':'green'} ):
 						with tag(html, 'input', {
@@ -453,7 +459,10 @@ function sortTableId( iTable, iCol ) {
 								'name':"categorySelect",
 								'onclick':"selectCategory({});".format(iTable)} ):
 							with tag(html, 'span'):
-								write( '{}'.format(escape(categoryName)) )
+								write( '{}'.format(escape(categoryDisplayNames.get(categoryName,'Combined/Combinées'))) )
+			
+			hasPrimePoints = any( rr.primePoints for rr in raceResults )
+			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
 			for iTable, categoryName in enumerate(categoryNames):
 				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
@@ -472,7 +481,7 @@ function sortTableId( iTable, iCol ) {
 					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( escape(categoryName) )
+						write( escape(categoryDisplayNames.get(categoryName, 'Combined/Combinées')) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -517,13 +526,14 @@ function sortTableId( iTable, iCol ) {
 											write( formatTeamResults(scoreByPoints, rt) )
 										
 			#-----------------------------------------------------------------------------
-			if considerPrimePointsOrTimeBonus:
+			if considerPrimePointsOrTimeBonus and hasPrimePoints:
 				with tag(html, 'p', {'class':'noprint'}):
 					write( 'Bonus Points added to Points for Place.' )
 					
 			#-----------------------------------------------------------------------------
 			if scoreByPoints:
 				with tag(html, 'div', {'class':'noprint'} ):
+					'''
 					with tag(html, 'p'):
 						pass
 					with tag(html, 'hr'):
@@ -559,18 +569,21 @@ function sortTableId( iTable, iCol ) {
 						pass
 					with tag(html, 'hr'):
 						pass
+					'''
 						
 					with tag(html, 'h2'):
 						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
-						write( u"If two or more teams are tied on points, the following rules are applied in sequence until the tie is broken:" )
+						write( "If two or more teams are tied on points, the following rules are applied in sequence until the tie is broken:" )
+						
 					isFirst = True
-					tieLink = u"if still a tie, use "
+					tieLink = "if still a tie, use "
 					with tag(html, 'ol'):
+						'''
 						if model.useMostEventsCompleted:
 							with tag(html, 'li'):
-								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
+								write( "{}number of events completed".format( tieLink if not isFirst else "" ) )
 								isFirst = False
 						if model.numPlacesTieBreaker != 0:
 							finishOrdinals = [Utils.ordinal(p+1) for p in range(model.numPlacesTieBreaker)]
@@ -579,12 +592,13 @@ function sortTableId( iTable, iCol ) {
 							else:
 								finishStr = ', '.join(finishOrdinals[:-1]) + ' then ' + finishOrdinals[-1]
 							with tag(html, 'li'):
-								write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
+								write( "{}number of {} place finishes".format( tieLink if not isFirst else "",
 									finishStr,
 								) )
 								isFirst = False
+						'''
 						with tag(html, 'li'):
-							write( u"{}best finish position in most recent event".format(tieLink if not isFirst else "") )
+							write( "{}best result in most recent event".format(tieLink if not isFirst else "") )
 							isFirst = False
 					
 			#-----------------------------------------------------------------------------
@@ -1015,7 +1029,7 @@ class TeamResults(wx.Panel):
 		except IOError:
 			return
 		
-		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
+		html = open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
 		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
 			dlg.ShowModal()
 		self.callPostPublishCmd( htmlfileName )
