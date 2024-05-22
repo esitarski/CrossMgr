@@ -107,15 +107,17 @@ using First and Last Name.'''
 	
 	def commit( self ):
 		model = SeriesModel.model
-		if model.showLastToFirst != self.showLastToFirst.GetValue():
-			model.showLastToFirst = self.showLastToFirst.GetValue()
-			model.changed = True
-		if model.riderKey != self.riderKey.GetSelection():
-			model.riderKey = self.riderKey.GetSelection()
-			model.changed = True
-		if model.teamResultsOption != self.teamResultsOption.GetSelection():
-			model.teamResultsOption = self.teamResultsOption.GetSelection()
-			model.changed = True
+		
+		av = (
+			('showLastToFirst',		self.showLastToFirst.GetValue()),
+			('riderKey',			self.riderKey.GetSelection()),
+			('teamResultsOption',	self.teamResultsOption.GetSelection()),
+		)
+		
+		for a, v in av:
+			if getattr(model, a) != v:
+				setattr( model, a, v )
+				model.changed = True
 		
 ########################################################################
 
