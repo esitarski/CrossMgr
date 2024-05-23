@@ -72,8 +72,16 @@ def getHeaderGraphicBase64():
 			return b64
 	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
 	with open(graphicFName, 'rb') as f:
-		s64 = base64.standard_b64encode(f.read())
+		s64 = base64.standard_b64encode(f.read()).decode()
 		return 'data:image/png;base64,{}'.format(s64)
+
+def getFaviconBase64():
+	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
+	image = wx.Image( graphicFName )
+	image.Rescale( 32, 32, wx.IMAGE_QUALITY_HIGH )
+	b = io.BytesIO()
+	image.SaveFile( b, wx.BITMAP_TYPE_PNG )
+	return 'data:image/png;base64,{}'.format(base64.standard_b64encode(b.getvalue()).decode())
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -157,6 +165,8 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 			for k, v in model.getMetaTags():
 				with tag(html, 'meta', {'name':k, 'content':v}):
 					pass
+			with tag(html, 'link', dict(rel="icon", type="image/png", href=getFaviconBase64())):
+				pass
 			with tag(html, 'style', dict( type="text/css")):
 				write( '''
 body{ font-family: sans-serif; }

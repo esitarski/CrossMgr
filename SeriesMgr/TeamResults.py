@@ -2,6 +2,7 @@ import re
 import wx
 import wx.grid as gridlib
 
+import io
 import os
 from html import escape
 from urllib.parse import quote
@@ -22,6 +23,7 @@ from ReorderableGrid import ReorderableGrid
 from FitSheetWrapper import FitSheetWrapper
 import FtpWriteFile
 from ExportGrid import tag
+from Results import getHeaderGraphicBase64, getFaviconBase64
 
 reNoDigits = re.compile( '[^0-9]' )
 
@@ -61,15 +63,6 @@ def filterResults( results, scoreByPoints, scoreByTime ):
 	elif scoreByTime:
 		return [rr for rr in results if toSeconds(rr[1]) > 0.0]
 	return []
-
-def getHeaderGraphicBase64():
-	if Utils.mainWin:
-		b64 = Utils.mainWin.getGraphicBase64()
-		if b64:
-			return b64
-	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
-	with open(graphicFName, 'rb') as f:
-		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
 
 def formatTeamResults( scoreByPoints, rt ):
 	if scoreByPoints:
@@ -135,7 +128,7 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	
 	def write( s ):
 		html.write( '{}'.format(s) )
-	
+		
 	with tag(html, 'html'):
 		with tag(html, 'head'):
 			with tag(html, 'title'):
@@ -144,6 +137,8 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 										author="Edward Sitarski",
 										copyright="Edward Sitarski, 2013-{}".format(datetime.datetime.now().strftime('%Y')),
 										generator="SeriesMgr")):
+				pass
+			with tag(html, 'link', dict(rel="icon", type="image/png", href=getFaviconBase64())):
 				pass
 			with tag(html, 'style', dict( type="text/css")):
 				write( '''
