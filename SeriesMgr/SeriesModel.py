@@ -274,6 +274,8 @@ class SeriesModel:
 	ftpPassword = ''
 	urlPath = ''
 	
+	graphicBase64 = None
+	
 	# Control how to identify riders: name, uciid or license.
 	KeyByName, KeyByUciId, KeyByLicense = list(range(3))
 	riderKey = KeyByName

@@ -351,6 +351,14 @@ class MainWin( wx.Frame ):
 		return defaultFName
 	
 	def getGraphicBase64( self ):
+		model = SeriesModel.model
+		if model.graphicBase64 and model.graphicBase64.startswith('data:image/'):
+			try:
+				base64.standard_b64decode( model.graphicBase64.split(',',1)[1].encode() )
+				return model.graphicBase64
+			except Exception:
+				pass
+		
 		graphicFName = self.getGraphicFName()
 		if not graphicFName:
 			return None
@@ -365,6 +373,9 @@ class MainWin( wx.Frame ):
 		try:
 			with open(graphicFName, 'rb') as f:
 				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read()).decode())
+				model.graphicBase64 = b64
+				model.setChanged()
+				self.setTitle()
 				return b64
 		except IOError:
 			pass
@@ -377,6 +388,9 @@ class MainWin( wx.Frame ):
 				imgPath = dlg.GetValue()
 				self.config.Write( 'graphic', imgPath )
 				self.config.Flush()
+				
+				SeriesModel.model.graphicBase64 = None
+				self.getGraphicBase64()
 
 	def menuSetRootFolder( self, event ):
 		with wx.DirDialog(

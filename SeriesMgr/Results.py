@@ -183,61 +183,6 @@ h2{ font-size: 200%; }
 .bigfont { font-size: 120%; }
 .hidden { display: none; }
 
-#buttongroup {
-	margin:4px;   
-	float:left;
-}
-
-#buttongroup label {
-	float:left;
-	margin:4px;
-	background-color:#EFEFEF;
-	border-radius:4px;
-	border:1px solid #D0D0D0;
-	overflow:auto;
-	cursor: pointer;
-}
-
-#buttongroup label span {
-	text-align:center;
-	padding:8px 8px;
-	display:block;
-}
-
-#buttongroup label input {
-	position:absolute;
-	top:-20px;
-}
-
-#buttongroup input:checked + span {
-	background-color:#404040;
-	color:#F7F7F7;
-}
-
-#buttongroup .yellow {
-	background-color:#FFCC00;
-	color:#333;
-}
-
-#buttongroup .blue {
-	background-color:#00BFFF;
-	color:#333;
-}
-
-#buttongroup .pink {
-	background-color:#FF99FF;
-	color:#333;
-}
-
-#buttongroup .green {
-	background-color:#7FE57F;
-	color:#333;
-}
-#buttongroup .purple {
-	background-color:#B399FF;
-	color:#333;
-}
-
 table.results {
 	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse:collapse;
@@ -471,6 +416,10 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
 							write( escape(model.name) )
+							
+						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+							write( "Individual Series Results/Résultats Cumulatifs Individuels" )
+
 						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
 							if model.organizer:
 								write( '{}'.format(escape(model.organizer)) )
