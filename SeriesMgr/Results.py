@@ -468,15 +468,16 @@ function sortTableId( iTable, iCol ) {
 								write( '&nbsp;' * 5 )
 								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
 
-			with tag(html, 'h3' ):
-				with tag(html, 'label', {'for':'categoryselect'} ):
-					write( 'Cat' + ':' )
-				with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
-					with tag(html, 'option', {'value':-1} ):
-						write( '---' )
-					for iTable, categoryName in enumerate(categoryNames):
-						with tag(html, 'option', {'value':iTable} ):
-							write( '{}'.format(escape(categoryDisplayNames[categoryName])) )
+			if len(categoryNames) > 1:
+				with tag(html, 'h3' ):
+					with tag(html, 'label', {'for':'categoryselect'} ):
+						write( 'Cat' + ':' )
+					with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
+						with tag(html, 'option', {'value':-1} ):
+							write( '---' )
+						for iTable, categoryName in enumerate(categoryNames):
+							with tag(html, 'option', {'value':iTable} ):
+								write( '{}'.format(escape(categoryDisplayNames[categoryName])) )
 			
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
 			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
