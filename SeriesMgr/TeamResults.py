@@ -102,6 +102,8 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 	
+	combinedLabel = 'Combined/Combinées'
+	
 	categoryNames = model.getCategoryNamesSortedTeamPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
@@ -447,23 +449,15 @@ function sortTableId( iTable, iCol ) {
 								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
 
 			if (categoryNames[0] and len(categoryNames) > 1) or (not categoryNames[0] and len(categoryNames) > 2):
-				with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
-					with tag(html, 'label', {'class':'green'} ):
-						with tag(html, 'input', {
-								'type':"radio",
-								'name':"categorySelect",
-								'checked':"true",
-								'onclick':"selectCategory(-1);"} ):
-							with tag(html, 'span'):
-								write( '---' )
-					for iTable, categoryName in enumerate(categoryNames):
-						with tag(html, 'label', {'class':'green'} ):
-							with tag(html, 'input', {
-									'type':"radio",
-									'name':"categorySelect",
-									'onclick':"selectCategory({});".format(iTable)} ):
-								with tag(html, 'span'):
-									write( '{}'.format(escape(categoryDisplayNames.get(categoryName,'Combined/Combinées'))) )
+				with tag(html, 'h3' ):
+					with tag(html, 'label', {'for':'categoryselect'} ):
+						write( 'Cat' + ':' )
+					with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
+						with tag(html, 'option', {'value':-1} ):
+							write( '---' )
+						for iTable, categoryName in enumerate(categoryNames):
+							with tag(html, 'option', {'value':iTable} ):
+								write( '{}'.format(escape(categoryDisplayNames.get(categoryName,combinedLabel))) )
 			
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
 			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
@@ -485,7 +479,7 @@ function sortTableId( iTable, iCol ) {
 					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( escape(categoryDisplayNames.get(categoryName, 'Combined/Combinées')) )
+						write( escape(categoryDisplayNames.get(categoryName, combinedLabel)) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
