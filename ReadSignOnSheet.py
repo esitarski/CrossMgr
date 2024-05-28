@@ -461,7 +461,7 @@ class GetExcelLink:
 			if page == self.fileNamePage:
 				fileName = self.fileNamePage.getFileName()
 				try:
-					open(fileName).close()
+					open(fileName, 'rb').close()
 					self.sheetNamePage.setFileName(self.fileNamePage.getFileName())
 				except IOError:
 					if fileName == '':

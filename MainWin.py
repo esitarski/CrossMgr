@@ -2758,7 +2758,7 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			with open(fileName, 'w') as fp:
+			with open(fileName, 'wb') as fp:
 				pass
 		except IOError:
 			Utils.MessageOK( self, '{}\n\n    "{}"'.format(_('Cannot Open File'),fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
@@ -2976,7 +2976,7 @@ class MainWin( wx.Frame ):
 
 		# Try to open the file.
 		try:
-			with open(fileName, 'w'):
+			with open(fileName, 'wb'):
 				pass
 		except IOError:
 			Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
@@ -3304,7 +3304,7 @@ class MainWin( wx.Frame ):
 		
 		# Test if we can write something there.
 		try:
-			with open(fName, 'w'):
+			with open(fName, 'wb'):
 				pass
 		except IOError:
 			Utils.MessageOK(self, '{} "{}".'.format(_('Cannot open file'), fName), _('File Open Error'), iconMask=wx.ICON_ERROR)

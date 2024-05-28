@@ -1,7 +1,7 @@
 import os
 
 def UpdateDependencies():
-	with open('Dependencies.py') as d:
+	with open('Dependencies.py', encoding='utf8') as d:
 		for line in d:
 			line = line.strip()
 			if not line:
@@ -15,11 +15,11 @@ def UpdateDependencies():
 			except Exception:
 				pass
 			
-			with open(os.path.join('..', fname)) as fc:
+			with open(os.path.join('..', fname), encoding='utf8') as fc:
 				contents = fc.read()
 			if fname in ('Utils.py', 'HelpIndex.py'):
 				contents = contents.replace("'CrossMgr", "'CallupSeedingMgr").replace('CrossMgrImages', 'CallupSeedinMgrImages')
-			with open(fname, 'w') as fc:
+			with open(fname, 'w', encoding='utf8') as fc:
 				fc.write( contents )
 			
 if __name__ == '__main__':
