@@ -520,7 +520,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'hr'):
 						pass
 						
-					with tag(html, 'h2'):
+					with tag(html, 'h3'):
 						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
