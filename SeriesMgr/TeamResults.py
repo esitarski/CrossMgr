@@ -400,7 +400,7 @@ function sortTableId( iTable, iCol ) {
 						pass
 					'''
 						
-					with tag(html, 'h2'):
+					with tag(html, 'h3'):
 						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
