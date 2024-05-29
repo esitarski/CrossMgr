@@ -175,9 +175,9 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 				write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
 				write( '''
 function removeClass( classStr, oldClass ) {
-	var classes = classStr.split( ' ' );
-	var ret = [];
-	for( var i = 0; i < classes.length; ++i ) {
+	let classes = classStr.split( ' ' );
+	let ret = [];
+	for( let i = 0; i < classes.length; ++i ) {
 		if( classes[i] != oldClass )
 			ret.push( classes[i] );
 	}
@@ -189,8 +189,8 @@ function addClass( classStr, newClass ) {
 }
 
 function selectCategory( iCat ) {
-	for( var i = 0; i < catMax; ++i ) {
-		var e = document.getElementById('catContent' + i);
+	for( let i = 0; i < catMax; ++i ) {
+		let e = document.getElementById('catContent' + i);
 		if( i == iCat || iCat < 0 )
 			e.className = removeClass(e.className, 'hidden');
 		else
@@ -199,27 +199,27 @@ function selectCategory( iCat ) {
 }
 
 function sortTable( table, col, reverse ) {
-	var tb = table.tBodies[0];
-	var tr = Array.prototype.slice.call(tb.rows, 0);
+	let tb = table.tBodies[0];
+	let tr = Array.prototype.slice.call(tb.rows, 0);
 	
-	var parseRank = function( s ) {
+	let parseRank = function( s ) {
 		if( !s )
 			return 999999;
 		var fields = s.split( '(' );
 		return parseInt( fields[1] );
 	}
 	
-	var cmpPos = function( a, b ) {
+	let cmpPos = function( a, b ) {
 		return parseInt( a.cells[0].textContent.trim() ) - parseInt( b.cells[0].textContent.trim() );
 	};
 	
-	var MakeCmpStable = function( a, b, res ) {
+	let MakeCmpStable = function( a, b, res ) {
 		if( res != 0 )
 			return res;
 		return cmpPos( a, b );
 	};
 	
-	var cmpFunc;
+	let cmpFunc;
 	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
@@ -237,7 +237,7 @@ function sortTable( table, col, reverse ) {
 	}
 	tr = tr.sort( function (a, b) { return reverse * cmpFunc(a, b); } );
 	
-	for( var i = 0; i < tr.length; ++i) {
+	for( let i = 0; i < tr.length; ++i) {
 		tr[i].className = (i % 2 == 1) ? addClass(tr[i].className,'odd') : removeClass(tr[i].className,'odd');
 		tb.appendChild( tr[i] );
 	}
@@ -245,18 +245,18 @@ function sortTable( table, col, reverse ) {
 
 var ssPersist = {};
 function sortTableId( iTable, iCol ) {
-	var upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
-	var isNone = 0, isDn = 1, isUp = 2;
-	var id = 'idUpDn' + iTable + '_' + iCol;
-	var upDn = document.getElementById(id);
-	var sortState = ssPersist[id] ? ssPersist[id] : isNone;
-	var table = document.getElementById('idTable' + iTable);
+	let upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
+	let isNone = 0, isDn = 1, isUp = 2;
+	let id = 'idUpDn' + iTable + '_' + iCol;
+	let upDn = document.getElementById(id);
+	let sortState = ssPersist[id] ? ssPersist[id] : isNone;
+	let table = document.getElementById('idTable' + iTable);
 	
 	// Clear all sort states.
-	var row0Len = table.tBodies[0].rows[0].cells.length;
-	for( var i = 0; i < row0Len; ++i ) {
-		var idCur = 'idUpDn' + iTable + '_' + i;
-		var ele = document.getElementById(idCur);
+	let row0Len = table.tBodies[0].rows[0].cells.length;
+	for( let i = 0; i < row0Len; ++i ) {
+		let idCur = 'idUpDn' + iTable + '_' + i;
+		let ele = document.getElementById(idCur);
 		if( ele ) {
 			ele.innerHTML = '';
 			ssPersist[idCur] = isNone;
