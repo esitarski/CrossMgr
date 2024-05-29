@@ -96,6 +96,20 @@ using First and Last Name.'''
 		
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
 		#--------------------------------------------------------------------------
+
+		box = wx.StaticBox( self, -1, _("HTML Color Theme") )
+		bsizer = wx.StaticBoxSizer( box, wx.VERTICAL )
+		
+		self.colorTheme = wx.Choice( self, choices=[
+				_("Green"),
+				_("Red"),
+			]
+		)
+		self.colorTheme.SetSelection( 0 )
+		bsizer.Add( self.colorTheme )
+		
+		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
+		#--------------------------------------------------------------------------
 		
 		self.SetSizer( sizer )
 						
@@ -104,6 +118,7 @@ using First and Last Name.'''
 		self.showLastToFirst.SetValue( model.showLastToFirst )
 		self.riderKey.SetSelection( model.riderKey )
 		self.teamResultsOption.SetSelection( model.teamResultsOption )
+		self.colorTheme.SetSelection( model.colorTheme )
 	
 	def commit( self ):
 		model = SeriesModel.model
@@ -112,6 +127,7 @@ using First and Last Name.'''
 			('showLastToFirst',		self.showLastToFirst.GetValue()),
 			('riderKey',			self.riderKey.GetSelection()),
 			('teamResultsOption',	self.teamResultsOption.GetSelection()),
+			('colorTheme',			self.colorTheme.GetSelection()),
 		)
 		
 		for a, v in av:

@@ -285,6 +285,9 @@ class SeriesModel:
 	CategoryTeamResultsOnly, CombinedTeamResultsOnly, AllTeamResults = list( range(3) )
 	teamResultsOption = CategoryTeamResultsOnly
 	
+	GreenTheme, RedTheme = list( range(2) )
+	colorTheme = GreenTheme
+	
 	@property
 	def scoreByPoints( self ):
 		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)
