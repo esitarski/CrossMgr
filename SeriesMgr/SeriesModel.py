@@ -652,9 +652,7 @@ class SeriesModel:
 		return sorted( names )
 		
 	def setTeamResultsNames( self, teamResultsNames ):
-		teamResultsNames = sorted( set(trn.strip() for trn in teamResultsNames) )
-		teamResultsNames = [trn for trn in teamResultsNames if trn]
-		teamResultsNames.sort()
+		teamResultsNames = sorted( set(n for n in map(operator.methodcaller('strip'), teamResultsNames) if n ) )
 		if teamResultsNames != self.teamResultsNames:
 			self.teamResultsNames = teamResultsNames
 			self.setChanged()

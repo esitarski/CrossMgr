@@ -24,10 +24,9 @@ class CategorySequence(wx.Panel):
 				_("Change the Category order by dragging-and-dropping the first grey column in the table."),
 				_("If 'Use Nth Result Only' is True, 'Team N' specifies the top Nth rider's time to use for the team's time (eg. Team TT, scored on 3rd rider's result)"),
 				_("If 'Use Nth Result Only' if False, 'Team N' specifies the top riders' times to be totaled for the team result (eg. Team Stage Finish, scored on sum of top 3 results for each team)."),
-				_("If 'Points', 'TeamPoints' or 'Must Have Completed' are configured, they will override the values specified for the Races."),
+				_("If 'Points', 'TeamPoints' or 'Must Have Completed' are configured, they will override the values specified on the Races screen."),
 			] )
 		)
-		
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
@@ -137,6 +136,7 @@ class CategorySequence(wx.Panel):
 		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
 			self.grid.SetCellValue( row, self.LongNameCol, c.longName )
+			
 			self.grid.SetCellValue( row, self.PublishCol, '01'[int(c.publish)] )
 			self.grid.SetCellValue( row, self.PointsCol, c.pointStructure.name if c.pointStructure else '' )
 			self.grid.SetCellValue( row, self.BestResultsToConsiderCol, self.bestResultsToConsiderChoices[c.bestResultsToConsider+1 if c.bestResultsToConsider is not None else 0] )
