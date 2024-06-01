@@ -90,7 +90,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByPoints = model.scoreByPoints
 	scoreByTime = model.scoreByTime
-	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
@@ -114,13 +113,13 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
 	title = os.path.basename( seriesFileName ) + ' Team Results'
 	
-	pointsStructures = {}
-	pointsStructuresList = []
+	pointStructures = {}
+	pointStructuresList = []
 	for race in model.races:
-		if race.pointStructure not in pointsStructures:
-			pointsStructures[race.pointStructure] = []
-			pointsStructuresList.append( race.pointStructure )
-		pointsStructures[race.pointStructure].append( race )
+		if race.pointStructure not in pointStructures:
+			pointStructures[race.pointStructure] = []
+			pointStructuresList.append( race.pointStructure )
+		pointStructures[race.pointStructure].append( race )
 	
 	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
@@ -368,7 +367,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'h2'):
 						write( 'Point Structures' )
 					with tag(html, 'table' ):
-						for ps in pointsStructuresList:
+						for ps in pointStructuresList:
 							with tag(html, 'tr'):
 								for header in [ps.name, 'Races Scored with {}'.format(ps.name)]:
 									with tag(html, 'th'):
@@ -379,7 +378,7 @@ function sortTableId( iTable, iCol ) {
 									write( ps.getHtml() )
 								with tag(html, 'td', {'class': 'topAlign'}):
 									with tag(html, 'ul'):
-										for r in pointsStructures[ps]:
+										for r in pointStructures[ps]:
 											with tag(html, 'li'):
 												write( r.getRaceName() )
 						

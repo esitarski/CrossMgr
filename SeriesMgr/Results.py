@@ -136,13 +136,13 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	
 	licenseLinkTemplate = model.licenseLinkTemplate
 	
-	pointsStructures = {}
-	pointsStructuresList = []
+	pointStructures = {}
+	pointStructuresList = []
 	for race in model.races:
-		if race.pointStructure not in pointsStructures:
-			pointsStructures[race.pointStructure] = []
-			pointsStructuresList.append( race.pointStructure )
-		pointsStructures[race.pointStructure].append( race )
+		if race.pointStructure not in pointStructures:
+			pointStructures[race.pointStructure] = []
+			pointStructuresList.append( race.pointStructure )
+		pointStructures[race.pointStructure].append( race )
 	
 	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
@@ -325,8 +325,8 @@ function sortTableId( iTable, iCol ) {
 					raceResults,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker,
-					bestResultsToConsider=(category.bestResultsToConsider or model.bestResultsToConsider),
-					mustHaveCompleted=(category.mustHaveCompleted or model.mustHaveCompleted),
+					bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider),
+					mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted),
 				)
 				
 				results = filterValidResults( results )
@@ -493,7 +493,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'h2'):
 						write( 'Point Structures' )
 					with tag(html, 'table' ):
-						for ps in pointsStructuresList:
+						for ps in pointStructuresList:
 							with tag(html, 'tr'):
 								for header in [ps.name, 'Races Scored with {}'.format(ps.name)]:
 									with tag(html, 'th'):
@@ -504,7 +504,7 @@ function sortTableId( iTable, iCol ) {
 									write( ps.getHtml() )
 								with tag(html, 'td', {'class': 'topAlign'}):
 									with tag(html, 'ul'):
-										for r in pointsStructures[ps]:
+										for r in pointStructures[ps]:
 											with tag(html, 'li'):
 												write( r.getRaceName() )
 						
@@ -786,8 +786,8 @@ class Results(wx.Panel):
 			self.raceResults,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
-			bestResultsToConsider=(category.bestResultsToConsider or model.bestResultsToConsider),
-			mustHaveCompleted=(category.mustHaveCompleted or model.mustHaveCompleted),
+			bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider),
+			mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted),
 		)
 		
 		results = filterValidResults( results )
@@ -902,8 +902,8 @@ class Results(wx.Panel):
 				raceResults,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
-				bestResultsToConsider=(category.bestResultsToConsider or model.bestResultsToConsider),
-				mustHaveCompleted=(category.mustHaveCompleted or model.mustHaveCompleted),
+				bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider),
+				mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveComplete is not None else  model.mustHaveCompleted),
 			)
 			
 			results = filterValidResults( results )

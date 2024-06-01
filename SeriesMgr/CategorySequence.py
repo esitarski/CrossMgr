@@ -12,7 +12,7 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 class CategorySequence(wx.Panel):
 	HeaderNames = ['Category', 'Long Name', 'Indiv Publish', 'Points', 'Consider', 'Must Have Completed', 'Team Publish', 'Team Points', 'Use Nth Result Only', 'Team N']
 	
-	CategoryCol, LongNameCol, PublishCol, PointsCol, BestResultsToConsiderCol, MustHaveCompleted, TeamPublishCol, TeamPointsCol, UseNthScoreCol, TeamNCol = list(range(len(HeaderNames)))
+	CategoryCol, LongNameCol, PublishCol, PointsCol, BestResultsToConsiderCol, MustHaveCompletedCol, TeamPublishCol, TeamPointsCol, UseNthScoreCol, TeamNCol = list(range(len(HeaderNames)))
 
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -37,6 +37,9 @@ class CategorySequence(wx.Panel):
 			self.grid.SetColLabelValue( col, self.HeaderNames[col] )
 		
 		maxOptions = 30
+		self.bestResultsToConsiderChoices = ['', 'All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in range(2,maxOptions+1)]
+		self.mustHaveCompletedChoices = [''] + ['{} {}'.format(i, 'or more Events') for i in range(0,maxOptions+1)]
+
 		for col in range(self.grid.GetNumberCols()):
 			attr = gridlib.GridCellAttr()
 			if col == self.CategoryCol:
@@ -61,14 +64,12 @@ class CategorySequence(wx.Panel):
 				self.teamPointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
 				attr.SetEditor( self.teamPointsChoiceEditor )
 			elif col == self.BestResultsToConsiderCol:
-				self.bestResultsToConsiderChoices = ['All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in range(2,maxOptions+1)]
 				self.bestResultsToConsiderChoiceEditor = gridlib.GridCellChoiceEditor(
 					choices = self.bestResultsToConsiderChoices,
 					allowOthers = False
 				)
 				attr.SetEditor( self.bestResultsToConsiderChoiceEditor )
-			elif col == self.MustHaveCompleted:
-				self.mustHaveCompletedChoices = ['{} {}'.format(i, 'or more Events') for i in range(0,maxOptions+1)]
+			elif col == self.MustHaveCompletedCol:
 				self.mustHaveCompletedChoiceEditor = gridlib.GridCellChoiceEditor(
 					choices = self.mustHaveCompletedChoices,
 					allowOthers = False
@@ -78,8 +79,9 @@ class CategorySequence(wx.Panel):
 			self.grid.SetColAttr( col, attr )
 		
 		self.grid.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
-		self.gridAutoSize()
 		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
+		self.grid.Bind( wx.grid.EVT_GRID_CELL_CHANGING, self.onCellChanged )
+		self.gridAutoSize()
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		sizer.Add( self.alphaSort, 0, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
@@ -116,6 +118,9 @@ class CategorySequence(wx.Panel):
 		self.grid.EnableDragColSize( False )
 		self.Layout()
 		self.Refresh()
+		
+	def onCellChanged( self, event ):
+		wx.CallAfter( self.gridAutoSize )
 	
 	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
@@ -128,21 +133,25 @@ class CategorySequence(wx.Panel):
 				categoryList = model.getCategoriesSorted()
 		
 		Utils.AdjustGridSize( self.grid, len(categoryList) )
+		
 		for row, c in enumerate(categoryList):
 			self.grid.SetCellValue( row, self.CategoryCol, c.name )
 			self.grid.SetCellValue( row, self.LongNameCol, c.longName )
 			self.grid.SetCellValue( row, self.PublishCol, '01'[int(c.publish)] )
+			self.grid.SetCellValue( row, self.PointsCol, c.pointStructure.name if c.pointStructure else '' )
+			self.grid.SetCellValue( row, self.BestResultsToConsiderCol, self.bestResultsToConsiderChoices[c.bestResultsToConsider+1 if c.bestResultsToConsider is not None else 0] )
+			self.grid.SetCellValue( row, self.MustHaveCompletedCol, self.mustHaveCompletedChoices[c.mustHaveCompleted+1 if c.mustHaveCompleted is not None else 0] )
+
+			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
+			self.grid.SetCellValue( row, self.TeamPointsCol, c.teamPointStructure.name if c.teamPointStructure else '' )
 			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
 			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
-			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
-			self.grid.SetCellValue( row, self.PointsCol, c.pointStructure.name if c.pointStructure else '' )
-			self.grid.SetCellValue( row, self.TeamPointsCol, c.teamPointStructure.name if c.teamPointStructure else '' )
 
 		wx.CallAfter( self.gridAutoSize )
 	
 	def getCategoryList( self ):
 		model = SeriesModel.model
-		pointsStructureByName = {p.name:p for p in model.pointsStructures}
+		pointsStructureByName = {p.name:p for p in model.pointStructures}
 		
 		Category = SeriesModel.Category
 		gc = self.grid.GetCellValue
@@ -155,8 +164,8 @@ class CategorySequence(wx.Panel):
 				
 				publish=gc(row, self.PublishCol) == '1',
 				pointStructure = pointsStructureByName.get(gc(row, self.PointsCol), None),
-				bestResultsToConsider = self.bestResultsToConsiderChoices.index(gc(row, self.BestResultsToConsiderCol)),
-				mustHaveCompleted = self.mustHaveCompletedChoices.index(gc(row, self.MustHaveCompletedCol)),
+				bestResultsToConsider = (self.bestResultsToConsiderChoices.index(gc(row, self.BestResultsToConsiderCol)) - 1) if gc(row, self.BestResultsToConsiderCol) else None,
+				mustHaveCompleted = (self.mustHaveCompletedChoices.index(gc(row, self.MustHaveCompletedCol)) - 1) if gc(row, self.MustHaveCompletedCol) else None,
 
 				teamPublish=gc(row, self.TeamPublishCol) == '1',
 				teamPointStructure = pointsStructureByName.get(gc(row, self.TeamPointsCol), None),
