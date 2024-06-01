@@ -121,8 +121,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
 	scoreByTrueSkill = model.scoreByTrueSkill
-	bestResultsToConsider = model.bestResultsToConsider
-	mustHaveCompleted = model.mustHaveCompleted
 	hasUpgrades = model.upgradePaths
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults()
@@ -132,8 +130,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	categoryDisplayNames = model.getCategoryDisplayNames()
 	
-	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-
 	if not seriesFileName:
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
 	title = os.path.basename( seriesFileName )
@@ -320,13 +316,18 @@ function sortTableId( iTable, iCol ) {
 			
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
 			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
+			
 			for iTable, categoryName in enumerate(categoryNames):
+				
+				category = model.categories[categoryName]				
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
 					raceResults,
-					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
-					numPlacesTieBreaker=model.numPlacesTieBreaker )
+					numPlacesTieBreaker=model.numPlacesTieBreaker,
+					bestResultsToConsider=(category.bestResultsToConsider or model.bestResultsToConsider),
+					mustHaveCompleted=(category.mustHaveCompleted or model.mustHaveCompleted),
+				)
 				
 				results = filterValidResults( results )
 				headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
@@ -779,14 +780,14 @@ class Results(wx.Panel):
 		if not categoryName:
 			return
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-
+		category = model.categories[categoryName]				
 		results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 			categoryName,
 			self.raceResults,
-			pointsForRank,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
+			bestResultsToConsider=(category.bestResultsToConsider or model.bestResultsToConsider),
+			mustHaveCompleted=(category.mustHaveCompleted or model.mustHaveCompleted),
 		)
 		
 		results = filterValidResults( results )
@@ -892,17 +893,17 @@ class Results(wx.Panel):
 		if not categoryNames:
 			return
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-		
 		wb = xlwt.Workbook()
 		
 		for categoryName in categoryNames:
+			category = model.categories[categoryName]				
 			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 				categoryName,
-				self.raceResults,
-				pointsForRank,
+				raceResults,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
+				bestResultsToConsider=(category.bestResultsToConsider or model.bestResultsToConsider),
+				mustHaveCompleted=(category.mustHaveCompleted or model.mustHaveCompleted),
 			)
 			
 			results = filterValidResults( results )

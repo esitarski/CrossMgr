@@ -196,19 +196,36 @@ class Category:
 	name = ''
 	longName = ''
 	iSequence = 0
-	publish = False
-	teamN = 3
-	useNthScore = False
-	teamPublish = False
+
+	publish = False					# If true, generate results for this category.
+	pointStructure = None			# Override the pointStructure for this category.  If undefined, use the one from the Event.
+	bestResultsToConsider = None	# Override the bestResultsToConsider for this category.
+	mustHaveCompleted = None		# Override the mustHaveCompleted for this category.
 	
-	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore=False, teamPublish=True, longName='' ):
+	teamPublish = False				# If true, generate team results for this category.
+	teamPointStructure = None		# Override the teamPointStructure for this category.  If undefined, use the one from the Event.
+	useNthScore = False				# Flag indicating to use top Nth scoring team member.
+	teamN = 3						# Top N team members to use.
+	
+	def __init__( self,
+			name, longName='',
+			iSequence=0,
+			publish=True, pointStructure=None, bestResultsToConsider=None, mustHaveCompleted=None,
+			teamPublish=True, teamPointStructure=None, useNthScore=False, teamN=3,
+		):
 		self.name = name
 		self.longName = longName
 		self.iSequence = iSequence
+		
 		self.publish = publish
-		self.teamN = teamN
-		self.useNthScore = useNthScore
+		self.pointStructure = pointStructure
+		self.bestResultsToConsider = bestResultsToConsider
+		self.mustHaveCompleted = mustHaveCompleted
+
 		self.teamPublish = teamPublish
+		self.teamPointStructure = teamPointStructure
+		self.useNthScore = useNthScore
+		self.teamN = teamN		
 		
 	def __eq__( self, other ):
 		return self.__dict__ == other.__dict__
@@ -288,6 +305,8 @@ class SeriesModel:
 	GreenTheme, RedTheme = list( range(2) )
 	colorTheme = GreenTheme
 	
+	teamResultsNames = []
+	
 	@property
 	def scoreByPoints( self ):
 		return not (self.scoreByTime or self.scoreByPercent or self.scoreByTrueSkill)
@@ -299,7 +318,9 @@ class SeriesModel:
 		self.numPlacesTieBreaker = 5
 		self.errors = []
 		self.changed = False
-		imageResource = None
+		self.imageResource = None
+		self.colorTheme = self.GreenTheme
+		self.teamResultsList = []
 		
 	def postReadFix( self ):
 		memoize.clear()
@@ -311,7 +332,8 @@ class SeriesModel:
 			for p in self.pointStructures]
 		if oldPointsList == pointsList:
 			return
-			
+		
+		# Create new points structures, and create a mapping from the old names to the new names.
 		newPointStructures = []
 		oldToNewName = {}
 		newPS = {}
@@ -330,11 +352,16 @@ class SeriesModel:
 			
 		if not newPointStructures:
 			newPointStructures = [PointStructure(self.DefaultPointStructureName)]
-			
+		
+		# Correct the pointStructure pointers to point to the new structures.
 		for r in self.races:
 			r.pointStructure = newPS.get( oldToNewName.get(r.pointStructure.name, ''), newPointStructures[0] )
 			if r.teamPointStructure:
 				r.teamPointStructure = newPS.get( oldToNewName.get(r.teamPointStructure.name, ''), None )
+			
+		for c in self.categoryList:
+			if c.pointsStructure:
+				c.pointsStructure = newPS.get( oldToNewName.get(c.pointStructure.name, ''), None )
 			
 		self.pointStructures = newPointStructures
 		self.setChanged()
@@ -623,6 +650,16 @@ class SeriesModel:
 		for r in self.races:
 			names.add( os.path.splitext(os.path.basename(r.fileName))[0] )
 		return sorted( names )
+		
+	def setTeamResultsNames( self, teamResultsNames ):
+		teamResultsNames = sorted( set(trn.strip() for trn in teamResultsNames) )
+		teamResultsNames = [trn for trn in teamResultsNames if trn]
+		teamResultsNames.sort()
+		if teamResultsNames != self.teamResultsNames:
+			self.teamResultsNames = teamResultsNames
+			self.setChanged()
+			return True
+		return False
 		
 	def getMetaTags( self ):
 		return (

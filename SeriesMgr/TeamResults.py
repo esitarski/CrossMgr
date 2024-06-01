@@ -109,8 +109,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	categoryDisplayNames = model.getCategoryDisplayNames()
 
 	HeaderNames = getHeaderNames()
-	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-	teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 
 	if not seriesFileName:
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
@@ -296,7 +294,6 @@ function sortTableId( iTable, iCol ) {
 				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
 					raceResults,
-					pointsForRank,
 					teamPointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker )
@@ -653,14 +650,9 @@ class TeamResults(wx.Panel):
 		
 		self.grid.ClearGrid()
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
-
 		results, races = GetModelInfo.GetCategoryResultsTeam(
 			categoryName if categoryName != '--Combined--' else '',
 			self.raceResults,
-			pointsForRank,
-			teamPointsForRank,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)

@@ -38,6 +38,7 @@ from Points				import Points
 from Upgrades			import Upgrades
 from Results			import Results
 from TeamResults		import TeamResults
+from TeamResultsNames	import TeamResultsNames
 from CategorySequence	import CategorySequence
 from Aliases			import Aliases
 from AliasesLicense		import AliasesLicense
@@ -287,6 +288,7 @@ class MainWin( wx.Frame ):
 			[ 'aliases',		Aliases,			'Name Aliases' ],
 			[ 'licenseAliases',	AliasesLicense,		'License Aliases' ],
 			[ 'teamAliases',	AliasesTeam,		'Team Aliases' ],
+			[ 'teamResultsNames', TeamResultsNames, 'Team Results Names' ],
 			[ 'options',		Options,			'Options' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]

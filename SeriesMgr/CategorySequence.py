@@ -10,12 +10,9 @@ import Utils
 from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class CategorySequence(wx.Panel):
-	CategoryCol = 0
-	LongNameCol = 1
-	PublishCol = 2
-	TeamNCol = 3
-	UseNthScoreCol = 4
-	TeamPublishCol = 5
+	HeaderNames = ['Category', 'Long Name', 'Indiv Publish', 'Points', 'Consider', 'Must Have Completed', 'Team Publish', 'Team Points', 'Use Nth Result Only', 'Team N']
+	
+	CategoryCol, LongNameCol, PublishCol, PointsCol, BestResultsToConsiderCol, MustHaveCompleted, TeamPublishCol, TeamPointsCol, UseNthScoreCol, TeamNCol = list(range(len(HeaderNames)))
 
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -27,18 +24,19 @@ class CategorySequence(wx.Panel):
 				_("Change the Category order by dragging-and-dropping the first grey column in the table."),
 				_("If 'Use Nth Result Only' is True, 'Team N' specifies the top Nth rider's time to use for the team's time (eg. Team TT, scored on 3rd rider's result)"),
 				_("If 'Use Nth Result Only' if False, 'Team N' specifies the top riders' times to be totaled for the team result (eg. Team Stage Finish, scored on sum of top 3 results for each team)."),
+				_("If 'Points', 'TeamPoints' or 'Must Have Completed' are configured, they will override the values specified for the Races."),
 			] )
 		)
 		
-		self.headerNames = ['Category', 'Long Name', 'Ind. Publish', 'Team N', 'Use Nth Result Only', 'Team Publish']
 		
 		self.grid = ReorderableGrid( self, style = wx.BORDER_SUNKEN )
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
-		self.grid.CreateGrid( 0, len(self.headerNames) )
+		self.grid.CreateGrid( 0, len(self.HeaderNames) )
 		for col in range(self.grid.GetNumberCols()):
-			self.grid.SetColLabelValue( col, self.headerNames[col] )
+			self.grid.SetColLabelValue( col, self.HeaderNames[col] )
 		
+		maxOptions = 30
 		for col in range(self.grid.GetNumberCols()):
 			attr = gridlib.GridCellAttr()
 			if col == self.CategoryCol:
@@ -55,11 +53,33 @@ class CategorySequence(wx.Panel):
 				editor = gridlib.GridCellNumberEditor()
 				attr.SetEditor( editor )
 				attr.SetRenderer( gridlib.GridCellNumberRenderer() )
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )				
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+			elif col == self.PointsCol:
+				self.pointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
+				attr.SetEditor( self.pointsChoiceEditor )
+			elif col == self.TeamPointsCol:
+				self.teamPointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
+				attr.SetEditor( self.teamPointsChoiceEditor )
+			elif col == self.BestResultsToConsiderCol:
+				self.bestResultsToConsiderChoices = ['All Results', 'Best Result Only'] + ['{} {} {}'.format('Best', i, 'Results Only') for i in range(2,maxOptions+1)]
+				self.bestResultsToConsiderChoiceEditor = gridlib.GridCellChoiceEditor(
+					choices = self.bestResultsToConsiderChoices,
+					allowOthers = False
+				)
+				attr.SetEditor( self.bestResultsToConsiderChoiceEditor )
+			elif col == self.MustHaveCompleted:
+				self.mustHaveCompletedChoices = ['{} {}'.format(i, 'or more Events') for i in range(0,maxOptions+1)]
+				self.mustHaveCompletedChoiceEditor = gridlib.GridCellChoiceEditor(
+					choices = self.mustHaveCompletedChoices,
+					allowOthers = False
+				)
+				attr.SetEditor( self.mustHaveCompletedChoiceEditor )
 
 			self.grid.SetColAttr( col, attr )
 		
-		self.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
+		self.grid.Bind( gridlib.EVT_GRID_CELL_LEFT_CLICK, self.onGridLeftClick )
+		self.gridAutoSize()
+		self.grid.Bind( wx.grid.EVT_GRID_EDITOR_CREATED, self.onGridEditorCreated )
 		
 		sizer = wx.BoxSizer( wx.VERTICAL )
 		sizer.Add( self.alphaSort, 0, flag=wx.ALL|wx.ALIGN_RIGHT, border=4 )
@@ -68,7 +88,7 @@ class CategorySequence(wx.Panel):
 		self.SetSizer( sizer )
 
 	def onGridLeftClick( self, event ):
-		if event.GetCol() in (self.PublishCol, self.UseNthScoreCol, self.TeamPublishCol):
+		if event.GetCol() in (self.PublishCol, self.TeamPublishCol, self.UseNthScoreCol):
 			r, c = event.GetRow(), event.GetCol()
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
 		event.Skip()
@@ -76,6 +96,20 @@ class CategorySequence(wx.Panel):
 	def getGrid( self ):
 		return self.grid
 	
+	def updatePointsChoices( self ):
+		try:
+			comboBox = self.comboBox
+		except AttributeError:
+			return
+		# Create a list of points structure with a blank default.
+		comboBox.SetItems( [''] + [p.name for p in SeriesModel.model.pointStructures] )
+	
+	def onGridEditorCreated(self, event):
+		if event.GetCol() in (self.PointsCol, self.TeamPointsCol):
+			self.comboBox = event.GetControl()
+			self.updatePointsChoices()
+		event.Skip()
+
 	def gridAutoSize( self ):
 		self.grid.AutoSize()
 		self.grid.EnableDragGridSize( False )
@@ -101,21 +135,33 @@ class CategorySequence(wx.Panel):
 			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
 			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
 			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
+			self.grid.SetCellValue( row, self.PointsCol, c.pointStructure.name if c.pointStructure else '' )
+			self.grid.SetCellValue( row, self.TeamPointsCol, c.teamPointStructure.name if c.teamPointStructure else '' )
+
 		wx.CallAfter( self.gridAutoSize )
 	
 	def getCategoryList( self ):
+		model = SeriesModel.model
+		pointsStructureByName = {p.name:p for p in model.pointsStructures}
+		
 		Category = SeriesModel.Category
 		gc = self.grid.GetCellValue
 		categories = []
 		for row in range(self.grid.GetNumberRows()):
 			c = Category(
-				name=gc(row, self.CategoryCol).strip(),
+				name = gc(row, self.CategoryCol).strip(),
 				longName = gc(row, self.LongNameCol).strip(),
 				iSequence=row,
+				
 				publish=gc(row, self.PublishCol) == '1',
-				teamN=max(1, int(gc(row, self.TeamNCol))),
+				pointStructure = pointsStructureByName.get(gc(row, self.PointsCol), None),
+				bestResultsToConsider = self.bestResultsToConsiderChoices.index(gc(row, self.BestResultsToConsiderCol)),
+				mustHaveCompleted = self.mustHaveCompletedChoices.index(gc(row, self.MustHaveCompletedCol)),
+
+				teamPublish=gc(row, self.TeamPublishCol) == '1',
+				teamPointStructure = pointsStructureByName.get(gc(row, self.TeamPointsCol), None),
 				useNthScore=gc(row, self.UseNthScoreCol) == '1',
-				teamPublish=gc(row, self.TeamPublishCol) == '1'
+				teamN=max(1, int(gc(row, self.TeamNCol))),
 			)
 			categories.append( c )
 		return categories

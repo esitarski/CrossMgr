@@ -10,7 +10,7 @@ from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
-	headerNames = ['Race', 'Grade', 'Points', 'Team Pts', 'Race File']
+	headerNames = ['Race', 'Grade', 'Default Points', 'Default Team Pts', 'Race File']
 	
 	RaceCol = 0
 	GradeCol = 1
@@ -33,10 +33,11 @@ class Races(wx.Panel):
 				_("Make sure the races are in chronological order."),
 				_("You can change the order by dragging-and-dropping the first grey column in the table."),
 				'',
-				_("Configure the Points Structures or Time Scoring parameters on the Scoring Criteria page."),
+				_("You can configure the Point Structures and Team Scoring parameters on the Scoring Criteria page."),
 				_("Each race can have its own Points Structure.  For example, you could create 'Double Points' for one race."),
+				_("You can also configure Point Structures by Category, which will override the structures defined by race."),
 				'',
-				_("Race results are shown Last-to-First in the output by default."),
+				_("Results are shown Last-to-First in the output by default."),
 				_("You can change this on the Options page."),
 			] )
 		)
