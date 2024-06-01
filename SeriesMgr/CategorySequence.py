@@ -144,8 +144,8 @@ class CategorySequence(wx.Panel):
 
 			self.grid.SetCellValue( row, self.TeamPublishCol, '01'[int(c.teamPublish)] )
 			self.grid.SetCellValue( row, self.TeamPointsCol, c.teamPointStructure.name if c.teamPointStructure else '' )
-			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
 			self.grid.SetCellValue( row, self.UseNthScoreCol, '01'[int(c.useNthScore)] )
+			self.grid.SetCellValue( row, self.TeamNCol, '{}'.format(c.teamN) )
 
 		wx.CallAfter( self.gridAutoSize )
 	
@@ -158,8 +158,8 @@ class CategorySequence(wx.Panel):
 		categories = []
 		for row in range(self.grid.GetNumberRows()):
 			c = Category(
-				name = gc(row, self.CategoryCol).strip(),
-				longName = gc(row, self.LongNameCol).strip(),
+				name=gc(row, self.CategoryCol).strip(),
+				longName=gc(row, self.LongNameCol).strip(),
 				iSequence=row,
 				
 				publish=gc(row, self.PublishCol) == '1',
