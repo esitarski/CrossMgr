@@ -736,7 +736,14 @@ table.results tr td.fastest{
 				break
 		else:
 			return False
-			
+		
+		# Check if all the race files are rooted from the same folder as the .smn file.
+		path = os.path.dirname(self.fileName)
+		if model.setRootFolderWillSucceed( path ):
+			model.setRootFolder( path )
+			return True
+		
+		# Otherwise, ask the user where the Root folder is.
 		if not Utils.MessageOKCancel(
 				self,
 				'Cannot find Race File:\n\n    "{}"\nin    "{}"\n\nSet new Root Folder?'.format(fname, dirname),
@@ -746,7 +753,7 @@ table.results tr td.fastest{
 		
 		with wx.DirDialog(
 				self,
-				message='Select Root Folder where Race Files can be Found under:',
+				message='Select Root Folder where all Race Files can be found:',
 				defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
 			) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:

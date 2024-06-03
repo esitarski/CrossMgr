@@ -598,7 +598,14 @@ class SeriesModel:
 			return self.categories[categoryName].useNthScore
 		except KeyError:
 			return False
-			
+	
+	def setRootFolderWillSucceed( self, path ):
+		ft = FileTrie()
+		for top, directories, files in os.walk(path):
+			for f in files:
+				ft.add( os.path.join(top, f) )				
+		return all( ft.best_match( r.fileName ) for r in self.races )
+	
 	def setRootFolder( self, path ):
 		ft = FileTrie()
 		for top, directories, files in os.walk(path):
