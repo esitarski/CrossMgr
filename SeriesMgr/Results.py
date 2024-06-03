@@ -320,13 +320,16 @@ function sortTableId( iTable, iCol ) {
 			for iTable, categoryName in enumerate(categoryNames):
 				
 				category = model.categories[categoryName]				
+				bestResultsToConsider = (category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
+				mustHaveCompleted = (category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted)
+				
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
 					raceResults,
 					useMostEventsCompleted=model.useMostEventsCompleted,
 					numPlacesTieBreaker=model.numPlacesTieBreaker,
-					bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider),
-					mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted),
+					bestResultsToConsider=bestResultsToConsider,
+					mustHaveCompleted=mustHaveCompleted,
 				)
 				
 				results = filterValidResults( results )
@@ -437,7 +440,7 @@ function sortTableId( iTable, iCol ) {
 									write( '+N' )
 							write( ' - {}'.format( 'Bonus Points added to Points for Place.') )
 					
-			if bestResultsToConsider > 0 and not scoreByTrueSkill:
+			if bestResultsToConsider is not None and bestResultsToConsider > 0 and not scoreByTrueSkill:
 				with tag(html, 'p', {'class':'noprint'}):
 					with tag(html, 'strong'):
 						write( '**' )
@@ -781,13 +784,16 @@ class Results(wx.Panel):
 			return
 			
 		category = model.categories[categoryName]				
+		bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
+		mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted)
+
 		results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 			categoryName,
 			self.raceResults,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
-			bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider),
-			mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted),
+			bestResultsToConsider=bestResultsToConsider,
+			mustHaveCompleted=mustHaveCompleted,
 		)
 		
 		results = filterValidResults( results )
@@ -897,13 +903,15 @@ class Results(wx.Panel):
 		
 		for categoryName in categoryNames:
 			category = model.categories[categoryName]				
+			bestResultsToConsider = (category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
+			mustHaveCompleted = (category.mustHaveCompleted if category.mustHaveComplete is not None else  model.mustHaveCompleted)
 			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 				categoryName,
 				raceResults,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
-				bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider),
-				mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveComplete is not None else  model.mustHaveCompleted),
+				bestResultsToConsider=bestResultsToConsider,
+				mustHaveCompleted=mustHaveCompleted,
 			)
 			
 			results = filterValidResults( results )

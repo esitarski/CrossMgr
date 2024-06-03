@@ -122,7 +122,6 @@ using First and Last Name.'''
 	
 	def commit( self ):
 		model = SeriesModel.model
-		
 		av = (
 			('showLastToFirst',		self.showLastToFirst.GetValue()),
 			('riderKey',			self.riderKey.GetSelection()),

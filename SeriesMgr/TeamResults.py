@@ -290,12 +290,13 @@ function sortTableId( iTable, iCol ) {
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
 			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
 			for iTable, categoryName in enumerate(categoryNames):
+				
 				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
 					raceResults,
-					teamPointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
-					numPlacesTieBreaker=model.numPlacesTieBreaker )
+					numPlacesTieBreaker=model.numPlacesTieBreaker
+				)
 				
 				results = filterResults( results, scoreByPoints, scoreByTime )
 				
@@ -754,8 +755,6 @@ class TeamResults(wx.Panel):
 			results, races = GetModelInfo.GetCategoryResultsTeam(
 				categoryName,
 				self.raceResults,
-				pointsForRank,
-				teamPointsForRank,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)

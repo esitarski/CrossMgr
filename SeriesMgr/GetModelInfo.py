@@ -168,7 +168,7 @@ class RaceResult:
 		return ', '.join( [name for name in [self.lastName.upper(), self.firstName] if name] )
 		
 	def __repr__( self ):
-		return ', '.join( '{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
+		return '\n({})'.format( ', '.join( '"{}"'.format(p) for p in (self.raceName, self.team, self.full_name, self.categoryName) ) )
 
 def ExtractRaceResults( r, seriesModel ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
@@ -764,7 +764,7 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 	else: # Score by points.
 		# Get the individual results for each rider, and the total points.
 		
-		pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }	
+		pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }
 		def getPointStructure( raceFileName, categoryName ):
 			return model.categories[categoryName].pointStructure or pointStructureFromRaceFileName[raceFileName]
 					
@@ -863,6 +863,7 @@ def GetAllCategoryResultsTeam( raceResults ):
 	# Get all races for this category.
 	raceNameSequence = {rr.raceName:rr.raceInSeries.iSequence for rr in raceResults}
 	raceNames = sorted( set( rr.raceName for rr in raceResults ), key=lambda name: raceNameSequence[name], reverse=True )
+	
 	raceNameIndex = { rn:i for i, rn in enumerate(raceNames) }
 	raceNameToRaceTuple = {}
 	for rr in raceResults:

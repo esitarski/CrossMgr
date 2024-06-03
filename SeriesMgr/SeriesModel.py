@@ -709,11 +709,17 @@ class SeriesModel:
 		for i, r in enumerate(self.races):
 			r.iSequence = i
 			raceFromFileName[r.fileName] = r
-
+			
+		# Try to find missing teams based on the uciid.
+		# This defaults to using the most recent team.
+		teamFromUCIID = { rr.uci_id:rr.team for rr in raceResults if rr.uci_id and rr.team }
+		
 		# Apply all aliases.
 		for rr in raceResults:
-			rr.firstName, rr.lastName = self.getReferenceName( rr.firstName, rr.lastName )
+			rr.lastName, rr.firstName = self.getReferenceName( rr.lastName, rr.firstName )
 			rr.license = self.getReferenceLicense( rr.license )
+			if rr.uci_id and not rr.team:	# If we are missing the team, try to use a previously used team.
+				rr.team = teamFromUCIID.get( rr.uci_id, '' )
 			rr.team = self.getReferenceTeam( rr.team )
 			rr.raceFileName = rr.raceInSeries.fileName
 			rr.raceInSeries = raceFromFileName.get( rr.raceInSeries.fileName, rr.raceInSeries )	# Normalize the deepcopied raceInSeries.
@@ -721,7 +727,7 @@ class SeriesModel:
 		if adjustForUpgrades:
 			GetModelInfo.AdjustForUpgrades( raceResults )
 			
-		# Filter by requested races.
+		# Filter by configured races.
 		rt = { r.fileName for r in self.races
 				if r.resultsType == Race.IndividualAndTeamResults or
 					(isIndividual and r.resultsType == Race.IndividualResultsOnly) or
