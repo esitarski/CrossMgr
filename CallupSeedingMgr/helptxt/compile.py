@@ -44,7 +44,7 @@ def CompileHelp( dir = '.' ):
 
 		contentDiv = '<div class="content">'
 		
-		with open('Links.md') as f:
+		with open('Links.md', encoding='utf8') as f:
 			links = f.read()
 			
 		for fname in glob.glob("./*.md"):

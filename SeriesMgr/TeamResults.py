@@ -1,14 +1,20 @@
+import re
 import wx
 import wx.grid as gridlib
 
-import os
 import io
+import os
 from html import escape
 from urllib.parse import quote
 import sys
 import urllib
 import base64
 import datetime
+
+import xlwt
+import platform
+import webbrowser
+import subprocess
 
 import Utils
 import SeriesModel
@@ -17,13 +23,7 @@ from ReorderableGrid import ReorderableGrid
 from FitSheetWrapper import FitSheetWrapper
 import FtpWriteFile
 from ExportGrid import tag
-
-import xlwt
-import io
-import re
-import webbrowser
-import subprocess
-import platform
+from Results import getHeaderGraphicBase64, getFaviconBase64
 
 reNoDigits = re.compile( '[^0-9]' )
 
@@ -64,21 +64,12 @@ def filterResults( results, scoreByPoints, scoreByTime ):
 		return [rr for rr in results if toSeconds(rr[1]) > 0.0]
 	return []
 
-def getHeaderGraphicBase64():
-	if Utils.mainWin:
-		b64 = Utils.mainWin.getGraphicBase64()
-		if b64:
-			return b64
-	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
-	with io.open(graphicFName, 'rb') as f:
-		return 'data:image/png;base64,{}'.format(base64.standard_b64encode(f.read()))
-
 def formatTeamResults( scoreByPoints, rt ):
 	if scoreByPoints:
 		# The first value is the team score.  Subsequent values are the individual ranks.
 		if not rt[0]:
 			return '';
-		return '{} ({})'.format(rt[0], Utils.ordinal(rt[1]))
+		return '{}'.format(rt[0])
 	else:
 		rt = [r for r in rt if r.time]
 		if not rt:
@@ -99,36 +90,42 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByPoints = model.scoreByPoints
 	scoreByTime = model.scoreByTime
-	bestResultsToConsider = model.bestResultsToConsider
 	mustHaveCompleted = model.mustHaveCompleted
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
+	
+	combinedLabel = 'Combined/Combinées'
 	
 	categoryNames = model.getCategoryNamesSortedTeamPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
 	
+	if model.teamResultsOption == SeriesModel.SeriesModel.AllTeamResults:
+		categoryNames = categoryNames + ['']
+	elif model.teamResultsOption == SeriesModel.SeriesModel.CombinedTeamResultsOnly:
+		categoryNames = ['']
+	
+	categoryDisplayNames = model.getCategoryDisplayNames()
+
 	HeaderNames = getHeaderNames()
-	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-	teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
 
 	if not seriesFileName:
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
 	title = os.path.basename( seriesFileName ) + ' Team Results'
 	
-	pointsStructures = {}
-	pointsStructuresList = []
+	pointStructures = {}
+	pointStructuresList = []
 	for race in model.races:
-		if race.pointStructure not in pointsStructures:
-			pointsStructures[race.pointStructure] = []
-			pointsStructuresList.append( race.pointStructure )
-		pointsStructures[race.pointStructure].append( race )
+		if race.pointStructure not in pointStructures:
+			pointStructures[race.pointStructure] = []
+			pointStructuresList.append( race.pointStructure )
+		pointStructures[race.pointStructure].append( race )
 	
-	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
 	def write( s ):
 		html.write( '{}'.format(s) )
-	
+		
 	with tag(html, 'html'):
 		with tag(html, 'head'):
 			with tag(html, 'title'):
@@ -138,185 +135,19 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 										copyright="Edward Sitarski, 2013-{}".format(datetime.datetime.now().strftime('%Y')),
 										generator="SeriesMgr")):
 				pass
+			with tag(html, 'link', dict(rel="icon", type="image/png", href=getFaviconBase64())):
+				pass
 			with tag(html, 'style', dict( type="text/css")):
-				write( '''
-body{ font-family: sans-serif; }
-
-h1{ font-size: 250%; }
-h2{ font-size: 200%; }
-
-#idRaceName {
-	font-size: 200%;
-	font-weight: bold;
-}
-#idImgHeader { box-shadow: 4px 4px 4px #888888; }
-.smallfont { font-size: 80%; }
-.bigfont { font-size: 120%; }
-.hidden { display: none; }
-
-#buttongroup {
-	margin:4px;   
-	float:left;
-}
-
-#buttongroup label {
-	float:left;
-	margin:4px;
-	background-color:#EFEFEF;
-	border-radius:4px;
-	border:1px solid #D0D0D0;
-	overflow:auto;
-	cursor: pointer;
-}
-
-#buttongroup label span {
-	text-align:center;
-	padding:8px 8px;
-	display:block;
-}
-
-#buttongroup label input {
-	position:absolute;
-	top:-20px;
-}
-
-#buttongroup input:checked + span {
-	background-color:#404040;
-	color:#F7F7F7;
-}
-
-#buttongroup .yellow {
-	background-color:#FFCC00;
-	color:#333;
-}
-
-#buttongroup .blue {
-	background-color:#00BFFF;
-	color:#333;
-}
-
-#buttongroup .pink {
-	background-color:#FF99FF;
-	color:#333;
-}
-
-#buttongroup .green {
-	background-color:#7FE57F;
-	color:#333;
-}
-#buttongroup .purple {
-	background-color:#B399FF;
-	color:#333;
-}
-
-table.results {
-	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
-	border-collapse:collapse;
-}
-table.results td, table.results th {
-	font-size:1em;
-	padding:3px 7px 2px 7px;
-	text-align: left;
-}
-table.results th {
-	font-size:1.1em;
-	text-align:left;
-	padding-top:5px;
-	padding-bottom:4px;
-	background-color:#7FE57F;
-	color:#000000;
-	vertical-align:bottom;
-}
-table.results tr.odd {
-	color:#000000;
-	background-color:#EAF2D3;
-}
-
-.smallFont {
-	font-size: 75%;
-}
-
-table.results td.leftBorder, table.results th.leftBorder
-{
-	border-left:1px solid #98bf21;
-}
-
-table.results tr:hover
-{
-	color:#000000;
-	background-color:#FFFFCC;
-}
-table.results tr.odd:hover
-{
-	color:#000000;
-	background-color:#FFFFCC;
-}
-
-table.results td.colSelect
-{
-	color:#000000;
-	background-color:#FFFFCC;
-}}
-
-table.results td {
-	border-top:1px solid #98bf21;
-}
-
-table.results td.noborder {
-	border-top:0px solid #98bf21;
-}
-
-table.results td.rightAlign, table.results th.rightAlign {
-	text-align:right;
-}
-
-table.results td.leftAlign, table.results th.leftAlign {
-	text-align:left;
-}
-
-.topAlign {
-	vertical-align:top;
-}
-
-table.results th.centerAlign, table.results td.centerAlign {
-	text-align:center;
-}
-
-.ignored {
-	color: #999;
-	font-style: italic;
-}
-
-table.points tr.odd {
-	color:#000000;
-	background-color:#EAF2D3;
-}
-
-.rank {
-	color: #999;
-	font-style: italic;
-}
-
-.points-cell {
-	text-align: right;
-	padding:3px 7px 2px 7px;
-}
-
-hr { clear: both; }
-
-@media print {
-	.noprint { display: none; }
-	.title { page-break-after: avoid; }
-}
-''')
+				with open( os.path.join(Utils.getImageFolder(),('green-theme.css','red-theme.css')[model.colorTheme]), encoding='utf8' ) as fs:
+					write( fs.read() )
 
 			with tag(html, 'script', dict( type="text/javascript")):
 				write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
 				write( '''
 function removeClass( classStr, oldClass ) {
-	var classes = classStr.split( ' ' );
-	var ret = [];
-	for( var i = 0; i < classes.length; ++i ) {
+	let classes = classStr.split( ' ' );
+	let ret = [];
+	for( let i = 0; i < classes.length; ++i ) {
 		if( classes[i] != oldClass )
 			ret.push( classes[i] );
 	}
@@ -328,8 +159,8 @@ function addClass( classStr, newClass ) {
 }
 
 function selectCategory( iCat ) {
-	for( var i = 0; i < catMax; ++i ) {
-		var e = document.getElementById('catContent' + i);
+	for( let i = 0; i < catMax; ++i ) {
+		let e = document.getElementById('catContent' + i);
 		if( i == iCat || iCat < 0 )
 			e.className = removeClass(e.className, 'hidden');
 		else
@@ -338,45 +169,45 @@ function selectCategory( iCat ) {
 }
 
 function sortTable( table, col, reverse ) {
-	var tb = table.tBodies[0];
-	var tr = Array.prototype.slice.call(tb.rows, 0);
+	let tb = table.tBodies[0];
+	let tr = Array.prototype.slice.call(tb.rows, 0);
 	
 	var parseRank = function( s ) {
 		if( !s )
 			return 999999;
-		var fields = s.split( '(' );
+		let fields = s.split( '(' );
 		return parseInt( fields[1] );
 	}
 	
-	var cmpPos = function( a, b ) {
+	let cmpPos = function( a, b ) {
 		return parseInt( a.cells[0].textContent.trim() ) - parseInt( b.cells[0].textContent.trim() );
 	};
 	
-	var MakeCmpStable = function( a, b, res ) {
+	let MakeCmpStable = function( a, b, res ) {
 		if( res != 0 )
 			return res;
 		return cmpPos( a, b );
 	};
 	
-	var cmpFunc;
-	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
+	let cmpFunc;
+	if( col == 0 || col == 2 || col == 3 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
-	else if( col >= 6 ) {				// Race Points/Time and Rank
+	else if( col >= 4 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
 			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
 			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
-	else {								// Rider data field.
+	else {								// Team data field.
 		cmpFunc = function( a, b ) {
 		   return MakeCmpStable( a, b, a.cells[col].textContent.trim().localeCompare(b.cells[col].textContent.trim()) );
 		};
 	}
 	tr = tr.sort( function (a, b) { return reverse * cmpFunc(a, b); } );
 	
-	for( var i = 0; i < tr.length; ++i) {
+	for( let i = 0; i < tr.length; ++i) {
 		tr[i].className = (i % 2 == 1) ? addClass(tr[i].className,'odd') : removeClass(tr[i].className,'odd');
 		tb.appendChild( tr[i] );
 	}
@@ -384,18 +215,18 @@ function sortTable( table, col, reverse ) {
 
 var ssPersist = {};
 function sortTableId( iTable, iCol ) {
-	var upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
-	var isNone = 0, isDn = 1, isUp = 2;
-	var id = 'idUpDn' + iTable + '_' + iCol;
-	var upDn = document.getElementById(id);
-	var sortState = ssPersist[id] ? ssPersist[id] : isNone;
-	var table = document.getElementById('idTable' + iTable);
+	let upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
+	let isNone = 0, isDn = 1, isUp = 2;
+	let id = 'idUpDn' + iTable + '_' + iCol;
+	let upDn = document.getElementById(id);
+	let sortState = ssPersist[id] ? ssPersist[id] : isNone;
+	let table = document.getElementById('idTable' + iTable);
 	
 	// Clear all sort states.
-	var row0Len = table.tBodies[0].rows[0].cells.length;
-	for( var i = 0; i < row0Len; ++i ) {
-		var idCur = 'idUpDn' + iTable + '_' + i;
-		var ele = document.getElementById(idCur);
+	let row0Len = table.tBodies[0].rows[0].cells.length;
+	for( let i = 0; i < row0Len; ++i ) {
+		let idCur = 'idUpDn' + iTable + '_' + i;
+		let ele = document.getElementById(idCur);
 		if( ele ) {
 			ele.innerHTML = '';
 			ssPersist[idCur] = isNone;
@@ -433,35 +264,39 @@ function sortTableId( iTable, iCol ) {
 						write( '<img id="idImgHeader" src="{}" />'.format(getHeaderGraphicBase64()) )
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
-							write( escape(model.name + ' Team Results') )
-						if model.organizer:
-							with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
-								write( 'by {}'.format(escape(model.organizer)) )
-			with tag(html, 'div', {'id':'buttongroup', 'class':'noprint'} ):
-				with tag(html, 'label', {'class':'green'} ):
-					with tag(html, 'input', {
-							'type':"radio",
-							'name':"categorySelect",
-							'checked':"true",
-							'onclick':"selectCategory(-1);"} ):
-						with tag(html, 'span'):
-							write( 'All' )
-				for iTable, categoryName in enumerate(categoryNames):
-					with tag(html, 'label', {'class':'green'} ):
-						with tag(html, 'input', {
-								'type':"radio",
-								'name':"categorySelect",
-								'onclick':"selectCategory({});".format(iTable)} ):
-							with tag(html, 'span'):
-								write( '{}'.format(escape(categoryName)) )
+							write( escape(model.name) )
+							
+						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+							write( "Team Series Results/Résultats Cumulatifs de l'Équipe" )
+						
+						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+							if model.organizer:
+								write( '{}'.format(escape(model.organizer)) )
+							with tag(html, 'span', {'style': 'font-size: 60%'}):
+								write( '&nbsp;' * 5 )
+								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
+
+			if (categoryNames[0] and len(categoryNames) > 1) or (not categoryNames[0] and len(categoryNames) > 2):
+				with tag(html, 'h3' ):
+					with tag(html, 'label', {'for':'categoryselect'} ):
+						write( 'Cat' + ':' )
+					with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
+						with tag(html, 'option', {'value':-1} ):
+							write( '---' )
+						for iTable, categoryName in enumerate(categoryNames):
+							with tag(html, 'option', {'value':iTable} ):
+								write( '{}'.format(escape(categoryDisplayNames.get(categoryName,combinedLabel))) )
+			
+			hasPrimePoints = any( rr.primePoints for rr in raceResults )
+			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
 			for iTable, categoryName in enumerate(categoryNames):
+				
 				results, races = GetModelInfo.GetCategoryResultsTeam(
 					categoryName,
 					raceResults,
-					pointsForRank,
-					teamPointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
-					numPlacesTieBreaker=model.numPlacesTieBreaker )
+					numPlacesTieBreaker=model.numPlacesTieBreaker
+				)
 				
 				results = filterResults( results, scoreByPoints, scoreByTime )
 				
@@ -472,7 +307,7 @@ function sortTableId( iTable, iCol ) {
 					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( escape(categoryName) )
+						write( escape(categoryDisplayNames.get(categoryName, combinedLabel)) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -517,13 +352,14 @@ function sortTableId( iTable, iCol ) {
 											write( formatTeamResults(scoreByPoints, rt) )
 										
 			#-----------------------------------------------------------------------------
-			if considerPrimePointsOrTimeBonus:
+			if considerPrimePointsOrTimeBonus and hasPrimePoints:
 				with tag(html, 'p', {'class':'noprint'}):
 					write( 'Bonus Points added to Points for Place.' )
 					
 			#-----------------------------------------------------------------------------
 			if scoreByPoints:
 				with tag(html, 'div', {'class':'noprint'} ):
+					'''
 					with tag(html, 'p'):
 						pass
 					with tag(html, 'hr'):
@@ -532,7 +368,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'h2'):
 						write( 'Point Structures' )
 					with tag(html, 'table' ):
-						for ps in pointsStructuresList:
+						for ps in pointStructuresList:
 							with tag(html, 'tr'):
 								for header in [ps.name, 'Races Scored with {}'.format(ps.name)]:
 									with tag(html, 'th'):
@@ -543,7 +379,7 @@ function sortTableId( iTable, iCol ) {
 									write( ps.getHtml() )
 								with tag(html, 'td', {'class': 'topAlign'}):
 									with tag(html, 'ul'):
-										for r in pointsStructures[ps]:
+										for r in pointStructures[ps]:
 											with tag(html, 'li'):
 												write( r.getRaceName() )
 						
@@ -559,18 +395,21 @@ function sortTableId( iTable, iCol ) {
 						pass
 					with tag(html, 'hr'):
 						pass
+					'''
 						
-					with tag(html, 'h2'):
+					with tag(html, 'h3'):
 						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
-						write( u"If two or more teams are tied on points, the following rules are applied in sequence until the tie is broken:" )
+						write( "If two or more teams are tied on points, the following rules are applied in sequence until the tie is broken:" )
+						
 					isFirst = True
-					tieLink = u"if still a tie, use "
+					tieLink = "if still a tie, use "
 					with tag(html, 'ol'):
+						'''
 						if model.useMostEventsCompleted:
 							with tag(html, 'li'):
-								write( u"{}number of events completed".format( tieLink if not isFirst else "" ) )
+								write( "{}number of events completed".format( tieLink if not isFirst else "" ) )
 								isFirst = False
 						if model.numPlacesTieBreaker != 0:
 							finishOrdinals = [Utils.ordinal(p+1) for p in range(model.numPlacesTieBreaker)]
@@ -579,12 +418,13 @@ function sortTableId( iTable, iCol ) {
 							else:
 								finishStr = ', '.join(finishOrdinals[:-1]) + ' then ' + finishOrdinals[-1]
 							with tag(html, 'li'):
-								write( u"{}number of {} place finishes".format( tieLink if not isFirst else "",
+								write( "{}number of {} place finishes".format( tieLink if not isFirst else "",
 									finishStr,
 								) )
 								isFirst = False
+						'''
 						with tag(html, 'li'):
-							write( u"{}best finish position in most recent event".format(tieLink if not isFirst else "") )
+							write( "{}best result in most recent event".format(tieLink if not isFirst else "") )
 							isFirst = False
 					
 			#-----------------------------------------------------------------------------
@@ -768,6 +608,11 @@ class TeamResults(wx.Panel):
 	def fixCategories( self ):
 		model = SeriesModel.model
 		categoryNames = model.getCategoryNamesSortedTeamPublish()
+		if model.teamResultsOption == SeriesModel.SeriesModel.AllTeamResults:
+			categoryNames = categoryNames + ['--Combined--']
+		elif model.teamResultsOption == SeriesModel.SeriesModel.CombinedTeamResultsOnly:
+			categoryNames = ['--Combined--']
+		
 		lastSelection = self.categoryChoice.GetStringSelection()
 		self.categoryChoice.SetItems( categoryNames )
 		iCurSelection = 0
@@ -800,19 +645,14 @@ class TeamResults(wx.Panel):
 		
 		categoryName = self.categoryChoice.GetStringSelection()
 		if not categoryName or not (scoreByPoints or scoreByTime):
-			Utils.AdjustGridSize( self.grid, rowsRequired=0)
+			Utils.AdjustGridSize( self.grid, rowsRequired=0 )
 			return
 		
 		self.grid.ClearGrid()
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
-
 		results, races = GetModelInfo.GetCategoryResultsTeam(
-			categoryName,
+			categoryName if categoryName != '--Combined--' else '',
 			self.raceResults,
-			pointsForRank,
-			teamPointsForRank,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
 		)
@@ -915,8 +755,6 @@ class TeamResults(wx.Panel):
 			results, races = GetModelInfo.GetCategoryResultsTeam(
 				categoryName,
 				self.raceResults,
-				pointsForRank,
-				teamPointsForRank,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
 			)
@@ -1015,7 +853,7 @@ class TeamResults(wx.Panel):
 		except IOError:
 			return
 		
-		html = io.open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
+		html = open( htmlfileName, 'r', encoding='utf-8', newline='' ).read()
 		with FtpWriteFile.FtpPublishDialog( self, html=html ) as dlg:
 			dlg.ShowModal()
 		self.callPostPublishCmd( htmlfileName )

@@ -4,7 +4,7 @@ import platform
 
 if platform.system() == 'Windows':
 	class filesystem_str( str ):
-		"""Case insensitive with respect to hashes and comparisons """
+		"""Case insensitive with respect to hashes and comparisons. """
 		#--Hash/Compare
 		def __hash__(self):		return hash(self.lower())
 		def __eq__(self, other):
@@ -65,9 +65,9 @@ class FileTrie:
 		path.reverse()
 		
 		if path:
-			if re.match( '^[a-zA-Z]:$', path[0] ):	# Add absolution path to drive.
+			if re.match( '^[a-zA-Z]:$', path[0] ):	# Add absolute path to drive.
 				path[0] += '\\'
-			elif not path[0]:						# Ensure absolution paths are created correctly on linux in python 3.
+			elif not path[0]:						# Ensure absolute paths are created correctly on linux in python 3.
 				path[0] = os.sep
 
 		return os.path.join( *path )

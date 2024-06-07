@@ -13,6 +13,7 @@ import GetModelInfo
 from FileTrie import FileTrie
 from io import StringIO
 import Utils
+from RelativePath import FullToRelative, RelativeToFull
 
 #----------------------------------------------------------------------
 class memoize:
@@ -25,7 +26,7 @@ class memoize:
 	
 	@classmethod
 	def clear( cls ):
-		cls.cache = {}
+		cls.cache.clear()
    
 	def __init__(self, func):
 		# print( 'memoize:', func.__name__ )
@@ -45,21 +46,27 @@ class memoize:
 			return self.func(*args)
 			
 	def __repr__(self):
-		"""Return the function's docstring."""
+		# Return the function's docstring.
 		return self.func.__doc__
 		
 	def __get__(self, obj, objtype):
-		"""Support instance methods."""
+		# Support instance methods.
 		return functools.partial(self.__call__, obj)
 
-def RaceNameFromPath( p ):
-	raceName = os.path.basename( p )
-	raceName = os.path.splitext( raceName )[0]
-	while raceName.endswith('-'):
-		raceName = raceName[:-1]
-	raceName = raceName.replace( '-', ' ' )
-	raceName = raceName.replace( ' ', '-', 2 )
-	return raceName
+def RaceNameFromPath( p, isUCIDataride=False ):
+	if isUCIDataride:
+		folderName = os.path.basename( os.path.dirname(p) )
+		baseFileName = os.path.splitext( os.path.basename(p) )[0]
+		raceName = '/'.join( folderName, baseFileName )
+		return raceName
+	else:
+		raceName = os.path.basename( p )
+		raceName = os.path.splitext( raceName )[0]
+		while raceName.endswith('-'):
+			raceName = raceName[:-1]
+		raceName = raceName.replace( '-', ' ' )
+		raceName = raceName.replace( ' ', '-' )
+		return raceName
 
 class PointStructure:
 
@@ -176,24 +183,49 @@ class Race:
 	def getFileName( self ):
 		return self.fileName
 		
+	def fullToRelative( self, source ):
+		self.fileName = FullToRelative( source, self.fileName )
+		
+	def relativeToFull( self, source ):
+		self.fileName = RelativeToFull( source, self.fileName )
+		
 	def __repr__( self ):
 		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
 
 class Category:
 	name = ''
+	longName = ''
 	iSequence = 0
-	publish = False
-	teamN = 3
-	useNthScore = False
-	teamPublish = False
+
+	publish = False					# If true, generate results for this category.
+	pointStructure = None			# Override the pointStructure for this category.  If undefined, use the one from the Event.
+	bestResultsToConsider = None	# Override the bestResultsToConsider for this category.
+	mustHaveCompleted = None		# Override the mustHaveCompleted for this category.
 	
-	def __init__( self, name, iSequence=0, publish=True, teamN=3, useNthScore=False, teamPublish=True ):
+	teamPublish = False				# If true, generate team results for this category.
+	teamPointStructure = None		# Override the teamPointStructure for this category.  If undefined, use the one from the Event.
+	useNthScore = False				# Flag indicating to use top Nth scoring team member.
+	teamN = 3						# Top N team members to use.
+	
+	def __init__( self,
+			name, longName='',
+			iSequence=0,
+			publish=True, pointStructure=None, bestResultsToConsider=None, mustHaveCompleted=None,
+			teamPublish=True, teamPointStructure=None, useNthScore=False, teamN=3,
+		):
 		self.name = name
+		self.longName = longName
 		self.iSequence = iSequence
+		
 		self.publish = publish
-		self.teamN = teamN
-		self.useNthScore = useNthScore
+		self.pointStructure = pointStructure
+		self.bestResultsToConsider = bestResultsToConsider
+		self.mustHaveCompleted = mustHaveCompleted
+
 		self.teamPublish = teamPublish
+		self.teamPointStructure = teamPointStructure
+		self.useNthScore = useNthScore
+		self.teamN = teamN		
 		
 	def __eq__( self, other ):
 		return self.__dict__ == other.__dict__
@@ -202,9 +234,10 @@ class Category:
 		return self.__dict__ != other.__dict__
 		
 	def __repr__( self ):
-		return 'Category(name="{}", iSequence={}, publish={}, teamN={}, useNthScore={}, teamPublish={})'.format(
-			self.name, self.iSequence, self.publish, self.teamN, self.useNthScore, self.teamPublish
-		)
+		return f'Category(name="{self.name}", iSequence={self.iSequence}, publish={self.publish}, teamN={self.teamN}, useNthScore={self.useNthScore}, teamPublish={self.teamPublish})'
+		
+	def getName( self ):
+		return self.longName or self.name
 
 def nameToAliasKey( name ):
 	no_accent_name = Utils.removeDiacritic( name )
@@ -258,11 +291,21 @@ class SeriesModel:
 	ftpPassword = ''
 	urlPath = ''
 	
+	graphicBase64 = None
+	
 	# Control how to identify riders: name, uciid or license.
 	KeyByName, KeyByUciId, KeyByLicense = list(range(3))
 	riderKey = KeyByName
 	
 	imageResource = None	# Display Logo (None uses default logo).  In base64.
+	
+	CategoryTeamResultsOnly, CombinedTeamResultsOnly, AllTeamResults = list( range(3) )
+	teamResultsOption = CategoryTeamResultsOnly
+	
+	GreenTheme, RedTheme = list( range(2) )
+	colorTheme = GreenTheme
+	
+	teamResultsNames = []
 	
 	@property
 	def scoreByPoints( self ):
@@ -275,7 +318,9 @@ class SeriesModel:
 		self.numPlacesTieBreaker = 5
 		self.errors = []
 		self.changed = False
-		imageResource = None
+		self.imageResource = None
+		self.colorTheme = self.GreenTheme
+		self.teamResultsList = []
 		
 	def postReadFix( self ):
 		memoize.clear()
@@ -287,7 +332,8 @@ class SeriesModel:
 			for p in self.pointStructures]
 		if oldPointsList == pointsList:
 			return
-			
+		
+		# Create new points structures, and create a mapping from the old names to the new names.
 		newPointStructures = []
 		oldToNewName = {}
 		newPS = {}
@@ -306,14 +352,31 @@ class SeriesModel:
 			
 		if not newPointStructures:
 			newPointStructures = [PointStructure(self.DefaultPointStructureName)]
-			
+		
+		# Correct the pointStructure pointers to point to the new structures.
 		for r in self.races:
 			r.pointStructure = newPS.get( oldToNewName.get(r.pointStructure.name, ''), newPointStructures[0] )
 			if r.teamPointStructure:
 				r.teamPointStructure = newPS.get( oldToNewName.get(r.teamPointStructure.name, ''), None )
 			
+		for c in self.categoryList:
+			if c.pointsStructure:
+				c.pointsStructure = newPS.get( oldToNewName.get(c.pointStructure.name, ''), None )
+			
 		self.pointStructures = newPointStructures
 		self.setChanged()
+	
+	def racesFullToRelative( self, source ):
+		# source = os.path.abspath( source )
+		# for r in self.races:
+		#	r.fullToRelative( source )
+		pass
+	
+	def racesRelativeToFull( self, source ):
+		# source = os.path.abspath( source )
+		# for r in self.races:
+		#	r.relativeToFull( source )
+		pass
 	
 	def setRaces( self, raceList ):
 		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
@@ -407,11 +470,7 @@ class SeriesModel:
 				for alias in aliases:
 					key = Utils.removeDiacritic(alias).upper()
 					self.aliasLicenseLookup[key] = license				
-	
-		#if updated:
-		#	memoize.clear()
-	
-	
+		
 	def setReferenceTeams( self, referenceTeams ):
 		dNew = dict( referenceTeams )
 		dExisting = dict( self.referenceTeams )
@@ -443,9 +502,6 @@ class SeriesModel:
 					key = nameToAliasKey( alias )
 					self.aliasTeamLookup[key] = Team				
 	
-		#if updated:
-		#	memoize.clear()
-	
 	def getReferenceName( self, lastName, firstName ):
 		key = (nameToAliasKey(lastName), nameToAliasKey(firstName))
 		alias = self.aliasLookup.get( key, None )
@@ -460,7 +516,10 @@ class SeriesModel:
 	def getReferenceTeam( self, team ):
 		if team is None:
 			return team
-		return self.aliasTeamLookup.get( nameToAliasKey(team), team )
+		team = self.aliasTeamLookup.get( nameToAliasKey(team), team )
+		if team.lower() in {'independent', 'ind.', 'ind', 'none', 'no team'}:
+			return ''
+		return team
 	
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
@@ -522,7 +581,10 @@ class SeriesModel:
 	
 	def getCategoryNamesSortedTeamPublish( self ):
 		return [c.name for c in self.getCategoriesSortedTeamPublish()]
-		
+	
+	def getCategoryDisplayNames( self ):
+		return {c.name:c.getName() for c in self.getCategoriesSorted()}
+	
 	def getTeamN( self, categoryName ):
 		self.fixCategories()
 		try:
@@ -536,7 +598,14 @@ class SeriesModel:
 			return self.categories[categoryName].useNthScore
 		except KeyError:
 			return False
-			
+	
+	def setRootFolderWillSucceed( self, path ):
+		ft = FileTrie()
+		for top, directories, files in os.walk(path):
+			for f in files:
+				ft.add( os.path.join(top, f) )				
+		return all( ft.best_match( r.fileName ) for r in self.races )
+	
 	def setRootFolder( self, path ):
 		ft = FileTrie()
 		for top, directories, files in os.walk(path):
@@ -560,6 +629,15 @@ class SeriesModel:
 	
 	def addRace( self, name ):
 		race = Race( name, self.pointStructures[0] )
+		
+		# Check if this race name matches an existing one and use the same pointsStructure.
+		# This works for UCIDataride spreadsheets.
+		for r in reversed(self.races):
+			if r.getRaceName() == race.getRaceName():
+				race.pointStructure = r.pointStructure
+				race.teamPointStructure = r.teamPointStructure
+				break
+		
 		self.races.append( race )
 		self.setChanged()
 		
@@ -580,6 +658,14 @@ class SeriesModel:
 			names.add( os.path.splitext(os.path.basename(r.fileName))[0] )
 		return sorted( names )
 		
+	def setTeamResultsNames( self, teamResultsNames ):
+		teamResultsNames = sorted( set(n for n in map(operator.methodcaller('strip'), teamResultsNames) if n ) )
+		if teamResultsNames != self.teamResultsNames:
+			self.teamResultsNames = teamResultsNames
+			self.setChanged()
+			return True
+		return False
+		
 	def getMetaTags( self ):
 		return (
 			('author', 'Edward Sitarski'),
@@ -599,11 +685,11 @@ class SeriesModel:
 	@memoize
 	def _extractAllRaceResultsCore( self ):
 		with modelUpdateLock:	
-			# Extract all race results in parallel.  Arguments are the race info and this series (to get the alias lookups).
+			# Extract all race results in parallel.  Arguments are the race info and this series.
 			with Pool() as p:
 				p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
 			
-			# Combine all results and record errors.
+			# Combine all results and record any errors.
 			raceResults = []
 			oldErrors = self.errors
 			self.errors = []
@@ -621,11 +707,34 @@ class SeriesModel:
 		return raceResults
 
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
-		raceResults = self._extractAllRaceResultsCore()
-		if adjustForUpgrades:
-			raceResults = copy.deepcopy( raceResults )
-			GetModelInfo.AdjustForUpgrades( raceResults )
+		# Get a copy of the potenially cached race results.
+		raceResults = copy.deepcopy( self._extractAllRaceResultsCore() )
 		
+		# Assign a sequence number to the races in the specified order.
+		# Track the race filename so we can consolidate the race objects after the deep copy.
+		raceFromFileName = {}
+		for i, r in enumerate(self.races):
+			r.iSequence = i
+			raceFromFileName[r.fileName] = r
+			
+		# Try to find missing teams based on the uciid.
+		# This defaults to using the most recent team.
+		teamFromUCIID = { rr.uci_id:rr.team for rr in raceResults if rr.uci_id and rr.team }
+		
+		# Apply all aliases.
+		for rr in raceResults:
+			rr.lastName, rr.firstName = self.getReferenceName( rr.lastName, rr.firstName )
+			rr.license = self.getReferenceLicense( rr.license )
+			if rr.uci_id and not rr.team:	# If we are missing the team, try to use a previously used team.
+				rr.team = teamFromUCIID.get( rr.uci_id, '' )
+			rr.team = self.getReferenceTeam( rr.team )
+			rr.raceFileName = rr.raceInSeries.fileName
+			rr.raceInSeries = raceFromFileName.get( rr.raceInSeries.fileName, rr.raceInSeries )	# Normalize the deepcopied raceInSeries.
+		
+		if adjustForUpgrades:
+			GetModelInfo.AdjustForUpgrades( raceResults )
+			
+		# Filter by configured races.
 		rt = { r.fileName for r in self.races
 				if r.resultsType == Race.IndividualAndTeamResults or
 					(isIndividual and r.resultsType == Race.IndividualResultsOnly) or

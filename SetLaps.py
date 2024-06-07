@@ -16,10 +16,9 @@ class SetLaps( wx.Dialog ):
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 		
 		self.race = Model.getRace()
-		self.category = category
-		assert self.category.catType == Model.Category.CatWave
+		self.category = self.race.getCategoryStartWave( category )
 		
-		font = wx.Font(16, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		font = wx.Font( wx.FontInfo(16) )
 		
 		fields = (
 			('raceLaps', _('Race Laps'), wx.StaticText),
@@ -44,8 +43,8 @@ class SetLaps( wx.Dialog ):
 		self.fgs.AddGrowableCol( 2 )
 		
 		self.fgs.Add( wx.StaticText(self) )
-		self.fgs.Add( wx.StaticText(self, label=_('Current')) )
-		self.fgs.Add( wx.StaticText(self, label=_('Proposed')) )
+		self.fgs.Add( wx.StaticText(self, label=_('Current')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
+		self.fgs.Add( wx.StaticText(self, label=_('Proposed')), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		
 		class Column:	# Dummy class to hold column attributes.
 			pass
@@ -59,7 +58,7 @@ class SetLaps( wx.Dialog ):
 			
 			self.fgs.Add( wx.StaticText(self, label=label + ': '), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 			for c in range(2):
-				ctrl = wx.lib.intctrl.IntCtrl(self, min = 0, allow_none = True, limited = True, size=(64,-1)) if c == 1 and field == 'raceLaps' else fieldType(self)
+				ctrl = wx.lib.intctrl.IntCtrl(self, min=0, allow_none=True, limited=True, size=(64,-1)) if c == 1 and field == 'raceLaps' else fieldType(self)
 				setattr( self.column[c], field, ctrl )
 				self.fgs.Add( ctrl, flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 			
@@ -207,17 +206,17 @@ class SetLaps( wx.Dialog ):
 
 if __name__ == '__main__':
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMan SetLaps", size=(1000,500))
+	mainWin = wx.Frame(None,title="CrossMan SetLaps", size=(1000,550))
 	Model.setRace( Model.Race() )
 	race = Model.getRace()
 	race._populate()
 	race.setCategories( [
-							{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
-							{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
-							{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
-							{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
-							{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men'},
-						] )
+		{'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
+		{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
+		{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
+		{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
+		{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men'},
+	] )
 	setLaps = SetLaps(mainWin, race.getCategories()[1])
 	mainWin.Show()
 	setLaps.ShowModal()

@@ -60,13 +60,26 @@ CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRa
 
 From the Releases tab, download the CrossMgr-VERSION.dmg file. From the finder, double click the DMG file to open it. Once the window comes up, you simply drag and drop the CrossMgr.app folder to your Applications directory. From the Applications folder, you can now run CrossMgr like any other Mac app
 
-Most recent Mac OSX versions will require you to press CTRL before clicking on the app for the first time, and then clicking open. The app is a non-signed program that MacOSX will not open otherwise. This is only require the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
+If you still get a message that the dmg file is damaged and to delete it, you will need to temporarily disable GateKeeper to complete the install.  To do so, open a Terminal and enter:
+
+    sudo spctl --master-disable
+    
+Then, double-click on the CrossMgr .dmg file.
+
+Re-enable GateKeeper from the terminal as follows:
+
+    sudo spctl --master-enable
+
+Some Mac OSX versions accept pressing CTRL before clicking on the app for the first time, and then clicking open.
+The app is non-signed and MacOSX may not open it otherwise.
+This is only required the first time you run it. MacOSX will also ask a few questions when the program is run, and you must confirm with YES (Allow Networking, Access to Documents Directory, etc, etc.)
 
 CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process.
 
 #### Debugging the Mac Apps
 
-Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting
+Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting.
+
 First, and foremost, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then click Open on the dialog box to start the application the first time
 Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc...
 Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application.

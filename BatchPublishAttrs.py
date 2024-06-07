@@ -17,14 +17,14 @@ batchPublishAttr = (
 
 	BatchAttr('RaceDB',	_('RaceDB'),		None,			'menuPublishAsRaceDB', False, _('upload results to RaceDB database'), None),
 	
-	BatchAttr('UCI',	_('UCI'),			'uciexcel',		'menuExportUCI', True, _('as .xlsx upload file'), None),
+	BatchAttr('UCI Dataride', _('UCI'),	'uciexcel',		'menuExportUCI', True, _('as .xlsx UCI Dataride upload, one file per category'), None),
 
-	BatchAttr('USAC',	_('USAC'),			'usacexcel',	'menuExportUSAC', True, _('as .xls upload file'), fNew('-USAC.xls') ),
+	BatchAttr('USAC',	_('USAC'),			'usacexcel',	'menuExportUSAC', True, _('as .xls USAC upload file'), fNew('-USAC.xls') ),
 	
 	BatchAttr('VTTA',	_('VTTA'),	 		'vttaexcel', 	'menuExportVTTA', True, _('as .xlsx file'), fNew('-VTTA.xlsx') ),
 	BatchAttr('JPResults',	_('JPResults'),	 'jpresultsexcel','menuExportJPResults', True, _('as .xlsx file'), fNew('-JP.xlsx') ),
 	
-	BatchAttr('WebScorer', _('WebScorer'),	'webscorertxt',	'menuExportWebScorer', True, _('as .txt upload file'), fNew('-WebScorer.txt') ),
+	BatchAttr('WebScorer', _('WebScorer'),	'webscorertxt',	'menuExportWebScorer', True, _('as .txt WebScorer upload file'), fNew('-WebScorer.txt') ),
 	BatchAttr('Facebook', _('Facebook'),	None,			'menuPrintPNG', False, _('as .png upload files in Facebook folder'), None ),
 )
 

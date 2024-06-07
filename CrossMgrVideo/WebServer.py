@@ -46,7 +46,7 @@ def getMainPage( dateStr=None ):
 	global mainPage
 	
 	if True or not mainPage:
-		with open( os.path.join(Utils.getHtmlFolder(), 'main.html') ) as f:
+		with open( os.path.join(Utils.getHtmlFolder(), 'main.html'), encoding='utf8' ) as f:
 			mainPage = f.read()
 	
 	if dateStr:

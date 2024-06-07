@@ -23,6 +23,10 @@ from Excel				import GetExcelReader
 from FieldMap			import standard_field_map, standard_field_aliases
 from GetMatchingExcelFile import GetMatchingExcelFile
 
+class DeepDict(defaultdict):
+	def __call__(self):
+		return DeepDict(self.default_factory)
+
 def formatTime( secs, highPrecision = False ):
 	if secs is None:
 		secs = 0
@@ -126,7 +130,7 @@ class RaceResult:
 	
 	@property
 	def teamIsValid( self ):
-		return self.team and self.team.lower() not in {'no team', 'no-team', 'independent'}
+		return self.team and self.team.lower() not in {'0', '0.0', 'no team', 'no-team', 'independent', 'independant', 'none'}
 	
 	'''
 	def keySort( self ):
@@ -164,7 +168,7 @@ class RaceResult:
 		return ', '.join( [name for name in [self.lastName.upper(), self.firstName] if name] )
 		
 	def __repr__( self ):
-		return ', '.join( '{}'.format(p) for p in [self.full_name, self.license, self.categoryName, self.raceName, self.raceDate] if p )
+		return '\n({})'.format( ', '.join( '"{}"'.format(p) for p in (self.raceName, self.team, self.full_name, self.categoryName) ) )
 
 def ExtractRaceResults( r, seriesModel ):
 	if os.path.splitext(r.fileName)[1] == '.cmn':
@@ -188,11 +192,6 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 		ret['explanation'] = 'File not found'
 		return ret
 	
-	getReferenceName = seriesModel.getReferenceName
-	getReferenceLicense = seriesModel.getReferenceLicense
-	getReferenceTeam = seriesModel.getReferenceTeam
-		
-	excel = GetExcelReader( raceInSeries.getFileName() )
 	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
 	raceResults = []
 	
@@ -204,11 +203,15 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 	
 	# Check if this is a UCI Dataride spreadsheet
 	folderName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
+	baseFileName = os.path.splitext( os.path.basename( raceInSeries.getFileName() ) )[0]
+	
+	excel = GetExcelReader( raceInSeries.getFileName() )
 	uciDatarideSheets = {'General', 'Reference', 'Country Reference'}
 	isUCIDataride = any( (s.strip() in uciDatarideSheets) for s in excel.sheet_names() )
 	if isUCIDataride:
-		# Get the category name as the directory name.
-		uciCategoryName = folderName
+		uciCategoryName = baseFileName	# Category name is the directory.
+		raceName = folderName			# Race name is the base file name.
+		raceInSeries.isUCIDataride = isUCIDataride
 	else:
 		uciCategoryName = None
 		
@@ -300,9 +303,6 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				if not info['firstName'] and not info['lastName']:
 					continue
 				
-				info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
-				info['license'] = getReferenceLicense(info['license'])
-				info['team'] = getReferenceTeam(info['team'])
 				if info['team'] == 'None':
 					info['team'] = ''
 				
@@ -375,10 +375,6 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 	if race.licenseLinkTemplate:
 		ret['licenseLinkTemplate'] = race.licenseLinkTemplate
 	
-	getReferenceName = seriesModel.getReferenceName
-	getReferenceLicense = seriesModel.getReferenceLicense
-	getReferenceTeam = seriesModel.getReferenceTeam
-
 	Finisher = Model.Rider.Finisher
 	DNF = Model.Rider.DNF
 	acceptedStatus = { Finisher, DNF }
@@ -413,9 +409,6 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 				continue				
 
 			info['categoryName'] = category.fullname
-			info['lastName'], info['firstName'] = getReferenceName(info['lastName'], info['firstName'])
-			info['license'] = getReferenceLicense(info['license'])
-			info['team'] = getReferenceTeam(info['team'])
 			info['laps'] = rr.laps
 			
 			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
@@ -511,17 +504,17 @@ def GetPotentialDuplicateFullNames( riderNameLicenseUCIID ):
 	
 	return {full_name for full_name, entries in nameLicenseUCIID.items() if len(entries) > 1}
 			
-def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
+def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False, numPlacesTieBreaker=5, bestResultsToConsider=None, mustHaveCompleted=None ):
 	model = SeriesModel.model
 	
 	scoreByTime						= model.scoreByTime
 	scoreByPercent					= model.scoreByPercent
 	scoreByTrueSkill				= model.scoreByTrueSkill
-	bestResultsToConsider			= model.bestResultsToConsider
-	mustHaveCompleted				= model.mustHaveCompleted
 	showLastToFirst					= model.showLastToFirst
 	considerPrimePointsOrTimeBonus	= model.considerPrimePointsOrTimeBonus
 	scoreByPointsInput				= model.scoreByPointsInput
+	bestResultsToConsider			= (bestResultsToConsider or 0)
+	mustHaveCompleted				= (mustHaveCompleted or 0)
 	
 	# Get all results for this category.
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName]
@@ -538,7 +531,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 	# Get all races for this category.
 	races = set( (rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
-	races = sorted( races, key = lambda r: r[3].iSequence )
+	races = sorted( races, key = lambda r: getattr(r[3], 'iSequence', 0) )
 	raceSequence = dict( (r[3], i) for i, r in enumerate(races) )
 	
 	riderEventsCompleted = defaultdict( int )
@@ -681,7 +674,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# Sort by decreasing percent total.
 		riderOrder.sort( key = lambda r: -riderPercentTotal[r] )
 		
-		# Compute the points gap.
+		# Compute the gap.
 		riderGap = {}
 		if riderOrder:
 			leader = riderOrder[0]
@@ -747,7 +740,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		# Sort by rider points - greatest number of points first.
 		riderOrder = sorted( riderPoints.keys(), key=lambda r: riderPoints[r], reverse=True )
 
-		# Compute the points gap.
+		# Compute the gap.
 		riderGap = {}
 		if riderOrder:
 			leader = riderOrder[0]
@@ -770,6 +763,11 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 		
 	else: # Score by points.
 		# Get the individual results for each rider, and the total points.
+		
+		pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }
+		def getPointStructure( raceFileName, categoryName ):
+			return model.categories[categoryName].pointStructure or pointStructureFromRaceFileName[raceFileName]
+					
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
 			rider = rr.key()
@@ -777,7 +775,7 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
-			earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
+			earnedPoints = getPointStructure(rr.raceFileName, categoryName)[rr.rank] + primePoints
 			points = asInt( earnedPoints * rr.upgradeFactor )
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
@@ -851,33 +849,119 @@ def GetCategoryResults( categoryName, raceResults, pointsForRank, useMostEventsC
 RaceTuple = namedtuple('RaceTuple', ['date', 'name', 'url', 'raceInSeries'] )
 ResultTuple = namedtuple('ResultTuple', ['points', 'time', 'rank', 'primePoints', 'timeBonus', 'rr'] )
 
-def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPointsForRank, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
-	scoreByPoints = SeriesModel.model.scoreByPoints
-	scoreByTime = SeriesModel.model.scoreByTime
+def GetAllCategoryResultsTeam( raceResults ):
+	model = SeriesModel.model
+	showLastToFirst = model.showLastToFirst
+	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	
-	teamResultsN = SeriesModel.model.getTeamN( categoryName )
-	useNthScore = SeriesModel.model.getUseNthScore( categoryName )
+	# Filter results just for teams on the list, or valid team names (exclude missing team, independent, etc.)
+	trn = set( model.teamResultsNames )
+	raceResults = [rr for rr in raceResults if ((rr.team in trn) if trn else rr.teamIsValid)]
+	if not raceResults:
+		return [], []
+		
+	# Get all races for this category.
+	raceNameSequence = {rr.raceName:rr.raceInSeries.iSequence for rr in raceResults}
+	raceNames = sorted( set( rr.raceName for rr in raceResults ), key=lambda name: raceNameSequence[name], reverse=True )
 	
-	showLastToFirst = SeriesModel.model.showLastToFirst
-	considerPrimePointsOrTimeBonus = SeriesModel.model.considerPrimePointsOrTimeBonus
+	raceNameIndex = { rn:i for i, rn in enumerate(raceNames) }
+	raceNameToRaceTuple = {}
+	for rr in raceResults:
+		if rr.raceName not in raceNameToRaceTuple:
+			raceNameToRaceTuple[rr.raceName] = RaceTuple(None, rr.raceName, None, rr.raceInSeries)
 	
-	# Get all results for this category.
-	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and rr.teamIsValid]
+	def asInt( v ):
+		return int(v) if int(v) == v else v
+
+	# Get the specific pointStructure as a function of the raceName and categoryName.
+	# If no pointStructure is specified by category, use the race one as a default.
+	pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }	
+	def getPointStructure( raceFileName, categoryName ):
+		return model.categories[categoryName].pointStructure or pointStructureFromRaceFileName[raceFileName]
+		
+	# Get the best points result by raceName, keyTeam and categoryName.
+	teamName = {}
+	
+	bestResultsByTeamRaceCategory = defaultdict( lambda:defaultdict( lambda:defaultdict(int) ) )
+	teamResultsPoints = defaultdict( lambda: [0] * len(raceNames)  )
+	for rr in raceResults:
+		if trn and rr.team not in trn:	# Skip teams not included in the Team Results Names list.
+			continue
+		
+		primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
+		earnedPoints = getPointStructure(rr.raceFileName, rr.categoryName)[rr.rank] + primePoints
+		pointsNew = asInt( earnedPoints )
+		
+		pointsCur = bestResultsByTeamRaceCategory[rr.keyTeam()][rr.raceName][rr.categoryName]
+		if pointsNew > pointsCur:
+			bestResultsByTeamRaceCategory[rr.keyTeam()][rr.raceName][rr.categoryName] = pointsNew
+			teamResultsPoints[rr.keyTeam()][raceNameIndex[rr.raceName]] += pointsNew - pointsCur
+		teamName[rr.keyTeam()] = rr.team
+	
+	# Get the total results by keyTeam for all races.
+	teamPoints = {}
+	for keyTeam, bestResultsByRace in teamResultsPoints.items():
+		teamPoints[keyTeam] = sum( bestResultsByRace )
+	
+	# Transform into a list of keyTeam, pointsTotal sorted by decreasing points.
+	# Break ties with most recent results.
+	teamOrder = [
+		keyTeam for keyTeam, totalPoints in sorted(teamPoints.items(), key=lambda e: [e[1]] + teamResultsPoints[e[0]], reverse=True)
+	]
+	
+	# Compute the points gap.
+	teamGap = {}
+	if teamOrder:
+		leader = teamOrder[0]
+		leaderPoints = teamPoints[leader]
+		teamGap = { t : leaderPoints - teamPoints[t] for t in teamOrder }
+		teamGap = { t : str(gap) if gap else '' for t, gap in teamGap.items() }
+	
+	# Reverse the race order if required for display.
+	if not showLastToFirst:
+		raceNames.reverse()
+	
+	# List of:
+	# team, points, gap, [list of teamResultsPoints for each race in series]
+	# Note: only the team results are returned - the individual results are not included.
+	categoryResult = [
+		[teamName[t], teamPoints[t], teamGap[t]] + [[(teamResultsPoints[t][raceNameIndex[rn]], []) for rn in raceNames]]
+		for t in teamOrder
+	]
+	
+	return categoryResult, [raceNameToRaceTuple[rn] for rn in raceNames]
+
+def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
+	
+	# If this is a combined result, return that.
+	if SeriesModel.model.scoreByPoints and not categoryName:
+		return GetAllCategoryResultsTeam( raceResults )
+	
+	model = SeriesModel.model
+	
+	scoreByPoints = model.scoreByPoints
+	scoreByTime = model.scoreByTime
+	
+	teamResultsN = model.getTeamN( categoryName )
+	useNthScore = model.getUseNthScore( categoryName )
+	
+	showLastToFirst = model.showLastToFirst
+	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
+	
+	# Get all results for this category and valid teams.
+	trn = set( model.teamResultsNames )	
+	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and ((rr.team in trn) if trn else rr.teamIsValid)]
 	if not raceResults or not(scoreByPoints or scoreByTime):
 		return [], []
 		
 	# Create a map for race filenames to grade.
-	raceGrade = { race.getFileName():race.grade for race in SeriesModel.model.races }
-	gradesUsed = sorted( set(race.grade for race in SeriesModel.model.races) )
-	pureTeam = { race.getFileName() for race in SeriesModel.model.races if race.pureTeam }
-		
-	# Assign a sequence number to the races in the specified order.
-	for i, r in enumerate(SeriesModel.model.races):
-		r.iSequence = i
+	raceGrade = { race.getFileName():race.grade for race in model.races }
+	gradesUsed = sorted( set(race.grade for race in model.races) )
+	pureTeam = { race.getFileName() for race in model.races if race.pureTeam }
 		
 	# Get all races for this category.
 	races = set( RaceTuple(rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
-	races = sorted( races, key = operator.attrgetter('raceInSeries.iSequence') )
+	races = sorted( races, key = lambda r: getattr(r[3], 'iSequence', 0) )
 	raceSequence = dict( (r.raceInSeries, i) for i, r in enumerate(races) )
 	
 	def asInt( v ):
@@ -897,15 +981,26 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 	teamRanks = defaultdict( lambda : defaultdict(int) )
 	
 	if scoreByPoints:
-		# Score by points.
+		# Get the specific pointStructure as a function of the raceName and categoryName.
+		# If no pointStructure is specified by category, use the race one as a default.
+		pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }
+		def getPointStructure( raceFileName, categoryName ):
+			return model.categories[categoryName].pointStructure or pointStructureFromRaceFileName[raceFileName]
+			
+		teamPointStructureFromRaceFileName = { r.fileName:r.teamPointStructure for r in model.races }
+		def getTeamPointStructure( raceFileName, categoryName ):
+			return model.categories[categoryName].teamPointStructure or teamPointStructureFromRaceFileName[raceFileName]
+		
 		# Get the individual results for each rider, and the total points.
 		teamPoints = defaultdict( int )
 		for raceInSeries, teamParticipants in resultsByTeam.items():
+			pointsStructure = getPointStructure( raceInSeries.fileName, categoryName )
+			
 			for team, rrs in teamParticipants.items():
 				for rr in rrs:
 					rider = rr.key()
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
-					earnedPoints = pointsForRank[rr.raceFileName][rr.rank] + primePoints
+					earnedPoints = pointsStructure[rr.rank] + primePoints
 					points = asInt( earnedPoints )
 					teamResults[raceInSeries][team].append( ResultTuple(points, rr.tFinish, rr.rank, primePoints, 0, rr) )
 
@@ -923,9 +1018,10 @@ def GetCategoryResultsTeam( categoryName, raceResults, pointsForRank, teamPoints
 			)
 			
 			# Correct the earned team points based on the team points structure, not the sum of the individual points.
-			if teamPointsForRank[raceInSeries.getFileName()]:
+			teamPointStructure = getTeamPointStructure( raceInSeries.getFileName(), categoryName )
+			if teamPointStructure:
 				def getTeamPointsForRank(team, rank):
-					return teamPointsForRank[raceInSeries.getFileName()][rank]
+					return teamPointStructure[rank]
 			else:
 				def getTeamPointsForRank(team, rank):
 					return teamResultsPoints[raceInSeries][team]
@@ -1071,7 +1167,7 @@ if __name__ == '__main__':
 		pointsForRank[i+1] = 250 - i
 		
 	pointsForRank = { files[0]: pointsForRank }
-		
+	
 	for c in categories:
 		categoryResult, races, potentialDuplicates = GetCategoryResults( c, raceResults, pointsForRank )
 		print ( '--------------------------------------------------------' )

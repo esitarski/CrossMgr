@@ -1107,16 +1107,16 @@ class MainWin( wx.Frame ):
 				return
 			
 			dateStr = infoList[0]['ts'].strftime('%Y-%m-%d')
-			fname = os.path.join( dirname, '{}-index.html'.format(dateStr) )
+			fname = os.path.join( dirname, '{}-photos.html'.format(dateStr) )
 			ftemplate = os.path.join( Utils.getHtmlFolder(), 'PhotoPage.html' )
 			
-			with open(fname, 'w') as fOut, open(ftemplate) as fIn:
+			with open(fname, 'w', encoding='utf8') as fOut, open(ftemplate, encoding='utf8') as fIn:
 				for line in fIn:
 					
 					lineStrip = line.strip()
 					if lineStrip == '<script src="ScaledBitmap.js"></script>':
 						fOut.write( '<script>\n' )
-						with open( os.path.join(Utils.getHtmlFolder(), 'ScaledBitmap.js') ) as fsb:
+						with open( os.path.join(Utils.getHtmlFolder(), 'ScaledBitmap.js'), encoding='utf8' ) as fsb:
 							fOut.write( fsb.read() )
 						fOut.write( '\n</script>\n' )
 						continue
@@ -1953,7 +1953,7 @@ def MainLoop():
 			pass
 			
 		try:
-			with open(redirectFileName, 'a') as pf:
+			with open(redirectFileName, 'a', encoding='utf8') as pf:
 				pf.write( '********************************************\n' )
 				pf.write( '{}: {} Started.\n'.format(now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except Exception:

@@ -30,7 +30,7 @@ def DoChipImport(	fname, parseTagTime, startTime = None,
 	
 	raceStart = None
 	
-	with open(fname) as f, Model.LockRace() as race:
+	with open(fname, encoding='utf8') as f, Model.LockRace() as race:
 		year, month, day = [int(n) for n in race.date.split('-')]
 		raceDate = datetime.date( year=year, month=month, day=day )
 		JChip.reset( raceDate )

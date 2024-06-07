@@ -34,8 +34,8 @@ def AddExifToJpeg( jpeg, ts, comment ):
 
 if __name__ == '__main__':
 	fname = os.path.join( 'photos', '0001-20190209T094625-Capture.jpg' )
-	with open(fname, 'rb') as f:
+	with open(fname, 'rb', encoding='utf8') as f:
 		jpeg = f.read()
 	fnameOut = os.path.splitext(fname)[0] + '-exif.jpg'
-	with open(fnameOut, 'wb') as f:
+	with open(fnameOut, 'wb', encoding='utf8') as f:
 		f.write( AddExifToJpeg( jpeg, datetime.datetime.now(), 'This is a comment' ) )

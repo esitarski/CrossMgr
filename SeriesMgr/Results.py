@@ -72,8 +72,16 @@ def getHeaderGraphicBase64():
 			return b64
 	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
 	with open(graphicFName, 'rb') as f:
-		s64 = base64.standard_b64encode(f.read())
+		s64 = base64.standard_b64encode(f.read()).decode()
 		return 'data:image/png;base64,{}'.format(s64)
+
+def getFaviconBase64():
+	graphicFName = os.path.join(Utils.getImageFolder(), 'SeriesMgr128.png')
+	image = wx.Image( graphicFName )
+	image.Rescale( 32, 32, wx.IMAGE_QUALITY_HIGH )
+	b = io.BytesIO()
+	image.SaveFile( b, wx.BITMAP_TYPE_PNG )
+	return 'data:image/png;base64,{}'.format(base64.standard_b64encode(b.getvalue()).decode())
 
 def getHtmlFileName():
 	modelFileName = Utils.getFileName() if Utils.getFileName() else 'Test.smn'
@@ -95,6 +103,14 @@ def fixHeaderNames( results ):
 		hasUCIID = False
 	return [h for h in getHeaderNames() if h not in toRemove], hasTeam, hasLicense, hasUCIID
 
+def translateHeader( h ):
+	translations = {
+		'Team': 'Team/Équipe',
+		'Gap': 'Gap/Écart',
+		'Name': 'Name/Nom',
+	}
+	return translations.get( h, h )
+
 def filterValidResults( results ):
 	# name, license, uci_id, team, points
 	#   0      1       2       3      4
@@ -105,8 +121,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	scoreByTime = model.scoreByTime
 	scoreByPercent = model.scoreByPercent
 	scoreByTrueSkill = model.scoreByTrueSkill
-	bestResultsToConsider = model.bestResultsToConsider
-	mustHaveCompleted = model.mustHaveCompleted
 	hasUpgrades = model.upgradePaths
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults()
@@ -114,24 +128,26 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	categoryNames = model.getCategoryNamesSortedPublish()
 	if not categoryNames:
 		return '<html><body>SeriesMgr: No Categories.</body></html>'
+	categoryDisplayNames = model.getCategoryDisplayNames()
 	
-	pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-
 	if not seriesFileName:
 		seriesFileName = (os.path.splitext(Utils.mainWin.fileName)[0] if Utils.mainWin and Utils.mainWin.fileName else 'Series Results')
 	title = os.path.basename( seriesFileName )
 	
 	licenseLinkTemplate = model.licenseLinkTemplate
 	
-	pointsStructures = {}
-	pointsStructuresList = []
+	pointStructures = {}
+	pointStructuresList = []
 	for race in model.races:
-		if race.pointStructure not in pointsStructures:
-			pointsStructures[race.pointStructure] = []
-			pointsStructuresList.append( race.pointStructure )
-		pointsStructures[race.pointStructure].append( race )
+		if race.pointStructure not in pointStructures:
+			pointStructures[race.pointStructure] = []
+			pointStructuresList.append( race.pointStructure )
+		pointStructures[race.pointStructure].append( race )
 	
-	html = io.open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
+	
+	def ordinal( x ):
+		return f'{x}'
 	
 	def write( s ):
 		html.write( '{}'.format(s) )
@@ -145,193 +161,19 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 			for k, v in model.getMetaTags():
 				with tag(html, 'meta', {'name':k, 'content':v}):
 					pass
+			with tag(html, 'link', dict(rel="icon", type="image/png", href=getFaviconBase64())):
+				pass
 			with tag(html, 'style', dict( type="text/css")):
-				write( '''
-body{ font-family: sans-serif; }
-
-h1{ font-size: 250%; }
-h2{ font-size: 200%; }
-
-#idRaceName {
-	font-size: 200%;
-	font-weight: bold;
-}
-#idImgHeader { box-shadow: 4px 4px 4px #888888; }
-.smallfont { font-size: 80%; }
-.bigfont { font-size: 120%; }
-.hidden { display: none; }
-
-#buttongroup {
-	margin:4px;   
-	float:left;
-}
-
-#buttongroup label {
-	float:left;
-	margin:4px;
-	background-color:#EFEFEF;
-	border-radius:4px;
-	border:1px solid #D0D0D0;
-	overflow:auto;
-	cursor: pointer;
-}
-
-#buttongroup label span {
-	text-align:center;
-	padding:8px 8px;
-	display:block;
-}
-
-#buttongroup label input {
-	position:absolute;
-	top:-20px;
-}
-
-#buttongroup input:checked + span {
-	background-color:#404040;
-	color:#F7F7F7;
-}
-
-#buttongroup .yellow {
-	background-color:#FFCC00;
-	color:#333;
-}
-
-#buttongroup .blue {
-	background-color:#00BFFF;
-	color:#333;
-}
-
-#buttongroup .pink {
-	background-color:#FF99FF;
-	color:#333;
-}
-
-#buttongroup .green {
-	background-color:#7FE57F;
-	color:#333;
-}
-#buttongroup .purple {
-	background-color:#B399FF;
-	color:#333;
-}
-
-table.results {
-	font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
-	border-collapse:collapse;
-}
-table.results td, table.results th {
-	font-size:1em;
-	padding:3px 7px 2px 7px;
-	text-align: left;
-}
-table.results th {
-	font-size:1.1em;
-	text-align:left;
-	padding-top:5px;
-	padding-bottom:4px;
-	background-color:#7FE57F;
-	color:#000000;
-	vertical-align:bottom;
-}
-table.results tr.odd {
-	color:#000000;
-	background-color:#EAF2D3;
-}
-
-.smallFont {
-	font-size: 75%;
-}
-
-table.results td.leftBorder, table.results th.leftBorder
-{
-	border-left:1px solid #98bf21;
-}
-
-table.results tr:hover
-{
-	color:#000000;
-	background-color:#FFFFCC;
-}
-table.results tr.odd:hover
-{
-	color:#000000;
-	background-color:#FFFFCC;
-}
-
-table.results td.colSelect
-{
-	color:#000000;
-	background-color:#FFFFCC;
-}}
-
-table.results td {
-	border-top:1px solid #98bf21;
-}
-
-table.results td.noborder {
-	border-top:0px solid #98bf21;
-}
-
-table.results td.rightAlign, table.results th.rightAlign {
-	text-align:right;
-}
-
-table.results td.leftAlign, table.results th.leftAlign {
-	text-align:left;
-}
-
-.topAlign {
-	vertical-align:top;
-}
-
-table.results th.centerAlign, table.results td.centerAlign {
-	text-align:center;
-}
-
-.ignored {
-	color: #999;
-	font-style: italic;
-}
-
-table.points tr.odd {
-	color:#000000;
-	background-color:#EAF2D3;
-}
-
-.rank {
-	color: #999;
-	font-style: italic;
-}
-
-.points-cell {
-	text-align: right;
-	padding:3px 7px 2px 7px;
-}
-
-select {
-    font: inherit;
-}
-
-hr { clear: both; }
-
-.nowrap {
-	white-space: nowrap;
-}
-
-@media print {
-	.noprint { display: none; }
-	.title { page-break-after: avoid; }
-}
-''')
+				with open( os.path.join(Utils.getImageFolder(),('green-theme.css','red-theme.css')[model.colorTheme]), encoding='utf8' ) as fs:
+					write( fs.read() )
 
 			with tag(html, 'script', dict( type="text/javascript")):
 				write( '\nvar catMax={};\n'.format( len(categoryNames) ) )
 				write( '''
 function removeClass( classStr, oldClass ) {
-	var classes = classStr.split( ' ' );
-	var ret = [];
-	for( var i = 0; i < classes.length; ++i ) {
+	let classes = classStr.split( ' ' );
+	let ret = [];
+	for( let i = 0; i < classes.length; ++i ) {
 		if( classes[i] != oldClass )
 			ret.push( classes[i] );
 	}
@@ -343,8 +185,8 @@ function addClass( classStr, newClass ) {
 }
 
 function selectCategory( iCat ) {
-	for( var i = 0; i < catMax; ++i ) {
-		var e = document.getElementById('catContent' + i);
+	for( let i = 0; i < catMax; ++i ) {
+		let e = document.getElementById('catContent' + i);
 		if( i == iCat || iCat < 0 )
 			e.className = removeClass(e.className, 'hidden');
 		else
@@ -353,27 +195,27 @@ function selectCategory( iCat ) {
 }
 
 function sortTable( table, col, reverse ) {
-	var tb = table.tBodies[0];
-	var tr = Array.prototype.slice.call(tb.rows, 0);
+	let tb = table.tBodies[0];
+	let tr = Array.prototype.slice.call(tb.rows, 0);
 	
-	var parseRank = function( s ) {
+	let parseRank = function( s ) {
 		if( !s )
 			return 999999;
 		var fields = s.split( '(' );
 		return parseInt( fields[1] );
 	}
 	
-	var cmpPos = function( a, b ) {
+	let cmpPos = function( a, b ) {
 		return parseInt( a.cells[0].textContent.trim() ) - parseInt( b.cells[0].textContent.trim() );
 	};
 	
-	var MakeCmpStable = function( a, b, res ) {
+	let MakeCmpStable = function( a, b, res ) {
 		if( res != 0 )
 			return res;
 		return cmpPos( a, b );
 	};
 	
-	var cmpFunc;
+	let cmpFunc;
 	if( col == 0 || col == 4 || col == 5 ) {		// Pos, Points or Gap
 		cmpFunc = cmpPos;
 	}
@@ -391,7 +233,7 @@ function sortTable( table, col, reverse ) {
 	}
 	tr = tr.sort( function (a, b) { return reverse * cmpFunc(a, b); } );
 	
-	for( var i = 0; i < tr.length; ++i) {
+	for( let i = 0; i < tr.length; ++i) {
 		tr[i].className = (i % 2 == 1) ? addClass(tr[i].className,'odd') : removeClass(tr[i].className,'odd');
 		tb.appendChild( tr[i] );
 	}
@@ -399,18 +241,18 @@ function sortTable( table, col, reverse ) {
 
 var ssPersist = {};
 function sortTableId( iTable, iCol ) {
-	var upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
-	var isNone = 0, isDn = 1, isUp = 2;
-	var id = 'idUpDn' + iTable + '_' + iCol;
-	var upDn = document.getElementById(id);
-	var sortState = ssPersist[id] ? ssPersist[id] : isNone;
-	var table = document.getElementById('idTable' + iTable);
+	let upChar = '&nbsp;&nbsp;&#x25b2;', dnChar = '&nbsp;&nbsp;&#x25bc;';
+	let isNone = 0, isDn = 1, isUp = 2;
+	let id = 'idUpDn' + iTable + '_' + iCol;
+	let upDn = document.getElementById(id);
+	let sortState = ssPersist[id] ? ssPersist[id] : isNone;
+	let table = document.getElementById('idTable' + iTable);
 	
 	// Clear all sort states.
-	var row0Len = table.tBodies[0].rows[0].cells.length;
-	for( var i = 0; i < row0Len; ++i ) {
-		var idCur = 'idUpDn' + iTable + '_' + i;
-		var ele = document.getElementById(idCur);
+	let row0Len = table.tBodies[0].rows[0].cells.length;
+	for( let i = 0; i < row0Len; ++i ) {
+		let idCur = 'idUpDn' + iTable + '_' + i;
+		let ele = document.getElementById(idCur);
 		if( ele ) {
 			ele.innerHTML = '';
 			ssPersist[idCur] = isNone;
@@ -449,32 +291,46 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'td'):
 						with tag(html, 'h1', {'style': 'margin-left: 1cm;'}):
 							write( escape(model.name) )
+							
+						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
+							write( "Individual Series Results/Résultats Cumulatifs Individuels" )
+
 						with tag(html, 'h2', {'style': 'margin-left: 1cm;'}):
 							if model.organizer:
-								write( 'by {}'.format(escape(model.organizer)) )
+								write( '{}'.format(escape(model.organizer)) )
 							with tag(html, 'span', {'style': 'font-size: 60%'}):
-								write( '&nbsp;' * 5 )
-								write( ' Updated:&nbsp;{}'.format(datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S')) )
+								if model.organizer:
+									write( '&nbsp;' * 5 )
+								write( datetime.datetime.now().strftime('%Y-%m-%d&nbsp;%H:%M:%S') )
 
-			with tag(html, 'h3' ):
-				with tag(html, 'label', {'for':'categoryselect'} ):
-					write( 'Category' + ':' )
-				with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
-					with tag(html, 'option', {'value':-1} ):
-						with tag(html, 'span'):
-							write( 'All' )
-					for iTable, categoryName in enumerate(categoryNames):
-						with tag(html, 'option', {'value':iTable} ):
-							with tag(html, 'span'):
-								write( '{}'.format(escape(categoryName)) )
+			if len(categoryNames) > 1:
+				with tag(html, 'h3' ):
+					with tag(html, 'label', {'for':'categoryselect'} ):
+						write( 'Cat' + ':' )
+					with tag(html, 'select', {'name': 'categoryselect', 'onchange':'selectCategory(parseInt(this.value,10))'} ):
+						with tag(html, 'option', {'value':-1} ):
+							write( '---' )
+						for iTable, categoryName in enumerate(categoryNames):
+							with tag(html, 'option', {'value':iTable} ):
+								write( '{}'.format(escape(categoryDisplayNames[categoryName])) )
+			
+			hasPrimePoints = any( rr.primePoints for rr in raceResults )
+			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
 			
 			for iTable, categoryName in enumerate(categoryNames):
+				
+				category = model.categories[categoryName]				
+				bestResultsToConsider = (category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
+				mustHaveCompleted = (category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted)
+				
 				results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 					categoryName,
 					raceResults,
-					pointsForRank,
 					useMostEventsCompleted=model.useMostEventsCompleted,
-					numPlacesTieBreaker=model.numPlacesTieBreaker )
+					numPlacesTieBreaker=model.numPlacesTieBreaker,
+					bestResultsToConsider=bestResultsToConsider,
+					mustHaveCompleted=mustHaveCompleted,
+				)
 				
 				results = filterValidResults( results )
 				headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
@@ -485,7 +341,7 @@ function sortTableId( iTable, iCol ) {
 					write( '<hr/>')
 					
 					with tag(html, 'h2', {'class':'title'}):
-						write( escape(categoryName) )
+						write( escape(categoryDisplayNames[categoryName]) )
 					with tag(html, 'table', {'class': 'results', 'id': 'idTable{}'.format(iTable)} ):
 						with tag(html, 'thead'):
 							with tag(html, 'tr'):
@@ -496,7 +352,7 @@ function sortTableId( iTable, iCol ) {
 									with tag(html, 'th', colAttr):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,iHeader)) ):
 											pass
-										write( '{}'.format(escape(col).replace('\n', '<br/>\n')) )
+										write( '{}'.format(escape(translateHeader(col)).replace('\n', '<br/>\n')) )
 								for iRace, r in enumerate(races):
 									# r[0] = RaceData, r[1] = RaceName, r[2] = RaceURL, r[3] = Race
 									with tag(html, 'th', {
@@ -554,16 +410,16 @@ function sortTableId( iTable, iCol ) {
 										if rRank <= SeriesModel.rankDNF:
 											if rPrimePoints:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( '({})&nbsp;+{}'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
+													write( '({})&nbsp;+{}'.format(ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:
 												with tag(html, 'td', {'class':'rank noprint'}):
 													write( '({})&nbsp;-{}'.format(
-														Utils.ordinal(rRank).replace(' ', '&nbsp;'),
+														ordinal(rRank).replace(' ', '&nbsp;'),
 														Utils.formatTime(rTimeBonus, twoDigitMinutes=False)),
 													)
 											else:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( '({})'.format(Utils.ordinal(rRank).replace(' ', '&nbsp;')) )
+													write( '({})'.format(ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
 											with tag(html, 'td', {'class':'noprint'}):
 												pass
@@ -572,17 +428,19 @@ function sortTableId( iTable, iCol ) {
 			if considerPrimePointsOrTimeBonus:
 				with tag(html, 'p', {'class':'noprint'}):
 					if scoreByTime:
-						with tag(html, 'strong'):
-							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( '-MM:SS' )
-						write( ' - {}'.format( 'Time Bonus subtracted from Finish Time.') )
+						if hasTimeBonus:
+							with tag(html, 'strong'):
+								with tag(html, 'span', {'style':'font-style: italic;'}):
+									write( '-MM:SS' )
+							write( ' - {}'.format( 'Time Bonus subtracted from Finish Time.') )
 					elif not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
-						with tag(html, 'strong'):
-							with tag(html, 'span', {'style':'font-style: italic;'}):
-								write( '+N' )
-						write( ' - {}'.format( 'Bonus Points added to Points for Place.') )
+						if hasPrimePoints:
+							with tag(html, 'strong'):
+								with tag(html, 'span', {'style':'font-style: italic;'}):
+									write( '+N' )
+							write( ' - {}'.format( 'Bonus Points added to Points for Place.') )
 					
-			if bestResultsToConsider > 0 and not scoreByTrueSkill:
+			if bestResultsToConsider is not None and bestResultsToConsider > 0 and not scoreByTrueSkill:
 				with tag(html, 'p', {'class':'noprint'}):
 					with tag(html, 'strong'):
 						write( '**' )
@@ -629,6 +487,7 @@ function sortTableId( iTable, iCol ) {
 				
 			if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
 				with tag(html, 'div', {'class':'noprint'} ):
+					'''
 					with tag(html, 'p'):
 						pass
 					with tag(html, 'hr'):
@@ -637,7 +496,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'h2'):
 						write( 'Point Structures' )
 					with tag(html, 'table' ):
-						for ps in pointsStructuresList:
+						for ps in pointStructuresList:
 							with tag(html, 'tr'):
 								for header in [ps.name, 'Races Scored with {}'.format(ps.name)]:
 									with tag(html, 'th'):
@@ -648,7 +507,7 @@ function sortTableId( iTable, iCol ) {
 									write( ps.getHtml() )
 								with tag(html, 'td', {'class': 'topAlign'}):
 									with tag(html, 'ul'):
-										for r in pointsStructures[ps]:
+										for r in pointStructures[ps]:
 											with tag(html, 'li'):
 												write( r.getRaceName() )
 						
@@ -657,7 +516,7 @@ function sortTableId( iTable, iCol ) {
 								pass
 							with tag(html, 'td'):
 								pass
-						
+					'''
 					#-----------------------------------------------------------------------------
 					
 					with tag(html, 'p'):
@@ -665,7 +524,7 @@ function sortTableId( iTable, iCol ) {
 					with tag(html, 'hr'):
 						pass
 						
-					with tag(html, 'h2'):
+					with tag(html, 'h3'):
 						write( 'Tie Breaking Rules' )
 						
 					with tag(html, 'p'):
@@ -924,14 +783,17 @@ class Results(wx.Panel):
 		if not categoryName:
 			return
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
+		category = model.categories[categoryName]				
+		bestResultsToConsider=(category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
+		mustHaveCompleted=(category.mustHaveCompleted if category.mustHaveCompleted is not None else model.mustHaveCompleted)
 
 		results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 			categoryName,
 			self.raceResults,
-			pointsForRank,
 			useMostEventsCompleted=model.useMostEventsCompleted,
 			numPlacesTieBreaker=model.numPlacesTieBreaker,
+			bestResultsToConsider=bestResultsToConsider,
+			mustHaveCompleted=mustHaveCompleted,
 		)
 		
 		results = filterValidResults( results )
@@ -1037,17 +899,19 @@ class Results(wx.Panel):
 		if not categoryNames:
 			return
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-		
 		wb = xlwt.Workbook()
 		
 		for categoryName in categoryNames:
+			category = model.categories[categoryName]				
+			bestResultsToConsider = (category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
+			mustHaveCompleted = (category.mustHaveCompleted if category.mustHaveComplete is not None else  model.mustHaveCompleted)
 			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 				categoryName,
-				self.raceResults,
-				pointsForRank,
+				raceResults,
 				useMostEventsCompleted=model.useMostEventsCompleted,
 				numPlacesTieBreaker=model.numPlacesTieBreaker,
+				bestResultsToConsider=bestResultsToConsider,
+				mustHaveCompleted=mustHaveCompleted,
 			)
 			
 			results = filterValidResults( results )
@@ -1069,7 +933,7 @@ class Results(wx.Panel):
 			ws.write_merge( rowCur, rowCur, 0, 8, model.name, headerStyle )
 			rowCur += 1
 			if model.organizer:
-				ws.write_merge( rowCur, rowCur, 0, 8, 'by {}'.format(model.organizer), headerStyle )
+				ws.write_merge( rowCur, rowCur, 0, 8, '{}'.format(model.organizer), headerStyle )
 				rowCur += 1
 			rowCur += 1
 			colCur = 0
@@ -1088,8 +952,8 @@ class Results(wx.Panel):
 				wsFit.write( rowCur, iCol, name, textStyle ); iCol += 1
 				if hasLicense:
 					wsFit.write( rowCur, iCol, license, textStyle ); iCol += 1
-				if hasLicense:
-					wsFit.write( rowCur, iCol, foratUCIID(uci_id), textStyle ); iCol += 1
+				if hasUCIID:
+					wsFit.write( rowCur, iCol, formatUCIID(uci_id), textStyle ); iCol += 1
 				if hasTeam:
 					wsFit.write( rowCur, iCol, team, textStyle ); iCol += 1
 				wsFit.write( rowCur, iCol, points, numberStyle ); iCol += 1

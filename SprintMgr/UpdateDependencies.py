@@ -1,7 +1,7 @@
 import os
 
 def UpdateDependencies():
-	with open('Dependencies.py') as d:
+	with open('Dependencies.py', encoding='utf-8') as d:
 		for line in d:
 			line = line.strip()
 			if not line:

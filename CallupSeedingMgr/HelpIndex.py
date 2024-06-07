@@ -85,7 +85,7 @@ if __name__ == '__main__':
 	from whoosh.qparser import QueryParser
 	ix = open_dir( indexDir, readonly=True )
 
-	with ix.searcher() as searcher, open('search.html', 'w') as f:
+	with ix.searcher() as searcher, open('search.html', 'w', encoding='utf8') as f:
 		query = QueryParser('content', ix.schema).parse('fastest lap')
 		results = searcher.search(query, limit=20)
 		f.write( '<table><tr><th></th><th align="left">Section</th><th align="left">Match</th></tr>\n' )

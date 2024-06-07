@@ -38,6 +38,7 @@ from Points				import Points
 from Upgrades			import Upgrades
 from Results			import Results
 from TeamResults		import TeamResults
+from TeamResultsNames	import TeamResultsNames
 from CategorySequence	import CategorySequence
 from Aliases			import Aliases
 from AliasesLicense		import AliasesLicense
@@ -287,6 +288,7 @@ class MainWin( wx.Frame ):
 			[ 'aliases',		Aliases,			'Name Aliases' ],
 			[ 'licenseAliases',	AliasesLicense,		'License Aliases' ],
 			[ 'teamAliases',	AliasesTeam,		'Team Aliases' ],
+			[ 'teamResultsNames', TeamResultsNames, 'Team Results Names' ],
 			[ 'options',		Options,			'Options' ],
 			[ 'errors',			Errors,				'Errors' ],
 		]
@@ -351,6 +353,14 @@ class MainWin( wx.Frame ):
 		return defaultFName
 	
 	def getGraphicBase64( self ):
+		model = SeriesModel.model
+		if model.graphicBase64 and model.graphicBase64.startswith('data:image/'):
+			try:
+				base64.standard_b64decode( model.graphicBase64.split(',',1)[1].encode() )
+				return model.graphicBase64
+			except Exception:
+				pass
+		
 		graphicFName = self.getGraphicFName()
 		if not graphicFName:
 			return None
@@ -365,6 +375,9 @@ class MainWin( wx.Frame ):
 		try:
 			with open(graphicFName, 'rb') as f:
 				b64 = 'data:image/{};base64,{}'.format(fileType, base64.standard_b64encode(f.read()).decode())
+				model.graphicBase64 = b64
+				model.setChanged()
+				self.setTitle()
 				return b64
 		except IOError:
 			pass
@@ -372,23 +385,24 @@ class MainWin( wx.Frame ):
 	
 	def menuSetGraphic( self, event ):
 		imgPath = self.getGraphicFName()
-		dlg = SetGraphicDialog( self, graphic = imgPath )
-		if dlg.ShowModal() == wx.ID_OK:
-			imgPath = dlg.GetValue()
-			self.config.Write( 'graphic', imgPath )
-			self.config.Flush()
-		dlg.Destroy()
+		with SetGraphicDialog( self, graphic=imgPath ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				imgPath = dlg.GetValue()
+				self.config.Write( 'graphic', imgPath )
+				self.config.Flush()
+				
+				SeriesModel.model.graphicBase64 = None
+				self.getGraphicBase64()
 
 	def menuSetRootFolder( self, event ):
-		dlg = wx.DirDialog(
-			self,
-			message='Set Root Folder where All Race Files can be Found',
-			defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
-		)
-		if dlg.ShowModal() == wx.ID_OK:
-			SeriesModel.model.setRootFolder( dlg.GetPath() )
-			self.refreshAll()
-		dlg.Destroy()
+		with wx.DirDialog(
+				self,
+				message='Set Root Folder where All Race Files can be Found',
+				defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
+			) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				SeriesModel.model.setRootFolder( dlg.GetPath() )
+				wx.CallAfter( self.refreshAll )
 
 	def menuDeleteAllRaces( self, event ):
 		if Utils.MessageOKCancel(self, "Delete All Races\n\nThere is no undo.   Continue?", "Delete All Races"):
@@ -397,14 +411,12 @@ class MainWin( wx.Frame ):
 		
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		dlg = wx.PageSetupDialog(self, psdd)
-		dlg.ShowModal()
-
-		# this makes a copy of the wx.PrintData instead of just saving
-		# a reference to the one inside the PrintDialogData that will
-		# be destroyed when the dialog is destroyed
-		self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
-		dlg.Destroy()
+		with wx.PageSetupDialog(self, psdd) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				# this makes a copy of the wx.PrintData instead of just saving
+				# a reference to the one inside the PrintDialogData that will
+				# be destroyed when the dialog is destroyed
+				self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
 
 	def getTitle( self ):
 		model = SeriesModel.model
@@ -457,15 +469,12 @@ class MainWin( wx.Frame ):
 		pdd.EnablePageNumbers( 0 )
 		pdd.EnableHelp( 0 )
 		
-		printer = wx.Printer(pdd)
-
-		if not printer.Print(self, printout, True):
-			if printer.GetLastError() == wx.PRINTER_ERROR:
-				Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
-		else:
-			self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
-
-		printout.Destroy()
+		with wx.Printer(pdd) as printer:
+			if not printer.Print(self, printout, True):
+				if printer.GetLastError() == wx.PRINTER_ERROR:
+					Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error", iconMask=wx.ICON_ERROR)
+			else:
+				self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
 	#--------------------------------------------------------------------------------------------
 
@@ -489,13 +498,12 @@ class MainWin( wx.Frame ):
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
 		xlfileName = self.fileName[:-4] + '-' + pageTitle + '.xls'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlfileName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlfileName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) ) as dlg:
+			if ret != wx.ID_OK:
+				return
+			ret = dlg.ShowModal()
+			dName = dlg.GetPath()
 
 		xlfileName = os.path.join( dName, os.path.basename(xlfileName) )
 
@@ -536,13 +544,11 @@ class MainWin( wx.Frame ):
 
 		pageTitle = Utils.RemoveDisallowedFilenameChars( pageTitle.replace('/', '_') )
 		htmlfileName = self.fileName[:-4] + '-' + pageTitle + '.html'
-		dlg = wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(htmlfileName)),
-						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlfileName) )
-		ret = dlg.ShowModal()
-		dName = dlg.GetPath()
-		dlg.Destroy()
-		if ret != wx.ID_OK:
-			return
+		with wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(htmlfileName)),
+						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(htmlfileName) ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
+			dName = dlg.GetPath()
 
 		htmlfileName = os.path.join( dName, os.path.basename(htmlfileName) )
 
@@ -691,8 +697,14 @@ table.results tr td.fastest{
 			self.setTitle()
 			return
 		model = SeriesModel.model
+		
+		# Make the race file name relative to the series file name.
+		model.racesFullToRelative( self.fileName )
 		with open(self.fileName, 'wb') as fp:
 			pickle.dump( model, fp, 2 )
+		# Reset back to full file names.
+		model.racesRelativeToFull( self.fileName )
+		
 		model.setChanged( False )
 		self.setTitle()
 
@@ -724,7 +736,14 @@ table.results tr td.fastest{
 				break
 		else:
 			return False
-			
+		
+		# Check if all the race files are rooted from the same folder as the .smn file.
+		path = os.path.dirname(self.fileName)
+		if model.setRootFolderWillSucceed( path ):
+			model.setRootFolder( path )
+			return True
+		
+		# Otherwise, ask the user where the Root folder is.
 		if not Utils.MessageOKCancel(
 				self,
 				'Cannot find Race File:\n\n    "{}"\nin    "{}"\n\nSet new Root Folder?'.format(fname, dirname),
@@ -734,7 +753,7 @@ table.results tr td.fastest{
 		
 		with wx.DirDialog(
 				self,
-				message='Select Root Folder where Race Files can be Found under:',
+				message='Select Root Folder where all Race Files can be found:',
 				defaultPath=os.path.dirname(self.fileName) if self.fileName else '',
 			) as dlg:
 			if dlg.ShowModal() == wx.ID_OK:
@@ -760,11 +779,12 @@ table.results tr td.fastest{
 					fp.seek( 0 )
 					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', errors='replace' ).load()
 		except IOError:
-			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, f'Cannot Open File "{fileName}".', 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 		
 		SeriesModel.model.postReadFix()
 		self.fileName = fileName
+		SeriesModel.model.racesRelativeToFull( self.fileName )
 		self.updateRecentFiles()
 		
 		SeriesModel.model.setChanged( self.fixPaths() )
@@ -781,16 +801,15 @@ table.results tr td.fastest{
 				try:
 					self.writeSeries()
 				except:
-					Utils.MessageOK(self, 'Write Failed.  Series NOT saved..\n\n    "{}"'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+					Utils.MessageOK(self, f'Write Failed.  Series NOT saved..\n\n    "{self.fileName}"', 'Write Failed', iconMask=wx.ICON_ERROR )
 					return
 				
-		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
+		with wx.FileDialog( self, message="Choose a file for your Competition",
 							defaultFile = '',
 							wildcard = 'SeriesMgr files (*.smn)|*.smn',
-							style=wx.FD_OPEN | wx.FD_CHANGE_DIR )
-		if dlg.ShowModal() == wx.ID_OK:
-			self.openSeries( dlg.GetPath() )
-		dlg.Destroy()
+							style=wx.FD_OPEN | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() == wx.ID_OK:
+				self.openSeries( dlg.GetPath() )
 
 	def menuSave( self, event ):
 		if not self.fileName:
@@ -800,7 +819,7 @@ table.results tr td.fastest{
 		try:
 			self.writeSeries()
 		except:
-			Utils.MessageOK(self, 'Write Failed.  Series NOT saved.\n\n    "{}".'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, f'Write Failed.  Series NOT saved.\n\n    "{self.fileName}".', 'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
 	def setTitle( self ):
@@ -811,16 +830,13 @@ table.results tr td.fastest{
 		self.SetTitle( title )
 			
 	def menuSaveAs( self, event ):
-		dlg = wx.FileDialog( self, message="Choose a file for your Series",
+		with wx.FileDialog( self, message="Choose a file for your Series",
 							defaultFile = '',
 							wildcard = 'SeriesMgr files (*.smn)|*.smn',
-							style=wx.FD_SAVE | wx.FD_CHANGE_DIR )
-		response = dlg.ShowModal()
-		if response == wx.ID_OK:
+							style=wx.FD_SAVE | wx.FD_CHANGE_DIR ) as dlg:
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 			fileName = dlg.GetPath()
-		dlg.Destroy()
-		if response != wx.ID_OK:
-			return
 		
 		if not fileName.endswith('.smn'):
 			fileName += '.smn'
@@ -828,7 +844,7 @@ table.results tr td.fastest{
 		try:
 			with open(fileName, 'rb') as fp:
 				pass
-			if not Utils.MessageOKCancel(self, 'File Exists.\n\n    "{}"\n\nReplace?'.format(fileName), 'File Exists'):
+			if not Utils.MessageOKCancel(self, f'File Exists.\n\n    "{fileName}"\n\nReplace?', 'File Exists'):
 				return
 		except IOError:
 			pass
@@ -837,7 +853,7 @@ table.results tr td.fastest{
 			with open(fileName, 'wb') as fp:
 				pass
 		except:
-			Utils.MessageOK(self, 'Cannot open file:\n\n    "{}"'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, f'Cannot open file:\n\n    "{fileName}"', 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 			
 		self.fileName = fileName

@@ -164,7 +164,7 @@ class Points(wx.Panel):
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(bsizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
-		self.pointsStructures = wx.StaticText(self, wx.ID_ANY, 'Points Structures:')
+		self.pointsStructures = wx.StaticText(self, label='Points Structures:')
 		sizer.Add( self.pointsStructures, 0, flag=wx.ALL, border = 4 )
 		sizer.Add(self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 6)
 		self.SetSizer(sizer)
