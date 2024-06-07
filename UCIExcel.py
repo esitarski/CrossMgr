@@ -375,9 +375,11 @@ def UCIExcel( category, fname, startList=False ):
 	def getIRM( rr ):
 		if 'REL' in '{}'.format(rr.pos):
 			return 'REL'
+		if rr.status != Finisher:
+			return statusNames[rr.status].replace('DQ', 'DSQ')
 		if rrWinner and rr.laps != rrWinner.laps:
 			return 'LAP'
-		return '' if rr.status == Finisher else statusNames[rr.status].replace('DQ', 'DSQ')
+		return ''
 	
 	getValue = {
 		'Start Order':	lambda rr: toInt(rr.pos),
