@@ -472,7 +472,7 @@ class MainWin( wx.Frame ):
 		with wx.Printer(pdd) as printer:
 			if not printer.Print(self, printout, True):
 				if printer.GetLastError() == wx.PRINTER_ERROR:
-					Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error",iconMask=wx.ICON_ERROR)
+					Utils.MessageOK(self, "There was a printer problem.\nCheck your printer setup.", "Printer Error", iconMask=wx.ICON_ERROR)
 			else:
 				self.printData = wx.PrintData( printer.GetPrintDialogData().GetPrintData() )
 
@@ -779,7 +779,7 @@ table.results tr td.fastest{
 					fp.seek( 0 )
 					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', errors='replace' ).load()
 		except IOError:
-			Utils.MessageOK(self, 'Cannot Open File "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, f'Cannot Open File "{fileName}".', 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 		
 		SeriesModel.model.postReadFix()
@@ -801,7 +801,7 @@ table.results tr td.fastest{
 				try:
 					self.writeSeries()
 				except:
-					Utils.MessageOK(self, 'Write Failed.  Series NOT saved..\n\n    "{}"'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+					Utils.MessageOK(self, f'Write Failed.  Series NOT saved..\n\n    "{self.fileName}"', 'Write Failed', iconMask=wx.ICON_ERROR )
 					return
 				
 		with wx.FileDialog( self, message="Choose a file for your Competition",
@@ -819,7 +819,7 @@ table.results tr td.fastest{
 		try:
 			self.writeSeries()
 		except:
-			Utils.MessageOK(self, 'Write Failed.  Series NOT saved.\n\n    "{}".'.format(self.fileName), 'Write Failed', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, f'Write Failed.  Series NOT saved.\n\n    "{self.fileName}".', 'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
 	def setTitle( self ):
@@ -844,7 +844,7 @@ table.results tr td.fastest{
 		try:
 			with open(fileName, 'rb') as fp:
 				pass
-			if not Utils.MessageOKCancel(self, 'File Exists.\n\n    "{}"\n\nReplace?'.format(fileName), 'File Exists'):
+			if not Utils.MessageOKCancel(self, f'File Exists.\n\n    "{fileName}"\n\nReplace?', 'File Exists'):
 				return
 		except IOError:
 			pass
@@ -853,7 +853,7 @@ table.results tr td.fastest{
 			with open(fileName, 'wb') as fp:
 				pass
 		except:
-			Utils.MessageOK(self, 'Cannot open file:\n\n    "{}"'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
+			Utils.MessageOK(self, f'Cannot open file:\n\n    "{fileName}"', 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 			
 		self.fileName = fileName

@@ -8,7 +8,7 @@ def UpdateDependencies():
 				continue
 			
 			fname = line.split()[1] + '.py'
-			print( 'copying: {}'.format(fname) )
+			print( f'copying: {fname}' )
 			
 			try:
 				os.remove( fname )
