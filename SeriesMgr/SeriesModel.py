@@ -279,11 +279,16 @@ class SeriesModel:
 	categoriesPrevious = {}
 	
 	references = []
-	referenceLicenses = []
-	referenceTeams = []
 	aliasLookup = {}
+
+	referenceLicenses = []
 	aliasLicenseLookup = {}
+
+	referenceTeams = []
 	aliasTeamLookup = {}
+
+	referenceCategories = []	
+	aliasCategoryLookup = {}
 
 	ftpHost = ''
 	ftpPath = ''
@@ -497,10 +502,41 @@ class SeriesModel:
 			self.changed = changed
 			self.referenceTeams = referenceTeams
 			self.aliasTeamLookup = {}
-			for Team, aliases in self.referenceTeams:
+			for team, aliases in self.referenceTeams:
 				for alias in aliases:
 					key = nameToAliasKey( alias )
-					self.aliasTeamLookup[key] = Team				
+					self.aliasTeamLookup[key] = team				
+	
+	def setReferenceCategories( self, referenceCategories ):
+		dNew = dict( referenceCategories )
+		dExisting = dict( self.referenceCategories )
+		
+		changed = (len(dNew) != len(dExisting))
+		updated = False
+		
+		for name, aliases in dNew.items():
+			if name not in dExisting:
+				changed = True
+				if aliases:
+					updated = True
+			elif aliases != dExisting[name]:
+				changed = True
+				updated = True
+	
+		for name, aliases in dExisting.items():
+			if name not in dNew:
+				changed = True
+				if aliases:
+					updated = True
+				
+		if changed:
+			self.changed = changed
+			self.referenceCategories = referenceCategories
+			self.aliasCategoryLookup = {}
+			for category, aliases in self.referenceCategories:
+				for alias in aliases:
+					key = nameToAliasKey( alias )
+					self.aliasCategoryLookup[key] = category				
 	
 	def getReferenceName( self, lastName, firstName ):
 		key = (nameToAliasKey(lastName), nameToAliasKey(firstName))
@@ -520,6 +556,11 @@ class SeriesModel:
 		if team.lower() in {'independent', 'ind.', 'ind', 'none', 'no team'}:
 			return ''
 		return team
+	
+	def getReferenceCategory( self, categoryName ):
+		if categoryName is None:
+			return categoryName
+		return self.aliasCategoryLookup.get( nameToAliasKey(categoryName), categoryName )
 	
 	def fixCategories( self ):
 		categorySequence = getattr( self, 'categorySequence', None )
@@ -703,7 +744,6 @@ class SeriesModel:
 			if oldErrors != self.errors:
 				self.changed = True
 				
-			self.harmonizeCategorySequence( raceResults )
 		return raceResults
 
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
@@ -717,12 +757,13 @@ class SeriesModel:
 			r.iSequence = i
 			raceFromFileName[r.fileName] = r
 			
-		# Try to find missing teams based on the uciid.
-		# This defaults to using the most recent team.
+		# Try to fix missing teams based on the uciid.
+		# Defaults to the most recent team.
 		teamFromUCIID = { rr.uci_id:rr.team for rr in raceResults if rr.uci_id and rr.team }
 		
 		# Apply all aliases.
 		for rr in raceResults:
+			rr.categoryName = self.getReferenceCategory( rr.categoryName )
 			rr.lastName, rr.firstName = self.getReferenceName( rr.lastName, rr.firstName )
 			rr.license = self.getReferenceLicense( rr.license )
 			if rr.uci_id and not rr.team:	# If we are missing the team, try to use a previously used team.
@@ -730,6 +771,9 @@ class SeriesModel:
 			rr.team = self.getReferenceTeam( rr.team )
 			rr.raceFileName = rr.raceInSeries.fileName
 			rr.raceInSeries = raceFromFileName.get( rr.raceInSeries.fileName, rr.raceInSeries )	# Normalize the deepcopied raceInSeries.
+		
+		# Harmonize the categories *after* we have applied the category aliases.
+		self.harmonizeCategorySequence( raceResults )
 		
 		if adjustForUpgrades:
 			GetModelInfo.AdjustForUpgrades( raceResults )
