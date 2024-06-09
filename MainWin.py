@@ -3952,7 +3952,7 @@ class MainWin( wx.Frame ):
 		info.Version = ''
 		info.Copyright = "(C) 2009-{}".format( now().year )
 		info.Description = wordwrap(
-_("""Score Cycling races quickly and easily with little preparation.
+			_("""Score Cycling races quickly and easily with little preparation.
 
 A brief list of features:
    * Input riders on the first lap

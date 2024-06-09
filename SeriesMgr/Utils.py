@@ -106,10 +106,11 @@ def initTranslation():
 		except Exception:
 			pass
 		
-		extra_fields = {
+		# Keep these here for translations.
+		(
 			_('Search'),
 			_('Finisher'), _('DNF'), _('PUL'), _('DNS'), _('DQ'), _('OTL'), _('NP'),
-		}
+		)
 		
 initTranslation()
 

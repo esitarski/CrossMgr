@@ -43,6 +43,7 @@ from CategorySequence	import CategorySequence
 from Aliases			import Aliases
 from AliasesLicense		import AliasesLicense
 from AliasesTeam		import AliasesTeam
+from AliasesCategory	import AliasesCategory
 from Options			import Options
 from Errors				import Errors
 from Printing			import SeriesMgrPrintout
@@ -285,12 +286,13 @@ class MainWin( wx.Frame ):
 			[ 'points',			Points,				'Scoring Criteria' ],
 			[ 'categorySequence',CategorySequence,	'Category Options' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
+			[ 'errors',			Errors,				'Errors' ],
+			[ 'options',		Options,			'Options' ],
+			[ 'teamResultsNames', TeamResultsNames, 'Team Results Names' ],
 			[ 'aliases',		Aliases,			'Name Aliases' ],
 			[ 'licenseAliases',	AliasesLicense,		'License Aliases' ],
 			[ 'teamAliases',	AliasesTeam,		'Team Aliases' ],
-			[ 'teamResultsNames', TeamResultsNames, 'Team Results Names' ],
-			[ 'options',		Options,			'Options' ],
-			[ 'errors',			Errors,				'Errors' ],
+			[ 'categoryAliases',  AliasesCategory,  'Category Aliases' ],
 		]
 		
 		for i, (a, c, n) in enumerate(self.attrClassName):

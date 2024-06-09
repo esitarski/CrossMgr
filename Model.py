@@ -349,9 +349,9 @@ class Category:
 				self.gender = 'Women'
 		except Exception:
 			pass
-			
-		lappedRidersMustContinue = f'{lappedRidersMustContinue}'.strip()
-		self.lappedRidersMustContinue = (lappedRidersMustContinue[:1] in 'TtYy1')
+		
+		lappedRidersMustContinueFirstChar = f'{lappedRidersMustContinue}'.strip()[:1].lower()
+		self.lappedRidersMustContinue = (lappedRidersMustContinueFirstChar in 'ty1')
 
 	def __setstate( self, d ):
 		self.__dict__.update(d)
