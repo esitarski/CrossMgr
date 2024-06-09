@@ -404,7 +404,8 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('uci_id', 'UCIID'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
-				
+			
+			# Skip all entries that do not have a first name or last name.
 			if not info['firstName'] and not info['lastName']:
 				continue				
 

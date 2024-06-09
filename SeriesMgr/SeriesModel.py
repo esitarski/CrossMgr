@@ -560,6 +560,7 @@ class SeriesModel:
 	def getReferenceCategory( self, categoryName ):
 		if categoryName is None:
 			return categoryName
+		# print( f'"{self.aliasCategoryLookup.get( nameToAliasKey(categoryName), categoryName )}"="{categoryName}"' )
 		return self.aliasCategoryLookup.get( nameToAliasKey(categoryName), categoryName )
 	
 	def fixCategories( self ):
