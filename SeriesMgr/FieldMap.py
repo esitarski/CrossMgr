@@ -1,4 +1,7 @@
 import unicodedata
+from collections import defaultdict
+import csv
+import io
 
 def remove_diacritic( s ):
 	'''
@@ -32,9 +35,11 @@ class FieldMap:
 
 	def __delitem__( self, name ):
 		for a in self.aliases[name]:
-			del self.alias_to_name[normalize(a)]
-		del self.aliases[name]
-		del self.description[name]
+			self.alias_to_name.pop( normalize(a), None )
+		self.name_to_col.pop( name, None )
+		self.unmapped.discard( name )
+		self.aliases.pop( name, None )
+		self.description.pop( name, None )
 		
 	def get_aliases( self, name ):
 		return self.aliases.get(name, tuple())
@@ -43,8 +48,8 @@ class FieldMap:
 		return self.description.get(name, '')
 			
 	def set_headers( self, header ):
-		self.name_to_col = {}
-		self.unmapped = set()
+		self.name_to_col.clear()
+		self.unmapped.clear()
 		for i, h in enumerate(header):
 			try:
 				h = normalize( h )
@@ -78,6 +83,21 @@ class FieldMap:
 		except Exception as e:
 			return None
 		return None if alias in self.unmapped else self.alias_to_name.get(alias, None)
+		
+	def __repr__( self ):
+		return repr(self.name_to_col)
+		
+	def summary( self ):
+		name_aliases = defaultdict( list )
+		for alias, name in self.alias_to_name.items():
+			name_aliases[name].append( alias )
+		
+		s = io.StringIO()
+		writer = csv.writer( s )
+		writer.writerow( ['Field','Description','Accepted Column Names (upper/lower case, accents are ignored)'] )
+		for name, aliases in sorted(name_aliases.items()):
+			writer.writerow( [name, self.description[name]] + sorted(aliases) )
+		return s.getvalue()
 
 standard_field_aliases = (
 	('pos',
@@ -89,27 +109,27 @@ standard_field_aliases = (
 		"Finish time",
 	),
 	('last_name',
-		('LastName','Last Name','LName','Rider Last Name',),
+		('LastName','Last Name','LName','Rider Last Name','Nom de famille'),
 		"Participant's last name",
 	),
 	('first_name',
-		('FirstName','First Name','FName','Rider First Name',),
+		('FirstName','First Name','FName','Rider First Name','Prénom'),
 		"Participant's first name",
 	),
 	('name',
-		('Name',),
-		"Participant's name",
+		('Name','Nom',),
+		"Participant's name in \"LASTNAME, Firstname\" format",
 	),
 	('date_of_birth',
-		('Date of Birth','DateOfBirth','Birthdate','DOB','Birth','Birthday',),
+		('Date of Birth','DateOfBirth','Birthdate','DOB','Birth','Birthday','date de naissance'),
 		"Date of birth",
 	),
 	('gender',
-		('Gender', 'Rider Gender', 'Sex', 'Race Gender',),
+		('Gender', 'Rider Gender', 'Sex', 'Race Gender','Genre',),
 		"Gender",
 	),
 	('team',
-		('Team','Team Name','TeamName','Rider Team','Club','Club Name','ClubName','Rider Club','Rider Club/Team',),
+		('Team','Team Name','TeamName','Rider Team','Club','Club Name','ClubName','Rider Club','Rider Club/Team','Équipe',),
 		"Team",
 	),
 	('discipline',
@@ -144,7 +164,7 @@ standard_field_aliases = (
 		"UCI ID of the form NNNNNNNNNNN",
 	),
 	('bib',
-		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #',),
+		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #','Plate', 'Plate #', 'Plate#','Numéro','plaque'),
 		"Bib number",
 	),
 	('paid',
@@ -155,6 +175,10 @@ standard_field_aliases = (
 		('IRM',),
 		"Dataride DNF/DNS/DSQ/LAP/REL status field",
 	),
+	('status',
+		('Status',),
+		"Status DNF/DNS/DSQ status field",
+	),
 	('result',
 		('Result',),
 		"Dataride Result (time)",
@@ -164,11 +188,11 @@ standard_field_aliases = (
 		"Email",
 	),
 	('phone',
-		('Phone','Telephone','Phone #',),
+		('Phone','Telephone','Phone #','téléphone'),
 		"Phone",
 	),
 	('city',
-		('City',),
+		('City','ville'),
 		"City",
 	),
 	('state_prov',
@@ -188,11 +212,11 @@ standard_field_aliases = (
 		"Postal or Zip code",
 	),
 	('category_code',
-		('Race Category','RaceCategory','Race_Category',),
+		('Race Category','RaceCategory','Race_Category','code de catégorie'),
 		"Race Category",
 	),
 	('category_name',
-		('Category',),
+		('Category','catégorie'),
 		"Category Name",
 	),
 	('est_kmh',
@@ -220,19 +244,19 @@ standard_field_aliases = (
 		"Race Entered",
 	),
 	('role',
-		('Role',),
+		('Role','rôle'),
 		"Role",
 	),
 	('preregistered',
-		('Preregistered', 'Prereg',),
+		('Preregistered', 'Prereg','préinscrit'),
 		"Preregistered",
 	),
 	('waiver',
-		('Waiver',),
+		('Waiver','renoncer'),
 		"Waiver",
 	),
 	('laps',
-		('Laps',),
+		('Laps','tours'),
 		"Laps",
 	),
 	('points',
@@ -241,12 +265,18 @@ standard_field_aliases = (
 	),
 )
 
-def standard_field_map( exclude = [] ):
+def standard_field_map( exclude=None, only=None ):
 	fm = FieldMap()
 	for a in standard_field_aliases:
 		fm.set_aliases( *a )
-	for e in exclude:
-		del fm[e]
+	if exclude:
+		for f in exclude:
+			del fm[f]
+	if only:
+		only_set = set( only )
+		for f in list( fm.description.keys() ):
+			if f not in only_set:
+				del fm[f]
 	return fm
 	
 if __name__ == '__main__':
@@ -260,3 +290,7 @@ if __name__ == '__main__':
 	print( v('bib'), v('role'), v('license'), v('uci_code'), v('note'), v('tag'), v('emergency_contact_phone') )
 	assert v('bib', None) == 133
 	print( sfm.get_aliases( 'license_code' ) )
+
+	sfm = standard_field_map( only=['pos', 'bib', 'license_code', 'uci_id', 'time', 'name', 'first_name', 'last_name', 'team', 'categoryName', 'laps', 'points', 'irm', 'status'] )
+	with open('summary.csv', 'w', encoding='utf8') as f:
+		f.write( sfm.summary() )

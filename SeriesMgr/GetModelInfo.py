@@ -245,14 +245,20 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					'laps':			f('laps',1),
 					'pointsInput':	f('points',defaultPointsInput),
 					'irm':			f('irm',None),
+					'status':		f('status',None),
 				}
 				
 				info['rank'] = str(info['rank']).strip()
 				
-				# Handle the status in the irm column.
-				if not info['rank'] and info['irm'] in {'DQ', 'DSQ', 'DNS', 'DNF'}:
-					info['rank'] = info['irm']
+				# Handle the irm and status column (if present).
+				if not info['rank']:
+					if info['irm'] in {'DQ', 'DSQ', 'DNS', 'DNF'}:
+						info['rank'] = info['irm']
+					elif info['status'] in {'DQ', 'DSQ', 'DNS', 'DNF'}:
+						info['rank'] = info['status']
+						
 				info.pop('irm', None)
+				info.pop('status', None)
 				
 				if not info['rank']:	# If missing rank, assume end of input.
 					break
@@ -321,11 +327,15 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					except Exception as e:
 						info['tFinish'] = 0.0
 				
+				#print( info )
 				raceResults.append( RaceResult(**info) )
 				
 			elif any( str(r).strip().lower() in posHeader for r in row ):
 				fm = standard_field_map()
 				fm.set_headers( row )
+				
+				# print( row )
+				# print( fm )				
 				
 				# Check if this spreadsheet has points.
 				if 'points' in fm:
