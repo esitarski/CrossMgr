@@ -229,7 +229,7 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="hpte", size=(1024,600))
 	vs = wx.BoxSizer( wx.VERTICAL )
 	
-	hpte1 = HighPrecisionTimeEdit( mainWin, value="10:00:00", size=(200,-1) )
+	hpte1 = HighPrecisionTimeEdit( mainWin, value="10:00:00", allow_none=True, size=(200,-1) )
 	hpte2 = HighPrecisionTimeEdit( mainWin, display_milliseconds=False, value="10:00", size=(200,-1) )
 	hpte3 = HighPrecisionTimeEdit( mainWin, display_seconds=False, value="10:00", size=(200,-1) )
 	
