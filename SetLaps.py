@@ -97,8 +97,11 @@ class SetLaps( wx.Dialog ):
 		
 		vs.Add( wx.StaticText(self) )
 		
-		self.updateTimer = wx.CallLater( self.updateInterval, self.onUpdateTimer )
 		self.update()
+		#self.updateTimer = wx.CallLater( self.updateInterval, self.onUpdateTimer )
+		self.updateTimer = wx.Timer( self )
+		self.updateTimer.Start( self.updateInterval )
+		self.Bind( wx.EVT_TIMER, self.onUpdateTimer )
 		self.SetSizerAndFit( vs )
 	
 	def setEarlyBellTime( self, event ):
@@ -181,11 +184,10 @@ class SetLaps( wx.Dialog ):
 			self.earlyBellTime.SetSeconds( self.category.earlyBellTime )
 		
 		# Ensure that updated text is size adjusted.
-		self.fgs.Layout()
+		self.Layout()
 
-	def onUpdateTimer( self ):
+	def onUpdateTimer( self, event=None ):
 		self.update( fromTimer=True )
-		self.updateTimer.Start( self.updateInterval )
 
 	def onNewRaceLaps( self, event ):
 		self.update()
@@ -201,7 +203,7 @@ class SetLaps( wx.Dialog ):
 		self.EndModal( wx.ID_OK )
 		
 	def onCancel( self, event ):
-		self.updateTimer.Stop()
+		self.updateTimer.Stop()		
 		self.EndModal( wx.ID_CANCEL )
 
 if __name__ == '__main__':

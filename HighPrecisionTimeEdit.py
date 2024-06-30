@@ -86,7 +86,11 @@ if platform.system() == 'Windows':
 			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
 			
 		def SetSeconds( self, secs ):
-			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
+			super().SetValue(
+				secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds)
+					if secs is not None
+					else ''
+			)
 			
 		def SetValue( self, v ):
 			if self.allow_none and v is None:
