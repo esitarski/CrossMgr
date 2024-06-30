@@ -145,7 +145,7 @@ else:
 		def onKeypress(self, event):
 			keycode = event.GetKeyCode()
 			obj = event.GetEventObject()
-			val = obj.GetValue()
+			val = super(HighPrecisionTimeEdit, obj).GetValue()	# Use the actual text value, not the formatted value.
 			
 			# filter unicode characters
 			if keycode == wx.WXK_NONE:
@@ -157,7 +157,7 @@ else:
 			elif chr(keycode) not in string.printable:
 				event.Skip() # allow all other special keycode
 			# allow one '.'
-			elif chr(keycode) == '.' and '.' not in val:
+			elif chr(keycode) == '.' and val and '.' not in val:
 				event.Skip()
 			return
 		
