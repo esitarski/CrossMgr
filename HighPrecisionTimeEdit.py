@@ -45,7 +45,7 @@ def getSeconds( v, display_seconds, display_milliseconds ):
 		return 0.0
 
 # Masked controls still don't work on anything but Windows.  Sigh :(
-if platform.system() == 'Windows':
+if False: # platform.system() == 'Windows':
 	import wx.lib.masked as masked
 	
 	class HighPrecisionTimeEdit( masked.TextCtrl ):
@@ -86,7 +86,11 @@ if platform.system() == 'Windows':
 			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
 			
 		def SetSeconds( self, secs ):
-			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) )
+			super().SetValue(
+				secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds)
+					if secs is not None
+					else self.emptyValue
+			)
 			
 		def SetValue( self, v ):
 			if self.allow_none and v is None:
@@ -141,7 +145,7 @@ else:
 		def onKeypress(self, event):
 			keycode = event.GetKeyCode()
 			obj = event.GetEventObject()
-			val = obj.GetValue()
+			val = super(HighPrecisionTimeEdit, obj).GetValue()	# Use the actual text value, not the formatted value.
 			
 			# filter unicode characters
 			if keycode == wx.WXK_NONE:
@@ -153,7 +157,7 @@ else:
 			elif chr(keycode) not in string.printable:
 				event.Skip() # allow all other special keycode
 			# allow one '.'
-			elif chr(keycode) == '.' and '.' not in val:
+			elif chr(keycode) == '.' and val and '.' not in val:
 				event.Skip()
 			return
 		
@@ -225,9 +229,12 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="hpte", size=(1024,600))
 	vs = wx.BoxSizer( wx.VERTICAL )
 	
-	hpte1 = HighPrecisionTimeEdit( mainWin, value="10:00:00", size=(200,-1) )
+	hpte1 = HighPrecisionTimeEdit( mainWin, value="10:00:00", allow_none=True, size=(200,-1) )
 	hpte2 = HighPrecisionTimeEdit( mainWin, display_milliseconds=False, value="10:00", size=(200,-1) )
 	hpte3 = HighPrecisionTimeEdit( mainWin, display_seconds=False, value="10:00", size=(200,-1) )
+	
+	hpte1.SetSeconds( None )
+	#hpte1.SetValue( '' )
 	
 	def getValues( event ):
 		print( 'hpte1: {}, {}'.format(hpte1.GetValue(), hpte1.GetSeconds()) ) 
