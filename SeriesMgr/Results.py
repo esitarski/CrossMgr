@@ -893,7 +893,7 @@ class Results(wx.Panel):
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
 				return
 		
-		self.raceResults = model.extractAllRaceResults()
+		raceResults = model.extractAllRaceResults()
 		
 		categoryNames = model.getCategoryNamesSortedPublish()
 		if not categoryNames:
@@ -904,7 +904,7 @@ class Results(wx.Panel):
 		for categoryName in categoryNames:
 			category = model.categories[categoryName]				
 			bestResultsToConsider = (category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
-			mustHaveCompleted = (category.mustHaveCompleted if category.mustHaveComplete is not None else  model.mustHaveCompleted)
+			mustHaveCompleted = (category.mustHaveCompleted if category.mustHaveCompleted is not None else  model.mustHaveCompleted)
 			results, races, potentialDuplicates = GetModelInfo.GetCategoryResults(
 				categoryName,
 				raceResults,
