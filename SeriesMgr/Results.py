@@ -972,7 +972,7 @@ class Results(wx.Panel):
 						else '({})'.format(Utils.ordinal(rRank)) if rRank <= SeriesModel.rankDNF
 						else '',
 						centerStyle
-				)
+					)
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
