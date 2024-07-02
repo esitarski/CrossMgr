@@ -13,11 +13,11 @@ import Utils
 import SeriesModel
 import GetModelInfo
 from ReorderableGrid import ReorderableGrid
-from FitSheetWrapper import FitSheetWrapper
+from FitSheetWrapper import FitSheetWrapperXLSX
 import FtpWriteFile
 from ExportGrid import tag
 
-import xlwt
+import xlsxwriter
 import io
 import re
 import webbrowser
@@ -571,23 +571,6 @@ function sortTableId( iTable, iCol ) {
 
 brandText = 'Powered by CrossMgr (sites.google.com/site/crossmgrsoftware)'
 
-textStyle = xlwt.easyxf(
-	"alignment: horizontal left;"
-	"borders: bottom thin;"
-)
-numberStyle = xlwt.easyxf(
-	"alignment: horizontal right;"
-	"borders: bottom thin;"
-)
-centerStyle = xlwt.easyxf(
-	"alignment: horizontal center;"
-	"borders: bottom thin;"
-)
-labelStyle = xlwt.easyxf(
-	"alignment: horizontal center;"
-    "borders: bottom medium;"
-)
-
 class Results(wx.Panel):
 	#----------------------------------------------------------------------
 	def __init__(self, parent):
@@ -899,7 +882,37 @@ class Results(wx.Panel):
 		if not categoryNames:
 			return
 			
-		wb = xlwt.Workbook()
+		if Utils.mainWin:
+			xlfileName = os.path.splitext(Utils.mainWin.fileName)[0] + '.xlsx'
+		else:
+			xlfileName = 'ResultsTest.xlsx'
+		
+		wb = xlsxwriter.Workbook( xlfileName )
+		
+		textStyle = wb.add_format()
+		textStyle.set_align( 'left' )
+		textStyle.set_bottom( 1 )
+		
+		numberStyle = wb.add_format()
+		numberStyle.set_align( 'right' )
+		numberStyle.set_bottom( 1 )
+		
+		centerStyle = wb.add_format()
+		centerStyle.set_align( 'center' )
+		centerStyle.set_bottom( 1 )
+		
+		labelStyle = wb.add_format()
+		labelStyle.set_bold()
+		labelStyle.set_align( 'center' )
+		labelStyle.set_bottom( 2 )
+
+		brandingStyle = wb.add_format()
+		brandingStyle.set_align( 'left' )
+		
+		headerStyle = wb.add_format()
+		headerStyle.set_bold()
+		font_size = 16
+		headerStyle.set_font_size( font_size )
 		
 		for categoryName in categoryNames:
 			category = model.categories[categoryName]				
@@ -918,28 +931,21 @@ class Results(wx.Panel):
 			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
 			headerNames.extend( '{}'.format(r[1]) for r in races )
 			
-			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
-			wsFit = FitSheetWrapper( ws )
+			ws = wb.add_worksheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
+			wsFit = FitSheetWrapperXLSX( ws )
 
-			fnt = xlwt.Font()
-			fnt.name = 'Arial'
-			fnt.bold = True
-			fnt.height = int(fnt.height * 1.5)
-			
-			headerStyle = xlwt.XFStyle()
-			headerStyle.font = fnt
-			
 			rowCur = 0
-			ws.write_merge( rowCur, rowCur, 0, 8, model.name, headerStyle )
+			ws.set_row( rowCur, font_size*1.15 )
+			ws.merge_range( rowCur, 0, rowCur, 8, model.name, headerStyle )
 			rowCur += 1
 			if model.organizer:
-				ws.write_merge( rowCur, rowCur, 0, 8, '{}'.format(model.organizer), headerStyle )
+				ws.set_row( rowCur, font_size*1.15 )
+				ws.merge_range( rowCur, 0, rowCur, 8, f'{model.organizer}', headerStyle )
 				rowCur += 1
 			rowCur += 1
 			colCur = 0
-			ws.write_merge( rowCur, rowCur, colCur, colCur + 4, categoryName, xlwt.easyxf(
-																	"font: name Arial, bold on;"
-																	) );
+			ws.set_row( rowCur, font_size*1.15 )
+			ws.merge_range( rowCur, colCur, rowCur, colCur + 4, categoryName, headerStyle )
 				
 			rowCur += 2
 			for c, headerName in enumerate(headerNames):
@@ -970,17 +976,10 @@ class Results(wx.Panel):
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
-			style = xlwt.XFStyle()
-			style.alignment.horz = xlwt.Alignment.HORZ_LEFT
-			ws.write( rowCur + 2, 0, brandText, style )
+			ws.write( rowCur + 2, 0, brandText, brandingStyle )
 		
-		if Utils.mainWin:
-			xlfileName = os.path.splitext(Utils.mainWin.fileName)[0] + '.xls'
-		else:
-			xlfileName = 'ResultsTest.xls'
-			
 		try:
-			wb.save( xlfileName )
+			wb.close()
 			webbrowser.open( xlfileName, new = 2, autoraise = True )
 			Utils.MessageOK(self, 'Excel file written to:\n\n   {}'.format(xlfileName), 'Excel Write')
 			self.callPostPublishCmd( xlfileName )
