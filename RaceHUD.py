@@ -16,7 +16,7 @@ def rescaleBitmap( b, s ):
 class RaceHUD(wx.Control):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name=_("RaceHUD"), lapInfoFunc=None, leftClickFunc=None ):
+				name=_("RaceHUD"), lapInfoFunc=None, leftClickFunc=None, rightClickFunc=None ):
 		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour(wx.WHITE)
 		self.raceTimes = None	# Last time is red lantern.
@@ -26,6 +26,7 @@ class RaceHUD(wx.Control):
 		self.getNowTimeCallback = None
 		self.lapInfoFunc = lapInfoFunc
 		self.leftClickFunc = leftClickFunc
+		self.rightClickFunc = rightClickFunc
 		
 		self.resetDimensions()
 		
@@ -45,6 +46,7 @@ class RaceHUD(wx.Control):
 		self.Bind(wx.EVT_MOTION, self.OnMotion)
 		self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeave)
 		self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+		self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
 		
 		if leftClickFunc:
 			self.SetCursor( wx.Cursor(wx.CURSOR_CROSS) )
@@ -122,19 +124,29 @@ class RaceHUD(wx.Control):
 			self.iLapHover = iLapHover
 			wx.CallAfter( self.Refresh )
 	
-	def OnLeftUp( self, event ):
-		if not self.leftClickFunc or not self.raceTimes:
-			event.Skip()
-			return
-			
+	def getIRaceTimesHover( self, event ):
 		y = event.GetY()
 		
 		iRaceTimesHover = int( y / self.hudHeight )
 		if iRaceTimesHover >= len(self.raceTimes):
 			iRaceTimesHover = None
-		
+		return iRaceTimesHover
+	
+	def OnLeftUp( self, event ):
+		if not self.leftClickFunc or not self.raceTimes:
+			event.Skip()
+			return
+		iRaceTimesHover = self.getIRaceTimesHover( event )
 		if iRaceTimesHover is not None:
 			wx.CallAfter( self.leftClickFunc, iRaceTimesHover )
+	
+	def OnRightUp( self, event ):
+		if not self.rightClickFunc or not self.raceTimes:
+			event.Skip()
+			return
+		iRaceTimesHover = self.getIRaceTimesHover( event )
+		if iRaceTimesHover is not None:
+			wx.CallAfter( self.rightClickFunc, iRaceTimesHover )
 	
 	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)

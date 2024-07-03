@@ -433,7 +433,11 @@ class NumKeypad( wx.Panel ):
 		self.horizontalMainSizer = horizontalMainSizer
 		
 		#----------------------------------------------------------------------------------------------
-		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN, lapInfoFunc=getLapInfo, leftClickFunc=self.doLeftClickHUD )
+		self.raceHUD = RaceHUD( splitter, wx.ID_ANY, style=wx.BORDER_SUNKEN,
+			lapInfoFunc=getLapInfo,
+			leftClickFunc=self.doLeftClickHUD,
+			rightClickFunc=self.doLeftClickHUD,
+		)
 		
 		splitter.SetMinimumPaneSize( 20 )
 		splitter.SplitHorizontally( panel, self.raceHUD, -100 )

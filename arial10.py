@@ -160,7 +160,7 @@ def fitlinewidth(data, bold=False):
         else:
             units += charwidths['0']
     if bold:
-        units *= 1.1
+        units *= 1.12
     return max(units, 700) # Don't go smaller than a reported width of 2
 
 def fitWidth(data, bold=False):
