@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-warnings.simplefilter('ignore', np.RankWarning)
+warnings.simplefilter('ignore', np.exceptions.RankWarning)
 import math
 import operator
 import itertools
