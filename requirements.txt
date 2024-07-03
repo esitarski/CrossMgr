@@ -1,5 +1,5 @@
 wheel
-numpy==1.26.4
+numpy
 setuptools
 requests
 waitress
