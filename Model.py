@@ -176,6 +176,7 @@ class Category:
 		'distanceType',
 		'firstLapDistance',
 		'lappedRidersMustContinue',
+		'earlyBellTime',
 		'publishFlag',
 		'uploadFlag',
 		'seriesFlag',
