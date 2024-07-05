@@ -30,7 +30,7 @@ for f in glob.glob( '*.py' ):
 	shutil.copy( f, dir )
 
 pot = os.path.join(CrossMgrLocale, "messages.pot")
-subprocess.call( cmd + ["extract", "-o", pot, dir] )
+subprocess.run( cmd + ["extract", "-o", pot, dir] )
 
 shutil.rmtree( dir )
 
@@ -47,11 +47,11 @@ for lang in languages:
 	po = os.path.join(CrossMgrLocale, lang, 'LC_MESSAGES', 'messages.po')
 
 	if os.path.exists( po ):
-		subprocess.call( cmd + ["update", "-d", CrossMgrLocale, "-i", pot] )
+		subprocess.run( cmd + ["update", "-d", CrossMgrLocale, "-i", pot] )
 	else:
-		subprocess.call( cmd + ["init", "-d", CrossMgrLocale, "-l", lang, "-i", pot] )
+		subprocess.run( cmd + ["init", "-d", CrossMgrLocale, "-l", lang, "-i", pot] )
 		
 	#-----------------------------------------------------------------------
 	# Compile the translation file.
 	#
-	subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )
+	subprocess.run( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )

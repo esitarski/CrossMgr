@@ -1,10 +1,13 @@
-import numpy as np
-import warnings
-warnings.simplefilter('ignore', np.RankWarning)
 import math
+from math import log
 import operator
 import itertools
-from math import log
+import numpy as np
+import warnings
+try:
+	warnings.simplefilter('ignore', np.exceptions.RankWarning)
+except Exception as e:
+	warnings.simplefilter('ignore', np.RankWarning)
 
 def QuadReg( data ):
 	lenData = len(data)

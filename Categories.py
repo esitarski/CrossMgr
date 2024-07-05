@@ -657,60 +657,54 @@ and remove them from other categories.'''),
 		self.state.reset()
 		self.refresh()
 		
-	def _setRow( self, r, active, name, catStr, startOffset='00:00:00',
-					numLaps=None, raceMinutes=None,
-					lappedRidersMustContinue=False,
-					distance=None, distanceType=None,
-					firstLapDistance=None, gender=None,
-					catType=Model.Category.CatWave,
-					earlyBellTime='',
-					publishFlag=True, uploadFlag=True, seriesFlag=True, ):
-					
+	def _setRow( self, r, cat ):
+		def bToS( b ):
+			return ('0','1')[int(b)]
+		
+		startOffset = cat.startOffset
 		while len(startOffset) < len('00:00:00'):
 			startOffset = '00:' + startOffset
-		earlyBellTime = earlyBellTime or ''
+		earlyBellTime = cat.earlyBellTime or ''
 		if isinstance( earlyBellTime, (float, int) ):
 			earlyBellTime = Utils.formatTime( float(earlyBellTime) ) if earlyBellTime else ''
-			
+
 		GetTranslation = _
-		gender = gender if gender in ['Men', 'Women'] else 'Open'
+		gender = cat.gender if cat.gender in ['Men', 'Women'] else 'Open'
 		self.grid.SetRowLabelValue( r, '' )
-		self.grid.SetCellValue( r, self.iCol['active'], '1' if active else '0' )
-		self.grid.SetCellValue( r, self.iCol['catType'], self.CategoryTypeChoices[catType] )
-		self.grid.SetCellValue( r, self.iCol['name'], name )
+		self.grid.SetCellValue( r, self.iCol['active'], bToS(cat.active) )
+		self.grid.SetCellValue( r, self.iCol['catType'], self.CategoryTypeChoices[cat.catType] )
+		self.grid.SetCellValue( r, self.iCol['name'], cat.name )
 		self.grid.SetCellValue( r, self.iCol['gender'], GetTranslation(gender) )
-		self.grid.SetCellValue( r, self.iCol['catStr'], catStr )
+		self.grid.SetCellValue( r, self.iCol['catStr'], cat.catStr )
 		self.grid.SetCellValue( r, self.iCol['startOffset'], startOffset )
-		self.grid.SetCellValue( r, self.iCol['numLaps'], '{}'.format(numLaps) if numLaps else '' )
+		self.grid.SetCellValue( r, self.iCol['numLaps'], f'{cat.numLaps}' if cat.numLaps else '' )
 		self.grid.SetCellValue( r, self.iCol['setLaps'], '\u27F3' )
-		self.grid.SetCellValue( r, self.iCol['raceMinutes'], '{}'.format(raceMinutes) if raceMinutes else '' )
-		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], '1' if lappedRidersMustContinue else '0' )
+		self.grid.SetCellValue( r, self.iCol['raceMinutes'], f'{cat.raceMinutes}' if cat.raceMinutes else '' )
+		self.grid.SetCellValue( r, self.iCol['lappedRidersMustContinue'], bToS(cat.lappedRidersMustContinue) )
 		self.grid.SetCellValue( r, self.iCol['rule80Time'], '' )
 		self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '' )
-		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3n}'.format(distance)) if distance else '' )
-		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[distanceType if distanceType else 0] )
-		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3n}'.format(firstLapDistance)) if firstLapDistance else '' )
+		self.grid.SetCellValue( r, self.iCol['distance'], ('{:.3n}'.format(cat.distance)) if cat.distance else '' )
+		self.grid.SetCellValue( r, self.iCol['distanceType'], self.DistanceTypeChoices[cat.distanceType if cat.distanceType else 0] )
+		self.grid.SetCellValue( r, self.iCol['firstLapDistance'], ('{:.3n}'.format(cat.firstLapDistance)) if cat.firstLapDistance else '' )
 		self.grid.SetCellValue( r, self.iCol['earlyBellTime'], earlyBellTime )
-		self.grid.SetCellValue( r, self.iCol['publishFlag'], '1' if publishFlag else '0' )
-		self.grid.SetCellValue( r, self.iCol['uploadFlag'], '1' if uploadFlag else '0' )
-		self.grid.SetCellValue( r, self.iCol['seriesFlag'], '1' if seriesFlag else '0' )
+		self.grid.SetCellValue( r, self.iCol['publishFlag'], bToS(cat.publishFlag) )
+		self.grid.SetCellValue( r, self.iCol['uploadFlag'], bToS(cat.uploadFlag) )
+		self.grid.SetCellValue( r, self.iCol['seriesFlag'], bToS(cat.seriesFlag) )
 		
-		race = Model.race
-		category = race.categories.get('{} ({})'.format(name.strip(), gender), None) if race else None
-		if not category or category.catType != Model.Category.CatWave:
+		# Update the computed fields.
+		if not cat.active or cat.catType != Model.Category.CatWave:
 			return
 			
-		# Get the 80% time cutoff.
-		if not active or not race:
-			return
-		
-		rule80Time = race.getRule80CountdownTime( category ) if race else None
-		if rule80Time:
-			self.grid.SetCellValue( r, self.iCol['rule80Time'], Utils.formatTime(rule80Time) )
-		
-		laps = race.getNumLapsFromCategory( category ) if race else None
-		if laps:
-			self.grid.SetCellValue( r, self.iCol['suggestedLaps'], '{}'.format(laps) )
+		# Get the 80% time.
+		race = Model.race
+		if race:		
+			rule80Time = race.getRule80CountdownTime( cat ) if race else None
+			if rule80Time:
+				self.grid.SetCellValue( r, self.iCol['rule80Time'], Utils.formatTime(rule80Time) )
+			
+			laps = race.getNumLapsFromCategory( cat ) if race else None
+			if laps:
+				self.grid.SetCellValue( r, self.iCol['suggestedLaps'], f'{laps}' )
 	
 	def fixRowColours( self, row, catType, active ):
 		activeColour = wx.WHITE if active else self.inactiveColour
@@ -760,7 +754,7 @@ and remove them from other categories.'''),
 	
 	def onNewCategory( self, event ):
 		self.grid.AppendRows( 1 )
-		self._setRow( r=self.grid.GetNumberRows() - 1, active=True, name='<{}>     '.format(_('CategoryName')), catStr='100-199,504,-128' )
+		self._setRow( self.grid.GetNumberRows() - 1, Model.Category(active=True, name='<{}>     '.format(_('CategoryName')), catStr='100-199,504,-128') )
 		self.doAutosize()
 		
 	def onDelCategory( self, event ):
@@ -827,25 +821,7 @@ and remove them from other categories.'''),
 			self.grid.AppendRows( len(categories) )
 			
 			for r, cat in enumerate(categories):
-				self._setRow(
-					r=r,
-					active				= cat.active,
-					name				= cat.name,
-					gender				= getattr(cat, 'gender', None),
-					catStr				= cat.catStr,
-					catType				= cat.catType,
-					startOffset			= cat.startOffset,
-					numLaps				= cat._numLaps,
-					raceMinutes			= cat.raceMinutes,
-					lappedRidersMustContinue = getattr(cat, 'lappedRidersMustContinue', False),
-					distance			= getattr(cat, 'distance', None),
-					distanceType		= getattr(cat, 'distanceType', Model.Category.DistanceByLap),
-					firstLapDistance	= getattr(cat, 'firstLapDistance', None),
-					earlyBellTime		= Utils.formatTime(cat.earlyBellTime, highPrecision=False, forceHours=True) if cat.earlyBellTime else '',
-					publishFlag			= cat.publishFlag,
-					uploadFlag			= cat.uploadFlag,
-					seriesFlag			= cat.seriesFlag,
-				)
+				self._setRow( r, cat )
 				
 			self.doAutosize()
 			self.fixCells()
@@ -868,6 +844,7 @@ and remove them from other categories.'''),
 				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
 				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
 				numStrTuples.append( values )
+				
 			race.setCategories( numStrTuples )
 			race.adjustAllCategoryWaveNumbers()
 		wx.CallAfter( Utils.refreshForecastHistory )
@@ -886,9 +863,9 @@ if __name__ == '__main__':
 	race.setCategories( [
 		# {'name':'test1', 'catStr':'100-199,999'+','+','.join('{}'.format(i) for i in range(1, 50, 2)),'gender':'Men'},
 		{'name':'test2', 'catStr':'200-299,888', 'startOffset':'00:10', 'distance':'6'},
-		{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women'},
+		{'name':'test3', 'catStr':'300-399', 'startOffset':'00:20','gender':'Women', 'lappedRidersMustContinue':True},
 		{'name':'test4', 'catStr':'400-499', 'startOffset':'00:30','gender':'Open'},
-		{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men'},
+		{'name':'test5', 'catStr':'500-599', 'startOffset':'01:00','gender':'Men', 'lappedRidersMustContinue':True},
 	] )
 	categories = Categories(mainWin)
 	categories.refresh()

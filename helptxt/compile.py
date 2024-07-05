@@ -42,7 +42,7 @@ def getHelpFiles( dir='.' ):
 			continue
 		yield fname
 
-def CompileHelp( dir = '.' ):
+def CompileHelp( dir='.', quiet=False ):
 	with working_directory( dir ):
 		md = markdown.Markdown(
 				extensions=['toc', 'tables', 'sane_lists'], 
@@ -65,7 +65,8 @@ def CompileHelp( dir = '.' ):
 			links = f.read()
 			
 		for fname in getHelpFiles():
-			print( fname, '...' )
+			if not quiet:
+				print( fname, '...' )
 			with open(fname, 'r', encoding='utf8') as f:
 				input = io.StringIO()
 				input.write( links )
@@ -105,4 +106,4 @@ def CompileHelp( dir = '.' ):
 				shutil.move( fname, htmldocdir )
 
 if __name__ == '__main__':
-	CompileHelp()
+	CompileHelp( quiet=True )

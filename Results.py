@@ -621,7 +621,9 @@ class Results( wx.Panel ):
 		if not race:
 			self.clearGrid()
 			return
+			
 		category = FixCategories( self.categoryChoice, getattr(race, 'resultsCategory', 0) )
+
 		self.hbs.Layout()
 		for si in self.hbs.GetChildren():
 			if si.IsWindow():
@@ -648,6 +650,7 @@ class Results( wx.Panel ):
 				if rr.status==Model.Rider.Finisher and rr.lapTimes and getSortTime(rr) > 0),
 			key = getSortTime
 		)
+		
 		for i in range(1, len(results)):
 			if results[i]._lastTimeOrig - results[i-1]._lastTimeOrig <= CloseFinishTime:
 				self.closeFinishBibs[results[i-1].num].append( results[i].num )
@@ -655,7 +658,7 @@ class Results( wx.Panel ):
 		
 		labelLastX, labelLastY = self.labelGrid.GetViewStart()
 		lapLastX, lapLastY = self.lapGrid.GetViewStart()
-		
+				
 		exportGrid = ExportGrid()
 		exportGrid.setResultsOneList( category, self.showRiderData, showLapsFrequency = 1 )
 		
