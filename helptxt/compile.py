@@ -53,7 +53,6 @@ def CompileHelp( dir='.', quiet=False ):
 		with open('markdown.css', 'r', encoding='utf8') as f:
 			style = f.read()
 		with open('prolog.html', 'r', encoding='utf8') as f:
-		with open('prolog.html', 'r', encoding='utf8') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
@@ -66,7 +65,7 @@ def CompileHelp( dir='.', quiet=False ):
 			links = f.read()
 			
 		for fname in getHelpFiles():
-			if !quiet:
+			if not quiet:
 				print( fname, '...' )
 			with open(fname, 'r', encoding='utf8') as f:
 				input = io.StringIO()
