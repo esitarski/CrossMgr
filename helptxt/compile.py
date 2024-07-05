@@ -42,7 +42,7 @@ def getHelpFiles( dir='.' ):
 			continue
 		yield fname
 
-def CompileHelp( dir = '.' ):
+def CompileHelp( dir='.', quiet=False ):
 	with working_directory( dir ):
 		md = markdown.Markdown(
 				extensions=['toc', 'tables', 'sane_lists'], 
@@ -52,6 +52,7 @@ def CompileHelp( dir = '.' ):
 
 		with open('markdown.css', 'r', encoding='utf8') as f:
 			style = f.read()
+		with open('prolog.html', 'r', encoding='utf8') as f:
 		with open('prolog.html', 'r', encoding='utf8') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
@@ -65,7 +66,8 @@ def CompileHelp( dir = '.' ):
 			links = f.read()
 			
 		for fname in getHelpFiles():
-			print( fname, '...' )
+			if !quiet:
+				print( fname, '...' )
 			with open(fname, 'r', encoding='utf8') as f:
 				input = io.StringIO()
 				input.write( links )
@@ -105,4 +107,4 @@ def CompileHelp( dir = '.' ):
 				shutil.move( fname, htmldocdir )
 
 if __name__ == '__main__':
-	CompileHelp()
+	CompileHelp( quiet=True )

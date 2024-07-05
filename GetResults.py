@@ -743,7 +743,7 @@ def GetResultsWithData( category ):
 	
 	return riderResults
 
-def GetResults( category ):
+def GetResults( category ):	
 	# If the spreadsheet changed, clear the cache to update the results with new data.
 	try:
 		excelLink = Model.race.excelLink

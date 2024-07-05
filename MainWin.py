@@ -1435,7 +1435,7 @@ class MainWin( wx.Frame ):
 		if wx.TheClipboard.Open():
 			wx.TheClipboard.SetData( dataObj )
 			wx.TheClipboard.Close()
-			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), _("Success") )
+			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), f"{len(logData.decode())} bytes", _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
 	
@@ -2686,6 +2686,7 @@ class MainWin( wx.Frame ):
 		self.doCleanup()
 		wx.Exit()
 
+	@logCall
 	def writeRace( self, doCommit = True ):
 		if doCommit:
 			self.commit()
@@ -3041,6 +3042,7 @@ class MainWin( wx.Frame ):
 		if getattr(self, 'findDialog', None):
 			self.findDialog.Show( False )
 
+	@logCall
 	def openRace( self, fileName ):
 		if not fileName:
 			return
@@ -3077,10 +3079,11 @@ class MainWin( wx.Frame ):
 			
 			self.setNumSelect( None )
 			self.record.setTimeTrialInput( race.isTimeTrial )
-			self.showPage( self.iResultsPage if isFinished else self.iActionsPage )
+			self.showPage( self.iResultsPage if isFinished else self.iActionsPage, commitFirst=False )
 			self.refreshAll()
 			Utils.writeLog( '{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
 			Utils.writeLog( 'call: openRace: "{}"'.format(fileName) )
+			
 			
 			eventFileName = os.path.join( os.path.dirname(self.fileName), race.getFileName() )
 			if self.fileName != eventFileName:
@@ -4001,8 +4004,10 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 	def isShowingPage( self, page ):
 		return page == self.pages[self.notebook.GetSelection()]
 	
-	def showPage( self, iPage ):
-		self.callPageCommit( self.notebook.GetSelection() )
+	def showPage( self, iPage, commitFirst=True ):
+		if commitFirst:
+			self.callPageCommit( self.notebook.GetSelection() )
+		
 		self.callPageRefresh( iPage )
 		self.notebook.SetSelection( iPage )
 		self.pages[self.notebook.GetSelection()].Layout()
@@ -4029,6 +4034,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			page = self.pages[i]
 		except IndexError:
 			return
+		
 		try:
 			page.refresh()
 		except AttributeError:
@@ -4317,7 +4323,7 @@ def MainLoop():
 	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'CrossMgr.log')
-			
+	
 	# Set up the log file.  Otherwise, show errors on the screen unbuffered.
 	if __name__ == '__main__':
 		Utils.disable_stdout_buffering()
@@ -4367,7 +4373,6 @@ def MainLoop():
 				msg = 'Cannot load race file "{}".  Cannot do --batchpublish.'.format( fileName )
 			else:
 				msg = 'Missing race file.  Cannot do --batchpublish.'
-			print( msg, file=sys.stderr )
 			Utils.writeLog( msg )
 			sys.exit( -2 )
 	

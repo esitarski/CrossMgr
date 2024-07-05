@@ -175,6 +175,7 @@ class Category:
 		'distance',
 		'distanceType',
 		'firstLapDistance',
+		'lappedRidersMustContinue',
 		'publishFlag',
 		'uploadFlag',
 		'seriesFlag',
@@ -503,20 +504,8 @@ class Category:
 		self.intervals = SetToIntervals( all_nums )
 	
 	def __repr__( self ):
-		return 'Category(active={}, name="{}", catStr="{}", startOffset="{}", numLaps={}, raceMinutes={}, sequence={}, distance={}, distanceType={}, gender="{}", lappedRidersMustContinue="{}", catType="{}")'.format(
-				self.active,
-				self.name,
-				self.catStr,
-				self.startOffset,
-				self._numLaps,
-				self.raceMinutes,
-				self.sequence,
-				getattr(self,'distance',None),
-				getattr(self,'distanceType', Category.DistanceByLap),
-				getattr(self,'gender',''),
-				getattr(self,'lappedRidersMustContinue',False),
-				['Wave', 'Component', 'Custom'][self.catType],
-			)
+		catType = ('Wave', 'Component', 'Custom')[self.catType]
+		return f'Category(active={self.active}, name="{self.name}", lappedRidersMustContinue={self.lappedRidersMustContinue}, catStr="{self.catStr}", startOffset="{self.startOffset}", numLaps={self.numLaps}, raceMinutes={self.raceMinutes}, sequence={self.sequence}, distance={self.distance}, distanceType={self.distanceType}, gender="{self.gender}", catType="{catType}")'
 
 	def getStartOffsetSecs( self ):
 		return Utils.StrToSeconds( self.startOffset )
@@ -2187,7 +2176,7 @@ class Race:
 						break
 			newCategories[category.fullname] = category
 			i += 1
-		
+
 		if self.categories != newCategories:
 			# Copy the new values into the existing categories.
 			# This minimizes the impact if the calling code is in a category loop.
@@ -2199,7 +2188,6 @@ class Race:
 			
 			self.categories = { cName:cValue for cName, cValue in self.categories.items() if cName in newCategories }
 			self.setChanged()
-			
 			changed = True
 		else:
 			changed = False
