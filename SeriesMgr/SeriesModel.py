@@ -234,7 +234,7 @@ class Category:
 		return self.__dict__ != other.__dict__
 		
 	def __repr__( self ):
-		return f'Category(name="{self.name}", iSequence={self.iSequence}, publish={self.publish}, teamN={self.teamN}, useNthScore={self.useNthScore}, teamPublish={self.teamPublish})'
+		return f'Category(name="{self.name}", iSequence={self.iSequence}, pointStructure={self.pointStructure.name if self.pointStructure else None}, publish={self.publish}, teamN={self.teamN}, useNthScore={self.useNthScore}, teamPublish={self.teamPublish})'
 		
 	def getName( self ):
 		return self.longName or self.name
@@ -337,7 +337,7 @@ class SeriesModel:
 			for p in self.pointStructures]
 		if oldPointsList == pointsList:
 			return
-		
+			
 		# Create new points structures, and create a mapping from the old names to the new names.
 		newPointStructures = []
 		oldToNewName = {}
@@ -364,9 +364,10 @@ class SeriesModel:
 			if r.teamPointStructure:
 				r.teamPointStructure = newPS.get( oldToNewName.get(r.teamPointStructure.name, ''), None )
 			
-		for c in self.categoryList:
-			if c.pointsStructure:
-				c.pointsStructure = newPS.get( oldToNewName.get(c.pointStructure.name, ''), None )
+		# Correct any category-specific points structures.
+		for c in self.categories.values():
+			if c.pointStructure:
+				c.pointStructure = newPS.get( oldToNewName.get(c.pointStructure.name, ''), None )
 			
 		self.pointStructures = newPointStructures
 		self.setChanged()

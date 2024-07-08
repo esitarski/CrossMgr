@@ -254,7 +254,7 @@ class Points(wx.Panel):
 					self.grid.GetCellValue(row, self.ParticipationCol),
 					self.grid.GetCellValue(row, self.DNFCol),
 				) )
-		
+				
 		model = SeriesModel.model
 		model.setPoints( pointsList )
 		
