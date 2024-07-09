@@ -4171,7 +4171,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		data = ChipReader.chipReaderCur.GetData()
 		
 		if not getattr(race, 'tagNums', None):
-			GetTagNums()
+			GetTagNums( True )
 		if not race.tagNums:
 			return False
 		
@@ -4196,7 +4196,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				
 			# Only process times after the start of the race.
 			if race.isRunning() and race.startTime <= dt:
-				#Always process times for mass start races and when timeTrialNoRFIDStart unset.
+				# Always process times for mass start races and when timeTrialNoRFIDStart unset.
 				if not race.isTimeTrial or not race.timeTrialNoRFIDStart:
 					self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 				else:

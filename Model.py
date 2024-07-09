@@ -170,6 +170,7 @@ class Category:
 	MergeAttributes = (
 		'active',
 		'numLaps',
+		'catType',
 		'raceMinutes',
 		'startOffset',
 		'distance',
@@ -180,7 +181,6 @@ class Category:
 		'publishFlag',
 		'uploadFlag',
 		'seriesFlag',
-		'catType',
 	)
 	PublishFlags = tuple( a for a in MergeAttributes if a.endswith('Flag') )
 
@@ -2644,7 +2644,7 @@ class Race:
 				self.unmatchedTags[tag].append( t )
 		except KeyError:
 			self.unmatchedTags[tag] = [t]
-		except TypeError:
+		except (AttributeError, TypeError):
 			self.unmatchedTags = {tag: [t]}
 		
 	def getRawData( self ):

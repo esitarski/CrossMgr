@@ -1231,13 +1231,13 @@ class RiderDetail( wx.Panel ):
 		self.riderTeam.SetLabel( '' )
 		self.tags.SetLabel( '' )
 		
-		for w in [	'startTimeName',	'startTime',
+		for w in (	'startTimeName',	'startTime',
 					'finishTimeName',	'finishTime',
 					'rideTimeName',		'rideTime',
 					'penaltyTimeName',	'penaltyTime',
 					'noteName',			'note',
 					'earlyStartWaveName','earlyStartWave',
-					'adjustTime']:
+					'adjustTime'):
 			getattr( self, w ).Show( False )
 		
 		GetTagNums()
@@ -1334,12 +1334,12 @@ class RiderDetail( wx.Panel ):
 				self.rideTime.SetLabel( Utils.formatTime(ft-st, True) if ft is not None and st is not None else '')
 				self.penaltyTime.SetLabel( Utils.formatTime(getattr(rider, 'ttPenalty', 0.0)) )
 				self.note.SetLabel( getattr(rider, 'ttNote', '') )
-				for w in [	'startTimeName',	'startTime',
+				for w in (	'startTimeName',	'startTime',
 							'finishTimeName',	'finishTime',
 							'rideTimeName',		'rideTime',
 							'penaltyTimeName',	'penaltyTime',
 							'noteName',			'note',
-							'adjustTime']:
+							'adjustTime'):
 					getattr( self, w ).Show( True )
 			else:
 				earlyStartOffset = rider.getEarlyStartOffset()
