@@ -653,7 +653,7 @@ def UnmatchedTagsUpdate( tagNums=None ):
 		if missingTagsLen != len(race.missingTags):
 			race.setChanged()
 
-#-----------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
 # Cache the Excel sheet so we don't have to re-read if it has not changed.
 stateCache = None
 infoCache = None
@@ -969,7 +969,9 @@ class ExcelLink:
 			for bib, fields in infoCache.items():
 				MatchingCategory.AddToMatchingCategory( bib, fields )
 			MatchingCategory.EpilogMatchingCategory()
-			
+		
+		# Process all known tag nums from the new Excel sheet.
+		# This also adds data from previously missing tags.
 		GetTagNums( True )
 		
 		try:

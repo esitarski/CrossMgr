@@ -1,9 +1,10 @@
 #-----------------------------------------------------------------------
 # Installs all CrossMgr programs and creates desktop shortcuts.
 # This is the easiest and fastest way to keep up with the latest version of CrossMgr.
+# Works for Linux, Mac and Windows.
 #
-# This script requires that Python is installed on your machine.
-# If you are running Linux, it is already installed.
+# Requires Python installed on your machine.
+# If you are running Linux, Python is already installed.
 #
 # On Mac and Windows, you may need to install Python first if you don't already have it.
 # See: www.python.org/downloads/ for details.
@@ -13,7 +14,7 @@
 # You only need to install Python once.  You can the run crossmgr-install.py anytime you want.
 # Once Python is installed, open a terminal/console/powershell window.
 #
-# Change to the directory where you downloaded this script (poissibly your Downloads diretory).
+# Change to the directory where you downloaded this script (i.e. the Downloads directory).
 # Make sure you have an internet connection.
 #
 # At the command line, enter:
@@ -30,13 +31,15 @@
 #
 # Advantages of this script:
 #
-# * No security or virus errors.  Python download is always validated and safe.
-# * One step, quick install for all CrossMgr applications.  About 15Meg download each time.
+# * No security or virus errors.
+# * One step, quick install for all CrossMgr applications.  About 15Meg download for everything.
 # * Smallest disk usage.  Rather than separately include the Python runtime in each exectuable
-#   (like what pyinstaller does), this the Python runtime is downloaded once and reused
+#   (like pyinstaller), the Python runtime is installed once and reused
 #   by all executables.
+#
+# Edward Sitarski, 2024.
+#
 
-import io
 import os
 import sys
 import shutil
@@ -48,7 +51,7 @@ import subprocess
 import contextlib
 import urllib.request
 
-do_debug=True
+do_debug=False
 
 zip_file_url = 'https://github.com/esitarski/CrossMgr/archive/refs/heads/master.zip'	# url of the CrossMgr source code zip file on github.
 
@@ -57,6 +60,7 @@ env_dir = 'CrossMgrEnv'			# directory of the python environment.
 
 @contextlib.contextmanager
 def in_dir( x ):
+	# Temporarily switch to another directory in a with statement.
 	d = os.getcwd()
 	os.chdir( x )
 	try:
@@ -65,24 +69,27 @@ def in_dir( x ):
 		os.chdir( d )
 
 def get_install_dir():
+	# Install into the user's home directory.
+	# This is the only folder that is guaranteed that we can write to.
 	return os.path.join(os.path.expanduser('~'), 'Projects', 'install') if do_debug else os.path.expanduser('~')
 
 def dir_setup():
 	os.chdir( get_install_dir() )
 
 def src_download():
+	# Pull the entire source and resources from github.
 	zip_file_name = 'CrossMgrSrc.zip'
 	
 	print( f"Downloading CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
 	urllib.request.urlretrieve( zip_file_url, filename=zip_file_name )
 
-	# Remove the existing folder.
+	# Remove the existing folder and replace its contents..
 	try:
 		shutil.rmtree( src_dir, ignore_errors=True )
 	except Exception as e:
 		pass
 	
-	# Unzip everything to a new folder.
+	# Unzip everything to the new folder.
 	z = zipfile.ZipFile( zip_file_name )
 	z.extractall( "." )
 	print( 'Done.' )
@@ -107,7 +114,7 @@ def env_setup( full=False ):
 	print( f"Updating python environment (this could take a few minutes): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
 	if platform.system() == 'Linux':
-		# Get wxPython from the extras folder.
+		# Install wxPython from the "extras" folder.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
 			for line in f_in:
 				if 'wxPython' not in line and 'pybabel' not in line:
@@ -209,34 +216,39 @@ def get_pyws():
 				yield os.path.abspath( os.path.join(subdir, fname) )
 
 def make_bin( python_exe ):
-	print( "Making scripts in bin directory... ", end='', flush=True )
+	# Make scripts in CrossMgr-master/bin
+	# These scripts can be used to auto-launch from file extensions.
+	
+	bin_dir = 'bin'
+	print( f"Making scripts in directory {os.path.abspath(os.path.join('.',bin_dir))}... ", end='', flush=True )
 
 	try:
-		os.mkdir( 'bin' )
+		os.mkdir( bin_dir )
 	except Exception as e:
 		pass
 
 	is_windows = (platform.system() == 'Windows')
-	suffix = '.ps1' if is_windows else '.sh'
 	
 	home_dir = os.path.expanduser( '~' )
 	
 	pyws = sorted( get_pyws(), reverse=True )
-	with in_dir( 'bin' ):
+	with in_dir( bin_dir ):
 		for pyw in pyws:
 			fbase = os.path.splitext(os.path.basename(pyw))[0]
-			fname = fbase + suffix
+			fname = fbase + ('.ps1' if is_windows else '.sh')
 			with open( fname, 'w', encoding='utf8' ) as f:
 				if not is_windows:
+					# Create a bash shell script,
 					f.write( '#!/usr/bin/env bash\n' )
 					f.write( f'cd {home_dir}\n' )
 					f.write( f'{python_exe} "{pyw}" "$@"\n' )
 				
-					# Make the file executable.
+					# Make the script executable.
 					mode = os.fstat( f.fileno() ).st_mode
 					mode |= 0o111
 					os.fchmod( f.fileno(), mode & 0o777 )
 				else:
+					# Create a powershell script.
 					f.write( f'Start-Process -WorkingDirectory {home_dir} -FilePath "{python_exe}" -ArgumentList "{pyw}" $args\n' )
 	
 	print( 'Done.' )
@@ -245,7 +257,7 @@ def get_name( pyw_file ):
 	return os.path.splitext( os.path.basename( pyw_file ) )[0]
 		
 def make_shortcuts( python_exe ):
-	print( "Making shortcuts... ", end='', flush=True )
+	print( "Making desktop shortcuts... ", end='', flush=True )
 
 	def get_ico_file( pyw_file ):
 		fname = os.path.basename( pyw_file )
@@ -257,7 +269,6 @@ def make_shortcuts( python_exe ):
 	pyws = sorted( get_pyws(), reverse=True )
 	
 	shortcuts_fname = 'make_shortcuts_tmp.py'
-	home_dir = os.path.expanduser( '~' )
 	
 	script_info=tuple( (pyw, get_ico_file(pyw), get_name(pyw)) for pyw in pyws )
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
