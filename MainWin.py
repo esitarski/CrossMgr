@@ -2919,8 +2919,6 @@ class MainWin( wx.Frame ):
 		Model.newRace()
 		race = Model.race
 		race.lastOpened = now()
-		if HasDefaultTemplate() and Utils.MessageYesNo(self, _("Apply Default Template?"), _("Apply Default Template?")):
-			ApplyDefaultTemplate( race )
 		
 		# Create the link to the RaceDB excel sheet.
 		try:
@@ -2939,9 +2937,6 @@ class MainWin( wx.Frame ):
 		ResetExcelLinkCache()
 		SyncExcelLink( race )
 		
-		# Get the start times from the spreadsheet.
-		AutoImportTTStartTimes()
-		
 		# Show the Properties screen for the user to review.
 		with PropertiesDialog(self, title=_("Configure Race"), style=wx.DEFAULT_DIALOG_STYLE ) as dlg:
 			dlg.properties.refresh()
@@ -2949,14 +2944,24 @@ class MainWin( wx.Frame ):
 			dlg.folder.SetValue(os.path.dirname(fname))
 			dlg.properties.updateFileName()
 			
+			# If we have an existing CrossMgr file, open it, and link it to the updated Excel sheet.
 			if not overwriteExisting and os.path.isfile(dlg.GetPath()):
+				fileName = dlg.GetPath()
+				Utils.writeLog( f'Existing CrossMgr file: "{fileName}"' )
 				Model.race = raceSave
-				self.openRace( dlg.GetPath() )
-				Model.race.excelLink = excelLink
+				self.openRace( fileName )			# Open the existing race.
+				Model.race.excelLink = excelLink	# Replace the link for the new excel sheet.
+				Model.race.setChanged()				# Reset all the caches.
+				Model.resetCache()
+				AutoImportTTStartTimes()			# Import any TT times changes.
+				GetTagNums( True )					# Get RFID-->nums map and add any times from previously unmatched tags.
+				self.refreshAll()					# Refresh all screens.
+				self.writeRace()					# Write the race to save any processed tags.
 				return
 			
 			ret = dlg.ShowModal()
 			fileName = dlg.GetPath()
+			Utils.writeLog( f'New CrossMgr file: "{fileName}"' )
 			categoriesFile = dlg.GetCategoriesFile()
 			properties = dlg.properties
 
@@ -2968,14 +2973,14 @@ class MainWin( wx.Frame ):
 		race = Model.race
 		geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
 
-		if overwriteExisting and os.path.isfile(fileName):
+		if os.path.isfile(fileName):
 			if not Utils.MessageOKCancel( self,
 				'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
 				_('File Exists') ):
 				Model.race = raceSave
 				return
 
-		# Try to open the file.
+		# Try to open the new CrossMgr file.
 		try:
 			with open(fileName, 'wb'):
 				pass
@@ -2984,6 +2989,12 @@ class MainWin( wx.Frame ):
 			Model.race = raceSave
 			return
 
+		if HasDefaultTemplate() and Utils.MessageYesNo(self, _("Apply Default Template?"), _("Apply Default Template?")):
+			ApplyDefaultTemplate( race )
+		
+		# Get the start times from the spreadsheet.
+		AutoImportTTStartTimes()
+		
 		# Set the new race with the updated properties.
 		self.fileName = fileName
 		WebServer.SetFileName( self.fileName )
@@ -3001,7 +3012,7 @@ class MainWin( wx.Frame ):
 		self.setActiveCategories()
 		self.setNumSelect( None )
 		
-		# Make sure we apply the course distances if known.
+		# Apply the course distances if known.
 		race = Model.race
 		if geoTrack and not race.geoTrack:
 			race.geoTrack, race.geoTrackFName = geoTrack, geoTrackFName
@@ -3009,6 +3020,9 @@ class MainWin( wx.Frame ):
 			race.setDistanceForCategories( race.geoTrack.lengthKm )
 			race.showOval = False
 		
+		AutoImportTTStartTimes()			# Import any TT times changes.
+		# Process all missing RFID tags from the Excel sheet before refreshing.
+		GetTagNums( True )
 		self.refreshAll()
 		self.writeRace()
 		
@@ -3084,7 +3098,6 @@ class MainWin( wx.Frame ):
 			Utils.writeLog( '{}: {} {}'.format(Version.AppVerName, platform.system(), platform.release()) )
 			Utils.writeLog( 'call: openRace: "{}"'.format(fileName) )
 			
-			
 			eventFileName = os.path.join( os.path.dirname(self.fileName), race.getFileName() )
 			if self.fileName != eventFileName:
 				if os.path.isfile(eventFileName):
@@ -3119,6 +3132,9 @@ class MainWin( wx.Frame ):
 				
 			if os.path.isfile(excelLink.fileName):
 				Utils.writeLog( 'openRace: Excel file "{}"'.format(excelLink.fileName) )
+				AutoImportTTStartTimes()			# Import any TT times changes.
+				GetTagNums( True )					# Get the RFID-->num map and process any missing RFID tags.
+				self.refreshAll()
 				return
 				
 			# Check if we have a missing spreadsheet but can find one in the same folder as the race.
@@ -3134,6 +3150,7 @@ class MainWin( wx.Frame ):
 				race.setChanged()
 				ResetExcelLinkCache()
 				Model.resetCache()
+				GetTagNums( True )
 				self.refreshAll()
 				Utils.writeLog( 'openRace: changed Excel file to "{}"'.format(newFileName) )
 				
@@ -4171,7 +4188,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		data = ChipReader.chipReaderCur.GetData()
 		
 		if not getattr(race, 'tagNums', None):
-			GetTagNums()
+			GetTagNums( True )
 		if not race.tagNums:
 			return False
 		
@@ -4196,7 +4213,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				
 			# Only process times after the start of the race.
 			if race.isRunning() and race.startTime <= dt:
-				#Always process times for mass start races and when timeTrialNoRFIDStart unset.
+				# Always process times for mass start races and when timeTrialNoRFIDStart unset.
 				if not race.isTimeTrial or not race.timeTrialNoRFIDStart:
 					self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 				else:

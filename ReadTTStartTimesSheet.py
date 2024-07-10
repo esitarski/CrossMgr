@@ -447,6 +447,11 @@ def AutoImportTTStartTimes():
 	excelLink = ExcelLink()
 	excelLink.setFileName( race.excelLink.fileName )
 	excelLink.setSheetName( race.excelLink.sheetName )
+	
+	# If Bib# is not in the spreadsheet, or Bib# not the second column, this is *not* a TT start sheet.
+	if race.excelLink.fieldCol.get('Bib#', 0) != 1:
+		return False
+	
 	excelLink.setFieldCol( {'Bib#': race.excelLink.fieldCol['Bib#'], 'StartTime': 0} )	# Hack to hardcode StartTime as the first column.
 	errors, startTimes, changeCount = DoImportTTStartTimes( race, excelLink )
 	return True

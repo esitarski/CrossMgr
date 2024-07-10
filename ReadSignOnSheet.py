@@ -571,58 +571,89 @@ def FixTagFormat( externalInfo ):
 				continue
 			edata[tagName] = fixTagFunc( tag )
 
-def GetTagNums( forceUpdate = False ):
+def GetTagNums( forceUpdate=False ):
+	# Get a dict that links chip tags to bib numbers.
 	race = Model.race
 	if not race:
 		return {}
 		
-	# Get the linked external data.
+	# Get the Excel link.
 	try:
+		# If no Excel link, tagNums is empty.
 		excelLink = race.excelLink
 	except Exception:
 		race.tagNums = {}
-	else:
-		try:
-			externalInfo = excelLink.read()
-		except Exception:
+		return race.tagNums
+		
+	# Read the data from the Excel link.
+	try:
+		externalInfo = excelLink.read()
+	except Exception:
+		# If the external info cannot be retrieved, tagNums is empty.
+		race.tagNums = {}
+		return race.tagNums
+	
+	# If the file did not change and we are not forcing an update,
+	# return the existing tagNums as it hasn't changed.
+	if not (excelLink.readFromFile or forceUpdate):
+		if getattr(race, 'tagNums', None) is None:
 			race.tagNums = {}
-		else:
-			if excelLink.readFromFile or not getattr(race, 'tagNums', None) or forceUpdate:
-				race.tagNums = {}
-				for tagName in TagFields:
-					if excelLink.hasField( tagName ):
-						tn = {}
-						for num, edata in externalInfo.items():
-							try:
-								tag = Utils.removeDiacritic('{}'.format(edata[tagName] or '')).lstrip('0').upper()
-							except (KeyError, ValueError):
-								continue
-							if tag:
-								tn[tag] = num
-						race.tagNums.update( tn )
+		return race.tagNums
+		
+	# Get all tagName fields that exist in the spreadsheet.
+	tagNames = {tagName for tagName in TagFields if excelLink.hasField(tagName)}
+	if not tagNames:
+		race.tagNums = {}		# No tag columns in the spreadsheet.
+		return race.tagNums
+	
+	# Create a dict of all tags to bib numbers.
+	tagNums = {}	
+	for num, edata in externalInfo.items():
+		for tagName in tagNames:
+			tag = edata.get(tagName, None)
+			if not tag:
+				continue
+			
+			if isinstance(tag, float):
+				tag = f'{int(tag)}'
+			elif isinstance(tag, int):
+				tag = f'{tag}'
+			else:
+				tag = Utils.removeDiacritic( f'{tag}' ).strip().lstrip('0').upper()
+				
+			if tag:
+				tagNums[tag] = num
+	
+	race.tagNums = tagNums
+	UnmatchedTagsUpdate( tagNums )
 	return race.tagNums
 
-def UnmatchedTagsUpdate():
+def UnmatchedTagsUpdate( tagNums=None ):
+	# Add all times from previously unmatched tags.
 	race = Model.race
-	if not race or not race.unmatchedTags:
+	if not race:
 		return
 	
-	tagNums = GetTagNums( forceUpdate=True )
-	tagsFound = False
-	for tag, times in race.unmatchedTags.items():
-		try:
+	if tagNums is None:
+		tagNums = GetTagNums( forceUpdate=True )
+	
+	if not tagNums:
+		return
+	
+	if race.unmatchedTags:	
+		for tag in (race.unmatchedTags.keys() & tagNums.keys()):
 			num = tagNums[tag]
-		except KeyError:
-			continue
-		
-		for t in times:
-			race.addTime( num, t )
-		tagsFound = True
+			for t in race.unmatchedTags[tag]:
+				race.addTime( num, t )		# Sets the changed flag is something changes.
+			del race.unmatchedTags[tag]
 	
-	if tagsFound:
-		race.unmatchedTags = { tag: times for tag, times in race.unmatchedTags.items() if tag not in tagNums }
-	
-#-----------------------------------------------------------------------------------------------------
+	if race.missingTags:
+		missingTagsLen = len(race.missingTags)
+		race.missingTags -= tagNums.keys()
+		if missingTagsLen != len(race.missingTags):
+			race.setChanged()
+
+#-------------------------------------------------------------------------------------------
 # Cache the Excel sheet so we don't have to re-read if it has not changed.
 stateCache = None
 infoCache = None
@@ -742,7 +773,7 @@ class ExcelLink:
 	def updateFilenameToMostRecent( self ):
 		self.fileName = (self.getMostRecentFilename() or self.fileName)
 		
-	def read( self, alwaysReturnCache = False ):
+	def read( self, alwaysReturnCache=False ):
 		# Check the cache.  Return the last info if the file has not been modified, and the name, sheet and fields are the same.
 		global stateCache
 		global infoCache
@@ -918,7 +949,7 @@ class ExcelLink:
 		infoCache = info
 		errorCache = errors
 		
-		# Clear the tagNums cache
+		# Clear the tagNums cache as it will be reset after reading the spreadsheet.
 		try:
 			Model.race.tagNums = None
 		except AttributeError:
@@ -928,7 +959,6 @@ class ExcelLink:
 		if Model.race and Model.race.startTime:
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader, bool(Model.race.startTime) )
 			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader, bool(Model.race.startTime) )
-			UnmatchedTagsUpdate()
 		else:
 			self.hasPropertiesSheet = ReadPropertiesFromExcel( reader )
 			self.hasCategoriesSheet = ReadCategoriesFromExcel( reader )
@@ -939,7 +969,11 @@ class ExcelLink:
 			for bib, fields in infoCache.items():
 				MatchingCategory.AddToMatchingCategory( bib, fields )
 			MatchingCategory.EpilogMatchingCategory()
-			
+		
+		# Process all known tag nums from the new Excel sheet.
+		# This also adds data from previously missing tags.
+		GetTagNums( True )
+		
 		try:
 			Model.race.resetAllCaches()
 		except Exception:
