@@ -148,16 +148,15 @@ def env_setup( full=False ):
 			sys.exit( -1 )
 		
 		# Install wxPyhon from the extras url.
-		# Supress stderr so we don't get the DEPRECATED message in the download and scare the user.
 		subprocess.check_output( [
 			python_exe, '-m',
 			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )
+		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
 			for line in f_in:
-				if 'pybabel' not in line:	# Skip pybabel as we don't need it.
+				if 'pybabel' not in line:	# Skip pybabel as we don't use it.
 					f_out.write( line )
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
