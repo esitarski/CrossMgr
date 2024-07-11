@@ -45,7 +45,6 @@ import sys
 import shutil
 import zipfile
 import argparse
-import httplib2
 import platform
 import subprocess
 import contextlib
@@ -135,11 +134,26 @@ def env_setup( full=False ):
 		url = f'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/{os_name}-{os_version}'
 		
 		# Check if the version exists and fail if it doesn't.
-		h = httplib2.Http()
-		resp = h.request( url, 'HEAD' )
-		if int(resp[0]['status']) >= 400:
-			print( f'\nCrossMgr is not supported on {os_name} : {os_version}' )
-			print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
+		http_error = False
+		url_found = False
+		try:
+			html = urllib.request.urlopen( url )
+			url_found = True
+		except urllib.error.HTTPError as e:
+			# some sort of http error.
+			http_error = false
+		except urllib.error.URLError as e:
+			# url not found.
+			pass
+		
+		if not url_found:
+			if http_error:
+				print( f'Failed to connect to the internet to download {url}.' )
+				print( 'Aborting.' )
+			else:
+				print( f'\nCrossMgr is not supported on {os_name} : {os_version}' )
+				print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
+				print( 'Aborting.' )
 			uninstall()
 			sys.exit( -1 )
 		
@@ -283,7 +297,7 @@ def make_shortcuts( python_exe ):
 	os.remove( shortcuts_fname )
 	
 	# Create a shortcut for this update script.
-	icon = os.path.abspath( os.path.join('.', src_dir, 'CrossMgrImages', 'CrossMgrDownload.png') )
+	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( '\n'.join( [
 				'from pyshortcuts import make_shortcut',
@@ -312,14 +326,21 @@ def install( full=False ):
 	print( f"These can be found in {bin_dir}." )
 	print()
 	print( 'Use these scripts to configure auto-launch for CrossMgr file extensions.' )
-	print( 'Enjoy, and thank you for using CrossMgr!' )
+	print()
+	print( 'Thank you for using CrossMgr!' )
 	
 def uninstall():
 	install_dir = get_install_dir()
+	home_dir = os.path.expanduser('~')
 	
-	with in_dir( os.path.join(install_dir, src_dir) ):
-		pyws = list( get_pyws() )
-	pyws.append( 'Update CrossMgr.pyw' )
+	cross_mgr_source_dir = os.path.join(install_dir, src_dir)
+	if os.path.isdir( cross_mgr_source_dir ):
+		# Get all pyw files from the src dir.
+		with in_dir( cross_mgr_source_dir ):
+			pyws = list( get_pyws() )
+		pyws.append( 'Update CrossMgr.pyw' )	# Add the install shortcut itself.
+	else:
+		pyws = []
 	
 	print( "Removing CrossMgr source... ", end='', flush=True )
 	try:
@@ -332,13 +353,25 @@ def uninstall():
 	try:
 		shutil.rmtree( os.path.join(install_dir, env_dir), ignore_errors=True )
 	except Exception as e:
-		print( 'Error: ', e )
-		
+		print( 'Error: ', e )		
 	print( 'Done.' )
 	
-	desktop_dir = os.path.join( os.path.expanduser('~'), 'Desktop' )
+	print( "Removing CrossMgr log files... ", end='', flush=True )
+	pyws_set = set( pyws )
+	for fn in os.listdir( home_dir ):
+		fname = os.path.join( home_dir, fn )
+		if fname.endswith('.log') and os.path.isfile(fname):
+			pyw_log = os.path.splitext(os.path.basename(fname))[0] + '.pyw'
+			if pyw_log in pyws_set:
+				try:
+					os.remove( fname )
+				except Exception as e:
+					print( 'Error: ', e )
+	print( 'Done.' )
+
+	desktop_dir = os.path.join( home_dir, 'Desktop' )
 	if os.path.isdir(desktop_dir):
-		print( "Removing desktop shortcuts... ", end='', flush=True )
+		print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
 		for pyw in pyws:
 			fname = os.path.join( desktop_dir, get_name(pyw) ) + '.desktop'
 			if os.path.isfile(fname):
@@ -348,7 +381,7 @@ def uninstall():
 					print( 'Error: ', e )
 		print( 'Done.' )
 	else:
-		print( 'Desktop shortcuts must be removed manually.' )
+		print( 'CrossMgr desktop shortcuts must be removed manually.' )
 	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
