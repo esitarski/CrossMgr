@@ -158,10 +158,11 @@ def env_setup( full=False ):
 			sys.exit( -1 )
 		
 		# Instally wxPyhon from the extras url.
+		# Supress stderr so we don't get the DEPRECATED message in the download.
 		subprocess.check_output( [
 			python_exe, '-m',
 			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		] )
+		], stderr=subprocess.DEVNULL )
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -319,15 +320,18 @@ def install( full=False ):
 	make_shortcuts( python_exe )
 
 	print( "CrossMgr updated." )
-	print( "See the desktop shortcuts which allow you to run the CrossMgr executables." )
+	print( "Check your desktop for shortcuts which allow you to run the CrossMgr applications." )
 	print()
-	print( "Additionally, there are scripts which will can run the executables." )
+	print( "Additionally, there are scripts which will can run the programs." )
 	bin_dir = os.path.abspath( os.path.join( '.', src_dir, 'bin') )
 	print( f"These can be found in {bin_dir}." )
 	print()
 	print( 'Use these scripts to configure auto-launch for CrossMgr file extensions.' )
 	print()
-	print( 'Thank you for using CrossMgr!' )
+	print( 'Information about the CrossMgr suite of applications can be found at: https://github.com/esitarski/CrossMgr')
+	print( 'The CrossMgr users group can be found at: https://groups.google.com/g/crossmgrsoftware' )
+	print()
+	print( 'Thank you for using CrossMgr.' )
 	
 def uninstall():
 	install_dir = get_install_dir()
