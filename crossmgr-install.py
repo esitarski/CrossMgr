@@ -22,8 +22,8 @@
 #     python3 crossmgr-install.py
 #
 # This will download and install all CrossMgr programs and also create desktop shortcuts.
-# It also creates an icon to re-run the script.
-# To upgrade, just run the script again.
+# It also creates a desktop shortcut to re-run the script.
+# To upgrade to the latest CrossMgr, run the install from the desktop, or run this script again.
 #
 # For information about the script options (including uninstall), run the script with --help.
 #
@@ -59,7 +59,7 @@ env_dir = 'CrossMgrEnv'			# directory of the python environment.
 
 @contextlib.contextmanager
 def in_dir( x ):
-	# Temporarily switch to another directory in a with statement.
+	# Temporarily switch to another directory using a "with" statement.
 	d = os.getcwd()
 	os.chdir( x )
 	try:
@@ -133,32 +133,22 @@ def env_setup( full=False ):
 		# Get the name of the python extras url.
 		url = f'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/{os_name}-{os_version}'
 		
-		# Check if the version exists and fail if it doesn't.
-		http_error = False
-		url_found = False
+		# Check if the url exists.  If not, this version of Linux is unsupported.
 		try:
-			html = urllib.request.urlopen( url )
-			url_found = True
-		except urllib.error.HTTPError as e:
-			# some sort of http error.
-			http_error = false
-		except urllib.error.URLError as e:
-			# url not found.
-			pass
+			with urllib.request.urlopen(url) as request:
+				url_found = True
+		except urllib.error.URLError:
+			url_found = False
 		
 		if not url_found:
-			if http_error:
-				print( f'Failed to connect to the internet to download {url}.' )
-				print( 'Aborting.' )
-			else:
-				print( f'\nCrossMgr is not supported on {os_name} : {os_version}' )
-				print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
-				print( 'Aborting.' )
+			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
+			print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
+			print( 'Aborting.' )
 			uninstall()
 			sys.exit( -1 )
 		
-		# Instally wxPyhon from the extras url.
-		# Supress stderr so we don't get the DEPRECATED message in the download.
+		# Install wxPyhon from the extras url.
+		# Supress stderr so we don't get the DEPRECATED message in the download and scare the user.
 		subprocess.check_output( [
 			python_exe, '-m',
 			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
@@ -298,6 +288,7 @@ def make_shortcuts( python_exe ):
 	os.remove( shortcuts_fname )
 	
 	# Create a shortcut for this update script.
+	# Remember, we are in the CrossMgr-master directory.
 	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( '\n'.join( [
