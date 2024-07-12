@@ -22,8 +22,8 @@
 #     python3 crossmgr-install.py
 #
 # This will download and install all CrossMgr programs and also create desktop shortcuts.
-# It also creates an icon to re-run the script.
-# To upgrade, just run the script again.
+# It also creates a desktop shortcut to re-run the script.
+# To upgrade to the latest CrossMgr, run the install from the desktop, or run this script again.
 #
 # For information about the script options (including uninstall), run the script with --help.
 #
@@ -45,7 +45,6 @@ import sys
 import shutil
 import zipfile
 import argparse
-import httplib2
 import platform
 import subprocess
 import contextlib
@@ -60,7 +59,7 @@ env_dir = 'CrossMgrEnv'			# directory of the python environment.
 
 @contextlib.contextmanager
 def in_dir( x ):
-	# Temporarily switch to another directory in a with statement.
+	# Temporarily switch to another directory using a "with" statement.
 	d = os.getcwd()
 	os.chdir( x )
 	try:
@@ -134,25 +133,30 @@ def env_setup( full=False ):
 		# Get the name of the python extras url.
 		url = f'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/{os_name}-{os_version}'
 		
-		# Check if the version exists and fail if it doesn't.
-		h = httplib2.Http()
-		resp = h.request( url, 'HEAD' )
-		if int(resp[0]['status']) >= 400:
-			print( f'\nCrossMgr is not supported on {os_name} : {os_version}' )
+		# Check if the url exists.  If not, this version of Linux is unsupported.
+		try:
+			with urllib.request.urlopen(url) as request:
+				url_found = True
+		except urllib.error.URLError:
+			url_found = False
+		
+		if not url_found:
+			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
 			print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
+			print( 'Aborting.' )
 			uninstall()
 			sys.exit( -1 )
 		
-		# Instally wxPyhon from the extras url.
+		# Install wxPyhon from the extras url.
 		subprocess.check_output( [
 			python_exe, '-m',
 			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		] )
+		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
 			for line in f_in:
-				if 'pybabel' not in line:	# Skip pybabel as we don't need it.
+				if 'pybabel' not in line:	# Skip pybabel as we don't use it.
 					f_out.write( line )
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
@@ -283,7 +287,8 @@ def make_shortcuts( python_exe ):
 	os.remove( shortcuts_fname )
 	
 	# Create a shortcut for this update script.
-	icon = os.path.abspath( os.path.join('.', src_dir, 'CrossMgrImages', 'CrossMgrDownload.png') )
+	# Remember, we are in the CrossMgr-master directory.
+	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( '\n'.join( [
 				'from pyshortcuts import make_shortcut',
@@ -305,21 +310,31 @@ def install( full=False ):
 	make_shortcuts( python_exe )
 
 	print( "CrossMgr updated." )
-	print( "See the desktop shortcuts which allow you to run the CrossMgr executables." )
+	print( "Check your desktop for shortcuts which allow you to run the CrossMgr applications." )
 	print()
-	print( "Additionally, there are scripts which will can run the executables." )
+	print( "Additionally, there are scripts which will can run the programs." )
 	bin_dir = os.path.abspath( os.path.join( '.', src_dir, 'bin') )
 	print( f"These can be found in {bin_dir}." )
 	print()
 	print( 'Use these scripts to configure auto-launch for CrossMgr file extensions.' )
-	print( 'Enjoy, and thank you for using CrossMgr!' )
+	print()
+	print( 'Information about the CrossMgr suite of applications can be found at: https://github.com/esitarski/CrossMgr')
+	print( 'The CrossMgr users group can be found at: https://groups.google.com/g/crossmgrsoftware' )
+	print()
+	print( 'Thank you for using CrossMgr.' )
 	
 def uninstall():
 	install_dir = get_install_dir()
+	home_dir = os.path.expanduser('~')
 	
-	with in_dir( os.path.join(install_dir, src_dir) ):
-		pyws = list( get_pyws() )
-	pyws.append( 'Update CrossMgr.pyw' )
+	cross_mgr_source_dir = os.path.join(install_dir, src_dir)
+	if os.path.isdir( cross_mgr_source_dir ):
+		# Get all pyw files from the src dir.
+		with in_dir( cross_mgr_source_dir ):
+			pyws = list( get_pyws() )
+		pyws.append( 'Update CrossMgr.pyw' )	# Add the install shortcut itself.
+	else:
+		pyws = []
 	
 	print( "Removing CrossMgr source... ", end='', flush=True )
 	try:
@@ -332,13 +347,25 @@ def uninstall():
 	try:
 		shutil.rmtree( os.path.join(install_dir, env_dir), ignore_errors=True )
 	except Exception as e:
-		print( 'Error: ', e )
-		
+		print( 'Error: ', e )		
 	print( 'Done.' )
 	
-	desktop_dir = os.path.join( os.path.expanduser('~'), 'Desktop' )
+	print( "Removing CrossMgr log files... ", end='', flush=True )
+	pyws_set = set( pyws )
+	for fn in os.listdir( home_dir ):
+		fname = os.path.join( home_dir, fn )
+		if fname.endswith('.log') and os.path.isfile(fname):
+			pyw_log = os.path.splitext(os.path.basename(fname))[0] + '.pyw'
+			if pyw_log in pyws_set:
+				try:
+					os.remove( fname )
+				except Exception as e:
+					print( 'Error: ', e )
+	print( 'Done.' )
+
+	desktop_dir = os.path.join( home_dir, 'Desktop' )
 	if os.path.isdir(desktop_dir):
-		print( "Removing desktop shortcuts... ", end='', flush=True )
+		print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
 		for pyw in pyws:
 			fname = os.path.join( desktop_dir, get_name(pyw) ) + '.desktop'
 			if os.path.isfile(fname):
@@ -348,7 +375,7 @@ def uninstall():
 					print( 'Error: ', e )
 		print( 'Done.' )
 	else:
-		print( 'Desktop shortcuts must be removed manually.' )
+		print( 'CrossMgr desktop shortcuts must be removed manually.' )
 	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
