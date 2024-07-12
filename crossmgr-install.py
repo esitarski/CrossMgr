@@ -19,7 +19,7 @@
 #
 # At the command line, enter:
 #
-#     python3 crossmgr-install.py
+#     python3 crossmgr-install.py install
 #
 # This will download and install all CrossMgr programs and also create desktop shortcuts.
 # It also creates a desktop shortcut to re-run the script.
@@ -293,7 +293,7 @@ def make_shortcuts( python_exe ):
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( '\n'.join( [
 				'from pyshortcuts import make_shortcut',
-				f"make_shortcut( terminal=True, startmenu=False, executable='python3', icon='{icon}', script='{__file__}', name='Update CrossMgr' )",
+				f"make_shortcut( terminal=True, startmenu=False, executable='python3', icon='{icon}', script='{__file__} install', name='Update CrossMgr' )",
 			] ).format( python_exe=python_exe, script_info=script_info )
 		)
 	
@@ -339,7 +339,7 @@ def install( full=False ):
 	make_bin( python_exe )
 	make_shortcuts( python_exe )
 
-	print( "CrossMgr updated." )
+	print( "CrossMgr updated successfully." )
 	print( "Check your desktop for shortcuts which allow you to run the CrossMgr applications." )
 	print()
 	print( "Additionally, there are scripts which will can run the programs." )
@@ -416,28 +416,38 @@ def uninstall():
 		print( 'CrossMgr desktop shortcuts must be removed manually.' )
 	
 if __name__ == '__main__':
+	def do_install( args ):
+		install( args.full )
+		
+	def do_restore( args ):
+		restore()
+		
+	def do_uninstall( args ):
+		uninstall()
+	
 	parser = argparse.ArgumentParser(
-		prog='crossmgr-install',
 		description='Installs/uninstalls all programs in the CrossMgr suite.',
 		epilog='The install downloads and updates all CrossMgr programs and configures them to run in a local environment.  Requires internet access.'
 	)
-	parser.add_argument( '-i', '--install', action='store_true', default=True,
+	subparsers = parser.add_subparsers( required=True )
+	
+	parser_install = subparsers.add_parser( 'install',
 		help='Installs CrossMgr source and Python environment (default).'
 	)
-	parser.add_argument( '-u', '--uninstall', action='store_true',
-		help='Removes the CrossMgr source, Python environment and archive.'
-	)
-	parser.add_argument( '-r', '--restore', action='store_true',
-		help="Restores to the last install (if available)."
-	)
-	parser.add_argument( '-f', '--full', action='store_true',
+	parser_install.set_defaults( func = do_install )
+	parser_install.add_argument( '-f', '--full', action='store_true',
 		help="Forces a full install of the python environment.  Otherwise, the python environment is updated (faster).  Required if you upgrade your computer's python version."
 	)
-	args = parser.parse_args()
 	
-	if args.uninstall:
-		uninstall()
-	elif args.restore:
-		restore_archive()
-	else:
-		install( args.full )
+	parser_uninstall = subparsers.add_parser( 'uninstall',
+		help='Removes the CrossMgr source, Python environment and archive.'
+	)
+	parser_uninstall.set_defaults( func = do_uninstall )
+	
+	parser_restore = subparsers.add_parser( 'restore',
+		help="Restores to the last install (if available)."
+	)
+	parser_restore.set_defaults( func = do_restore )
+	
+	args = parser.parse_args()
+	args.func( args )
