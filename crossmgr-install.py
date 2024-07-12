@@ -421,13 +421,14 @@ if __name__ == '__main__':
 		description='Installs/uninstalls all programs in the CrossMgr suite.',
 		epilog='The install downloads and updates all CrossMgr programs and configures them to run in a local environment.  Requires internet access.'
 	)
-	parser.add_argument( '-i', '--install', action='store_true', default=True,
+	group = parser.add_mutually_exclusive_group()
+	group.add_argument( '-i', '--install', action='store_true', default=True,
 		help='Installs CrossMgr source and Python environment (default).'
 	)
-	parser.add_argument( '-u', '--uninstall', action='store_true',
+	group.add_argument( '-u', '--uninstall', action='store_true',
 		help='Removes the CrossMgr source, Python environment and archive.'
 	)
-	parser.add_argument( '-r', '--restore', action='store_true',
+	group.add_argument( '-r', '--restore', action='store_true',
 		help="Restores to the last install (if available)."
 	)
 	parser.add_argument( '-f', '--full', action='store_true',
