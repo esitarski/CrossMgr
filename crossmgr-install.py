@@ -54,8 +54,9 @@ do_debug=False
 
 zip_file_url = 'https://github.com/esitarski/CrossMgr/archive/refs/heads/master.zip'	# url of the CrossMgr source code zip file on github.
 
-src_dir = 'CrossMgr-master'		# directory of the source code files.
-env_dir = 'CrossMgrEnv'			# directory of the python environment.
+src_dir = 'CrossMgr-master'			# directory of the source code files.
+env_dir = 'CrossMgr-env'			# directory of the python environment.
+archive_dir = 'CrossMgr-archive'	# directory of previous releases.
 
 @contextlib.contextmanager
 def in_dir( x ):
@@ -301,8 +302,37 @@ def make_shortcuts( python_exe ):
 	
 	print( 'Done.' )
 
+def make_archive():
+	install_dir = get_install_dir()
+	with in_dir( install_dir ):
+		if os.path.isdir(env_dir) and os.path.isdir(src_dir):
+			print( f"Creating archive: {os.path.join(install_dir,archive_dir)}... ", end='', flush=True )
+			# Delete the previous archive directory.
+			if os.path.isdir(archive_dir):
+				try:
+					shutil.rmtree( archive_dir, ignore_errors=True )
+				except Exception as e:
+					pass
+			
+			# Copy the src and env to the archive.
+			shutil.copytree( src_dir, archive_dir, dirs_exist_ok=True )
+			shutil.copytree( env_dir, archive_dir, dirs_exist_ok=True )
+			print( 'Done.' )
+
+def restore_archive():
+	with in_dir( get_install_dir() ):
+		if not os.path.isdir(archive_dir):
+			print( f"No archive to restore." )
+			return
+	
+		print( f"Restoring from archive... ", end='', flush=True )
+		shutil.copytree( os.path.join(archive_dir, src_dir), '.', dirs_exist_ok=True )
+		shutil.copytree( os.path.join(archive_dir, end_dir), '.', dirs_exist_ok=True )
+		print( 'Done.' )
+
 def install( full=False ):
 	dir_setup()
+	make_archive()					# Make a copy of the existing install if it exists.
 	src_download()
 	python_exe = env_setup( full )
 	fix_dependencies( python_exe )
@@ -350,6 +380,14 @@ def uninstall():
 		print( 'Error: ', e )		
 	print( 'Done.' )
 	
+	if os.path.isdir( os.path.join(install_dir, archive_dir) ):
+		print( "Removing CrossMgr archive... ", end='', flush=True )
+		try:
+			shutil.rmtree( os.path.join(install_dir, archive_dir), ignore_errors=True )
+		except Exception as e:
+			print( 'Error: ', e )		
+		print( 'Done.' )
+	
 	print( "Removing CrossMgr log files... ", end='', flush=True )
 	pyws_set = set( pyws )
 	for fn in os.listdir( home_dir ):
@@ -380,18 +418,26 @@ def uninstall():
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
 		prog='crossmgr-install',
-		description='Installs all programs in the CrossMgr suite.',
-		epilog='Downloads and updates all CrossMgr programs and configures them to run in a local environment.'
+		description='Installs/uninstalls all programs in the CrossMgr suite.',
+		epilog='The install downloads and updates all CrossMgr programs and configures them to run in a local environment.  Requires internet access.'
+	)
+	parser.add_argument( '-i', '--install', action='store_true', default=True,
+		help='Installs CrossMgr source and Python environment (default).'
 	)
 	parser.add_argument( '-u', '--uninstall', action='store_true',
-		help='Removes the CrossMgr source and Python environment.  Desktop shortcuts must be removed manually.'
+		help='Removes the CrossMgr source, Python environment and archive.'
+	)
+	parser.add_argument( '-r', '--restore', action='store_true',
+		help="Restores to the last install (if available)."
 	)
 	parser.add_argument( '-f', '--full', action='store_true',
-		help="Does a full install of the python environment.  Otherwise, an incremental update is done for speed.  Required if you upgrade your computer's python version."
+		help="Forces a full install of the python environment.  Otherwise, the python environment is updated (faster).  Required if you upgrade your computer's python version."
 	)
 	args = parser.parse_args()
 	
 	if args.uninstall:
 		uninstall()
+	elif args.restore:
+		restore_archive()
 	else:
 		install( args.full )
