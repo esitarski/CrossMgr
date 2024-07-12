@@ -322,12 +322,12 @@ def make_archive():
 def restore_archive():
 	with in_dir( get_install_dir() ):
 		if not os.path.isdir(archive_dir):
-			print( f"No archive to restore." )
+			print( "No archive to restore." )
 			return
 	
-		print( f"Restoring from archive... ", end='', flush=True )
+		print( "Restoring previous version from archive... ", end='', flush=True )
 		shutil.copytree( os.path.join(archive_dir, src_dir), '.', dirs_exist_ok=True )
-		shutil.copytree( os.path.join(archive_dir, end_dir), '.', dirs_exist_ok=True )
+		shutil.copytree( os.path.join(archive_dir, env_dir), '.', dirs_exist_ok=True )
 		print( 'Done.' )
 
 def install( full=False ):
