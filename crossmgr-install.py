@@ -306,7 +306,7 @@ def make_archive():
 	install_dir = get_install_dir()
 	with in_dir( install_dir ):
 		if os.path.isdir(env_dir) and os.path.isdir(src_dir):
-			print( f"Creating archive: {os.path.join(install_dir,archive_dir)}... ", end='', flush=True )
+			print( f"Archiving current version: {os.path.join(install_dir,archive_dir)}... ", end='', flush=True )
 			# Delete the previous archive directory.
 			if os.path.isdir(archive_dir):
 				try:
@@ -321,13 +321,25 @@ def make_archive():
 
 def restore_archive():
 	with in_dir( get_install_dir() ):
-		if not os.path.isdir(archive_dir):
-			print( "No archive to restore." )
+		src_dir_archive = os.path.join(archive_dir, src_dir)
+		env_dir_archive = os.path.join(archive_dir, env_dir)
+		if not all(os.path.isdir(d) for d in (archive_dir, src_dir_archive, env_dir_archive)):
+			print( "No previously archived version to restore." )
 			return
-	
+		
 		print( "Restoring previous version from archive... ", end='', flush=True )
-		shutil.copytree( os.path.join(archive_dir, src_dir), '.', dirs_exist_ok=True )
-		shutil.copytree( os.path.join(archive_dir, env_dir), '.', dirs_exist_ok=True )
+		
+		# Delete the current src and env.
+		for d in (src_dir, env_dir):	
+			if os.path.isdir(d):
+				shutil.rmtree( d, ignore_errors=True )
+	
+		# Replace with the archived version.
+		shutil.move( src_dir_archive, '.' )
+		shutil.move( env_dir_archive, '.' )
+		
+		# Remove the empty archive directory.
+		shutil.rmtree( archive_dir, ignore_errors=True )
 		print( 'Done.' )
 
 def install( full=False ):
