@@ -44,10 +44,14 @@ import os
 import sys
 import shutil
 import zipfile
+import bisect
 import argparse
+import operator
 import platform
 import subprocess
 import contextlib
+from collections import defaultdict
+from html.parser import HTMLParser
 import urllib.request
 
 do_debug=False
@@ -57,6 +61,8 @@ zip_file_url = 'https://github.com/esitarski/CrossMgr/archive/refs/heads/master.
 src_dir = 'CrossMgr-master'			# directory of the source code files.
 env_dir = 'CrossMgr-env'			# directory of the python environment.
 archive_dir = 'CrossMgr-archive'	# directory of previous releases.
+
+wxpython_extras_url = 'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/'
 
 @contextlib.contextmanager
 def in_dir( x ):
@@ -93,6 +99,37 @@ def src_download():
 	z = zipfile.ZipFile( zip_file_name )
 	z.extractall( "." )
 	print( 'Done.' )
+	
+def get_wxpython_versions():
+	# Read the extras page.
+	with urllib.request.urlopen(wxpython_extras_url) as request:
+		contents = request.read().decode( encoding='utf8' )
+
+	distro_versions = defaultdict( list )
+	class DVHTMLParser(HTMLParser):
+		def handle_starttag(self, tag, attrs):
+			if tag != 'a':
+				return
+			attrs = {k:v for k,v in attrs}
+			try:
+				href = attrs['href']
+			except KeyError:
+				return
+			if '-' not in href:
+				return
+			fields = href.split('-')
+			if len(fields) != 2:
+				return
+			
+			distro, version = fields
+			if version.endswith('/'):
+				version = version[:-1]
+			distro_versions[distro].append( (float(version), version) )
+
+	DVHTMLParser().feed( contents )
+	for distro, versions in distro_versions.items():
+		versions.sort( key = operator.itemgetter(0) )
+	return distro_versions
 
 def env_setup( full=False ):
 	if full and os.path.isdir( env_dir ):
@@ -134,30 +171,38 @@ def env_setup( full=False ):
 			elif line.startswith( 'Release:' ):
 				os_version = line.split(':')[1].strip().lower()
 		
-		# Get the name of the python extras url.
-		url = f'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/{os_name}-{os_version}'
-		
-		# Check if the url exists.  If not, this version of Linux is unsupported.
-		try:
-			with urllib.request.urlopen(url) as request:
-				url_found = True
-		except urllib.error.URLError:
-			url_found = False
-		
-		if not url_found:
+		wxpython_versions = get_wxpython_versions()
+
+		# Check if this os is supported.
+		if os_name not in wxpython_versions:
 			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
-			print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
-			if not has_existing_env:
-				uninstall()
-				sys.exit( -1 )
-			else:
-				print( 'Using existing wxPython install.' )
-		else:
-			# Install wxPyhon from the extras url.
-			subprocess.check_output( [
-				python_exe, '-m',
-				'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
+			print( f'See {wxpython_extras_url} for supported Linux platforms and versions.' )
+			uninstall()
+			sys.exit( -1 )
+
+		# Find the closest, lower version of wxPython.
+		f_os_v = float( os_version )
+		os_versions = wxpython_versions[os_name]
+		f_v = [v[0] for v in os_versions]
+		i = bisect.bisect_left( f_v, f_os_v, hi=len(f_v)-1 )
+		if i and f_v[i] > f_os_v:
+			i -= 1
+		
+		if os_version != os_versions[i][1]:
+			print( f'\n***** Warning: CrossMgr is not supported on: {os_name}-{os_version} *****' )
+			print( 'Using closest version: {os_name}-{os_versions[i][1]}' )
+			print( 'This may not work!' )
+
+		os_version = os_versions[i][1]
+		
+		# Get the name of the python extras url.
+		url = f'{wxpython_extras_url}/{os_name}-{os_version}'
+		
+		# Install wxPyhon from the extras url.
+		subprocess.check_output( [
+			python_exe, '-m',
+			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
+		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
