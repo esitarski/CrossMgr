@@ -107,6 +107,9 @@ def env_setup( full=False ):
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 		subprocess.check_output( ['python3', '-m', 'venv', env_dir] )
 		print( 'Done.' )
+		has_existing_env = False
+	else:
+		has_existing_env = True
 	
 	# Get the path to the exe.
 	python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
@@ -144,15 +147,17 @@ def env_setup( full=False ):
 		if not url_found:
 			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
 			print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
-			print( 'Aborting.' )
-			uninstall()
-			sys.exit( -1 )
-		
-		# Install wxPyhon from the extras url.
-		subprocess.check_output( [
-			python_exe, '-m',
-			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
+			if not has_existing_env:
+				uninstall()
+				sys.exit( -1 )
+			else:
+				print( 'Using existing wxPython install.' )
+		else:
+			# Install wxPyhon from the extras url.
+			subprocess.check_output( [
+				python_exe, '-m',
+				'pip', 'install', '--upgrade', '-f', url, 'wxPython',
+			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -311,6 +316,11 @@ def make_archive():
 			env_dir_archive = os.path.join( archive_dir, env_dir )
 			
 			# Move the src dir as we download it completely on each install.
+			# Copy the env dir as we incrementally updated it on each install.
+			try:
+				shutil.rmtree( src_dir_archive, ignore_errors=True )
+			except Exception:
+				pass
 			shutil.move( src_dir, src_dir_archive )
 			
 			# Copy the env dir as we incrementally updated it on each install.
