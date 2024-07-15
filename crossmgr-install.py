@@ -184,7 +184,7 @@ def env_setup( full=False ):
 		f_os_v = float( os_version )
 		os_versions = wxpython_versions[os_name]
 		f_v = [v[0] for v in os_versions]
-		i = bisect.bisect_left( f_v, f_os_v, 0, len(f_v)-1 )
+		i = bisect.bisect_left( f_v, f_os_v, hi=len(f_v)-1 )
 		if i and f_v[i] > f_os_v:
 			i -= 1
 		
