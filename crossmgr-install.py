@@ -107,11 +107,14 @@ def env_setup( full=False ):
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 		subprocess.check_output( ['python3', '-m', 'venv', env_dir] )
 		print( 'Done.' )
+		has_existing_env = False
+	else:
+		has_existing_env = True
 	
 	# Get the path to the exe.
 	python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
 	
-	print( f"Updating python environment (this could take a few minutes): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
+	print( f"Updating python environment (this can take a few minutes): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
 	if platform.system() == 'Linux':
 		# Install wxPython from the "extras" folder.
@@ -144,15 +147,17 @@ def env_setup( full=False ):
 		if not url_found:
 			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
 			print( 'See https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ for supported Linux platforms and versions.' )
-			print( 'Aborting.' )
-			uninstall()
-			sys.exit( -1 )
-		
-		# Install wxPyhon from the extras url.
-		subprocess.check_output( [
-			python_exe, '-m',
-			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
+			if not has_existing_env:
+				uninstall()
+				sys.exit( -1 )
+			else:
+				print( 'Using existing wxPython install.' )
+		else:
+			# Install wxPyhon from the extras url.
+			subprocess.check_output( [
+				python_exe, '-m',
+				'pip', 'install', '--upgrade', '-f', url, 'wxPython',
+			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -306,28 +311,54 @@ def make_archive():
 	install_dir = get_install_dir()
 	with in_dir( install_dir ):
 		if os.path.isdir(env_dir) and os.path.isdir(src_dir):
-			print( f"Creating archive: {os.path.join(install_dir,archive_dir)}... ", end='', flush=True )
-			# Delete the previous archive directory.
-			if os.path.isdir(archive_dir):
-				try:
-					shutil.rmtree( archive_dir, ignore_errors=True )
-				except Exception as e:
-					pass
+			print( f"Archiving current version: {os.path.join(install_dir,archive_dir)}... ", end='', flush=True )
+			src_dir_archive = os.path.join( archive_dir, src_dir )
+			env_dir_archive = os.path.join( archive_dir, env_dir )
 			
-			# Copy the src and env to the archive.
-			shutil.copytree( src_dir, archive_dir, dirs_exist_ok=True )
-			shutil.copytree( env_dir, archive_dir, dirs_exist_ok=True )
+			# Move the src dir as we download it completely on each install.
+			# Copy the env dir as we incrementally updated it on each install.
+			try:
+				shutil.rmtree( src_dir_archive, ignore_errors=True )
+			except Exception:
+				pass
+			shutil.move( src_dir, src_dir_archive )
+			
+			# Copy the env dir as we incrementally updated it on each install.
+			try:
+				shutil.rmtree( env_dir_archive, ignore_errors=True )
+			except Exception:
+				pass
+			shutil.copytree( env_dir, env_dir_archive )
 			print( 'Done.' )
 
 def restore_archive():
+	install_dir = get_install_dir()
 	with in_dir( get_install_dir() ):
-		if not os.path.isdir(archive_dir):
-			print( "No archive to restore." )
+		src_dir_archive = os.path.join( archive_dir, src_dir )
+		env_dir_archive = os.path.join( archive_dir, env_dir )
+		if not all (os.path.isdir(d) for d in (archive_dir, src_dir_archive, env_dir_archive) ):
+			print( "No previously archived version to restore." )
 			return
-	
+		
 		print( "Restoring previous version from archive... ", end='', flush=True )
-		shutil.copytree( os.path.join(archive_dir, src_dir), '.', dirs_exist_ok=True )
-		shutil.copytree( os.path.join(archive_dir, env_dir), '.', dirs_exist_ok=True )
+		
+		# Delete the current src and env.
+		for d in (src_dir, env_dir):
+			try:
+				shutil.rmtree( d, ignore_errors=True )
+			except Exception:
+				pass
+
+		# Restore src and env from the archive.
+		# It is safe to do a move instead of a copy as we don't need to preserve the archive after the restore.
+		for d in (src_dir_archive, env_dir_archive):
+			shutil.move( d, install_dir )
+		
+		# Cleanup the archive_dir.
+		try:
+			shutil.rmtree( archive_dir, ignore_errors=True )
+		except Exception:
+			pass
 		print( 'Done.' )
 
 def install( full=False ):
@@ -420,7 +451,7 @@ if __name__ == '__main__':
 		install( args.full )
 		
 	def do_restore( args ):
-		restore()
+		restore_archive()
 		
 	def do_uninstall( args ):
 		uninstall()
