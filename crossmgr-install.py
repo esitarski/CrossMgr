@@ -378,16 +378,15 @@ def make_archive():
 			if not os.path.isdir( archive_dir_version ):
 				os.makedirs( archive_dir_version )
 			
-			# Move the src dir as we download it completely on each install.
-			# Copy the env dir as we incrementally updated it on each install.
+			# Move the src dir as we download it completely on install.
 			rmdir_ignore( src_dir_archive )
 			shutil.move( src_dir, src_dir_archive )
 			
-			# Copy the env dir as we incrementally updated it on each install.
+			# Copy the env dir as we incrementally update it on install.
 			rmdir_ignore( env_dir_archive )
 			shutil.copytree( env_dir, env_dir_archive )
 			
-			# If there are too many archived versions, clean them up.
+			# Clean up excessive archive versions.
 			dirs = sorted( (d for d in os.listdir(archive_dir) if re.fullmatch(re_timestamp, d) and os.path.isdir(os.path.join(archive_dir,d))), reverse=True )
 			for d in dirs[10:]:
 				rmdir_ignore( os.path.join(archive_dir, d) )
