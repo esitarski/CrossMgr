@@ -41,6 +41,7 @@
 #
 
 import os
+import re
 import sys
 import shutil
 import zipfile
@@ -48,6 +49,7 @@ import bisect
 import argparse
 import operator
 import platform
+import datetime
 import subprocess
 import contextlib
 from collections import defaultdict
@@ -352,58 +354,79 @@ def make_shortcuts( python_exe ):
 	
 	print( 'Done.' )
 
+def rmdir_ignore( d ):
+	try:
+		shutil.rmtree( d, ignore_errors=True )
+		return True
+	except Exception:
+		return False
+
+re_timestamp = re.compile( r'(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2}\-\d{6})' )
+
 def make_archive():
 	install_dir = get_install_dir()
+	timestamp = datetime.datetime.now().strftime( '%Y%m%dT%H%M%S-%f' )
+	
+	archive_dir_version = os.path.join( archive_dir, timestamp )
+	src_dir_archive = os.path.join( archive_dir, timestamp, src_dir )
+	env_dir_archive = os.path.join( archive_dir, timestamp, env_dir )
+						
 	with in_dir( install_dir ):
 		if os.path.isdir(env_dir) and os.path.isdir(src_dir):
-			print( f"Archiving current version: {os.path.join(install_dir,archive_dir)}... ", end='', flush=True )
-			src_dir_archive = os.path.join( archive_dir, src_dir )
-			env_dir_archive = os.path.join( archive_dir, env_dir )
+			print( f"Archiving current version to: {os.path.join(install_dir,archive_dir_version)}... ", end='', flush=True )
 			
-			# Move the src dir as we download it completely on each install.
-			# Copy the env dir as we incrementally updated it on each install.
-			try:
-				shutil.rmtree( src_dir_archive, ignore_errors=True )
-			except Exception:
-				pass
+			if not os.path.isdir( archive_dir_version ):
+				os.makedirs( archive_dir_version )
+			
+			# Move the src dir as we download it completely on install.
+			rmdir_ignore( src_dir_archive )
 			shutil.move( src_dir, src_dir_archive )
 			
-			# Copy the env dir as we incrementally updated it on each install.
-			try:
-				shutil.rmtree( env_dir_archive, ignore_errors=True )
-			except Exception:
-				pass
+			# Copy the env dir as we incrementally update it on install.
+			rmdir_ignore( env_dir_archive )
 			shutil.copytree( env_dir, env_dir_archive )
+			
+			# Clean up excessive archive versions.
+			dirs = sorted( (d for d in os.listdir(archive_dir) if re.fullmatch(re_timestamp, d) and os.path.isdir(os.path.join(archive_dir,d))), reverse=True )
+			for d in dirs[10:]:
+				rmdir_ignore( os.path.join(archive_dir, d) )
+				
 			print( 'Done.' )
 
 def restore_archive():
 	install_dir = get_install_dir()
 	with in_dir( get_install_dir() ):
-		src_dir_archive = os.path.join( archive_dir, src_dir )
-		env_dir_archive = os.path.join( archive_dir, env_dir )
-		if not all (os.path.isdir(d) for d in (archive_dir, src_dir_archive, env_dir_archive) ):
+		if not os.path.isdir( archive_dir ):
+			print( "Archive directory does not exist." )
+			return
+		
+		# Find the most recent archived version and restore it.
+		dirs = sorted( (d for d in os.listdir(archive_dir) if re.fullmatch(re_timestamp, d) and os.path.isdir(os.path.join(archive_dir,d))), reverse=True )
+		if not dirs:
 			print( "No previously archived version to restore." )
 			return
 		
-		print( "Restoring previous version from archive... ", end='', flush=True )
+		timestamp = dirs[0]
+		archive_dir_version = os.path.join( archive_dir, timestamp )
+		
+		print( f"Restoring from archive {timestamp}... ", end='', flush=True )
+		src_dir_archive = os.path.join( archive_dir_version, src_dir )
+		env_dir_archive = os.path.join( archive_dir_version, env_dir )
 		
 		# Delete the current src and env.
 		for d in (src_dir, env_dir):
-			try:
-				shutil.rmtree( d, ignore_errors=True )
-			except Exception:
-				pass
+			rmdir_ignore( d )
 
 		# Restore src and env from the archive.
-		# It is safe to do a move instead of a copy as we don't need to preserve the archive after the restore.
+		# It is safe to move the files instead of copy as we don't need to preserve the archive after the restore.
 		for d in (src_dir_archive, env_dir_archive):
 			shutil.move( d, install_dir )
 		
-		# Cleanup the archive_dir.
-		try:
-			shutil.rmtree( archive_dir, ignore_errors=True )
-		except Exception:
-			pass
+		# Cleanup the directories.
+		rmdir_ignore( archive_dir_version )
+		if not list( os.listdir(archive_dir) ):
+			rmdir_ignore( archive_dir )
+		# Check if the entire 
 		print( 'Done.' )
 
 def install( full=False ):
