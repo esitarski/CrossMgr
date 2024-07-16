@@ -763,8 +763,11 @@ class GanttChartPanel(wx.Panel):
 			
 			dc.SetPen( wx.Pen(ctColour, 3) )
 			dc.DrawLine( x, barHeight - 4, x, yLast + 4 )
-			if self.data[self.moveIRider]:
-				dc.DrawLine( xLeft-4, self.yMove, xRight+4, self.yMove )
+			try:
+				if self.data[self.moveIRider]:
+					dc.DrawLine( xLeft-4, self.yMove, xRight+4, self.yMove )
+			except IndexError:
+				pass
 			
 			# Draw the time text.
 			dc.SetBrush( wx.Brush(ctColour) )

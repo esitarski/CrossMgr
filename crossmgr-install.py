@@ -387,7 +387,8 @@ def make_archive():
 			shutil.copytree( env_dir, env_dir_archive )
 			
 			# Clean up excessive archive versions.
-			dirs = sorted( (d for d in os.listdir(archive_dir) if re.fullmatch(re_timestamp, d) and os.path.isdir(os.path.join(archive_dir,d))), reverse=True )
+			with os.scandir( archive_dir ) as contents:
+				dirs = sorted( (d.name for d in contents if d.is_dir() and re.fullmatch(re_timestamp, d.name)), reverse=True )
 			for d in dirs[10:]:
 				rmdir_ignore( os.path.join(archive_dir, d) )
 				
@@ -401,7 +402,8 @@ def restore_archive():
 			return
 		
 		# Find the most recent archived version and restore it.
-		dirs = sorted( (d for d in os.listdir(archive_dir) if re.fullmatch(re_timestamp, d) and os.path.isdir(os.path.join(archive_dir,d))), reverse=True )
+		with os.scandir( archive_dir ) as contents:
+			dirs = sorted( (d.name for d in contents if d.is_dir() and re.fullmatch(re_timestamp, d.name)), reverse=True )
 		if not dirs:
 			print( "No previously archived version to restore." )
 			return
