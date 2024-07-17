@@ -633,6 +633,7 @@ class GanttChartPanel(wx.Panel):
 				ebtX = tToX( self.earlyBellTimes[i] )
 				dc.SetPen( penEBT )
 				dc.DrawLine( ebtX, yLast, ebtX, yLast+dy )
+				dc.SetPen( penBar )
 			
 			# Draw the label on both ends.
 			if self.greyOutSet and i in self.greyOutSet:
@@ -770,8 +771,8 @@ class GanttChartPanel(wx.Panel):
 				pass
 			
 			# Draw the time text.
-			dc.SetBrush( wx.Brush(ctColour) )
 			dc.SetPen( wx.Pen(ctColour,1) )
+			dc.SetBrush( wx.Brush(ctColour) )
 			rect = wx.Rect( x - labelWidth//2-2, 0, labelWidth+4, labelHeight )
 			dc.DrawRectangle( rect )
 			if not self.minimizeLabels:
