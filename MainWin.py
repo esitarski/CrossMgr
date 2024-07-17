@@ -1422,8 +1422,8 @@ class MainWin( wx.Frame ):
 		try:
 			with open(redirectFileName, encoding='utf8') as f:
 				logData = f.read()
-		except IOError:
-			Utils.MessageOK(self, _("Unable to open log file."), _("Error"), wx.ICON_ERROR )
+		except Exception as e:
+			Utils.MessageOK(self, '\n\n'.join( (_("Unable to open log file."), str(e)) ), _("Error"), wx.ICON_ERROR )
 			return
 			
 		logData = logData.split( '\n' )
@@ -1431,11 +1431,11 @@ class MainWin( wx.Frame ):
 		logData = '\n'.join( logData )
 		
 		dataObj = wx.TextDataObject()
-		dataObj.SetText(logData)
+		dataObj.SetText( logData )
 		if wx.TheClipboard.Open():
 			wx.TheClipboard.SetData( dataObj )
 			wx.TheClipboard.Close()
-			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), f"{len(logData.encode())} bytes", _("Success") )
+			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email."), f"{len(logData.encode())} bytes"] ), _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
 	

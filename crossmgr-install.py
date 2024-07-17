@@ -173,6 +173,10 @@ def env_setup( full=False ):
 			elif line.startswith( 'Release:' ):
 				os_version = line.split(':')[1].strip().lower()
 		
+		# If this is an ubuntu flavor, use the ubuntu version.
+		os_name = os_name.lower()
+		if any( f in os_name for f in ('buntu', 'mint') ):
+			os_name = 'ubuntu'
 		wxpython_versions = get_wxpython_versions()
 
 		# Check if this os is supported.
