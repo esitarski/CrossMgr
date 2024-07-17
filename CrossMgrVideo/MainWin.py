@@ -29,6 +29,7 @@ import gzip
 import sqlite3
 from time import sleep
 import numpy as np
+from collections import defaultdict
 from queue import Queue, Empty
 
 from datetime import datetime, timedelta, time
@@ -1727,12 +1728,27 @@ class MainWin( wx.Frame ):
 			handler( msg )
 		
 	def processRequests( self ):
+		bibMissing = 99999
+		tSearchLast = {}		# Record of the last trigger time of this bib.
+		tSearchPrev = 0.0		# Previous search time.
 		while True:
 			msg = self.requestQ.get()	# Blocking get.
 			
 			tSearch = msg['time']
 			advanceSeconds = msg.get('advanceSeconds', 0.0)
 			tSearch += timedelta(seconds=advanceSeconds)
+			
+			# Filter triggers that are too close together for the same bib number.
+			bib = msg.get('bib', bibMissing)
+			if tSearch - tSearchLast.get(bib, -1.0) < 0.01:
+				tSearchLast[bib] = tSearch
+				continue
+			
+			# If there has been no recent activity, delete the cache to reduce memory.
+			if tSearch - tSearchPrev > 0.1:
+				tSearchLast.clear()
+			tSearchPrev = tSearch
+			tSearchLast[bib] = tSearch
 			
 			closest_frames = msg.get('closest_frames', self.autoCaptureClosestFrames)
 			s_before = 0.0	if closest_frames else msg.get('s_before', self.tdCaptureBefore.total_seconds())	# Use the configured capture interval, not the default.
@@ -1747,7 +1763,7 @@ class MainWin( wx.Frame ):
 						's_after':			s_after,
 						'ts_start':			msg.get('ts_start', None) or now(),
 						'closest_frames':	closest_frames,
-						'bib':				msg.get('bib', 99999),
+						'bib':				bib,
 						'first_name':		msg.get('first_name','') or msg.get('firstName',''),
 						'last_name':		msg.get('last_name','') or msg.get('lastName',''),
 						'team':				msg.get('team',''),
@@ -1761,8 +1777,8 @@ class MainWin( wx.Frame ):
 			if closest_frames:
 				self.camInQ.put( {'cmd':'query_closest', 't':tSearch, 'closest_frames':closest_frames} )
 			else:
-				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )
-	
+				self.camInQ.put( {'cmd':'query', 'tStart':tStart, 'tEnd':tEnd} )			
+					
 	def shutdown( self ):
 		# Ensure that all images in the queue are saved.
 		self.isShutdown = True
