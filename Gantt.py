@@ -614,7 +614,7 @@ class Gantt( wx.Panel ):
 				catResults = GetResults(c)
 				if not catResults:
 					continue
-				# Create a name for the category as a bogus rider.
+				# Create a name for the category as a pretend rider.
 				rr = RiderResult( num='', status=Finisher, lastTime=None, raceCat=c, lapTimes=[], raceTimes=[], interp=[] )
 				rr.FirstName = c.fullname
 				headerSet.add( rr.FirstName )
@@ -623,7 +623,8 @@ class Gantt( wx.Panel ):
 				earlyBellTimes.append( None )
 				
 				results.extend( list(catResults) )
-				earlyBellTimes.extend( c.earlyBellTime if r.status == Finisher else None for r in catResults )
+				ebt = c.earlyBellTime
+				earlyBellTimes.extend( ebt if r.status == Finisher else None for r in catResults )
 		else:
 			results = GetResults( category )
 			if category:
