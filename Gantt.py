@@ -627,7 +627,8 @@ class Gantt( wx.Panel ):
 		else:
 			results = GetResults( category )
 			if category:
-				earlyBellTimes = [category.earlyBellTime if r.status == Finisher else None for r in results]
+				ebt = category.earlyBellTime
+				earlyBellTimes = [ebt if r.status == Finisher else None for r in results]
 			else:
 				def _getEarlyBellTime( num ):
 					c = race.getCategory( num )

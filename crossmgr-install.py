@@ -146,9 +146,6 @@ def env_setup( full=False ):
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 		subprocess.check_output( ['python3', '-m', 'venv', env_dir] )
 		print( 'Done.' )
-		has_existing_env = False
-	else:
-		has_existing_env = True
 	
 	# Get the path to the exe.
 	python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
