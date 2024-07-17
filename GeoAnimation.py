@@ -378,8 +378,10 @@ class GeoTrack:
 		self.gpsPoints = gpsPoints
 		self.isPointToPoint = isPointToPoint
 
-		self.xMax = max( p.x for p in self.gpsPoints )
-		self.yMax = max( p.y for p in self.gpsPoints )
+		# Default max to 1 to avoid divisivion by zero errors.
+		self.xMax = max( (p.x for p in self.gpsPoints), default=1 )
+		self.yMax = max( (p.y for p in self.gpsPoints), default=1 )
+		
 		dCum = 0.0
 		self.cumDistance = []
 		for p in self.gpsPoints:

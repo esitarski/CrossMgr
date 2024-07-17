@@ -1435,7 +1435,7 @@ class MainWin( wx.Frame ):
 		if wx.TheClipboard.Open():
 			wx.TheClipboard.SetData( dataObj )
 			wx.TheClipboard.Close()
-			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), f"{len(logData.decode())} bytes", _("Success") )
+			Utils.MessageOK(self, '\n\n'.join( [_("Log file copied to clipboard."), _("You can now paste it into an email.")] ), f"{len(logData.encode())} bytes", _("Success") )
 		else:
 			Utils.MessageOK(self, _("Unable to open the clipboard."), _("Error"), wx.ICON_ERROR )
 	
