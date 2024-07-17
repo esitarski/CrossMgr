@@ -626,7 +626,10 @@ class Gantt( wx.Panel ):
 				earlyBellTimes.extend( c.earlyBellTime if r.status == Finisher else None for r in catResults )
 		else:
 			results = GetResults( category )
-			earlyBellTimes = [(category.earlyBellTime if category else None) if r.status == Finisher else None for r in results]
+			def _getEarlyBellTime( num ):
+				c = race.getCategory( num )
+				return c.earlyBellTime if c else None
+			earlyBellTimes = [_getEarlyBellTime(r.num) if r.status == Finisher else None for r in results]
 		
 		if race.showFullNamesInChart:
 			def getLabel( r ):
