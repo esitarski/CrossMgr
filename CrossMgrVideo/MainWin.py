@@ -94,13 +94,15 @@ def getInfo():
 	app = AppVerName.split()[0]
 	uname = platform.uname()
 	info = {
-		'{}_AppVersion'.format(app):	AppVerName,
-		'{}_Timestamp'.format(app):		datetime.now(),
-		'{}_User'.format(app):			os.path.basename(os.path.expanduser("~")),
-		'{}_Python'.format(app):		sys.version.replace('\n', ' '),
+		f'{app}_AppVersion':	AppVerName,
+		f'{app}_Timestamp':		datetime.now(),
+		f'{app}_User':			os.path.basename(os.path.expanduser("~")),
+		f'{app}_Python':		sys.version.replace('\n', ' '),
 	}
-	info.update( {'{}_{}'.format(app, a.capitalize()): getattr(uname, a)
-		for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '') } )
+	info.update( {
+		f'{app}_{a.capitalize()}': getattr(uname, a)
+			for a in ('system', 'release', 'version', 'machine', 'processor') if getattr(uname, a, '')
+	} )
 	return info
 
 import Resolutions
@@ -135,10 +137,10 @@ class ConfigDialog( wx.Dialog ):
 		
 		pfgs.Add( wx.StaticText(self, label='Camera USB'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
 		hs = wx.BoxSizer( wx.HORIZONTAL )
-		self.usb = wx.Choice( self, choices=['{}'.format(i) for i in range(CamServer.CameraUsbMax)] )
+		self.usb = wx.Choice( self, choices=[f'{i}' for i in range(CamServer.CameraUsbMax)] )
 		self.usb.SetSelection( usb )
 		hs.Add( self.usb )
-		hs.Add( wx.StaticText(self, label='cameras detected on {}'.format(availableCameraUsb)), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		hs.Add( wx.StaticText(self, label=f'cameras detected on {availableCameraUsb}'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
 		pfgs.Add( hs )
 		
 		pfgs.Add( wx.StaticText(self, label='Camera Resolution'+':'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.ALIGN_RIGHT )
@@ -481,8 +483,8 @@ class MainWin( wx.Frame ):
 		self.logo = Utils.GetPngBitmap('CrossMgrHeader.png')
 		headerSizer.Add( wx.StaticBitmap(self, wx.ID_ANY, self.logo) )
 		
-		self.title = wx.StaticText(self, label='CrossMgr Video\nVersion {}'.format(AppVerName.split()[1]), style=wx.ALIGN_RIGHT )
-		self.title.SetFont( wx.Font( (0,28), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
+		self.title = wx.StaticText(self, label='CrossMgr Video\nVersion {}'.format(AppVerName.split()[1].replace('-private','\nprivate')), style=wx.ALIGN_RIGHT )
+		self.title.SetFont( wx.Font( (0,26), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL ) )
 		headerSizer.Add( self.title, flag=wx.ALL, border=10 )
 		
 		clock = Clock( self, size=(90,90) )
@@ -600,7 +602,7 @@ class MainWin( wx.Frame ):
 		self.dateSelect.Bind( wx.EVT_BUTTON, self.onDateSelect )
 		
 		hsDate.Add( wx.StaticText(self, label='Filter by Bib'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=12 )
-		self.bib = wx.lib.intctrl.IntCtrl( self, style=wx.TE_PROCESS_ENTER, size=(64,-1), min=1, allow_none=True, value=None )
+		self.bib = wx.lib.intctrl.IntCtrl( self, style=wx.TE_PROCESS_ENTER, size=(64,-1), min=0, allow_none=True, value=None )
 		self.bib.Bind( wx.EVT_TEXT_ENTER, self.onQueryBibChanged )
 		hsDate.Add( self.bib, flag=wx.LEFT, border=2 )
 		

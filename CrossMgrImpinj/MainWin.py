@@ -356,7 +356,7 @@ class MainWin( wx.Frame ):
 		self.copyToClipboard.Bind( wx.EVT_BUTTON, self.doCopyToClipboard )
 		bs.Add( self.copyToClipboard, border = 32, flag = wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.tStart = datetime.datetime.now()
-		bs.Add( setFont(bigFont,wx.StaticText(self, label='Last Reset: %s' % self.tStart.strftime('%H:%M:%S'))), border = 10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
+		bs.Add( setFont(bigFont,wx.StaticText(self, label='Last Reset: {}'.format(self.tStart.strftime('%H:%M:%S')))), border=10, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		self.runningTime = setFont(bigFont,wx.StaticText(self, label='00:00:00' ))
 		bs.Add( self.runningTime, border = 20, flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL )
 		bs.Add( setFont(bigFont,wx.StaticText(self, label=' / ')), flag=wx.ALIGN_CENTER_VERTICAL )
