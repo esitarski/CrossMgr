@@ -107,13 +107,13 @@ class FrontWheelEdgePage(adv.WizardPageSimple):
 		vbs.Add( wx.StaticText(self, label = _('Drag the Green Square so the line is on the Leading Edge of the Front Wheel.')),
 					flag=wx.ALL, border = border )
 		self.speed = wx.StaticText( self, label=self.formatSpeed() )
-		bigFont = wx.Font( (0,32), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
-		self.speed.SetFont( bigFont )
+		#bigFont = wx.Font( (0,24), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL )
+		#self.speed.SetFont( bigFont )
 		vbs.Add( self.speed, flag=wx.ALL, border = border )
 		self.SetSizerAndFit( vbs )
 		
 	def formatSpeed( self, kmh=0.0, mps=0.0, mph=0.0 ):
-		return '{:.2f}km/h   {:.2f}m/s   {:.2f}mph'.format(kmh, mps, mph)
+		return f'{kmh:.2f}km/h   {mps:.2f}m/s   {mph:.2f}mph'
 		
 	def onVerticalLines( self, event=None ):
 		mps, kmh, mph, pps = self.getSpeed()
@@ -135,7 +135,7 @@ class ComputeSpeed:
 	wheelDiameter = 0.678
 
 	def __init__( self, parent, size=wx.DefaultSize ):
-		self.wizard = adv.Wizard( parent, wx.ID_ANY, _('Compute Speed') )
+		self.wizard = adv.Wizard( parent, wx.ID_ANY, _('Compute Speed'), style=wx.RESIZE_BORDER)
 		self.wizard.Bind( adv.EVT_WIZARD_PAGE_CHANGING, self.onPageChanging )
 		
 		self.iPhoto1 = None

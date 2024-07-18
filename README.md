@@ -31,7 +31,7 @@ The minimum system requires are as follows:
 
 ### Windows
 
-- Windows 10 x64 (32 bit systems are not supported)
+- Windows 11 x64
 - 4G RAM
 - 10G HD space
 
@@ -41,12 +41,18 @@ The minimum system requires are as follows:
 - 4G RAM
 - 10G HD space
 
+### Linux
+
+- ubuntu (and flavors), centos, debian, fedora, rocky
+- 4G RAM
+- 10G HD space
+
 ## User Installation
 
 As a user, you can install the CrossManager applications on Windows, Mac OSX, and Linux. Only x86 64 bit platforms are supported. The Windows and MacOSX versions are available as binary releases.
 See the Releases tab in the github repo for binaries.
 
-You can still run on Linux too, but you have to run from the source code.
+You can still run on Linux too, but you have to use the install script (more on that later).
 
 ### Windows Installation
 
@@ -76,27 +82,55 @@ This is only required the first time you run it. MacOSX will also ask a few ques
 
 CrossMgrImpinj, TagReadWriter, CrossMgrAlien, CrossMgrVideo, SeriesMgr, PointsRaceMgr and SprintMgr follow the same install process.
 
-#### Debugging the Mac Apps
+## Installation with the CrossMgr Install Script
 
-Because MacOSX has added a lot of security to the system, some weird problems can occur that prevent the application from starting.
+Windows and Mac have become increasingly difficult to deal with due to virus checkers incorrectly flagging CrossMgr installs as containing a virus.
+And, it is difficult to create a standard install for Linux due to all its flavors and variants.
 
-First, and foremost, because the apps are not signed, you must CTRL-CLICK the icon, and select Open from the pop up menu, and then click Open on the dialog box to start the application the first time
-Additionally, MacOSX will prompt the user for permissions to access the network, documents folder, etc...
-Sometimes, the splash screens for the application will cover this dialog box up, or it could end up behind the application.
-Unless you select ALLOW, the application can't work. For example, CrossMgr requires network access to run.
-Additionally, sometimes the application just won't start. Typically, it's icon will start to flash, and then nothing.
-To see why and what is happening, run the application from the command line from the app's MacOS directory. For example, for CrossMgr:
+To address this problem, there is now a cross-platform install which solves many of these problems.
 
-```bash
-cd /Applications/CrossMgr.app/Content/MacOS
-./CrossMgr
-```
+To clear the air about viruses, all CrossMgr installs are submitted to [VirusTotal](https://www.virustotal.com/gui/home/upload).  VirusTotal runs 70 virus checkers and logs the result in a public database.
+Regardless, Windows and Mac virus checkers often flag CrossMgr installs as suspicious (this stops sometimes after a sufficient number of installs).
+The Mac's GateKeeper is the worst offender as it falsely claims that the .dmg file is damaged and should be deleted.  Yikes!
 
-Python is set up to dump logs to stdout which usually indicates the problem. Sometimes, the problem of starting the application will just go away.
+<rant>
+I get that Microsoft and Apple want all installs from their online store, but these policies don't serve the open-source community well where there isn't enough money to pay the fees.
+Posting to the Apple online store also requires a submitting and approval process for every version (costly, with delays).
+Microsoft has (winget)[https://winget.run/], but it isn't available for Mac or Linux.
+And overall, I don't have the time to maintain and test separate release mechanisms for each platform.
+</rant>
 
-### Linux Installation
+To install from the script:
 
-Follow the instructions for building CrossMgr on your system.  Check the wxPython web page for specific instructions for how to install it on your distro.
+1. Make sure you have an internet connection.
+1. On Windows and Mac only, install Python onto your maching from (here)[https://www.python.org/] if you don't currently have it.  If presented with an option to add Python to your PATH, choose Yes.  You only need to install Python once.  Python is the computer language CrossMgr is written in.  Skip this step on Linux as Python is already installed.
+1. Download (crossmgr-install.py)[https://github.com/esitarski/CrossMgr/blob/master/crossmgr-install.py] and save it into a folder on your machine.  You only need to do this once.
+1. Open a terminal and "cd" to the directory you downloaded crossmgr-install.py
+1. In the terminal, enter:  __python3 crossmgr-install.py install__
+1. Wait a few minutes while the install pulls the latest release from github, updates the Python env, and creates the desktop shortcuts.  You can now launch the CrossMgr apps from the desktop shortcuts.
+1. To use the shortcuts on Linux, right-click on them and select "Allow Launching".  You only need to do this once.
+1. You can associate file types with CrossMgr apps on Windows.  For example, to launch CrossMgr when you double-click on .cmn files, click on a .cmn file, then set __~/CrossMgr-master/bin/CrossMgr.ps1__ as the app to use to open it (~ is your home directory).  Similar for Mac, but the app name ends in .sh.
+
+After the install completes, there is an __Update CrossMgr__ shortcut on your desktop.
+This is all you need to run to update CrossMgr going forward - you don't have to spend time finding the latest CrossMgr release.
+
+None of the CrossMgr apps require an internet connection to run.
+
+The script also supports __uninstall__ and __restore__ commands which allow you to remove all CrossMgr apps, or to revert back to the last version you installed, respectively.
+
+There are a number of application in the CrossMgr suite, but as you work more races, you need many of them, especially CrossMgr (mass start and TT), SeriesMgr (for series) CrossMgr Impinj (for RFID), TagReadWrite (to make RFID tags)
+and CallupSeedingMgr (if you have callups for high-level events for MTB and CX).
+
+In addition to being faster and more convenient, the script requires much less disk space as each app reuses the Python runtime, rather than bundling in each .exe or .dmg file.
+
+If you are running with a .exe (Windows) or .dmg (Mac) install, you should uninstall all the apps first before switching to the script method.
+
+I investigated a number of ways to solve this problem (containers, python setup, nuitka as well as the existing solution).
+However, nuitka takes an hour to compile, downloading an .exe or .dmg is out anuyway, containers are at least as complicated to install as Python, and python setup does not deal with resource and data files well (not to mention shortcuts, etc.).
+
+This solution requires the extra step to install Python, but on the whole, I think this effort is worth it.
+Perhaps there will be a better way to solve this in the future (for example, on Windows, install it automatically with winget).
+Suggestions are welcome.
 
 ## Building Cross Manager (for developers)
 
