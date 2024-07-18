@@ -6,13 +6,15 @@
 Welcome to Cross Manager! Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
 
 In addition to the application help files, there is a tutorial for CrossMgr [here](/https://github.com/esitarski/CrossMgr/blob/master/CrossMgrTutorial.docx)
-and an explanation of an RFID implementation using CrossMgrIpinj [here](https://github.com/esitarski/CrossMgr/blob/master/CrossMgrImpinj/CrossMgrImpinjReadme.docx).
+and an explanation of an RFID implementation using CrossMgrImpinj [here](https://github.com/esitarski/CrossMgr/blob/master/CrossMgrImpinj/CrossMgrImpinjReadme.docx).
 
 The software consists of a set of executables.  For Cyclocross, MTB CX, TimeTrial, Road and Criterium races, you will need:
 
-* CrossMgr
+* CrossMgr for mass-start races and TT.
 * CrossMgrImpinj or CrossMgrAlien if you plan to use an RFID reader.
 * SeriesMgr if you plan to score a series of races.
+* TagReadWrite create your own tags.
+* CallupSeedingMgr to create callups using multiple criteria.
 
 If you are scoring Track races you will need:
 
@@ -43,7 +45,7 @@ The minimum system requires are as follows:
 
 ### Linux
 
-- ubuntu (and flavors), centos, debian, fedora, rocky
+- ubuntu (and flavors) or centos, debian, fedora, rocky on x64
 - 4G RAM
 - 10G HD space
 
@@ -93,18 +95,19 @@ To clear the air about viruses, all CrossMgr installs are submitted to [VirusTot
 Regardless, Windows and Mac virus checkers often flag CrossMgr installs as suspicious (this stops sometimes after a sufficient number of installs).
 The Mac's GateKeeper is the worst offender as it falsely claims that the .dmg file is damaged and should be deleted.  Yikes!
 
-<rant>
+`rant`
 I get that Microsoft and Apple want all installs from their online store, but these policies don't serve the open-source community well where there isn't enough money to pay the fees.
 Posting to the Apple online store also requires a submitting and approval process for every version (costly, with delays).
-Microsoft has (winget)[https://winget.run/], but it isn't available for Mac or Linux.
+Microsoft has [winget](https://winget.run/), but it isn't available for Mac or Linux.
 And overall, I don't have the time to maintain and test separate release mechanisms for each platform.
-</rant>
+If anyone has any suggestions, please let me know.
+`/rant`
 
 To install from the script:
 
 1. Make sure you have an internet connection.
-1. On Windows and Mac only, install Python onto your maching from (here)[https://www.python.org/] if you don't currently have it.  If presented with an option to add Python to your PATH, choose Yes.  You only need to install Python once.  Python is the computer language CrossMgr is written in.  Skip this step on Linux as Python is already installed.
-1. Download (crossmgr-install.py)[https://github.com/esitarski/CrossMgr/blob/master/crossmgr-install.py] and save it into a folder on your machine.  You only need to do this once.
+1. On Windows and Mac only, install Python onto your maching from [here](https://www.python.org/) if you don't currently have it.  If presented with an option to add Python to your PATH, choose Yes.  You only need to install Python once.  Python is the computer language CrossMgr is written in.  Skip this step on Linux as Python is already installed.
+1. Download [crossmgr-install.py](https://github.com/esitarski/CrossMgr/blob/master/crossmgr-install.py) and save it into a folder on your machine.  You only need to do this once.
 1. Open a terminal and "cd" to the directory you downloaded crossmgr-install.py
 1. In the terminal, enter:  __python3 crossmgr-install.py install__
 1. Wait a few minutes while the install pulls the latest release from github, updates the Python env, and creates the desktop shortcuts.  You can now launch the CrossMgr apps from the desktop shortcuts.
@@ -146,7 +149,7 @@ Use the help parameter to find the available command line options. You can build
 
 All platforms currently work with Python 3.7.x. Python 3.8 and newer is not yet supported by pyinstaller which freezes the python code to binary form.
 
-Windows builds require InnoSetup V6.x from [https://www.jrsoftware.org/isdl.php]. If you do not have Inno Setup installed, the windows build will fail.
+Windows builds require [InnoSetup V6.x](https://www.jrsoftware.org/isdl.php). If you do not have Inno Setup installed, the windows build will fail.
 
 The build has been automated, and compile.sh/ps1 script does everything to enable the developer to build CrossMgr and the associated tools. However, you can also download the binary from the github Releases tab.
 
