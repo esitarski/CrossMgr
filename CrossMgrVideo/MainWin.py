@@ -1228,7 +1228,7 @@ class MainWin( wx.Frame ):
 	def refreshTriggers( self, replace=False, iTriggerRow=None ):
 		'''
 			Refreshes the trigger list from the database.
-			If any rows have zero frames, it fixes the number of frames by reading the database.
+			If a row has zero frames, retrieve the number of frames from the database.
 		'''
 		tNow = now()
 
@@ -1523,7 +1523,7 @@ class MainWin( wx.Frame ):
 				
 		# Update the screen based on the new trigger.
 		with wx.BusyCursor():
-			self.finishStrip.Set( None )	# Clear the current finish strip so nothing gets updated.
+			self.finishStrip.Set( None )	# Clear the current finish strip to prevent UI interactions.
 			self.refreshPhotoPanel()
 			
 			triggerInfo = self.triggerInfo = self.getTriggerInfo( self.iTriggerSelect )
