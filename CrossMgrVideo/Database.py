@@ -329,6 +329,7 @@ pragma mmap_size = 30000000000;'''
 			del ids[-chunk_size:]
 	
 	def _purgeDuplicateTS( self, tsJpgIdIter ):
+		# Purge duplicate timestamps in whatever records are given.
 		tsSeen = set()
 		duplicateIds = []
 		for ts, jpgId in tsJpgIdIter:
@@ -337,8 +338,6 @@ pragma mmap_size = 30000000000;'''
 				yield ts, jpgId
 			else:
 				duplicateIds.append( jpgId )
-		# For now, just filter out duplicates without removing them from the database.
-		# self._deleteIds( 'photo', duplicateIds )
 	
 	def deleteTss( self, table, tss, callback=None ):
 		# Convert the timestamps to strings for the database.

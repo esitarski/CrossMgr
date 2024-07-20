@@ -518,38 +518,37 @@ def uninstall():
 		print( 'CrossMgr desktop shortcuts must be removed manually.' )
 	
 if __name__ == '__main__':
-	def do_install( args ):
-		install( args.full )
-		
-	def do_restore( args ):
-		restore_archive()
-		
-	def do_uninstall( args ):
-		uninstall()
-	
 	parser = argparse.ArgumentParser(
 		description='Installs/uninstalls all programs in the CrossMgr suite.',
 		epilog='The install downloads and updates all CrossMgr programs and configures them to run in a local environment.  Requires internet access.'
 	)
-	subparsers = parser.add_subparsers( required=True )
+	subparsers = parser.add_subparsers( required=True, dest='sub_command' )	# dest specifies the attribute field of the subparser, in this case "sub_command".
 	
-	parser_install = subparsers.add_parser( 'install',
+	p_install = subparsers.add_parser(
+		'install',
 		help='Installs CrossMgr source and Python environment (default).'
 	)
-	parser_install.set_defaults( func = do_install )
-	parser_install.add_argument( '-f', '--full', action='store_true',
+	p_install.add_argument(
+		'-f', '--full',
+		action='store_true',
 		help="Forces a full install of the python environment.  Otherwise, the python environment is updated (faster).  Required if you upgrade your computer's python version."
-	)
+	)	
 	
-	parser_uninstall = subparsers.add_parser( 'uninstall',
+	p_uninstall = subparsers.add_parser(
+		'uninstall',
 		help='Removes the CrossMgr source, Python environment and archive.'
 	)
-	parser_uninstall.set_defaults( func = do_uninstall )
 	
-	parser_restore = subparsers.add_parser( 'restore',
+	p_restore = subparsers.add_parser(
+		'restore',
 		help="Restores to the last install (if available)."
 	)
-	parser_restore.set_defaults( func = do_restore )
+
+	dispatch = {
+		'install':		lambda args: install( args.full ),
+		'uninstall': 	lambda args: uninstall(),
+		'restore':		lambda args: restore_archive(),
+	}
 	
-	args = parser.parse_args()
-	args.func( args )
+	args = parser.parse_args()	
+	dispatch[args.sub_command]( args )
