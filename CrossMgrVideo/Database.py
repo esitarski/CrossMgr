@@ -374,6 +374,10 @@ pragma mmap_size = 30000000000;'''
 	def _getPhotoCount( self, tsLower, tsUpper ):
 		return sum( 1 for _ in self._purgeDuplicateTS(self.conn.execute( 'SELECT ts,id FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper))) )
 	
+	def getPhotoCount( self, tsLower, tsUpper ):
+		with self.dbLock, self.conn:
+			return self.conn.execute( 'SELECT COUNT( DISTINCT ts ) FROM photo WHERE ts BETWEEN ? AND ?', (tsLower, tsUpper)).fetchone()[0]
+	
 	def getPhotos( self, tsLower, tsUpper ):
 		# Cache the results of the last query.
 		key = (tsLower, tsUpper)
