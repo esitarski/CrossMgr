@@ -1543,8 +1543,6 @@ class MainWin( wx.Frame ):
 			else:
 				self.tsJpg = []
 				frames = GlobalDatabase().getPhotoCount(self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
-				
-				# self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			
 			# Update the frame information.
 			if triggerInfo['frames'] != frames:
