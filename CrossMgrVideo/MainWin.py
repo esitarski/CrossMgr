@@ -1560,8 +1560,9 @@ class MainWin( wx.Frame ):
 				def updateFinishStrip( mainWin, updateId, triggerInfo, ts, s_before, s_after ):
 					tsJpg = GlobalDatabase().getPhotos( ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after) )
 					
-					# Refresh the cache with the jpgs we read from the database.
+					# Force the cache to update converting the jpgs to frames from the database.
 					# If the id changes at any time, stop all processing as there is a more recent update to work on.
+					# This pushes more processing off the GUI thread.
 					for ts, jpg in tsJpg:
 						if updateId != mainWin.updateId:
 							return
@@ -1578,7 +1579,7 @@ class MainWin( wx.Frame ):
 				self.updateId += 1
 				thread = threading.Thread( target=updateFinishStrip, args=(self, self.updateId, triggerInfo, self.ts, s_before, s_after) )
 				thread.daemon = True
-				thread.start()				
+				thread.start()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index

@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 import traceback
+import functools
 from time import sleep
 from datetime import datetime, timedelta, date, time
 import sqlite3
@@ -9,7 +10,7 @@ from collections import namedtuple, defaultdict
 from threading import RLock, Timer
 
 import CVUtil
-from FIFOCache import FIFOCacheSet
+from FIFOCache import FIFOCacheSet, FIFOCacheDict
 
 from queue import Queue, Empty
 
@@ -19,6 +20,12 @@ def removeDiacritic( s ):
 
 now = datetime.now
 
+# Create a lru cache to ensure a shared representation of the argument.
+# Must be called within the database lock.
+#@functools.lru_cache( 30*30 )
+def _sharedRep( item ):
+	return item
+	
 class BulkInsertDBRows:
 	def __init__( self, table, fields, toDB, maxlen=2000 ):
 		self.toDB = toDB
@@ -362,7 +369,7 @@ pragma mmap_size = 30000000000;'''
 		for jpgId, ts, jpg in self.conn.execute( 'SELECT id,ts,jpg FROM photo WHERE ts BETWEEN ? AND ? ORDER BY ts', (tsLower, tsUpper) ):
 			if ts and jpg and ts not in tsSeen:
 				tsSeen.add( ts )
-				tsJpgs.append( (ts, jpg) )
+				tsJpgs.append( (ts, _sharedRep(jpg)) )
 				if len(tsJpgs) == maxPhotos:
 					break
 			else:
@@ -403,13 +410,13 @@ pragma mmap_size = 30000000000;'''
 			
 		with self.dbLock, self.conn:
 			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts <= ? ORDER BY ts DESC', (ts,) ):
-				tsEarlier, jpgEarlier = ts, jpg
+				tsEarlier, jpgEarlier = ts, _sharedRep(jpg)
 				break
 			else:
 				tsEarlier, jpgEarlier = None, None
 			
 			for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo WHERE ts > ? ORDER BY ts ASC', (ts,) ):
-				tsLater, jpgLater = ts, jpg
+				tsLater, jpgLater = ts, _sharedRep(jpg)
 				break
 			else:
 				tsLater, jpgLater = None, None
@@ -467,9 +474,9 @@ pragma mmap_size = 30000000000;'''
 	def getPhotoById( self, id ):
 		with self.dbLock, self.conn:
 			row = self.conn.execute( 'SELECT jpg FROM photo WHERE id=?', (id,) ).fetchone()
-		if row is None:
-			raise ValueError( 'Nonexistent photo id={}'.format(id) )
-		return row[0]		
+			if row is None:
+				raise ValueError( 'Nonexistent photo id={}'.format(id) )
+			return _sharedRep(row[0])
 	
 	def getBestTriggerPhoto( self, id ):
 		'''
@@ -570,7 +577,7 @@ pragma mmap_size = 30000000000;'''
 	
 	def getLastPhotos( self, count ):
 		with self.dbLock, self.conn:
-			tsJpgs = list( self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,)) )
+			tsJpgs = [(ts, _sharedRep(jpg)) for ts, jpg in self.conn.execute( 'SELECT ts,jpg FROM photo ORDER BY ts DESC LIMIT ?', (count,))]
 		tsJpgs.reverse()
 		return tsJpgs
 	
