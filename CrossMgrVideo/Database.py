@@ -473,10 +473,10 @@ pragma mmap_size = 30000000000;'''
 	
 	def getPhotoById( self, id ):
 		with self.dbLock, self.conn:
-			row = self.conn.execute( 'SELECT jpg FROM photo WHERE id=?', (id,) ).fetchone()
+			row = self.conn.execute( 'SELECT ts,jpg FROM photo WHERE id=?', (id,) ).fetchone()
 			if row is None:
 				raise ValueError( 'Nonexistent photo id={}'.format(id) )
-			return _sharedRep(row[0])
+			return _sharedRep(row[1])
 	
 	def getBestTriggerPhoto( self, id ):
 		'''
