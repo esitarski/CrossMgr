@@ -5,7 +5,7 @@ import numpy as np
 import simplejpeg
 from LRUCache import LRUCache
 
-jpegFramesCache = LRUCache( 20*30 )		# For performance, cache the last few seconds of jpegs to frame conversions.
+jpegFramesCache = LRUCache( 120*30 )		# For performance, cache the last few minutes of jpegs to frame conversions.
 def resetCache():
 	jpegFramesCache.clear()
 

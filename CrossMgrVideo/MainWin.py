@@ -393,6 +393,8 @@ class MainWin( wx.Frame ):
 		self.tsMax = None
 		self.inCapture = 0	# Use an integer so we can support reentrant captures.
 		
+		self.updateId = 0	# Update it so we know if we are the current update.
+		
 		self.captureTimer = wx.CallLater( 10, self.stopCapture )
 		self.availableCameraUsb = []
 		
@@ -1537,18 +1539,47 @@ class MainWin( wx.Frame ):
 			self.ts = triggerInfo['ts']
 			if triggerInfo['closest_frames']:
 				self.tsJpg = GlobalDatabase().getPhotosClosest( self.ts, triggerInfo['closest_frames'] )
+				frames = len( self.tsJpg )
 			else:
-				self.tsJpg = GlobalDatabase().getPhotos( self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
+				self.tsJpg = []
+				frames = GlobalDatabase().getPhotoCount(self.ts - timedelta(seconds=s_before), self.ts + timedelta(seconds=s_after) )
 			
 			# Update the frame information.
-			if triggerInfo['frames'] != len(self.tsJpg):
-				triggerInfo['frames'] = len(self.tsJpg)
+			if triggerInfo['frames'] != frames:
+				triggerInfo['frames'] = frames
 				self.dbWriterQ.put( ('photoCount', self.triggerInfo['id'], len(self.tsJpg)) )
-				self.updateTriggerRow( self.iTriggerSelect, {'frames':len(self.tsJpg)} )
+				self.updateTriggerRow( self.iTriggerSelect, {'frames':frames} )
 			
 			# Update the main UI.
-			self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
-			self.refreshPhotoPanel()
+			if self.tsJpg:
+				# If there is a photo count, update it directly.
+				self.finishStrip.Set( self.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
+				self.refreshPhotoPanel()
+			else:
+				# If there is an photo interval, update it in the background.
+				def updateFinishStrip( mainWin, updateId, triggerInfo, ts, s_before, s_after ):
+					tsJpg = GlobalDatabase().getPhotos( ts - timedelta(seconds=s_before), ts + timedelta(seconds=s_after) )
+					
+					# Force the cache to update converting the jpgs to frames from the database.
+					# If the id changes at any time, stop all processing as there is a more recent update to work on.
+					# This pushes more processing off the GUI thread.
+					for ts, jpg in tsJpg:
+						if updateId != mainWin.updateId:
+							return
+						CVUtil.jpegToFrame( jpg )
+						
+					if updateId == mainWin.updateId:
+						# Update the finishStrip on the main thread with a wx.CallAfter.
+						mainWin.tsJpg = tsJpg 
+						def updateFinishStrip():
+							mainWin.finishStrip.Set( mainWin.tsJpg, leftToRight=[None, True, False][triggerInfo.get('finish_direction', 0)], triggerTS=triggerInfo['ts'] )
+							mainWin.refreshPhotoPanel()
+						wx.CallAfter( updateFinishStrip )
+				
+				self.updateId += 1
+				thread = threading.Thread( target=updateFinishStrip, args=(self, self.updateId, triggerInfo, self.ts, s_before, s_after) )
+				thread.daemon = True
+				thread.start()
 	
 	def onTriggerRightClick( self, event ):
 		self.iTriggerSelect = event.Index
