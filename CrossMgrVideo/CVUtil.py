@@ -3,12 +3,23 @@ import io
 import cv2
 import numpy as np
 import simplejpeg
+import threading
 from LRUCache import LRUCache
 
-jpegFramesCache = LRUCache( 120*30 )		# For performance, cache the last few minutes of jpegs to frame conversions.
+jpegFramesCache = LRUCache( 120*30 )		# For performance, cache the last few minutes of jpegs to frames.
+jpegFramesLock = threading.Lock()			# Lock for accessing the cache.
 def resetCache():
-	jpegFramesCache.clear()
+	with jpegFramesLock:
+		jpegFramesCache.clear()
 
+def jpegFramesCacheInsert( jpeg, frame ):
+	with jpegFramesLock:
+		jpegFramesCache[jpeg] = frame
+	
+def jpegFramesCacheGet( jpeg ):
+	with jpegFramesLock:
+		return jpegFramesCache.get( jpeg, None )
+	
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
 	return int(w_src * scale), int(h_src * scale)
@@ -97,17 +108,18 @@ def frameToJPeg( frame ):
 		return frame.tobytes()
 	# jpeg = cv2.imencode('.jpg', frame)[1].tobytes()
 	jpeg = simplejpeg.encode_jpeg( image=frame, colorspace='BGR' )
-	jpegFramesCache[jpeg] = frame
+	jpegFramesCacheInsert( jpeg, frame )
 	return jpeg
 
 def jpegToFrame( jpeg, updateCache=True ):
-	if jpeg in jpegFramesCache:
-		return jpegFramesCache[jpeg]
+	if (frame := jpegFramesCacheGet(jpeg)) is not None:
+		return frame
+	
 	# frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
 	assert isJpegBuf(jpeg), 'Corrupt JPEG data'
 	frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
 	if updateCache:
-		jpegFramesCache[jpeg] = frame
+		jpegFramesCacheInsert( jpeg, frame )
 	return frame
 
 def jpegToImage( jpeg ):
