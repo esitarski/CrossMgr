@@ -1975,7 +1975,6 @@ def MainLoop():
 
 	mainWin = MainWin( None, title=AppVerName, size=(1000,500) )
 	
-	dataDir = Utils.getHomeDir()
 	redirectFileName = getLogFileName()
 	
 	# Set up the log file.  Otherwise, show errors on the screen.
