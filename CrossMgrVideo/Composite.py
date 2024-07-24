@@ -1,12 +1,9 @@
 import wx
-import wx.lib.scrolledpanel as scrolled
 import os
-import sys
 import cv2
 import glob
 from math import tan, radians
 from datetime import datetime, timedelta
-from bisect import bisect_left
 
 import Utils
 import CVUtil
@@ -350,7 +347,7 @@ class CompositeCtrl( wx.Control ):
 		return frame
 
 	def setClosestPhoto( self, ts ):
-		self.iJpg = 0;
+		self.iJpg = 0
 		if len(self.tsJpgs) <= 1:
 			return self.iJpg
 		
@@ -385,7 +382,7 @@ class CompositeCtrl( wx.Control ):
 			clear()
 			return
 		
-		compositeWidth, compositeHeight = self.compositeBitmap.GetSize();
+		compositeWidth, compositeHeight = self.compositeBitmap.GetSize()
 		if compositeWidth < width:
 			clear()
 		

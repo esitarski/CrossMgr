@@ -1,9 +1,5 @@
-import numpy as np
 import cv2
-import sys
 import time
-import platform
-import simplejpeg
 import queue
 from queue import Empty, Queue
 
@@ -68,8 +64,10 @@ def getVideoCapture( usb=0, fps=30, width=640, height=480, fourcc='' ):
 class VideoCaptureManager:
 	def __init__( self, **kwargs ):
 		self.cap, self.retvals = getVideoCapture(**kwargs)
+	
 	def __enter__(self):
 		return self.cap, self.retvals
+	
 	def __exit__(self, type, value, traceback):
 		self.cap.release()
 
@@ -222,7 +220,6 @@ def CamServer( qIn, qOut, camInfo=None ):
 					elif cmd == 'cam_info':
 						camInfo = m['info'] or {}
 						keepCapturing = False
-						CVUtil.resetCache()
 						break
 					
 					elif cmd == 'get_usb':

@@ -1,4 +1,3 @@
-from distutils.core import setup
 import os
 import sys
 import glob
@@ -48,7 +47,7 @@ subprocess.call( [
 	'pyinstaller',
 	
 	'CrossMgrVideo.pyw',
-	'--icon=images\CrossMgrVideo.ico',
+	'--icon=images/CrossMgrVideo.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -116,13 +115,13 @@ def make_inno_version():
 	with open('inno_setup.txt', 'w', encoding='utf8') as f:
 		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
+
 make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrVideo.iss'
 print( cmd )
 os.system( cmd )
 
 # Create versioned executable.
-from Version import AppVerName
 vNum = AppVerName.split()[1]
 vNum = vNum.replace( '.', '_' )
 newExeName = 'CrossMgrVideo_Setup_v' + vNum + '.exe'

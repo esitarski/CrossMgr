@@ -7,7 +7,6 @@ import subprocess
 import sqlite3
 import platform
 import datetime
-from PIL import Image
 from Database import GlobalDatabase
 
 def MPegToDatabase( fnameMPeg, tRecorded=None ):

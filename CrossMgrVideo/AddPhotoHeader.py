@@ -1,7 +1,6 @@
+import math
 import wx
 from wx.lib.agw.aui import LightColour
-import os
-import math
 import Utils
 
 class dotdict:

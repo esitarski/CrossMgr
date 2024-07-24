@@ -1,18 +1,12 @@
-import wx
 import os
 import sys
-import traceback
-import functools
-from time import sleep
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, timedelta, date
 import sqlite3
 from collections import namedtuple, defaultdict
 from threading import RLock, Timer
 
 import CVUtil
-from FIFOCache import FIFOCacheSet, FIFOCacheDict
-
-from queue import Queue, Empty
+from FIFOCache import FIFOCacheSet
 
 import unicodedata
 def removeDiacritic( s ):
@@ -651,8 +645,8 @@ pragma mmap_size = 30000000000;'''
 		if not tsLower and not tsUpper:
 			return
 			
-		tsLower = tsLower or datedatetime(1900,1,1,0,0,0)
-		tsUpper = tsUpper or datedatetime(datedatenow().year+1000,1,1,0,0,0)
+		tsLower = tsLower or datetime(1900,1,1,0,0,0)
+		tsUpper = tsUpper or datetime(now().year+1000,1,1,0,0,0)
 	
 		with self.dbLock, self.conn:
 			self.conn.execute( 'DELETE from photo WHERE ts BETWEEN ? AND ?', (tsLower,tsUpper) )
@@ -836,17 +830,13 @@ if __name__ == '__main__':
 	d = GlobalDatabase()
 	
 	import time
-	t_start = process_time()
-	# counts = d.getTriggerPhotoCounts(datenow() - timedelta(days=30), datetime(2200,1,1))
-	d.updateTriggerPhotoCountInterval( datenow() - timedelta(days=2000), datetime(2200,1,1) )
-	print( process_time() - t_start )
+	t_start = time.process_time()
+	# counts = d.getTriggerPhotoCounts(now() - timedelta(days=30), datetime(2200,1,1))
+	d.updateTriggerPhotoCountInterval( now() - timedelta(days=2000), datetime(2200,1,1) )
+	print( time.process_time() - t_start )
 	sys.exit()
 	
-	for k,v in counts.items():
-		print( k, v )
-	sys.exit()
-	
-	ts = d.getLastTimestamp(datenow() - timedelta(days=30), datetime(2200,1,1))
+	ts = d.getLastTimestamp(now() - timedelta(days=30), datetime(2200,1,1))
 	print( ts )
 	
 	def printTriggers():

@@ -1,7 +1,6 @@
 import wx
-import os
 import re
-import time
+import cv2
 import datetime
 import bisect
 import threading

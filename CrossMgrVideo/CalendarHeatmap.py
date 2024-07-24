@@ -387,6 +387,7 @@ if __name__ == '__main__':
 	year = datetime.datetime.now().year
 	dates = [(d,random.randint(0,1000)) for d in daterange(datetime.date(year, 1, 1), datetime.date(year+1, 1, 1))]
 	chm = CalendarHeatmap( mainWin, dates=dates )
+	
 	def onPress( event ):
 		print( 'Pressed: ', event.GetDate() )
 	

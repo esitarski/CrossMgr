@@ -25,7 +25,6 @@ import re
 import sys
 import math
 import string
-import socket
 import datetime
 import unicodedata
 
@@ -239,4 +238,4 @@ def readDelimitedData( s, delim ):
 	yield buffer
 	
 if __name__ == '__main__':
-	print_( getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png') )
+	print( getImageFolder(), os.path.join(getImageFolder(), 'CrossMgrHeader.png') )

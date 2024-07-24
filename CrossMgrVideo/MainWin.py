@@ -1,5 +1,6 @@
-import platform
+import re
 import os
+import platform
 
 # Apply workaround for cv2 slow open cameras.
 if platform.system() == 'Windows':
@@ -9,28 +10,17 @@ import wx
 import wx.adv
 import wx.lib.mixins.listctrl as listmix
 import wx.lib.intctrl
-import re
 import sys
-import cv2
-import sys
-import math
 import json
-import time
-import socket
 import atexit
 import base64
-import random
-import tempfile
 import threading
 import webbrowser
-import platform
 import pickle
 import gzip
 import sqlite3
 from time import sleep
-import numpy as np
-from collections import defaultdict
-from queue import Queue, Empty
+from queue import Queue
 
 from datetime import datetime, timedelta, time
 
@@ -52,7 +42,6 @@ from AddExifToJpeg import AddExifToJpeg
 from PublishPhotoOptions import PublishPhotoOptionsDialog
 from roundbutton import RoundButton
 from GetMyIP import GetMyIP
-from FIFOCache import FIFOCacheSet
 from Version import AppVerName
 import WebServer
 from DateSelectDialog import DateSelectDialog
@@ -1617,7 +1606,7 @@ class MainWin( wx.Frame ):
 		self.doTriggerDelete()
 	
 	def onTriggerKey( self, event ):
-		if event.GetKeyCode() == 127 and self.iTriggerSelect != None:
+		if event.GetKeyCode() == 127 and self.iTriggerSelect is not None:
 			self.doTriggerDelete()
 		
 	def doTriggerEdit( self ):
@@ -1695,7 +1684,7 @@ class MainWin( wx.Frame ):
 		
 		#---------------------------------------------------------------
 		def updateHandler( msg ):
-			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'], False)
+			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
 			
 			if name == 'primary':
 				if lastFrame is None:
@@ -1714,6 +1703,8 @@ class MainWin( wx.Frame ):
 
 		#---------------------------------------------------------------
 		def focusHandler( msg ):
+			name, lastFrame = msg['name'], CVUtil.toFrame(msg['frame'])
+
 			if self.focusDialog.IsShown():
 				if lastFrame is None:
 					wx.CallAfter( self.focusDialog.SetTestBitmap )

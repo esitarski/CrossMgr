@@ -1,13 +1,7 @@
 import os
-import io
 import re
-import sys
-import gzip
-import glob
 import time
 import json
-import base64
-import urllib
 import socket
 import datetime
 import traceback
@@ -16,13 +10,10 @@ import functools
 from qrcode import QRCode
 from io import StringIO
 
-from urllib.parse import quote, urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 from cgi import parse_header, parse_multipart
 
-from queue import Queue, Empty
-from socketserver import ThreadingMixIn
-
-from http.server import BaseHTTPRequestHandler, HTTPServer, HTTPStatus
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import Utils
 import CVUtil
@@ -40,6 +31,9 @@ now = datetime.datetime.now
 
 with open( os.path.join(Utils.getImageFolder(), 'CrossMgrVideo.ico'), 'rb' ) as f:
 	favicon = f.read()
+
+def epochTime():
+	return (now() - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)).total_seconds()
 
 mainPage = None
 def getMainPage( dateStr=None ):
@@ -116,7 +110,7 @@ function Draw() {
 
 class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 	html_content	= 'text/html; charset=utf-8'
-	js_content		= 'text/javascript';
+	js_content		= 'text/javascript'
 	ico_content		= 'image/x-icon'
 	json_content	= 'application/json'
 	jpeg_content	= 'image/jpeg'
@@ -154,7 +148,7 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 			elif self.re_jpeg_request.match( up.path ):		# Images.
 				imgName = up.path.split('img')[1]
 				content = GlobalDatabase().getPhotoById( int(re.sub('[^0-9]', '', imgName)) )
-				mods = re.match( '^[0-9]+([a-z]*)\.jpeg$', imgName ).group(1)
+				mods = re.match( r'^[0-9]+([a-z]*)\.jpeg$', imgName ).group(1)
 				if mods:
 					frame = CVUtil.jpegToFrame( content )
 					if 'c' in mods:

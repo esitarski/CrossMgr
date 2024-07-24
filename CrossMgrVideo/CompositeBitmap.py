@@ -1,13 +1,12 @@
 import wx
 from io import BytesIO
 from Database import GlobalDatabase
-from datetime import datetime, timedelta
-from PIL import Image, ImageDraw
+from PIL import Image
 
 def scaledBitmapfromJpg( jpg, scale ):
 	image = wx.Image( BytesIO(jpg) )
 	width, height = image.size
-	if self.scale != 1.0:
+	if scale != 1.0:
 		image = image.resize( (int(width*scale), int(height*scale)), Image.ANTIALIAS )
 	return image
 	
@@ -23,7 +22,7 @@ def CompositeBitmap( qResult, fnameDB, tsLower, tsUpper, pixelsPerSec, scale ):
 	scaledBitmaps = {}
 	def getScaledBitmap( t ):
 		if t not in scaledBitmaps:
-			scaledBitmaps[t] = scaledBitmapFromJpg(tJpg[t], scale)
+			scaledBitmaps[t] = scaledBitmapfromJpg(tJpg[t], scale)
 		return scaledBitmaps[t]
 	widthPhoto, heightPhoto = getScaledBitmap[times[0]].size
 	

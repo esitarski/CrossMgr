@@ -1,8 +1,6 @@
 import wx
 import wx.adv as adv
-import datetime
 from ScaledBitmapVerticalLines import ScaledBitmapVerticalLines, EVT_VERTICAL_LINES
-from Utils import formatTime
 import CVUtil
 
 _ = lambda x: x
