@@ -7,20 +7,26 @@ if platform.system() == 'Windows':
 		"""Case insensitive with respect to hashes and comparisons. """
 		#--Hash/Compare
 		def __hash__(self):		return hash(self.lower())
+		
 		def __eq__(self, other):
 			if isinstance(other, str):
 				return self.lower() == other.lower()
 			return NotImplemented
+			
 		def __ne__(self, other): return not (self == other)
+		
 		def __lt__(self, other):
 			if isinstance(other, str):
 				return self.lower() < other.lower()
 			return NotImplemented
+			
 		def __ge__(self, other): return not (self < other)
+		
 		def __gt__(self, other):
 			if isinstance(other, str):
 				return self.lower() > other.lower()
 			return NotImplemented
+			
 		def __le__(self, other): return not (self > other)
 else:
 	filesystem_str = str

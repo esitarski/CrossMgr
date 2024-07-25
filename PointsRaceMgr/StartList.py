@@ -2,9 +2,6 @@ import wx
 import wx.grid as gridlib
 import wx.lib.mixins.grid as gae
 
-import os
-import sys
-import operator
 from html.parser import HTMLParser
 
 import Utils
@@ -198,7 +195,7 @@ class StartList(wx.Panel):
 				if name and not info['first_name'] and not info['last_name']:
 					try:
 						info['last_name'], info['first_name'] = name.split(',',1)
-					except:
+					except Exception:
 						pass
 				
 				# If there is a bib it must be numeric.
@@ -218,7 +215,7 @@ class StartList(wx.Panel):
 			self.updateGrid()
 		
 	def onImportFromExcel( self, event ):
-		dlg = wx.MessageBox(
+		with wx.MessageBox(
 			'Import from Excel\n\n'
 			'Reads the first sheet in the file.\n'
 			'Looks for the first row starting with "Bib","BibNum","Bib Num", "Bib #" or "Bib#".\n\n'
@@ -235,18 +232,21 @@ class StartList(wx.Panel):
 			,
 			'Import from Excel',
 			wx.OK|wx.CANCEL | wx.ICON_INFORMATION,
-		)
+			) as dlg:
+			
+			if dlg.ShowModal() != wx.ID_OK:
+				return
 		
 		# Get the excel filename.
-		openFileDialog = wx.FileDialog(self, "Open Excel file", "", "",
-									   "Excel files (*.xls,*.xlsx,*.xlsm)|*.xls;*.xlsx;*.xlsm", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+		with wx.FileDialog(self, "Open Excel file", "", "",
+							   "Excel files (*.xls,*.xlsx,*.xlsm)|*.xls;*.xlsx;*.xlsm", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as openFileDialog:
 
-		if openFileDialog.ShowModal() == wx.ID_CANCEL:
-			return
+			if openFileDialog.ShowModal() != wx.ID_OK:
+				return
 
-		# proceed loading the file chosen by the user
-		# this can be done with e.g. wxPython input streams:
-		excelFile = openFileDialog.GetPath()
+			# proceed loading the file chosen by the user
+			# this can be done with e.g. wxPython input streams:
+			excelFile = openFileDialog.GetPath()
 		
 		excel = GetExcelReader( excelFile )
 		
@@ -278,7 +278,7 @@ class StartList(wx.Panel):
 				if name and not info['first_name'] and not info['last_name']:
 					try:
 						info['last_name'], info['first_name'] = name.split(',',1)
-					except:
+					except Exception:
 						pass
 				
 				# If there is a bib it must be numeric.

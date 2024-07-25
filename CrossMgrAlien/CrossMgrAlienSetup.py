@@ -1,4 +1,3 @@
-from distutils.core import setup
 import os
 import shutil
 import zipfile
@@ -10,8 +9,10 @@ if os.path.exists('build'):
 
 distDir = r'dist\CrossMgrAlien'
 distDirParent = os.path.dirname(distDir)
+
 if os.path.exists(distDirParent):
 	shutil.rmtree( distDirParent )
+
 if not os.path.exists( distDirParent ):
 	os.makedirs( distDirParent )
 
@@ -20,9 +21,11 @@ gds = [
 	r"C:\Users\edwar\Google Drive\Downloads\Windows",
 	r"C:\Users\Edward Sitarski\Google Drive\Downloads\Windows",
 ]
+
 for googleDrive in gds:
 	if os.path.exists(googleDrive):
 		break
+
 googleDrive = os.path.join( googleDrive, 'CrossMgrAlien' )
 	
 subprocess.call( [
@@ -88,13 +91,13 @@ def make_inno_version():
 	with open('inno_setup.txt', 'w') as f:
 		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
+
 make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrAlien.iss'
 print ( cmd )
 os.system( cmd )
 
 # Create versioned executable.
-from Version import AppVerName
 vNum = AppVerName.split()[1]
 vNum = vNum.replace( '.', '_' )
 newExeName = 'CrossMgrAlien_Setup_v' + vNum + '.exe'

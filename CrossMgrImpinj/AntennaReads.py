@@ -101,8 +101,10 @@ if __name__ == '__main__':
 		def __init__( self ):
 			super( wx.Timer, self ).__init__()
 			self.Start( milliseconds=250 )
+
 		def Notify( self ):
 			ar.Set( [random.random()*1000.0 for i in range(int(random.random()*5))] )
+
 	t = Timer()
 	
 	mainWin.Show()

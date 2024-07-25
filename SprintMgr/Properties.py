@@ -1,6 +1,4 @@
 import wx
-import os
-import sys
 import Utils
 import Model
 from FieldDef import FieldDef

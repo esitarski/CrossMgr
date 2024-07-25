@@ -1,8 +1,6 @@
 import wx
 import wx.grid as gridlib
 
-import os
-import sys
 import Utils
 from ReorderableGrid import ReorderableGrid, GridCellMultiLineStringRenderer
 from Competitions import SetDefaultData

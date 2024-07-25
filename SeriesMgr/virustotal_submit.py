@@ -119,9 +119,9 @@ def SetProxiesIfNecessary():
         dProxies['http'] = HTTP_PROXY
     if HTTPS_PROXY != '':
         dProxies['https'] = HTTPS_PROXY
-    if os.getenv('http_proxy') != None:
+    if os.getenv('http_proxy') is not None:
         dProxies['http'] = os.getenv('http_proxy')
-    if os.getenv('https_proxy') != None:
+    if os.getenv('https_proxy') is not None:
         dProxies['https'] = os.getenv('https_proxy')
     if dProxies != {}:
         urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler(dProxies), poster.streaminghttp.StreamingHTTPSHandler()))
@@ -141,7 +141,7 @@ def VirusTotalSubmit(filenames, options):
 			if filename != filenames[0]:
 				time.sleep(options.delay)
 			jsonResponse, error = VTHTTPScanRequest(filename, options)
-			if jsonResponse == None:
+			if jsonResponse is None:
 				f.write( '{}: Scan failed (jsonResponse=None)<br/>\n'.format( os.path.basename(filename)) )
 			else:
 				oResult = jsonalias.loads(jsonResponse)
@@ -169,7 +169,7 @@ def Main():
         print('  Use at your own risk')
         print('  https://DidierStevens.com')
         return
-    if os.getenv('VIRUSTOTAL_API2_KEY') != None:
+    if os.getenv('VIRUSTOTAL_API2_KEY') is not None:
         VIRUSTOTAL_API2_KEY = os.getenv('VIRUSTOTAL_API2_KEY')
     if options.key != '':
         VIRUSTOTAL_API2_KEY = options.key

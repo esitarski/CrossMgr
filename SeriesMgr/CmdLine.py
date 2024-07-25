@@ -1,16 +1,14 @@
-import sys
-import argparse
 import os
-import Utils
-import SeriesModel
-import Results
+import sys
 import pickle
 
+import SeriesModel
+import Results
+
 def CmdLine( args ):
-	import pdb; pdb.set_trace()
 	
 	seriesFileName = None
-	if args.series:
+	if args.series: 
 		seriesFileName = args.series
 		ext = os.path.splitext( seriesFileName )
 		if ext != '.smn':
@@ -73,7 +71,7 @@ def CmdLine( args ):
 		score_by_points, score_by_time, score_by_percent = False, False, True
 		
 	output_file = args.output or ((os.path.splitext(args.series)[0] + '.html') if args.series else 'SeriesMgr.html')
-	results = SeriesModel.model.extractAllRaceResults()
+	SeriesModel.model.extractAllRaceResults()
 	with open( output_file, 'w', encoding='utf8' ) as f:
 		f.write( Results.getHtml(seriesFileName) )
 	

@@ -1,10 +1,8 @@
 import wx
 import wx.grid as gridlib
 
-import os
-import sys
-from ReorderableGrid import ReorderableGrid
 import SeriesModel
+from ReorderableGrid import ReorderableGrid
 import Utils
 
 class Errors(wx.Panel):

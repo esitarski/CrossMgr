@@ -1,5 +1,3 @@
-import os
-import sys
 import wx
 import wx.grid as gridlib
 
@@ -99,9 +97,6 @@ class Qualifiers(wx.Panel):
 	
 	def doExcelImport( self, event ):
 		self.grid.SaveEditControlValue()
-		
-		model = Model.model
-		riders = model.riders
 		
 		with wx.FileDialog(self, "Choose Excel file with qualifying times", wildcard="Excel files (*.xlsx)|*.xlsx",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR) as fileDialog:
@@ -222,7 +217,6 @@ class Qualifiers(wx.Panel):
 		# The qualifying times can be changed at any time, however, if the competition is underway, the events cannot
 		# be adusted.
 		model = Model.model
-		riders = model.riders
 		self.setQualifyingInfo()
 		if model.canReassignStarters():
 			model.setQualifyingInfo()

@@ -1,9 +1,6 @@
 import os
-import re
-import sys
 from html import escape
 import copy
-import time
 import operator
 import functools
 import datetime
@@ -148,7 +145,7 @@ class PointStructure:
 		for v in s.split():
 			try:
 				values.append( int(v) )
-			except:
+			except Exception:
 				continue
 		self.pointsForPlace = dict( (i+1, v) for i, v in enumerate(sorted(values, reverse=True)) )
 		
@@ -417,22 +414,16 @@ class SeriesModel:
 		dExisting = dict( self.references )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -443,30 +434,21 @@ class SeriesModel:
 					key = tuple( [nameToAliasKey(n) for n in alias] )
 					self.aliasLookup[key] = name				
 	
-		#if updated:
-		#	memoize.clear()
-	
 	def setReferenceLicenses( self, referenceLicenses ):
 		dNew = dict( referenceLicenses )
 		dExisting = dict( self.referenceLicenses )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -482,22 +464,16 @@ class SeriesModel:
 		dExisting = dict( self.referenceTeams )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -513,22 +489,16 @@ class SeriesModel:
 		dExisting = dict( self.referenceCategories )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed

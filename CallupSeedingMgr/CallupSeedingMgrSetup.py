@@ -26,7 +26,7 @@ subprocess.call( [
 	'pyinstaller',
 	
 	'CallupSeedingMgr.pyw',
-	'--icon=CallupSeedingMgrImages\CallupSeedingMgr.ico',
+	'--icon=CallupSeedingMgrImages/CallupSeedingMgr.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -71,7 +71,6 @@ for drive in ['C', 'D']:
 		inno = innoTest
 		break
 		
-from Version import AppVerName
 def make_inno_version():
 	setup = {
 		'AppName':				AppVerName.split()[0],

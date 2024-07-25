@@ -10,15 +10,10 @@ from collections import defaultdict, namedtuple
 import trueskill
 
 import Model
-import GpxParse
-import GeoAnimation
-import Animation
-import GanttChart
-import ReadSignOnSheet
 import SeriesModel
 import Utils
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
-from GetResults			import GetResults, GetCategoryDetails
+from ReadSignOnSheet	import ResetExcelLinkCache, HasExcelLink
+from GetResults			import GetResults
 from Excel				import GetExcelReader
 from FieldMap			import standard_field_map, standard_field_aliases
 from GetMatchingExcelFile import GetMatchingExcelFile
@@ -76,7 +71,7 @@ def formatTimeGap( secs, highPrecision = False ):
 def safe_upper( f ):
 	try:
 		return f.upper()
-	except:
+	except Exception:
 		return f
 
 def fix_uci_id( uci_id ):
@@ -181,7 +176,7 @@ def toInt( n ):
 		return SeriesModel.rankDNF
 	try:
 		return int(n.split()[0])
-	except:
+	except Exception:
 		return n
 
 def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
@@ -303,7 +298,7 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				if name and not info['firstName'] and not info['lastName']:
 					try:
 						info['lastName'], info['firstName'] = name.split(',',1)
-					except:
+					except Exception:
 						pass
 				
 				if not info['firstName'] and not info['lastName']:
@@ -324,7 +319,7 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				else:
 					try:
 						info['tFinish'] = float( info['tFinish'] ) * 24.0 * 60.0 * 60.0	# Convert Excel day number to seconds.
-					except Exception as e:
+					except Exception:
 						info['tFinish'] = 0.0
 				
 				#print( info )
@@ -365,7 +360,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 		with open(fileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp, encoding='latin1', errors='replace' )
 			FixExcelSheetLocal( fileName, race )
-			isFinished = race.isFinished()
+			#isFinished = race.isFinished()
 			race.tagNums = None
 			race.resetAllCaches()
 			Model.setRace( race )
@@ -437,7 +432,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 					d = race.date.replace('-', ' ').replace('/', ' ')
 					fields = [int(v) for v in d.split()] + [int(v) for v in race.scheduledStart.split(':')]
 					info['raceDate'] = datetime.datetime( *fields )
-				except:
+				except Exception:
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)			
@@ -488,7 +483,7 @@ def AdjustForUpgrades( raceResults ):
 			
 			try:
 				upgradeFactor = upgradeFactors[i]
-			except:
+			except Exception:
 				upgradeFactor = 0.5
 			
 			categoryPosition = {}
@@ -962,7 +957,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 	# Get all results for this category and valid teams.
 	trn = set( model.teamResultsNames )	
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and ((rr.team in trn) if trn else rr.teamIsValid)]
-	if not raceResults or not(scoreByPoints or scoreByTime):
+	if not raceResults or not (scoreByPoints or scoreByTime):
 		return [], []
 		
 	# Create a map for race filenames to grade.
@@ -973,8 +968,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 	# Get all races for this category.
 	races = set( RaceTuple(rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
 	races = sorted( races, key = lambda r: getattr(r[3], 'iSequence', 0) )
-	raceSequence = dict( (r.raceInSeries, i) for i, r in enumerate(races) )
-	
+
 	def asInt( v ):
 		return int(v) if int(v) == v else v
 	
@@ -1009,7 +1003,6 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 			
 			for team, rrs in teamParticipants.items():
 				for rr in rrs:
-					rider = rr.key()
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 					earnedPoints = pointsStructure[rr.rank] + primePoints
 					points = asInt( earnedPoints )
@@ -1089,9 +1082,8 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 				for rr in rrs:
 					if rr.rank == SeriesModel.rankDNF:
 						continue
-					rider = rr.key()
 					timeBonus = rr.timeBonus if considerPrimePointsOrTimeBonus else 0
-					time = rr.tFinish - timeBonus
+					#time = rr.tFinish - timeBonus
 					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
 
 				if len(teamResults[raceInSeries][team]) < teamResultsN and raceInSeries.getFileName() not in pureTeam:

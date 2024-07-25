@@ -1,11 +1,9 @@
+import os
+import ftplib
+import webbrowser
+
 import wx
 import wx.lib.intctrl
-import os
-import sys
-import ftplib
-import datetime
-import threading
-import webbrowser
 import Utils
 import SeriesModel
 

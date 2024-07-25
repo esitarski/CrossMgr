@@ -1,7 +1,5 @@
 import os
-import sys
 import random
-from operator import attrgetter
 
 import wx
 import wx.grid as gridlib
@@ -174,7 +172,7 @@ class Seeding(wx.Panel):
 				self.randomize = sortDlg.randomize.GetValue()
 				ttOrder = sortDlg.ttOrder.GetValue()
 				toSort = model.riders[rMin:rMax]
-				if randomize:
+				if self.randomize:
 					keyFunc = lambda r: (-r.uci_points, r.seeding_rank, random.random())
 				else:
 					keyFunc = lambda r: (-r.uci_points, r.seeding_rank)

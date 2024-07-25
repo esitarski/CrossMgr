@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 import datetime
@@ -7,8 +6,7 @@ import operator
 from metaphone import doublemetaphone
 
 import Utils
-from Excel import GetExcelReader
-from CountryIOC import uci_country_codes, uci_country_codes_set, ioc_from_country, country_from_ioc
+from CountryIOC import uci_country_codes, ioc_from_country, country_from_ioc
 
 countryTranslations = {
 	'England':						'United Kingdom',
@@ -431,7 +429,7 @@ class FindResult:
 		key = self.get_key()
 		try:
 			row = self.matches[0].row
-		except:
+		except Exception:
 			row = 999999
 		# Add the row as a sort criteria.
 		return key + tuple([row]) if isinstance(key, tuple) else (key, row)
@@ -507,6 +505,7 @@ class Source:
 		'by_mp_last_name', 'by_mp_first_name',
 		'by_nation_code', 'by_date_of_birth', 'by_age',
 	)
+	
 	def __init__( self, fname, sheet_name, soundalike=True, useUciId=True, useLicense=True ):
 		self.fname = fname
 		self.sheet_name = sheet_name
@@ -541,7 +540,6 @@ class Source:
 		
 	def read( self, reader ):
 		header_fields = ['name'] + list(Result.Fields)
-		dCur = datetime.date.today()
 		header_map = {}
 		errors = []
 		for row_number, row in enumerate(reader.iter_list(self.sheet_name)):
@@ -660,7 +658,7 @@ class Source:
 				assert idx_name != 'by_license' or v not in idx, 'Duplicate license: {}'.format(v)
 				try:
 					key = normalize_name_lookup(v)
-				except:
+				except Exception:
 					key = v					
 				try:
 					idx[key].append( result )
@@ -701,7 +699,7 @@ class Source:
 
 			try:
 				v = normalize_name_lookup( v )
-			except:
+			except Exception:
 				pass
 				
 			if self.debug: print( 'match_indices: value=', v )

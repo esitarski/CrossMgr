@@ -2,12 +2,10 @@ import sys
 import random
 import operator
 import threading
-import itertools
 from time import sleep
 from datetime import datetime, timedelta
 from queue import Queue, Empty
-from threading import Lock
-from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRobust, QuadRegRemoveOutliersRansac, QuadReg
+from QuadReg import QuadRegExtreme, QuadRegRemoveOutliersRansac, QuadReg
 
 # Use a reference time to convert given times to float seconds.
 tRef = datetime.now()

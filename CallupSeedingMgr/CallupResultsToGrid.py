@@ -1,6 +1,6 @@
 import wx
 import wx.grid as gridlib
-import sys
+
 import Utils
 import Model
 from GetCallups import make_title

@@ -2,7 +2,6 @@ import sys
 import copy
 import random
 import datetime
-import traceback
 from operator import attrgetter
 
 from collections import defaultdict
@@ -22,6 +21,7 @@ class Rider:
 	
 	fields = { 'bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'seeding_rank', 'status' }
 	extended_fields = fields | {'full_name', 'bib_full_name', 'uci_points_text', 'short_name', 'long_name'}
+
 	def __init__( self, bib,
 			first_name = '', last_name = '', team = '', team_code = '', uci_id = '',
 			qualifying_time = QualifyingTimeDefault,
@@ -307,7 +307,6 @@ class Start:
 		# Based on the known places and noncontinue status, set the places again so that the
 		# additional data structures get initialized.
 		state = self.event.competition.state
-		OpenRider = state.OpenRider
 		bibStatus = []
 		for pos, id in sorted( (pos, id) for pos, id in self.places.items() ):
 			try:
@@ -857,7 +856,7 @@ class Competition:
 								abnormalFinishers.add( rider )
 							
 							status = riderStatus.get(rider,1)
-							statTxt = statusText[Finisher] if status != DQ and round > 1 else statusText[status]
+							#statTxt = statusText[Finisher] if status != DQ and round > 1 else statusText[status]
 							compResults.append( (
 								-round, status, rank,
 								rider.qualifying_time if rider else sys.float_info.max,

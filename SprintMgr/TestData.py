@@ -1,5 +1,4 @@
 import random
-import operator
 
 def getTestData():
 	results = '''

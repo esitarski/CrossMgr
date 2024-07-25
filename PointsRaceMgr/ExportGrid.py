@@ -1,14 +1,10 @@
-import wx
 import io
 import os
-import math
 from html import escape
-import base64
-import xlsxwriter
 from contextlib import contextmanager
 
+import wx
 import Utils
-import Model
 from FitSheetWrapper import FitSheetWrapperXLSX
 
 #---------------------------------------------------------------------------
@@ -32,7 +28,7 @@ def getHeaderFName():
 		with io.open(graphicFName, 'rb') as f:
 			pass
 		return graphicFName
-	except:
+	except Exception:
 		return os.path.join(Utils.getImageFolder(), 'PointsRaceMgr.png')
 
 def getHeaderBitmap():

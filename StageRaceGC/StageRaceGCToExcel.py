@@ -1,7 +1,5 @@
-import wx
-import sys
-import datetime
 import xlsxwriter
+
 import Utils
 import Model
 from FitSheetWrapper import FitSheetWrapperXLSX
@@ -40,10 +38,6 @@ def StageRaceGCToExcel( fname_excel, model ):
 	time_format = wb.add_format( {'num_format': 'hh:mm:ss'} )
 	high_precision_time_format = wb.add_format( {'num_format': 'hh:mm:ss.000'} )
 	
-	comment_style = {'width':400}
-	wide_comment_style = {'width':800}
-	narrow_comment_style = {'width':256}
-	
 	#---------------------------------------------------------------------------------------
 	def writeIC( ws, stage ):
 		fit_sheet = FitSheetWrapperXLSX( ws )
@@ -70,25 +64,25 @@ def StageRaceGCToExcel( fname_excel, model ):
 		
 			col = 0
 			if r.retired_stage > 0:
-				fit_sheet.write( rowNum, col, 'AB' ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, 'AB' )
 			else:
-				fit_sheet.write( rowNum, col, place ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, place )
 			
-			fit_sheet.write( rowNum, col, r.bib ); col += 1
-			fit_sheet.write( rowNum, col, rider.last_name.upper() ); col += 1
-			fit_sheet.write( rowNum, col, rider.first_name ); col += 1
-			fit_sheet.write( rowNum, col, rider.team ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, r.bib )
+			fit_sheet.write( rowNum, (col:=col+1)-1, rider.last_name.upper() )
+			fit_sheet.write( rowNum, (col:=col+1)-1, rider.first_name )
+			fit_sheet.write( rowNum, (col:=col+1)-1, rider.team )
 			
 			if 'uci_id' in riderFields:
-				fit_sheet.write( rowNum, col, rider.uci_id ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, rider.uci_id )
 			if 'license' in riderFields:
-				fit_sheet.write( rowNum, col, rider.license ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, rider.license )
 			
 			if r.retired_stage == 0:
-				fit_sheet.write( rowNum, col, r.gap / (24.0*60.0*60.0), time_format ); col += 1
-				fit_sheet.write( rowNum, col, r.total_time_with_bonus_plus_penalty / (24.0*60.0*60.0), time_format ); col += 1
-				fit_sheet.write( rowNum, col, r.total_time_with_bonus_plus_penalty_plus_second_fraction / (24.0*60.0*60.0), high_precision_time_format ); col += 1
-				fit_sheet.write( rowNum, col, r.last_stage_place ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, r.gap / (24.0*60.0*60.0), time_format )
+				fit_sheet.write( rowNum, (col:=col+1)-1, r.total_time_with_bonus_plus_penalty / (24.0*60.0*60.0), time_format )
+				fit_sheet.write( rowNum, (col:=col+1)-1, r.total_time_with_bonus_plus_penalty_plus_second_fraction / (24.0*60.0*60.0), high_precision_time_format )
+				fit_sheet.write( rowNum, (col:=col+1)-1, r.last_stage_place )
 			
 			rowNum +=1
 	
@@ -105,23 +99,19 @@ def StageRaceGCToExcel( fname_excel, model ):
 		
 		for place, tc in enumerate(stage.team_classification, 1):
 			col = 0
-			fit_sheet.write( rowNum, col, place ); col += 1
-			fit_sheet.write( rowNum, col, tc.team ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, place )
+			fit_sheet.write( rowNum, (col:=col+1)-1, tc.team )
 			
-			fit_sheet.write( rowNum, col, tc.gap / (24.0*60.0*60.0), time_format )
-			col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, tc.gap / (24.0*60.0*60.0), time_format )
 			
-			fit_sheet.write( rowNum, col, tc.sum_best_top_times.value / (24.0*60.0*60.0), time_format )
-			# ws.write_comment( rowNum, col, formatContext(tc.sum_best_top_times.context), comment_style )
-			col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, tc.sum_best_top_times.value / (24.0*60.0*60.0), time_format )
+			# ws.write_comment( rowNum, col-1, formatContext(tc.sum_best_top_times.context), comment_style )
 			
-			fit_sheet.write( rowNum, col, tc.sum_best_top_places.value )
-			# ws.write_comment( rowNum, col, formatContext(tc.sum_best_top_places.context), comment_style )
-			col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, tc.sum_best_top_places.value )
+			# ws.write_comment( rowNum, col-1, formatContext(tc.sum_best_top_places.context), comment_style )
 			
-			fit_sheet.write( rowNum, col, tc.best_place.value )
-			# ws.write_comment( rowNum, col, formatContext(tc.best_place.context), comment_style )
-			col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, tc.best_place.value )
+			# ws.write_comment( rowNum, col-1, formatContext(tc.best_place.context), comment_style )
 			rowNum +=1
 
 	#---------------------------------------------------------------------------------------
@@ -142,21 +132,19 @@ def StageRaceGCToExcel( fname_excel, model ):
 		leaderTime = None
 		for place, tgc in enumerate(model.team_gc, 1):
 			col = 0
-			fit_sheet.write( rowNum, col, place ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, place )
 			
-			fit_sheet.write( rowNum, col, tgc[-1] ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, tgc[-1] )
 			
 			timeCur = tgc[0].value
 			if leaderTime is None:
 				leaderTime = timeCur
 				
 			gap = timeCur - leaderTime
-			fit_sheet.write( rowNum, col, gap / (24.0*60.0*60.0), time_format )
-			col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, gap / (24.0*60.0*60.0), time_format )
 			
-			fit_sheet.write( rowNum, col, timeCur / (24.0*60.0*60.0), time_format )
-			# ws.write_comment( rowNum, col, formatContextList(tgc[0].context), wide_comment_style )
-			col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, timeCur / (24.0*60.0*60.0), time_format )
+			# ws.write_comment( rowNum, col-1, formatContextList(tgc[0].context), wide_comment_style )
 			
 			for i in range(1, len(tgc)-2):
 				if tgc[i].value:
@@ -164,16 +152,15 @@ def StageRaceGCToExcel( fname_excel, model ):
 					# ws.write_comment( rowNum, col, u'\n'.join(tgc[i].context), narrow_comment_style )
 				col += 1
 			
-			fit_sheet.write( rowNum, col, tgc[-2].value )
+			fit_sheet.write( rowNum, (col:=col+1)-1, tgc[-2].value )
 			# ws.write_comment( rowNum, col, formatContext(tgc[-2].context), comment_style )
-			col += 1
 			
 			rowNum +=1
 		
 		for team in model.unranked_teams:
 			col = 0
-			fit_sheet.write( rowNum, col, 'DNF' ); col += 1
-			fit_sheet.write( rowNum, col, team ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, 'DNF' )
+			fit_sheet.write( rowNum, (col:=col+1)-1, team )
 			rowNum +=1
 	
 	#---------------------------------------------------------------------------------------
@@ -200,16 +187,16 @@ def StageRaceGCToExcel( fname_excel, model ):
 				continue
 		
 			col = 0
-			fit_sheet.write( rowNum, col, str(place) ); col += 1			
-			fit_sheet.write( rowNum, col, str(rider.bib) ); col += 1
-			fit_sheet.write( rowNum, col, str(rider.last_name).upper()); col += 1
-			fit_sheet.write( rowNum, col, str(rider.first_name) ); col += 1
-			fit_sheet.write( rowNum, col, str(rider.team) ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(place) )
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.bib) )
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.last_name).upper())
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.first_name) )
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.team) )
 			
 			if 'uci_id' in riderFields:
-				fit_sheet.write(  rowNum, col, str(rider.uci_id) ); col += 1
+				fit_sheet.write(  rowNum, (col:=col+1)-1, str(rider.uci_id) )
 			if 'license' in riderFields:
-				fit_sheet.write(  rowNum, col, str(rider.license) ); col += 1
+				fit_sheet.write(  rowNum, (col:=col+1)-1, str(rider.license) )
 
 			for v in r[:-1]:
 				if v:
@@ -242,16 +229,16 @@ def StageRaceGCToExcel( fname_excel, model ):
 				continue
 		
 			col = 0
-			fit_sheet.write( rowNum, col, str(place) ); col += 1			
-			fit_sheet.write( rowNum, col, str(rider.bib) ); col += 1
-			fit_sheet.write( rowNum, col, str(rider.last_name).upper()); col += 1
-			fit_sheet.write( rowNum, col, str(rider.first_name) ); col += 1
-			fit_sheet.write( rowNum, col, str(rider.team) ); col += 1
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(place) )
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.bib) )
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.last_name).upper())
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.first_name) )
+			fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.team) )
 			
 			if 'uci_id' in riderFields:
-				fit_sheet.write( rowNum, col, str(rider.uci_id) ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.uci_id) )
 			if 'license' in riderFields:
-				fit_sheet.write( rowNum, col, str(rider.license) ); col += 1
+				fit_sheet.write( rowNum, (col:=col+1)-1, str(rider.license) )
 
 			for v in r[:-1]:
 				if v:

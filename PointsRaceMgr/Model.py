@@ -3,8 +3,6 @@ import random
 import operator
 import itertools
 import datetime
-import sys
-from collections import namedtuple
 
 #------------------------------------------------------------------------------
 # Define a global current race.
@@ -120,7 +118,7 @@ class RiderInfo:
 		self.nation_code = nation_code
 		try:
 			self.existing_points = float(existing_points)
-		except:
+		except Exception:
 			self.existing_points = 0.0
 		
 		self.status = status
@@ -189,7 +187,7 @@ class RaceEvent:
 			for v in bibs.split():
 				try:
 					biblist.append( int(v) )
-				except:
+				except Exception:
 					continue
 			bibs = biblist
 				
@@ -289,7 +287,7 @@ class Race:
 		
 		if (	self.rankBy == Race.RankByPoints and
 				self.pointsForLapping == 20 and
-				self.doublePointsForLastSprint == True
+				self.doublePointsForLastSprint
 			):
 			return 'Points Race' if len(self.pointsForPlace) > 1 else 'Tempo Race'
 		
@@ -326,7 +324,7 @@ class Race:
 	def getNumSprints( self ):
 		try:
 			numSprints = max(0, self.laps - self.startLaps) // self.sprintEvery
-		except:
+		except Exception:
 			numSprints = 0
 		return numSprints
 	
@@ -364,7 +362,7 @@ class Race:
 		while place > 1:
 			try:
 				bib = bibs[place-1]
-			except IndexException:
+			except IndexError:
 				break
 			if bib < 0:		# If the bib number is negative, tie with the previous position.
 				place -= 1
@@ -374,7 +372,7 @@ class Race:
 		# If this is a tie, the following bib will be negative.
 		try:
 			tie = (bibs[place] < 0)
-		except:
+		except Exception:
 			tie = False
 		
 		points = self.pointsForPlace.get(place,0)

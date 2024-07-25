@@ -1,4 +1,3 @@
-import sys
 import time
 import socket
 import random
@@ -91,7 +90,7 @@ def StartClient():
 		raise
 	
 	print( 'StatClient: Sending  event notification - everything is OK.' )
-	ms = long((datetime.datetime.now() - datetime.datetime( 1970, 1, 1, 0, 0, 0 )).total_seconds() * 1000000)
+	ms = int((datetime.datetime.now() - datetime.datetime( 1970, 1, 1, 0, 0, 0 )).total_seconds() * 1000000)
 	READER_EVENT_NOTIFICATION_Message( Parameters = [
 			ReaderEventNotificationData_Parameter( Parameters = [
 				UTCTimestamp_Parameter( ms ),

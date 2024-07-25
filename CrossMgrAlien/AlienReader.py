@@ -1,12 +1,11 @@
-
-import os
-import sys
-import string
 import re
+import sys
 import math
+import string
+import socket
 import datetime
-import random
 from functools import partial
+from xml.dom.minidom import parseString
 
 regexURL = re.compile(
 	r'^(?:http|ftp)s?://'  # http:// or https://
@@ -32,13 +31,16 @@ def validateEmail( value ):
 		raise ValueError('Invalid Email')
 	return True
 		
-class Type( object ):
+class Type:
 	def toStr( self, v ):
 		return str(v)
+		
 	def validate( self, v ):
 		return True
+		
 	def fromStr( self, v ):
 		return str(v)
+		
 	def repValue( self ):
 		raise ValueError( 'repValue not implemented' )
 
@@ -58,8 +60,9 @@ class MACAddress( Type ):
 		if len(values) != 6:
 			raise ValueError( '{}: Invalid MACAddress: requires 6 hex values'.format(v) )
 		for v in values:
-			i = int( v, 16 )
+			int( v, 16 )
 		return True
+	
 	def repValue( self ):
 		return '00:00:00:00:00:00'
 
@@ -69,8 +72,9 @@ class IPAddress( Type ):
 		if len(values) != 4:
 			raise ValueError( '{}: Invalid IPAddress: requires 4 decimal values'.format(v) )
 		for v in values:
-			i = int( v.strip() )
+			int( v.strip() )
 		return True
+	
 	def repValue( self ):
 		return '0.0.0.0'
 
@@ -85,18 +89,19 @@ class IPAddressPortSerial( IPAddress ):
 		if v.upper() == "SERIAL":
 			return True
 		host, port = v.split( ':' )
-		p = int( port )
+		int( port )
 		return super( IPAddressPortSerial, self ).validate( host )
 
 class IPAddressPortSerialEmail( IPAddressPortSerial ):
 	def validate( self, v ):
 		if v.find('@') >= 0:
 			return validateEmail( v )
-		return super( IPAddressPortSerialEmail, self ).validate( host )
+		return super().validate( v )
 		
 class URL( Type ):
 	def validate( self, v ):
 		return validateURL( v )
+		
 	def repValue( self ):
 		return 'http://www.google.com'
 		
@@ -105,20 +110,24 @@ class Int( Type ):
 		if not isinstance(v, int):
 			raise ValueError( 'value must be int type' )
 		return True
+		
 	def fromStr( self, v ):
 		return int(v)
+		
 	def repValue( self ):
 		return 999
 
 class IntRange( Int ):
 	def __init__( self, iMin = 0, iMax = sys.maxint ):
 		self.iMin, self.iMax = iMin, iMax
+		
 	def validate( self, v ):
 		if not isinstance(v, int):
 			raise ValueError( 'value must be int type' )
 		if not (self.iMin <= v <= self.iMax):
 			raise ValueError( '{} must be in range [{}, {}] inclusive'.format(v, self.iMin, self.iMax) )
 		return True
+		
 	def repValue( self ):
 		return self.iMin
 			
@@ -128,48 +137,60 @@ def NonNegInt():
 class IntChoice( Type ):
 	def __init__( self, choices ):
 		self.choices = choices
+		
 	def validate( self, v ):
-		i = int(reponse)
+		i = int( v )
 		if i not in self.choices:
 			raise ValueError( '{} must be one of {}'.format(i, ','.join( '{}'.format(k) for k in self.choices) ) )
 		return True
+		
 	def fromStr( self, v ):
 		return int(v)
+		
 	def repValue( self ):
-		return choices[0]
+		return self.choices[0]
 		
 class StringChoice( Type ):
 	def __init__( self, choices ):
 		self.choices = choices
+	
 	def validate( self, v ):
 		if v not in self.choices:
 			raise ValueError( '"{}" must be one of {}'.format(v, ','.join( '"{}"'.format(k) for k in self.choices) ) )
 		return True
+		
 	def fromStr( self, v ):
 		return v
+		
 	def repValue( self ):
-		return choices[0]
+		return self.choices[0]
 		
 class Bool( Type ):
 	def toStr( self, v ):
 		return 'ON' if v else 'OFF'
+		
 	def validate( self, v ):
 		if not isinstance(v, bool):
 			raise ValueError( 'Value must be Bool type' )
 		return True
+		
 	def fromStr( self, v ):
 		return v.upper() == 'ON'
+		
 	def repValue( self ):
 		return True
 		
 class DateTime( Type ):
 	def toStr( self, v ):
 		return v.strftime( '%Y/%M/%D %H:%M:%S' )
+		
 	def validate( self, v ):
-		if not isintance(v, datetime.datetime):
+		if not isinstance(v, datetime.datetime):
 			raise ValueError( 'Value must be datetime type' )
 		return True
+		
 	timeDelimTrans = string.maketrans( '/:', '  ' )
+	
 	def fromStr( self, v ):
 		fields = v.translate(self.timeDelimTrans).split()
 		if len(fields) != 6:
@@ -179,6 +200,7 @@ class DateTime( Type ):
 		microsecont = fract * 1000000.0
 		return datetime.datetime(	year=int(year), month=int(month), day=int(day),
 									hour=int(hour), minutes=int(minute), second=int(second), microsecond=int(microsecont) )
+	
 	def repValue( self ):
 		return datetime.datetime.now()
 
@@ -327,7 +349,7 @@ cmds = {
 # Validate that all the commands are coded correctly.
 cmdsNormalized = {}
 for cmd, cmdInfo in cmds.iteritems():
-	assert isinstance(cmd, basestring)
+	assert isinstance(cmd, str)
 	try:
 		assert isinstance(cmdInfo, dict)
 	except AssertionError:
@@ -339,7 +361,7 @@ for cmd, cmdInfo in cmds.iteritems():
 		try:
 			assert len(cmdInfo) == 1
 		except AssertionError:
-			print ( 'command: "{}" specifies InOut but also has other specifier: {}'.format(cmd, tName), ','.join( cmdInfo.keys() ) )
+			print( 'command: "{}" specifies InOut but also has other specifier: {}'.format(cmd, ','.join(cmdInfo.keys())) )
 			raise
 	
 	# Check for any unknown type specifiers.
@@ -347,7 +369,7 @@ for cmd, cmdInfo in cmds.iteritems():
 		try:
 			assert tName in [In, Out, InOut]
 		except AssertionError:
-			print ( 'command: "{}" has unknown specifier: {}'.format(cmd, tName) )
+			print( 'command: "{}" has unknown specifier: {}'.format(cmd, tName) )
 			raise
 			
 	# Normalize types to In and Out only
@@ -454,6 +476,7 @@ class AlienReader( object ):
 	SupressPrefix = '\1'
 	
 	nonCmdAttributes = set( ('testMode', 'CmdHost', 'CmdPort', 'cmdSocket', 'keepGoing') )
+	
 	def __init__( self ):
 		self.testMode = True
 		self.CmdHost = None
@@ -557,7 +580,7 @@ class AlienReader( object ):
 	
 	def getResponse( self, conn ):
 		# Read delimited data from the reader
-		ReaderDelim = seld.ReaderDelim.decode()
+		ReaderDelim = self.ReaderDelim.decode()
 		response = ''
 		while not response.endswith( ReaderDelim ):
 			more = conn.recv( 4096 )

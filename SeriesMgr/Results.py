@@ -1,13 +1,17 @@
-import wx
-import wx.grid as gridlib
-
 import os
 import io
-from html import escape
-from urllib.parse import quote
-import sys
+import re
 import base64
 import datetime
+import xlsxwriter
+import webbrowser
+import subprocess
+import platform
+from html import escape
+from urllib.parse import quote
+
+import wx
+import wx.grid as gridlib
 
 import Utils
 import SeriesModel
@@ -16,13 +20,6 @@ from ReorderableGrid import ReorderableGrid
 from FitSheetWrapper import FitSheetWrapperXLSX
 import FtpWriteFile
 from ExportGrid import tag
-
-import xlsxwriter
-import io
-import re
-import webbrowser
-import subprocess
-import platform
 
 reNoDigits = re.compile( '[^0-9]' )
 
@@ -655,7 +652,6 @@ class Results(wx.Panel):
 		
 	def doLabelClick( self, event ):
 		col = event.GetCol()
-		label = self.grid.GetColLabelValue( col )
 		if self.sortCol == col:
 			self.sortCol = -self.sortCol
 		elif self.sortCol == -col:
@@ -746,9 +742,6 @@ class Results(wx.Panel):
 
 	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
-		scoreByTime = model.scoreByTime
-		scoreByPercent = model.scoreByPercent
-		scoreByTrueSkill = model.scoreByTrueSkill
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
@@ -756,7 +749,7 @@ class Results(wx.Panel):
 			self.raceResults = []
 			self.categoryChoice.SetItems( [] )
 		else:
-			with wx.BusyCursor() as wait:
+			with wx.BusyCursor():
 				self.raceResults = model.extractAllRaceResults()
 			self.fixCategories()
 		
@@ -866,11 +859,6 @@ class Results(wx.Panel):
 	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
 		
-		scoreByTime = model.scoreByTime
-		scoreByPercent = model.scoreByPercent
-		scoreByTrueSkill = model.scoreByTrueSkill
-		HeaderNames = getHeaderNames()
-		
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
@@ -931,7 +919,7 @@ class Results(wx.Panel):
 			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
 			headerNames.extend( '{}'.format(r[1]) for r in races )
 			
-			ws = wb.add_worksheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
+			ws = wb.add_worksheet( re.sub('[:\\/?*\\[\\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapperXLSX( ws )
 
 			rowCur = 0

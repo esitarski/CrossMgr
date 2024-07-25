@@ -1,12 +1,9 @@
 import wx
 import bisect
-import pickle
 from collections import defaultdict
 
-import Utils
 import Model
 from Competitions import getCompetitions, SetDefaultData, DoRandomSimulation
-from Utils import WriteCell
 from Events import GetFont, GetBoldFont
 
 class Graph( wx.Control ):
@@ -43,7 +40,7 @@ class Graph( wx.Control ):
 			for rect, rider in self.rectRiders[i]:
 				if rect.Contains(x, y):
 					if self.selectedRider != rider:
-						self.selectedRider = rider;
+						self.selectedRider = rider
 						wx.CallAfter( self.Refresh )
 					return
 				if rect.GetY() > y:
@@ -506,6 +503,7 @@ if __name__ == "__main__":
 	frame = GraphDrawFrame()
 	
 	pauseMs = 4000
+	
 	def nextCompetition():
 		i = Model.model.competition.i + 1 if Model.model.competition else 0
 		Model.model = SetDefaultData( i if i < len(getCompetitions()) else 0 )

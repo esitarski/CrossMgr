@@ -1,6 +1,5 @@
 import wx
 import copy
-import types
 
 class PrintBase:
 	def SetPrintFont(self, font):	  # set the DC font parameters
@@ -34,7 +33,7 @@ class PrintBase:
 			remain = 'X'
 			while remain != "":
 				vout, remain = self.SetFlow(text, self.region)
-				if self.draw == True and txtdraw == True:
+				if self.draw is True and txtdraw is True:
 					test_out = self.TestFull(vout)
 					if self.align == wx.ALIGN_LEFT:
 						self.DC.DrawText(test_out, self.indent+self.pcell_left_margin, y)
@@ -122,7 +121,7 @@ class PrintBase:
 			remain = 'X'
 			while remain != "":
 				vout, remain = self.SetFlow(text, pagew)
-				if self.draw == True and txtdraw == True:
+				if self.draw is True and txtdraw is True:
 					test_out = vout
 					if align == wx.ALIGN_LEFT:
 						self.DC.DrawText(test_out, indent, y)
@@ -258,22 +257,22 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 		if isinstance(first_value, str): # a sequence of strings
 			if self.label == [] and self.set_column == []:
 				data = []
-				for x in self.data:	 #becomes one column
+				for x in self.data:	 # becomes one column
 					data.append([x])
 			else:
-				data = [self.data]	  #becomes one row
+				data = [self.data]	  # becomes one row
 			self.data = data
 			first_value = data[0]
 		try:
 			column_total = len(first_value)
 		except TypeError:	# a sequence of non-iterables
 			if self.label == [] and self.set_column == []:
-				data = []	   #becomes one column
+				data = []	   # becomes one column
 				for x in self.data:
 					data.append(['{}'.format(x)])
 				column_total = 1
 			else:
-				data = [self.data] #becomes one row
+				data = [self.data] # becomes one row
 				column_total = len(self.data)
 			self.data = data
 			first_value = data[0]
@@ -382,7 +381,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 		while 1:
 			test = self.OutPage()
 			self.page_index.append(self.data_cnt)
-			if  test == False:
+			if  test is False:
 				break
 			cnt = cnt + 1
 
@@ -453,7 +452,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 		self.y = max_y + self.label_space
 
 	def PrintHeader(self):	  # print the header array
-		if self.draw == False:
+		if self.draw is False:
 			return
 
 		for val in self.parent.header:
@@ -473,7 +472,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 			self.OutTextPageWidth(text+addtext, self.pheader_margin, val["Align"], header_indent, True)
 
 	def PrintFooter(self):	  # print the header array
-		if self.draw == False:
+		if self.draw is False:
 			return
 
 		footer_pos = self.parent.page_height * self.pheight - self.pfooter_margin + self.vertical_offset
@@ -508,7 +507,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 							  self.end_x-self.column[0]+1, height)
 
 	def ColourRowCells(self, height):
-		if self.draw == False:
+		if self.draw is False:
 			return
 
 		col = 0
@@ -581,8 +580,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 		self.DrawColumns()	  # draw all vertical lines
 
 	def DrawGridLine(self):
-		if self.draw == True \
-		and len(self.column) > 2:	#supress grid lines if only one column
+		if self.draw is True and len(self.column) > 2:	# suppress grid lines if only one column
 			try:
 				size = self.row_line_size[self.data_cnt]
 			except Exception:
@@ -602,8 +600,7 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 			self.DC.DrawLine(self.column[0], y_out, self.end_x, y_out)
 
 	def DrawColumns(self):
-		if self.draw == True \
-		and len(self.column) > 2:   #surpress grid line if only one column
+		if self.draw is True and len(self.column) > 2:   # suppress grid line if only one column
 			col = 0
 			for val in self.column:
 				try:
@@ -628,7 +625,6 @@ class PrintTableDraw(wx.ScrolledWindow, PrintBase):
 		self.DoRefresh()
 
 	def DoDrawing(self, DC):
-		size = DC.GetSize()
 		self.DC = DC
 
 		DC.BeginDrawing()
@@ -974,10 +970,6 @@ class PrintTable:
 		self.preview = preview
 		self.scale = scale
 
-	def SetTotalSize(self, width, height):
-		self.ptwidth = width
-		self.ptheight = height
-
 class PrintGrid:
 	def __init__(self, parent, grid, format = [], total_col = None, total_row = None):
 		if total_row is None:
@@ -1119,8 +1111,8 @@ if __name__ == '__main__':
 		'This is the first line of text.',
 		'This is the second line\nand the third. The fourth will be the number "4.0".',
 		04.00,
-		'This is the fifth line, but by design it is too long to fit in the width of a standard'\
-		 ' page, so it will be forced to wrap around in order to fit without having '\
+		'This is the fifth line, but by design it is too long to fit in the width of a standard'
+		 ' page, so it will be forced to wrap around in order to fit without having '
 		 'some of its verbose verbage truncated.',
 		'Here we have the final line.'
 		)

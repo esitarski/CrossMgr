@@ -1,11 +1,8 @@
-import re
 import os
-import socket
 import time
-import threading
+import socket
 import datetime
 from queue import Empty
-from Utils import readDelimitedData, timeoutSecs
 
 #------------------------------------------------------------------------------	
 # JChip delimiter (CR, **not** LF)
@@ -46,7 +43,7 @@ class Alien2JChip:
 			return False
 			
 		try:
-			d = self.shutdownQ.get( False )
+			self.shutdownQ.get( False )
 			self.keepGoing = False
 			return False
 		except Empty:
@@ -79,7 +76,7 @@ class Alien2JChip:
 					sock.connect((self.crossMgrHost, self.crossMgrPort))
 					break
 				except Exception as e:
-					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed ({}).'.format(e)) );
+					self.messageQ.put( ('Alien2JChip', 'CrossMgr Connection Failed ({}).'.format(e)) )
 					self.messageQ.put( ('Alien2JChip', 'Trying "{}" again in 2 secs...'.format(instance_name)) )
 					for t in range(2):
 						time.sleep( 1 )

@@ -1,25 +1,17 @@
 import wx
 import wx.adv
-import wx.lib.masked.numctrl as NC
-import  wx.lib.intctrl as IC
-from wx.lib.wordwrap import wordwrap
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.agw.flatnotebook as flatnotebook
 import wx.lib.mixins.listctrl as listmix
 
-import sys
 import os
-import re
 import datetime
 import traceback
-import xlwt
-from optparse import OptionParser
+from argparse import ArgumentParser
 from roundbutton import RoundButton
 
 import Utils
-from ReorderableGrid import ReorderableGrid
 import Model
-import Version
 from StageRaceGCToExcel import StageRaceGCToExcel
 from StageRaceGCToGrid import StageRaceGCToGrid
 from MakeExampleExcel import MakeExampleExcel
@@ -29,7 +21,7 @@ from Version import AppVerName
 def ShowSplashScreen():
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'StageRaceGC.png'), wx.BITMAP_TYPE_PNG )
 	showSeconds = 2.5
-	frame = wx.adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	wx.adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 
 class ListMixCtrl( wx.ListCtrl, listmix.ListCtrlAutoWidthMixin ):
 	def __init__( self, parent, ID=-1, pos=wx.DefaultPosition, size=wx.DefaultSize, style=0 ):
@@ -211,7 +203,7 @@ class MainWin( wx.Frame ):
 	def doUpdate( self, event=None, fnameNew=None ):
 		try:
 			self.fname = (fnameNew or event.GetString() or self.fileBrowse.GetValue())
-		except:
+		except Exception:
 			self.fname = u''
 		
 		if not self.fname:
@@ -223,7 +215,7 @@ class MainWin( wx.Frame ):
 			return
 		
 		try:
-			with open(self.fname, 'rb') as f:
+			with open(self.fname, 'rb'):
 				pass
 		except Exception as e:
 			traceback.print_exc()
@@ -235,24 +227,22 @@ class MainWin( wx.Frame ):
 		self.filehistory.Save( self.config )
 		self.fileBrowse.SetValue( self.fname )
 		
-		wait = wx.BusyCursor()
-		labelSave, backgroundColourSave = self.updateButton.GetLabel(), self.updateButton.GetForegroundColour()
+		with wx.BusyCursor():
+			try:
+				Model.read( self.fname, callbackfunc=self.updateStageList )
+			except Exception as e:
+				traceback.print_exc()
+				Utils.MessageOK( self, '{}:\n\n    {}\n\n{}'.format( _('Excel File Error'), self.fname, e), _('Excel File Error') )
+				self.setUpdated( False )
+				return
+			
+			Model.model.getGCs()
+			self.setUpdated( True )
+			
+			self.updateStageList()
+			StageRaceGCToGrid( self.notebook )
 		
-		try:
-			Model.read( self.fname, callbackfunc=self.updateStageList )
-		except Exception as e:
-			traceback.print_exc()
-			Utils.MessageOK( self, '{}:\n\n    {}\n\n{}'.format( _('Excel File Error'), self.fname, e), _('Excel File Error') )
-			self.setUpdated( False )
-			return
-		
-		Model.model.getGCs()
-		self.setUpdated( True )
-		
-		self.updateStageList()
-		StageRaceGCToGrid( self.notebook )
-		
-		self.lastUpdateTime = datetime.datetime.now()
+			self.lastUpdateTime = datetime.datetime.now()
 	
 	def getOutputExcelName( self ):
 		fname_base, fname_suffix = os.path.splitext(self.fname)
@@ -283,8 +273,8 @@ class MainWin( wx.Frame ):
 			)
 			return
 			
-		wait = wx.BusyCursor()
-		Utils.LaunchApplication( fname_excel )
+		with wx.BusyCursor():
+			Utils.LaunchApplication( fname_excel )
 
 # Set log file location.
 dataDir = ''
@@ -297,18 +287,14 @@ def MainLoop():
 	app = wx.App( False )
 	app.SetAppName("StageRaceGC")
 	
-	parser = OptionParser( usage = "usage: %prog [options] [StageRaceGCSpreadsheet.xlsx]" )
-	parser.add_option("-f", "--file", dest="filename", help="stage race info file", metavar="StageRaceGCSpreadsheet.xlsx")
-	parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
-	parser.add_option("-r", "--regular", action="store_true", dest="regular", default=False, help='regular size')
-	(options, args) = parser.parse_args()
+	parser = ArgumentParser()
+	parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", default=True, help='hide splash screen')
+	parser.add_argument("-r", "--regular", action="store_true", dest="regular", default=False, help='regular size')
+	parser.add_argument("filename", nargs='?', default=None, help="stage race info file", metavar="StageRaceGCSpreadsheet.xlsx")
+	args = parser.parse_args( )
 
 	# Try to open a specified filename.
-	fileName = options.filename
-	
-	# If nothing, try a positional argument.
-	if not fileName and args:
-		fileName = args[0]
+	fileName = args.filename
 	
 	dataDir = Utils.getHomeDir()
 	redirectFileName = os.path.join(dataDir, 'StageRaceGC.log')
@@ -320,30 +306,30 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
-	if not options.regular:
+	if not args.regular:
 		mainWin.Maximize( True )
 
 	# Set the upper left icon.
 	try:
 		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'StageRaceGC.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
-	except:
+	except Exception:
 		pass
 
 	mainWin.Show()
 	if fileName:
 		wx.CallAfter( mainWin.doUpdate, fnameNew=fileName )
 	
-	if options.verbose:
+	if args.verbose:
 		ShowSplashScreen()
 	
 	# Start processing events.

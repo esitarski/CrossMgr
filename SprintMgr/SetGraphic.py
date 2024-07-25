@@ -1,7 +1,6 @@
-import wx
 import os
 import imagebrowser
-import Utils
+import wx
 
 #------------------------------------------------------------------------------------------------
 class SetGraphicDialog( wx.Dialog ):

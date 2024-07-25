@@ -1,6 +1,6 @@
 import glob
 import datetime
-from TagGroup import TagGroup, QuadraticRegressionMethod, StrongestReadMethod
+from TagGroup import TagGroup, QuadraticRegressionMethod
 
 def Test():
 	method = QuadraticRegressionMethod

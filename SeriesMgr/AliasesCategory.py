@@ -1,6 +1,4 @@
 import wx
-import os
-import sys
 import SeriesModel
 import Utils
 from AliasGrid import AliasGrid

@@ -1,27 +1,25 @@
+import os
+import sys
+import time
+import xlwt
+import base64
+import random
+import locale
+import datetime
+import traceback
+import threading
+import webbrowser
+
 import wx
 from wx.lib.wordwrap import wordwrap
 import wx.adv as adv
-import sys
-import os
-import re
-import datetime
-import random
-import time
-import json
-import webbrowser
-from urllib.request import pathname2url
-import locale
-import traceback
-import xlwt
-import base64
-import threading
 
 FontSize = 20
 
 try:
 	localDateFormat = locale.nl_langinfo( locale.D_FMT )
 	localTimeFormat = locale.nl_langinfo( locale.T_FMT )
-except:
+except Exception:
 	localDateFormat = '%b %d, %Y'
 	localTimeFormat = '%I:%M%p'
 	
@@ -67,7 +65,7 @@ def ShowSplashScreen():
 	dc.SelectObject( wx.NullBitmap )
 	
 	showSeconds = 2.5
-	frame = adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 
 #----------------------------------------------------------------------------------
 		
@@ -82,7 +80,7 @@ class MyTipProvider( wx.adv.TipProvider ):
 						self.tips.append( line )
 			if tipNo is None:
 				tipNo = (int(round(time.time() * 1000)) * 13) % (len(self.tips) - 1)
-		except:
+		except Exception:
 			pass
 		if tipNo is None:
 			tipNo = 0
@@ -136,7 +134,7 @@ def ShowTipAtStartup():
 		showTipAtStartup = wx.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
-	except:
+	except Exception:
 		pass
 
 #----------------------------------------------------------------------------------
@@ -348,7 +346,7 @@ class MainWin( wx.Frame ):
 		graphicFName = self.config.Read( 'graphic', defaultFName )
 		if graphicFName != defaultFName:
 			try:
-				with open(graphicFName, 'rb') as f:
+				with open(graphicFName, 'rb'):
 					return graphicFName
 			except IOError:
 				pass
@@ -425,7 +423,7 @@ class MainWin( wx.Frame ):
 		iSelection = self.notebook.GetSelection()
 		try:
 			pageTitle = self.pages[iSelection].getTitle()
-		except:
+		except Exception:
 			pageTitle = self.attrClassName[iSelection][2]
 		
 		if pageTitle == 'Results':
@@ -486,12 +484,12 @@ class MainWin( wx.Frame ):
 		page = self.pages[iSelection]
 		try:
 			grid = page.getGrid()
-		except:
+		except Exception:
 			return
 		
 		try:
 			pageTitle = self.pages[iSelection].getTitle()
-		except:
+		except Exception:
 			pageTitle = self.attrClassName[iSelection][2]
 		
 		if not self.fileName or len(self.fileName) < 4:
@@ -502,9 +500,8 @@ class MainWin( wx.Frame ):
 		xlfileName = self.fileName[:-4] + '-' + pageTitle + '.xls'
 		with wx.DirDialog( self, 'Folder to write "{}"'.format(os.path.basename(xlfileName)),
 						style=wx.DD_DEFAULT_STYLE, defaultPath=os.path.dirname(xlfileName) ) as dlg:
-			if ret != wx.ID_OK:
+			if dlg.ShowModal() != wx.ID_OK:
 				return
-			ret = dlg.ShowModal()
 			dName = dlg.GetPath()
 
 		xlfileName = os.path.join( dName, os.path.basename(xlfileName) )
@@ -532,12 +529,12 @@ class MainWin( wx.Frame ):
 		page = self.pages[iSelection]
 		try:
 			grid = page.getGrid()
-		except:
+		except Exception:
 			return
 		
 		try:
 			pageTitle = self.pages[iSelection].getTitle()
-		except:
+		except Exception:
 			pageTitle = self.attrClassName[iSelection][2]
 		
 		if not self.fileName or len(self.fileName) < 4:
@@ -712,7 +709,6 @@ table.results tr td.fastest{
 
 	def menuNew( self, event ):
 		if self.saveExistingSeries():
-			model = SeriesModel.model
 			SeriesModel.model = SeriesModel.SeriesModel()
 			SeriesModel.model.postReadFix()
 			
@@ -802,7 +798,7 @@ table.results tr td.fastest{
 			if Utils.MessageOKCancel(self, 'You have Unsaved Changes.  Save Now?', 'Unsaved Changes'):
 				try:
 					self.writeSeries()
-				except:
+				except Exception:
 					Utils.MessageOK(self, f'Write Failed.  Series NOT saved..\n\n    "{self.fileName}"', 'Write Failed', iconMask=wx.ICON_ERROR )
 					return
 				
@@ -820,7 +816,7 @@ table.results tr td.fastest{
 		
 		try:
 			self.writeSeries()
-		except:
+		except Exception:
 			Utils.MessageOK(self, f'Write Failed.  Series NOT saved.\n\n    "{self.fileName}".', 'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
@@ -844,7 +840,7 @@ table.results tr td.fastest{
 			fileName += '.smn'
 		
 		try:
-			with open(fileName, 'rb') as fp:
+			with open(fileName, 'rb'):
 				pass
 			if not Utils.MessageOKCancel(self, f'File Exists.\n\n    "{fileName}"\n\nReplace?', 'File Exists'):
 				return
@@ -852,9 +848,9 @@ table.results tr td.fastest{
 			pass
 		
 		try:
-			with open(fileName, 'wb') as fp:
+			with open(fileName, 'wb'):
 				pass
-		except:
+		except Exception:
 			Utils.MessageOK(self, f'Cannot open file:\n\n    "{fileName}"', 'Cannot Open File', iconMask=wx.ICON_ERROR )
 			return
 			
@@ -970,7 +966,7 @@ table.results tr td.fastest{
 		# This eliminates user timeouts.
 		def backgroundRefresh():
 			with Counter():
-				raceResults = model.extractAllRaceResults()
+				model.extractAllRaceResults()
 				wx.CallAfter( self.results.refresh )
 				wx.CallAfter( self.teamResults.refresh )
 				wx.CallAfter( self.categorySequence.refresh )
@@ -1041,12 +1037,12 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 	Utils.initTranslation()
@@ -1082,7 +1078,7 @@ def MainLoop():
 	# Try to load a series.
 	if fileName:
 		if os.path.splitext( fileName )[1] != '.smn':
-			print( 'Cannot open non SeriesMgr file "{}".  Aborting.'.format( filename ), file=sys.stderr )
+			print( f'Cannot open non SeriesMgr file "{fileName}".  Aborting.', file=sys.stderr )
 			sys.exit( 1 )
 		try:
 			mainWin.openSeries( fileName )
@@ -1093,7 +1089,7 @@ def MainLoop():
 	mainWin.GetSizer().Layout()
 	try:
 		app.MainLoop()
-	except:
+	except Exception:
 		xc = traceback.format_exception(*sys.exc_info())
 		wx.MessageBox(''.join(xc))
 

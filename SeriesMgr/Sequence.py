@@ -1,12 +1,9 @@
 import wx
 import wx.grid as gridlib
 
-import os
-import sys
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
-from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class Sequence(wx.Panel):
 	def __init__(self, parent):
@@ -29,7 +26,7 @@ class Sequence(wx.Panel):
 		self.grid.DisableDragRowSize()
 		self.grid.SetRowLabelSize( 64 )
 		self.grid.CreateGrid( 0, len(self.headerNames) )
-		for col in xrange(self.grid.GetNumberCols()):
+		for col in range(self.grid.GetNumberCols()):
 			self.grid.SetColLabelValue( col, self.headerNames[col] )
 		
 		self.pointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
@@ -164,8 +161,7 @@ class Sequence(wx.Panel):
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		
 		raceList = []
-		for row in xrange(self.grid.GetNumberRows()):
-			race = SeriesModel.model.Sequence[row]
+		for row in range(self.grid.GetNumberRows()):
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			if not fileName or not pname:

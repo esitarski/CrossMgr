@@ -2,11 +2,8 @@ import wx
 import wx.grid as gridlib
 import wx.lib.intctrl
 
-import os
-import sys
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
-import Utils
 
 class PointsEditor(gridlib.GridCellEditor):
 
@@ -32,12 +29,10 @@ class PointsEditor(gridlib.GridCellEditor):
 		self._tc.SetFocus()
 		
 	def EndEdit( self, row, col, grid, value = None ):
-		changed = False
 		val = self._tc.GetValue().strip()
 		if val:
 			val = SeriesModel.PointStructure( 'EditCheck', val ).getStr()
 		if val != self.startValue:
-			change = True
 			grid.GetTable().SetValue( row, col, val )
 			grid.GetParent().updateDepth( row )
 			wx.CallAfter( grid.GetParent().gridAutoSize )
@@ -246,7 +241,7 @@ class Points(wx.Panel):
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		pointsList = []
 		for row in range(self.grid.GetNumberRows()):
-			if( self.grid.GetCellValue(row, self.NameCol).strip() ):
+			if self.grid.GetCellValue(row, self.NameCol).strip():
 				pointsList.append( (
 					self.grid.GetCellValue(row, self.NameCol),
 					self.grid.GetCellValue(row, self.OldNameCol),

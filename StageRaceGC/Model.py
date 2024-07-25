@@ -1,9 +1,4 @@
-import os
 import re
-import sys
-import six
-import math
-import datetime
 import operator
 from collections import defaultdict, namedtuple
 from ValueContext import ValueContext as VC
@@ -95,7 +90,7 @@ class Rider:
 		if self.uci_id:
 			try:
 				self.uci_id = int(self.uci_id)
-			except:
+			except Exception:
 				pass
 			self.uci_id = str(self.uci_id).strip()
 			if len(self.uci_id) != 11:
@@ -118,7 +113,7 @@ class Rider:
 
 def ExcelTimeToSeconds( t ):
 	if t is not None:
-		assert isinstance(t, six.string_types)
+		assert isinstance(t, str)
 		return Utils.StrToSeconds( t.replace('"',':').replace("'",':') )
 	return t
 	
@@ -156,7 +151,7 @@ class Result:
 		for pointsType, bib, i, v in Result.deferred:
 			try:
 				result = bibResult[bib]
-			except:
+			except Exception:
 				continue				
 			setValueAt( result.kom if pointsType == 'kom' else result.sprint, i-1, v )
 		Result.deferred = []
@@ -167,7 +162,7 @@ class Result:
 		
 		try:
 			self.stage_sprint = int(kwargs.pop('stagesprint', '0'))
-		except:
+		except Exception:
 			self.stage_sprint = 0
 		
 		for f in self.Fields:
@@ -191,7 +186,7 @@ class Result:
 				try:
 					bib = int(bib.strip())
 					v = int(v.strip())
-				except:
+				except Exception:
 					return
 				self.deferred.append( ('kom' if a == self.kom else 'sprint', bib, i, v) )
 				return
@@ -199,7 +194,7 @@ class Result:
 			# Otherwise, add this result to this rider.
 			try:
 				v = int(v)
-			except:
+			except Exception:
 				return
 			setValueAt( a, i-1, v )
 		
@@ -218,7 +213,7 @@ class Result:
 		
 		try:
 			self.row = int(self.row)
-		except:
+		except Exception:
 			self.row = 0
 		
 		if not self.place:
@@ -226,15 +221,13 @@ class Result:
 		else:
 			try:
 				self.place = int( self.place )
-			except:
+			except Exception:
 				pass
 		
 		if not isinstance( self.place, int ):
 			self.place = 'AB'
 		
 	def __repr__( self ):
-		values = [u'{}'.format(getattr(self, a)) for a in self.Fields
-			if not a.startswith('sprint') and not a.startswith('kom')]
 		kom = 'kom=[{}]'.format(','.join('{}'.format(v) for v in self.kom))
 		sprint = 'sprint=[{}]'.format(','.join('{}'.format(v) for v in self.sprint))
 		stage_sprint = 'stage_sprint={}'.format( self.stage_sprint )
@@ -289,7 +282,7 @@ def readSheet( reader, sheet_name, header_fields ):
 						if len(climb_categories) < i:
 							climb_categories.extend( [ClimbCategoryLowest] * (i - len(climb_categories)) )
 						climb_categories[i-1] = category
-					except:
+					except Exception:
 						pass
 						
 				for h in header_fields:
@@ -439,7 +432,7 @@ class TeamPenalty:
 		
 		try:
 			self.row = int(self.row)
-		except:
+		except Exception:
 			pass
 			
 	def __repr__( self ):
@@ -534,9 +527,9 @@ class Model:
 				stage = StageTTT( sheet_name )
 			elif sheet_name.lower().replace(' ', '') == 'teampenalties':
 				self.team_penalties = TeamPenalties( sheet_name )
-				errors = team_penalties.read()
+				errors = self.team_penalties.read()
 				self.all_teams = { r.team for r in self.registration.riders }
-				for team in team_penalties.team_penalties.iterkeys():
+				for team in self.team_penalties.iterkeys():
 					if team not in self.all_teams:
 						errors.append( 'Unknown Team: {}'. format(team) )
 				continue
@@ -776,7 +769,7 @@ class Model:
 				continue
 			try:
 				stage_sprint_count = max(len(r.sprint) for r in stage.results)
-			except:
+			except Exception:
 				continue
 			stage_sprint_points = 0
 			stage_sprint_winner = 0

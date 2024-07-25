@@ -1,20 +1,14 @@
 # coding=utf8
 
 import os
-import datetime
-import operator
 import random
+import operator
 import xlsxwriter
 import Utils
-from Excel import GetExcelReader
 from FitSheetWrapper import FitSheetWrapperXLSX
 
 def get_license():
 	return ''.join( 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[random.randint(0,25)] for i in range(6) )
-
-def get_uci_id():
-	dob = datetime.date.today() - datetime.timedelta( days=random.normalvariate(25,3)*365.25 )
-	return 'FRA{}'.format( dob.strftime( '%Y%m%d' ) ) 
 
 def get_uci_id():
 	uci_id = ''.join(random.choice('123456789') for i in range(9))

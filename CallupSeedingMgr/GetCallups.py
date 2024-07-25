@@ -1,7 +1,5 @@
-import os
 import sys
-import datetime
-import Utils
+
 import random
 from Model import Source
 from Excel import GetExcelReader
@@ -121,7 +119,7 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callback
 	registration_headers = registration.get_ordered_fields()
 	
 	# Also add the team code if there is one.
-	if not 'team_code' in registration_headers:
+	if 'team_code' not in registration_headers:
 		for iSource, source in enumerate(sources):
 			if 'team_code' in source.get_ordered_fields():
 				try:
@@ -137,7 +135,7 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callback
 				for reg in callup_order:
 					try:
 						reg.team_code = reg.result_vector[iSource].matches[0].team_code
-					except:
+					except Exception:
 						pass
 				break
 	

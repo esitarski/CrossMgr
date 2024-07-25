@@ -1,6 +1,5 @@
 import datetime
 import Utils
-import math
 
 class FitSheetWrapper(object):
 	"""Try to fit columns to max size of any entry.

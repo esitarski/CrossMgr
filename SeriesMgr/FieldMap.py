@@ -10,7 +10,7 @@ def remove_diacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 
 def normalize( s ):

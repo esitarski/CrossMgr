@@ -3,7 +3,6 @@ import wx.grid as gridlib
 
 import re
 import os
-import sys
 import Utils
 import Model
 from ReorderableGrid import ReorderableGrid, GridCellMultiLineStringRenderer
@@ -138,7 +137,7 @@ class RestartDialog( wx.Dialog ):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( font )
 			if self.headerNames[col] == 'Bib':
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP );
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 				attr.SetReadOnly( True )
 			elif col == 1 or col == 2:
 				attr.SetReadOnly( True )
@@ -340,7 +339,7 @@ class EventPosition(EnablePanel):
 			attr.SetFont( font )
 			attr.SetReadOnly( True )
 			if self.headerNames[col].startswith('Bib'):
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP );
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			elif self.headerNames[col].startswith('Status'):
 				attr.SetEditor( gridlib.GridCellChoiceEditor(choices = ['DNS', '']) )
 				attr.SetReadOnly( False )
@@ -538,7 +537,7 @@ class EventFinishOrderConfirmDialog( wx.Dialog ):
 		self.grid.SetColLabelValue( 0, 'Pos' )
 		attr = gridlib.GridCellAttr()
 		attr.SetFont( font )
-		attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP );
+		attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 		attr.SetReadOnly( True )
 		self.grid.SetColAttr( 0, attr )
 		
@@ -549,7 +548,7 @@ class EventFinishOrderConfirmDialog( wx.Dialog ):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( font )
 			if headerName == 'Bib':
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP );
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 			elif headerName.startswith('Time'):
 				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 			elif headerName.startswith('Status'):
@@ -626,7 +625,7 @@ class EventFinishOrder(EnablePanel):
 			attr = gridlib.GridCellAttr()
 			attr.SetFont( font )
 			if self.headerNames[col] == 'Bib':
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP );
+				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_TOP )
 				attr.SetReadOnly( True )
 			elif self.headerNames[col].startswith('Time'):
 				attr.SetEditor( HighPrecisionTimeEditor() )
@@ -820,7 +819,7 @@ class Events(wx.Panel):
 		self.setState( 2 )
 		
 	def doEventPositionCancel( self, e ):
-		del( self.event.starts[-1] )
+		del self.event.starts[-1]
 		Model.model.setChanged( True )
 		Utils.setTitle()
 		self.reset()

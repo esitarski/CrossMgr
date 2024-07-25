@@ -2,7 +2,6 @@ import wx
 import wx.grid		as gridlib
 import Model
 import Utils
-import re
 
 class RankSummary( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -25,7 +24,6 @@ class RankSummary( wx.Panel ):
 		riders = race.getRiders() if race else []
 		hasNumWins = race.rankBy == race.RankByLapsPointsNumWins
 		pointsFmt = Utils.asInt if all(rr.pointsTotal == int(rr.pointsTotal) for rr in riders) else Utils.asFloat
-		existingPointsFmt = Utils.asInt if all(rr.existingPoints == int(rr.existingPoints) for rr in riders) else Utils.asFloat
 				
 		riderInfo = {info.bib:info for info in race.riderInfo} if race else {}
 		

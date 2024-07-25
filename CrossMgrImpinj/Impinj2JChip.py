@@ -1,8 +1,6 @@
-import re
 import os
 import socket
 import time
-import threading
 import datetime
 from queue import Empty
 
@@ -50,7 +48,7 @@ class Impinj2JChip:
 			return False
 			
 		try:
-			d = self.shutdownQ.get( False )
+			self.shutdownQ.get( False )
 			self.keepGoing = False
 			return False
 		except Empty:

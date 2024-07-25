@@ -1,8 +1,13 @@
+import os
 import sys
-import threading
-import socket
 import atexit
-import time
+import datetime
+
+import wx
+import wx.adv
+import wx.lib.masked        as masked
+import wx.lib.intctrl		as intctrl
+
 from roundbutton import RoundButton
 import Utils
 from queue import Queue, Empty
@@ -11,15 +16,6 @@ from Alien import AlienServer
 import Alien
 from Alien2JChip import CrossMgrServer
 from AutoDetect import AutoDetect, DefaultAlienCmdPort
-
-import wx
-import wx.adv
-import wx.lib.masked        as masked
-import wx.lib.intctrl		as intctrl
-import sys
-import os
-import re
-import datetime
 
 if 'WXMAC' in wx.Platform:
 	class IpAddrCtrl( wx.TextCtrl ):
@@ -539,11 +535,10 @@ class MainWin( wx.Frame ):
 			do.SetText( '\n'.join(cc) )
 			wx.TheClipboard.SetData(do)
 			wx.TheClipboard.Close()
-			dlg = wx.MessageDialog(self, 'Configuration and Logs copied to the Clipboard.',
+			with wx.MessageDialog(self, 'Configuration and Logs copied to the Clipboard.',
 									'Copy to Clipboard Succeeded',
-									wx.OK | wx.ICON_INFORMATION )
-			ret = dlg.ShowModal()
-			dlg.Destroy()
+									wx.OK | wx.ICON_INFORMATION ) as dlg:
+				dlg.ShowModal()
 		else:
 			# oops... something went wrong!
 			wx.MessageBox("Unable to open the clipboard", "Error")

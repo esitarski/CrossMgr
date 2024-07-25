@@ -1,20 +1,17 @@
-import wx
-import wx.adv as adv
-from wx.lib.wordwrap import wordwrap
-import wx.lib.dialogs
-
-import sys
-from html import escape
 import os
 import io
-import re
+from html import escape
 import datetime
 import xlsxwriter
 import webbrowser
 import pickle
-import subprocess
 import traceback
 from argparse import ArgumentParser
+
+import wx
+import wx.adv as adv
+from wx.lib.wordwrap import wordwrap
+import wx.lib.dialogs
 
 import Utils
 from Utils import tag
@@ -26,8 +23,7 @@ from RankDetails import RankDetails
 from RankSummary import RankSummary
 from StartList import StartList
 from Commentary import Commentary
-from ToPrintout import ToPrintout, ToHtml, ToExcel
-from ExportGrid import ExportGrid
+from ToPrintout import ToHtml, ToExcel
 
 from Version import AppVerName
 
@@ -39,8 +35,6 @@ def ShowSplashScreen():
 class MainWin( wx.Frame ):
 	def __init__( self, parent, id = wx.ID_ANY, title='', size=(200,200) ):
 		super().__init__(parent, id, title, size=size)
-		
-		isMac = ('WXMAC' in wx.Platform)
 		
 		Model.newRace()
 		
@@ -497,7 +491,7 @@ hr { clear: both; }
 		
 		try:
 			webbrowser.open( htmlFName )
-		except:
+		except Exception:
 			pass
 		#Utils.MessageOK(self, 'Excel file written to:\n\n   {}'.format(htmlFName), 'Excel Write', iconMask=wx.ICON_INFORMATION)
 
@@ -699,7 +693,7 @@ hr { clear: both; }
 		try:
 			self.writeRaceValidFileName()
 			return True
-		except:
+		except Exception:
 			Utils.MessageOK( self, 'WriteRace:\n\nError writing to file.\n\nRace NOT saved.\n\nTry "File|Save As..." again.', iconMask = wx.ICON_ERROR )
 			return False
 
@@ -853,12 +847,12 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 			
 	Utils.writeLog( 'start: {}'.format(Version.AppVerName) )
@@ -875,7 +869,7 @@ def MainLoop():
 	try:
 		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'PointsRaceMgr16x16.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
-	except:
+	except Exception:
 		pass
 
 	if args.verbose:

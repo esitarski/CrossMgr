@@ -1,15 +1,14 @@
-import wx
-import wx.adv
-from NumCtrl import PosNumCtrl
-import wx.lib.intctrl as IC
-import sys
 import os
 import re
 import datetime
 
+import wx
+import wx.adv
+from NumCtrl import PosNumCtrl
+import wx.lib.intctrl as IC
+
 import Utils
 import Model
-import Version
 
 class Configure( wx.Panel ):
 	def __init__( self, parent, id=wx.ID_ANY, size=(200,200) ):

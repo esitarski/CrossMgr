@@ -1,20 +1,16 @@
-import wx
-import wx.adv
-from wx.lib.wordwrap import wordwrap
-import wx.lib.filebrowsebutton as filebrowse
-import sys
 import os
-import re
 import datetime
 import traceback
 import webbrowser
 from optparse import OptionParser
 from roundbutton import RoundButton
 
+import wx
+import wx.adv
+import wx.lib.filebrowsebutton as filebrowse
+
 import Utils
 from ReorderableGrid import ReorderableGrid
-import Model
-import Version
 from GetCallups import GetCallups, make_title
 from CallupResultsToGrid import CallupResultsToGrid
 from CallupResultsToExcel import CallupResultsToExcel
@@ -25,7 +21,7 @@ from Version import AppVerName
 def ShowSplashScreen():
 	bitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'CallupSeedingMgr.png'), wx.BITMAP_TYPE_PNG )
 	showSeconds = 2.5
-	frame = wx.adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
+	wx.adv.SplashScreen(bitmap, wx.adv.SPLASH_CENTRE_ON_SCREEN|wx.adv.SPLASH_TIMEOUT, int(showSeconds*1000), None)
 	
 class ErrorDialog( wx.Dialog ):
 	def __init__( self, parent, errors, id=wx.ID_ANY, title='Errors', size=(800,600) ):
@@ -452,7 +448,7 @@ class MainWin( wx.Frame ):
 	def doUpdate( self, event=None, fnameNew=None ):
 		try:
 			self.fname = fnameNew or (event and event.GetString()) or self.fileBrowse.GetValue()
-		except:
+		except Exception:
 			self.fname = ''
 		
 		if not self.fname:
@@ -464,7 +460,7 @@ class MainWin( wx.Frame ):
 			return
 		
 		try:
-			with open(self.fname, 'rb') as f:
+			with open(self.fname, 'rb'):
 				pass
 		except Exception as e:
 			Utils.MessageOK( self, '{}:\n\n    {}\n\n{}'.format( _('Cannot Open Excel file'), self.fname, e), _('Cannot Open Excel File') )
@@ -473,37 +469,38 @@ class MainWin( wx.Frame ):
 		
 		self.filehistory.AddFileToHistory( self.fname )
 		self.filehistory.Save( self.config )
+
+		with wx.BusyCursor():
+			labelSave, backgroundColourSave = self.updateButton.GetLabel(), self.updateButton.GetForegroundColour()
+			
+			try:
+				self.registration_headers, self.callup_headers, self.callup_results, self.sources, self.errors = GetCallups(
+					self.fname,
+					soundalike = self.getIsSoundalike(),
+					useUciId = self.getUseUciId(),
+					useLicense = self.getUseLicense(),
+					callbackfunc = self.updateSourceList,
+					callbackupdate = self.callbackUpdate,
+					cycleLast = self.getCycleLast(),
+				)
+			except Exception as e:
+				traceback.print_exc()
+				Utils.MessageOK( self, '{}:\n\n    {}\n\n{}'.format( _('Excel File Error'), self.fname, e), _('Excel File Error') )
+				self.setUpdated( False )
+				return
 		
-		wait = wx.BusyCursor()
-		labelSave, backgroundColourSave = self.updateButton.GetLabel(), self.updateButton.GetForegroundColour()
-		
-		try:
-			self.registration_headers, self.callup_headers, self.callup_results, self.sources, self.errors = GetCallups(
-				self.fname,
-				soundalike = self.getIsSoundalike(),
-				useUciId = self.getUseUciId(),
-				useLicense = self.getUseLicense(),
-				callbackfunc = self.updateSourceList,
-				callbackupdate = self.callbackUpdate,
-				cycleLast = self.getCycleLast(),
+			self.setUpdated( True )
+			
+			self.updateSourceList()
+			
+			CallupResultsToGrid(
+				self.grid,
+				self.registration_headers, self.callup_headers, self.callup_results,
+				is_callup=(self.callupSeedingRB.GetSelection() == 0),
+				top_riders=self.getTopRiders(),
+				exclude_unranked=self.excludeUnrankedCB.GetValue(),
 			)
-		except Exception as e:
-			traceback.print_exc()
-			Utils.MessageOK( self, '{}:\n\n    {}\n\n{}'.format( _('Excel File Error'), self.fname, e), _('Excel File Error') )
-			self.setUpdated( False )
-			return
 		
-		self.setUpdated( True )
-		
-		self.updateSourceList()
-		
-		CallupResultsToGrid(
-			self.grid,
-			self.registration_headers, self.callup_headers, self.callup_results,
-			is_callup=(self.callupSeedingRB.GetSelection() == 0),
-			top_riders=self.getTopRiders(),
-			exclude_unranked=self.excludeUnrankedCB.GetValue(),
-		)
 		self.GetSizer().Layout()
 		self.lastUpdateTime = datetime.datetime.now()
 	
@@ -580,12 +577,12 @@ def MainLoop():
 			logSize = os.path.getsize( redirectFileName )
 			if logSize > 1000000:
 				os.remove( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 		try:
 			app.RedirectStdio( redirectFileName )
-		except:
+		except Exception:
 			pass
 	
 	mainWin = MainWin( None, title=AppVerName, size=(800,600) )
@@ -596,7 +593,7 @@ def MainLoop():
 	try:
 		icon = wx.Icon( os.path.join(Utils.getImageFolder(), 'CallupSeedingMgr.ico'), wx.BITMAP_TYPE_ICO )
 		mainWin.SetIcon( icon )
-	except:
+	except Exception:
 		pass
 
 	mainWin.Show()

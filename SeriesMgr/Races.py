@@ -1,12 +1,9 @@
 import wx
 import wx.grid as gridlib
 
-import os
-import sys
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
-from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
@@ -201,7 +198,6 @@ class Races(wx.Panel):
 		
 		raceList = []
 		for row in range(self.grid.GetNumberRows()):
-			race = SeriesModel.model.races[row]
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			pteamname = self.grid.GetCellValue( row, self.TeamPointsCol ) or None
