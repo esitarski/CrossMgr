@@ -674,7 +674,6 @@ class MainWin( wx.Frame ):
 		# Add keyboard accellerators.
 
 		idStartAutoCapture = wx.NewIdRef()
-		idToggleCapture = wx.NewIdRef()
 		
 		entries = [wx.AcceleratorEntry()]
 		entries[0].Set(wx.ACCEL_CTRL, ord('A'), idStartAutoCapture)
@@ -1231,7 +1230,7 @@ class MainWin( wx.Frame ):
 			tsUpper = tsLower + timedelta(days=1)
 
 		# Read the triggers from the database before we repaint the screen to avoid flashing.
-		counts = GlobalDatabase().updateTriggerPhotoCountInterval( tsLower, tsUpper )
+		GlobalDatabase().updateTriggerPhotoCountInterval( tsLower, tsUpper )
 		triggers = GlobalDatabase().getTriggers( tsLower, tsUpper, self.bibQuery )		
 		if triggers:
 			self.tsMax = triggers[-1].ts
@@ -1442,8 +1441,6 @@ class MainWin( wx.Frame ):
 		tStartCapture = self.tStartCapture
 		captureCount = self.captureCount
 
-		captureLatency = timedelta( seconds=0.0 )
-		
 		self.waitForDB()
 		
 		# Update the capture trigger info.
@@ -1868,14 +1865,14 @@ class MainWin( wx.Frame ):
 		trigFirst, trigLast = GlobalDatabase().getTimestampRange()
 		dlg = ManageDatabase( self, GlobalDatabase().getsize(), GlobalDatabase().fname, trigFirst, trigLast, title='Manage Database' )
 		if dlg.ShowModal() == wx.ID_OK:
-			work = wx.BusyCursor()
-			tsLower, tsUpper, vacuum, dbName = dlg.GetValues()
-			self.setDBName( dbName )
-			if tsUpper:
-				tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
-			GlobalDatabase().cleanBetween( tsLower, tsUpper )
-			if vacuum:
-				GlobalDatabase().vacuum()
+			with wx.BusyCursor():
+				tsLower, tsUpper, vacuum, dbName = dlg.GetValues()
+				self.setDBName( dbName )
+				if tsUpper:
+					tsUpper = datetime.combine( tsUpper, time(23,59,59,999999) )
+				GlobalDatabase().cleanBetween( tsLower, tsUpper )
+				if vacuum:
+					GlobalDatabase().vacuum()
 			wx.CallAfter( self.finishStrip.Clear )
 			wx.CallAfter( self.refreshTriggers, True )
 		dlg.Destroy()
