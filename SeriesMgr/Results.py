@@ -359,11 +359,16 @@ function sortTableId( iTable, iCol ) {
 										} ):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(headerNames) + iRace)) ):
 											pass
+										
+										rName = r[1].replace('\n', '<br/>\n').replace('  ',' ')
+										if rName.endswith('Finals'):
+											rName = rName.replace('Finals', 'Final')
+										rName = escape(rName)
 										if r[2]:
 											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+												write( rName )
 										else:
-											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+											write( rName )
 										if r[0]:
 											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):

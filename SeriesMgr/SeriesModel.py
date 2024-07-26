@@ -699,8 +699,11 @@ class SeriesModel:
 	def _extractAllRaceResultsCore( self ):
 		with modelUpdateLock:	
 			# Extract all race results in parallel.  Arguments are the race info and this series.
-			with Pool() as p:
-				p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
+			if self.races:
+				with Pool() as p:
+					p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
+			else:
+				p_results = []
 			
 			# Combine all results and record any errors.
 			raceResults = []
