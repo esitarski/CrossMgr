@@ -725,6 +725,14 @@ class SeriesModel:
 		# Get a copy of the potenially cached race results.
 		raceResults = copy.deepcopy( self._extractAllRaceResultsCore() )
 		
+		# Remove any race results with missing keys.
+		if self.riderKey == self.KeyByUciId:
+			# If matching by UCI ID, remove all riders without a UCI ID.
+			raceResults = [rr for rr in raceResults if rr.uci_id]
+		elif self.riderKey == self.KeyByLicense:
+			# If matching by license, remove all riders without a license.
+			raceResults = [rr for rr in raceResults if rr.license]
+		
 		# Assign a sequence number to the races in the specified order.
 		# Track the race filename so we can consolidate the race objects after the deep copy.
 		raceFromFileName = {}
