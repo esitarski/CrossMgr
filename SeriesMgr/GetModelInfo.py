@@ -165,11 +165,11 @@ class RaceResult:
 	def __repr__( self ):
 		return '\n({})'.format( ', '.join( '"{}"'.format(p) for p in (self.raceName, self.team, self.full_name, self.categoryName) ) )
 
-def ExtractRaceResults( r, seriesModel ):
-	if os.path.splitext(r.fileName)[1] == '.cmn':
-		return ExtractRaceResultsCrossMgr( r, seriesModel )
+def ExtractRaceResults( fileName ):
+	if os.path.splitext(fileName)[1] == '.cmn':
+		return ExtractRaceResultsCrossMgr( fileName )
 	else:
-		return ExtractRaceResultsExcel( r, seriesModel )
+		return ExtractRaceResultsExcel( fileName )
 
 def toInt( n ):
 	if n == 'DNF':
@@ -179,15 +179,15 @@ def toInt( n ):
 	except Exception:
 		return n
 
-def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
-	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
+def ExtractRaceResultsExcel( raceFileName ):
+	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
 	
-	if not os.path.exists( raceInSeries.getFileName() ):
+	if not os.path.exists( raceFileName ):
 		ret['success'] = False
 		ret['explanation'] = 'File not found'
 		return ret
 	
-	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
+	raceName = os.path.splitext(os.path.basename(raceFileName))[0]
 	raceResults = []
 	
 	# Search for a "Pos" field to indicate the start of the data.
@@ -197,16 +197,22 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 			break
 	
 	# Check if this is a UCI Dataride spreadsheet
-	folderName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
-	baseFileName = os.path.splitext( os.path.basename( raceInSeries.getFileName() ) )[0]
+	folderName = os.path.basename( os.path.dirname(raceFileName) )
+	baseFileName = os.path.splitext( os.path.basename( raceFileName ) )[0]
 	
-	excel = GetExcelReader( raceInSeries.getFileName() )
+	try:
+		excel = GetExcelReader( raceFileName )
+	except Exception as e:
+		ret['success'] = False
+		ret['explanation'] = str(e)
+		return ret
+		
 	uciDatarideSheets = {'General', 'Reference', 'Country Reference'}
 	isUCIDataride = any( (s.strip() in uciDatarideSheets) for s in excel.sheet_names() )
 	if isUCIDataride:
 		uciCategoryName = baseFileName	# Category name is the directory.
 		raceName = folderName			# Race name is the base file name.
-		raceInSeries.isUCIDataride = isUCIDataride
+		ret['isUCIDataride'] = True
 	else:
 		uciCategoryName = None
 		
@@ -224,10 +230,9 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				f = fm.finder( row )
 				info = {
 					'raceDate':		None,
-					'raceFileName':	raceInSeries.getFileName(),
+					'raceFileName':	raceFileName,
 					'raceName':		raceName,
 					'raceOrganizer': '',
-					'raceInSeries': raceInSeries,					
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
 					'tFinish':		f('time',0.0) or f('result',0.0),
@@ -337,8 +342,8 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					hasPointsInput, defaultPointsInput = True, 0
 				
 				# Check if this is a team-only sheet.
-				raceInSeries.pureTeam = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
-				raceInSeries.resultsType = SeriesModel.Race.TeamResultsOnly if raceInSeries.pureTeam else SeriesModel.Race.IndividualAndTeamResults
+				ret['pureTeam'] = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
+				ret['resultsType'] = SeriesModel.Race.TeamResultsOnly if ret['pureTeam'] else SeriesModel.Race.IndividualAndTeamResults
 
 	ret['raceResults'] = raceResults
 	return ret
@@ -352,14 +357,13 @@ def FixExcelSheetLocal( fileName, race ):
 			if newFileName:
 				race.excelLink.fileName = newFileName
 
-def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
-	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
+def ExtractRaceResultsCrossMgr( raceFileName ):
+	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
 	
-	fileName = raceInSeries.getFileName()
 	try:
-		with open(fileName, 'rb') as fp, Model.LockRace() as race:
+		with open(raceFileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp, encoding='latin1', errors='replace' )
-			FixExcelSheetLocal( fileName, race )
+			FixExcelSheetLocal( raceFileName, race )
 			#isFinished = race.isFinished()
 			race.tagNums = None
 			race.resetAllCaches()
@@ -368,7 +372,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 		ResetExcelLinkCache()
 		Model.resetCache()
 
-	except IOError as e:
+	except Exception as e:
 		ret['success'] = False
 		ret['explanation'] = e
 		return ret
@@ -405,7 +409,6 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 				continue
 			info = {
 				'raceURL':		raceURL,
-				'raceInSeries':	raceInSeries,
 			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('uci_id', 'UCIID'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
@@ -424,7 +427,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 			if raceNum:
 				info['raceName'] = '{}-{}'.format(info['raceName'], raceNum)
 				
-			info['raceFileName'] = fileName
+			info['raceFileName'] = raceFileName
 			if race.startTime:
 				info['raceDate'] = race.startTime
 			else:

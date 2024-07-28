@@ -176,7 +176,7 @@ standard_field_aliases = (
 		"Dataride DNF/DNS/DSQ/LAP/REL status field",
 	),
 	('status',
-		('Status',),
+		('Status','State'),
 		"Status DNF/DNS/DSQ status field",
 	),
 	('result',

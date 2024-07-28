@@ -147,7 +147,7 @@ class Races(wx.Panel):
 		selectedRows = sorted( selectedRows )
 		
 		if not selectedRows:
-			Utils.MessageOK(self, 'No Selected Races.\nPlease Select one or more Races to Remove.', 'No Selected Race')
+			Utils.MessageOK(self, 'No Selected Races.\nPlease Select one or more Races to Remove.', 'No Selected Races')
 			return
 		
 		raceNames = []

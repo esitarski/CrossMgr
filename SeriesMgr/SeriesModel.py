@@ -700,38 +700,55 @@ class SeriesModel:
 		with modelUpdateLock:	
 			# Extract all race results in parallel.  Arguments are the race info and this series.
 			if self.races:
+				# p_results = map( GetModelInfo.ExtractRaceResults, [r.fileName for r in self.races] )
 				with Pool() as p:
-					p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
+					p_results = p.map( GetModelInfo.ExtractRaceResults, [r.fileName for r in self.races] )
 			else:
 				p_results = []
 			
 			# Combine all results and record any errors.
 			raceResults = []
-			oldErrors = self.errors
 			self.errors = []
 			for ret, r in zip(p_results, self.races):
+				# Set race attributes.
+				for a in ('isUCIDataride', 'pureTeam', 'resultsType'):
+					setattr( r, a, ret[a] )
 				if ret['success']:
+					for rr in ret['raceResults']:
+						rr.raceInSeries = r
 					raceResults.extend( ret['raceResults'] )
 					if ret['licenseLinkTemplate']:
 						self.licenseLinkTemplate = ret['licenseLinkTemplate']
 				else:
 					self.errors.append( (r, ret['explanation']) )
-			if oldErrors != self.errors:
-				self.changed = True
-				
+					
 		return raceResults
 
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
-		# Get a copy of the potenially cached race results.
+		# Purge any existing key errors.
+		oldErrors = self.errors
+		keyErrorPrefix = '** '
+		self.errors = [ (r,e) for r,e in self.errors if not e.startswith(keyErrorPrefix) ]
+
+		# Get a copy of the potenially cached race results.  This will also reset self.errors.
 		raceResults = copy.deepcopy( self._extractAllRaceResultsCore() )
 		
-		# Remove any race results with missing keys.
+		# Remove race results with missing keys.  Add corresponding errors to list.
 		if self.riderKey == self.KeyByUciId:
-			# If matching by UCI ID, remove all riders without a UCI ID.
+			# If matching by UCI ID, remove all riders without a UCI ID and record those missing one as errors.
+			self.errors.extend(
+				(rr.raceInSeries, f'{keyErrorPrefix}Missing UCI ID: ({rr.categoryName}) {rr.lastName}, {rr.firstName}') for rr in raceResults if not rr.uci_id
+			)
 			raceResults = [rr for rr in raceResults if rr.uci_id]
 		elif self.riderKey == self.KeyByLicense:
-			# If matching by license, remove all riders without a license.
+			# If matching by license, remove all riders without a license and record those missing one as errors.
+			self.errors.extend(
+				(rr.raceInSeries, f'{keyErrorPrefix}Missing License: ({rr.categoryName}) {rr.lastName}, {rr.firstName}') for rr in raceResults if not rr.license
+			)
 			raceResults = [rr for rr in raceResults if rr.license]
+
+		# Set the change flag if the errors change.
+		self.changed |= (oldErrors != self.errors)
 		
 		# Assign a sequence number to the races in the specified order.
 		# Track the race filename so we can consolidate the race objects after the deep copy.
