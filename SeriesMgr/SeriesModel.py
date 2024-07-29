@@ -50,6 +50,14 @@ class memoize:
 		# Support instance methods.
 		return functools.partial(self.__call__, obj)
 
+def ValidateUCIID( uci_id ):
+	# Returns a valid UCI ID string, or '' if the uci_id is invalid.
+	# Strict: checks length and remainder.
+	uci_id = str(uci_id).replace(' ','')
+	if uci_id.endswith('.0'):	# If the uci id was a float, remove the decimal.
+		uci_id = uci_id[:-2]
+	return uci_id if (len(uci_id) == 11 and uci_id.isdigit() and int(uci_id[:-2]) % 97 == int(uci_id[-2:])) else ''
+
 def RaceNameFromPath( p, isUCIDataride=False ):
 	if isUCIDataride:
 		folderName = os.path.basename( os.path.dirname(p) )
@@ -736,16 +744,24 @@ class SeriesModel:
 		# Remove race results with missing keys.  Add corresponding errors to list.
 		if self.riderKey == self.KeyByUciId:
 			# If matching by UCI ID, remove all riders without a UCI ID and record those missing one as errors.
-			self.errors.extend(
-				(rr.raceInSeries, f'{keyErrorPrefix}Missing UCI ID: ({rr.categoryName}) {rr.lastName}, {rr.firstName}') for rr in raceResults if not rr.uci_id
-			)
-			raceResults = [rr for rr in raceResults if rr.uci_id]
+			raceResultsKeep = []
+			for rr in raceResults:
+				uci_id_existing = rr.uci_id or ''
+				rr.uci_id = ValidateUCIID( rr.uci_id )
+				if not rr.uci_id:
+					self.errors.append( (rr.raceInSeries, f'{keyErrorPrefix}Invalid UCI ID: ({rr.categoryName}) {rr.lastName}, {rr.firstName} - [{uci_id_existing}]') )
+				else:
+					raceResultsKeep.append( rr )
+			raceResults = raceResultsKeep
 		elif self.riderKey == self.KeyByLicense:
 			# If matching by license, remove all riders without a license and record those missing one as errors.
-			self.errors.extend(
-				(rr.raceInSeries, f'{keyErrorPrefix}Missing License: ({rr.categoryName}) {rr.lastName}, {rr.firstName}') for rr in raceResults if not rr.license
-			)
-			raceResults = [rr for rr in raceResults if rr.license]
+			raceResultsKeep = []
+			for rr in raceResults:
+				if not rr.license:
+					self.errors.append( (rr.raceInSeries, f'{keyErrorPrefix}Missing License: ({rr.categoryName}) {rr.lastName}, {rr.firstName}') )
+				else:
+					raceResultsKeep.append( rr )
+			raceResults = raceResultsKeep
 
 		# Set the change flag if the errors change.
 		self.changed |= (oldErrors != self.errors)

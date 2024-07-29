@@ -75,6 +75,8 @@ def safe_upper( f ):
 		return f
 
 def fix_uci_id( uci_id ):
+	# From a str, int, float or None ,and convert to a uci id as best as possible.
+	# Do not do the remainder test.
 	uci_id = str(uci_id or '').strip()
 	if uci_id.endswith('.0'):	# Correct if the uci_id is a floating point number.
 		uci_id = uci_id[-2:]
@@ -165,12 +167,6 @@ class RaceResult:
 	def __repr__( self ):
 		return '\n({})'.format( ', '.join( '"{}"'.format(p) for p in (self.raceName, self.team, self.full_name, self.categoryName) ) )
 
-def ExtractRaceResults( fileName ):
-	if os.path.splitext(fileName)[1] == '.cmn':
-		return ExtractRaceResultsCrossMgr( fileName )
-	else:
-		return ExtractRaceResultsExcel( fileName )
-
 def toInt( n ):
 	if n == 'DNF':
 		return SeriesModel.rankDNF
@@ -179,8 +175,11 @@ def toInt( n ):
 	except Exception:
 		return n
 
+def getRaceResultRet():
+	return { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
+
 def ExtractRaceResultsExcel( raceFileName ):
-	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
+	ret = getRaceResultRet()
 	
 	if not os.path.exists( raceFileName ):
 		ret['success'] = False
@@ -358,7 +357,7 @@ def FixExcelSheetLocal( fileName, race ):
 				race.excelLink.fileName = newFileName
 
 def ExtractRaceResultsCrossMgr( raceFileName ):
-	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
+	ret = getRaceResultRet()
 	
 	try:
 		with open(raceFileName, 'rb') as fp, Model.LockRace() as race:
@@ -374,7 +373,7 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 
 	except Exception as e:
 		ret['success'] = False
-		ret['explanation'] = e
+		ret['explanation'] = str(e)
 		return ret
 	
 	race = Model.race
@@ -464,6 +463,12 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 	Model.race = None
 	ret['raceResults'] = raceResults
 	return ret
+
+def ExtractRaceResults( fileName ):
+	if os.path.splitext(fileName)[1] == '.cmn':
+		return ExtractRaceResultsCrossMgr( fileName )
+	else:
+		return ExtractRaceResultsExcel( fileName )
 
 def AdjustForUpgrades( raceResults ):
 	upgradePaths = []

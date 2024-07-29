@@ -29,7 +29,7 @@ def getHeaderNames():
 
 def isUCIID( uci_id ):
 	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
-	return len(uci_id == 11) and sum( int(c) for c in uci_id[:9] ) % 97 == int(uci_id[9:] )
+	return len(uci_id == 11) and int(uci_id[:-2]) % 97 == int(uci_id[-2:])
 
 def formatUCIID( uci_id ):
 	uci_id = re.sub( '[^0-9]', '', str(uci_id) )

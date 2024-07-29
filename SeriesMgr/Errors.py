@@ -1,9 +1,15 @@
 import wx
 import wx.grid as gridlib
 
+import os
 import SeriesModel
 from ReorderableGrid import ReorderableGrid
 import Utils
+
+def shorterFilename( fileName ):
+	fileName = fileName.replace('\\','/')
+	components = fileName.split('/')
+	return os.path.join( *components[-3:] )
 
 class Errors(wx.Panel):
 	#----------------------------------------------------------------------
@@ -43,8 +49,8 @@ class Errors(wx.Panel):
 		model = SeriesModel.model
 		Utils.AdjustGridSize( self.grid, len(model.errors) )
 		for row, (r, e) in enumerate(model.errors):
-			self.grid.SetCellValue( row, self.RaceCol, r.fileName )
-			self.grid.SetCellValue( row, self.ErrorCol, '{}'.format(e) )
+			self.grid.SetCellValue( row, self.RaceCol, shorterFilename(r.fileName) )
+			self.grid.SetCellValue( row, self.ErrorCol, f'{e}' )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def commit( self ):
