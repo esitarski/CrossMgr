@@ -1,31 +1,25 @@
+import os
 import sys
-import threading
-import socket
 import atexit
-import time
-from roundbutton import RoundButton
-import Utils
+import datetime
 from queue import Queue, Empty
 from threading import Thread as Process
-import Impinj
-from Impinj import ImpinjServer, ResetAntennaConnectionsCheck
-from Impinj2JChip import CrossMgrServer
-from pyllrp.AutoDetect import AutoDetect
-import QuadReg
-from TagGroup import QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MethodNames, MostReadsChoice, DBMaxChoice, AntennaChoiceNames
-from AntennaReads import AntennaReads
 
 import wx
 import wx.lib.masked			as masked
 import wx.lib.intctrl			as intctrl
 import wx.adv
 import wx.lib.agw.hyperlink as hl
-import sys
-import os
-import io
-import re
-import datetime
-import operator
+
+import Utils
+import Impinj
+from Impinj import ImpinjServer, ResetAntennaConnectionsCheck
+from Impinj2JChip import CrossMgrServer
+from pyllrp.AutoDetect import AutoDetect
+import QuadReg
+from TagGroup import FirstReadMethod, MethodNames, AntennaChoiceNames
+from AntennaReads import AntennaReads
+from roundbutton import RoundButton
 
 from Version import AppVerName
 

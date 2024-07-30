@@ -42,3 +42,5 @@ E127
 E701
 E225
 E211
+E122 continuation line missing indentation or outdented
+F405

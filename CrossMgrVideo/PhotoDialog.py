@@ -1,7 +1,6 @@
 import wx
-import os
 import re
-import time
+import cv2
 import datetime
 import bisect
 import threading
@@ -533,7 +532,6 @@ class PhotoPanel( wx.Panel ):
 	def onGetSpeed( self, event ):
 		self.playStop()
 
-		t1, bitmap1, t2, bitmap2 = None, None, None, None
 		speedFrames = 2
 		
 		if self.iJpg == 0:
@@ -549,7 +547,7 @@ class PhotoPanel( wx.Panel ):
 		computeSpeed = ComputeSpeed( self, size=self.GetSize() )
 		self.mps, self.kmh, self.mph, self.pps = computeSpeed.Show( self.tsJpg, i1, i2, self.triggerInfo['ts_start'] )
 		if self.kmh is not None:
-			self.triggerInfo.update( {'kmh':'{:.2f}'.format(self.kmh), 'mph':'{:.2f}'.format(self.mph)} )
+			self.triggerInfo.update( {'kmh':f'{self.kmh:.2f}', 'mph':f'{self.mph:.2f}'} )
 			GlobalDatabase().updateTriggerRecord( self.triggerInfo['id'], {'kmh': self.kmh} )
 			wx.CallAfter( self.updateCB, self.triggerInfo )
 	

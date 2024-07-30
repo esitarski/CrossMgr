@@ -14,8 +14,6 @@ revision 0f17f805f7dd.
 
 from __future__ import absolute_import
 
-import datetime
-import re
 import time
 import logging
 from ctypes import windll, byref, cast, create_string_buffer, c_long

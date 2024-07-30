@@ -2,7 +2,6 @@ import wx
 import os
 import Utils
 import Model
-import math
 from html import escape
 import base64
 from FitSheetWrapper import FitSheetWrapperXLSX
@@ -26,7 +25,7 @@ def getHeaderFName():
 	''' Get the header bitmap if specified and exists, or use a default.  '''
 	try:
 		graphicFName = Utils.getMainWin().getGraphicFName()
-		with open(graphicFName, 'rb') as f:
+		with open(graphicFName, 'rb'):
 			pass
 		return graphicFName
 	except Exception:

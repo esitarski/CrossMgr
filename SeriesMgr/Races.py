@@ -1,12 +1,11 @@
+import os
+
 import wx
 import wx.grid as gridlib
 
-import os
-import sys
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
-from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
@@ -85,8 +84,8 @@ class Races(wx.Panel):
 		self.addButton = wx.Button( self, wx.ID_ANY, 'Add Races' )
 		self.addButton.Bind( wx.EVT_BUTTON, self.doAddRace )
 
-		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove Race' )
-		self.removeButton.Bind( wx.EVT_BUTTON, self.doRemoveRace )
+		self.removeButton = wx.Button( self, wx.ID_ANY, 'Remove Races' )
+		self.removeButton.Bind( wx.EVT_BUTTON, self.doRemoveRaces )
 
 		fgs = wx.FlexGridSizer( rows=2, cols=2, vgap=2, hgap=2 )
 		fgs.AddGrowableCol( 1, proportion=1 )
@@ -139,13 +138,29 @@ class Races(wx.Panel):
 					SeriesModel.model.addRace( fileName )
 				self.refresh()
 		
-	def doRemoveRace( self, event ):
-		row = self.grid.GetGridCursorRow()
-		if row < 0:
-			Utils.MessageOK(self, 'No Selected Race.\nPlease Select a Race to Remove.', 'No Selected Race')
+	def doRemoveRaces( self, event ):
+		selectedRows = set()
+		selectedRows.update( c.GetRow() for c in self.grid.GetSelectedCells() )
+		selectedRows.update( self.grid.GetSelectedRows() )
+		if (row := self.grid.GetGridCursorRow()) >= 0:
+			selectedRows.add( row )
+		selectedRows = sorted( selectedRows )
+		
+		if not selectedRows:
+			Utils.MessageOK(self, 'No Selected Races.\nPlease Select one or more Races to Remove.', 'No Selected Races')
 			return
-		if Utils.MessageOKCancel(self, 'Confirm Remove Race:\n\n    {}'.format( self.grid.GetCellValue(row, 0) ), 'Remove Race'):
-			self.grid.DeleteRows( row )
+		
+		raceNames = []
+		for i, r in enumerate(selectedRows, 1):
+			# Make a name from the last two components of the path.
+			name = self.grid.GetCellValue(r, 0).replace( '\\', '/' )
+			rName = os.path.join( *name.split('/')[-2:] )
+			raceNames.append( f'{i}.  {rName}' )
+		raceList = '\n'.join( raceNames )
+		
+		if Utils.MessageOKCancel(self, 'Confirm Remove Races:\n\n{}'.format( raceList ), 'Remove Races'):
+			for r in reversed(selectedRows):
+				self.grid.DeleteRows( r )
 			self.commit()
 	
 	def updatePointsChoices( self ):
@@ -201,7 +216,6 @@ class Races(wx.Panel):
 		
 		raceList = []
 		for row in range(self.grid.GetNumberRows()):
-			race = SeriesModel.model.races[row]
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
 			pname = self.grid.GetCellValue( row, self.PointsCol )
 			pteamname = self.grid.GetCellValue( row, self.TeamPointsCol ) or None

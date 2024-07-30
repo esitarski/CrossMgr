@@ -3,12 +3,9 @@ import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.adv
 import os
-import sys
 import copy
 import Utils
-import traceback
 import datetime
-import Model
 from Excel import GetExcelReader
 
 #-----------------------------------------------------------------------------------------------------
@@ -321,7 +318,7 @@ class GetExcelResultsLink:
 						evt.Veto()
 		
 	def onPageChanged( self, evt ):
-		isForward = evt.GetDirection()
+		pass
 		
 #----------------------------------------------------------------------------------
 class ExcelLink:
@@ -367,7 +364,7 @@ class ExcelLink:
 						self.raceDate = row[1]
 					elif row[0] == 'Time' and row[1] and isinstance(row[1], datetime.time):
 						self.raceTime = row[1]
-				except:
+				except Exception:
 					pass
 				
 			data = {}
@@ -381,7 +378,7 @@ class ExcelLink:
 					
 				try:
 					data[field] = '{}'.format(data[field])
-				except:
+				except Exception:
 					data[field] = ''
 			
 			if not data.get('Category', ''):

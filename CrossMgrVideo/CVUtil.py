@@ -3,11 +3,7 @@ import io
 import cv2
 import numpy as np
 import simplejpeg
-from LRUCache import LRUCache
-
-jpegFramesCache = LRUCache( 120*30 )		# For performance, cache the last few minutes of jpegs to frame conversions.
-def resetCache():
-	jpegFramesCache.clear()
+import functools
 
 def rescaleToRect( w_src, h_src, w_dest, h_dest ):
 	scale = min( float(w_dest)/float(w_src), float(h_dest)/float(w_src) )
@@ -30,7 +26,7 @@ def getWidthHeight( o ):
 def isJpegBuf( buf ):
 	return isinstance(buf, bytes) and buf[:2] == b'\xff\xd8' and buf[-2:] == b'\xff\xd9'	# Check for jpeg magic values.
 
-def toFrame( o, updateCache=True ):
+def toFrame( o ):
 	'''
 		Transform the given object into an opencv numpy frame.
 		Specifically, a numpy ndarray of dimension 2 in BGR format.
@@ -39,12 +35,12 @@ def toFrame( o, updateCache=True ):
 		if o.shape[0] != 1:
 			return o
 		try:
-			return jpegToFrame( o.tobytes(), updateCache )	# Assume single-dimension np is encoded as jpeg.
+			return jpegToFrame( o.tobytes() )	# Assume single-dimension np is encoded as jpeg.
 		except Exception as e:
 			#print( 'Conversion failure.  o.shape=', o.shape )
 			return None
 	if isJpegBuf( o ):
-		return jpegToFrame( o, updateCache )
+		return jpegToFrame( o )
 	if isinstance( o, wx.Bitmap ):
 		return bitmapToFrame( o )
 	if isinstance( o, wx.Image ):
@@ -97,17 +93,13 @@ def frameToJPeg( frame ):
 		return frame.tobytes()
 	# jpeg = cv2.imencode('.jpg', frame)[1].tobytes()
 	jpeg = simplejpeg.encode_jpeg( image=frame, colorspace='BGR' )
-	jpegFramesCache[jpeg] = frame
 	return jpeg
 
-def jpegToFrame( jpeg, updateCache=True ):
-	if jpeg in jpegFramesCache:
-		return jpegFramesCache[jpeg]
+@functools.lru_cache( 120*30 )
+def jpegToFrame( jpeg ):
 	# frame = cv2.imdecode(np.frombuffer(jpeg, np.uint8), cv2.IMREAD_COLOR)
 	assert isJpegBuf(jpeg), 'Corrupt JPEG data'
 	frame = simplejpeg.decode_jpeg( data=jpeg, colorspace='BGR' )
-	if updateCache:
-		jpegFramesCache[jpeg] = frame
 	return frame
 
 def jpegToImage( jpeg ):

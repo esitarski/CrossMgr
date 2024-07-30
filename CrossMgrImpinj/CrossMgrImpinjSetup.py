@@ -1,6 +1,4 @@
-from distutils.core import setup
 import os
-import io
 import shutil
 import zipfile
 import datetime
@@ -76,7 +74,6 @@ for drive in ['C', 'D']:
 		inno = innoTest
 		break
 		
-from Version import AppVerName
 def make_inno_version():
 	setup = {
 		'AppName':				AppVerName.split()[0],
@@ -91,6 +88,7 @@ def make_inno_version():
 	with open('inno_setup.txt', 'w') as f:
 		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
+
 make_inno_version()
 cmd = '"' + inno + '" ' + 'CrossMgrImpinj.iss'
 print( cmd )

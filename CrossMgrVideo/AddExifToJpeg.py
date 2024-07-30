@@ -1,13 +1,11 @@
 import os
 from io import BytesIO
-import sys
 import getpass
 import datetime
 import platform
 import piexif
 import piexif.helper
 import Version
-import Utils
 
 zeroth_ifd_common = {
 	piexif.ImageIFD.Artist: 			getpass.getuser(),

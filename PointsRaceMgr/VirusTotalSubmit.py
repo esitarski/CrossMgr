@@ -5,7 +5,7 @@ import sys
 import argparse
 try:
 	from virus_total_apis import PublicApi as VirusTotalPublicApi
-except:
+except  Exception:
 	print( '**** virus_total_apis module not found.  Do "pip install virustotal-api"' )
 	raise
 	

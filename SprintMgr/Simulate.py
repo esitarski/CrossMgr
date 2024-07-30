@@ -1,5 +1,4 @@
 from Model import *
-import Competitions
 import random
 
 def Simulate( competition ):
@@ -9,8 +8,8 @@ def Simulate( competition ):
 	print( 'Qualifying Times:' )
 	for i, (t, rider) in enumerate(competition.state.getQualifyingTimes()):
 		if rider != competition.state.OpenRider:
-			print('{:2d: {} {:.3f}'.format(i+1, rider, t) )
-	print( )
+			print('{:2d}: {} {:.3f}'.format(i+1, rider, t) )
+	print()
 	
 	tse = competition.getCanStart()
 	while tse:
@@ -23,7 +22,7 @@ def Simulate( competition ):
 		results, dnfs, dqs = competition.getResults()
 		for i, r in enumerate(results):
 			if r and r != competition.state.OpenRider:
-				print( '{:2d: {}'.format(i+1, r) )
+				print( '{:2d}: {}'.format(i+1, r) )
 		print( '\n'.join( 'DNF: {}'.format(r) for r in dnfs ) )
 		print( '\n'.join( 'DQ: {}'.format(r) for r in dqs ) )
 			
@@ -76,7 +75,6 @@ def Simulate( competition ):
 		print( e )
 		print()
 		competition.propagate()
-		se = competition.getCanStart()
 		raw_input()
 			
 	print()

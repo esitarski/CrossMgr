@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 import cv2
 import numpy as np
 from CVUtil import frameToBitmap, jpegToFrame

@@ -3,7 +3,6 @@ import os
 import xlwt
 import Utils
 import Model
-import math
 from html import escape
 import base64
 import datetime

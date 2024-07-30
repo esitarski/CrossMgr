@@ -1,9 +1,6 @@
-import wx
-import wx.grid as gridlib
-
 import re
-import os
-import sys
+
+import wx
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
@@ -68,7 +65,7 @@ class TeamResultsNames(wx.Panel):
 		if row < 0:
 			Utils.MessageOK(self, 'No Selected Team.\nPlease Select a Team to Remove.', 'No Selected Team')
 			return
-		if Utils.MessageOKCancel(self, 'Confirm Remove Team:\n\n    {}'.format( self.grid.GetCellValue(row, iTeamNameCol) ), 'Remove Team'):
+		if Utils.MessageOKCancel(self, 'Confirm Remove Team:\n\n    {}'.format( self.grid.GetCellValue(row, self.iTeamNameCol) ), 'Remove Team'):
 			self.grid.DeleteRows( row )
 			self.commit()
 	

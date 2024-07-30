@@ -2,13 +2,16 @@ import wx
 import wx.grid as gridlib
 
 import os
-import sys
-from ReorderableGrid import ReorderableGrid
 import SeriesModel
+from ReorderableGrid import ReorderableGrid
 import Utils
 
+def shorterFilename( fileName ):
+	fileName = fileName.replace('\\','/')
+	components = fileName.split('/')
+	return os.path.join( *components[-3:] )
+
 class Errors(wx.Panel):
-	#----------------------------------------------------------------------
 	ErrorCol = 0
 	RaceCol = 1
 	
@@ -45,23 +48,19 @@ class Errors(wx.Panel):
 		model = SeriesModel.model
 		Utils.AdjustGridSize( self.grid, len(model.errors) )
 		for row, (r, e) in enumerate(model.errors):
-			self.grid.SetCellValue( row, self.RaceCol, r.fileName )
-			self.grid.SetCellValue( row, self.ErrorCol, '{}'.format(e) )
+			self.grid.SetCellValue( row, self.RaceCol, shorterFilename(r.fileName) )
+			self.grid.SetCellValue( row, self.ErrorCol, f'{e}' )
 		wx.CallAfter( self.gridAutoSize )
 	
 	def commit( self ):
 		pass
 		
-#----------------------------------------------------------------------------
-
 class ErrorsFrame(wx.Frame):
-	#----------------------------------------------------------------------
 	def __init__(self):
 		wx.Frame.__init__(self, None, title="Error Test", size=(800,600) )
 		self.panel = Errors(self)
 		self.Show()
  
-#----------------------------------------------------------------------
 if __name__ == "__main__":
 	app = wx.App(False)
 	frame = ErrorsFrame()

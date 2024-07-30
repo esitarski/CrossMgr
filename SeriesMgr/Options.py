@@ -1,11 +1,8 @@
-import wx
-import wx.grid as gridlib
-import wx.lib.agw.floatspin as FS
 import os
 import io
-import re
-import sys
 import base64
+
+import wx
 import SeriesModel
 import Utils
 

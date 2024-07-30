@@ -1,21 +1,18 @@
-import re
 import os
 import time
-import math
 import socket
 import threading
 import datetime
-import random
 import traceback
 from collections import defaultdict
 from queue import Queue, Empty
-from Utils import timeoutSecs, Beep
+from Utils import Beep
 
 try:
 	from pyllrp.pyllrp import *
 except ImportError:
 	from pyllrp import *
-from TagGroup import TagGroup, QuadraticRegressionMethod, StrongestReadMethod, FirstReadMethod, MostReadsChoice, DBMaxChoice
+from TagGroup import TagGroup, QuadraticRegressionMethod, FirstReadMethod, MostReadsChoice
 
 getTimeNow = datetime.datetime.now
 tOld = getTimeNow() - datetime.timedelta( days=200 )
@@ -197,7 +194,7 @@ class Impinj:
 			
 		try:
 			# Check the shutdown queue for a message.  If there is one, shutdown.
-			d = self.shutdownQ.get( False )
+			self.shutdownQ.get( False )
 			self.keepGoing = False
 			return False
 		except Empty:
@@ -441,8 +438,6 @@ class Impinj:
 		self.messageQ.put( ('Impinj', '*****************************************' ) )
 		self.messageQ.put( ('Impinj', 'Reader Server Started: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
 			
-		# Create an old default time for last tag read.
-		tOld = getTimeNow() - datetime.timedelta( days = 200 )
 		utcfromtimestamp = datetime.datetime.utcfromtimestamp
 		
 		while self.checkKeepGoing():
@@ -665,7 +660,7 @@ class Impinj:
 	def purgeDataQ( self ):
 		while True:
 			try:
-				d = self.dataQ.get( False )
+				self.dataQ.get( False )
 			except Empty:
 				break
 

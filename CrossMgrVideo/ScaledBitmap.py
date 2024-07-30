@@ -1,5 +1,4 @@
 import wx
-import traceback
 
 contrastColour = wx.Colour( 255, 130, 0 )
 

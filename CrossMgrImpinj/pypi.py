@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-import shutil
 import os
-import sys
 import stat
 import glob
+import shutil
 import datetime
 import subprocess
 from Version import AppVerName
@@ -39,10 +38,10 @@ def writeToFile( s, fname ):
 print( 'Clearing previous contents...' )
 try:
 	subprocess.call( ['rm', '-rf', pypiDir] )
-except:
+except Exception:
 	try:
 		shutil.rmtree( pypiDir, ignore_errors=True )
-	except:
+	except Exception:
 		pass
 	
 os.mkdir( pypiDir )

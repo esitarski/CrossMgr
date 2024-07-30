@@ -7,7 +7,6 @@ import wx.lib.agw.hyperlink as hl
 import re
 import os
 import sys
-import time
 import datetime
 import traceback
 import secrets
@@ -390,6 +389,7 @@ class MainWin( wx.Frame ):
 		self.writeSuccess.SetValue( 100 if success else 0 )
 	
 	reTemplate = re.compile( '#+' )
+
 	def getFormatStr( self ):
 		template = self.template.GetValue()
 		if '#' not in template:
@@ -563,20 +563,20 @@ class MainWin( wx.Frame ):
 			Utils.MessageOK( self, 'Reader not connected.\n\nSet reader connection parameters and press "Reset Connection".', 'Reader Not Connected' )
 			return
 		
-		busy = wx.BusyCursor()
-		wx.CallAfter( self.writeOptions )
-		
-		self.setWriteSuccess( False )
-		
-		writeValue = self.getWriteValue()
-		
-		try:
-			self.tagWriter.WriteTag( '', writeValue )
-		except Exception as e:
-			Utils.MessageOK( self, 'Write Fails: {}\n\nCheck the reader connection.\n\n{}'.format(e, traceback.format_exc()),
-							'Write Fails' )
-		
-		self.setWriteSuccess( True )
+		with wx.BusyCursor():
+			wx.CallAfter( self.writeOptions )
+			
+			self.setWriteSuccess( False )
+			
+			writeValue = self.getWriteValue()
+			
+			try:
+				self.tagWriter.WriteTag( '', writeValue )
+			except Exception as e:
+				Utils.MessageOK( self, 'Write Fails: {}\n\nCheck the reader connection.\n\n{}'.format(e, traceback.format_exc()),
+								'Write Fails' )
+			
+			self.setWriteSuccess( True )
 		wx.CallLater( 100, self.onReadButton, None )
 		
 	def onReadButton( self, event=None ):

@@ -13,7 +13,7 @@ def initTranslation():
 	if not initTranslationCalled:
 		try:
 			gettext.install(AppVerName.split()[0], './locale', unicode=True)
-		except:
+		except Exception:
 			gettext.install(AppVerName.split()[0], './locale')
 		initTranslationCalled = True
 		
@@ -25,15 +25,12 @@ def BigFont():
 import os
 import re
 import sys
-import math
 import wx.grid		as gridlib
 import traceback
 import unicodedata
 import platform
 import datetime
 import string
-
-import Model
 
 def removeDiacritic( s ):
 	'''
@@ -42,7 +39,7 @@ def removeDiacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 	
 invalidFilenameChars = re.compile( "[^-_.() " + string.ascii_letters + string.digits + "]" )
@@ -149,7 +146,7 @@ def formatTime( secs ):
 	if secs is None:
 		secs = 0
 	secs = int(secs + 0.5)
-	hours = secs // (60*60);
+	hours = secs // (60*60)
 	minutes = (secs // 60) % 60
 	secs = secs % 60
 	if hours > 0:
@@ -213,7 +210,9 @@ if 'MAC' in wx.Platform:
 # Add access functions for all resource folders.
 from GetFolder import GetFolders
 globals().update( {'get' + folder[0].upper() + folder[1:]:lambda v=location: v for folder, location in GetFolders().items()} )
-def getImageFile( fname, folder=getImageFolder() ):
+def getImageFile( fname, folder=None ):
+	if not folder:
+		folder = imageFolder
 	return os.path.join( folder, fname )
 
 def AlignHorizontalScroll( gFrom, gTo ):

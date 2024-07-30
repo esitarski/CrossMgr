@@ -262,6 +262,6 @@ class ReorderableGrid(	gridlib.Grid,
 					if row not in rows: 
 						rows.append(row) 
 		else: 
-			 rows.append(gcr) 
+			rows.append(gcr) 
 		return rows 
 	

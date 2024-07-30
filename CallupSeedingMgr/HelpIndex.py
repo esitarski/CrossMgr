@@ -54,13 +54,13 @@ def BuildHelpIndex():
 		for child in div.contents:
 			try:
 				tag = child.name
-			except:
+			except Exception:
 				tag = None
 			
 			if tag not in titleTags:
 				try:
 					textCur.append( child.get_text() )
-				except:
+				except Exception:
 					pass
 				continue
 			

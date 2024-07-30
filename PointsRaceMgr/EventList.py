@@ -2,9 +2,7 @@ import wx
 import wx.grid		as gridlib
 Button = wx.Button
 from Colours import *
-import re
 import copy
-import operator
 from ReorderableGrid import ReorderableGrid
 import Model
 import Utils

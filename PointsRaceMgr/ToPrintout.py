@@ -2,7 +2,6 @@ import wx
 import os
 import re
 from html import escape
-import math
 import datetime
 import Utils
 from Utils import tag
@@ -63,7 +62,7 @@ class GrowTable:
 			try:
 				f = float(v)
 				return True
-			except:
+			except Exception:
 				return False
 		
 		numericCols = set( c for c in range(grid.GetNumberCols()) if all(isNumeric(grid.GetCellValue(r, c)) for r in range(grid.GetNumberRows())) )
@@ -312,8 +311,11 @@ def getTitleGrowTable( includeApprovedBy = True ):
 		rowCur = gt.set( rowCur, 0, 'Approved by:________', GrowTable.alignRight )[0] + 1
 	return gt
 
+def getBodyGrowTable():
+	gt = GrowTable(alignHorizontal=GrowTable.alignLeft, alignVertical=GrowTable.alignTop, cellBorder=False)
+	return gt
+
 def ToPrintout( dc, grid ):
-	race = Model.race
 	rankSummary = Utils.getMainWin().rankSummary
 	rankDetails = Utils.getMainWin().rankDetails
 	

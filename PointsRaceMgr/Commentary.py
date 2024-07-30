@@ -1,8 +1,6 @@
-import wx
 from html import escape
-import sys
+import wx
 import Model
-import Utils
 
 class Commentary( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
@@ -113,7 +111,6 @@ class Commentary( wx.Panel ):
 		text = self.getText().replace('.', '')
 		if not text:
 			return ''
-		lines = []
 		inList = False
 		html.write( '<dl>' )
 		for line in text.split('\n'):

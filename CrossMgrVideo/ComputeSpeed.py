@@ -1,8 +1,6 @@
 import wx
 import wx.adv as adv
-import datetime
 from ScaledBitmapVerticalLines import ScaledBitmapVerticalLines, EVT_VERTICAL_LINES
-from Utils import formatTime
 import CVUtil
 
 _ = lambda x: x
@@ -200,7 +198,7 @@ class ComputeSpeed:
 				self.frontWheelEdgePage.sbvl.verticalLines = [self.wheelEdgesPage.sbvl.verticalLines[1]]
 			
 	def onPageChanged( self, evt ):
-		isForward = evt.GetDirection()
+		pass
 		
 if __name__ == '__main__':
 	from Database import GlobalDatabase

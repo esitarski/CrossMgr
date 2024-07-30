@@ -1,7 +1,3 @@
-import wx
-import wx.adv
-from wx.lib.wordwrap import wordwrap
-import wx.lib.agw.flatnotebook as flatnotebook
 import os
 import re
 import sys
@@ -10,15 +6,18 @@ import random
 import time
 import json
 import webbrowser
-import locale
 import traceback
 import xlsxwriter
 from argparse import ArgumentParser
-import codecs
 import base64
 import uuid
 import pickle
 from io import StringIO
+
+import wx
+import wx.adv
+from wx.lib.wordwrap import wordwrap
+import wx.lib.agw.flatnotebook as flatnotebook
 
 import Utils
 import Model
@@ -34,8 +33,6 @@ from GraphDraw			import GraphDraw
 from Competitions		import SetDefaultData
 from Printing			import SprintMgrPrintout, GraphDrawPrintout
 from ExportGrid			import ExportGrid, tag, writeHtmlHeader
-from FitSheetWrapper	import FitSheetWrapperXLSX
-from Events				import FontSize
 
 from SetGraphic			import SetGraphicDialog
 
@@ -56,11 +53,12 @@ def ShowSplashScreen():
 	
 	# Show the splash screen.
 	splashStyle = wx.adv.SPLASH_CENTRE_ON_PARENT|wx.adv.SPLASH_TIMEOUT
-	frame = wx.adv.SplashScreen(
+	wx.adv.SplashScreen(
 		parent=Utils.getMainWin(),
 		splashStyle=splashStyle,
 		bitmap=bitmap,
-		milliseconds=int(showSeconds*1000) )
+		milliseconds=int(showSeconds*1000)
+	)
 
 #----------------------------------------------------------------------------------
 		
@@ -307,25 +305,11 @@ class MainWin( wx.Frame ):
 	def resetEvents( self ):
 		self.events.reset()
 		
-	def menuUndo( self, event ):
-		undo.doUndo()
-		self.refresh()
-		
-	def menuRedo( self, event ):
-		undo.doRedo()
-		self.refresh()
-		
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, 'Turn Off Tips at Startup?' if showing else 'Show Tips at Startup?', 'Tips at Startup' ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
 
-	def menuChangeProperties( self, event ):
-		if not Model.race:
-			Utils.MessageOK(self, "You must have a valid race.", "No Valid Race", iconMask=wx.ICON_ERROR)
-			return
-		ChangeProperties( self )
-				
 	def getDirName( self ):
 		return Utils.getDirName()
 		
@@ -718,7 +702,7 @@ table.results tr td.fastest{
 		try:
 			self.writeRace()
 		except Exception:
-			Utils.MessageOK(self, 'Write Failed.  Competition NOT saved.\n\n"{}".'.format(fileName),
+			Utils.MessageOK(self, f'Write Failed.  Competition NOT saved.\n\n"{self.fileName}".',
 								'Write Failed', iconMask=wx.ICON_ERROR )
 		self.updateRecentFiles()
 
@@ -748,7 +732,7 @@ table.results tr td.fastest{
 			fileName += '.smr'
 		
 		try:
-			with open(fileName, 'rb') as fp:
+			with open(fileName, 'rb'):
 				pass
 			if not Utils.MessageOKCancel(self, 'File Exists.  Replace?', 'File Exists'):
 				return
@@ -756,7 +740,7 @@ table.results tr td.fastest{
 			pass
 		
 		try:
-			with open(fileName, 'wb') as fp:
+			with open(fileName, 'wb'):
 				pass
 		except Exception:
 			Utils.MessageOK(self, 'Cannot open file "{}".'.format(fileName), 'Cannot Open File', iconMask=wx.ICON_ERROR )
@@ -815,7 +799,7 @@ table.results tr td.fastest{
 		graphicFName = self.config.Read( 'graphic', defaultFName )
 		if graphicFName != defaultFName:
 			try:
-				with open(graphicFName, 'rb') as f:
+				with open(graphicFName, 'rb'):
 					return graphicFName
 			except IOError:
 				pass

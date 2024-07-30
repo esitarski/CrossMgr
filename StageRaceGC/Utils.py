@@ -15,13 +15,7 @@ def initTranslation():
 		
 initTranslation()
 
-try:
-	from win32com.shell import shell, shellcon
-except ImportError:
-	pass
-	
 import os
-import re
 import sys
 import math
 import subprocess
@@ -29,17 +23,18 @@ import datetime
 import platform
 import traceback
 import unicodedata
+import webbrowser
 
-def removeDiacritic(input):
+def removeDiacritic( s ):
 	'''
-	Accept a unicode string, and return a normal string (bytes in Python 3)
+	Accept a unicode string, and return a normal string
 	without any diacritical marks.
 	'''
-	if type(input) == str:
-		return input
-	else:
-		return unicodedata.normalize('NFKD', input).encode('ASCII', 'ignore')
-	
+	try:
+		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
+	except Exception:
+		return s
+		
 '''
 wx.ICON_EXCLAMATION	Shows an exclamation mark icon.
 wx.ICON_HAND	Shows an error icon.
@@ -91,7 +86,7 @@ def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
 
 try:
 	dirName = os.path.dirname(os.path.abspath(__file__))
-except:
+except Exception:
 	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 if os.path.basename(dirName) == 'library.zip':
@@ -283,7 +278,6 @@ def getHomeDir():
 
 def getDirName():		return dirName
 def getImageFolder():	return imageFolder
-def getHtmlFolder():	return htmlFolder
 def getHtmlDocFolder():	return htmlDocFolder
 
 if sys.platform == 'darwin':

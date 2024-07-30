@@ -1,12 +1,8 @@
+import re
 import wx
-import wx.grid as gridlib
 import wx.lib.agw.floatspin as FS
 
-import os
-import re
-import sys
 import SeriesModel
-import Utils
 
 class Upgrades(wx.Panel):
 	def __init__(self, parent):

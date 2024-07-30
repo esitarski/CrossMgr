@@ -1,10 +1,7 @@
-import os
-import sys
 import wx
 import wx.grid as gridlib
 from operator import attrgetter
 
-import TestData
 import Model
 import Utils
 from ReorderableGrid import ReorderableGrid
@@ -103,7 +100,6 @@ class Results(wx.Panel):
 	
 	def fixShowResults( self ):
 		model = Model.model
-		competition = model.competition
 		
 		choices = self.getResultChoices()
 		self.showResults.SetItems( choices )

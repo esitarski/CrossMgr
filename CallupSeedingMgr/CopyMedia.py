@@ -8,7 +8,7 @@ def NeedsUpdating( srcFName, destFName ):
 	try:
 		srcStat = os.stat( srcFName )
 		destStat = os.stat( destFName )
-	except:
+	except Exception:
 		return True
 	
 	return srcStat.st_mtime > destStat.st_mtime or srcStat.st_size != destStat.st_size

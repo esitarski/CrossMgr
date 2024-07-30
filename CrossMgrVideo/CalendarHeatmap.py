@@ -64,7 +64,6 @@ Version 0.1
 """
 
 import wx
-import wx.lib.agw.artmanager as AM
 from math import sqrt
 import datetime
 
@@ -319,15 +318,10 @@ class CalendarHeatmap(wx.Control):
 		self._getGridDate()
 		self._setDimensions( dc )
 		
-		am = AM.ArtManager()
-		
 		gc = wx.GraphicsContext.Create(dc)
 
 		dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
 		dc.Clear()
-		
-		colour = self.GetForegroundColour()
-		textColour = am.DarkColour(wx.WHITE, 3.0) if am.IsDark(colour) else am.LightColour(wx.BLACK, 3.0)
 		
 		valueMax = max( self.dates.values(), default=1 )
 		
@@ -387,6 +381,7 @@ if __name__ == '__main__':
 	year = datetime.datetime.now().year
 	dates = [(d,random.randint(0,1000)) for d in daterange(datetime.date(year, 1, 1), datetime.date(year+1, 1, 1))]
 	chm = CalendarHeatmap( mainWin, dates=dates )
+	
 	def onPress( event ):
 		print( 'Pressed: ', event.GetDate() )
 	

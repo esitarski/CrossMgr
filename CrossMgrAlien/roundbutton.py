@@ -309,16 +309,6 @@ class RoundButton(wx.Control):
 
 	SetBestSize = SetInitialSize
 	
-
-	#def AcceptsFocus(self):
-		#"""
-		#Can this window be given focus by mouse click?
-
-		#:note: Overridden from `wx.Control`.
-		#"""
-		
-		#return self.IsShown() and self.IsEnabled()
-
 	def AcceptsFocusFromKeyboard( self ):
 		return True
 		

@@ -1,20 +1,14 @@
 # coding=utf8
 
 import os
-import datetime
-import operator
 import random
+import operator
 import xlsxwriter
 import Utils
-from Excel import GetExcelReader
 from FitSheetWrapper import FitSheetWrapperXLSX
 
 def get_license():
 	return ''.join( 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[random.randint(0,25)] for i in range(6) )
-
-def get_uci_id():
-	dob = datetime.date.today() - datetime.timedelta( days=random.normalvariate(25,3)*365.25 )
-	return 'FRA{}'.format( dob.strftime( '%Y%m%d' ) ) 
 
 def get_uci_id():
 	uci_id = ''.join(random.choice('123456789') for i in range(9))
@@ -75,13 +69,14 @@ def MakeExampleExcel():
 	bibs = []
 	for i in range(riders):
 		row += 1
+		col = 0
 		bibs.append((i//team_size+1)*10 + (i%team_size))
-		fit_sheet.write( row, 0, bibs[i] )
-		fit_sheet.write( row, 1, common_first_names[i%len(common_first_names)] )
-		fit_sheet.write( row, 2, common_last_names[i%len(common_last_names)] )
-		fit_sheet.write( row, 3, get_uci_id() )
-		fit_sheet.write( row, 4, get_license() )
-		fit_sheet.write( row, 5, teams[i//team_size] )
+		fit_sheet.write( row, (col:=col+1)-1, bibs[i] )
+		fit_sheet.write( row, (col:=col+1)-1, common_first_names[i%len(common_first_names)] )
+		fit_sheet.write( row, (col:=col+1)-1, common_last_names[i%len(common_last_names)] )
+		fit_sheet.write( row, (col:=col+1)-1, get_uci_id() )
+		fit_sheet.write( row, (col:=col+1)-1, get_license() )
+		fit_sheet.write( row, (col:=col+1)-1, teams[i//team_size] )
 
 	stageCount = 5
 	for stage in range(stageCount):

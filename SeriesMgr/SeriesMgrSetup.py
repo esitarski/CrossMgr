@@ -1,11 +1,9 @@
-from distutils.core import setup
 import os
 import shutil
 import zipfile
 import sys
 import datetime
 import subprocess
-import platform
 
 # Copy all dependent files from the CrossMgr directory into this directory because we are just being lazy
 # We use the Dependencies file to figure out what files we want and we do this because it's easier
@@ -55,7 +53,7 @@ subprocess.call( [
 	'pyinstaller',
 	
 	'SeriesMgr.pyw',
-    '--icon=SeriesMgrImages\SeriesMgr.ico',
+    '--icon=SeriesMgrImages/SeriesMgr.ico',
 	'--clean',
 	'--windowed',
 	'--noconfirm',
@@ -70,11 +68,11 @@ subprocess.call( [
 wxHome = r'C:\Python27\Lib\site-packages\wx-2.8-msw-ansi\wx'
 try:
 	shutil.copy( os.path.join(wxHome, 'MSVCP71.dll'), distDir )
-except:
+except Exception:
 	pass
 try:
 	shutil.copy( os.path.join(wxHome, 'gdiplus.dll'), distDir )
-except:
+except Exception:
 	pass
 
 # Add images to the distribution folder.
@@ -101,7 +99,6 @@ for drive in ['C', 'D']:
 		inno = innoTest
 		break
 		
-from Version import AppVerName
 def make_inno_version():
 	setup = {
 		'AppName':				AppVerName.split()[0],
@@ -116,6 +113,7 @@ def make_inno_version():
 	with open('inno_setup.txt', 'w') as f:
 		for k, v in setup.items():
 			f.write( '{}={}\n'.format(k,v) )
+
 make_inno_version()
 cmd = '"' + inno + '" ' + 'SeriesMgr.iss'
 print( cmd )
@@ -128,7 +126,7 @@ newExeName = 'SeriesMgr_Setup_v' + vNum + '.exe'
 
 try:
 	os.remove( os.path.join('install',newExeName) )
-except:
+except Exception:
 	pass
 	
 shutil.copy( os.path.join('install', 'SeriesMgr_Setup.exe'), os.path.join('install', newExeName) )
@@ -141,7 +139,7 @@ newZipName = newExeName.replace( '.exe', '.zip' )
 
 try:
 	os.remove( newZipName )
-except:
+except Exception:
 	pass
 
 z = zipfile.ZipFile(newZipName, "w")

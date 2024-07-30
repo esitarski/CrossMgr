@@ -1,15 +1,10 @@
-import wx
-import re
 import os
-import sys
-import itertools
 import copy
+
+import wx
 import wx.lib.filebrowsebutton as filebrowse
 import wx.lib.scrolledpanel as scrolled
 import wx.adv as adv
-import string
-import webbrowser
-import traceback
 
 import Utils
 import Model
@@ -317,7 +312,7 @@ class GetExcelStartListLink:
 						evt.Veto()
 		
 	def onPageChanged( self, evt ):
-		isForward = evt.GetDirection()
+		pass
 		
 #----------------------------------------------------------------------------------
 class ExcelLink:
@@ -343,17 +338,6 @@ class ExcelLink:
 		
 	def getFields( self ):
 		return [f for f in Fields if self.hasField(f)]
-	
-	def get( self ):
-		# Check the cache, but don't bother with the modification date of the file for performance.
-		if stateCache and infoCache:
-			try:
-				state = (self.fileName, self.sheetName, self.fieldCol)
-				if state == stateCache[-3:]:
-					return infoCache
-			except Exception:
-				pass
-		return None
 	
 	def read( self ):
 		try:
@@ -388,7 +372,8 @@ def ImportStartList( parent ):
 	info = excelLink.read()
 	errors = []
 	
-	if Utils.MessageYesNo( parent, 'Replace existing Riders from Spreadsheet?\n\nOtherwise, data will be merged by Bib number.',
+	if Utils.MessageYesNo( parent,
+		'Replace existing Riders from Spreadsheet?\n\nOtherwise, data will be merged by Bib number.',
 		'Replace existing Riders' ):
 		Model.model.riders = []
 	

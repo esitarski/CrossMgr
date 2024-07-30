@@ -55,7 +55,7 @@ def RemoveDisallowedFilenameChars( filename ):
 
 def RemoveDisallowedSheetChars( sheetName ):
 	sheetName = unicodedata.normalize('NFKD', str(sheetName)).encode('ASCII', 'ignore').decode()
-	return re.sub('[+!#$%&+~`".:;|\\\\/?*\[\] ]+', ' ', sheetName)[:31]		# four backslashes required to match one backslash in re.
+	return re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', sheetName)[:31]
 	
 def ordinal( value ):
 	try:
@@ -122,6 +122,7 @@ class WriteCell:
 		self.grid = grid
 		self.row = row
 		self.col = col
+
 	def __call__( self, value, horiz=None, vert=None ):
 		self.grid.SetCellValue( self.row, self.col, value )
 		if horiz is not None or vert is not None:

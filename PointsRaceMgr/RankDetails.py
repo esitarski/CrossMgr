@@ -1,4 +1,3 @@
-import re
 import wx
 import wx.grid		as gridlib
 import Model

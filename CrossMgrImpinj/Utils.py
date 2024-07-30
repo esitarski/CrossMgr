@@ -1,9 +1,7 @@
-import datetime
 import wx
 import os
 import re
 import sys
-import math
 import socket
 import subprocess
 
@@ -67,7 +65,7 @@ def getHomeDir():
 	try:
 		if os.path.basename(homedir) == '.CrossMgrImpinj':
 			homedir = os.path.join( os.path.dirname(homedir), '.CrossMgrImpinjApp' )
-	except:
+	except Exception:
 		pass
 	if not os.path.exists(homedir):
 		os.makedirs( homedir )
@@ -81,7 +79,7 @@ def getDocumentsDir():
 if 'WXMAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
-	except:
+	except Exception:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
 	if os.path.isdir( os.path.join(topdirName, 'CrossMgrImpinjImages') ):
 		dirName = topdirName
@@ -94,7 +92,7 @@ if 'WXMAC' in wx.Platform:
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
+	except Exception:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 	if os.path.basename(dirName) == 'library.zip':
@@ -127,6 +125,7 @@ def Bell():
 # Attempt at portable sound player.
 if sys.platform.startswith('win'):
 	soundCache = {}
+	
 	def Play( soundFile ):
 		global soundCache
 		soundFile = os.path.join( imageFolder, soundFile )
@@ -157,7 +156,7 @@ else:	# Try Linux
 				shell=False, stdin=None, stdout=None, stderr=None,
 				close_fds=True,
 			)
-		except Exception as e:
+		except Exception:
 			pass
 		return True
 					
@@ -201,7 +200,7 @@ def GetAllIps():
 	for a in addrInfo:
 		try:
 			ip = a[4][0]
-		except:
+		except Exception:
 			continue
 		if reIP.search(ip):
 			ips.append( ip )

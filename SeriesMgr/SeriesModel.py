@@ -1,9 +1,6 @@
 import os
-import re
-import sys
 from html import escape
 import copy
-import time
 import operator
 import functools
 import datetime
@@ -52,6 +49,14 @@ class memoize:
 	def __get__(self, obj, objtype):
 		# Support instance methods.
 		return functools.partial(self.__call__, obj)
+
+def ValidateUCIID( uci_id ):
+	# Returns a valid UCI ID string, or '' if the uci_id is invalid.
+	# Strict: checks length and remainder.
+	uci_id = str(uci_id).replace(' ','')
+	if uci_id.endswith('.0'):	# If the uci id was a float, remove the decimal.
+		uci_id = uci_id[:-2]
+	return uci_id if (len(uci_id) == 11 and uci_id.isdigit() and int(uci_id[:-2]) % 97 == int(uci_id[-2:])) else ''
 
 def RaceNameFromPath( p, isUCIDataride=False ):
 	if isUCIDataride:
@@ -148,7 +153,7 @@ class PointStructure:
 		for v in s.split():
 			try:
 				values.append( int(v) )
-			except:
+			except Exception:
 				continue
 		self.pointsForPlace = dict( (i+1, v) for i, v in enumerate(sorted(values, reverse=True)) )
 		
@@ -417,22 +422,16 @@ class SeriesModel:
 		dExisting = dict( self.references )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -443,30 +442,21 @@ class SeriesModel:
 					key = tuple( [nameToAliasKey(n) for n in alias] )
 					self.aliasLookup[key] = name				
 	
-		#if updated:
-		#	memoize.clear()
-	
 	def setReferenceLicenses( self, referenceLicenses ):
 		dNew = dict( referenceLicenses )
 		dExisting = dict( self.referenceLicenses )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -482,22 +472,16 @@ class SeriesModel:
 		dExisting = dict( self.referenceTeams )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -513,22 +497,16 @@ class SeriesModel:
 		dExisting = dict( self.referenceCategories )
 		
 		changed = (len(dNew) != len(dExisting))
-		updated = False
 		
 		for name, aliases in dNew.items():
 			if name not in dExisting:
 				changed = True
-				if aliases:
-					updated = True
 			elif aliases != dExisting[name]:
 				changed = True
-				updated = True
 	
 		for name, aliases in dExisting.items():
 			if name not in dNew:
 				changed = True
-				if aliases:
-					updated = True
 				
 		if changed:
 			self.changed = changed
@@ -729,28 +707,64 @@ class SeriesModel:
 	def _extractAllRaceResultsCore( self ):
 		with modelUpdateLock:	
 			# Extract all race results in parallel.  Arguments are the race info and this series.
-			with Pool() as p:
-				p_results = p.starmap( GetModelInfo.ExtractRaceResults, ((r,self) for r in self.races) )
+			if self.races:
+				# p_results = map( GetModelInfo.ExtractRaceResults, [r.fileName for r in self.races] )
+				with Pool() as p:
+					p_results = p.map( GetModelInfo.ExtractRaceResults, [r.fileName for r in self.races] )
+			else:
+				p_results = []
 			
 			# Combine all results and record any errors.
 			raceResults = []
-			oldErrors = self.errors
 			self.errors = []
 			for ret, r in zip(p_results, self.races):
+				# Set race attributes.
+				for a in ('isUCIDataride', 'pureTeam', 'resultsType'):
+					setattr( r, a, ret[a] )
 				if ret['success']:
+					for rr in ret['raceResults']:
+						rr.raceInSeries = r
 					raceResults.extend( ret['raceResults'] )
 					if ret['licenseLinkTemplate']:
 						self.licenseLinkTemplate = ret['licenseLinkTemplate']
 				else:
 					self.errors.append( (r, ret['explanation']) )
-			if oldErrors != self.errors:
-				self.changed = True
-				
+					
 		return raceResults
 
 	def extractAllRaceResults( self, adjustForUpgrades=True, isIndividual=True ):
-		# Get a copy of the potenially cached race results.
+		# Purge any existing key errors.
+		oldErrors = self.errors
+		keyErrorPrefix = '** '
+		self.errors = [ (r,e) for r,e in self.errors if not e.startswith(keyErrorPrefix) ]
+
+		# Get a copy of the potenially cached race results.  This will also reset self.errors.
 		raceResults = copy.deepcopy( self._extractAllRaceResultsCore() )
+		
+		# Remove race results with missing keys.  Add corresponding errors to list.
+		if self.riderKey == self.KeyByUciId:
+			# If matching by UCI ID, remove all riders without a UCI ID and record those missing one as errors.
+			raceResultsKeep = []
+			for rr in raceResults:
+				uci_id_existing = rr.uci_id or ''
+				rr.uci_id = ValidateUCIID( rr.uci_id )
+				if not rr.uci_id:
+					self.errors.append( (rr.raceInSeries, f'{keyErrorPrefix}Invalid UCI ID: ({rr.categoryName}) {rr.lastName}, {rr.firstName} - [{uci_id_existing}]') )
+				else:
+					raceResultsKeep.append( rr )
+			raceResults = raceResultsKeep
+		elif self.riderKey == self.KeyByLicense:
+			# If matching by license, remove all riders without a license and record those missing one as errors.
+			raceResultsKeep = []
+			for rr in raceResults:
+				if not rr.license:
+					self.errors.append( (rr.raceInSeries, f'{keyErrorPrefix}Missing License: ({rr.categoryName}) {rr.lastName}, {rr.firstName}') )
+				else:
+					raceResultsKeep.append( rr )
+			raceResults = raceResultsKeep
+
+		# Set the change flag if the errors change.
+		self.changed |= (oldErrors != self.errors)
 		
 		# Assign a sequence number to the races in the specified order.
 		# Track the race filename so we can consolidate the race objects after the deep copy.

@@ -1,7 +1,6 @@
+import math
 import wx
 from wx.lib.agw.aui import LightColour
-import os
-import math
 import Utils
 
 class dotdict:
@@ -132,7 +131,7 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', 
 	bitmapHeight = drawResources.bitmapHeight
 	bibSpaceWidth = drawResources.bibSpaceWidth
 	spaceWidth = drawResources.spaceWidth
-	xText, yText = bitmapWidth, 0
+	xText = bitmapWidth
 	
 	x = borderWidth
 	y = borderWidth

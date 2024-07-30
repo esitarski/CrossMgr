@@ -12,20 +12,14 @@ def initTranslation():
 	if not initTranslationCalled:
 		try:
 			gettext.install(AppVerName.split(None, 1), './locale', unicode=True)
-		except:
+		except Exception:
 			gettext.install(AppVerName.split(None, 1), './locale')
 			
 		initTranslationCalled = True
 		
 initTranslation()
 
-try:
-	from win32com.shell import shell, shellcon
-except ImportError:
-	pass
-	
 import os
-import re
 import sys
 import platform
 import datetime
@@ -40,7 +34,7 @@ def removeDiacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 		
 '''
@@ -95,7 +89,7 @@ def AdjustGridSize( grid, rowsRequired = None, colsRequired = None ):
 if 'WXMAC' in wx.Platform:
 	try:
 		topdirName = os.environ['RESOURCEPATH']
-	except:
+	except Exception:
 		topdirName = os.path.dirname(os.path.realpath(__file__))
 	if os.path.isdir( os.path.join(topdirName, 'CallupSeedingMgrImages') ):
 		dirName = topdirName
@@ -109,7 +103,7 @@ if 'WXMAC' in wx.Platform:
 else:
 	try:
 		dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
+	except Exception:
 		dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 	
 	if os.path.basename(dirName) in ['library.zip', 'MainWin.exe', 'CrossMgrCallUpSeedingMgr.exe']:

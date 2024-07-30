@@ -1,7 +1,6 @@
 import math
 from math import log
 import operator
-import itertools
 import numpy as np
 import warnings
 try:

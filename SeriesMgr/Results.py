@@ -1,13 +1,17 @@
-import wx
-import wx.grid as gridlib
-
 import os
 import io
-from html import escape
-from urllib.parse import quote
-import sys
+import re
 import base64
 import datetime
+import xlsxwriter
+import webbrowser
+import subprocess
+import platform
+from html import escape
+from urllib.parse import quote
+
+import wx
+import wx.grid as gridlib
 
 import Utils
 import SeriesModel
@@ -17,13 +21,6 @@ from FitSheetWrapper import FitSheetWrapperXLSX
 import FtpWriteFile
 from ExportGrid import tag
 
-import xlsxwriter
-import io
-import re
-import webbrowser
-import subprocess
-import platform
-
 reNoDigits = re.compile( '[^0-9]' )
 
 HeaderNamesTemplate = ['Pos', 'Name', 'License', 'UCI ID', 'Team']
@@ -32,7 +29,7 @@ def getHeaderNames():
 
 def isUCIID( uci_id ):
 	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
-	return len(uci_id == 11) and sum( int(c) for c in uci_id[:9] ) % 97 == int(uci_id[9:] )
+	return len(uci_id == 11) and int(uci_id[:-2]) % 97 == int(uci_id[-2:])
 
 def formatUCIID( uci_id ):
 	uci_id = re.sub( '[^0-9]', '', str(uci_id) )
@@ -362,11 +359,16 @@ function sortTableId( iTable, iCol ) {
 										} ):
 										with tag(html, 'span', dict(id='idUpDn{}_{}'.format(iTable,len(headerNames) + iRace)) ):
 											pass
+										
+										rName = r[1].replace('\n', '<br/>\n').replace('  ',' ')
+										if rName.endswith('Finals'):
+											rName = rName.replace('Finals', 'Final')
+										rName = escape(rName)
 										if r[2]:
 											with tag(html,'a',dict(href='{}?raceCat={}'.format(r[2], quote(categoryName.encode('utf8')))) ):
-												write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+												write( rName )
 										else:
-											write( '{}'.format(escape(r[1]).replace('\n', '<br/>\n')) )
+											write( rName )
 										if r[0]:
 											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
@@ -655,7 +657,6 @@ class Results(wx.Panel):
 		
 	def doLabelClick( self, event ):
 		col = event.GetCol()
-		label = self.grid.GetColLabelValue( col )
 		if self.sortCol == col:
 			self.sortCol = -self.sortCol
 		elif self.sortCol == -col:
@@ -746,9 +747,6 @@ class Results(wx.Panel):
 
 	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
-		scoreByTime = model.scoreByTime
-		scoreByPercent = model.scoreByPercent
-		scoreByTrueSkill = model.scoreByTrueSkill
 		
 		self.postPublishCmd.SetValue( model.postPublishCmd )
 		
@@ -756,7 +754,7 @@ class Results(wx.Panel):
 			self.raceResults = []
 			self.categoryChoice.SetItems( [] )
 		else:
-			with wx.BusyCursor() as wait:
+			with wx.BusyCursor():
 				self.raceResults = model.extractAllRaceResults()
 			self.fixCategories()
 		
@@ -866,11 +864,6 @@ class Results(wx.Panel):
 	def onPublishToExcel( self, event ):
 		model = SeriesModel.model
 		
-		scoreByTime = model.scoreByTime
-		scoreByPercent = model.scoreByPercent
-		scoreByTrueSkill = model.scoreByTrueSkill
-		HeaderNames = getHeaderNames()
-		
 		if Utils.mainWin:
 			if not Utils.mainWin.fileName:
 				Utils.MessageOK( self, 'You must save your Series to a file first.', 'Save Series' )
@@ -931,7 +924,7 @@ class Results(wx.Panel):
 			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
 			headerNames.extend( '{}'.format(r[1]) for r in races )
 			
-			ws = wb.add_worksheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
+			ws = wb.add_worksheet( re.sub('[:\\/?*\\[\\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapperXLSX( ws )
 
 			rowCur = 0

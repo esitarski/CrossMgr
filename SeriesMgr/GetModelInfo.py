@@ -10,15 +10,10 @@ from collections import defaultdict, namedtuple
 import trueskill
 
 import Model
-import GpxParse
-import GeoAnimation
-import Animation
-import GanttChart
-import ReadSignOnSheet
 import SeriesModel
 import Utils
-from ReadSignOnSheet	import GetExcelLink, ResetExcelLinkCache, HasExcelLink
-from GetResults			import GetResults, GetCategoryDetails
+from ReadSignOnSheet	import ResetExcelLinkCache, HasExcelLink
+from GetResults			import GetResults
 from Excel				import GetExcelReader
 from FieldMap			import standard_field_map, standard_field_aliases
 from GetMatchingExcelFile import GetMatchingExcelFile
@@ -76,10 +71,12 @@ def formatTimeGap( secs, highPrecision = False ):
 def safe_upper( f ):
 	try:
 		return f.upper()
-	except:
+	except Exception:
 		return f
 
 def fix_uci_id( uci_id ):
+	# From a str, int, float or None ,and convert to a uci id as best as possible.
+	# Do not do the remainder test.
 	uci_id = str(uci_id or '').strip()
 	if uci_id.endswith('.0'):	# Correct if the uci_id is a floating point number.
 		uci_id = uci_id[-2:]
@@ -170,29 +167,26 @@ class RaceResult:
 	def __repr__( self ):
 		return '\n({})'.format( ', '.join( '"{}"'.format(p) for p in (self.raceName, self.team, self.full_name, self.categoryName) ) )
 
-def ExtractRaceResults( r, seriesModel ):
-	if os.path.splitext(r.fileName)[1] == '.cmn':
-		return ExtractRaceResultsCrossMgr( r, seriesModel )
-	else:
-		return ExtractRaceResultsExcel( r, seriesModel )
-
 def toInt( n ):
 	if n == 'DNF':
 		return SeriesModel.rankDNF
 	try:
 		return int(n.split()[0])
-	except:
+	except Exception:
 		return n
 
-def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
-	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
+def getRaceResultRet():
+	return { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
+
+def ExtractRaceResultsExcel( raceFileName ):
+	ret = getRaceResultRet()
 	
-	if not os.path.exists( raceInSeries.getFileName() ):
+	if not os.path.exists( raceFileName ):
 		ret['success'] = False
 		ret['explanation'] = 'File not found'
 		return ret
 	
-	raceName = os.path.splitext(os.path.basename(raceInSeries.getFileName()))[0]
+	raceName = os.path.splitext(os.path.basename(raceFileName))[0]
 	raceResults = []
 	
 	# Search for a "Pos" field to indicate the start of the data.
@@ -202,16 +196,22 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 			break
 	
 	# Check if this is a UCI Dataride spreadsheet
-	folderName = os.path.basename( os.path.dirname(raceInSeries.getFileName()) )
-	baseFileName = os.path.splitext( os.path.basename( raceInSeries.getFileName() ) )[0]
+	folderName = os.path.basename( os.path.dirname(raceFileName) )
+	baseFileName = os.path.splitext( os.path.basename( raceFileName ) )[0]
 	
-	excel = GetExcelReader( raceInSeries.getFileName() )
+	try:
+		excel = GetExcelReader( raceFileName )
+	except Exception as e:
+		ret['success'] = False
+		ret['explanation'] = str(e)
+		return ret
+		
 	uciDatarideSheets = {'General', 'Reference', 'Country Reference'}
 	isUCIDataride = any( (s.strip() in uciDatarideSheets) for s in excel.sheet_names() )
 	if isUCIDataride:
 		uciCategoryName = baseFileName	# Category name is the directory.
 		raceName = folderName			# Race name is the base file name.
-		raceInSeries.isUCIDataride = isUCIDataride
+		ret['isUCIDataride'] = True
 	else:
 		uciCategoryName = None
 		
@@ -229,10 +229,9 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				f = fm.finder( row )
 				info = {
 					'raceDate':		None,
-					'raceFileName':	raceInSeries.getFileName(),
+					'raceFileName':	raceFileName,
 					'raceName':		raceName,
 					'raceOrganizer': '',
-					'raceInSeries': raceInSeries,					
 					'bib': 			f('bib',99999),
 					'rank':			f('pos',''),
 					'tFinish':		f('time',0.0) or f('result',0.0),
@@ -303,7 +302,7 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				if name and not info['firstName'] and not info['lastName']:
 					try:
 						info['lastName'], info['firstName'] = name.split(',',1)
-					except:
+					except Exception:
 						pass
 				
 				if not info['firstName'] and not info['lastName']:
@@ -324,7 +323,7 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 				else:
 					try:
 						info['tFinish'] = float( info['tFinish'] ) * 24.0 * 60.0 * 60.0	# Convert Excel day number to seconds.
-					except Exception as e:
+					except Exception:
 						info['tFinish'] = 0.0
 				
 				#print( info )
@@ -342,8 +341,8 @@ def ExtractRaceResultsExcel( raceInSeries, seriesModel ):
 					hasPointsInput, defaultPointsInput = True, 0
 				
 				# Check if this is a team-only sheet.
-				raceInSeries.pureTeam = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
-				raceInSeries.resultsType = SeriesModel.Race.TeamResultsOnly if raceInSeries.pureTeam else SeriesModel.Race.IndividualAndTeamResults
+				ret['pureTeam'] = ('team' in fm and not any(n in fm for n in ('name', 'last_name', 'first_name', 'license')))
+				ret['resultsType'] = SeriesModel.Race.TeamResultsOnly if ret['pureTeam'] else SeriesModel.Race.IndividualAndTeamResults
 
 	ret['raceResults'] = raceResults
 	return ret
@@ -357,15 +356,14 @@ def FixExcelSheetLocal( fileName, race ):
 			if newFileName:
 				race.excelLink.fileName = newFileName
 
-def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
-	ret = { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None }
+def ExtractRaceResultsCrossMgr( raceFileName ):
+	ret = getRaceResultRet()
 	
-	fileName = raceInSeries.getFileName()
 	try:
-		with open(fileName, 'rb') as fp, Model.LockRace() as race:
+		with open(raceFileName, 'rb') as fp, Model.LockRace() as race:
 			race = pickle.load( fp, encoding='latin1', errors='replace' )
-			FixExcelSheetLocal( fileName, race )
-			isFinished = race.isFinished()
+			FixExcelSheetLocal( raceFileName, race )
+			#isFinished = race.isFinished()
 			race.tagNums = None
 			race.resetAllCaches()
 			Model.setRace( race )
@@ -373,9 +371,9 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 		ResetExcelLinkCache()
 		Model.resetCache()
 
-	except IOError as e:
+	except Exception as e:
 		ret['success'] = False
-		ret['explanation'] = e
+		ret['explanation'] = str(e)
 		return ret
 	
 	race = Model.race
@@ -410,7 +408,6 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 				continue
 			info = {
 				'raceURL':		raceURL,
-				'raceInSeries':	raceInSeries,
 			}
 			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('uci_id', 'UCIID'), ('team', 'Team')]:
 				info[fTo] = getattr(rr, fFrom, '')
@@ -429,7 +426,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 			if raceNum:
 				info['raceName'] = '{}-{}'.format(info['raceName'], raceNum)
 				
-			info['raceFileName'] = fileName
+			info['raceFileName'] = raceFileName
 			if race.startTime:
 				info['raceDate'] = race.startTime
 			else:
@@ -437,7 +434,7 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 					d = race.date.replace('-', ' ').replace('/', ' ')
 					fields = [int(v) for v in d.split()] + [int(v) for v in race.scheduledStart.split(':')]
 					info['raceDate'] = datetime.datetime( *fields )
-				except:
+				except Exception:
 					info['raceDate'] = None
 			
 			info['bib'] = int(rr.num)			
@@ -467,6 +464,12 @@ def ExtractRaceResultsCrossMgr( raceInSeries, seriesModel ):
 	ret['raceResults'] = raceResults
 	return ret
 
+def ExtractRaceResults( fileName ):
+	if os.path.splitext(fileName)[1] == '.cmn':
+		return ExtractRaceResultsCrossMgr( fileName )
+	else:
+		return ExtractRaceResultsExcel( fileName )
+
 def AdjustForUpgrades( raceResults ):
 	upgradePaths = []
 	for path in SeriesModel.model.upgradePaths:
@@ -488,7 +491,7 @@ def AdjustForUpgrades( raceResults ):
 			
 			try:
 				upgradeFactor = upgradeFactors[i]
-			except:
+			except Exception:
 				upgradeFactor = 0.5
 			
 			categoryPosition = {}
@@ -962,7 +965,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 	# Get all results for this category and valid teams.
 	trn = set( model.teamResultsNames )	
 	raceResults = [rr for rr in raceResults if rr.categoryName == categoryName and ((rr.team in trn) if trn else rr.teamIsValid)]
-	if not raceResults or not(scoreByPoints or scoreByTime):
+	if not raceResults or not (scoreByPoints or scoreByTime):
 		return [], []
 		
 	# Create a map for race filenames to grade.
@@ -973,8 +976,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 	# Get all races for this category.
 	races = set( RaceTuple(rr.raceDate, rr.raceName, rr.raceURL, rr.raceInSeries) for rr in raceResults )
 	races = sorted( races, key = lambda r: getattr(r[3], 'iSequence', 0) )
-	raceSequence = dict( (r.raceInSeries, i) for i, r in enumerate(races) )
-	
+
 	def asInt( v ):
 		return int(v) if int(v) == v else v
 	
@@ -1009,7 +1011,6 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 			
 			for team, rrs in teamParticipants.items():
 				for rr in rrs:
-					rider = rr.key()
 					primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
 					earnedPoints = pointsStructure[rr.rank] + primePoints
 					points = asInt( earnedPoints )
@@ -1089,9 +1090,8 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 				for rr in rrs:
 					if rr.rank == SeriesModel.rankDNF:
 						continue
-					rider = rr.key()
 					timeBonus = rr.timeBonus if considerPrimePointsOrTimeBonus else 0
-					time = rr.tFinish - timeBonus
+					#time = rr.tFinish - timeBonus
 					teamResults[raceInSeries][team].append( ResultTuple(0, rr.tFinish, rr.rank, 0, timeBonus, rr) )
 
 				if len(teamResults[raceInSeries][team]) < teamResultsN and raceInSeries.getFileName() not in pureTeam:

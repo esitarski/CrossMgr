@@ -10,7 +10,7 @@ def remove_diacritic( s ):
 	'''
 	try:
 		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
-	except:
+	except Exception:
 		return s
 
 def normalize( s ):
@@ -164,7 +164,7 @@ standard_field_aliases = (
 		"UCI ID of the form NNNNNNNNNNN",
 	),
 	('bib',
-		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #','Plate', 'Plate #', 'Plate#','Numéro','plaque'),
+		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #', 'Rider #', 'Rider#', 'Plate', 'Plate #', 'Plate#','Numéro','plaque'),
 		"Bib number",
 	),
 	('paid',
@@ -176,7 +176,7 @@ standard_field_aliases = (
 		"Dataride DNF/DNS/DSQ/LAP/REL status field",
 	),
 	('status',
-		('Status',),
+		('Status','State'),
 		"Status DNF/DNS/DSQ status field",
 	),
 	('result',

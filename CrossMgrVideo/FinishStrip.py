@@ -1,12 +1,6 @@
 import wx
-import os
 import io
-import sys
-import glob
-import math
-from time import sleep
 import datetime
-import platform
 from bisect import bisect_left
 from MakeComposite import MakeComposite
 import Utils
@@ -166,7 +160,7 @@ class FinishStrip( wx.Panel ):
 		if not self.times:
 			return
 		if t is None:
-			 t = self.triggerTime
+			t = self.triggerTime
 		self.tCursor = t
 		x = self.xFromT( t )
 		if self.compositeBitmap:

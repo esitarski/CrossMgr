@@ -1,10 +1,8 @@
 import re
 import os
-import six
 import time
 import math
 import socket
-import threading
 import datetime
 import xml
 import xml.etree.ElementTree
@@ -15,7 +13,7 @@ import unicodedata
 from xml.dom.minidom import parseString
 import traceback
 from queue import Empty
-from Utils import readDelimitedData, timeoutSecs, Bell
+from Utils import Bell
 
 HOME_DIR = os.path.expanduser("~")
 
@@ -146,7 +144,7 @@ class Alien:
 			
 		try:
 			# Check the shutdown queue for a message.  If there is one, shutdown.
-			d = self.shutdownQ.get( False )
+			self.shutdownQ.get( False )
 			self.keepGoing = False
 			return False
 		except Empty:
@@ -447,9 +445,9 @@ class Alien:
 			return True
 		
 	def purgeDataQ( self ):
-		while 1:
+		while True:
 			try:
-				d = self.dataQ.get( False )
+				self.dataQ.get( False )
 			except Empty:
 				break
 

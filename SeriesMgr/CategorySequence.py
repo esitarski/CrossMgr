@@ -1,13 +1,10 @@
 import wx
 import wx.grid as gridlib
 
-import os
-import sys
 import operator
 from ReorderableGrid import ReorderableGrid
 import SeriesModel
 import Utils
-from ReadRaceResultsSheet import GetExcelResultsLink, ExcelLink
 	
 class CategorySequence(wx.Panel):
 	HeaderNames = ['Category', 'Long Name', 'Indiv Publish', 'Points', 'Consider', 'Must Have Completed', 'Team Publish', 'Team Points', 'Use Nth Result Only', 'Team N']
@@ -127,7 +124,7 @@ class CategorySequence(wx.Panel):
 		if backgroundUpdate:
 			categoryList = []
 		else:
-			with wx.BusyCursor() as wait:
+			with wx.BusyCursor():
 				model.extractAllRaceResults()	# Also harmonizes the categorySequence
 				categoryList = model.getCategoriesSorted()
 		

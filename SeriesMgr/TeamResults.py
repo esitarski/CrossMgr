@@ -1,20 +1,16 @@
 import re
-import wx
-import wx.grid as gridlib
-
-import io
 import os
 from html import escape
 from urllib.parse import quote
-import sys
-import urllib
-import base64
 import datetime
 
 import xlwt
 import platform
 import webbrowser
 import subprocess
+
+import wx
+import wx.grid as gridlib
 
 import Utils
 import SeriesModel
@@ -68,7 +64,7 @@ def formatTeamResults( scoreByPoints, rt ):
 	if scoreByPoints:
 		# The first value is the team score.  Subsequent values are the individual ranks.
 		if not rt[0]:
-			return '';
+			return ''
 		return '{}'.format(rt[0])
 	else:
 		rt = [r for r in rt if r.time]
@@ -90,7 +86,6 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	model = SeriesModel.model
 	scoreByPoints = model.scoreByPoints
 	scoreByTime = model.scoreByTime
-	mustHaveCompleted = model.mustHaveCompleted
 	considerPrimePointsOrTimeBonus = model.considerPrimePointsOrTimeBonus
 	raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 	
@@ -288,7 +283,7 @@ function sortTableId( iTable, iCol ) {
 								write( '{}'.format(escape(categoryDisplayNames.get(categoryName,combinedLabel))) )
 			
 			hasPrimePoints = any( rr.primePoints for rr in raceResults )
-			hasTimeBonus = any( rr.timeBonus for rr in raceResults )
+			#hasTimeBonus = any( rr.timeBonus for rr in raceResults )
 			for iTable, categoryName in enumerate(categoryNames):
 				
 				results, races = GetModelInfo.GetCategoryResultsTeam(
@@ -299,8 +294,6 @@ function sortTableId( iTable, iCol ) {
 				)
 				
 				results = filterResults( results, scoreByPoints, scoreByTime )
-				
-				headerNames = HeaderNames + ['{}'.format(r[1]) for r in races]
 				
 				with tag(html, 'div', {'id':'catContent{}'.format(iTable)} ):
 					write( '<p/>')
@@ -537,7 +530,6 @@ class TeamResults(wx.Panel):
 		
 	def doLabelClick( self, event ):
 		col = event.GetCol()
-		label = self.grid.GetColLabelValue( col )
 		if self.sortCol == col:
 			self.sortCol = -self.sortCol
 		elif self.sortCol == -col:
@@ -635,7 +627,7 @@ class TeamResults(wx.Panel):
 			self.raceResults = []
 			self.categoryChoice.SetItems( [] )
 		else:
-			with wx.BusyCursor() as wait:
+			with wx.BusyCursor():
 				self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
 			self.fixCategories()
 		
@@ -731,8 +723,6 @@ class TeamResults(wx.Panel):
 		
 		scoreByPoints = model.scoreByPoints
 		scoreByTime = model.scoreByTime
-		scoreByPercent = model.scoreByPercent
-		scoreByTrueSkill = model.scoreByTrueSkill
 		HeaderNames = getHeaderNames()
 		
 		if Utils.mainWin:
@@ -746,9 +736,6 @@ class TeamResults(wx.Panel):
 		if not categoryNames:
 			return
 			
-		pointsForRank = { r.getFileName(): r.pointStructure for r in model.races }
-		teamPointsForRank = { r.getFileName(): r.teamPointStructure for r in model.races }
-		
 		wb = xlwt.Workbook()
 		
 		for categoryName in categoryNames:
@@ -763,7 +750,7 @@ class TeamResults(wx.Panel):
 			
 			headerNames = HeaderNames + [r[1] for r in races]
 			
-			ws = wb.add_sheet( re.sub('[:\\/?*\[\]]', ' ', categoryName) )
+			ws = wb.add_sheet( re.sub('[:\\/?*\\[\\]]', ' ', categoryName) )
 			wsFit = FitSheetWrapper( ws )
 
 			fnt = xlwt.Font()
@@ -784,7 +771,7 @@ class TeamResults(wx.Panel):
 			colCur = 0
 			ws.write_merge( rowCur, rowCur, colCur, colCur + 4, categoryName, xlwt.easyxf(
 																	"font: name Arial, bold on;"
-																	) );
+																	) )
 				
 			rowCur += 2
 			for c, headerName in enumerate(headerNames):
