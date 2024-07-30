@@ -144,7 +144,7 @@ def env_setup( full=False ):
 	
 	if not os.path.isdir( env_dir ):
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
-		subprocess.check_output( ['python3', '-m', 'venv', env_dir] )
+		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	
 	# Get the path to the exe.
@@ -329,13 +329,14 @@ def make_shortcuts( python_exe ):
 	shortcuts_fname = 'make_shortcuts_tmp.py'
 	
 	script_info=tuple( (pyw, get_ico_file(pyw), get_name(pyw)) for pyw in pyws )
+	contents = '\n'.join( [
+		'from pyshortcuts import make_shortcut',
+		"for script, ico, name in {script_info}:",
+		"    make_shortcut( terminal=False, startmenu=False, executable='{python_exe}', script=script, icon=ico, name=name )",
+	] ).format( python_exe=python_exe, script_info=script_info )
+	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
-		f.write( '\n'.join( [
-				'from pyshortcuts import make_shortcut',
-				"for script, ico, name in {script_info}:",
-				"    make_shortcut( terminal=False, startmenu=False, executable='{python_exe}', icon=ico, script=script, name=name )",
-			] ).format( python_exe=python_exe, script_info=script_info )
-		)
+		f.write( contents )
 	
 	subprocess.check_output( [python_exe, shortcuts_fname] )
 	os.remove( shortcuts_fname )
@@ -343,12 +344,13 @@ def make_shortcuts( python_exe ):
 	# Create a shortcut for this update script.
 	# Remember, we are in the CrossMgr-master directory.
 	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
+	contents = '\n'.join( [
+		'from pyshortcuts import make_shortcut',
+		f"make_shortcut( terminal=True, startmenu=False, executable='{python_exe}', script='{__file__} install', icon='{icon}', name='Update CrossMgr' )",
+	] )
+	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
-		f.write( '\n'.join( [
-				'from pyshortcuts import make_shortcut',
-				f"make_shortcut( terminal=True, startmenu=False, executable='python3', icon='{icon}', script='{__file__} install', name='Update CrossMgr' )",
-			] ).format( python_exe=python_exe, script_info=script_info )
-		)
+		f.write( contents )
 	
 	subprocess.check_output( [python_exe, shortcuts_fname] )
 	os.remove( shortcuts_fname )

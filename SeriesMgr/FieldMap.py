@@ -164,7 +164,7 @@ standard_field_aliases = (
 		"UCI ID of the form NNNNNNNNNNN",
 	),
 	('bib',
-		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #','Plate', 'Plate #', 'Plate#','Numéro','plaque'),
+		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #', 'Rider #', 'Rider#', 'Plate', 'Plate #', 'Plate#','Numéro','plaque'),
 		"Bib number",
 	),
 	('paid',

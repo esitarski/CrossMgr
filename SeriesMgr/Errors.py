@@ -12,7 +12,6 @@ def shorterFilename( fileName ):
 	return os.path.join( *components[-3:] )
 
 class Errors(wx.Panel):
-	#----------------------------------------------------------------------
 	ErrorCol = 0
 	RaceCol = 1
 	
@@ -56,16 +55,12 @@ class Errors(wx.Panel):
 	def commit( self ):
 		pass
 		
-#----------------------------------------------------------------------------
-
 class ErrorsFrame(wx.Frame):
-	#----------------------------------------------------------------------
 	def __init__(self):
 		wx.Frame.__init__(self, None, title="Error Test", size=(800,600) )
 		self.panel = Errors(self)
 		self.Show()
  
-#----------------------------------------------------------------------
 if __name__ == "__main__":
 	app = wx.App(False)
 	frame = ErrorsFrame()
