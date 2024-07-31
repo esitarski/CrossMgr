@@ -133,6 +133,14 @@ def get_wxpython_versions():
 		versions.sort( key = operator.itemgetter(0) )
 	return distro_versions
 
+def get_python_exe( env_dir ):
+	# Get the path to python in the env.
+	if platform.system() == 'Windows':
+		python_exe = os.path.abspath( os.path.join('.', env_dir, 'Scripts', 'python.exe') )
+	else:
+		python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
+	return python_exe
+
 def env_setup( full=False ):
 	if full and os.path.isdir( env_dir ):
 		print( f"Removing existing python environment {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
@@ -147,11 +155,7 @@ def env_setup( full=False ):
 		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	
-	# Get the path to python in the env.
-	if platform.system() == 'Windows':
-		python_exe = os.path.abspath( os.path.join('.', env_dir, 'Scripts', 'python.exe') )
-	else:
-		python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
+	python_exe = get_python_exe( env_dir )
 	
 	print( f"Updating python environment (this can take a few minutes the first time): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
@@ -212,12 +216,16 @@ def env_setup( full=False ):
 		subprocess.check_output( [
 			python_exe, '-m',
 			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
+		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
+			if platform.system() == 'Windows':
+				# Add winshell so we can do more with window shortcuts and suffix bindings.
+				f_out.write( 'winshell\n' )
+			
 			for line in f_in:
-				if 'pybabel' not in line:	# Skip pybabel as we don't use it.
+				if 'pybabel' not in line:	# Skip pybabel as we don't need it here.  We use polib instead to convert the .po files to .mo.
 					f_out.write( line )
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
@@ -485,6 +493,8 @@ def install( full=False ):
 	print( 'Thank you for using CrossMgr.' )
 	
 def uninstall():
+	is_windows = sys.platform() == 'Windows'
+	
 	install_dir = get_install_dir()
 	home_dir = os.path.expanduser('~')
 	
@@ -504,6 +514,34 @@ def uninstall():
 		print( 'Error: ', e )
 	print( 'Done.' )
 
+	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
+	
+	if not is_windows:
+		desktop_dir = os.path.join( home_dir, 'Desktop' )
+	else:
+		# Get the desktop folder.  We have to call the python in the env to get winshell.
+		python_exe = get_python_exe( os.path.join(install_dir, env_dir) )
+		fname = os.path.join( install_dir, src_dir, 'get_desktop_tmp.py' )
+		with open(fname, 'w', encoding='utf7') as f:
+			f.write( 'import sys\n' )
+			f.write( 'import winshell\n' )
+			f.write( 'print( winshell.desktop() )\n' )
+			f.write( 'sys.exit(0)\n' )
+		desktop_dir = subprocess.check_output( [python_exe, fname], encoding='utf8' )
+		os.remove( fname )
+		
+	if os.path.isdir(desktop_dir):
+		for pyw in pyws:
+			fname = os.path.join( desktop_dir, get_name(pyw) ) + ('.lnk' if is_windows else '.desktop')
+			if os.path.isfile(fname):
+				try:
+					os.remove( fname )
+				except Exception as e:
+					print( 'Error: ', e )
+		print( 'Done.' )
+	else:
+		print( '\nCrossMgr desktop shortcuts must be removed manually.' )
+		
 	print( "Removing CrossMgr python environment... ", end='', flush=True )
 	try:
 		shutil.rmtree( os.path.join(install_dir, env_dir), ignore_errors=True )
@@ -532,19 +570,6 @@ def uninstall():
 					print( 'Error: ', e )
 	print( 'Done.' )
 
-	desktop_dir = os.path.join( home_dir, 'Desktop' )
-	if os.path.isdir(desktop_dir):
-		print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
-		for pyw in pyws:
-			fname = os.path.join( desktop_dir, get_name(pyw) ) + '.desktop'
-			if os.path.isfile(fname):
-				try:
-					os.remove( fname )
-				except Exception as e:
-					print( 'Error: ', e )
-		print( 'Done.' )
-	else:
-		print( 'CrossMgr desktop shortcuts must be removed manually.' )
 	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
