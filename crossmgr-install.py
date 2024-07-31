@@ -338,7 +338,9 @@ def get_name( pyw_file ):
 def make_shortcuts( python_exe ):
 	print( "Making desktop shortcuts... ", end='', flush=True )
 	
-	if platform.system() == 'Windows':
+	is_windows = platform.system() == 'Windows'
+	
+	if is_windows:
 		python_launch_exe = python_exe.replace( 'python.exe', 'pythonw.exe' )
 	else:
 		python_launch_exe = python_exe
@@ -348,7 +350,7 @@ def make_shortcuts( python_exe ):
 		basename = os.path.splitext( fname )[0]
 		dirname = os.path.dirname( pyw_file )
 		dirimages = os.path.join( dirname, basename + 'Images' )
-		return os.path.join( dirimages, basename + '.ico' )
+		return os.path.join( dirimages, basename + ('.ico' if is_windows else '.png') )
 		
 	pyws = sorted( get_pyws(), reverse=True )
 	
@@ -388,7 +390,7 @@ def make_shortcuts( python_exe ):
 		'python_exe': python_exe,	# Use the stock python, not the env python.
 		'shortcut_args': {
 			'script': __file__ + ' install',	# Add "install" command to the script.
-			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico') ),
+			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png') ),
 			'name': 'Update CrossMgr',
 		}
 	}
