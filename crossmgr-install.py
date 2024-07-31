@@ -43,9 +43,10 @@
 import os
 import re
 import sys
+import json
 import shutil
-import zipfile
 import bisect
+import zipfile
 import argparse
 import operator
 import platform
@@ -133,6 +134,14 @@ def get_wxpython_versions():
 		versions.sort( key = operator.itemgetter(0) )
 	return distro_versions
 
+def get_python_exe( env_dir ):
+	# Get the path to python in the env.
+	if platform.system() == 'Windows':
+		python_exe = os.path.abspath( os.path.join('.', env_dir, 'Scripts', 'python.exe') )
+	else:
+		python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
+	return python_exe
+
 def env_setup( full=False ):
 	if full and os.path.isdir( env_dir ):
 		print( f"Removing existing python environment {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
@@ -147,11 +156,14 @@ def env_setup( full=False ):
 		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	
-	# Get the path to the exe.
-	python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
+	python_exe = get_python_exe( env_dir )
 	
-	print( f"Updating python environment (this can take a few minutes): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
+	print( f"Updating python environment (takes a few minutes, especially on first install): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
+	
+	# Upgrade pip first.
+	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'pip'] )
+	
 	if platform.system() == 'Linux':
 		# Install wxPython from the "extras" folder.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -160,7 +172,7 @@ def env_setup( full=False ):
 					f_out.write( line )
 
 		# Install all the regular modules.
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 		# Get the name and version of this Linux so we can download it from the wxPython extras folder.
 		os_name, os_version = None, None
@@ -205,14 +217,18 @@ def env_setup( full=False ):
 		subprocess.check_output( [
 			python_exe, '-m',
 			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with the DEPRECATED warning.
+		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
+			if platform.system() == 'Windows':
+				# Add winshell so we can do more with window shortcuts and suffix bindings.
+				f_out.write( 'winshell\n' )
+			
 			for line in f_in:
-				if 'pybabel' not in line:	# Skip pybabel as we don't use it.
+				if 'pybabel' not in line:	# Skip pybabel as we don't need it here.  We use polib instead to convert the .po files to .mo.
 					f_out.write( line )
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'polib', 'pyshortcuts'] )
@@ -247,15 +263,20 @@ def fix_dependencies( python_exe ):
 	# This is a big hackyt and I wish there was an easier way to...
 	print( "Formatting translation files... ", end='', flush=True )
 	po_to_mo_fname = 'po_to_mo_tmp.py'
+	context = {
+		'pofiles': pofiles,
+	}
+	content = '\n'.join( [
+		'import os',
+		'import polib',
+		f'context = {json.dumps(context)}',
+		"for file in context['pofiles']:",
+		"    po = polib.pofile(file)",
+		"    po.save_as_mofile( os.path.splitext(file)[0] + '.mo' )",
+	] )
 	with open(po_to_mo_fname, 'w', encoding='utf8') as f:
-		f.write( '\n'.join( [
-				'import os',
-				'import polib',
-				"for file in ({}):",
-				"    po = polib.pofile(file)",
-				"    po.save_as_mofile( os.path.splitext(file)[0] + '.mo' )",
-			] ).format( ','.join( f'"{po}"' for po in pofiles ) )
-		)
+		f.write( content )
+	
 	subprocess.check_output( [python_exe, po_to_mo_fname] )
 	os.remove( po_to_mo_fname )
 	print( 'Done.' )
@@ -316,44 +337,80 @@ def get_name( pyw_file ):
 		
 def make_shortcuts( python_exe ):
 	print( "Making desktop shortcuts... ", end='', flush=True )
+	
+	is_windows = platform.system() == 'Windows'
+	
+	if is_windows:
+		python_launch_exe = python_exe.replace( 'python.exe', 'pythonw.exe' )
+	else:
+		python_launch_exe = python_exe
 
 	def get_ico_file( pyw_file ):
 		fname = os.path.basename( pyw_file )
 		basename = os.path.splitext( fname )[0]
 		dirname = os.path.dirname( pyw_file )
 		dirimages = os.path.join( dirname, basename + 'Images' )
-		return os.path.join( dirimages, basename + '.ico' )
+		return os.path.join( dirimages, basename + ('.ico' if is_windows else '.png') )
 		
 	pyws = sorted( get_pyws(), reverse=True )
 	
-	shortcuts_fname = 'make_shortcuts_tmp.py'
+	shortcuts_fname = os.path.abspath( os.path.join('.', 'make_shortcuts_tmp.py') )
 	
-	script_info=tuple( (pyw, get_ico_file(pyw), get_name(pyw)) for pyw in pyws )
+	context = {
+		'python_launch_exe': python_launch_exe,
+		'shortcut_info': [ {
+				'script':pyw,
+				'icon':get_ico_file(pyw),
+				'name':get_name(pyw)
+			} for pyw in pyws
+		],
+	}
 	contents = '\n'.join( [
+		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
-		"for script, ico, name in {script_info}:",
-		"    make_shortcut( terminal=False, startmenu=False, executable='{python_exe}', script=script, icon=ico, name=name )",
-	] ).format( python_exe=python_exe, script_info=script_info )
-	
-	with open(shortcuts_fname, 'w', encoding='utf8') as f:
-		f.write( contents )
-	
-	subprocess.check_output( [python_exe, shortcuts_fname] )
-	os.remove( shortcuts_fname )
-	
-	# Create a shortcut for this update script.
-	# Remember, we are in the CrossMgr-master directory.
-	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
-	contents = '\n'.join( [
-		'from pyshortcuts import make_shortcut',
-		f"make_shortcut( terminal=True, startmenu=False, executable='{python_exe}', script='{__file__} install', icon='{icon}', name='Update CrossMgr' )",
+		f'context = {json.dumps(context)}',
+		"for shortcut_args in context['shortcut_info']:",
+		"    make_shortcut( terminal=False, startmenu=False, executable=context['python_launch_exe'], **shortcut_args )",
+		"exit(0)",
 	] )
 	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( contents )
 	
-	subprocess.check_output( [python_exe, shortcuts_fname] )
-	os.remove( shortcuts_fname )
+	try:
+		subprocess.check_output( [python_exe, shortcuts_fname] )
+	except subprocess.CalledProcessError as e:
+		print( 'Error:', e )
+	finally:
+		os.remove( shortcuts_fname )
+	
+	# Create a shortcut for this update script.
+	# Remember, we are in the CrossMgr-master directory.
+	context = {
+		'python_exe': python_exe,	# Use the stock python, not the env python.
+		'shortcut_args': {
+			'script': __file__ + ' install',	# Add "install" command to the script.
+			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png') ),
+			'name': 'Update CrossMgr',
+		}
+	}
+	contents = '\n'.join( [
+		'from sys import exit',
+		'from pyshortcuts import make_shortcut',
+		f'context = {json.dumps(context)}',
+		"make_shortcut( terminal=True, startmenu=False, executable=context['python_exe'], **context['shortcut_args'] )",
+		"exit(0)",
+	] )
+	
+	with open(shortcuts_fname, 'w', encoding='utf8') as f:
+		f.write( contents )
+	
+	try:
+		subprocess.check_output( [python_exe, shortcuts_fname] )
+	except subprocess.CalledProcessError as e:
+		print( 'Error:', e )
+	finally:
+		os.remove( shortcuts_fname )
 	
 	print( 'Done.' )
 
@@ -458,6 +515,8 @@ def install( full=False ):
 	print( 'Thank you for using CrossMgr.' )
 	
 def uninstall():
+	is_windows = sys.platform() == 'Windows'
+	
 	install_dir = get_install_dir()
 	home_dir = os.path.expanduser('~')
 	
@@ -477,6 +536,34 @@ def uninstall():
 		print( 'Error: ', e )
 	print( 'Done.' )
 
+	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
+	
+	if not is_windows:
+		desktop_dir = os.path.join( home_dir, 'Desktop' )
+	else:
+		# Get the desktop folder.  We have to call the python in the env to get winshell.
+		python_exe = get_python_exe( os.path.join(install_dir, env_dir) )
+		fname = os.path.join( install_dir, src_dir, 'get_desktop_tmp.py' )
+		with open(fname, 'w', encoding='utf7') as f:
+			f.write( 'import sys\n' )
+			f.write( 'import winshell\n' )
+			f.write( 'print( winshell.desktop() )\n' )
+			f.write( 'sys.exit(0)\n' )
+		desktop_dir = subprocess.check_output( [python_exe, fname], encoding='utf8' )
+		os.remove( fname )
+		
+	if os.path.isdir(desktop_dir):
+		for pyw in pyws:
+			fname = os.path.join( desktop_dir, get_name(pyw) ) + ('.lnk' if is_windows else '.desktop')
+			if os.path.isfile(fname):
+				try:
+					os.remove( fname )
+				except Exception as e:
+					print( 'Error: ', e )
+		print( 'Done.' )
+	else:
+		print( '\nCrossMgr desktop shortcuts must be removed manually.' )
+		
 	print( "Removing CrossMgr python environment... ", end='', flush=True )
 	try:
 		shutil.rmtree( os.path.join(install_dir, env_dir), ignore_errors=True )
@@ -505,19 +592,6 @@ def uninstall():
 					print( 'Error: ', e )
 	print( 'Done.' )
 
-	desktop_dir = os.path.join( home_dir, 'Desktop' )
-	if os.path.isdir(desktop_dir):
-		print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
-		for pyw in pyws:
-			fname = os.path.join( desktop_dir, get_name(pyw) ) + '.desktop'
-			if os.path.isfile(fname):
-				try:
-					os.remove( fname )
-				except Exception as e:
-					print( 'Error: ', e )
-		print( 'Done.' )
-	else:
-		print( 'CrossMgr desktop shortcuts must be removed manually.' )
 	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(

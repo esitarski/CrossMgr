@@ -3745,35 +3745,6 @@ class MainWin( wx.Frame ):
 	@logCall
 	def menuExportUCI( self, event=None, silent=False ):
 		return self.menuUploadUCI()
-		
-		'''
-		self.commit()
-		if self.fileName is None or len(self.fileName) < 4:
-			return
-
-		xlFName = self.getFormatFilename( 'uciexcel' )
-
-		wb = xlwt.Workbook()
-		raceCategories = getRaceCategories()
-		for catName, category in raceCategories:
-			if catName == 'All' or not category.uploadFlag:
-				continue
-			sheetName = re.sub(r'[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', Utils.toAscii(catName))
-			sheetName = sheetName[:31]
-			sheetCur = wb.add_sheet( sheetName )
-			UCIExport( sheetCur, category )
-
-		try:
-			wb.save( xlFName )
-			if not silent:
-				if self.launchExcelAfterPublishingResults:
-					Utils.LaunchApplication( xlFName )
-				Utils.MessageOK(self, '{}:\n\n   {}'.format(_('Excel file written to'), xlFName), _('Excel Write'))
-		except IOError:
-			Utils.MessageOK(self,
-						'{} "{}".\n\n{}\n{}'.format(_('Cannot write'), xlFName, _('Check if this spreadsheet is open.'), _('If so, close it, and try again.')),
-						_('Excel File Error'), iconMask=wx.ICON_ERROR )
-		'''
 	
 	def resultsCheck( self ):
 		return Utils.MessageOKCancel( self,
