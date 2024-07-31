@@ -147,10 +147,13 @@ def env_setup( full=False ):
 		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	
-	# Get the path to the exe.
-	python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
+	# Get the path to python in the env.
+	if platform.system() == 'Windows':
+		python_exe = os.path.abspath( os.path.join('.', env_dir, 'Scripts', 'python.exe') )
+	else:
+		python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
 	
-	print( f"Updating python environment (this can take a few minutes): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
+	print( f"Updating python environment (this can take a few minutes the first time): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
 	if platform.system() == 'Linux':
 		# Install wxPython from the "extras" folder.
@@ -254,7 +257,7 @@ def fix_dependencies( python_exe ):
 				"for file in ({}):",
 				"    po = polib.pofile(file)",
 				"    po.save_as_mofile( os.path.splitext(file)[0] + '.mo' )",
-			] ).format( ','.join( f'"{po}"' for po in pofiles ) )
+			] ).format( ','.join( f'r"{po}"' for po in pofiles ) )
 		)
 	subprocess.check_output( [python_exe, po_to_mo_fname] )
 	os.remove( po_to_mo_fname )
@@ -316,6 +319,11 @@ def get_name( pyw_file ):
 		
 def make_shortcuts( python_exe ):
 	print( "Making desktop shortcuts... ", end='', flush=True )
+	
+	if platform.system() == 'Windows':
+		python_launch_exe = python_exe.replace( 'python.exe', 'pythonw.exe' )
+	else:
+		python_launch_exe = python_exe
 
 	def get_ico_file( pyw_file ):
 		fname = os.path.basename( pyw_file )
@@ -326,34 +334,47 @@ def make_shortcuts( python_exe ):
 		
 	pyws = sorted( get_pyws(), reverse=True )
 	
-	shortcuts_fname = 'make_shortcuts_tmp.py'
+	shortcuts_fname = os.path.abspath( os.path.join('.', 'make_shortcuts_tmp.py') )
 	
 	script_info=tuple( (pyw, get_ico_file(pyw), get_name(pyw)) for pyw in pyws )
 	contents = '\n'.join( [
+		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
 		"for script, ico, name in {script_info}:",
-		"    make_shortcut( terminal=False, startmenu=False, executable='{python_exe}', script=script, icon=ico, name=name )",
-	] ).format( python_exe=python_exe, script_info=script_info )
+		"    print( 'making shortcut for', name )",
+		"    make_shortcut( terminal=False, startmenu=False, executable=r'{python_launch_exe}', script=script, icon=ico, name=name )",
+		"exit(0)",
+	] ).format( python_launch_exe=python_launch_exe, script_info=script_info )
 	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( contents )
 	
-	subprocess.check_output( [python_exe, shortcuts_fname] )
-	os.remove( shortcuts_fname )
+	try:
+		subprocess.check_output( [python_exe, shortcuts_fname] )
+	except subprocess.CalledProcessError as e:
+		print( 'Error:', e )
+	finally:
+		os.remove( shortcuts_fname )
 	
 	# Create a shortcut for this update script.
 	# Remember, we are in the CrossMgr-master directory.
 	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
 	contents = '\n'.join( [
+		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
-		f"make_shortcut( terminal=True, startmenu=False, executable='{python_exe}', script='{__file__} install', icon='{icon}', name='Update CrossMgr' )",
+		f"make_shortcut( terminal=True, startmenu=False, executable=r'{python_exe}', script='{__file__} install', icon=r'{icon}', name='Update CrossMgr' )",
+		"exit(0)",
 	] )
 	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( contents )
 	
-	subprocess.check_output( [python_exe, shortcuts_fname] )
-	os.remove( shortcuts_fname )
+	try:
+		subprocess.check_output( [python_exe, shortcuts_fname] )
+	except subprocess.CalledProcessError as e:
+		print( 'Error:', e )
+	finally:
+		os.remove( shortcuts_fname )
 	
 	print( 'Done.' )
 
