@@ -143,7 +143,7 @@ def get_python_exe( env_dir ):
 	return python_exe
 
 def env_setup( full=False ):
-	if full and os.path.isdir( env_dir ):
+	if full:
 		print( f"Removing existing python environment {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 		try:
 			shutil.rmtree( env_dir, ignore_errors=True )
@@ -151,7 +151,7 @@ def env_setup( full=False ):
 			print( f"Failure: {e}... ", end='', flush=True )
 		print( 'Done.' )
 	
-	if not os.path.isdir( env_dir ):
+	if full or not os.path.isdir( env_dir ):
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
@@ -216,7 +216,7 @@ def env_setup( full=False ):
 		# Install wxPyhon from the extras url.
 		subprocess.check_output( [
 			python_exe, '-m',
-			'pip', 'install', '--upgrade', '-f', url, 'wxPython',
+			'pip', 'install', '--upgrade', '--quiet', '-f', url, 'wxPython',
 		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
@@ -228,7 +228,7 @@ def env_setup( full=False ):
 			for line in f_in:
 				if 'pybabel' not in line:	# Skip pybabel as we don't need it here.  We use polib instead to convert the .po files to .mo.
 					f_out.write( line )
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'polib', 'pyshortcuts'] )
