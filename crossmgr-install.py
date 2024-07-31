@@ -43,9 +43,10 @@
 import os
 import re
 import sys
+import json
 import shutil
-import zipfile
 import bisect
+import zipfile
 import argparse
 import operator
 import platform
@@ -157,7 +158,7 @@ def env_setup( full=False ):
 	
 	python_exe = get_python_exe( env_dir )
 	
-	print( f"Updating python environment (this can take a few minutes the first time): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
+	print( f"Updating python environment (takes a few minutes, especially on first install): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
 	
 	# Upgrade pip first.
@@ -262,15 +263,20 @@ def fix_dependencies( python_exe ):
 	# This is a big hackyt and I wish there was an easier way to...
 	print( "Formatting translation files... ", end='', flush=True )
 	po_to_mo_fname = 'po_to_mo_tmp.py'
+	context = {
+		'pofiles': pofiles,
+	}
+	content = '\n'.join( [
+		'import os',
+		'import polib',
+		f'context = {json.dumps(context)}',
+		"for file in context['pofiles']:",
+		"    po = polib.pofile(file)",
+		"    po.save_as_mofile( os.path.splitext(file)[0] + '.mo' )",
+	] )
 	with open(po_to_mo_fname, 'w', encoding='utf8') as f:
-		f.write( '\n'.join( [
-				'import os',
-				'import polib',
-				"for file in ({}):",
-				"    po = polib.pofile(file)",
-				"    po.save_as_mofile( os.path.splitext(file)[0] + '.mo' )",
-			] ).format( ','.join( f'r"{po}"' for po in pofiles ) )
-		)
+		f.write( content )
+	
 	subprocess.check_output( [python_exe, po_to_mo_fname] )
 	os.remove( po_to_mo_fname )
 	print( 'Done.' )
@@ -348,14 +354,23 @@ def make_shortcuts( python_exe ):
 	
 	shortcuts_fname = os.path.abspath( os.path.join('.', 'make_shortcuts_tmp.py') )
 	
-	script_info=tuple( (pyw, get_ico_file(pyw), get_name(pyw)) for pyw in pyws )
+	context = {
+		'python_launch_exe': python_launch_exe,
+		'shortcut_info': [ {
+				'script':pyw,
+				'icon':get_ico_file(pyw),
+				'name':get_name(pyw)
+			} for pyw in pyws
+		],
+	}
 	contents = '\n'.join( [
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
-		"for script, ico, name in {script_info}:",
-		"    make_shortcut( terminal=False, startmenu=False, executable=r'{python_launch_exe}', script=script, icon=ico, name=name )",
+		f'context = {json.dumps(context)}',
+		"for shortcut_args in context['shortcut_info']:",
+		"    make_shortcut( terminal=False, startmenu=False, executable=context['python_launch_exe'], **shortcut_args )",
 		"exit(0)",
-	] ).format( python_launch_exe=python_launch_exe, script_info=script_info )
+	] )
 	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( contents )
@@ -371,11 +386,19 @@ def make_shortcuts( python_exe ):
 	
 	# Create a shortcut for this update script.
 	# Remember, we are in the CrossMgr-master directory.
-	icon = os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.png') )
+	context = {
+		'python_exe': python_exe,	# Use the stock python, not the env python.
+		'shortcut_args': {
+			'script': __file__ + ' install',	# Add "install" command to the script.
+			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico') ),
+			'name': 'Update CrossMgr',
+		}
+	}
 	contents = '\n'.join( [
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
-		f"make_shortcut( terminal=True, startmenu=False, executable=r'{python_exe}', script='{__file__} install', icon=r'{icon}', name='Update CrossMgr' )",
+		f'context = {json.dumps(context)}',
+		"make_shortcut( terminal=True, startmenu=False, executable=context['python_exe'], **context['shortcut_args'] )",
 		"exit(0)",
 	] )
 	
