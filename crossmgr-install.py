@@ -353,7 +353,6 @@ def make_shortcuts( python_exe ):
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
 		"for script, ico, name in {script_info}:",
-		#"    print( 'making shortcut for', name )",
 		"    make_shortcut( terminal=False, startmenu=False, executable=r'{python_launch_exe}', script=script, icon=ico, name=name )",
 		"exit(0)",
 	] ).format( python_launch_exe=python_launch_exe, script_info=script_info )
