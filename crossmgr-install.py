@@ -375,8 +375,6 @@ def make_shortcuts( python_exe ):
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( contents )
 	
-	print( contents )
-	
 	try:
 		subprocess.check_output( [python_exe, shortcuts_fname] )
 	except subprocess.CalledProcessError as e:
