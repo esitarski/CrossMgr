@@ -346,11 +346,16 @@ def make_shortcuts( python_exe ):
 		python_launch_exe = python_exe
 
 	def get_ico_file( pyw_file ):
+		extension = {
+			'Windows': 	'.ico',
+			'Linux':	'.png',
+			'Darwin':	'.icns',
+		}
 		fname = os.path.basename( pyw_file )
 		basename = os.path.splitext( fname )[0]
 		dirname = os.path.dirname( pyw_file )
 		dirimages = os.path.join( dirname, basename + 'Images' )
-		return os.path.join( dirimages, basename + ('.ico' if is_windows else '.png') )
+		return os.path.join( dirimages, basename + extension.get(platform.system(), '.png') )
 		
 	pyws = sorted( get_pyws(), reverse=True )
 	
