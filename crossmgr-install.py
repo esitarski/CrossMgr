@@ -155,6 +155,10 @@ def env_setup( full=False ):
 	
 	print( f"Updating python environment (this can take a few minutes the first time): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 	os.chdir( src_dir )
+	
+	# Upgrade pip first.
+	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'pip'] )
+	
 	if platform.system() == 'Linux':
 		# Install wxPython from the "extras" folder.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -163,7 +167,7 @@ def env_setup( full=False ):
 					f_out.write( line )
 
 		# Install all the regular modules.
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 		# Get the name and version of this Linux so we can download it from the wxPython extras folder.
 		os_name, os_version = None, None
@@ -215,7 +219,7 @@ def env_setup( full=False ):
 			for line in f_in:
 				if 'pybabel' not in line:	# Skip pybabel as we don't use it.
 					f_out.write( line )
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'polib', 'pyshortcuts'] )
@@ -341,13 +345,15 @@ def make_shortcuts( python_exe ):
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
 		"for script, ico, name in {script_info}:",
-		"    print( 'making shortcut for', name )",
+		#"    print( 'making shortcut for', name )",
 		"    make_shortcut( terminal=False, startmenu=False, executable=r'{python_launch_exe}', script=script, icon=ico, name=name )",
 		"exit(0)",
 	] ).format( python_launch_exe=python_launch_exe, script_info=script_info )
 	
 	with open(shortcuts_fname, 'w', encoding='utf8') as f:
 		f.write( contents )
+	
+	print( contents )
 	
 	try:
 		subprocess.check_output( [python_exe, shortcuts_fname] )
