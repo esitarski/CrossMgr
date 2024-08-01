@@ -95,10 +95,10 @@ class Primes( wx.Panel ):
 		self.grid.AutoSizeRows( False )
 
 		#---------------------------------------------------------------
-		self.photosButton = wx.Button( self, label='{}...'.format(_('Photos')) )
-		self.photosButton.Bind( wx.EVT_BUTTON, self.onPhotos )
-		self.finishStrip = wx.Button( self, label='{}...'.format(_('Finish Strip')) )
-		self.finishStrip.Bind( wx.EVT_BUTTON, self.onFinishStrip )
+		#self.photosButton = wx.Button( self, label='{}...'.format(_('Photos')) )
+		#self.photosButton.Bind( wx.EVT_BUTTON, self.onPhotos )
+		#self.finishStrip = wx.Button( self, label='{}...'.format(_('Finish Strip')) )
+		#self.finishStrip.Bind( wx.EVT_BUTTON, self.onFinishStrip )
 		self.history = wx.Button( self, label='{}...'.format(_('Passings')) )
 		self.history.Bind( wx.EVT_BUTTON, self.onHistory )
 		
@@ -115,8 +115,8 @@ class Primes( wx.Panel ):
 		self.deleteButton.SetToolTip( wx.ToolTip(_('Delete a Prime')) )
 		self.deleteButton.Bind( wx.EVT_BUTTON, self.onDelete )
 		hsButtons = wx.BoxSizer( wx.HORIZONTAL )
-		hsButtons.Add( self.photosButton, flag=wx.ALL, border=4 )
-		hsButtons.Add( self.finishStrip, flag=wx.ALL, border=4 )
+		#hsButtons.Add( self.photosButton, flag=wx.ALL, border=4 )
+		#hsButtons.Add( self.finishStrip, flag=wx.ALL, border=4 )
 		hsButtons.Add( self.history, flag=wx.ALL, border=4 )
 		hsButtons.AddStretchSpacer()
 		hsButtons.Add( self.newButton, flag=wx.ALL, border=4 )
@@ -176,7 +176,7 @@ class Primes( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if not mainWin:
 			return
-		mainWin.openMenuWindow( 'Passings' )
+		mainWin.openMenuWindow( 'history' )
 	
 	def selectGridRow( self, row ):
 		self.grid.SelectRow( row )
