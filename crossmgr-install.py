@@ -87,14 +87,16 @@ def remove_ignore( file_name, show_error=False ):
 		return True
 	except Exception as e:
 		if show_error:
-			print( f'Error: {e}' )
+			print( f'remove error: {e}', flush=True )
 		return False
 
-def rmdir_ignore( d ):
+def rmdir_ignore( d, show_error=False ):
 	try:
 		shutil.rmtree( d, ignore_errors=True )
 		return True
-	except Exception:
+	except Exception as e:
+		if show_error:
+			print( f'rmdir error: {e}', flush=True )
 		return False
 
 def get_install_dir():
@@ -116,11 +118,7 @@ def src_download():
 	# Unzip everything to the new folder.
 	print( f"Extracting CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
 	
-	# Remove the existing folder and replace its contents..
-	try:
-		shutil.rmtree( src_dir, ignore_errors=True )
-	except Exception as e:
-		pass
+	rmdir_ignore( src_dir, True )
 	
 	with zipfile.ZipFile( zip_file_name ) as z:
 		z.extractall( '.' )
@@ -183,8 +181,10 @@ def env_setup( full=False ):
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
 		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
-	
-	print( f"Updating python environment (takes a few minutes, especially on first install): {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
+	else:
+		print( f"Using existing python environment {os.path.abspath(os.path.join('.',env_dir))}.", flush=True )
+
+	print( "Updating python environment (takes a few minutes, especially on first install)... ", end='', flush=True )
 	os.chdir( src_dir )
 	
 	# Upgrade pip first.
@@ -591,10 +591,7 @@ def uninstall():
 	
 	if os.path.isdir( os.path.join(install_dir, archive_dir) ):
 		print( "Removing CrossMgr archive... ", end='', flush=True )
-		try:
-			shutil.rmtree( os.path.join(install_dir, archive_dir), ignore_errors=True )
-		except Exception as e:
-			print( 'Error: ', e )		
+		rmdir_ignore( os.path.join(install_dir, archive_dir), True )
 		print( 'Done.' )
 	
 	print( "Removing CrossMgr log files... ", end='', flush=True )
