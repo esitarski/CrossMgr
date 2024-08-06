@@ -2712,10 +2712,7 @@ class Race:
 setDefaultRaceAttr( Race )
 
 def highPrecisionTimes():
-	try:
-		return race.highPrecisionTimes
-	except AttributeError:
-		return False
+	return getattr( race, 'highPrecisionTimes', False )
 
 def setCategoryChoice( iSelection, categoryAttribute = None ):
 	try:
