@@ -6,9 +6,132 @@ import Model
 from GetResults import GetResults
 import Utils
 
+from collections.abc import Iterable
+
+class DCStyle:
+	# Class to support setting wxPython dc elements, and restoring them from a "with" statement.
+	#
+	# Example:
+	#
+	# ...
+	# dc.SetPen( wx.RED_PEN )
+	# dc.SetBrush( wx.WHITE_BRUSH )
+	# ...
+	#
+	# with DCStyle( dc, Pen=wx.BLACK_PEN, Brush=wx.TRANSPARENT_BRUSH ):
+	#    ... do some drawing in the DC using the black Pen and and transparent Brush.
+	#    ... other settings of the dc will remain unchanged.
+	#    ... do not use SetPen or SetBrush in the "with" block.
+	#
+	# ... Pen and Brush are automatically restored to their previous values (red, white).
+	#
+	# Explanation: The Pen and Brush are set to the new values inside the "with".
+	# After the "with" block, the Pen and Brush are restored to the previous values.
+	#
+	# It is imperative that you do not modify elements of the dc state inside the "with" block
+	# (eg. SetPen, SetBrush).  Otherwise, they may not be restored.
+	#
+	# If you with to use Set within the block, you can force them to be restored by specifying None
+	# as the value.  For example:
+	#
+	# with DCStyle( dc, Pen=None, Brush=None ):
+	#    dc.SetPen( wx.BLACK_PEN )
+	#    dc.SetBrush( wx.TRANSPARENT_BRUSH )
+	#    ...
+	#    dc.SetBrush( wx.RED_BRUSH )
+	#    .. OK to call SetPen and SetBrush in the block as we indicated None as the values.
+	# 
+	# When DCStyle is used without any keyword arguments, it restores the full state of the dc after the "with" block.
+	# This allows you to change any state in the dc conventionally:
+	#
+	# Example:
+	#
+	# with DCStyle( dc ):
+	#    dc.SetPen( wx.BLACK_PEN )
+	#    dc.SetBrush( wx.TRANSPARENT_BRUSH )
+	#    dc.SetBackground( wx.RED )
+	#    ...
+	#
+	# The dc's full state will be restored after the "with".
+	# Note: this is slower (and less clear, IMHO) than the previous examples.
+	#
+	# Finally, you can create DCStyle contexts ahead of time and reuse them.  For example:
+	#
+	# titleStyle = DCStyle( dc, Font=wx.Font(wx.FontInfo(24).Bold() )
+	# linkStyle = DCStyle( dc, Font=wx.Font(wx.FontInfo(12).Italic().Underline()), TextForeground=wx.Colour(0,0,200) )
+	#
+	# Now you can do:
+	#
+	# with titleStyle:
+	#    # draw a title
+	#    dc.DrawText( "A Title', x, y )
+	#
+	# with linkStyle:
+	#    # draw a link
+	#    dc.DrawText( "link_to_cool_site', x, y )
+	#
+	# This make it easier to maintain formatting styles from a common location. 
+	
+	# Accepted arguments
+	valid_kw = { 
+		'AxisOrientation',
+		'Background',
+		'BackgroundMode',
+		'Brush',
+		'ClippingRegion',
+		'DeviceClippingRegion',
+		'DeviceOrigin',
+		'Font',
+		'LayoutDirection',
+		'LogicalFunction',
+		'LogicalOrigin',
+		'LogicalScale',
+		'MapMode',
+		'Palette',
+		'Pen',
+		'TextBackground',
+		'TextForeground',
+		'TransformMatrix',
+		'UserScale',
+	}
+	
+	def __init__(self, dc, /, **kwargs):
+		self.dc = dc
+		if kwargs:
+			# Check for invalid state parameters.
+			if not all( k in self.valid_kw for k in kwargs.keys() ):
+				for k in kwargs.keys():
+					if k not in self.valid_kw:
+						raise ValueError( f'Invalid argument: "{k}"' )
+			self.contextNew = kwargs.copy()
+
+	def __enter__(self):
+		if not hasattr(self, 'contextNew'):
+			# Cache all current state values to restore on __exit__.
+			self.settersRestore = [('Set'+k, getattr(self.dc, 'Get'+k)()) for k in self.valid_kw]
+		else:
+			# Only cache what is different from the current dc.
+			self.settersRestore = []
+			for k, vNew in self.contextNew.items():
+				if (vCur := getattr(self.dc, 'Get'+k)()) != vNew:
+					funcName = 'Set' + k
+					self.settersRestore.append( (funcName, vCur) )
+					if isinstance(vNew, Iterable):
+						getattr( self.dc, funcName )( *vNew )
+					elif vNew is not None:
+						getattr( self.dc, funcName )( vNew )
+		return self
+
+	def __exit__(self, *args):
+		for funcName, vNew in self.settersRestore:
+			if isinstance(vNew, Iterable):
+				getattr( self.dc, funcName )( *vNew )
+			else:
+				getattr( self.dc, funcName )( vNew )
+
 def LapsToGoCount( t=None ):
-	# Returns a dict indexed by category with a list of (lapsToGo, count).
-	ltgc = defaultdict( list )
+	ltgc = {}		# dict indexed by category with a list of (lapsToGo, count).
+	sc = {}			# dict index by category with counts of each status.
 	
 	race = Model.race
 	if not race or race.isUnstarted() or race.isFinished():
@@ -20,9 +143,13 @@ def LapsToGoCount( t=None ):
 	Finisher = Model.Rider.Finisher
 	lapsToGoCountCategory = defaultdict( int )
 	for category in race.getCategories():
+		statusCategory = defaultdict( int )
+		
 		for rr in GetResults(category):
+			statusCategory[rr.status] += 1
 			if rr.status != Finisher or not rr.raceTimes:
-				break
+				continue
+			
 			try:
 				tSearch = race.riders[rr.num].raceTimeToRiderTime( t )
 			except KeyError:
@@ -36,35 +163,37 @@ def LapsToGoCount( t=None ):
 		ltgc[category] = sorted( lapsToGoCountCategory.items(), reverse=True )
 		lapsToGoCountCategory.clear()
 		
-	return ltgc
+		sc[category] = statusCategory
 
-class lapsToGoCountGraph( wx.Control ):
+	return ltgc, sc
+
+class LapsToGoCountGraph( wx.Control ):
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				name="LapsToGoGraph"):
 		
 		super().__init__(parent, id, pos, size, style, validator, name)
 		
+		self.barBrushes = [wx.Brush(wx.Colour( int(c[:2],16), int(c[2:4],16), int(c[4:],16)), wx.SOLID) for c in ('D8E6AD', 'E6ADD8', 'ADD8E6')]
+		self.statusKeys = sorted( (k for k in Model.Rider.statusSortSeq.keys() if isinstance(k, int)), key=lambda k: Model.Rider.statusSortSeq[k] )
+		
 		self.SetBackgroundColour(wx.WHITE)
 		self.SetBackgroundStyle( wx.BG_STYLE_CUSTOM )
 		
 		# Bind the events related to our control: first of all, we use a
 		# combination of wx.BufferedPaintDC and an empty handler for
-		# wx.EVT_ERASE_BACKGROUND (see later) to reduce flicker
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
-		self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 		self.Bind(wx.EVT_SIZE, self.OnSize)
-		#self.Bind(wx.EVT_MOTION, self.OnMove )
 
 	def DoGetBestSize(self):
-		return wx.Size(128, 128)
+		return wx.Size(64, 128)
 
 	def SetForegroundColour(self, colour):
-		wx.Panel.SetForegroundColour(self, colour)
+		super().SetForegroundColour( colour )
 		self.Refresh()
 		
 	def SetBackgroundColour(self, colour):
-		wx.Panel.SetBackgroundColour(self, colour)
+		super().SetBackgroundColour( colour )
 		self.Refresh()
 		
 	def ShouldInheritColours(self):
@@ -95,25 +224,39 @@ class lapsToGoCountGraph( wx.Control ):
 		dc.SetBackground(backBrush)
 		dc.Clear()
 				
-		lapsToGoCount = LapsToGoCount()
+		lapsToGoCount, statusCount = LapsToGoCount()
 		if not lapsToGoCount or width < 100 or height < 64:
 			return
 			
 		race = Model.race
 		categories = race.getCategories()
 		
-		xLeft = int( width * 0.03 )
+		yTop = xLeft = int( min( height * 0.03, width * 0.03 ) )
+		
 		xRight = width - xLeft
-		yTop = int( height * 0.03 )
 		yBottom = height - yTop
 
 		catHeight = int( (yBottom-yTop) / len(categories) )
-		catFieldHeight = int( catHeight * 0.75 )
-		catLabelHeight = catHeight - catFieldHeight
+		catLabelFontHeight = min( 12, int(catHeight * 0.1) )
+		catLabelHeight = int( catLabelFontHeight * 2.5 )
 		
-		catLabelFontHeight = int(catLabelHeight * 0.8)
+		catFieldHeight = catHeight - catLabelHeight
+		
 		catLabelFont = wx.Font( wx.FontInfo(catLabelFontHeight).FaceName('Helvetica') )
+		catLabelFontBold = wx.Font( wx.FontInfo(catLabelFontHeight).FaceName('Helvetica').Bold() )
 		catLabelMargin = int( (catLabelHeight - catLabelFontHeight) / 2 )
+
+		def statusCountStr( sc ):
+			statusNames = Model.Rider.statusNames
+			translate = _
+			t = []
+			for status in self.statusKeys:
+				if count := sc.get(status, 0):
+					sName = translate(statusNames[status].replace('Finisher','Competing'))
+					t.append( f'{count}={sName}' )
+			return ' | '.join( t )
+
+		titleStyle = DCStyle( dc, Font=catLabelFontBold )
 
 		yCur = yTop
 		for cat in categories:
@@ -137,28 +280,45 @@ class lapsToGoCountGraph( wx.Control ):
 			
 			# Draw the bars and labels.
 			countTotal = sum( count for lap, count in ltg )
-			dc.SetPen( wx.BLACK_PEN )
-			dc.SetBrush( wx.Brush(wx.Colour(173, 216, 230), wx.SOLID) )
+			dc.SetPen( greyPen )
+			dc.SetFont( catLabelFont )
 			for lap, count in ltg:
 				barHeight = round( catFieldHeight * count / countTotal )
 				i = ltg[0][0] - lap
+				dc.SetBrush( self.barBrushes[lap%len(self.barBrushes)] )
 				dc.DrawRectangle( barX[i], yCur + catFieldHeight - barHeight, barX[i+1] - barX[i], barHeight )
-				s = f'{count} @ {lap} {_("to go")}'
+				
+				if lap:
+					s = f'{count} @ {lap} {_("to go")}'
+					tWidth = dc.GetTextExtent( s ).width
+					if tWidth >= barWidth - 2:
+						s = f'{count} @ {lap}'
+						tWidth = dc.GetTextExtent( s ).width
+						if tWidth >= barWidth - 2:
+							s = f'{count}@{lap}'
+							tWidth = dc.GetTextExtent( s ).width
+				else:
+					s = f'{count} {_("Finished")}'
+					tWidth = dc.GetTextExtent( s ).width
+					if tWidth >= barWidth - 2:
+						s = f'{count} @ {_("Fin")}'
+						tWidth = dc.GetTextExtent( s ).width
+						if tWidth >= barWidth - 2:
+							s = f'{count}@{_("Fin")}'
+							tWidth = dc.GetTextExtent( s ).width
+				
 				y = yCur + catHeight - catLabelMargin - catLabelFontHeight
-				tWidth = dc.GetTextExtent( s ).width
 				x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
 				dc.DrawText( s, x, y )
 					
 			# Draw the category label with the on course total.
-			onCourse = countTotal - (ltg[-1][1] if ltg and ltg[-1][0] == 0 else 0)
-			finished = countTotal - onCourse
-			dc.DrawText( f'{cat.fullname}: {onCourse} {_("on course")}, {finished} {_("finished")}', xLeft + catLabelMargin, yCur + catLabelMargin )
+			#onCourse = countTotal - (ltg[-1][1] if ltg and ltg[-1][0] == 0 else 0)
+			#finished = countTotal - onCourse
+			with titleStyle:
+				dc.DrawText( f'{cat.fullname}', xLeft + catLabelMargin, yCur + catLabelMargin )
+			dc.DrawText( f'{statusCountStr(statusCount[cat])}', xLeft + catLabelMargin*4, int(yCur + catLabelMargin + catLabelFontHeight*1.75) )
 			
-			yCur += catHeight
-			
-		
-		
-			
+			yCur += catHeight	
 	
 	def OnEraseBackground(self, event):
 		# This is intentionally empty.
@@ -170,6 +330,6 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,400))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	ltg = lapsToGoCountGraph( mainWin )
+	ltg = LapsToGoCountGraph( mainWin )
 	mainWin.Show()
 	app.MainLoop()

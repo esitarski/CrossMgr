@@ -25,5 +25,5 @@ piexif
 simplejpeg
 virustotal-api
 metaphone
--e git+https://github.com/esitarski/pyllrp.git#egg=pyllrp
+pyllrp
 wxPython
