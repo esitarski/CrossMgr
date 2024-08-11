@@ -18,7 +18,7 @@ class AutoWidthListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 class DNSManager( wx.Panel, listmix.ColumnSorterMixin ):
 	def __init__( self, parent, id = wx.ID_ANY ):
-		wx.Panel.__init__(self, parent, id)
+		super().__init__( parent, id )
 		
 		self.category = None
 

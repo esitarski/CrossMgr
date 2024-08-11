@@ -73,7 +73,7 @@ class Histogram(wx.Control):
 	
 	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
 				size=wx.DefaultSize, style=wx.NO_BORDER, validator=wx.DefaultValidator,
-				name="LineGraph"):
+				name="HistogramGraph"):
 		
 		super().__init__(parent, id, pos, size, style, validator, name)
 		self.SetBackgroundColour('white')

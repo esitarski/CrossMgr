@@ -128,11 +128,11 @@ class GanttChartPanel(wx.Panel):
 		return wx.Size(128, 100)
 
 	def SetForegroundColour(self, colour):
-		wx.Panel.SetForegroundColour(self, colour)
+		super().SetForegroundColour( colour )
 		self.Refresh()
 		
 	def SetBackgroundColour(self, colour):
-		wx.Panel.SetBackgroundColour(self, colour)
+		super().SetBackgroundColour( colour )
 		self.Refresh()
 		
 	def GetDefaultAttributes(self):

@@ -198,7 +198,7 @@ def env_setup( full=False ):
 					f_out.write( line )
 
 		# Install all the regular modules.
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 		# Get the name and version of this Linux so we can download it from the wxPython extras folder.
 		os_name, os_version = None, None
@@ -254,7 +254,7 @@ def env_setup( full=False ):
 			for line in f_in:
 				if 'pybabel' not in line:	# Skip pybabel.  Use polib instead to convert the .po files to .mo.
 					f_out.write( line )
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--use-pep517', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'polib', 'pyshortcuts'] )
