@@ -369,9 +369,9 @@ class RaceHUD(wx.Control):
 						elif yHover + hoverHeight + hoverBorderHeight*2 > height:
 							yHover = height - hoverHeight + hoverBorderHeight*2
 						dc.SetBrush( wx.WHITE_BRUSH )
-						render.DrawPushButton( self, dc, (
-								xHover - hoverBorderWidth, yHover - hoverBorderHeight,
-								hoverWidth + hoverBorderWidth*2, hoverHeight + hoverBorderHeight*2
+						render.DrawPushButton( self, dc, wx.Rect(
+								round(xHover - hoverBorderWidth), round(yHover - hoverBorderHeight),
+								round(hoverWidth + hoverBorderWidth*2), round(hoverHeight + hoverBorderHeight*2)
 							), wx.CONTROL_ISDEFAULT )
 						for label, value in info:
 							dc.DrawText( label, round(xHover+labelHoverWidth-dc.GetTextExtent(label)[0]), round(yHover) )

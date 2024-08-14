@@ -23,6 +23,8 @@ class SetLaps( wx.Dialog ):
 		fields = (
 			('raceLaps', _('Race Laps'), wx.StaticText),
 			(None, None, None),
+			('averageLapTime', _('Ave. Lap Time'), wx.StaticText),
+			(None, None, None),
 			('winnerFinish', _('Winner Time'), wx.StaticText),
 			('winnerDelta', _('Winner Time Delta'), wx.StaticText),
 			('lastOnCourseFinish', _('Last on Course Time'), wx.StaticText),
@@ -139,8 +141,21 @@ class SetLaps( wx.Dialog ):
 
 				lastOnCourseTime = max( lastOnCourseTime or 0.0, rr.raceTimes[-1] - categoryOffset )
 			
-			if c == 0:	# Current laps.
+			if c == 0:
+				# Current race laps.
 				self.column[c].raceLaps.SetLabel( '{}{}'.format(winnerLaps, ' ({})'.format(_('est')) if raceMinutes is not None else '') if winnerLaps else '' )
+				
+				# Average lap time.
+				if lapCur and results and results[0].raceTimes and results[0].status == Finisher:
+					laps = lapCur if race.isRunning() else winnerLaps
+					raceTimes = results[0].raceTimes[:laps+1]
+					if laps > 1:
+						alt = (raceTimes[-1] - raceTimes[1]) / (laps-1)	# Ignore first lap time (could be a run-up).
+					else:
+						alt = (raceTimes[-1] - raceTimes[0]) / laps
+					self.column[c].averageLapTime.SetLabel( Utils.formatTime(alt) )
+				else:
+					self.column[c].averageLapTime.SetLabel( '' )
 
 			self.column[c].timeToGo.SetLabel( Utils.formatTime(winnerTime - tCur) if winnerTime else '')
 			

@@ -225,11 +225,11 @@ def getCategoryStats():
 	def getStatsStr( finished, onCourse, stats ):
 		total = finished + onCourse + sum( stats.values() )
 		if total:
-			b = ['{}({})'.format(_('Starters'), total)]
+			b = [f'{_("Starters")}({total})']
 			if finished:
-				b.append( '{}({})'.format(_('Finished'), finished) )
-			b.extend( '{}({})'.format(statusNames[k], v) for k,v in sorted(stats.items(), key = lambda x: statusSortSeq[x[0]]) )
-			return '{}({}) = {}'.format( _('OnCourse'), onCourse, ' - '.join( b ) )
+				b.append( f'{_("Finished")}({finished})' )
+			b.extend( f'{statusNames[k]}({v})' for k,v in sorted(stats.items(), key = lambda x: statusSortSeq[x[0]]) )
+			return f'{_("OnCourse")}({onCourse}) = {" - ".join(b)}'
 		else:
 			return ''
 
