@@ -23,6 +23,7 @@ Field|Description
 :----|:----------
 Race Laps|Number of laps in the race.  If Race Laps is not specified, the race is run on time, and CrossMgr will compute the laps based on the lap times.
 Winner Time|Estimated winner's finish time.
+Ave. Lap Time|Average Lap Time of the leader.
 Winner Time Delta|Difference (+/-) of the winner's time from the scheduled race time.
 Last on Course Time|Estimated finish time of the last rider on course.  This takes lapped participants into account as appropriate.
 Winner Clock|Clock time (time of day) of winner.

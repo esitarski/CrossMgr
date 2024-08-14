@@ -146,7 +146,7 @@ class SetLaps( wx.Dialog ):
 				self.column[c].raceLaps.SetLabel( '{}{}'.format(winnerLaps, ' ({})'.format(_('est')) if raceMinutes is not None else '') if winnerLaps else '' )
 				
 				# Average lap time.
-				if lapCur and results[0].raceTimes:
+				if lapCur and results and results[0].raceTimes and results[0].status == Finisher:
 					laps = lapCur if race.isRunning() else winnerLaps
 					raceTimes = results[0].raceTimes[:laps+1]
 					if laps > 1:
