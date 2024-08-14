@@ -2,7 +2,6 @@ import wx
 import wx.lib.intctrl
 import bisect
 import datetime
-import statistics
 
 import Model
 import Utils
@@ -147,9 +146,13 @@ class SetLaps( wx.Dialog ):
 				self.column[c].raceLaps.SetLabel( '{}{}'.format(winnerLaps, ' ({})'.format(_('est')) if raceMinutes is not None else '') if winnerLaps else '' )
 				
 				# Average lap time.
-				if results and results[0].lapTimes and results[0].status == Finisher:
-					lapTimes = results[0].lapTimes if not race.isRunning() else results[0].lapTimes[:lapCur]
-					alt = statistics.mean( lapTimes if len(lapTimes) < 2 else lapTimes[1:] )	# Skip the first lap as it may be a run-up.
+				if lapCur and results[0].raceTimes:
+					laps = lapCur if race.isRunning() else winnerLaps
+					raceTimes = results[0].raceTimes[:laps+1]
+					if laps > 1:
+						alt = (raceTimes[-1] - raceTimes[1]) / (laps-1)	# Ignore first lap time (could be a run-up).
+					else:
+						alt = (raceTimes[-1] - raceTimes[0]) / laps
 					self.column[c].averageLapTime.SetLabel( Utils.formatTime(alt) )
 				else:
 					self.column[c].averageLapTime.SetLabel( '' )
