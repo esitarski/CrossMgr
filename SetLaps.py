@@ -2,6 +2,7 @@ import wx
 import wx.lib.intctrl
 import bisect
 import datetime
+import statistics
 
 import Model
 import Utils
@@ -22,6 +23,8 @@ class SetLaps( wx.Dialog ):
 		
 		fields = (
 			('raceLaps', _('Race Laps'), wx.StaticText),
+			(None, None, None),
+			('averageLapTime', _('Ave. Lap Time'), wx.StaticText),
 			(None, None, None),
 			('winnerFinish', _('Winner Time'), wx.StaticText),
 			('winnerDelta', _('Winner Time Delta'), wx.StaticText),
@@ -139,8 +142,16 @@ class SetLaps( wx.Dialog ):
 
 				lastOnCourseTime = max( lastOnCourseTime or 0.0, rr.raceTimes[-1] - categoryOffset )
 			
-			if c == 0:	# Current laps.
+			self.column[c].averageLapTime.SetLabel( '' )
+			if c == 0:
+				# Current race laps.
 				self.column[c].raceLaps.SetLabel( '{}{}'.format(winnerLaps, ' ({})'.format(_('est')) if raceMinutes is not None else '') if winnerLaps else '' )
+				
+				# Average lap time.
+				if results and results[0].lapTimes and results[0].status == Finisher:
+					lapTimes = results[0].lapTimes if not race.isRunning() else results[0].lapTimes[:lapCur]
+					alt = statistics.mean( lapTimes if len(lapTimes) < 2 else lapTimes[1:] )	# Skip the first lap as it may be a run-up.
+					self.column[c].averageLapTime.SetLabel( Utils.formatTime(alt) )
 
 			self.column[c].timeToGo.SetLabel( Utils.formatTime(winnerTime - tCur) if winnerTime else '')
 			

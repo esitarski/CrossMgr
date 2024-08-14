@@ -136,7 +136,7 @@ class RiderResult:
 	
 	def _getWinAndOutComponentKey( self ):
 		return (statusSortSeq[self.status], self.laps if self.laps else 999999, toInt(self.pos), self.lastTime, getattr(self, 'startTime', 0.0) or 0.0, self.num)
-		
+	
 	def _setLapsDown( self, lapsDown ):
 		self.gap = '-{} {}'.format(lapsDown, _('lap') if lapsDown == 1 else _('laps'))
 		self.gapValue = -lapsDown
