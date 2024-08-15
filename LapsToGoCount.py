@@ -129,16 +129,17 @@ class DCStyle:
 			else:
 				getattr( self.dc, funcName )( vNew )
 
+@Model.memoize
 def LapsToGoCount( t=None ):
 	ltgc = {}		# dict indexed by category with a list of (lapsToGo, count).
 	sc = {}			# dict index by category with counts of each status.
 	
 	race = Model.race
-	if not race or race.isUnstarted() or race.isFinished():
+	if not race or race.isUnstarted():
 		return ltgc, sc
 
 	if not t:
-		t = race.curRaceTime()
+		t = race.curRaceTime() if race.isRunning() else float('inf')
 
 	Finisher = Model.Rider.Finisher
 	lapsToGoCountCategory = defaultdict( int )
@@ -175,7 +176,6 @@ class LapsToGoCountGraph( wx.Control ):
 		
 		super().__init__(parent, id, pos, size, style, validator, name)
 		
-		#self.barBrushes = [wx.Brush(wx.Colour( int(c[:2],16), int(c[2:4],16), int(c[4:],16)), wx.SOLID) for c in ('D8E6AD', 'E6ADD8', 'ADD8E6')]
 		self.barBrushes = [wx.Brush(wx.Colour( int(c[:2],16), int(c[2:4],16), int(c[4:],16)), wx.SOLID) for c in ('A0A0A0', 'D3D3D3', 'E5E4E2')]
 		self.statusKeys = sorted( (k for k in Model.Rider.statusSortSeq.keys() if isinstance(k, int)), key=lambda k: Model.Rider.statusSortSeq[k] )
 		
@@ -239,7 +239,7 @@ class LapsToGoCountGraph( wx.Control ):
 		xLeft = 0
 		
 		xRight = width - xLeft
-		yBottom = height - yTop
+		yBottom = height
 
 		catHeight = int( (yBottom-yTop) / len(categories) )
 		
@@ -262,7 +262,7 @@ class LapsToGoCountGraph( wx.Control ):
 						onCourseCount = count - lap0Count
 					sName = translate(statusNames[status].replace('Finisher','Competing'))
 					t.append( f'{count}={sName}' )
-			return f"{onCourseCount}={_('OnCourse')} | " + ' | '.join( t )
+			return f"{onCourseCount}={_('OnCourse')}" + (" | " if t else '') + ' | '.join( t )
 
 		titleStyle = DCStyle( dc, Font=catLabelFontBold )
 		chartLineStyle = DCStyle( dc, Pen=greyPen, Brush=wx.TRANSPARENT_BRUSH )
@@ -270,9 +270,10 @@ class LapsToGoCountGraph( wx.Control ):
 		lap0Total = finisherTotal = 0
 		yCur = yTop
 		for cat in categories:
-			# Draw the chart lines.
-			with chartLineStyle:
-				dc.DrawRectangle( xLeft, yCur, xRight-xLeft, catFieldHeight )
+			if barFieldHeight >= catLabelFontHeight:
+				# Draw the chart lines.
+				with chartLineStyle:
+					dc.DrawRectangle( xLeft, yCur, xRight-xLeft, catFieldHeight )
 			
 			# Draw the lap bars.
 			ltg = lapsToGoCount[cat]
@@ -301,31 +302,34 @@ class LapsToGoCountGraph( wx.Control ):
 						s = f'{lap}'
 						tWidth = dc.GetTextExtent( s ).width
 				else:
-					lap0Count = lap
-					lap0Total += lap
+					lap0Count = count
+					lap0Total += count
 					s = f'{_("Finished")}'
 					tWidth = dc.GetTextExtent( s ).width
 					if tWidth >= barTextWidth:
 						s = f'{_("Fin")}'
 						tWidth = dc.GetTextExtent( s ).width
 				
-				barHeight = round( barFieldHeight * count / countTotal )
-				if barHeight < catLabelFontHeight:
+				if barFieldHeight < catLabelFontHeight:
 					continue
+
+				barHeight = round( barFieldHeight * count / countTotal )
 				
 				i = ltg[0][0] - lap
 				dc.SetBrush( self.barBrushes[lap%len(self.barBrushes)] )
 				dc.DrawRectangle( barX[i], yCur + catFieldHeight - barHeight, barX[i+1] - barX[i], barHeight )
 				
-				y = yCur + catHeight - catLabelMargin - catLabelFontHeight
-				x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
-				dc.DrawText( s, x, y )
+				if tWidth < barTextWidth:
+					y = yCur + catHeight - catLabelMargin - catLabelFontHeight
+					x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
+					dc.DrawText( s, x, y )
 
 				s = f'{count}'
 				tWidth = dc.GetTextExtent( s ).width
-				y = min( yCur + catFieldHeight - catLabelFontHeight- catLabelFontHeight//4, yCur + catFieldHeight - barHeight + catLabelFontHeight//2 )
-				x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
-				dc.DrawText( s, x, y )
+				if tWidth < barTextWidth:
+					y = min( yCur + catFieldHeight - catLabelFontHeight- catLabelFontHeight//4, yCur + catFieldHeight - barHeight + catLabelFontHeight//2 )
+					x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
+					dc.DrawText( s, x, y )
 					
 			# Draw the category label with the status totals.
 			with titleStyle:
