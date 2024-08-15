@@ -2686,7 +2686,7 @@ class MainWin( wx.Frame ):
 		self.doCleanup()
 		wx.Exit()
 
-	@logCall
+	#@logCall
 	def writeRace( self, doCommit = True ):
 		if doCommit:
 			self.commit()

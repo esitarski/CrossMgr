@@ -20,6 +20,7 @@ from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
 from SetLaps import SetLaps
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
+from LapsToGoCount import LapsToGoCountGraph
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
@@ -419,6 +420,7 @@ class NumKeypad( wx.Panel ):
 		#------------------------------------------------------------------------------
 		# Rider Lap Count.
 		rcVertical = wx.BoxSizer( wx.VERTICAL )
+		'''
 		rcVertical.AddSpacer( 32 )
 
 		self.categoryStatsList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
@@ -427,7 +429,9 @@ class NumKeypad( wx.Panel ):
 		self.categoryStatsList.AppendColumn( _('Composition'), wx.LIST_FORMAT_LEFT,	130 )
 		self.categoryStatsList.SetColumnWidth( 0, wx.LIST_AUTOSIZE_USEHEADER )
 		self.categoryStatsList.SetColumnWidth( 1, wx.LIST_AUTOSIZE_USEHEADER )
-		rcVertical.Add( self.categoryStatsList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
+		'''
+		self.categoryStatsList = LapsToGoCountGraph( panel )
+		rcVertical.Add( self.categoryStatsList, 1, flag=wx.EXPAND|wx.TOP|wx.RIGHT, border = 4 )
 		
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
 		self.horizontalMainSizer = horizontalMainSizer
@@ -663,6 +667,8 @@ class NumKeypad( wx.Panel ):
 		wx.CallAfter( self.refreshRaceHUD )
 	
 	def refreshRiderCategoryStatsList( self ):
+		self.categoryStatsList.Refresh()
+		'''
 		self.categoryStatsList.DeleteAllItems()
 		race = Model.race
 		if not race:
@@ -693,6 +699,7 @@ class NumKeypad( wx.Panel ):
 			
 		self.categoryStatsList.SetColumnWidth( 0, wx.LIST_AUTOSIZE_USEHEADER )
 		self.categoryStatsList.SetColumnWidth( 1, wx.LIST_AUTOSIZE_USEHEADER )
+		'''
 
 	def refreshLastRiderOnCourse( self ):
 		race = Model.race

@@ -135,7 +135,7 @@ def LapsToGoCount( t=None ):
 	
 	race = Model.race
 	if not race or race.isUnstarted() or race.isFinished():
-		return ltgc
+		return ltgc, sc
 
 	if not t:
 		t = race.curRaceTime()
@@ -155,10 +155,11 @@ def LapsToGoCount( t=None ):
 			except KeyError:
 				continue
 			
-			if rr.raceTimes[-1] <= tSearch or not (lap := bisect_right(rr.raceTimes, tSearch) ):
+			if not (lap := bisect_right(rr.raceTimes, tSearch) ):
 				continue
+			lap -= 1
 			
-			lapsToGoCountCategory[len(rr.raceTimes) - lap] += 1
+			lapsToGoCountCategory[len(rr.raceTimes) - lap - 1] += 1
 		
 		ltgc[category] = sorted( lapsToGoCountCategory.items(), reverse=True )
 		lapsToGoCountCategory.clear()
@@ -174,7 +175,8 @@ class LapsToGoCountGraph( wx.Control ):
 		
 		super().__init__(parent, id, pos, size, style, validator, name)
 		
-		self.barBrushes = [wx.Brush(wx.Colour( int(c[:2],16), int(c[2:4],16), int(c[4:],16)), wx.SOLID) for c in ('D8E6AD', 'E6ADD8', 'ADD8E6')]
+		#self.barBrushes = [wx.Brush(wx.Colour( int(c[:2],16), int(c[2:4],16), int(c[4:],16)), wx.SOLID) for c in ('D8E6AD', 'E6ADD8', 'ADD8E6')]
+		self.barBrushes = [wx.Brush(wx.Colour( int(c[:2],16), int(c[2:4],16), int(c[4:],16)), wx.SOLID) for c in ('A0A0A0', 'D3D3D3', 'E5E4E2')]
 		self.statusKeys = sorted( (k for k in Model.Rider.statusSortSeq.keys() if isinstance(k, int)), key=lambda k: Model.Rider.statusSortSeq[k] )
 		
 		self.SetBackgroundColour(wx.WHITE)
@@ -231,94 +233,114 @@ class LapsToGoCountGraph( wx.Control ):
 		race = Model.race
 		categories = race.getCategories()
 		
-		yTop = xLeft = int( min( height * 0.03, width * 0.03 ) )
+		catLabelFontHeight = min( 12, int(height * 0.1) )
+		catLabelHeight = int( catLabelFontHeight * 2.5 )
+		yTop = catLabelHeight
+		xLeft = 0
 		
 		xRight = width - xLeft
 		yBottom = height - yTop
 
 		catHeight = int( (yBottom-yTop) / len(categories) )
-		catLabelFontHeight = min( 12, int(catHeight * 0.1) )
-		catLabelHeight = int( catLabelFontHeight * 2.5 )
 		
 		catFieldHeight = catHeight - catLabelHeight
+		barFieldHeight = catFieldHeight - catLabelHeight
 		
 		catLabelFont = wx.Font( wx.FontInfo(catLabelFontHeight).FaceName('Helvetica') )
 		catLabelFontBold = wx.Font( wx.FontInfo(catLabelFontHeight).FaceName('Helvetica').Bold() )
 		catLabelMargin = int( (catLabelHeight - catLabelFontHeight) / 2 )
 
-		def statusCountStr( sc ):
+		Finisher = Model.Rider.Finisher
+		def statusCountStr( sc, lap0Count ):
 			statusNames = Model.Rider.statusNames
 			translate = _
 			t = []
+			onCourseCount = 0
 			for status in self.statusKeys:
 				if count := sc.get(status, 0):
+					if status == Finisher:
+						onCourseCount = count - lap0Count
 					sName = translate(statusNames[status].replace('Finisher','Competing'))
 					t.append( f'{count}={sName}' )
-			return ' | '.join( t )
+			return f"{onCourseCount}={_('OnCourse')} | " + ' | '.join( t )
 
 		titleStyle = DCStyle( dc, Font=catLabelFontBold )
+		chartLineStyle = DCStyle( dc, Pen=greyPen, Brush=wx.TRANSPARENT_BRUSH )
 
+		lap0Total = finisherTotal = 0
 		yCur = yTop
 		for cat in categories:
-			# Draw the lines.
-			dc.SetPen( greyPen )
-			dc.DrawLine( xLeft, yCur + catFieldHeight, xLeft, yCur )
-			dc.DrawLine( xRight, yCur + catFieldHeight, xRight, yCur )
-			dc.DrawLine( xLeft, yCur + catFieldHeight, xRight, yCur + catFieldHeight )
-			dc.DrawLine( xLeft, yCur, xRight, yCur )
+			# Draw the chart lines.
+			with chartLineStyle:
+				dc.DrawRectangle( xLeft, yCur, xRight-xLeft, catFieldHeight )
 			
 			# Draw the lap bars.
 			ltg = lapsToGoCount[cat]
 			barCount = 1
 			if ltg:
 				barCount = ltg[0][0] - ltg[-1][0] + 1
-				
+			
+			finisherTotal += statusCount[cat].get( Finisher, 0 )
+			
 			# Compute the barwidths so they take the entire horizontal line.
 			barWidth = (xRight - xLeft) / barCount
 			barX = [round( xLeft + i * barWidth ) for i in range(barCount)]
 			barX.append( xRight )
+			barTextWidth = barWidth - 2
 			
 			# Draw the bars and labels.
 			countTotal = sum( count for lap, count in ltg )
 			dc.SetPen( greyPen )
 			dc.SetFont( catLabelFont )
+			lap0Count = 0
 			for lap, count in ltg:
-				barHeight = round( catFieldHeight * count / countTotal )
+				if lap:
+					s = f'{lap} {_("to go")}'
+					tWidth = dc.GetTextExtent( s ).width
+					if tWidth >= barTextWidth:
+						s = f'{lap}'
+						tWidth = dc.GetTextExtent( s ).width
+				else:
+					lap0Count = lap
+					lap0Total += lap
+					s = f'{_("Finished")}'
+					tWidth = dc.GetTextExtent( s ).width
+					if tWidth >= barTextWidth:
+						s = f'{_("Fin")}'
+						tWidth = dc.GetTextExtent( s ).width
+				
+				barHeight = round( barFieldHeight * count / countTotal )
+				if barHeight < catLabelFontHeight:
+					continue
+				
 				i = ltg[0][0] - lap
 				dc.SetBrush( self.barBrushes[lap%len(self.barBrushes)] )
 				dc.DrawRectangle( barX[i], yCur + catFieldHeight - barHeight, barX[i+1] - barX[i], barHeight )
 				
-				if lap:
-					s = f'{count} @ {lap} {_("to go")}'
-					tWidth = dc.GetTextExtent( s ).width
-					if tWidth >= barWidth - 2:
-						s = f'{count} @ {lap}'
-						tWidth = dc.GetTextExtent( s ).width
-						if tWidth >= barWidth - 2:
-							s = f'{count}@{lap}'
-							tWidth = dc.GetTextExtent( s ).width
-				else:
-					s = f'{count} {_("Finished")}'
-					tWidth = dc.GetTextExtent( s ).width
-					if tWidth >= barWidth - 2:
-						s = f'{count} @ {_("Fin")}'
-						tWidth = dc.GetTextExtent( s ).width
-						if tWidth >= barWidth - 2:
-							s = f'{count}@{_("Fin")}'
-							tWidth = dc.GetTextExtent( s ).width
-				
 				y = yCur + catHeight - catLabelMargin - catLabelFontHeight
 				x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
 				dc.DrawText( s, x, y )
+
+				s = f'{count}'
+				tWidth = dc.GetTextExtent( s ).width
+				y = min( yCur + catFieldHeight - catLabelFontHeight- catLabelFontHeight//4, yCur + catFieldHeight - barHeight + catLabelFontHeight//2 )
+				x = barX[i] + (barX[i+1] - barX[i] - tWidth) // 2
+				dc.DrawText( s, x, y )
 					
-			# Draw the category label with the on course total.
-			#onCourse = countTotal - (ltg[-1][1] if ltg and ltg[-1][0] == 0 else 0)
-			#finished = countTotal - onCourse
+			# Draw the category label with the status totals.
 			with titleStyle:
-				dc.DrawText( f'{cat.fullname}', xLeft + catLabelMargin, yCur + catLabelMargin )
-			dc.DrawText( f'{statusCountStr(statusCount[cat])}', xLeft + catLabelMargin*4, int(yCur + catLabelMargin + catLabelFontHeight*1.75) )
+				catText = f'{cat.fullname}'
+				titleTextWidth = dc.GetTextExtent(catText).width
+				dc.DrawText( catText, xLeft + catLabelMargin, yCur + catLabelMargin )
+			dc.DrawText( f'{statusCountStr(statusCount[cat], lap0Count)}', xLeft + titleTextWidth + catLabelMargin*2, int(yCur + catLabelMargin) )
 			
-			yCur += catHeight	
+			yCur += catHeight
+			
+		with titleStyle:
+			catText = f'{_("All")}'
+			titleTextWidth = dc.GetTextExtent(catText).width
+			dc.DrawText( catText, xLeft + catLabelMargin, catLabelFontHeight//2 )
+		dc.DrawText( f'{finisherTotal-lap0Total}={_("OnCourse")}', xLeft + titleTextWidth + catLabelMargin*2, catLabelFontHeight//2 )
 	
 	def OnEraseBackground(self, event):
 		# This is intentionally empty.
