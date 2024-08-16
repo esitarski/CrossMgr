@@ -137,18 +137,37 @@ def LapsToGoCount( t=None ):
 	race = Model.race
 	if not race or race.isUnstarted():
 		return ltgc, sc
+	isTimeTrial = race.isTimeTrial
 
 	if not t:
 		t = race.curRaceTime() if race.isRunning() else float('inf')
 
 	Finisher = Model.Rider.Finisher
+	NP = Model.Rider.NP
+	
 	lapsToGoCountCategory = defaultdict( int )
 	for category in race.getCategories():
-		statusCategory = defaultdict( int )
+		categoryLaps = category.getNumLaps()
 		
+		statusCategory = defaultdict( int )
 		for rr in GetResults(category):
 			statusCategory[rr.status] += 1
-			if rr.status != Finisher or not rr.raceTimes:
+			
+			if rr.status != Finisher:
+				if isTimeTrial and rr.status == NP and categoryLaps is not None:
+					# Record TT riders who have started with the full laps.
+					rider = race.riders[rr.num]
+					# print( rider.num, rider.firstTime, t, rr.status, categoryLaps )
+					if rider.firstTime is not None and t >= rider.firstTime:
+						lapsToGoCountCategory[categoryLaps] += 1
+						# Reclassify NP to Finisher as we know the rider is on course.
+						statusCategory[NP] -= 1
+						statusCategory[Finisher] += 1
+				continue
+
+			if not rr.raceTimes:
+				if isTimeTrial and categoryLaps is not None:
+					lapsToGoCountCategory[categoryLaps] += 1
 				continue
 			
 			try:
@@ -201,7 +220,7 @@ class LapsToGoCountGraph( wx.Control ):
 	def ShouldInheritColours(self):
 		return True
 
-	def OnPaint(self, event ):
+	def OnPaint(self, event):
 		dc = wx.PaintDC(self)
 		self.Draw(dc)
 	

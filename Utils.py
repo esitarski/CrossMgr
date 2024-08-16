@@ -629,8 +629,10 @@ def refresh():
 		mainWin.refresh()
 
 def refreshForecastHistory():
-	if mainWin is not None:
+	try:
 		mainWin.forecastHistory.refresh()
+	except AttributeError:
+		pass
 
 def updateUndoStatus():
 	if mainWin is not None:
