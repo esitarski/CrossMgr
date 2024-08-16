@@ -2686,7 +2686,7 @@ class MainWin( wx.Frame ):
 		self.doCleanup()
 		wx.Exit()
 
-	@logCall
+	#@logCall
 	def writeRace( self, doCommit = True ):
 		if doCommit:
 			self.commit()
@@ -4065,6 +4065,9 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		self.updateRaceClock()
 
 	def refreshTTStart( self ):
+		if Model.race:
+			# If a rider started the TT, force the results to be re-computed if necessary.
+			Model.race.setChanged()
 		if self.notebook.GetSelection() in (self.iHistoryPage, self.iRecordPage):
 			self.refreshCurrentPage()
 

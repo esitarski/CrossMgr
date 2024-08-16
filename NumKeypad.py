@@ -20,6 +20,7 @@ from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
 from SetLaps import SetLaps
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
+from LapsToGoCount import LapsToGoCountGraph
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
@@ -419,15 +420,8 @@ class NumKeypad( wx.Panel ):
 		#------------------------------------------------------------------------------
 		# Rider Lap Count.
 		rcVertical = wx.BoxSizer( wx.VERTICAL )
-		rcVertical.AddSpacer( 32 )
-
-		self.categoryStatsList = wx.ListCtrl( panel, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
-		self.categoryStatsList.SetFont( wx.Font(int(fontSize*0.9), wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
-		self.categoryStatsList.AppendColumn( _('Category'),	wx.LIST_FORMAT_LEFT,	140 )
-		self.categoryStatsList.AppendColumn( _('Composition'), wx.LIST_FORMAT_LEFT,	130 )
-		self.categoryStatsList.SetColumnWidth( 0, wx.LIST_AUTOSIZE_USEHEADER )
-		self.categoryStatsList.SetColumnWidth( 1, wx.LIST_AUTOSIZE_USEHEADER )
-		rcVertical.Add( self.categoryStatsList, 1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, border = 4 )
+		self.lapsToGoCountGraph = LapsToGoCountGraph( panel )
+		rcVertical.Add( self.lapsToGoCountGraph, 1, flag=wx.EXPAND|wx.TOP|wx.RIGHT, border = 4 )
 		
 		horizontalMainSizer.Add( rcVertical, 1, flag=wx.EXPAND|wx.LEFT, border = 4 )
 		self.horizontalMainSizer = horizontalMainSizer
@@ -663,36 +657,7 @@ class NumKeypad( wx.Panel ):
 		wx.CallAfter( self.refreshRaceHUD )
 	
 	def refreshRiderCategoryStatsList( self ):
-		self.categoryStatsList.DeleteAllItems()
-		race = Model.race
-		if not race:
-			return
-		
-		def appendListRow( row = tuple(), colour = None, bold = None ):
-			r = self.categoryStatsList.InsertItem( self.categoryStatsList.GetItemCount(), '{}'.format(row[0]) if row else '' )
-			for c in range(1, len(row)):
-				self.categoryStatsList.SetItem( r, c, '{}'.format(row[c]) )
-			if colour is not None:
-				item = self.categoryStatsList.GetItem( r )
-				item.SetTextColour( colour )
-				self.categoryStatsList.SetItem( item )
-			if bold is not None:
-				item = self.categoryStatsList.GetItem( r )
-				font = self.categoryStatsList.GetFont()
-				font.SetWeight( wx.FONTWEIGHT_BOLD )
-				item.SetFont( font )
-				self.categoryStatsList.SetItem( item )
-			return r
-		
-		for catStat in getCategoryStats():
-			if catStat[0] == _('All'):
-				colour, bold = wx.BLUE, None
-			else:
-				colour = bold = None
-			appendListRow( catStat, colour, bold )
-			
-		self.categoryStatsList.SetColumnWidth( 0, wx.LIST_AUTOSIZE_USEHEADER )
-		self.categoryStatsList.SetColumnWidth( 1, wx.LIST_AUTOSIZE_USEHEADER )
+		self.lapsToGoCountGraph.Refresh()
 
 	def refreshLastRiderOnCourse( self ):
 		race = Model.race
