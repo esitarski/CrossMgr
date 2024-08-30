@@ -308,7 +308,7 @@ def fix_dependencies( python_exe ):
 	print( 'Done.' )
 
 	print( "Compiling all .py files... ", end='', flush=True )
-	subprocess.check_output( [python_exe, '-m', 'compileall', '-qq', ] )
+	subprocess.check_output( [python_exe, '-m', 'compileall', '-q', ] )
 	print( 'Done.' )
 
 def get_pyws():

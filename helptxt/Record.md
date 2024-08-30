@@ -188,3 +188,12 @@ This dialog shows the estimated finish times based on the number of laps, and al
 
 The __Set Laps__ dialog is also the easiest way to set the __Early Bell Time__.
 For more details, see [SetLaps][].
+
+## Riders on Course
+
+This display shows the overall number of riders on course.
+Rider status is then summarized by Start Wave (OnCourse, Finished, DNS, etc.).
+Each category also has a chart showing the number of riders by lap to go.
+
+__Note:__ Lapped riders (and riders projected to be lapped) will show as fewer laps to go than the leader.
+This is expected, but can be surprising.
