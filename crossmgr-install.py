@@ -358,7 +358,53 @@ def make_bin( python_exe ):
 
 def get_name( pyw_file ):
 	return os.path.splitext( os.path.basename( pyw_file ) )[0]
+
+def get_ico_file( pyw_file ):
+	extension = {
+		'Windows': 	'.ico',
+		'Linux':	'.png',
+		'Darwin':	'.icns',
+	}
+	fname = os.path.basename( pyw_file )
+	basename = os.path.splitext( fname )[0]
+	dirname = os.path.dirname( pyw_file )
+	dirimages = os.path.join( dirname, basename + 'Images' )
+	return os.path.join( dirimages, basename + extension.get(platform.system(), '.png') )
 		
+def make_file_associations( python_exe='', uninstall_assoc=False ):
+	suffix_for_name = {
+		'CrossMgr':		'.cmn',
+		'SeriesMgr':	'.smn',
+		'SprintMgr':	'.smr',
+	}
+	
+	if is_windows:
+		print( "{} file associations... ".format(['Making','Uninstalling'][uninstall_assoc]), end='', flush=True )
+
+		python_launch_exe = python_exe.replace( 'python.exe', 'pythonw.exe' )
+
+		assoc_fname = os.path.abspath( os.path.join('.', 'make_assoc_tmp.bat') )
+		with open(assoc_fname, 'w', encoding='utf8') as f:
+			for pyw in get_pyws():
+				name = get_name( pyw )
+				if name in suffix_for_name:
+					if uninstall_assoc:
+						f.write( f'assoc {suffix_for_name[name]}=\n' )
+					else:
+						f.write( f'assoc {suffix_for_name[name]}={name}\n' )
+						f.write( f'ftype {name}="{python_launch_exe}" "{pyw}" "%1"\n' )
+						f.write( fr'reg delete hkcr\{name}\DefaultIcon' + '\n' )
+						f.write( fr'reg add hkcr\{name}\DefaultIcon /ve /d "{get_ico_file(pyw)}"' + '\n' )
+
+		subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
+		remove_ignore( assoc_fname )
+
+		print( 'Done.' )
+	elif is_mac:
+		pass
+	elif is_linux:
+		pass
+
 def make_shortcuts( python_exe ):
 	print( "Making desktop shortcuts... ", end='', flush=True )
 	
@@ -367,18 +413,6 @@ def make_shortcuts( python_exe ):
 	else:
 		python_launch_exe = python_exe
 
-	def get_ico_file( pyw_file ):
-		extension = {
-			'Windows': 	'.ico',
-			'Linux':	'.png',
-			'Darwin':	'.icns',
-		}
-		fname = os.path.basename( pyw_file )
-		basename = os.path.splitext( fname )[0]
-		dirname = os.path.dirname( pyw_file )
-		dirimages = os.path.join( dirname, basename + 'Images' )
-		return os.path.join( dirimages, basename + extension.get(platform.system(), '.png') )
-		
 	pyws = sorted( get_pyws(), reverse=True )
 	
 	shortcuts_fname = os.path.abspath( os.path.join('.', 'make_shortcuts_tmp.py') )
@@ -519,6 +553,7 @@ def install( full=False ):
 	fix_dependencies( python_exe )
 	make_bin( python_exe )
 	make_shortcuts( python_exe )
+	make_file_associations( python_exe )
 
 	print( "CrossMgr updated successfully." )
 	print( "Check your desktop for shortcuts which allow you to run the CrossMgr applications." )
@@ -547,6 +582,8 @@ def uninstall():
 	else:
 		pyws = []
 	
+	make_file_associations( uninstall_assoc=True )
+	
 	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
 	
 	if not is_windows:
@@ -574,7 +611,7 @@ def uninstall():
 		print( 'Done.' )
 	else:
 		print( '\nError removing CrossMgr desktop shortcuts.  You must remove them manually.' )
-		
+	
 	print( "Removing CrossMgr source... ", end='', flush=True )
 	try:
 		shutil.rmtree( os.path.join(install_dir, src_dir), ignore_errors=True )
