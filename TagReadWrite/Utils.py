@@ -223,6 +223,8 @@ else:
 		dirName = os.path.dirname(dirName)
 	if 'TagReadWrite?' in os.path.basename(dirName):
 		dirName = os.path.dirname(dirName)
+	if not os.path.isdir( os.path.join(dirName, 'TagReadWriteImages') ):
+		dirName = os.path.dirname(dirName)
 
 	if os.path.isdir( os.path.join(dirName, 'TagReadWriteImages') ):
 		pass
