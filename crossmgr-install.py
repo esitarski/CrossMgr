@@ -260,7 +260,9 @@ def env_setup( full=False ):
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
-	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'polib', 'pyshortcuts'] )
+	# If Windows, include the win32 module.
+	extra_modules = ['polib', 'pyshortcuts'] + (['pywin32'] if is_windows else [])
+	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet'] + extra_modules )
 	print( 'Done.' )
 
 	return python_exe
@@ -375,8 +377,6 @@ def get_ico_file( pyw_file ):
 	return os.path.join( dirimages, basename + extension.get(platform.system(), '.png') )
 		
 def make_file_associations( python_exe='', uninstall_assoc=False ):
-	return	# Skip file associations until we figure out how to do it.
-	
 	suffix_for_name = {
 		'CrossMgr':		'.cmn',
 		'SeriesMgr':	'.smn',
@@ -401,7 +401,11 @@ def make_file_associations( python_exe='', uninstall_assoc=False ):
 						f.write( fr'reg delete hkcr\{name}\DefaultIcon' + '\n' )
 						f.write( fr'reg add hkcr\{name}\DefaultIcon /ve /d "{get_ico_file(pyw)}"' + '\n' )
 
-		subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
+		import ctypes
+		ret = ctypes.windll.shell32.ShellExecuteW(0, 'runas', assoc_fname,  '', os.path.dirname(assoc_fname), 1)
+		print( 'ret', ret )
+		
+		#subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
 		remove_ignore( assoc_fname )
 
 		print( 'Done.' )
@@ -567,7 +571,7 @@ def install( full=False ):
 	bin_dir = os.path.abspath( os.path.join( '.', src_dir, 'bin') )
 	print( f"These can be found in {bin_dir}." )
 	print()
-	print( 'Use these scripts to configure auto-launch for CrossMgr file extensions.' )
+	print( 'Use these scripts to configure file associations, if necessary.' )
 	print()
 	print( 'Information about the CrossMgr suite of applications can be found at: https://github.com/esitarski/CrossMgr')
 	print( 'The CrossMgr users group is here: https://groups.google.com/g/crossmgrsoftware' )
