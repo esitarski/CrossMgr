@@ -215,7 +215,7 @@ def env_setup( full=False ):
 		wxpython_versions = get_wxpython_versions()
 
 		# Check if this os is supported.
-		if os_name not in wxpython_versions:
+		if os_name in wxpython_versions:
 			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
 			print( f'See {wxpython_extras_url} for supported Linux platforms and versions.' )
 			uninstall()
@@ -229,21 +229,24 @@ def env_setup( full=False ):
 		if i and f_v[i] > f_os_v:
 			i -= 1
 		
-		if os_version != os_versions[i][1]:
-			print( f'\n***** Warning: CrossMgr is not supported on: {os_name}-{os_version} *****' )
-			print( 'Using closest version: {os_name}-{os_versions[i][1]}' )
-			print( 'This may not work!' )
-
-		os_version = os_versions[i][1]
-		
-		# Get the name of the python extras url.
-		url = f'{wxpython_extras_url}/{os_name}-{os_version}'
-		
-		# Install wxPyhon from the extras url.
-		subprocess.check_output( [
-			python_exe, '-m',
-			'pip', 'install', '--upgrade', '--quiet', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
+		if os_version == os_versions[i][1]:			
+			# Get the name of the python extras url.
+			url = f'{wxpython_extras_url}/{os_name}-{os_version}'
+			
+			# Install wxPyhon from the extras url.
+			subprocess.check_output( [
+				python_exe, '-m',
+				'pip', 'install', '--upgrade', '--quiet', '-f', url, 'wxPython',
+			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
+		else:
+			print( f'\n***** Warning: wxPython does not have a prebuilt version for "{os_name}-{os_version}" *****' )
+			print( 'wxPython will be installed and built from source.' )
+			print( 'This could take 30 min or longer on the first install.  Be very patient.' )
+						
+			subprocess.check_output( [
+				python_exe, '-m',
+				'pip', 'install', '--upgrade', '--quiet', 'wxPython',
+			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -372,6 +375,8 @@ def get_ico_file( pyw_file ):
 	return os.path.join( dirimages, basename + extension.get(platform.system(), '.png') )
 		
 def make_file_associations( python_exe='', uninstall_assoc=False ):
+	return	# Skip file associations until we figure out how to do it.
+	
 	suffix_for_name = {
 		'CrossMgr':		'.cmn',
 		'SeriesMgr':	'.smn',
