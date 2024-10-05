@@ -184,11 +184,11 @@ def env_setup( full=False ):
 	else:
 		print( f"Using existing python environment {os.path.abspath(os.path.join('.',env_dir))}.", flush=True )
 
-	print( "Updating python environment (takes a few minutes, especially on first install)... ", end='', flush=True )
+	print( "Updating python environment (may take a few minutes, especially on first install)... ", end='', flush=True )
 	os.chdir( src_dir )
 	
 	# Upgrade pip first.
-	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'pip'] )
+	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'] )
 	
 	if is_linux:
 		# Install wxPython from the "extras" folder.
@@ -198,7 +198,7 @@ def env_setup( full=False ):
 					f_out.write( line )
 
 		# Install all the regular modules.
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 
 		# Get the name and version of this Linux so we can download it from the wxPython extras folder.
 		os_name, os_version = None, None
@@ -236,7 +236,7 @@ def env_setup( full=False ):
 			# Install wxPyhon from the extras url.
 			subprocess.check_output( [
 				python_exe, '-m',
-				'pip', 'install', '--upgrade', '--quiet', '-f', url, 'wxPython',
+				'pip', 'install', '--upgrade', '-f', url, 'wxPython',
 			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 		else:
 			print( f'\n***** Warning: wxPython does not have a prebuilt version for "{os_name}-{os_version}" *****' )
@@ -245,7 +245,7 @@ def env_setup( full=False ):
 						
 			subprocess.check_output( [
 				python_exe, '-m',
-				'pip', 'install', '--upgrade', '--quiet', 'wxPython',
+				'pip', 'install', '--upgrade', 'wxPython',
 			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
@@ -257,12 +257,12 @@ def env_setup( full=False ):
 			for line in f_in:
 				if 'pybabel' not in line:	# Skip pybabel.  Use polib instead to convert the .po files to .mo.
 					f_out.write( line )
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	# If Windows, include the win32 module.
 	extra_modules = ['polib', 'pyshortcuts'] + (['pywin32'] if is_windows else [])
-	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet'] + extra_modules )
+	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )
 	print( 'Done.' )
 
 	return python_exe
@@ -403,7 +403,6 @@ def make_file_associations( python_exe='', uninstall_assoc=False ):
 
 		import ctypes
 		ret = ctypes.windll.shell32.ShellExecuteW(0, 'runas', assoc_fname,  '', os.path.dirname(assoc_fname), 1)
-		print( 'ret', ret )
 		
 		#subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
 		remove_ignore( assoc_fname )
@@ -595,26 +594,18 @@ def uninstall():
 	
 	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
 	
-	if not is_windows:
+	if is_windows:
 		desktop_dir = os.path.join( home_dir, 'Desktop' )
+		if not os.path.isdir(desktop_dir):
+			desktop_dir = os.path.join( home_dir, 'OneDrive', 'Desktop' )
 	else:
-		# Get the desktop folder.  We have to call the python in the env to get winshell.
-		python_exe = get_python_exe( os.path.join(install_dir, env_dir) )
-		fname = os.path.join( install_dir, src_dir, 'get_desktop_tmp.py' )
-		with open(fname, 'w', encoding='utf8') as f:
-			f.write( 'import sys\n' )
-			f.write( 'import winshell\n' )
-			f.write( 'print( winshell.desktop() )\n' )
-			f.write( 'sys.exit(0)\n' )
-		try:
-			desktop_dir = subprocess.check_output( [python_exe, fname], encoding='utf8' )
-		except Exception as e:
-			desktop_dir = None
-		os.remove( fname )
-		
+		desktop_dir = os.path.join( home_dir, 'Desktop' )
+	
+	print( 'desktop_dir', desktop_dir, os.path.isdir(desktop_dir) )
 	if desktop_dir is not None and os.path.isdir(desktop_dir):
 		for pyw in pyws:
 			fname = os.path.join( desktop_dir, get_name(pyw) ) + ('.lnk' if is_windows else '.desktop')
+			print( 'Removing:', fname )
 			if os.path.isfile(fname):
 				remove_ignore( fname, True )
 		print( 'Done.' )
