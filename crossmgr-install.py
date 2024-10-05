@@ -215,7 +215,7 @@ def env_setup( full=False ):
 		wxpython_versions = get_wxpython_versions()
 
 		# Check if this os is supported.
-		if os_name not in wxpython_versions:
+		if os_name in wxpython_versions:
 			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
 			print( f'See {wxpython_extras_url} for supported Linux platforms and versions.' )
 			uninstall()
@@ -229,21 +229,24 @@ def env_setup( full=False ):
 		if i and f_v[i] > f_os_v:
 			i -= 1
 		
-		if os_version != os_versions[i][1]:
-			print( f'\n***** Warning: CrossMgr is not supported on: {os_name}-{os_version} *****' )
-			print( 'Using closest version: {os_name}-{os_versions[i][1]}' )
-			print( 'This may not work!' )
-
-		os_version = os_versions[i][1]
-		
-		# Get the name of the python extras url.
-		url = f'{wxpython_extras_url}/{os_name}-{os_version}'
-		
-		# Install wxPyhon from the extras url.
-		subprocess.check_output( [
-			python_exe, '-m',
-			'pip', 'install', '--upgrade', '--quiet', '-f', url, 'wxPython',
-		], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
+		if os_version == os_versions[i][1]:			
+			# Get the name of the python extras url.
+			url = f'{wxpython_extras_url}/{os_name}-{os_version}'
+			
+			# Install wxPyhon from the extras url.
+			subprocess.check_output( [
+				python_exe, '-m',
+				'pip', 'install', '--upgrade', '--quiet', '-f', url, 'wxPython',
+			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
+		else:
+			print( f'\n***** Warning: wxPython does not have a prebuilt version for "{os_name}-{os_version}" *****' )
+			print( 'wxPython will be installed and built from source.' )
+			print( 'This could take 30 min or longer on the first install.  Be very patient.' )
+						
+			subprocess.check_output( [
+				python_exe, '-m',
+				'pip', 'install', '--upgrade', '--quiet', 'wxPython',
+			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
 	else:
 		# If Windows or Mac, install mostly everything from regular pypi.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -257,7 +260,9 @@ def env_setup( full=False ):
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', '-r', 'requirements_os.txt'] )
 
 	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
-	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet', 'polib', 'pyshortcuts'] )
+	# If Windows, include the win32 module.
+	extra_modules = ['polib', 'pyshortcuts'] + (['pywin32'] if is_windows else [])
+	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '--quiet'] + extra_modules )
 	print( 'Done.' )
 
 	return python_exe
@@ -396,7 +401,11 @@ def make_file_associations( python_exe='', uninstall_assoc=False ):
 						f.write( fr'reg delete hkcr\{name}\DefaultIcon' + '\n' )
 						f.write( fr'reg add hkcr\{name}\DefaultIcon /ve /d "{get_ico_file(pyw)}"' + '\n' )
 
-		subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
+		import ctypes
+		ret = ctypes.windll.shell32.ShellExecuteW(0, 'runas', assoc_fname,  '', os.path.dirname(assoc_fname), 1)
+		print( 'ret', ret )
+		
+		#subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
 		remove_ignore( assoc_fname )
 
 		print( 'Done.' )
@@ -562,7 +571,7 @@ def install( full=False ):
 	bin_dir = os.path.abspath( os.path.join( '.', src_dir, 'bin') )
 	print( f"These can be found in {bin_dir}." )
 	print()
-	print( 'Use these scripts to configure auto-launch for CrossMgr file extensions.' )
+	print( 'Use these scripts to configure file associations, if necessary.' )
 	print()
 	print( 'Information about the CrossMgr suite of applications can be found at: https://github.com/esitarski/CrossMgr')
 	print( 'The CrossMgr users group is here: https://groups.google.com/g/crossmgrsoftware' )
