@@ -214,12 +214,14 @@ def env_setup( full=False ):
 			os_name = 'ubuntu'
 		wxpython_versions = get_wxpython_versions()
 
+		'''
 		# Check if this os is supported.
 		if os_name in wxpython_versions:
 			print( f'\n***** CrossMgr is not supported on: {os_name}-{os_version} *****' )
 			print( f'See {wxpython_extras_url} for supported Linux platforms and versions.' )
 			uninstall()
 			sys.exit( -1 )
+		'''
 
 		# Find the closest, lower version of wxPython.
 		f_os_v = float( os_version )
@@ -378,9 +380,10 @@ def get_ico_file( pyw_file ):
 		
 def make_file_associations( python_exe='', uninstall_assoc=False ):
 	suffix_for_name = {
-		'CrossMgr':		'.cmn',
-		'SeriesMgr':	'.smn',
-		'SprintMgr':	'.smr',
+		'CrossMgr':			'.cmn',
+		'SeriesMgr':		'.smn',
+		'SprintMgr':		'.smr',
+		'PointsRaceMgr':	'.tp5',
 	}
 	
 	if is_windows:
