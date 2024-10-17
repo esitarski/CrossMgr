@@ -414,7 +414,87 @@ def make_file_associations( python_exe='', uninstall_assoc=False ):
 	elif is_mac:
 		pass
 	elif is_linux:
-		pass
+		if not uninstall_assoc:
+			return # FIXLATER
+		
+		print( "{} file associations... ".format(['Making','Uninstalling'][uninstall_assoc]), end='', flush=True )
+		mime_directory = os.path.expanduser( '~/.local/share/mime/packages' )
+		try:
+			os.makedirs( mime_directory, exist_ok=True )
+		except Exception as e:
+			print( f'{e}.  Cannot create {mime_directory}.' )
+			return
+			
+		def get_mime_name( name ):
+			return f'application/{name.lower()}'
+			
+		# Create custom mime files for each executable.
+		for name, suffix in suffix_for_name.items():
+			mime_name = get_mime_name( name )
+			fname = os.path.join( mime_directory, name + '.xml' )
+			if uninstall_assoc:
+				try:
+					os.path.remove( fname )
+				except:
+					pass
+			else:				
+				with open( fname, 'w', encoding='utf-8' ) as f:
+					f.write( f'''<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+	<mime-type type="{mime_name}">
+		<comment>{name} type</comment>
+		<glob pattern="*{suffix}"/>
+	</mime-type>
+</mime-info>
+''' )
+
+		if not uninstall_assoc:
+			# Update the mime databse.
+			try:
+				subprocess.check_output( ['update-mime-database', os.path.expanduser('~/.local/share/mime')] )
+			except Exception as e:
+				print( f'update-mime-database failed ({e}).' )
+				return
+			
+			# Link the custom mimes to the executables.
+			for name, suffix in suffix_for_name.items():
+				# Add command line parameter and MimeType to the .desktop files.
+				fname_desktop = os.path.expanduser( f'~/Desktop/{name}.desktop' )
+				if not os.path.isfile( fname_desktop ):
+					continue
+				
+				mime_name = get_mime_name( name )
+				
+				with open( fname_desktop, 'r', encoding='utf8' ) as f:
+					text_desktop = [line.strip() for line in f]
+
+				changed_desktop_file = False
+				has_mimetype = False
+
+				text_desktop_out = []
+				for line in text_desktop:
+					if line.startswith('Exec') and not line.endswith('%F'):
+						line += ' %f'
+						changed_desktop_file = True
+					elif line.startswith( 'MimeType' ):
+						has_mimetype = True
+					text_desktop_out.append( line )
+					
+				if not has_mimetype:
+					text_desktop_out.append( f'MimeType: {mime_name}' )
+					changed_desktop_file = True
+				
+				if changed_desktop_file:
+					with open( fname_desktop, 'w', encoding='utf8' ) as f:
+						for line in text_desktop_out:
+							f.write( line + '\n' )
+				
+				try:
+					subprocess.check_output( ['xdg-mime', 'default', f'{name}.desktop', f'application/{name.lower()}'] )
+				except Exception as e:
+					print( f'xdg-mime failed ({e}).' )
+					return
+			
 
 def make_shortcuts( python_exe ):
 	print( "Making desktop shortcuts... ", end='', flush=True )
