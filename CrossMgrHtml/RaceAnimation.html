@@ -2813,7 +2813,9 @@ function GetResultNotesTable( catDetail ) {
 		const info = data[p];
 		tr = createChild( tbody, 'TR' );
 		createTextChild( td = createChild(tr, 'TD'), (i+1) + '.');
+		td.rowSpan = 2;
 		createTextChild( td = createChild(tr, 'TD'), p );
+		td.rowSpan = 2;
 		if( hasName ) {
 			let s = '';
 			if( info.LastName )		s = info.LastName;
@@ -2841,6 +2843,7 @@ function GetResultNotesTable( catDetail ) {
 		createTextChild( td = createChild(tr, 'TD'), info.resultNote );
 		td.id = 'idNonNumeric';
 		td.colSpan = colTotal - 1;
+		td.rowSpan = 2;
 	}
 	return table;
 }
