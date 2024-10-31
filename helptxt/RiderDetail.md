@@ -30,7 +30,7 @@ Finish|In Time Trial mode, shows the finish time of the rider.
 Time|In Time Trial mode, shows the rider time of the rider.
 Adjust Time Trial Times...|In Time Trial mode, opens a dialog to adjust the Start Time, End Time and Penalty Time of the rider.  If you add a Time Penalty, it will also be visible in the Recommendations screen.  Double-clicking on any Recommendation will open the Rider Detail page again.
 
-Turning off Autocorrect for all riders has major implications for CrossMgr.  Without Autocorrect, CrossMgr cannot reliably count laps, display laps to go, or show the race progress.
+Turning off Autocorrect for all riders has major implications for CrossMgr and is not recommended.  Without Autocorrect, CrossMgr cannot reliably count laps, display laps to go, or show the race progress.
 It is recommended that you have Autocorrect on for the race leader.
 
 Rider Status has the following values:
@@ -76,6 +76,10 @@ Checking is done so that relegations "make sense".  For example, if you want to 
 
 For USAC, UCI, CrossResuls and WebScorer Publish, the rider will be also be given the relegated position.
 However, there is no way to indicate this in the output.
+
+### Result Note
+A text field that will appear on the Results page for this rider.
+Record Warnings, Disqualifications or Fines for this rider here, and they will be shown on the results page.
 
 ### Autocorrect Lap Data
 If selected, CrossMgr will try to autocorrect entries.

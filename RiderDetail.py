@@ -324,10 +324,15 @@ class RiderDetail( wx.Panel ):
 		self.relegatedName = wx.StaticText( self, label = '{} '.format(_('Relegated to')) )
 		gbs.Add( self.relegatedName, pos=(row,0), span=(1,1), flag=labelAlign )
 		self.relegatedPosition = intctrl.IntCtrl( self, min=2, max=9999, allow_none=True, value=None, style=wx.TE_RIGHT | wx.TE_PROCESS_ENTER )
-
 		gbs.Add( self.relegatedPosition, pos=(row,1), span=(1,1), flag=wx.EXPAND )
 		row += 1
 		
+		self.resultNoteName = wx.StaticText( self, label = '{} '.format(_('Result Note')) )
+		gbs.Add( self.resultNoteName, pos=(row,0), span=(1,1), flag=labelAlign )
+		self.resultNote = wx.TextCtrl( self, value='' )
+		gbs.Add( self.resultNote, pos=(row,1), span=(1,4), flag=wx.EXPAND )
+		row += 1
+
 		self.autocorrectLaps = wx.CheckBox( self, label = _('Autocorrect Lap Data') )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
 		self.alwaysFilterMinPossibleLapTime = wx.CheckBox( self, label = _('Always Filter on Min Possble Lap Time'), style=wx.ALIGN_RIGHT )
@@ -1192,7 +1197,7 @@ class RiderDetail( wx.Panel ):
 		rider = race.riders.get( num, None )
 		if not rider:
 			return False
-		attr = ('num', 'times', 'status', 'tStatus', 'firstTime', 'relegatedPosition', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
+		attr = ('num', 'times', 'status', 'tStatus', 'firstTime', 'relegatedPosition', 'resultNote', 'autocorrectLaps', 'alwaysFilterMinPossibleLapTime')
 		riderInfo = {a: getattr(rider,a,None) for a in attr}
 		riderInfo['category'] = race.getCategory( num )
 		riderInfo['lapNote'] = getattr(race, 'lapNote', {})
@@ -1304,6 +1309,8 @@ class RiderDetail( wx.Panel ):
 			# Default set the relegated position.
 			self.relegatedPosition.SetValue( rider.relegatedPosition )
 			self.relegatedPosition.Enable( False )
+			
+			self.resultNote.SetValue( rider.resultNote or '' )
 			
 			# Trigger adding the rider to the race if it isn't in already.
 			self.statusOption.SetSelection( rider.status )
@@ -1482,23 +1489,25 @@ class RiderDetail( wx.Panel ):
 		num = self.num.GetValue()
 		status = self.statusOption.GetSelection()
 		relegatedPosition = self.relegatedPosition.GetValue()
+		resultNote = self.resultNote.GetValue().strip() or None
 		
 		undo.pushState()
 		with Model.LockRace() as race:
 			# Allow new numbers to be added if status is DNS, DNF or DQ.
-			if race is None or (num not in race.riders and status not in [Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ]):
+			if race is None or (num not in race.riders and status not in (Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ)):
 				return
 				
 			rider = race.getRider(num)
 			oldValues = (rider.status, rider.tStatus, rider.relegatedPosition)
 
 			tStatus = None
-			if status not in [Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ]:
+			if status not in (Model.Rider.Finisher, Model.Rider.DNS, Model.Rider.DQ):
 				tStatus = Utils.StrToSeconds( self.atRaceTime.GetValue() )
 			
 			rider.setStatus( status, tStatus )
 			rider.relegatedPosition = relegatedPosition
-
+			rider.resultNote = resultNote
+			
 			newValues = (rider.status, rider.tStatus, rider.relegatedPosition)
 			if oldValues != newValues:
 				race.setChanged()
@@ -1603,7 +1612,7 @@ if __name__ == '__main__':
 	#race.isTimeTrial = True
 	
 	app = wx.App(False)
-	mainWin = wx.Frame(None,title="CrossMgr", size=(600,400))
+	mainWin = wx.Frame(None,title="CrossMgr", size=(800,600))
 	riderDetail = RiderDetail(mainWin)
 	riderDetail.refresh()
 	lineData = [random.normalvariate(100,15) for x in range(12)]

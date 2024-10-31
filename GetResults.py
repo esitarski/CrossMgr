@@ -1008,10 +1008,14 @@ def GetAnimationData( category=None, getExternalData=False ):
 				results = GetResults( cat )
 				
 				for rr in results:
+					rider = riders[rr.num]
 					info = {
 						'flr': race.getCategory(rr.num).firstLapRatio,
-						'relegated': riders[rr.num].isRelegated(),
+						'relegated': rider.isRelegated(),
 					}
+					if rider.resultNote:
+						info['resultNote'] = rider.resultNote
+					
 					bestLaps = race.getNumBestLaps( rr.num )
 					for a in dir(rr):
 						if a.startswith('_') or a in ignoreFields:
