@@ -2760,7 +2760,7 @@ function GetResultNotesTable( catDetail ) {
 			resultNotes.push( info );
 	}
 	
-	if( !resultNotes )
+	if( !resultNotes.length )
 		return null;
 		
 	resultNotes.sort( (a,b) => { return a.num - b.num; } );
