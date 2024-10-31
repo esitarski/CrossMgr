@@ -613,6 +613,8 @@ class Rider:
 	pulledLapsToGo = None
 	pulledSequence = None
 	
+	resultNote = None						# Note included in the results (penalty, etc.).
+	
 	def __init__( self, num ):
 		self.num = num
 		self.times = []

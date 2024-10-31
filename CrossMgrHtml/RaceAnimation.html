@@ -469,6 +469,7 @@ var translations = {
 	'Cash':			['Cash',			"Argent",					"Dinero"],
 	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
 	'Lapped':		['Lapped',			"Doublés",					"Doblados"],
+	'Notes':		['Notes',			"Remarques",				"Notas"],
 	'race in progress':	['race in progress - results unofficial', "course en cours - résultats non officiels",	"carrera en curso - resultados extraoficiales"],
 	'last':			['','','']
 };
@@ -2713,7 +2714,7 @@ function GetPrimesTable( primeFromBib, pos ) {
 		var prime = primes[primesCur[p]];
 		var bib = prime.winnerBib;
 		var info = data[bib];
-		var tr = createChild( thead, 'TR' );
+		var tr = createChild( tbody, 'TR' );
 		createTextChild( td = createChild(tr, 'TD'), (primesCur[p]+1) + '.');
 		createTextChild( td = createChild(tr, 'TD'), bib );
 		if( hasName ) {
@@ -2746,6 +2747,101 @@ function GetPrimesTable( primeFromBib, pos ) {
 			createTextChild( td = createChild(tr, 'TD'), prime.points ? (prime.points != parseInt(prime.points) ? prime.points.toFixed(2) : prime.points) : '');
 		if( hasTimeBonus )
 			createTextChild( td = createChild(tr, 'TD'), prime.timeBonus ? FormatTime(prime.timeBonus).replace(/\..+$/,'') : '' );
+	}
+	return table;
+}
+
+function GetResultNotesTable( catDetail ) {
+	let resultNoteBibs = [];
+	
+	for( const p of catDetail.pos ) {
+		if( data[p].resultNote )
+			resultNoteBibs.push( p );
+	}
+	
+	if( !resultNoteBibs.length )
+		return null;
+		
+	resultNoteBibs.sort();
+	
+	// Check for report fields.
+	let hasLicense=false, hasUCIID=false, hasName=false, hasTeam=false;
+	for( const p of resultNoteBibs ) {
+		const info = data[p];
+		hasLicense = (hasLicense || info['License'] );
+		hasUCIID = (hasUCIID || info['UICID'] );
+		hasName = (hasName || (info['FirstName'] || info['LastName']));
+		hasTeam = (hasTeam || info['Team']);
+	}
+	
+	let table = document.createElement('TABLE');
+	table.className = 'results';
+	let thead = createChild( table, 'THEAD' );
+	
+	let tr = createChild( thead, 'TR' );
+	let td;
+	createTextChild( td = createChild(tr, 'TH'), _('Notes') );
+	td.style.fontSize = '120%';
+	const colTotal = (1 + 1 + (hasLicense?1:0) + (hasUCIID?1:0) + (hasName?1:0) + (hasTeam?1:0))
+	td.colSpan = colTotal;
+	td.id = 'idNonNumeric';
+	
+	tr = createChild( thead, 'TR' );
+	
+	createTextChild( td = createChild(tr, 'TH'), '');
+	createTextChild( td = createChild(tr, 'TH'), _('Bib'));
+	if( hasName ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Name'));
+		td.id = 'idNonNumeric';
+	}
+	if( hasLicense ) {
+		createTextChild( td = createChild(tr, 'TH'), _('License'));
+		td.id = 'idNonNumeric';
+	}
+	if( hasUCIID ) {
+		createTextChild( td = createChild(tr, 'TH'), _('UCIID'));
+		td.id = 'idNonNumeric';
+	}
+	if( hasTeam ) {
+		createTextChild( td = createChild(tr, 'TH'), _('Team'));
+		td.id = 'idNonNumeric';
+	}
+
+	let tbody = createChild( table, 'TBODY' );
+	for( let i = 0; i < resultNoteBibs.length; ++i ) {
+		const p = resultNoteBibs[i];
+		const info = data[p];
+		tr = createChild( tbody, 'TR' );
+		createTextChild( td = createChild(tr, 'TD'), (i+1) + '.');
+		createTextChild( td = createChild(tr, 'TD'), p );
+		if( hasName ) {
+			let s = '';
+			if( info.LastName )		s = info.LastName;
+			if( info.FirstName )	s += (s ? ', ' : '') + info.FirstName;
+			createTextChild( td = createChild(tr, 'TD'), s );
+			td.id = 'idNonNumeric';
+		}
+		if( hasLicense ) {
+			createTextChild( td = createChild(tr, 'TD'), info.License ? info.License : '' );
+			td.id = 'idNonNumeric';
+		}
+		if( hasUCIID ) {
+			createTextChild( td = createChild(tr, 'TD'), info.UCIID ? info.UCIID : '' );
+			td.id = 'idNonNumeric';
+		}
+		if( hasTeam ) {
+			createTextChild( td = createChild(tr, 'TD'), info.Team ? info.Team : '' );
+			td.id = 'idNonNumeric';
+		}
+		
+		// Add the note on a separate row.
+		tr = createChild( tbody, 'TR' );
+		createTextChild( td = createChild(tr, 'TD'), '');
+		td.colSpan = 2;
+
+		createTextChild( td = createChild(tr, 'TD'), info.resultNote );
+		td.id = 'idNonNumeric';
+		td.colSpan = colTotal - 2;
 	}
 	return table;
 }
@@ -3377,6 +3473,10 @@ function RefreshResultsTable()
 		var primesTable = GetPrimesTable( primeFromBib, catDetail.pos );
 		if( primesTable )
 			resultsDiv.appendChild( primesTable );
+		
+		var resultNotesTable = GetResultNotesTable( catDetail );
+		if( resultNotesTable )
+			resultsDiv.appendChild( resultNotesTable );
 		
 		// Add some blank space between categories.
 		createChild(resultsDiv, 'P').innerHTML = '&nbsp;'
