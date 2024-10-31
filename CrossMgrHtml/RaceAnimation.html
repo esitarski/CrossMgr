@@ -469,7 +469,7 @@ var translations = {
 	'Cash':			['Cash',			"Argent",					"Dinero"],
 	'Merchandise':	['Merchandise',		"Marchendise",				"Mercancía"],
 	'Lapped':		['Lapped',			"Doublés",					"Doblados"],
-	'Note':			['Note',			"Remarque",					"Nota"],
+	'Note':			['Notes',			"Remarques",				"Notas"],
 	'race in progress':	['race in progress - results unofficial', "course en cours - résultats non officiels",	"carrera en curso - resultados extraoficiales"],
 	'last':			['','','']
 };
@@ -2714,7 +2714,7 @@ function GetPrimesTable( primeFromBib, pos ) {
 		var prime = primes[primesCur[p]];
 		var bib = prime.winnerBib;
 		var info = data[bib];
-		var tr = createChild( thead, 'TR' );
+		var tr = createChild( tbody, 'TR' );
 		createTextChild( td = createChild(tr, 'TD'), (primesCur[p]+1) + '.');
 		createTextChild( td = createChild(tr, 'TD'), bib );
 		if( hasName ) {
@@ -2752,23 +2752,23 @@ function GetPrimesTable( primeFromBib, pos ) {
 }
 
 function GetResultNotesTable( catDetail ) {
-	let resultNotes = [];
+	let resultNoteBibs = [];
 	
 	for( const p of catDetail.pos ) {
-		const info = data[p];
-		if( info.resultNote )
-			resultNotes.push( info );
+		if( data[p].resultNote )
+			resultNoteBibs.push( p );
 	}
 	
-	if( !resultNotes.length )
+	if( !resultNoteBibs.length )
 		return null;
 		
-	resultNotes.sort( (a,b) => { return a.num - b.num; } );
+	resultNoteBibs.sort();
 	
 	// Check for report fields.
 	let hasLicense=false, hasUCIID=false, hasName=false, hasTeam=false;
-	for( const info of resultNotes ) {
-		hasLicense = (hasLicenses || info['License'] );
+	for( const p of resultNoteBibs ) {
+		const info = data[p];
+		hasLicense = (hasLicense || info['License'] );
 		hasUCIID = (hasUCIID || info['UICID'] );
 		hasName = (hasName || (info['FirstName'] || info['LastName']));
 		hasTeam = (hasTeam || info['Team']);
@@ -2780,7 +2780,7 @@ function GetResultNotesTable( catDetail ) {
 	
 	let tr = createChild( thead, 'TR' );
 	let td;
-	createTextChild( td = createChild(tr, 'TH'), _('Note') );
+	createTextChild( td = createChild(tr, 'TH'), _('Notes') );
 	td.style.fontSize = '120%';
 	const colTotal = (1 + 1 + (hasLicense?1:0) + (hasUCIID?1:0) + (hasName?1:0) + (hasTeam?1:0))
 	td.colSpan = colTotal;
@@ -2808,11 +2808,12 @@ function GetResultNotesTable( catDetail ) {
 	}
 
 	let tbody = createChild( table, 'TBODY' );
-	for( let i = 0; i < resultNotes.length; ++i ) {
-		const info = resultNotes[i];
-		tr = createChild( thead, 'TR' );
+	for( let i = 0; i < resultNoteBibs.length; ++i ) {
+		const p = resultNoteBibs[i];
+		const info = data[p];
+		tr = createChild( tbody, 'TR' );
 		createTextChild( td = createChild(tr, 'TD'), (i+1) + '.');
-		createTextChild( td = createChild(tr, 'TD'), info.num );
+		createTextChild( td = createChild(tr, 'TD'), p );
 		if( hasName ) {
 			let s = '';
 			if( info.LastName )		s = info.LastName;
