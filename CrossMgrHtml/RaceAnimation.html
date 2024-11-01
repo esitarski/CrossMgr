@@ -2190,15 +2190,23 @@ function Animate( tRunning, aTMax, tCur ) {
 // ---------------------------------------------------------------------
 
 function createChild( parent, tag ) {
-	var child = document.createElement(tag);
+	let child = document.createElement(tag);
 	parent.appendChild( child );
 	return child;
 }
 
 function createTextChild( parent, s ) {
-	var child = document.createTextNode(s);
+	let child = document.createTextNode(s);
 	parent.appendChild( child );
 	return child;
+}
+
+function createMultilineTextChild( parent, s ) {
+	const lines = s.split('\n');
+	for( const line of lines ) {
+		parent.appendChild( document.createTextNode(line) );
+		parent.appendChild( document.createElement('BR');
+	}
 }
 
 // ---------------------------------------------------------------------
@@ -2839,7 +2847,7 @@ function GetResultNotesTable( catDetail ) {
 		createTextChild( td = createChild(tr, 'TD'), '');
 		td.colSpan = 2;
 
-		createTextChild( td = createChild(tr, 'TD'), info.resultNote );
+		createMultilineTextChild( td = createChild(tr, 'TD'), info.resultNote );
 		td.id = 'idNonNumeric';
 		td.colSpan = colTotal - 2;
 	}

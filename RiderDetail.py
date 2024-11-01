@@ -329,9 +329,9 @@ class RiderDetail( wx.Panel ):
 		
 		self.resultNoteName = wx.StaticText( self, label = '{} '.format(_('Result Note')) )
 		gbs.Add( self.resultNoteName, pos=(row,0), span=(1,1), flag=labelAlign )
-		self.resultNote = wx.TextCtrl( self, value='' )
-		gbs.Add( self.resultNote, pos=(row,1), span=(1,4), flag=wx.EXPAND )
-		row += 1
+		self.resultNote = wx.TextCtrl( self, value='', style=wx.TE_MULTILINE|wx.TE_DONTWRAP )
+		gbs.Add( self.resultNote, pos=(row,1), span=(2,4), flag=wx.EXPAND )
+		row += 2
 
 		self.autocorrectLaps = wx.CheckBox( self, label = _('Autocorrect Lap Data') )
 		self.Bind( wx.EVT_CHECKBOX, self.onAutocorrectLaps, self.autocorrectLaps )
