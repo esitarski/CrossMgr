@@ -1679,6 +1679,8 @@ def SetNewFilename( parent, properties ):
 	newFName = os.path.join( dir, newBaseName )
 	
 	mainWin.fileName = newFName
+	wx.CallAfter( mainWin.updateRecentFiles )	# Add to the recent files list.
+	wx.CallAfter( mainWin.updateRaceClock )		# Also updates the window title.
 	return success
 
 def ChangeProperties( parent ):
