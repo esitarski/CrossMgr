@@ -1053,7 +1053,6 @@ class Results(wx.Panel):
 class ResultsFrame(wx.Frame):
 	#----------------------------------------------------------------------
 	def __init__(self):
-		"""Constructor"""
 		wx.Frame.__init__(self, None, title="Results Grid Test", size=(800,600) )
 		panel = Results(self)
 		panel.refresh()
