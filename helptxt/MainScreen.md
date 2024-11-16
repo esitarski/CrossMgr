@@ -77,10 +77,13 @@ For example, F3 selects the Results screen.
 * [Passings][]
 * [RiderDetail][]
 * [Chart][]
-* [Animation][]
 * [Recommendations][]
 * [Categories][]
 * [Properties][]
+* [Primes][]
+* [ResultNotes][]
+* [Prizes][]
+* [Animation][]
 
 # Keyboard Accelerators
 

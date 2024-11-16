@@ -688,15 +688,15 @@ class MainWin( wx.Frame ):
 			[ 'recommendations',Recommendations,	_('Recommendations') ],
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
-			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'primes',			Primes,				_('Primes') ],
+			[ 'resultNote',		ResultNote,			_('Result Notes') ],
+			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			#[ 'situation',		Situation,			_('Situation') ],
 			[ 'gapChart',		GapChart,			_('GapChart') ],
 			[ 'lapCounter',		LapCounter,			_('LapCounter') ],
 			[ 'announcer',		Announcer,			_('Announcer') ],
 			[ 'histogram',		HistogramPanel,		_('Histogram') ],
-			[ 'resultNote',		ResultNote,			_('Result Notes') ],
 			[ 'teamResults',	TeamResults,		_('Team Results') ],
 		]
 		self.attrWindowSet = {'results', 'history', 'gantt', 'raceAnimation', 'gapChart', 'announcer', 'lapCounter', 'teamResults'}
