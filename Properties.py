@@ -1,4 +1,7 @@
+import sys
+
 import wx
+import wx.adv
 import re
 import os
 import wx.lib.intctrl as intctrl
@@ -8,6 +11,10 @@ import webbrowser
 import threading
 import subprocess
 import platform
+
+from wx import CommandEvent
+
+from DatePicker import SafeDatePickerCtrl
 from RaceInputState import RaceInputState
 import Utils
 import Model
@@ -73,7 +80,7 @@ class GeneralInfoProperties( wx.Panel ):
 		self.locationSizer.Add( self.raceCountry, 2, flag=wx.EXPAND|wx.LEFT, border=3 )
 		
 		self.dateLabel = wx.StaticText( self, label = _('Date') )
-		self.date = wx.adv.DatePickerCtrl(
+		self.date = SafeDatePickerCtrl(
 			self,
 			dt = Utils.GetDateTimeToday(),
 			style = wx.adv.DP_DROPDOWN,
@@ -152,8 +159,12 @@ class GeneralInfoProperties( wx.Panel ):
 		self.raceCountry.SetValue( race.country )
 		self.raceDiscipline.SetValue( getattr(race, 'discipline', 'Cyclo-cross') )
 		d = wx.DateTime()
-		d.ParseDate(race.date)
-		self.date.SetValue( d )
+		try:
+			d.ParseDate(race.date)
+			self.date.SetValue( d )
+		except ValueError as e:
+			print('Bad date {}, Parse Error:'.format(race.date), e, file=sys.stderr)
+
 		self.raceNum.SetValue( race.raceNum )
 		self.scheduledStart.SetValue( race.scheduledStart )
 		self.minutes.SetValue( race.minutes )
@@ -169,7 +180,11 @@ class GeneralInfoProperties( wx.Panel ):
 		race.stateProv = self.raceStateProv.GetValue().strip()
 		race.country = self.raceCountry.GetValue().strip()
 		race.discipline = self.raceDiscipline.GetValue().strip()
-		race.date = self.date.GetValue().Format(Properties.dateFormat)
+		try:
+			race.date = self.date.GetValue().Format(Properties.dateFormat)
+		except ValueError as e:
+			print('Bad date {}, Format Error:'.format(self.date.GetValue()), e, file=sys.stderr)
+
 		race.raceNum = self.raceNum.GetValue()
 		race.scheduledStart = self.scheduledStart.GetValue()
 		race.minutes = self.minutes.GetValue()
@@ -177,8 +192,7 @@ class GeneralInfoProperties( wx.Panel ):
 		race.commissaire = self.commissaire.GetValue().strip()
 		race.memo = self.memo.GetValue().strip()
 
-	def onChanged( self, event ):
-		#self.updateFileName()
+	def onChanged( self, event: CommandEvent ):
 		pass
 
 #------------------------------------------------------------------------------------------------

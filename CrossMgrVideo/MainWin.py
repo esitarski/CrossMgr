@@ -22,6 +22,8 @@ import sqlite3
 from time import sleep
 from queue import Queue
 
+from DatePicker import SafeDatePickerCtrl
+
 from datetime import datetime, timedelta, time
 
 now = datetime.now
@@ -580,7 +582,7 @@ class MainWin( wx.Frame ):
 		hsDate = wx.BoxSizer( wx.HORIZONTAL )
 		hsDate.Add( wx.StaticText(self, label='Show Triggers for'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = now()
-		self.date = wx.adv.DatePickerCtrl(
+		self.date = SafeDatePickerCtrl(
 			self,
 			dt=wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
 			style=wx.adv.DP_DROPDOWN|wx.adv.DP_SHOWCENTURY

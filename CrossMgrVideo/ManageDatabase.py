@@ -3,7 +3,7 @@ import wx.adv
 import os
 import datetime
 
-DatePickerCtrl = wx.adv.DatePickerCtrl
+from DatePicker import SafeDatePickerCtrl
 
 class ManageDatabase( wx.Dialog ):
 	def __init__( self, parent, dbSize, dbName, trigFirst, trigLast, id=wx.ID_ANY, title='', size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE ):
@@ -40,7 +40,7 @@ class ManageDatabase( wx.Dialog ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		hs.Add( wx.StaticText(self, label='Delete all data (inclusive) from'), flag=wx.ALIGN_CENTER_VERTICAL )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=7)
-		self.dateFrom = DatePickerCtrl(
+		self.dateFrom = SafeDatePickerCtrl(
 			self,
 			dt=wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
 			style=wx.adv.DP_DROPDOWN|wx.adv.DP_SHOWCENTURY|wx.adv.DP_ALLOWNONE
@@ -49,7 +49,7 @@ class ManageDatabase( wx.Dialog ):
 		
 		hs.Add( wx.StaticText(self, label='to'), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
 		tQuery = datetime.datetime.now() - datetime.timedelta(days=1)
-		self.dateTo = DatePickerCtrl(
+		self.dateTo = SafeDatePickerCtrl(
 			self,
 			dt=wx.DateTime.FromDMY( tQuery.day, tQuery.month-1, tQuery.year ),
 			style=wx.adv.DP_DROPDOWN|wx.adv.DP_SHOWCENTURY|wx.adv.DP_ALLOWNONE

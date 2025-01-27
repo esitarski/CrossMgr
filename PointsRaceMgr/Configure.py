@@ -4,6 +4,8 @@ import datetime
 
 import wx
 import wx.adv
+
+from DatePicker import SafeDatePickerCtrl
 from NumCtrl import PosNumCtrl
 import wx.lib.intctrl as IC
 
@@ -36,7 +38,7 @@ class Configure( wx.Panel ):
 		hs = wx.BoxSizer( wx.HORIZONTAL )
 		label = wx.StaticText( self, label='Date:' )
 		hs.Add( label, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16 )
-		ctrl = wx.adv.DatePickerCtrl( self, style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY, size=(132,-1) )
+		ctrl = SafeDatePickerCtrl( self, style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY, size=(132,-1) )
 		ctrl.Bind( wx.adv.EVT_DATE_CHANGED, self.onChange )
 		hs.Add( ctrl, flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4 )
 		self.dateLabel = label
