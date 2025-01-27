@@ -200,8 +200,8 @@ function BuildLocale($program)
 	{
 		$pofile="$localepath\$locale\LC_MESSAGES\messages.po"
 		Write-Host "Building Locale: $locale"
-		Write-Host "python -mbabel compile -f -d $localepath -l $locale -i $pofile"
-		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mbabel compile -f -d $localepath -l $locale -i $pofile"
+		Write-Host "pybabel compile -f -d $localepath -l $locale -i $pofile"
+		Start-Process -Wait -NoNewWindow -FilePath "pybabel" -ArgumentList "compile -f -d $localepath -l $locale -i $pofile"
 		if ($? -eq $false)
 		{
 			Write-Host "Locale $locale failed. Aborting..."
