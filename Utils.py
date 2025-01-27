@@ -646,7 +646,7 @@ def writeConfig( key, value ):
 	try:
 		ret = mainWin.config.Write( key, value )
 		mainWin.config.Flush()
-		return
+		return ret
 	except Exception:
 		pass
 
