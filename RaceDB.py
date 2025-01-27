@@ -1,6 +1,6 @@
 import re
 import os
-import wx
+import wx, wx.adv
 import wx.dataview as dataview
 import requests
 import datetime
@@ -11,6 +11,8 @@ import urllib.parse
 import Utils
 import Model
 from AddExcelInfo		import getInfo
+from DatePicker import SafeDatePickerCtrl
+
 
 def GetRaceDBConfigFile():
 	return os.path.join( os.path.expanduser('~'), 'CrossMgrRaceDB.ini' )
@@ -223,7 +225,7 @@ class RaceDB( wx.Dialog ):
 		self.raceDBUrl.Bind( wx.EVT_TEXT_ENTER, self.onChange )
 		self.raceDBUrl.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
 		raceDBLogo.SetDropTarget(URLDropTarget(self.raceDBUrl, self.refresh))
-		self.datePicker = wx.adv.DatePickerCtrl(
+		self.datePicker = SafeDatePickerCtrl(
 			self,
 			size=(120,-1),
 			dt=Utils.GetDateTimeToday(),

@@ -2,7 +2,7 @@ import re
 import datetime
 
 import wx
-from wx.adv import DatePickerCtrl
+from DatePicker import SafeDatePickerCtrl
 from wx.lib.intctrl import IntCtrl
 from wx.lib.masked.numctrl import NumCtrl
 from wx.lib.masked import TimeCtrl, EVT_TIMEUPDATE
@@ -74,7 +74,7 @@ class FieldDef:
 			self.editCtrl.Bind( wx.EVT_TEXT, self.onChanged )
 			
 		elif self.type == FieldDef.DateType:
-			self.editCtrl = DatePickerCtrl( parent, style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY, size=(120,-1))
+			self.editCtrl = SafeDatePickerCtrl( parent, style = wx.adv.DP_DROPDOWN | wx.adv.DP_SHOWCENTURY, size=(120,-1))
 			self.editCtrl.Bind( wx.adv.EVT_DATE_CHANGED, self.onChanged )
 			
 		elif self.type == FieldDef.TimeType:
