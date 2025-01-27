@@ -136,8 +136,9 @@ buildLocale() {
 	do
 		pofile="${locale}/LC_MESSAGES/messages.po"
 		echo "Building Locale: $locale"
-		echo "python -mbabel compile -f -d $localepath -l $locale -i $pofile"
-		python -mbabel compile -f -d $localepath -l $locale -i $pofile
+		lVal=$(basename $locale)
+		echo "pybabel compile -f -d $localepath -l $lVal -i $pofile"
+		pybabel compile -f -d $localepath -l $lVal -i $pofile
 		if [ $? -ne 0 ]; then
 			echo "Locale $locale failed. Aborting..."
 			exit 1
