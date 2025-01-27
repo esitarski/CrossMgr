@@ -3956,7 +3956,7 @@ function RefreshRaceChart() {
 				break;
 			const tCur = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + tCur * xFactor);
-			if( j == 0 ) {
+			if( j === 0 ) {
 				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : dnfBackgroundColour;
 				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );

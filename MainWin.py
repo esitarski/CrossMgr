@@ -211,8 +211,8 @@ class MyTipProvider( adv.TipProvider ):
 
 def ShowTipAtStartup():
 	mainWin = Utils.getMainWin()
-	#if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
-	#	return
+	if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
+		return
 	
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	try:
@@ -220,6 +220,7 @@ def ShowTipAtStartup():
 		showTipAtStartup = wx.adv.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
+			mainWin.config.Flush()
 	except Exception as e:
 		pass
 
@@ -1194,15 +1195,18 @@ class MainWin( wx.Frame ):
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
 		self.config.WriteBool( 'playSounds', self.playSounds )
+		self.config.Flush()
 		
 	def menuLaunchExcelAfterPublishingResults( self, event ):
 		self.launchExcelAfterPublishingResults = self.menuItemLaunchExcelAfterPublishingResults.IsChecked()
 		self.config.WriteBool( 'launchExcelAfterPublishingResults', self.launchExcelAfterPublishingResults )
+		self.config.Flush()
 	
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, _('Turn Off Tips at Startup?') if showing else _('Show Tips at Startup?'), _('Tips at Startup') ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
+			self.config.Flush()
 
 	def menuRestoreFromInput( self, event ):
 		if not Model.race:
