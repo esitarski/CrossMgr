@@ -194,7 +194,7 @@ def env_setup( full=False ):
 		# Install wxPython from the "extras" folder.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
 			for line in f_in:
-				if 'wxPython' not in line and 'pybabel' not in line:
+				if 'wxPython' not in line and 'babel' not in line:
 					f_out.write( line )
 
 		# Install all the regular modules.
@@ -257,7 +257,7 @@ def env_setup( full=False ):
 				f_out.write( 'winshell\n' )
 			
 			for line in f_in:
-				if 'pybabel' not in line:	# Skip pybabel.  Use polib instead to convert the .po files to .mo.
+				if 'babel' not in line:	# Skip babel.  Use polib instead to convert the .po files to .mo.
 					f_out.write( line )
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 

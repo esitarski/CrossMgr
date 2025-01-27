@@ -18,7 +18,7 @@ paramiko
 markdown
 bs4
 trueskill
-pybabel
+babel
 opencv-python
 pyinstaller
 piexif
