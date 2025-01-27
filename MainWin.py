@@ -209,10 +209,9 @@ class MyTipProvider( adv.TipProvider ):
 		return self.GetTip()
 
 def ShowTipAtStartup():
+	# Check whether this should be called, not whether the call should continue
 	mainWin = Utils.getMainWin()
-	#if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
-	#	return
-	
+
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	try:
 		provider = MyTipProvider( tipFile )
@@ -4381,7 +4380,10 @@ def MainLoop():
 	#tbicon.SetIcon( icon, "CrossMgr" )
 
 	if args.verbose:
-		wx.CallLater( 500, ShowSplashScreen, ShowTipAtStartup )
+		if mainWin.config.ReadBool('showTipAtStartup', True) == True:
+			wx.CallLater( 500, ShowSplashScreen, ShowTipAtStartup )
+		else:
+			wx.CallLater( 500, ShowSplashScreen )
 	
 	mainWin.forecastHistory.setSash()
 	
