@@ -1542,13 +1542,13 @@ class MainWin( wx.Frame ):
 	
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		with wx.PageSetupDialog(self, psdd) as dlg:
-			dlg.ShowModal()
+		dlg = wx.PageSetupDialog(self, psdd)
+		dlg.ShowModal()
 
-			# this makes a copy of the wx.PrintData instead of just saving
-			# a reference to the one inside the PrintDialogData that will
-			# be destroyed when the dialog is destroyed
-			self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
+		# this makes a copy of the wx.PrintData instead of just saving
+		# a reference to the one inside the PrintDialogData that will
+		# be destroyed when the dialog is destroyed
+		self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
 
 	PrintCategoriesDialogSize = (450, 400)
 	
