@@ -126,23 +126,8 @@ compileCode() {
 }
 
 buildLocale() {
-	PROGRAM=$1
-	getBuildDir $PROGRAM
-
-	localepath="${BUILDDIR}/${PROGRAM}Locale"
-	echo $localepath
-	locales=$(find $localepath -type d -depth 1)
-	for locale in $locales
-	do
-		pofile="${locale}/LC_MESSAGES/messages.po"
-		echo "Building Locale: $locale"
-		echo "pybabel compile -f -d $localepath -l $locale -i $pofile"
-		pybabel compile -f -d $localepath -l $locale -i $pofile
-		if [ $? -ne 0 ]; then
-			echo "Locale $locale failed. Aborting..."
-			exit 1
-		fi
-	done
+	echo "buildHelp: Building .mo files from .po locale files ..."
+	python3 po_to_mo.py
 }
 
 buildHelp() {
