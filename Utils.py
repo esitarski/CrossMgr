@@ -644,7 +644,9 @@ def writeRace():
 		
 def writeConfig( key, value ):
 	try:
-		return mainWin.config.Write( key, value )
+		ret = mainWin.config.Write( key, value )
+		mainWin.config.Flush()
+		return ret
 	except Exception:
 		pass
 

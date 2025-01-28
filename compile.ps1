@@ -193,20 +193,12 @@ function BuildLocale($program)
 {
 	CheckPythonVersion
 	CheckEnvActive
-	$builddir = GetBuildDir($program)
-	$localepath = "$builddir\${program}Locale"
-	$locales = Get-ChildItem -Directory -Path $localepath
-	foreach ($locale in $locales)
+	Write-Host 'BuildLocale: Building .mo files from .po locale files ...'
+	Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "po_to_mp.py"
+	if ($? -eq $false)
 	{
-		$pofile="$localepath\$locale\LC_MESSAGES\messages.po"
-		Write-Host "Building Locale: $locale"
-		Write-Host "python -mbabel compile -f -d $localepath -l $locale -i $pofile"
-		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "-mbabel compile -f -d $localepath -l $locale -i $pofile"
-		if ($? -eq $false)
-		{
-			Write-Host "Locale $locale failed. Aborting..."
-			exit 1
-		}
+		Write-Host "Locale Build failed. Aborting..."
+		exit 1
 	}
 }
 

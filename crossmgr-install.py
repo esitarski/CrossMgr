@@ -194,7 +194,7 @@ def env_setup( full=False ):
 		# Install wxPython from the "extras" folder.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
 			for line in f_in:
-				if 'wxPython' not in line and 'pybabel' not in line:
+				if 'wxPython' not in line:
 					f_out.write( line )
 
 		# Install all the regular modules.
@@ -257,13 +257,12 @@ def env_setup( full=False ):
 				f_out.write( 'winshell\n' )
 			
 			for line in f_in:
-				if 'pybabel' not in line:	# Skip pybabel.  Use polib instead to convert the .po files to .mo.
-					f_out.write( line )
+				f_out.write( line )
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 
-	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
+	# Install pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	# If Windows, include the win32 module.
-	extra_modules = ['polib', 'pyshortcuts'] + (['pywin32'] if is_windows else [])
+	extra_modules = ['pyshortcuts'] + (['pywin32'] if is_windows else [])
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )
 	print( 'Done.' )
 
@@ -293,7 +292,7 @@ def fix_dependencies( python_exe ):
 	print( 'Done.' )
 
 	# Write a python script to convert the po files to mo files with polib.
-	# This is a big hackyt and I wish there was an easier way to...
+	# This is a big hacky and I wish there was an easier way...
 	print( "Formatting translation files... ", end='', flush=True )
 	po_to_mo_fname = 'po_to_mo_tmp.py'
 	context = {

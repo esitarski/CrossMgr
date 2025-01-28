@@ -56,6 +56,7 @@ from GapChart			import GapChart
 from LapCounter			import LapCounter
 from Announcer			import Announcer
 from Primes				import Primes, GetGrid
+from ResultNote			import ResultNote
 from Prizes				import Prizes
 from HistogramPanel		import HistogramPanel
 from UnmatchedTagsGantt	import UnmatchedTagsGantt
@@ -210,8 +211,8 @@ class MyTipProvider( adv.TipProvider ):
 
 def ShowTipAtStartup():
 	mainWin = Utils.getMainWin()
-	#if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
-	#	return
+	if mainWin and not mainWin.config.ReadBool('showTipAtStartup', True):
+		return
 	
 	tipFile = os.path.join(Utils.getImageFolder(), "tips.txt")
 	try:
@@ -219,6 +220,7 @@ def ShowTipAtStartup():
 		showTipAtStartup = wx.adv.ShowTip( None, provider, True )
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
+			mainWin.config.Flush()
 	except Exception as e:
 		pass
 
@@ -687,8 +689,9 @@ class MainWin( wx.Frame ):
 			[ 'recommendations',Recommendations,	_('Recommendations') ],
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
-			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'primes',			Primes,				_('Primes') ],
+			[ 'resultNote',		ResultNote,			_('Result Notes') ],
+			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			#[ 'situation',		Situation,			_('Situation') ],
 			[ 'gapChart',		GapChart,			_('GapChart') ],
@@ -1192,15 +1195,18 @@ class MainWin( wx.Frame ):
 	def menuPlaySounds( self, event ):
 		self.playSounds = self.menuItemPlaySounds.IsChecked()
 		self.config.WriteBool( 'playSounds', self.playSounds )
+		self.config.Flush()
 		
 	def menuLaunchExcelAfterPublishingResults( self, event ):
 		self.launchExcelAfterPublishingResults = self.menuItemLaunchExcelAfterPublishingResults.IsChecked()
 		self.config.WriteBool( 'launchExcelAfterPublishingResults', self.launchExcelAfterPublishingResults )
+		self.config.Flush()
 	
 	def menuTipAtStartup( self, event ):
 		showing = self.config.ReadBool('showTipAtStartup', True)
 		if Utils.MessageOKCancel( self, _('Turn Off Tips at Startup?') if showing else _('Show Tips at Startup?'), _('Tips at Startup') ):
 			self.config.WriteBool( 'showTipAtStartup', showing ^ True )
+			self.config.Flush()
 
 	def menuRestoreFromInput( self, event ):
 		if not Model.race:
@@ -1536,13 +1542,13 @@ class MainWin( wx.Frame ):
 	
 	def menuPageSetup( self, event ):
 		psdd = wx.PageSetupDialogData(self.printData)
-		with wx.PageSetupDialog(self, psdd) as dlg:
-			dlg.ShowModal()
-
+		dlg = wx.PageSetupDialog(self, psdd)
+		if dlg.ShowModal() == wx.ID_OK:
 			# this makes a copy of the wx.PrintData instead of just saving
 			# a reference to the one inside the PrintDialogData that will
 			# be destroyed when the dialog is destroyed
 			self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
+		dlg.Destroy()
 
 	PrintCategoriesDialogSize = (450, 400)
 	
