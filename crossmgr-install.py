@@ -260,7 +260,7 @@ def env_setup( full=False ):
 				f_out.write( line )
 		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 
-	# Install polib and pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
+	# Install pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	# If Windows, include the win32 module.
 	extra_modules = ['pyshortcuts'] + (['pywin32'] if is_windows else [])
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )

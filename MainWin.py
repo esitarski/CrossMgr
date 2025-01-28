@@ -1548,6 +1548,7 @@ class MainWin( wx.Frame ):
 			# a reference to the one inside the PrintDialogData that will
 			# be destroyed when the dialog is destroyed
 			self.printData = wx.PrintData( dlg.GetPageSetupData().GetPrintData() )
+		dlg.Destroy()
 
 	PrintCategoriesDialogSize = (450, 400)
 	
