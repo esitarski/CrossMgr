@@ -126,7 +126,7 @@ compileCode() {
 }
 
 buildLocale() {
-	echo "buildHelp: Building .mo files from .po locale files ..."
+	echo "buildLocale: Building .mo files from .po locale files ..."
 	python3 po_to_mo.py
 }
 

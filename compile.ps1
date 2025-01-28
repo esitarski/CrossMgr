@@ -193,7 +193,8 @@ function BuildLocale($program)
 {
 	CheckPythonVersion
 	CheckEnvActive
-	Write-Host 'BuildLocale: Building .mo files from .po locale files ...'
+	Write-Host 'B
+	uildLocale: Building .mo files from .po locale files ...'
 	Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "po_to_mp.py"
 	if ($? -eq $false)
 	{
