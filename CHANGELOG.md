@@ -1,6 +1,7 @@
 # Changelog
 
 ## vv3.0.44-20200103135644 (03/01/2020)
+
 - [Updated version.](https://github.com/esitarski/CrossMgr/commit/50bf878f66c9c5738f6abf44014a03e10769b78c) - @esitarski
 - [Fixed SetValue bug in HighPrecisionTimeEdit.](https://github.com/esitarski/CrossMgr/commit/7c8721ff317e0bb776daed24d5639a3fde3ca623) - @esitarski
 - [Fixed bug in Linux/MacOS initialization.](https://github.com/esitarski/CrossMgr/commit/80310a2d481658eca0b0faabe4b74727b915353a) - @esitarski
