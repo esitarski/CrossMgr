@@ -50,6 +50,10 @@ param (
 $environ = "env"
 $script:pythongood = $false
 
+. .\Scripts\utils.ps1
+. .\Scripts\gitutils.ps1
+. .\Scripts\versions.ps1
+
 # Check the python version. Current only 3.10.x.
 function CheckPythonVersion
 {
@@ -75,15 +79,6 @@ function CheckPythonVersion
 		$script:pythongood = $true
 	}
 	
-}
-function GetBuildDir($program)
-{
-	$builddir = '.'
-	if ($program -ne 'CrossMgr')
-	{
-		$builddir = $program
-	}
-	return $builddir
 }
 
 function CheckEnvActive
@@ -133,20 +128,6 @@ function doPyInstaller($program)
 		Write-Host "Build failed. Aborting..."
 		exit 1
 	}
-}
-
-function GetVersion($program)
-{
-	$builddir = GetBuildDir($program)
-	if (!(Test-Path -Path "$builddir/Version.py"))
-	{
-		Write-Host "No version file in ", $builddir, "/Version.py. Aborting..."
-		exit 1
-	}
-	$versionItem = Get-Content "$builddir/Version.py"
-	$version = $versionItem.Split(' ')[1].Replace("`"", "")
-	Write-Host $program, "Version is", $version
-	return $version
 }
 
 function Cleanup($program)
@@ -430,50 +411,21 @@ function EnvSetup($program)
 	
 }
 
-function updateVersion($programs)
-{
-	if ($programs.Length -eq 0)
+function ValidateTag() {
+	$githubref = $env:GITHUB_REF.Split('/')
+	$verno = $githubref[2].Split('-')[0]
+	$refdate = $githubref[2].Split('-')[1]
+	$major = $verno.Split('.')[0]
+	$minor = $verno.Split('.')[1]
+	$release = $verno.Split('.')[2]
+	if ($major -ne 'v3' -or [string]::IsNullOrEmpty($minor) -or [string]::IsNullOrEmpty($release) -or [string]::IsNullOrEmpty($refdate))
 	{
-		Write-Host "No programs selected"
+		Write-Host "Invalid Tag format. Must be v3.0.3-20200101010101. Refusing to build!"
 		exit 1
 	}
-	if (-not [string]::IsNullOrEmpty($env:GITHUB_REF))
-	{
-		Write-Host "GITHUB_REF=$env:GITHUB_REF"
-		foreach ($program in $programs)
-		{
-			$builddir = GetBuildDir($program)
-			$version = GetVersion($program)
-			$githubref = $env:GITHUB_REF.Split('/')
-			$version = $version.Split('-')[0]
-			$shortsha=$env:GITHUB_SHA.SubString(0,7)
-			if ($githubref[1] -eq 'heads' -and $githubref[2] -eq 'dev')
-			{
-				$appvername = "AppVerName=`"$program $version-beta-$shortsha`""
-				$version="${version}-beta-${shortsha}"
-			}
-			if ($githubref[1] -eq 'tags')
-			{
-				$verno = $githubref[2].Split('-')[0]
-				$refdate = $githubref[2].Split('-')[1]
-				$major = $verno.Split('.')[0]
-				$minor = $verno.Split('.')[1]
-				$release = $verno.Split('.')[2]
-				if ($major -ne 'v3' -or [string]::IsNullOrEmpty($minor) -or [string]::IsNullOrEmpty($release) -or [string]::IsNullOrEmpty($refdate))
-				{
-					Write-Host "Invalid Tag format. Must be v3.0.3-20200101010101. Refusing to build!"
-					exit 1
-				}
-				$appvername = "AppVerName=`"$program $version-$refdate`""
-				$version = $githubref[2]
-			}
-			Write-Host "$program version is now $version"
-			Set-Content -Path "$builddir\Version.py" -Value "$appvername"
-		}
-		
-	}
-	
+	return $refdate
 }
+
 function BuildAll($programs)
 {
 	CheckPythonVersion
@@ -523,7 +475,6 @@ function Virustotal
 		Write-Host "Uploading $file to VirusTotal..."
 		Start-Process -Wait -NoNewWindow -FilePath "python.exe" -ArgumentList "VirusTotalSubmit.py -v $file"
 	}
-		
 }
 
 function DoRelease
@@ -808,6 +759,7 @@ if ($everything -eq $false)
 	{
 		updateVersion($programs)
 	}
+	$virus = $false
 }
 else
 {
