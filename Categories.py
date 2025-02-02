@@ -533,7 +533,7 @@ class Categories( wx.Panel ):
 		elif self.colNameFields[self.colCur][1] in ('distance', 'firstLapDistance'):
 			try:
 				d = Utils.positiveFloatLocale( self.grid.GetCellValue(self.rowCur, self.colCur) )
-				self.grid.SetCellValue( self.rowCur, self.colCur, f'{d:.3n}' if d > 0.0 else '' )
+				self.grid.SetCellValue( self.rowCur, self.colCur, f'{d:.3n}' if d>0.0 else '' )
 			except (ValueError, TypeError):
 				self.grid.SetCellValue( self.rowCur, self.colCur, '' )
 			
@@ -852,7 +852,7 @@ and remove them from other categories.'''),
 				for field in ('distance', 'firstLapDistance'):
 					try:
 						d = Utils.floatLocale( values[field] )
-						self.grid.SetCellValue( r, self.iCol[field], f'{d:.3n}' if d else '' )
+						self.grid.SetCellValue( r, self.iCol[field], f'{d:.3n}' if d>0.0 else '' )
 					except Exception:
 						self.grid.SetCellValue( r, self.iCol[field], '' )
 						values[field] = ''
