@@ -6,6 +6,7 @@ import xlsxwriter
 import Utils
 import Model
 from AddExcelInfo import AddExcelInfo
+from DistanceCellEditor import DistanceCellEditor
 
 from Undo import undo
 from ReorderableGrid import ReorderableGrid
@@ -349,6 +350,7 @@ class Categories( wx.Panel ):
 		
 		self.boolCols = set()
 		self.choiceCols = set()
+		self.floatCols = set()
 		self.readOnlyCols = set()
 		self.dependentCols = set()
 		
@@ -413,11 +415,12 @@ class Categories( wx.Panel ):
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.readOnlyCols.add( col )
 				self.dependentCols.add( col )
-				
+
 			elif fieldName in ['distance', 'firstLapDistance'] :
-				attr.SetEditor( GridCellFloatEditor(7, 3) )
+				attr.SetEditor( DistanceCellEditor() )
 				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				self.floatCols.add (col )
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'distanceType':
@@ -509,7 +512,10 @@ class Categories( wx.Panel ):
 	def onCellSelected( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
-		if self.colCur in self.choiceCols or self.colCur in self.boolCols:
+
+		if self.colCur in self.floatCols:
+			return
+		elif self.colCur in self.choiceCols or self.colCur in self.boolCols:
 			wx.CallAfter( self.grid.EnableCellEditControl )
 		elif self.colCur == self.iCol['setLaps']:
 			race = Model.race
