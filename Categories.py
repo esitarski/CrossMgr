@@ -415,7 +415,6 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName in ('distance', 'firstLapDistance'):
-				# attr.SetEditor( GridCellFloatEditor(7, 3) )		# Removed due to crash bugs in GridCellFloatEditor
 				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
@@ -533,7 +532,7 @@ class Categories( wx.Panel ):
 			wx.CallAfter( self.fixCells )
 		elif self.colNameFields[self.colCur][1] in ('distance', 'firstLapDistance'):
 			try:
-				d = Utils.positiveFloatLocale( self.grid.GetCellValue( self.rowCur, self.colCur ) )
+				d = Utils.positiveFloatLocale( self.grid.GetCellValue(self.rowCur, self.colCur) )
 				self.grid.SetCellValue( self.rowCur, self.colCur, f'{d:.3n}' if d > 0.0 else '' )
 			except (ValueError, TypeError):
 				self.grid.SetCellValue( self.rowCur, self.colCur, '' )
@@ -561,6 +560,7 @@ class Categories( wx.Panel ):
 		if not Model.race:
 			return False
 		
+		# Check if we need to update the Categories page if something relevant changes externally.
 		categories = Model.race.getAllCategories()
 		
 		for cat in categories:
