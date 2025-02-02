@@ -532,6 +532,21 @@ def getDocumentsDir():
 	return dd
 	
 #------------------------------------------------------------------------
+def positiveFloatLocale( v ):
+	if isinstance( v, float ):
+		return v if v > 0.0 else 0.0
+	if isinstance( v, int ):
+		return float(v if v > 0 else 0)
+	if isinstance( v, str ):
+		v = v.strip()
+		if v.startswith('-'):
+			return 0.0
+		if '.' not in v:
+			v = v.replace(',', '.')			# Normalize decimal sep.
+		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
+	return float( v )
+
 def floatLocale( v ):
 	if isinstance( v, float ):
 		return v
