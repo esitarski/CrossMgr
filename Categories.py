@@ -15,7 +15,7 @@ from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
 from RaceInputState import RaceInputState
 from SetLaps import SetLaps
-from wx.grid import GridCellFloatEditor, GridCellNumberEditor
+from wx.grid import GridCellNumberEditor
 
 #--------------------------------------------------------------------------------
 
@@ -414,8 +414,7 @@ class Categories( wx.Panel ):
 				self.readOnlyCols.add( col )
 				self.dependentCols.add( col )
 				
-			elif fieldName in ['distance', 'firstLapDistance'] :
-				attr.SetEditor( GridCellFloatEditor(7, 3) )
+			elif fieldName in ('distance', 'firstLapDistance'):
 				attr.SetRenderer( gridlib.GridCellFloatRenderer(7, 3) )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
@@ -505,7 +504,7 @@ class Categories( wx.Panel ):
 				wx.CallAfter( self.fixRowColours, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
 		event.Skip()
-	
+		
 	def onCellSelected( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
@@ -529,8 +528,15 @@ class Categories( wx.Panel ):
 	def onCellChanged( self, event ):
 		self.rowCur = event.GetRow()
 		self.colCur = event.GetCol()
-		if self.colCur in (1, 2):
+		if self.colNameFields[self.colCur][1] in ('catType','active'):
 			wx.CallAfter( self.fixCells )
+		elif self.colNameFields[self.colCur][1] in ('distance', 'firstLapDistance'):
+			try:
+				d = Utils.positiveFloatLocale( self.grid.GetCellValue(self.rowCur, self.colCur) )
+				self.grid.SetCellValue( self.rowCur, self.colCur, f'{d:.3n}' if d>0.0 else '' )
+			except (ValueError, TypeError):
+				self.grid.SetCellValue( self.rowCur, self.colCur, '' )
+			
 		event.Skip()
 
 	def onEditorCreated( self, event ):
@@ -554,6 +560,7 @@ class Categories( wx.Panel ):
 		if not Model.race:
 			return False
 		
+		# Check if we need to update the Categories page if something relevant changes externally.
 		categories = Model.race.getAllCategories()
 		
 		for cat in categories:
@@ -839,8 +846,17 @@ and remove them from other categories.'''),
 				return
 			numStrTuples = []
 			for r in range(self.grid.GetNumberRows()):
-				values = { name:self.grid.GetCellValue(r, c) for name, c in self.iCol.items()
-																			if name not in self.computedFields }
+				values = { name:self.grid.GetCellValue(r, c)
+					for name, c in self.iCol.items() if name not in self.computedFields
+				}
+				for field in ('distance', 'firstLapDistance'):
+					try:
+						d = Utils.floatLocale( values[field] )
+						self.grid.SetCellValue( r, self.iCol[field], f'{d:.3n}' if d>0.0 else '' )
+					except Exception:
+						self.grid.SetCellValue( r, self.iCol[field], '' )
+						values[field] = ''
+				
 				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
 				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
 				numStrTuples.append( values )

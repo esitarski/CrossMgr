@@ -80,10 +80,10 @@ class TeamResults( wx.Panel ):
 		#
 		xlFileName = os.path.splitext(fileName)[0] + '-TeamResults.xlsx'
 
+		wb = xlsxwriter.Workbook( xlFileName )
+		formats = ExportGrid.ExportGrid.getExcelFormatsXLSX( wb )
+		
 		try:
-			wb = xlsxwriter.Workbook( xlFileName )
-			formats = ExportGrid.ExportGrid.getExcelFormatsXLSX( wb )
-			
 			ues = Utils.UniqueExcelSheetName()
 			for category in race.getCategories( publishOnly=True ):			
 				eg = self.toExportGrid( category )
@@ -93,7 +93,6 @@ class TeamResults( wx.Panel ):
 			wb.close()
 		except Exception as e:
 			logException( e, sys.exc_info() )
-		del wb
 		
 		#---------------------------------------------------------------------------------
 		# Create a PDF file.
@@ -114,7 +113,6 @@ class TeamResults( wx.Panel ):
 			pdf.output( pdfFileName, 'F' )
 		except Exception as e:
 			logException( e, sys.exc_info() )
-		del pdf
 	
 	def getColNames( self ):
 		race = Model.race
@@ -180,12 +178,12 @@ class TeamResults( wx.Panel ):
 		colnames = [c.replace('\n', ' ') for c in self.getColNames()]
 		data = [[] for c in colnames]
 		for pos, r in enumerate( GetTeamResults(category), 1 ):
-			data[0].append( '{}'.format(pos) )
+			data[0].append( f'{pos}' )
 			data[1].append( r.team )
 			data[2].append( r.criteria )
 			data[3].append( r.gap )
 			if race.showNumTeamParticipants:
-				data[4].append( '{}'.format(r.numParticipants) )
+				data[4].append( f'{r.numParticipants}' )
 		
 		return ExportGrid.ExportGrid( colnames=colnames, data=data, title=title, leftJustifyCols=[1] )
 	
