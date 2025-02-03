@@ -40,7 +40,7 @@ import Utils
 from AddExcelInfo import AddExcelInfo
 from LogPrintStackStderr import LogPrintStackStderr
 from ForecastHistory	import ForecastHistory
-from NumKeypad			import NumKeypad
+from Record import Record
 from Actions			import Actions
 from Gantt				import Gantt
 from History			import History
@@ -680,7 +680,7 @@ class MainWin( wx.Frame ):
 			
 		self.attrClassName = [
 			[ 'actions',		Actions,			_('Actions') ],
-			[ 'record',			NumKeypad,			_('Record') ],
+			[ 'record', Record, _('Record')],
 			[ 'results',		Results,			_('Results') ],
 			[ 'pulled',			Pulled,				_('Pulled') ],
 			[ 'history',		History,			_('Passings') ],
