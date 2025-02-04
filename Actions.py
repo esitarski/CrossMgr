@@ -203,10 +203,17 @@ FinishText = '\n'.join(_('Finish Race').split(maxsplit=1))
 class Actions( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
 	iSkipFirstTagRead = 2
+	normalFont: wx.Font
+	largeFont: wx.Font
+	mediumFont: wx.Font
 
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__(parent, id)
-		
+
+		self.normalFont = wx.Font(wx.FONTSIZE_SMALL, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		self.largeFont = wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+		self.mediumFont = wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
 		
 		ps = wx.BoxSizer( wx.VERTICAL )
@@ -228,12 +235,12 @@ class Actions( wx.Panel ):
 		self.button.SetFontToFitLabel()
 		self.button.SetForegroundColour( wx.Colour(128,128,128) )
 		self.Bind(wx.EVT_BUTTON, self.onPress, self.button )
-		
+
 		self.clock = Clock( self.leftPanel, size=(190,190), checkFunc=self.updateClock )
 		self.clock.SetBackgroundColour( wx.WHITE )
 		
 		self.raceIntro = wx.StaticText( self.leftPanel, label =  '' )
-		self.raceIntro.SetFont( wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.NORMAL) )
+		self.raceIntro.SetFont( self.largeFont )
 		
 		self.chipTimingOptions = wx.RadioBox(
 			self.leftPanel,
@@ -274,7 +281,7 @@ class Actions( wx.Panel ):
 		self.rightPanel = wx.Panel( self.splitter )
 		self.rightPanel.SetBackgroundColour( wx.Colour(255,255,255) )
 		checklistTitle = wx.StaticText( self.rightPanel, label = _('Checklist:') )
-		checklistTitle.SetFont( wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) )
+		checklistTitle.SetFont( self.mediumFont )
 		self.checklist = Checklist.Checklist( self.rightPanel )
 		
 		hsSub = wx.BoxSizer( wx.VERTICAL )
@@ -291,10 +298,17 @@ class Actions( wx.Panel ):
 		wx.CallAfter( self.GetSizer().Layout )
 		
 	def setWrappedRaceInfo( self, event = None ):
+		introFont: wx.Font = self.normalFont
+		labelText:str = _('No race active. Create a new race, or open existing race from the File menu.')
+		if Model.race:
+			introFont = self.largeFont
+			labelText =  Model.race.getRaceIntro()
+
+		self.raceIntro.SetFont(introFont)
 		wrapWidth = self.leftPanel.GetClientSize()[0] - self.button.GetClientSize()[0] - 20
 		dc = wx.WindowDC( self.raceIntro )
-		dc.SetFont( self.raceIntro.GetFont() )
-		label = wordwrap( Model.race.getRaceIntro() if Model.race else '', wrapWidth, dc )
+		dc.SetFont( introFont )
+		label = wordwrap( labelText, wrapWidth, dc )
 		self.raceIntro.SetLabel( label )
 		self.leftPanel.GetSizer().Layout()
 		if event:
@@ -422,10 +436,21 @@ class Actions( wx.Panel ):
 	
 	def commit( self ):
 		self.checklist.commit()
+
+	def HideChecklist( self ) -> None:
+		self.checklist.Hide()
+
+	def HideStartRaceButton( self ) -> None:
+		self.button.Hide()
+		self.button.Enable(False)
+
+	def ShowChecklist( self ) -> None:
+		self.checklist.Show()
 	
 	def refresh( self ):
 		self.clock.Start()
 		self.button.Enable( False )
+		self.button.Show ( True )
 		self.startRaceTimeCheckBox.Enable( False )
 		self.settingsButton.Enable( False )
 		self.button.SetLabel( StartText )
@@ -435,6 +460,8 @@ class Actions( wx.Panel ):
 		
 		with Model.LockRace() as race:
 			if race:
+				self.ShowChecklist()
+
 				self.settingsButton.Enable( True )
 				
 				# Adjust the chip recording options for TT.
@@ -472,9 +499,14 @@ class Actions( wx.Panel ):
 				if getattr(race, 'isTimeTrial', False):
 					self.chipTimingOptions.Enable( False )
 					self.chipTimingOptions.Show( False )
-					
+
+			else:
+				# Display an info message if no no race is active.
+				self.HideChecklist()
+				self.HideStartRaceButton()
+
 			self.GetSizer().Layout()
-		
+
 		self.setWrappedRaceInfo()
 		self.checklist.refresh()
 		

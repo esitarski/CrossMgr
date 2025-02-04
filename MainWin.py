@@ -40,7 +40,7 @@ import Utils
 from AddExcelInfo import AddExcelInfo
 from LogPrintStackStderr import LogPrintStackStderr
 from ForecastHistory	import ForecastHistory
-from NumKeypad			import NumKeypad
+from Record import Record
 from Actions			import Actions
 from Gantt				import Gantt
 from History			import History
@@ -664,9 +664,9 @@ class MainWin( wx.Frame ):
 			| flatnotebook.FNB_NODRAG
 			| flatnotebook.FNB_DROPDOWN_TABS_LIST
 			| flatnotebook.FNB_NO_NAV_BUTTONS
+			| flatnotebook.FNB_FF2
 		)
 		self.notebook = flatnotebook.FlatNotebook( self.splitter, 1000, agwStyle=bookStyle )
-		self.notebook.SetBackgroundColour( wx.WHITE )
 		self.notebook.Bind( wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onPageChanging )
 		
 		self.fileDrop = FileDrop()	# Create a file drop target for all the main pages.
@@ -680,7 +680,7 @@ class MainWin( wx.Frame ):
 			
 		self.attrClassName = [
 			[ 'actions',		Actions,			_('Actions') ],
-			[ 'record',			NumKeypad,			_('Record') ],
+			[ 'record', Record, _('Record')],
 			[ 'results',		Results,			_('Results') ],
 			[ 'pulled',			Pulled,				_('Pulled') ],
 			[ 'history',		History,			_('Passings') ],
@@ -4296,8 +4296,7 @@ def MainLoop():
 	app = wx.App(False)
 	app.SetAppName("CrossMgr")
 	
-	if 'WXMAC' in wx.Platform:
-		wx.Log.SetActiveTarget( LogPrintStackStderr() )
+	wx.Log.SetActiveTarget( LogPrintStackStderr() )
 			
 	random.seed()
 
