@@ -128,14 +128,7 @@ class Keypad( wx.Panel ):
 		elif keycode in clearCodes:
 			self.numEdit.SetValue( '' )
 		elif keycode in actionCodes:
-			if   keycode == ord('/'):	# DNF
-				pass	
-			elif keycode == ord('*'):	# DNS
-				pass
-			elif keycode == ord('-'):	# PUL
-				pass
-			elif keycode == ord('+'):	# DQ
-				pass
+			pass
 		elif keycode < 255:
 			if keycode in validKeyCodes:
 				event.Skip()
