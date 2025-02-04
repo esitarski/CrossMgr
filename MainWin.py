@@ -4296,8 +4296,7 @@ def MainLoop():
 	app = wx.App(False)
 	app.SetAppName("CrossMgr")
 	
-	if 'WXMAC' in wx.Platform:
-		wx.Log.SetActiveTarget( LogPrintStackStderr() )
+	wx.Log.SetActiveTarget( LogPrintStackStderr() )
 			
 	random.seed()
 
