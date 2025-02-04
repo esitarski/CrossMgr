@@ -4,18 +4,15 @@ import wx.lib.buttons
 
 import Model
 import Utils
+from ManualTimeEntryPanel import ManualTimeEntryPanel, TimeEntryController
 from ReorderableGrid import ReorderableGrid
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
 
-class BibTimeRecord( wx.Panel ):
-	def __init__( self, parent, controller, id = wx.ID_ANY ):
-		super().__init__(parent, id)
-		# self.SetBackgroundColour( wx.Colour(173, 216, 230) )
-		self.SetBackgroundColour( wx.WHITE )
+class BibTimeRecord( ManualTimeEntryPanel, TimeEntryController ):
+	def __init__( self, parent: wx.Window, controller: ManualTimeEntryPanel = None, id = wx.ID_ANY ):
+		super().__init__(parent, controller, id)
 
-		self.controller = controller
-		
 		fontPixels = 36
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		dc = wx.WindowDC( self )
@@ -131,8 +128,7 @@ class BibTimeRecord( wx.Panel ):
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
 				mainWin.forecastHistory.logNum( int(num) )
-			if self.controller:
-				self.controller.refreshLaps()
+			self.refreshLaps()
 		if row < self.grid.GetNumberRows():
 			self.grid.DeleteRows( row, 1 )
 	
@@ -251,6 +247,12 @@ class BibTimeRecord( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if self.bibCur and mainWin:
 			mainWin.forecastHistory.SelectNumShowPage( self.bibCur, 'iChartPage' )
+
+	def _EnableControls(self):
+		pass
+
+	def _DisableControls(self):
+		pass
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
@@ -258,7 +260,12 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	bibTimeRecord = BibTimeRecord(mainWin, None)
+
+	AnonymousTimeEntryController = type('TimeEntryController', (object,), {'refreshLaps': lambda self: print ('Laps refreshed')})
+	testController = AnonymousTimeEntryController()
+
+	bibTimeRecord = BibTimeRecord(mainWin, testController)
+	bibTimeRecord.Disable()
 	bibTimeRecord.refresh()
 	mainWin.Show()
 	app.MainLoop()

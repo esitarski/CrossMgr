@@ -11,6 +11,7 @@ from BibTimeRecord import BibTimeRecord
 from ClockDigital import ClockDigital
 from GetResults import GetResultsWithData, GetLastRider
 from LapsToGoCount import LapsToGoCountGraph
+from ManualTimeEntryPanel import TimeEntryController
 from NonBusyCall import NonBusyCall
 from Keypad import Keypad, getLapInfo, SplitterMinPos
 from RaceHUD import RaceHUD
@@ -19,7 +20,7 @@ from TimeTrialRecord import TimeTrialRecord
 from Utils import SetLabel
 
 
-class Record(wx.Panel):
+class Record(wx.Panel, TimeEntryController):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__(parent, id)
 
@@ -457,12 +458,26 @@ class Record(wx.Panel):
 		self.clock.Start()
 
 		race = Model.race
-		enable = bool(race and race.isRunning())
+		if race is None:
+			enable = False
+			disableReason = 'No race is open.'
+		elif not race.isRunning():
+			enable = False
+			disableReason = 'Race is not running'
+		else:
+			enable = True
+			disableReason = None
+
 		if self.isEnabled != enable:
 			self.isEnabled = enable
-		if not enable:
-			if self.isKeypadInputMode():
-				self.keypad.numEdit.SetValue( '' )
+
+		self.keypad.Disable(not enable, reason=disableReason)
+		self.timeTrialRecord.Disable(not enable, reason=disableReason)
+		self.bibTimeRecord.Disable(not enable, reason=disableReason)
+
+		if not enable and self.isKeypadInputMode():
+			self.keypad.numEdit.SetValue( '' )
+
 		if self.isBibTimeInputMode():
 			self.bibTimeRecord.refresh()
 

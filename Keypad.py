@@ -11,16 +11,16 @@ from GetResults import GetResults
 import Model
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
+from Log import getLogger
+from ManualTimeEntryPanel import ManualTimeEntryPanel, TimeEntryController
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
 
-class Keypad( wx.Panel ):
-	def __init__( self, parent, controller, id = wx.ID_ANY ):
-		super().__init__(parent, id)
-		self.SetBackgroundColour( wx.WHITE )
-		self.controller = controller
-		
+class Keypad( ManualTimeEntryPanel ):
+	def __init__( self, parent: wx.Window, controller: TimeEntryController|None = None, id = wx.ID_ANY ):
+		super().__init__(parent, controller, id)
+
 		fontPixels = 36
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		dc = wx.WindowDC( self )
@@ -32,6 +32,8 @@ class Keypad( wx.Panel ):
 		outsideBorder = 4
 
 		vsizer = wx.BoxSizer( wx.VERTICAL )
+
+		# self._panel = wx.Panel( self )
 		
 		self.numEditHS = wx.BoxSizer( wx.HORIZONTAL )
 		
@@ -83,19 +85,19 @@ class Keypad( wx.Panel ):
 			
 		font = wx.Font((0,int(fontPixels*.6)), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		
-		hbs = wx.GridSizer( 2, 2, 4, 4 )
+		self._actionButtonSizer = wx.GridSizer( 2, 2, 4, 4 )
 		for label, actionFn in [(_('DN&F'),DoDNF), (_('DN&S'),DoDNS), (_('&Pull'),DoPull), (_('D&Q'),DoDQ)]:
 			btn = MakeKeypadButton( self, label=label, style=wx.EXPAND|wx.GROW, font = font)
 			btn.Bind( wx.EVT_BUTTON, lambda event, fn = actionFn: self.doAction(fn) )
-			hbs.Add( btn, flag=wx.EXPAND )
+			self._actionButtonSizer.Add( btn, flag=wx.EXPAND )
 		
-		vsizer.Add( hbs, flag=wx.EXPAND|wx.TOP, border=4 )
+		vsizer.Add( self._actionButtonSizer, flag=wx.EXPAND|wx.TOP, border=4 )
 		
 		self.touchBitmap = wx.Bitmap( os.path.join(Utils.getImageFolder(), 'touch24.png'), wx.BITMAP_TYPE_PNG )
 		self.touchButton = wx.BitmapButton( self, bitmap = self.touchBitmap )
 		self.touchButton.Bind( wx.EVT_BUTTON, self.onToggleTouchScreen)
 		self.touchButton.SetToolTip(wx.ToolTip(_("Touch Screen Toggle")))
-		
+
 		vsizer.Add( self.touchButton, flag=wx.TOP|wx.ALIGN_CENTRE, border=12 )
 		self.SetSizer( vsizer )
 	
@@ -103,7 +105,14 @@ class Keypad( wx.Panel ):
 		self.showTouchScreen ^= True
 		self.keypadPanel.Show( self.showTouchScreen )
 		self.GetSizer().Layout()
-		self.GetParent().GetParent().GetParent().SetSashPosition( SplitterMaxPos if self.showTouchScreen else SplitterMinPos )
+		# There has to be a better way here to pass this call up
+
+		try:
+			sashOwner = self.GetParent().GetParent().GetParent()
+			sashOwner.SetSashPosition( SplitterMinPos if self.showTouchScreen else SplitterMaxPos )
+		except Exception as e:
+			log = getLogger()
+			log.error('Keypad control was not placed on panel with a sash great-grandparent.')
 		try:
 			self.GetParent().GetSizer().Layout()
 		except Exception:
@@ -144,7 +153,7 @@ class Keypad( wx.Panel ):
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
 				mainWin.forecastHistory.logNum( nums )
-		self.controller.refreshLaps()
+		self.refreshLaps()
 		wx.CallAfter( self.numEdit.SetValue, '' )
 	
 	def doAction( self, action ):
@@ -157,10 +166,25 @@ class Keypad( wx.Panel ):
 		if success:
 			self.numEdit.SetValue( '' )
 			wx.CallAfter( Utils.refreshForecastHistory )
-	
-	def Enable( self, enable ):
-		wx.Panel.Enable( self, enable )
-		
+
+	def _DisableControls(self):
+		self.numEdit.Disable()
+		self.enterBtn.Disable()
+		self.delBtn.Disable()
+		for b in self.num:
+			b.Disable()
+		for b in self._actionButtonSizer.GetChildren():
+			if b.IsWindow():
+				b.GetWindow().Disable()
+
+	def _EnableControls(self):
+		self.numEdit.Enable()
+		self.enterBtn.Enable()
+		self.delBtn.Enable()
+		for b in self.num:
+			b.Enable()
+
+
 def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 	race = Model.race
 	if not race or not race.startTime:
@@ -262,3 +286,19 @@ def getCategoryStats():
 	categoryStats[0] = ( _('All'), getStatsStr(finishedAll, onCourseAll, statsAll) )
 	return categoryStats
 
+
+if __name__ == '__main__':
+	Utils.disable_stdout_buffering()
+	app = wx.App(False)
+	mainWin = wx.Frame(None,title="CrossMgr Keypad", size=(1000,800))
+	Model.setRace( Model.Race() )
+	model = Model.getRace()
+	model._populate()
+	model.enableUSBCamera = False
+	AnonymousTimeEntryController = type('TimeEntryController', (object,), {'refreshLaps': lambda self: print ('Laps refreshed')})
+	testController = AnonymousTimeEntryController()
+
+	numKeypad = Keypad(mainWin, testController)
+	numKeypad.Disable(reason='This is a test')
+	mainWin.Show()
+	app.MainLoop()
