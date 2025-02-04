@@ -56,7 +56,6 @@ from GapChart			import GapChart
 from LapCounter			import LapCounter
 from Announcer			import Announcer
 from Primes				import Primes, GetGrid
-from ResultNote			import ResultNote
 from Prizes				import Prizes
 from HistogramPanel		import HistogramPanel
 from UnmatchedTagsGantt	import UnmatchedTagsGantt
@@ -690,7 +689,6 @@ class MainWin( wx.Frame ):
 			[ 'categories', 	Categories,			_('Categories') ],
 			[ 'properties',		Properties,			_('Properties') ],
 			[ 'primes',			Primes,				_('Primes') ],
-			[ 'resultNote',		ResultNote,			_('Result Notes') ],
 			[ 'prizes',			Prizes,				_('Prizes') ],
 			[ 'raceAnimation',	RaceAnimation,		_('Animation') ],
 			#[ 'situation',		Situation,			_('Situation') ],
