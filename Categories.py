@@ -531,11 +531,8 @@ class Categories( wx.Panel ):
 		if self.colNameFields[self.colCur][1] in ('catType','active'):
 			wx.CallAfter( self.fixCells )
 		elif self.colNameFields[self.colCur][1] in ('distance', 'firstLapDistance'):
-			try:
-				d = Utils.positiveFloatLocale( self.grid.GetCellValue(self.rowCur, self.colCur) )
-				self.grid.SetCellValue( self.rowCur, self.colCur, f'{d:.3n}' if d>0.0 else '' )
-			except (ValueError, TypeError):
-				self.grid.SetCellValue( self.rowCur, self.colCur, '' )
+			d = Utils.positiveFloatLocale( self.grid.GetCellValue(self.rowCur, self.colCur) )
+			self.grid.SetCellValue( self.rowCur, self.colCur, f'{d:.3n}' if d>0.0 else '' )
 			
 		event.Skip()
 
@@ -850,12 +847,10 @@ and remove them from other categories.'''),
 					for name, c in self.iCol.items() if name not in self.computedFields
 				}
 				for field in ('distance', 'firstLapDistance'):
-					try:
-						d = Utils.floatLocale( values[field] )
-						self.grid.SetCellValue( r, self.iCol[field], f'{d:.3n}' if d>0.0 else '' )
-					except Exception:
-						self.grid.SetCellValue( r, self.iCol[field], '' )
-						values[field] = ''
+					d = Utils.positiveFloatLocale( values[field] )
+					s = f'{d:.3n}' if d>0.0 else ''
+					self.grid.SetCellValue( r, self.iCol[field], s )
+					values[field] = s
 				
 				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
 				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
