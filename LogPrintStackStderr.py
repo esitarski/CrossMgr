@@ -3,6 +3,7 @@ import sys
 import datetime
 import traceback
 
+# TODO: Modify this class to write to CrossMgrLogger
 class LogPrintStackStderr( wx.Log ):
     def logHeader( self ):
         sys.stderr.write( '*' * 78 + '\n' )
