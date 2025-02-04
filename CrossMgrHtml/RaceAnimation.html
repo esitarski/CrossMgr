@@ -429,6 +429,7 @@ var translations = {
 	'Race Chart':	['Race Chart',		'Tableau de la course',		'Tabla de carrera'],
 	'Race Position':	['Race Position',	'Position de course',		'Posición de carrera'],
 	'Show Start Offsets':	['Show Start Offsets',	'Afficher commencer décalages',	'Mostrar empezar a desplazamientos'],
+	'Show Laps Times':	['Show Lap Times',	'Afficher les temps au tours',	'Mostrar tiempos de vuelta'],
 	'Show Details':	['Show Details',	'Afficher les détails',	'Mostrar los detalles'],
 	'Race Lightning':	['Race Lightning',		"Éclair de course",	'Rayo de carrera'],
 	'Loop Continuously':['Loop Continuously',	'Boucle continue',	'Repetirá continuamente'],
@@ -592,13 +593,12 @@ function doReload( forceRefresh ) {
 }
 
 var reloadTriggered = false;
-function TriggerReload( leaderRaceTimes, tCur, iLapHint )
-{
+function TriggerReload( leaderRaceTimes, tCur, iLapHint ) {
 	// If the race is running, trigger a reload of the page a few seconds after the leader passes.
 	if( !raceIsRunning || reloadTriggered )
 		return;
 		
-	var maxLaps = leaderRaceTimes.length - 1;
+	const maxLaps = leaderRaceTimes.length - 1;
 	if( maxLaps < 1 )
 		return;
 		
@@ -611,31 +611,30 @@ function TriggerReload( leaderRaceTimes, tCur, iLapHint )
 	}
 }
 
-function OpenRiderDashboardViewerWindow( bib )
-{
-	var dataToGo = {};
-	var catDetailsToGo = [];
-	for( var i = 0; i < catDetails.length; ++i ) {
-		var c = catDetails[i];
-		for( var p = 0; p < c.pos.length; ++p ) {
+function OpenRiderDashboardViewerWindow( bib ) {
+	let dataToGo = {};
+	let catDetailsToGo = [];
+	for( let i = 0; i < catDetails.length; ++i ) {
+		const c = catDetails[i];
+		for( let p = 0; p < c.pos.length; ++p ) {
 			if( c.pos[p] == bib ) {
 				catDetailsToGo.push( c );
-				for( var p = 0; p < c.pos.length; ++p )
-					dataToGo[c.pos[p]] = data[c.pos[p]];
+				for( let q = 0; q < c.pos.length; ++q )
+					dataToGo[c.pos[q]] = data[c.pos[q]];
 				break;
 			}
 		}
 	}	
-	var payload = {'bib': bib, 'raceName': raceNameText + ': ' + raceDate, 'data':dataToGo, 'catDetails':catDetailsToGo};
+	const payload = {'bib': bib, 'raceName': raceNameText + ': ' + raceDate, 'data':dataToGo, 'catDetails':catDetailsToGo};
 	
-	var d = data[bib];
-	var name = (d.FirstName && d.LastName ? d.FirstName + ' ' + d.LastName : d.FirstName ? d.FirstName : d.LastName);
-	var newTitle = bib + ': ' + name + ' Dashboard';
-	var template = riderDashboard.replace(/{-{/g, '<').replace(/}-}/g, '>').replace(
+	const d = data[bib];
+	const name = (d.FirstName && d.LastName ? d.FirstName + ' ' + d.LastName : d.FirstName ? d.FirstName : d.LastName);
+	const newTitle = bib + ': ' + name + ' Dashboard';
+	const template = riderDashboard.replace(/{-{/g, '<').replace(/}-}/g, '>').replace(
 					'payload = null;', 'payload=' + JSON.stringify(payload) + ';' ).replace(
 					'TTIITTLLEE', newTitle.escapeHTML() );
 	
-	var w = window.open( '', '', '', true );
+	let w = window.open( '', '', '', true );
 	w.document.write( template );
 	w.document.close();
 }
@@ -643,20 +642,20 @@ function OpenRiderDashboardViewerWindow( bib )
 function GetLocationCount() {
 	if( !travelMap )
 		return [];
-	var locCnt = {};
+	let locCnt = {};
 	for( bib in data ) {
-		var d = data[bib];
-		var city = d['City'];
+		const d = data[bib];
+		const city = d['City'];
 		if( !city ) continue;
-		var region = (d['Prov'] || d['State'] || d['StateProv']);
+		const region = (d['Prov'] || d['State'] || d['StateProv']);
 		if( !region ) continue;
-		var location = city + ', ' + region;
+		const location = city + ', ' + region;
 		if( location in locCnt )
 			locCnt[location] += 1;
 		else
 			locCnt[location] = 1;
 	}
-	var locationCount = [];
+	let locationCount = [];
 	for( location in locCnt )
 		locationCount.push( [location, locCnt[location]] );
 	return locationCount;
@@ -720,49 +719,43 @@ function LineNormal( x1, y1, x2, y2, normLen )
 function getRiderPositionTime( num )
 {
 	// Returns the fraction of the lap covered by the num.
-	var info = data[num];
+	let info = data[num];
 	if( !info )
 		return [null, null];
-	var raceTimes = info['raceTimes'];
+	const raceTimes = info['raceTimes'];
 	if( !raceTimes || raceTimes.length == 0 )
 		return [null, null];
 	
-	var p;
-	if( t <= raceTimes[0] )
-	{
-		var firstLapRatio = info['flr'];
+	let p;
+	if( t <= raceTimes[0] ) {
+		const firstLapRatio = info['flr'];
 		p = 1.0 - firstLapRatio;
 		p -= Math.floor(p) - 1.0;
 		return [p, t];
 	}
 		
-	var tSearch = t;
-	var finishTime = info['finishTime'];
+	let tSearch = t;
+	const finishTime = info['finishTime'];
 	if( finishTime != null && finishTime < t )
 		tSearch = finishTime;
 		
-	if( tSearch >= raceTimes.back() )
-	{
-		var lastRaceTime = raceTimes.back();
+	if( tSearch >= raceTimes.back() ) {
+		const lastRaceTime = raceTimes.back();
 		p = raceTimes.length + (tSearch - lastRaceTime) / (lastRaceTime - raceTimes[raceTimes.length-2]);
 	}
-	else
-	{
-		var i = info['iLast'];
-		if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
-		{
+	else {
+		let i = info['iLast'];
+		if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) ) {
 			++i;
-			if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) )
-			{
+			if( !(raceTimes[i-1] < tSearch && tSearch <= raceTimes[i]) ) {
 				i = raceTimes.binSearch( tSearch );
 				if( raceTimes[i] < tSearch )
 					++i;
 			}
 			info['iLast'] = i;
 		}
-		if( i == 1 )
-		{
-			var firstLapRatio = info['flr'];
+		if( i == 1 ) {
+			const firstLapRatio = info['flr'];
 			p = (tSearch - raceTimes[i-1]) / (raceTimes[i] - raceTimes[i-1]);
 			p = 1.0 - firstLapRatio + p * firstLapRatio;
 			p -= Math.floor(p) - 1.0;
@@ -773,8 +766,7 @@ function getRiderPositionTime( num )
 	return [p, tSearch];
 }
 
-function DrawCircle( ctx, x, y, radius )
-{
+function DrawCircle( ctx, x, y, radius ) {
 	ctx.beginPath();
 	ctx.arc(x, y, radius, 0.0, Math.PI*2, true);
 	ctx.closePath();
@@ -782,82 +774,72 @@ function DrawCircle( ctx, x, y, radius )
 	ctx.stroke();
 }
 
-function DrawLine( ctx, x1, y1, x2, y2 )
-{
+function DrawLine( ctx, x1, y1, x2, y2 ) {
 	ctx.beginPath();
 	ctx.moveTo( x1, y1 );
 	ctx.lineTo( x2, y2 );
 	ctx.stroke();
 }
 
-function TimeDifference( a, b )
-{
+function TimeDifference( a, b ) {
 	// Returns (a - b) with proper precision.
-	if( showTimeDecimals )
-	{
+	if( showTimeDecimals ) {
 		a *= 100.0;
 		b *= 100.0;
 	}
-	var t = ~~a - ~~b;
+	const t = ~~a - ~~b;
 	if( showTimeDecimals )
 		t /= 100.0;
 	return t;
 }
 
 function FormatTime( t ) {
-	var tStr = '';
-	if( t < 0 )
-	{
+	let tStr = '';
+	if( t < 0 ) {
 		tStr = '-';
 		t = -t;
 	}
-	var secs = ~~t;
-	var h = ~~(secs / (60*60));
-	var m = (~~(secs / 60) % 60);
-	var s = ~~(secs % 60);
+	const secs = ~~t;
+	const h = ~~(secs / (60*60));
+	const m = (~~(secs / 60) % 60);
+	const s = ~~(secs % 60);
 	if( h > 0 )
 		tStr += h + (m < 10 ? ':0' : ':') + m + (s < 10 ? ':0' : ':') + s;
 	else
 		tStr += m + (s < 10 ? ':0' : ':') + s;
-	if( showTimeDecimals )
-	{
-		var decimals = ~~((t - ~~t) * 100);
+	if( showTimeDecimals ) {
+		const decimals = ~~((t - ~~t) * 100);
 		tStr += (decimals < 10 ? '.0' : '.') + decimals;
 	}
 	return tStr;
 }
 
-function FormatTimeGap( t )
-{
-	var tStr = '';
-	if( t < 0 )
-	{
+function FormatTimeGap( t ) {
+	let tStr = '';
+	if( t < 0 ) {
 		tStr = '-';
 		t = -t;
 	}
-	var secs = ~~t;
-	var h = ~~(secs / (60*60));
-	var m = (~~(secs / 60) % 60);
-	var s = ~~(secs % 60);
+	const secs = ~~t;
+	const h = ~~(secs / (60*60));
+	const m = (~~(secs / 60) % 60);
+	const s = ~~(secs % 60);
 	if( h > 0 )
 		tStr += h + (m < 10 ? 'h0' : 'h') + m + (s < 10 ? "'0" : "'") + s;
 	else
 		tStr += m + (s < 10 ? "'0" : "'") + s;
-	if( showTimeDecimals )
-	{
-		var decimals = ~~((t - ~~t) * 100);
+	if( showTimeDecimals ) {
+		const decimals = ~~((t - ~~t) * 100);
 		tStr += (decimals < 10 ? '.0' : '.') + decimals;
 	}
 	tStr += '"';
 	return tStr;
 }
 
-function getShortName( num )
-{
-	var d = data[num + ''];
-	var name = '';
-	if( d['LastName'] )
-	{
+function getShortName( num ) {
+	const d = data[num + ''];
+	let name = '';
+	if( d['LastName'] ) {
 		name = d['LastName'];
 		if( d['FirstName'] )
 			name += ', ' + d['FirstName'].substring(0, 1) + '.'
@@ -875,23 +857,21 @@ function FixedFormat( x, Length, Decimals ) {
 		s = Array(Length - s.length + 1).join('0') + s;
 	return s;
 }
-function TrackAnimation()
-{
+function TrackAnimation() {
 	this.iLapDistance = 0;
 	
-	this.getXYfromPosition = function( lane, position )
-	{
+	this.getXYfromPosition = function( lane, position ) {
 		// Get screen coordinates from rider position in lap.
 		// On the corner, use the ration of the angle, not the distance.
 		// This means that riders at the outer-most part of the curve will speed up
 		// so they do not lose ground to the riders in the inner part of the curve.
 		position -= ~~(position);
 		
-		var curveLength = (r/2.0) * Math.PI;
-		var trackLength = 4*r + 2 * curveLength;
-		var laneWidth = (r/2.0) / laneMax;
-		var laneLength = lane * laneWidth;
-		var riderLength = trackLength * position;
+		const curveLength = (r/2.0) * Math.PI;
+		const trackLength = 4*r + 2 * curveLength;
+		const laneWidth = (r/2.0) / laneMax;
+		const laneLength = lane * laneWidth;
+		let riderLength = trackLength * position;
 		
 		if( riderLength <= r/2 )
 			// rider is on starting straight
@@ -924,19 +904,17 @@ function TrackAnimation()
 		return [r + riderLength, r + r/2 + laneLength];
 	}
 
-	this.getRiderXYPT = function( num, lane )
-	{
+	this.getRiderXYPT = function( num, lane ) {
 		// Get the rider x, y, position (distance) and time.
-		var positionTime = getRiderPositionTime( num );
+		const positionTime = getRiderPositionTime( num );
 		if ( positionTime[0] == null )
 			return [null, null, null, null];
-		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
-		{
-			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
+		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] ) {
+			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );	// lapCur is a global variable.
 			return [null, null, positionTime[0], positionTime[1]];
 		}
-		lapCur = Math.max(lapCur, ~~positionTime[0]);
-		var xypt = this.getXYfromPosition( lane, positionTime[0] );
+		lapCur = Math.max(lapCur, ~~positionTime[0]);	// lapCur is a global variable.
+		let xypt = this.getXYfromPosition( lane, positionTime[0] );
 		if( reverseDirection )
 			xypt[0] = r * 4 - xypt[0];
 		if( finishTop )
@@ -948,19 +926,18 @@ function TrackAnimation()
 	
 	this.resetCache = function() { this.cache = {}; }
 
-	this.Refresh = function()
-	{
+	this.Refresh = function() {
 		if( !canvas || !canvasSupported || document[hidden] )
 			return;
 
 		// Redraw the canvas at this time.
-		var dc = canvas.getContext('2d');
+		let dc = canvas.getContext('2d');
 		
 		dc.textBaseline = "top";
 		
-		var width = canvas.width;
-		var height = canvas.height;
-		var backColour = 'white';
+		const width = canvas.width;
+		const height = canvas.height;
+		const backColour = 'white';
 		dc.fillStyle = backColour;
 		dc.fillRect(0, 0, width, height );
 		
@@ -972,10 +949,10 @@ function TrackAnimation()
 			r = ~~(height / 2);
 		r -= (r & 1);			// Make sure that r is an even number.
 
-		var tHeight = r / 8;
-		var fontHeight = ~~(tHeight * fontMult);
-		var fontStr = fontHeight + "px Arial";
-		var fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
+		const tHeight = r / 8;
+		const fontHeight = ~~(tHeight * fontMult);
+		const fontStr = fontHeight + "px Arial";
+		const fontStrHightlight = ~~(tHeight * 1.6 * fontMult) + "px Arial";
 		dc.font = fontStr;
 		
 		// Draw the track.
@@ -988,42 +965,37 @@ function TrackAnimation()
 		dc.fillRect( r, 0, 2*r, 2*r + 2 );
 		
 		// Draw the negative space.
-		laneWidth = (r/2) / laneMax;
+		const laneWidth = (r/2) / laneMax;
 		dc.fillStyle = backColour;
 		dc.strokeStyle = backColour;
 		DrawCircle( dc, r, r, r/2 - laneWidth );
 		DrawCircle( dc, 3*r, r, r/2 - laneWidth );
 		
-		var pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
+		const pp = [r, r/2 + laneWidth, 2*r, r - 2*laneWidth + 1];
 		dc.fillRect( pp[0], pp[1], pp[2], pp[3] );
 		dc.strokeRect( pp[0], pp[1], pp[2], pp[3] );
 		
 		// Draw the quarter lines and start/finish.
-		for( var i = 0; i <= 3; ++i )
-		{
-			var p = 0.25 * i;
-			var p1 = this.getXYfromPosition(-1, p);
-			var p2 = this.getXYfromPosition(laneMax+0.25, p);
-			if( reverseDirection )
-			{
+		for( let i = 0; i <= 3; ++i ) {
+			const p = 0.25 * i;
+			let p1 = this.getXYfromPosition(-1, p);
+			let p2 = this.getXYfromPosition(laneMax+0.25, p);
+			if( reverseDirection ) {
 				p1[0] = 4*r - p1[0];
 				p2[0] = 4*r - p2[0];
 			}
-			if( finishTop )
-			{
+			if( finishTop ) {
 				p1[1] = 2*r - p1[1];
 				p2[1] = 2*r - p2[1];
 			}
-			if( i == 0 )
-			{
-				var sfWidth = 8;
+			if( i == 0 ) {
+				const sfWidth = 8;
 				dc.strokeStyle = '#FFFFFF';
 				dc.fillRect( p1[0] - sfWidth / 2, Math.min(p1[1], p2[1]), sfWidth, r );
 				dc.strokeStyle = 'black';
 				dc.lineWidth = 2;
 			}
-			else
-			{
+			else {
 				dc.lineWidth = 1;
 				dc.strokeStyle = 'rgb(64,64,64)';
 			}
@@ -1035,25 +1007,27 @@ function TrackAnimation()
 		dc.fillStyle = 'black';
 		dc.lineWidth = 1;
 		numSize = (r/2)/laneMax;
-		lapCur = 0;
-		var riderRadius = laneWidth * 0.75;
-		var thickLine = r / 24;
-		var hasFirstLapRatio = false;
+		lapCur = 0;	// lapCur is a global variable.
+		let riderRadius = laneWidth * 0.75;
+		let thickLine = r / 24;
+		let hasFirstLapRatio = false;
 		firstLapRatio = 1.0;
-		if( data )
-		{
-			var riderXYPT = [];
-			var cd = catDetailsByName[categoryCur];
-			for( var p = 0; p < cd.pos.length; ++p )
-			{
-				var num = cd.pos[p];
-				if( !hasFirstLapRatio )
-				{
+		
+		let leaders = [];
+		let topThree = {};
+		let riderPosition = {};
+		
+		if( data ) {
+			let riderXYPT = [];
+			const cd = catDetailsByName[categoryCur];
+			for( let p = 0; p < cd.pos.length; ++p ) {
+				const num = cd.pos[p];
+				if( !hasFirstLapRatio ) {
 					hasFirstLapRatio = true;
 					if( cd['firstLapDistance'] && cd['lapDistance'] )
 						firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
 				}
-				var xypt = this.getRiderXYPT( num, num % laneMax );
+				const xypt = this.getRiderXYPT( num, num % laneMax );
 				if( xypt[2] == null )
 					continue;
 				xypt.splice( 0, 0, num );
@@ -1063,7 +1037,7 @@ function TrackAnimation()
 			// Sort in reverse order of position so we draw leaders last on top.
 			riderXYPT.sort(function(x, y)
 				{
-					var r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
+					let r = (y[3] ? y[3] : 0) - (x[3] ? x[3] : 0);	// Greatest distance.
 					if( r == 0 )
 						r = (x[4] ? x[4] : 0) - (y[4] ? y[4] : 0);	// Shortest time.
 					if( r == 0 )
@@ -1071,16 +1045,13 @@ function TrackAnimation()
 					return -r;
 				});
 				
-			var leaders = [];
-			for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
+			for( let i = riderXYPT.length - 1; i >= 0 && leaders.length < 3; --i )
 				leaders.push( riderXYPT[i][0] );
 
-			var topThree = {};
-			for( var i = 0; i < leaders.length; ++i )
+			for( let i = 0; i < leaders.length; ++i )
 				topThree[leaders[i]] = i;
 				
-			var riderPosition = {};
-			for( var i = 0; i < riderXYPT.length; ++i )
+			for( let i = 0; i < riderXYPT.length; ++i )
 			{
 				var rxypt = riderXYPT[i];
 				riderPosition[rxypt[0]] = riderXYPT.length - i;
@@ -1128,27 +1099,28 @@ function TrackAnimation()
 
 		// Draw the current lap
 		dc.fillStyle = 'black';
-		if( lapCur > 0 )
-		{
-			var table = [[],[]];
+		if( lapCur > 0 ) {
+			let table = [[],[]];
 			if( leaders.length > 0 ) {
-				var leaderRaceTimes = data[leaders[0]]['raceTimes'];
-				var maxLaps = leaderRaceTimes.length - 1;
-				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
+				const leaderRaceTimes = data[leaders[0]]['raceTimes'];
+				const maxLaps = leaderRaceTimes.length - 1;
+				const glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
 				this.iLapDistance = glr[0];
 				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
-				var lapRatio = glr[1];
+				let lapRatio = glr[1];
 				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
 				table[0].push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' ' + _('Laps of') + ' ' + maxLaps );
 				table[1].push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' ' + _('Laps to go') );
 				
-				var leaderCategory = data[leaders[0]]['raceCat'];
-				var cat = (leaderCategory && catDetailsByName ? catDetailsByName[leaderCategory] : null);
+				const leaderCategory = data[leaders[0]]['raceCat'];
+				const cat = (leaderCategory && catDetailsByName ? catDetailsByName[leaderCategory] : null);
 				if( cat ) {
-					var distanceCur = null, distanceRace = null;
+					let distanceCur = null;
+					let distanceRace = null;
+					
 					if( cat['lapDistance'] ) {
-						var flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
-						var distanceLap = cat['lapDistance'];
+						let flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
+						let distanceLap = cat['lapDistance'];
 						if( cat['distanceUnit'] != displayUnits )
 							distanceLap *= (displayUnits == 'km' ? 1.60934 : 0.621371);
 						distanceRace = distanceLap * (flr + maxLaps - 1);
@@ -1161,7 +1133,7 @@ function TrackAnimation()
 						distanceRace = cat['raceDistance'];
 						if( cat['distanceUnit'] != displayUnits )
 							distanceRace *= (displayUnits == 'km' ? 1.60934 : 0.621371);
-						var distanceCur = (t - leaderRaceTimes[0]) / (leaderRaceTimes.back() - leaderRaceTimes[0]) * distanceRace;
+						distanceCur = (t - leaderRaceTimes[0]) / (leaderRaceTimes.back() - leaderRaceTimes[0]) * distanceRace;
 						distanceCur = Math.max( 0.0, Math.min(distanceCur, distanceRace) );
 					}
 					if( distanceCur != null ) {
@@ -1173,17 +1145,17 @@ function TrackAnimation()
 				}
 			}
 			
-			var xRight  = 3*r + r/7;
-			for( var col = table[0].length - 1; col >= 0; --col ) {
-				var tWidth = 0;
-				for( var row = 0; row < table.length; ++row ) {
+			let xRight  = 3*r + r/7;
+			for( let col = table[0].length - 1; col >= 0; --col ) {
+				let tWidth = 0;
+				for( let row = 0; row < table.length; ++row ) {
 					tWidth = Math.max( tWidth, dc.measureText(table[row][col]).width );
 				}
 				xRight -= tWidth;
-				var yCur = r + r/2 - laneWidth - fontHeight * 1.2 - fontHeight;
-				for( var row = 0; row < table.length; ++row ) {
-					var value = table[row][col];
-					var tShow = value.replace(/^0+/, '');
+				let yCur = r + r/2 - laneWidth - fontHeight * 1.2 - fontHeight;
+				for( let row = 0; row < table.length; ++row ) {
+					const value = table[row][col];
+					let tShow = value.replace(/^0+/, '');
 					if( tShow.substring(0, 1) == '.' )
 						tShow = '0' + tShow;
 					dc.fillText( tShow, xRight + dc.measureText(Array(value.length - tShow.length + 1).join('0')).width, yCur );
@@ -1194,19 +1166,18 @@ function TrackAnimation()
 		}
 
 		// Draw the leader board.
-		var leaderWidthMax = 0;
-		var xLeft = ~~(r * 0.8);
+		let leaderWidthMax = 0;
+		let xLeft = ~~(r * 0.8);
 		if( leaders )
 		{
-			var x = xLeft;
-			var y = r / 2 + laneWidth * 1.5;
+			const x = xLeft;
+			let y = r / 2 + laneWidth * 1.5;
 			dc.fillText( 'Leaders:', x, y );
 			y += tHeight * 1.2;
 			thickLine = tHeight / 5;
 			riderRadius = tHeight / 3.5;
-			for( var i = 0; i < leaders.length; ++i )
-			{
-				var num = leaders[i];
+			for( let i = 0; i < leaders.length; ++i ) {
+				const num = leaders[i];
 				dc.lineWidth = 1;
 				dc.strokeStyle = backColour;
 				dc.fillStyle = trackColour;
@@ -1218,37 +1189,33 @@ function TrackAnimation()
 				DrawCircle( dc, x + tHeight / 2, y + tHeight / 2, riderRadius );
 				
 				dc.fillStyle = 'black';
-				var leadStr = num + ' ' + getShortName(num);
-				var tWidth = dc.measureText(leadStr).width;
+				const leadStr = num + ' ' + getShortName(num);
+				const tWidth = dc.measureText(leadStr).width;
 				if( tWidth > leaderWidthMax )
 					leaderWidthMax = tWidth;
 				dc.fillText( leadStr, x + tHeight * 1.2, y );
 				y += tHeight * 1.2;
 			}
 		}
-		if( numsToWatch )
-		{
-			var colCount = 0;
-			var x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
-			var yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
-			var y = yTop;
-			var rp = [];
-			for( n in numsToWatch )
-			{
-				var p = riderPosition[n];
+		if( numsToWatch ) {
+			let colCount = 0;
+			let x = xLeft + tHeight * 1.2 + leaderWidthMax + dc.measureText(' ').width;
+			const yTop = r / 2 + laneWidth * 1.5 + tHeight * 1.2;
+			let y = yTop;
+			let rp = [];
+			for( n in numsToWatch ) {
+				let p = riderPosition[n];
 				if( p != undefined )
 					rp.push( [p, n] );
 			}
 			rp.sort(function(x, y) { return x[0] - y[0]; });
 			
 			dc.fillStyle = 'black';
-			for( var i = 0; i < rp.length && i < 3; ++i )
-			{
-				var num = rp[i][1];
+			for( let i = 0; i < rp.length && i < 3; ++i ) {
+				const num = rp[i][1];
 				dc.fillText( '(' + rp[i][0] + ') ' + num + ' ' + getShortName(num), x, y );
 				y += tHeight * 1.2;
-				if( y >= r * 1.5 - tHeight * 1.5 )
-				{
+				if( y >= r * 1.5 - tHeight * 1.5 ) {
 					if( ++colCount == 2 )
 						break;
 					y = yTop;
@@ -1259,8 +1226,8 @@ function TrackAnimation()
 		
 		// Draw the race time
 		dc.fillStyle = 'black';
-		var tStr = FormatTime( t );
-		var tWidth = dc.measureText(tStr).width;
+		const tStr = FormatTime( t );
+		const tWidth = dc.measureText(tStr).width;
 		dc.fillText( tStr, 4*r - tWidth, 2*r - tHeight );
 	}
 }
@@ -1268,18 +1235,16 @@ function TrackAnimation()
 // ---------------------------------------------------------------------
 function GeoTrack()
 {
-	this.setData = function( gpsData )
-	{
+	this.setData = function( gpsData ) {
 		this.gpsPoints = gpsData;
 		
 		this.xMax = 0.0;
 		this.yMax = 0.0;
-		var dCum = 0.0;
+		let dCum = 0.0;
 		this.cumDistance = [];
-		var gpsPointsLength = this.gpsPoints.length;
-		for( var i = 0; i < gpsPointsLength; ++i )
-		{
-			var g = gpsData[i];
+		let gpsPointsLength = this.gpsPoints.length;
+		for( let i = 0; i < gpsPointsLength; ++i ) {
+			let g = gpsData[i];
 			this.xMax = Math.max( this.xMax, g[0] );
 			this.yMax = Math.max( this.yMax, g[1] );
 			this.cumDistance.push( dCum );
@@ -1297,44 +1262,39 @@ function GeoTrack()
 			
 	this.getXYTrack = function()
 	{
-		var x = this.x;
-		var yBottom = this.yBottom;
-		var mult = this.mult;
-		var track = [];
-		var gpsPointsLength = this.gpsPoints.length;
-		for( var i = 0; i < gpsPointsLength; ++i )
-		{
-			var p = this.gpsPoints[i];
+		let x = this.x;
+		let yBottom = this.yBottom;
+		let mult = this.mult;
+		let track = [];
+		const gpsPointsLength = this.gpsPoints.length;
+		for( let i = 0; i < gpsPointsLength; ++i ) {
+			const p = this.gpsPoints[i];
 			track.push( [p[0] * mult + x, yBottom - p[1] * mult] );
 		}
 		return track;
 	}
 		
-	this.getXY = function( lap, id )
-	{
+	this.getXY = function( lap, id ) {
 		if( id == undefined )
 			id = -1;
 			
 		// Find the segment at this distance in the lap.
-		var lap = lap - (~~lap);								// Get fraction of lap.
-		var lapDistance = lap * this.distanceTotal;				// Get distance traveled in the lap.
+		lap = lap - (~~lap);									// Get fraction of lap.
+		const lapDistance = lap * this.distanceTotal;			// Get distance traveled in the lap.
 		
 		// Avoid the cost of the binary search by checking if the id request is still on the last segment.
-		var lenGpsPoints = this.gpsPoints.length;
-		var i = -1;
-		if( id in this.cache )
-		{
+		const lenGpsPoints = this.gpsPoints.length;
+		let i = -1;
+		if( id in this.cache ) {
 			i = this.cache[id] % lenGpsPoints;
-			if( !(this.cumDistance[i] <= lapDistance && lapDistance <= this.cumDistance[i] + this.gpsPoints[i][2]) )
-			{
+			if( !(this.cumDistance[i] <= lapDistance && lapDistance <= this.cumDistance[i] + this.gpsPoints[i][2]) ) {
 				i = (i + 1) % lenGpsPoints;
 				if( !(this.cumDistance[i] <= lapDistance && lapDistance <= this.cumDistance[i] + this.gpsPoints[i][2]) )
 					i = -1;
 			}
 		}
 			
-		if( i == -1 )
-		{
+		if( i == -1 ) {
 			// Find the closest point LT the lap distance.
 			i = this.cumDistance.binSearch(lapDistance);
 			if( this.cumDistance[i] > lapDistance )
@@ -1347,44 +1307,40 @@ function GeoTrack()
 		
 		this.cache[id] = i;
 		
-		var pCur = this.gpsPoints[i], pNext = this.gpsPoints[(i+1)%lenGpsPoints];
-		var segDistance = lapDistance - this.cumDistance[i];
-		var segRatio = segDistance / pCur[2];
+		const pCur = this.gpsPoints[i], pNext = this.gpsPoints[(i+1)%lenGpsPoints];
+		const segDistance = lapDistance - this.cumDistance[i];
+		const segRatio = segDistance / pCur[2];
 		
-		var x = pCur[0] + (pNext[0] - pCur[0]) * segRatio;
-		var y = pCur[1] + (pNext[1] - pCur[1]) * segRatio;
+		const x = pCur[0] + (pNext[0] - pCur[0]) * segRatio;
+		const y = pCur[1] + (pNext[1] - pCur[1]) * segRatio;
 		return [x * this.mult + this.x, this.yBottom - y * this.mult];
 	}
 
-	this.setDisplayRect = function( x, y, width, height )
-	{
-		if( width <= 0 || height <= 0 )
-		{
+	this.setDisplayRect = function( x, y, width, height ) {
+		if( width <= 0 || height <= 0 ) {
 			this.mult = 1.0;
 			this.x = x;
 			this.yBottom = y + height;
 			return;
 		}
-		var mult = Math.min( width / this.xMax, height / this.yMax );
-		var w = this.xMax * mult, h = this.yMax * mult;
-		var xBorder = (width - w) / 4.0;
-		var yBorder = (height - h) / 2.0;
+		const mult = Math.min( width / this.xMax, height / this.yMax );
+		const w = this.xMax * mult, h = this.yMax * mult;
+		const xBorder = (width - w) / 4.0;
+		const yBorder = (height - h) / 2.0;
 		this.mult = mult;
 		this.x = xBorder + x;
 		this.yBottom = y + height;
 	}
 }
 
-function colorBetween( r1, g1, b1, r2, g2, b2, x )
-{
-	var r = (r1 + (r2 - r1) * x).toFixed(0);
-	var g = (g1 + (g2 - g1) * x).toFixed(0);
-	var b = (b1 + (b2 - b1) * x).toFixed(0);
+function colorBetween( r1, g1, b1, r2, g2, b2, x ) {
+	const r = (r1 + (r2 - r1) * x).toFixed(0);
+	const g = (g1 + (g2 - g1) * x).toFixed(0);
+	const b = (b1 + (b2 - b1) * x).toFixed(0);
 	return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
-function Altigraph()
-{
+function Altigraph() {
 	this.altigraph = [];
 	this.yMax = -1000000.0;
 	this.yMin = 1000000.0
@@ -1399,8 +1355,7 @@ function Altigraph()
 		this.yMax = -1000000.0;
 		this.yMin = 1000000.0
 		this.xMax = 0.0;
-		for( var i = 0; i < altigraph.length; ++i )
-		{
+		for( let i = 0; i < altigraph.length; ++i ) {
 			if( altigraph[i][1] > this.yMax )
 				this.yMax = altigraph[i][1];
 			if( altigraph[i][1] < this.yMin )
@@ -1428,45 +1383,43 @@ function Altigraph()
 		y += 2;		// Leave room to draw the line.
 		height -= 2;
 
-		var fontSize = (height*0.95)/4.0;
+		const fontSize = (height*0.95)/4.0;
 		dc.font = fontSize + 'px Arial';
 		
-		var minLabel = '0';
-		var maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
-		var labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
+		const minLabel = '0';
+		const maxLabel = ((this.yMax - this.yMin) * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
+		const labelWidth = Math.max( dc.measureText(minLabel).width, dc.measureText(maxLabel).width );
 		
-		var altigraph = this.altigraph;
-		var teg = 0.0;
-		for( var i = 1; i < this.altigraph.length; ++i )
+		let altigraph = this.altigraph;
+		let teg = 0.0;
+		for( let i = 1; i < this.altigraph.length; ++i )
 			teg += Math.max(0.0, altigraph[i][1] - altigraph[i-1][1]);
-		var tegLabel = '';
-		var tegWidth = 0;
-		var tegText = [('Total'), ('Elevation'), ('Gain')];
+		let tegLabel = '';
+		let tegWidth = 0;
+		let tegText = [('Total'), ('Elevation'), ('Gain')];
 		if( gpsTotalElevationGain )
 		{
 			tegLabel = (gpsTotalElevationGain * (displayUnits == 'km' ? 1.0 : 3.28084)).toFixed(0) + (displayUnits == 'km' ? ' m' : ' ft');
 			tegWidth = dc.measureText(tegLabel).width;
-			for( var i = 0; i < tegText.length; ++i )
+			for( let i = 0; i < tegText.length; ++i )
 				tegWidth = Math.max( tegWidth, dc.measureText(tegText[i]).width );
 		}
 		
-		var border = 4;
-		if( labelWidth + border*2 + tegWidth > width )
-		{
+		const border = 4;
+		if( labelWidth + border*2 + tegWidth > width ) {
 			dc.restore();
 			return;
 		}
 		
-		var xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
-		var yMult = height / (this.yMax - this.yMin);
+		const xMult = (width - labelWidth - border*2 - tegWidth) / this.xMax;
+		const yMult = height / (this.yMax - this.yMin);
 		
-		var points = [];
-		for( var i = 0; i < this.altigraph.length; ++i )
+		let points = [];
+		for( let i = 0; i < this.altigraph.length; ++i )
 			points.push( [(x + labelWidth + border + altigraph[i][0] * xMult), (y + height - (altigraph[i][1] - this.yMin) * yMult)] );
 		
-		for( var i = 1; i < this.altigraph.length; ++i )
-		{
-			var grade = (altigraph[i][1] - altigraph[i-1][1]) / (altigraph[i][0] - altigraph[i-1][0]);
+		for( let i = 1; i < this.altigraph.length; ++i ) {
+			const grade = (altigraph[i][1] - altigraph[i-1][1]) / (altigraph[i][0] - altigraph[i-1][0]);
 			if( grade > 0 )
 				dc.fillStyle = colorBetween( 255,255,255, 255,0,0, Math.min(1.0,  grade / 0.12) );
 			else
@@ -1484,7 +1437,7 @@ function Altigraph()
 		dc.lineWidth = 2;
 		dc.beginPath();
 		dc.moveTo( points[0][0], points[0][1] );
-		for( var i = 1; i < this.altigraph.length; ++i )
+		for( let i = 1; i < this.altigraph.length; ++i )
 			dc.lineTo( points[i][0], points[i][1] );
 		dc.stroke();
 		
@@ -1521,10 +1474,9 @@ function Altigraph()
 		{
 			dc.textBaseline = 'top';
 			dc.textAlign = 'left';
-			var xCur = x + width - tegWidth;
-			var yCur = y + (height - fontSize * 1.05 * 4) / 2;
-			for( var i = 0; i < tegText.length; ++i )
-			{
+			const xCur = x + width - tegWidth;
+			const yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			for( let i = 0; i < tegText.length; ++i ) {
 				dc.fillText( tegText[i], xCur, yCur );
 				yCur += fontSize * 1.05;
 			}
@@ -1548,44 +1500,40 @@ function GeoAnimation()
 	
 	this.tBannerLast = -1;
 	
-	this.drawCompass = function( dc, width, height, tHeight )
-	{
+	this.drawCompass = function( dc, width, height, tHeight ) {
 		dc.save();
 		
-		var size = width / 20;
+		const size = width / 20;
 		
-		var x = this.compassLocation[1] == 'E' ? width - size * 1.4 : size * 1.4;
-		var y = this.compassLocation[0] == 'N' ? size * 1.4 + tHeight * 3 : height - size * 1.4;
+		let x = this.compassLocation[1] == 'E' ? width - size * 1.4 : size * 1.4;
+		let y = this.compassLocation[0] == 'N' ? size * 1.4 + tHeight * 3 : height - size * 1.4;
 		if( this.compassLocation[0] == 'S' && gpsTotalElevationGain )
 			y -= height / 20;
 		
-		var factor = 7.0;
-		var pseg1 = [[0,0], [size/factor,size/factor], [0,size]];		
-		var pseg2 = [[0,0], [-size/factor,size/factor], [0,size]];
-		var labels = ['S', 'E', 'N', 'W'];
+		const factor = 7.0;
+		const pseg1 = [[0,0], [size/factor,size/factor], [0,size]];		
+		const pseg2 = [[0,0], [-size/factor,size/factor], [0,size]];
+		const labels = ['S', 'E', 'N', 'W'];
 		
 		dc.fillStyle = '#000000';
 		dc.strokeStyle = '#000000';
 		dc.lineWidth = 1;
-		var fontSize = size/4;
+		const fontSize = size/4;
 		dc.font = fontSize + 'px serif';
 		dc.textAlign = 'center';
-		for( var i = 0; i < 4; ++i )
-		{
+		for( let i = 0; i < 4; ++i ) {
 			dc.fillText( labels[i], x + pseg1[2][0]*1.2, y + pseg1[2][1]*1.2 - fontSize/2 );
 		
 			dc.beginPath();
 			dc.moveTo( x, y );
-			for( var p = 0; p < pseg1.length; ++p )
-			{
+			for( let p = 0; p < pseg1.length; ++p ) {
 				dc.lineTo( x + pseg1[p][0], y + pseg1[p][1] );
 				pseg1[p] = [pseg1[p][1], -pseg1[p][0]];	// Rotate 90.
 			}
 			dc.stroke()
 			dc.beginPath();
 			dc.moveTo( x, y );
-			for( var p = 0; p < pseg2.length; ++p )
-			{
+			for( let p = 0; p < pseg2.length; ++p ) {
 				dc.lineTo( x + pseg2[p][0], y + pseg2[p][1] );
 				pseg2[p] = [pseg2[p][1], -pseg2[p][0]];	// Rotate 90.
 			}
@@ -1595,29 +1543,26 @@ function GeoAnimation()
 		dc.restore();
 	}
 	
-	this.drawBanner = function( dc, width, height, tHeight, bannerItems )
-	{
+	this.drawBanner = function( dc, width, height, tHeight, bannerItems ) {
 		drawSegment( dc, 0, 0, width, tHeight*1.2, '#0000CC', '#0000EE' );
 		if( bannerItems.length == 0 )
 			return
 		
-		var y = tHeight * 0.1;
+		let y = tHeight * 0.1;
 		tHeight *= 0.85;
-		var x = this.xBanner;
-		var tWidth;
-		var positionFont = (tHeight*.7) + "px Arial";
-		var numberFont = 'italic bold ' + tHeight + "px Arial";
-		var nameFont = 'bold ' + tHeight + "px Arial";
-		while( x < width )
-		{
-			for( var i = 0; i < bannerItems.length && x < width; ++i )
-			{
-				var position = bannerItems[i][1];
-				var num = bannerItems[i][0];
-				var name = getShortName( num );
+		let x = this.xBanner;
+		let tWidth;
+		
+		const positionFont = (tHeight*.7) + "px Arial";
+		const numberFont = 'italic bold ' + tHeight + "px Arial";
+		const nameFont = 'bold ' + tHeight + "px Arial";
+		while( x < width ) {
+			for( let i = 0; i < bannerItems.length && x < width; ++i ) {
+				const position = bannerItems[i][1];
+				const num = bannerItems[i][0];
+				const name = getShortName( num );
 				
-				if( position == 1 )
-				{
+				if( position == 1 ) {
 					x += tHeight / 2;
 					tWidth = checkeredFlag.width;
 					if( x + tWidth > 0 && x < width )
@@ -1627,8 +1572,7 @@ function GeoAnimation()
 				
 				dc.font = positionFont;
 				tWidth = dc.measureText(position).width;
-				if( x + tWidth > 0 && x < width )
-				{
+				if( x + tWidth > 0 && x < width ) {
 					dc.fillStyle = '#FFFFFF';
 					dc.fillText(position, x, y );
 				}
@@ -1636,8 +1580,7 @@ function GeoAnimation()
 
 				dc.font = numberFont;
 				tWidth = dc.measureText(num).width;
-				if( x + tWidth > 0 && x < width)
-				{
+				if( x + tWidth > 0 && x < width) {
 					dc.fillStyle = '#FFFF00';
 					dc.fillText(num, x, y );
 				}
@@ -1645,8 +1588,7 @@ function GeoAnimation()
 				
 				dc.font = nameFont;
 				tWidth = dc.measureText(name).width;
-				if( x + tWidth > 0 && x < width )
-				{
+				if( x + tWidth > 0 && x < width ) {
 					dc.fillStyle = '#FFFFFF';
 					dc.fillText(name, x, y );
 				}
@@ -1656,7 +1598,7 @@ function GeoAnimation()
 				this.xBanner = x;
 		}
 		
-		var tBanner = (new Date().getTime()) / 1000.0;
+		let tBanner = (new Date().getTime()) / 1000.0;
 		if( this.tBannerLast < 0 )
 			this.tBannerLast = tBanner;
 		this.xBanner -= 64.0 * (tBanner - this.tBannerLast);
@@ -1665,55 +1607,48 @@ function GeoAnimation()
 	
 	this.resetCache = function() { this.geoTrack.resetCache(); }
 			
-	this.getRiderXYPT = function( num )
-	{
+	this.getRiderXYPT = function( num ) {
 		// Get the rider x, y, position (distance) and time.
-		var positionTime = getRiderPositionTime( num );
+		const positionTime = getRiderPositionTime( num );
 		if( positionTime[0] == null )
 			return [null, null, null, null];
-		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] )
-		{
+		if( data[num]['finishTime'] != null && t >= data[num]['finishTime'] ) {
 			lapCur = Math.max( lapCur, data[num]['raceTimes'].length );
 			return [null, null, positionTime[0], positionTime[1]];
 		}
 		lapCur = Math.max(lapCur, ~~positionTime[0]);
-		var xy = this.geoTrack.getXY( positionTime[0], num );
+		const xy = this.geoTrack.getXY( positionTime[0], num );
 		return [xy[0], xy[1], positionTime[0], positionTime[1]];
 	}
 
-	this.Refresh = function()
-	{
+	this.Refresh = function() {
 		if( !canvas || !canvasSupported || document[hidden] )
 			return;
 
-		var dc = canvas.getContext('2d');
+		let dc = canvas.getContext('2d');
 		
 		dc.textBaseline = "top";
 		
-		var width = canvas.width;
-		var height = canvas.height;
-		var sizeChanged = false;
-		if( width != this.widthLast || height != this.heightLast )
-		{
+		const width = canvas.width;
+		let height = canvas.height;
+		let sizeChanged = false;
+		if( width != this.widthLast || height != this.heightLast ) {
 			this.widthLast = width;
 			this.heightLast = height;
 			sizeChanged = true;
 		}
-		var backColour = 'white';
+		const backColour = 'white';
 		dc.fillStyle = backColour;
 		
-		if( width < 80 || height < 80 )
-		{
+		if( width < 80 || height < 80 ) {
 			dc.fillRect(0, 0, width, height );
 			return;
 		}
 
 		// Draw the altigraph.
-		if( gpsTotalElevationGain && !this.altigraph.empty() )
-		{
-			var altigraphHeight = height / 8;
-			if( sizeChanged )
-			{
+		if( gpsTotalElevationGain && !this.altigraph.empty() ) {
+			const altigraphHeight = height / 8;
+			if( sizeChanged ) {
 				dc.fillRect(0, 0, width, height );
 				this.altigraph.draw( dc, 0, height - altigraphHeight, width, altigraphHeight );
 			}
@@ -1722,32 +1657,32 @@ function GeoAnimation()
 		
 		dc.fillRect(0, 0, width, height );
 		
-		r = ~~(width / 4);
+		let r = ~~(width / 4);
 		if( r * 2 > height )
 			r = ~~(height / 2);
 		r -= (r & 1);			// Make sure that r is an even number.
 
-		var border = 8;
-		var tHeight = ~~((r / 8) * fontMult);
-		laneWidth = (r/2) / laneMax;
+		const border = 8;
+		const tHeight = ~~((r / 8) * fontMult);
+		const laneWidth = (r/2) / laneMax;
 
-		var fontStr = (tHeight*.8) + "px Arial";
-		var textVSpace = tHeight*0.2;
-		var fontStrHightlight = ~~(tHeight * 1.1) + "px Arial";
+		const fontStr = (tHeight*.8) + "px Arial";
+		const textVSpace = tHeight*0.2;
+		const fontStrHightlight = ~~(tHeight * 1.1) + "px Arial";
 		dc.font = fontStr;
 		
-		compassSize = (width / 20) * 1.4 * 2;
+		const compassSize = (width / 20) * 1.4 * 2;
 		
-		var trackWidth = width - border * 2 - laneWidth*2 - compassSize;
-		var topMargin = 2*border + tHeight * infoLines + textVSpace;
-		var trackHeight = height - topMargin;
+		const trackWidth = width - border * 2 - laneWidth*2 - compassSize;
+		const topMargin = 2*border + tHeight * infoLines + textVSpace;
+		const trackHeight = height - topMargin;
 		this.geoTrack.setDisplayRect( border, topMargin, trackWidth, trackHeight - laneWidth );
 
 		// Draw the course.
 		dc.beginPath();
-		var points = this.geoTrack.getXYTrack();
+		const points = this.geoTrack.getXYTrack();
 		dc.moveTo( points[0][0], points[0][1] );
-		var pointsLength = points.length;
+		const pointsLength = points.length;
 		for( var i = 1; i < pointsLength; ++i )
 			dc.lineTo( points[i][0], points[i][1] );
 		if( !gpsIsPointToPoint )
@@ -1772,12 +1707,13 @@ function GeoAnimation()
 		this.drawCompass( dc, width, height, tHeight )
 		
 		// Draw the finish line.
-		var finishLineLen = laneWidth * 2;
-		var fLine;
+		const finishLineLen = laneWidth * 2;
+		let fLine;
 		if( gpsIsPointToPoint )
 			fLine = LineNormal( points[points.length-1][0], points[points.length-1][1], points[points.length-2][0], points[points.length-2][1], finishLineLen );
 		else
 			fLine = LineNormal( points[0][0], points[0][1], points[1][0], points[1][1], finishLineLen );
+		
 		dc.beginPath()
 		dc.moveTo( fLine[0], fLine[1] );
 		dc.lineTo( fLine[2], fLine[3] );
@@ -1799,28 +1735,33 @@ function GeoAnimation()
 		dc.lineWidth = 1;
 		numSize = (r/2)/laneMax;
 		lapCur = 0;
-		var riderRadius = laneWidth * 0.5;
-		var thickLine = r / 32;
-		var hasFirstLapRatio = false;
-		firstLapRatio = 1.0;
+		const riderRadius = laneWidth * 0.5;
+		const thickLine = r / 32;
+		let hasFirstLapRatio = false;
+		let firstLapRatio = 1.0;
+		
+		let leaders = [];
+		let topThree = {};
+		let riderPosition = {};
+		
 		if( data )
 		{
-			var riderXYPT = [];
-			var cd = catDetailsByName[categoryCur];
-			for( var p = 0; p < cd.pos.length; ++p )
-			{
-				var num = cd.pos[p];
-				if( !hasFirstLapRatio )
-				{
-					hasFirstLapRatio = true;
-					if( cd['firstLapDistance'] && cd['lapDistance'] )
-						firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+			let riderXYPT = [];
+			const cd = catDetailsByName[categoryCur];
+			if( cd ) {
+				for( let p = 0; p < cd.pos.length; ++p ) {
+					const num = cd.pos[p];
+					if( !hasFirstLapRatio ) {
+						hasFirstLapRatio = true;
+						if( cd['firstLapDistance'] && cd['lapDistance'] )
+							firstLapRatio = cd['firstLapDistance'] / cd['lapDistance'];
+					}
+					const xypt = this.getRiderXYPT( num );
+					if( xypt[2] == null )
+						continue;
+					xypt.splice( 0, 0, num );
+					riderXYPT.push( xypt );
 				}
-				var xypt = this.getRiderXYPT( num );
-				if( xypt[2] == null )
-					continue;
-				xypt.splice( 0, 0, num );
-				riderXYPT.push( xypt );
 			}
 			
 			// Sort in reverse order of position so we draw leaders last on top.
@@ -1834,41 +1775,34 @@ function GeoAnimation()
 					return -r;
 				});
 				
-			var leaders = [];
-			for( var i = riderXYPT.length - 1; i >= 0 && leaders.length < 5; --i )
+			for( let i = riderXYPT.length - 1; i >= 0 && leaders.length < 5; --i )
 				leaders.push( riderXYPT[i][0] );
 
-			var topThree = {};
-			for( var i = 0; i < leaders.length; ++i )
+			for( let i = 0; i < leaders.length; ++i )
 				topThree[leaders[i]] = i;
 				
-			var riderPosition = {};
-			for( var i = 0; i < riderXYPT.length; ++i )
-			{
-				var rxypt = riderXYPT[i];
+			for( let i = 0; i < riderXYPT.length; ++i ) {
+				const rxypt = riderXYPT[i];
 				riderPosition[rxypt[0]] = riderXYPT.length - i;
-				var x = rxypt[1];
+				const x = rxypt[1];
 				if( x == null )
 					continue;
 					
-				num = rxypt[0];
-				var y = rxypt[2];
+				let num = rxypt[0];
+				let y = rxypt[2];
 				dc.fillStyle = colours[num % colours.length];
 				// Check for a leader.
-				var j = topThree[num];
-				if( j != undefined )
-				{
+				const j = topThree[num];
+				if( j != undefined ) {
 					dc.strokeStyle = topThreeColours[j];
 					dc.lineWidth = thickLine;
 					if( numsToWatch[num] != undefined )
 						dc.font = fontStrHightlight;
 				}
-				else
-				{
+				else {
 					// Check for a watch number.
-					j = numsToWatch[num];
-					if( j != undefined )
-					{
+					const j = numsToWatch[num];
+					if( j != undefined ) {
 						dc.strokeStyle = '#ffa500';
 						dc.lineWidth = thickLine * 1.5;
 						dc.font = fontStrHightlight;
@@ -1879,16 +1813,13 @@ function GeoAnimation()
 				//DrawCircle( dc, x, y, riderRadius );
 				dc.beginPath(); dc.arc(x, y, riderRadius, 0.0, Math.PI*2, true); dc.closePath(); dc.fill(); dc.stroke();
 
-				if( topThree[num] != undefined || numsToWatch[num] != undefined )
-				{
-					if( isEmptyObject(numsToWatch) || numsToWatch[num] != undefined )
-					{
+				if( topThree[num] != undefined || numsToWatch[num] != undefined ) {
+					if( isEmptyObject(numsToWatch) || numsToWatch[num] != undefined ) {
 						dc.fillStyle = 'black';
 						dc.fillText(num+'', x+numSize, y-numSize );
 					}
 				}
-				if( j != undefined )
-				{
+				if( j != undefined ) {
 					dc.strokeStyle = 'black';
 					dc.lineWidth = 1;
 					dc.font = fontStr;
@@ -1906,28 +1837,28 @@ function GeoAnimation()
 		
 		// Draw the current lap and distance
 		if( leaders.length > 0 ) {
-			var leaderRaceTimes = data[leaders[0]]['raceTimes'];
+			const leaderRaceTimes = data[leaders[0]]['raceTimes'];
 			if( leaderRaceTimes && leaderRaceTimes.length > 0 && leaderRaceTimes[0] < leaderRaceTimes.back() ) {
-				var table = [];
+				let table = [];
 				
-				var leaderRaceTimes = data[leaders[0]]['raceTimes'];
-				var maxLaps = leaderRaceTimes.length - 1;
-				var glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
+				const leaderRaceTimes = data[leaders[0]]['raceTimes'];
+				const maxLaps = leaderRaceTimes.length - 1;
+				const glr = GetLapRatio( leaderRaceTimes, t, this.iLapDistance );
 				this.iLapDistance = glr[0];
 				TriggerReload( leaderRaceTimes, t, this.iLapDistance );
-				var lapRatio = glr[1];
+				let lapRatio = glr[1];
 				lapRatio = Math.floor(lapRatio * 10.0) / 10.0		// Always round down, not to nearest decimal.
 				table.push( FixedFormat(this.iLapDistance + lapRatio, 5, 1) + ' ' + _('Laps of') + ' ' + maxLaps );
 				table.push( FixedFormat(maxLaps - this.iLapDistance - lapRatio, 5, 1) + ' ' + _('Laps to go') );
 				
-				var leaderCategory = data[leaders[0]]['raceCat'];
-				var cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
+				const leaderCategory = data[leaders[0]]['raceCat'];
+				const cat = (leaderCategory && catDetails ? catDetails[leaderCategory] : null);
 				if( cat ) {
-					var distanceCur = null, distanceRace = null;
+					let distanceCur = null, distanceRace = null;
 					
 					if( cat['lapDistance'] ) {
-						var flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
-						var distanceLap = cat['lapDistance'];
+						const flr = data[leaders[0]]['flr']; if( !flr ) flr = 1.0;
+						let distanceLap = cat['lapDistance'];
 						if( cat['distanceUnit'] != displayUnits )
 							distanceLap *= (displayUnits == 'km' ? 1.60934 : 0.621371);
 						distanceRace = distanceLap * (flr + maxLaps - 1);
@@ -1952,11 +1883,11 @@ function GeoAnimation()
 					}
 				}
 				
-				var widthMax = 0;
-				for( var w = 0; w < table.length; ++w )
+				let widthMax = 0;
+				for( let w = 0; w < table.length; ++w )
 					widthMax = Math.max( widthMax, dc.measureText(table[w]).width );
 				
-				var yCur, xCur;
+				let yCur, xCur;
 				if( this.compassLocation[0] == 'N' )
 					yCur = height - tHeight * (table.length + 1);
 				else
@@ -1965,12 +1896,12 @@ function GeoAnimation()
 					xCur = width - widthMax;
 				else
 					xCur = 0;
-				for( var w = 0; w < table.length; ++w ) {
+				for( let w = 0; w < table.length; ++w ) {
 					yCur += tHeight;
 					if( !table[w] )
 						continue;
-					var value = table[w];
-					var tShow = value.replace( /^0+/, '' );
+					const value = table[w];
+					let tShow = value.replace( /^0+/, '' );
 					if( tShow[0] == '.' )
 						tShow = '0' + tShow;
 					dc.fillText( tShow, xCur + dc.measureText(Array(value.length - tShow.length + 1).join('0')).width, yCur );
@@ -2057,8 +1988,7 @@ function GetDistanceUnit( aData ) {
 }
 
 var lastRaceTime = 0;
-function SetData( aData, tCur )
-{
+function SetData( aData, tCur ) {
 	if( !catDetails )
 		catDetails = [];
 	catDetailsByName = {};
@@ -2074,12 +2004,12 @@ function SetData( aData, tCur )
 		t = tCur;
 	
 	// Get some of the unique categories from the data.
-	var hasLapSpeeds = false;
-	var hasMultipleLaps = false;
+	let hasLapSpeeds = false;
+	let hasMultipleLaps = false;
 	lastRaceTime = 0;
-	for( var num in data )
+	for( let num in data )
 	{
-		var info = data[num];
+		const info = data[num];
 		info['iLast'] = 1;
 		if( info['raceTimes'] && info['raceTimes'].length > 2 )
 			hasMultipleLaps = true;
@@ -2096,17 +2026,15 @@ function SetData( aData, tCur )
 	}
 	
 	// Create an array of the category names.
-	categories = [];
-	for( var i = 0; i < catDetails.length; ++i )
+	categories = [];	// Global variable.
+	for( let i = 0; i < catDetails.length; ++i )
 		categories.push( catDetails[i].name );
 	
-	var catHTML = [];
-	if( categories.length > 2 )
-	{
+	let catHTML = [];
+	if( categories.length > 2 ) {
 		catHTML.push( '<div id="buttongroup">' );
-		for( var i = 0; i < categories.length; ++i )
-		{
-			var cat = categories[i];
+		for( let i = 0; i < categories.length; ++i ) {
+			const cat = categories[i];
 			catHTML.push(
 				'<label class="green">' +
 					'<input ' +
@@ -2128,7 +2056,7 @@ function SetData( aData, tCur )
 	document.getElementById('idCategories').innerHTML = catHTML.join('');
 	
 	// Adjust the display options based on the data.
-	var options = [
+	let options = [
 	{ i:0, name:'Lap Times',	value:'showLapTimes',		requiresMultipleLaps:false, requiresLapSpeeds:false },
 	{ i:1, name:'Race Times',	value:'showRaceTimes',		requiresMultipleLaps:true, requiresLapSpeeds:false },
 	{ i:2, name:'Time Gaps',	value:'showLapGaps',		requiresMultipleLaps:true, requiresLapSpeeds:false },
@@ -2136,12 +2064,11 @@ function SetData( aData, tCur )
 	{ i:4, name:'Lap Speed',	value:'showLapSpeed',		requiresMultipleLaps:true, requiresLapSpeeds:true },
 	{ i:5, name:'Est. Distance Gap',value:'showDistanceGap',requiresMultipleLaps:true, requiresLapSpeeds:true }
 	];
-	var showOptionsSpan = document.getElementById( 'idShowOptions' );
-	var firstOption = true;
-	var showHTML = ['<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">'];
-	for( var i = 0; i < options.length; ++i )
-	{
-		var o = options[i];
+	let showOptionsSpan = document.getElementById( 'idShowOptions' );
+	let firstOption = true;
+	let showHTML = ['<div id="display_menu"><label class="heading" data-tr="Show:"></label><div class="buttonset">'];
+	for( let i = 0; i < options.length; ++i ) {
+		const o = options[i];
 		if( (o.requiresMultipleLaps && !hasMultipleLaps) || (o.requiresLapSpeeds && !hasLapSpeeds) )
 			continue;
 		
@@ -3478,11 +3405,11 @@ function RefreshResultsTable()
 		
 		resultsDiv.appendChild( table );
 		
-		var primesTable = GetPrimesTable( primeFromBib, catDetail.pos );
+		let primesTable = GetPrimesTable( primeFromBib, catDetail.pos );
 		if( primesTable )
 			resultsDiv.appendChild( primesTable );
 		
-		var resultNotesTable = GetResultNotesTable( catDetail );
+		let resultNotesTable = GetResultNotesTable( catDetail );
 		if( resultNotesTable )
 			resultsDiv.appendChild( resultNotesTable );
 		
@@ -3492,7 +3419,7 @@ function RefreshResultsTable()
 }
 
 function byte2Hex(n) {
-	var nybHexString = "0123456789ABCDEF";
+	const nybHexString = "0123456789ABCDEF";
 	return String(nybHexString.substr((n >> 4) & 0x0F,1)) + nybHexString.substr(n & 0x0F,1);
 }
 
@@ -3508,22 +3435,20 @@ function makeColorGradient(frequency1, frequency2, frequency3,
 	if (center == undefined)   center = 128;
 	if (width == undefined)    width = 127;
 
-	var grad = [];
-	for (var i = 0; i <= len; ++i)
-	{
-		var red = Math.sin(frequency1*i + phase1) * width + center;
-		var grn = Math.sin(frequency2*i + phase2) * width + center;
-		var blu = Math.sin(frequency3*i + phase3) * width + center;
+	let grad = [];
+	for( let i = 0; i <= len; ++i ) {
+		const red = Math.sin(frequency1*i + phase1) * width + center;
+		const grn = Math.sin(frequency2*i + phase2) * width + center;
+		const blu = Math.sin(frequency3*i + phase3) * width + center;
 		grad.push( RGB2Color(red,grn,blu) );
 	}
 	return grad.slice(1);  // Skip the first pink colour.
 }
 
 function lighterColor( k ) {
-	var s = '#';
-	for( var i = 0; i < 3; ++i )
-	{
-		var c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
+	let s = '#';
+	for( let i = 0; i < 3; ++i ) {
+		let c = parseInt(k.substring(1 + i*2, 1 + i*2 + 2), 16);
 		c += (255 - c) * 0.6;
 		c = ~~c;
 		s += (c < 16 ? '0' : '') + c.toString(16);
@@ -3534,14 +3459,13 @@ function lighterColor( k ) {
 function drawSegment( c, x, y, w, h, color, colorLighter ) {
 	c.save();
 	
-	var gr = c.createLinearGradient( x, y, x, y+h );
+	let gr = c.createLinearGradient( x, y, x, y+h );
 	gr.addColorStop(0.0, color);
 	gr.addColorStop(0.33, colorLighter);
 	gr.addColorStop(1.0, color );
 	c.fillStyle = gr;
 	c.fillRect( x, y, w, h );
-	if( color != '#FFFFFF' )
-	{
+	if( color != '#FFFFFF' ) {
 		c.strokeStyle = '#000';
 		c.strokeRect( x, y, w, h );
 	}
@@ -3558,7 +3482,7 @@ function drawDiamond( c, xCenter, yCenter, radius ) {
 	c.lineTo( xCenter         , yCenter + radius );
 	c.closePath();
 	
-	var grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
+	let grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
 	grd.addColorStop(0, '#FFFFFF');
 	grd.addColorStop(1, 'rgb(220,220,0)');
 	
@@ -3589,7 +3513,7 @@ function drawStar( c, xCenter, yCenter, numPoints, radius, radiusInner ) {
 	}
 	c.closePath();
 	
-	var grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
+	let grd = c.createRadialGradient( 0+ xCenter, - radius*0.50 + yCenter, 0, 0 + xCenter, radius + 1 + yCenter, radius );
 	grd.addColorStop(0, '#FFFFFF');
 	grd.addColorStop(1, 'rgb(255,165,0)');
 	
@@ -3611,7 +3535,7 @@ var	labelsWidthCur = 0.0;
 var segmentsCur = [];
 
 function findPos(obj) {
-	var curleft = curtop = 0;
+	let curleft = 0, curtop = 0;
 	if (obj.offsetParent) {
 		curleft = obj.offsetLeft
 		curtop = obj.offsetTop
@@ -3627,10 +3551,9 @@ var hoverTimer = null;
 var xEvent = null;
 var yEvent = null;
 
-function RaceChartProcessMouse( event )
-{
-	var canvasRaceChart = document.getElementById('idRaceChart');
-	var pos = findPos( canvasRaceChart );
+function RaceChartProcessMouse( event ) {
+	let canvasRaceChart = document.getElementById('idRaceChart');
+	const pos = findPos( canvasRaceChart );
 	xEvent = event.pageX - canvasRaceChart.offsetLeft;
 	yEvent = event.pageY - canvasRaceChart.offsetTop;
 	if( hoverTimer != null )
@@ -3638,19 +3561,17 @@ function RaceChartProcessMouse( event )
 	hoverTimer = setTimeout( "RaceChartUpdateInfo()", 25 );
 }
 
-function RaceChartProcessClick( event )
-{
-	var canvasRaceChart = document.getElementById('idRaceChart');
-	var pos = findPos( canvasRaceChart );
+function RaceChartProcessClick( event ) {
+	let canvasRaceChart = document.getElementById('idRaceChart');
+	const pos = findPos( canvasRaceChart );
 	xEvent = event.pageX - canvasRaceChart.offsetLeft;
 	yEvent = event.pageY - canvasRaceChart.offsetTop;
-	for( var s = 0; s < segmentsCur.length; ++s )
-	{
-		var seg = segmentsCur[s];
+	for( let s = 0; s < segmentsCur.length; ++s ) {
+		const seg = segmentsCur[s];
 		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
 			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
 		{
-			var num = seg[5];
+			const num = seg[5];
 			document.getElementById('idNumsToWatch').value = num + '';
 			SetNumsToWatch();
 			return;
@@ -3659,14 +3580,12 @@ function RaceChartProcessClick( event )
 }
 
 function getRiderName( num ) {
-	var name = '';
-	var riderData = data[num];
-	if( riderData )
-	{
+	let name = '';
+	const riderData = data[num];
+	if( riderData ) {
 		if( riderData['LastName'] )
 			name = riderData['LastName'];
-		if( riderData['FirstName'] )
-		{
+		if( riderData['FirstName'] ) {
 			if( name )
 				name = name + ', ' + riderData['FirstName'];
 			else
@@ -3677,41 +3596,40 @@ function getRiderName( num ) {
 }
 
 function getRiderTeam( num ) {
-	var team = '';
-	var riderData = data[num];
+	let team = '';
+	const riderData = data[num];
 	if( riderData && riderData['Team'] )
 		team = riderData['Team'];
 	return team;
 }
 
 function getRiderNameNum( num ) {
-	var name = getRiderName(num);
+	const name = getRiderName(num);
 	if( name )
 		return name + ' ' + num;
 	return num + '';
 }
 
-function RaceChartUpdateInfo()
-{
+function RaceChartUpdateInfo() {
 	RefreshRaceChart();
 	
-	var canvasRaceChart = document.getElementById('idRaceChart');
-	for( var s = 0; s < segmentsCur.length; ++s )
+	let canvasRaceChart = document.getElementById('idRaceChart');
+	for( let s = 0; s < segmentsCur.length; ++s )
 	{
-		var seg = segmentsCur[s];
+		const seg = segmentsCur[s];
 		if( seg[0] <= xEvent && xEvent < (seg[0] + seg[2]) &&
 			seg[1] <= yEvent && yEvent < (seg[1] + seg[3]) )
 		{
-			var hover = seg[4];
-			var num = seg[5];
-			var name = getRiderNameNum( num );
-			var lap = seg[6];
+			let hover = seg[4];
+			const num = seg[5];
+			const name = getRiderNameNum( num );
+			const lap = seg[6];
 			hover = name + ': ' + _('Lap') + ' ' + hover;
 			if( showDetails ) {
-				var d = data[num];
+				const d = data[num];
 				if( d.interp[lap] )
 					hover += '\n' + _('Projected Time');
-				var detail = lapDetails[num + ',' + lap];
+				const detail = lapDetails[num + ',' + lap];
 				if( detail ) {
 					for( var dd = 0; dd < detail.length; ++dd ) {
 						if( detail[dd] )
@@ -3721,14 +3639,14 @@ function RaceChartUpdateInfo()
 			}
 
 			hover = hover.trim();
-			var splitHover = hover.split( '\n' );
-			var hoverLines = splitHover.length;
-			var fontHeight = 14;
-			var height = fontHeight * hoverLines + fontHeight / 2.0;
+			const splitHover = hover.split( '\n' );
+			const hoverLines = splitHover.length;
+			const fontHeight = 14;
+			const height = fontHeight * hoverLines + fontHeight / 2.0;
 				
-			var margin = fontHeight / 4.0 - 1;
+			const margin = fontHeight / 4.0 - 1;
 				
-			var c = canvasRaceChart.getContext('2d');
+			let c = canvasRaceChart.getContext('2d');
 			c.font = fontHeight + 'px Arial';
 
 			c.save();
@@ -3736,26 +3654,26 @@ function RaceChartUpdateInfo()
 			c.strokeStyle = '#000';
 			c.strokeRect( seg[0], seg[1], seg[2]-1, seg[3]-1 );
 			
-			var textWidth = 0;
-			for( var isp = 0; isp < splitHover.length; ++isp )
+			let textWidth = 0;
+			for( let isp = 0; isp < splitHover.length; ++isp )
 				textWidth = Math.max( textWidth, c.measureText(splitHover[isp]).width );
-			var drawDirection = (x + textWidth > canvasRaceChart.width*0.90 ? -1 : 1);
+			const drawDirection = (x + textWidth > canvasRaceChart.width*0.90 ? -1 : 1);
 			
 			c.lineWidth = 1;
-			var x = xEvent, y = yEvent;
+			let x = xEvent, y = yEvent;
 			
 			c.fillStyle = '#FFF';
 			c.beginPath();
 			c.moveTo( x, y );
 			y -= fontHeight;
-			var yMax = y;
+			let yMax = y;
 			c.lineTo( x, y );
 			x += drawDirection * textWidth;
 			c.lineTo( x, y );
 			y -= height / 2;
 			c.arc( x, y, height / 2, Math.PI / 2, 3 * Math.PI / 2, drawDirection > 0 );
 			y -= height / 2;
-			var yMin = y;
+			let yMin = y;
 			x -= drawDirection * textWidth;
 			c.lineTo( x, y );
 			y += height / 2;
@@ -3765,8 +3683,8 @@ function RaceChartUpdateInfo()
 			c.stroke();
 			c.fillStyle = '#000';
 			c.textBaseline = 'top';
-			var yText = yMin + (yMax - yMin - splitHover.length*fontHeight) / 2;
-			for( var isp = 0; isp < splitHover.length; ++isp, yText += fontHeight )
+			let yText = yMin + (yMax - yMin - splitHover.length*fontHeight) / 2;
+			for( let isp = 0; isp < splitHover.length; ++isp, yText += fontHeight )
 				c.fillText( splitHover[isp], xEvent - (drawDirection < 0 ? textWidth : 0), yText );
 			c.restore();
 			
@@ -3776,46 +3694,44 @@ function RaceChartUpdateInfo()
 	}
 }
 
-function RefreshRaceChart()
-{
-	var canvasRaceChart = document.getElementById('idRaceChart');
+function RefreshRaceChart() {
+	let canvasRaceChart = document.getElementById('idRaceChart');
 	if( !data || !canvasRaceChart || !canvasSupported || winAndOut )
 		return;
 
-	var iFromCategory = {};
-	for( var i = 0; i < categories.length; ++i )
+	let iFromCategory = {};
+	for( let i = 0; i < categories.length; ++i )
 		iFromCategory[categories[i]] = i;
 
-	var showStartOffsetOption = document.getElementById('idShowStartOffsetOption');
-	var showStartOffsetButton = document.getElementById('idShowStartOffsets');
-	var showStartOffsets = showStartOffsetButton.checked;
+	let showStartOffsetOption = document.getElementById('idShowStartOffsetOption');
+	let showStartOffsetButton = document.getElementById('idShowStartOffsets');
+	const showStartOffsets = showStartOffsetButton.checked;
 	showDetails = document.getElementById('idShowDetails').checked;
+
+	const showLapTimes = document.getElementById('idShowLapTimes').checked;
 		
 	// Show results for this category.
-	var categoriesUsed = {};
-	var dataMax = 0;
-	var resultsData = [];
-	var lapsMax = 0;
-	for( var c = 0; c < catDetails.length; ++c )
-	{
-		var catDetail = catDetails[c];
-		var catName = catDetail.name;
+	let categoriesUsed = {};
+	let dataMax = 0;
+	let resultsData = [];
+	let lapsMax = 0;
+	for( let c = 0; c < catDetails.length; ++c ) {
+		const catDetail = catDetails[c];
+		const catName = catDetail.name;
 		if( catName == 'All' )
 			continue;
 		if( categoryCur != 'All' && categoryCur != catName )
 			continue;
 			
-		for( var p = 0; p < catDetail.pos.length; ++p )
-		{
-			var num = catDetail.pos[p];
-			var d = data[num];
+		for( let p = 0; p < catDetail.pos.length; ++p ) {
+			const num = catDetail.pos[p];
+			const d = data[num];
 			
-			var raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
+			const raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
 			
 			// Remove the race start time if this is not a Wave category.
-			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 )
-			{
-				for( var j = 1; j < raceTimes.length; ++j )
+			if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 ) {
+				for( let j = 1; j < raceTimes.length; ++j )
 					raceTimes[j] -= raceTimes[0];
 				raceTimes[0] = 0;
 			}
@@ -3828,8 +3744,7 @@ function RefreshRaceChart()
 								iFromCategory[catName]
 							] );
 			categoriesUsed[catName] = true;
-			if( raceTimes.length > 0 )
-			{
+			if( raceTimes.length > 0 ) {
 				if( raceTimes.back() > dataMax )
 					dataMax = raceTimes.back();
 				if( raceTimes.length > lapsMax )
@@ -3838,28 +3753,27 @@ function RefreshRaceChart()
 		}
 	}
 	
-	if( resultsData.length == 0 || lapsMax == 0 )
-	{
+	if( resultsData.length == 0 || lapsMax == 0 ) {
 		canvasRaceChart.height = 8;
 		return;
 	}
 		
-	var categoryCount = 0;
-	for( var c in categoriesUsed )
+	let categoryCount = 0;
+	for( let c in categoriesUsed )
 		++categoryCount;
 
 	// Adjust the height of the race chart to make each row reasonably high.
-	var rowMin = 14, rowMax = rowMin*2, rows = resultsData.length + categoryCount + 2;
+	const rowMin = 14, rowMax = rowMin*2, rows = resultsData.length + categoryCount + 2;
 	if( canvasRaceChart.height / rows < rowMin )
 		canvasRaceChart.height = ~~(rowMin * rows);
 	else if( canvasRaceChart.height / rows > rowMax )
 		canvasRaceChart.height = ~~(rowMax * rows);
-	var width = canvasRaceChart.width;
-	var height = canvasRaceChart.height;
+	const width = canvasRaceChart.width;
+	const height = canvasRaceChart.height;
 		
-	var dc = canvasRaceChart.getContext('2d');
+	let dc = canvasRaceChart.getContext('2d');
 	
-	var backColour = 'white';
+	const backColour = 'white';
 	dc.textBaseline = "top";
 	dc.fillStyle = backColour;
 	dc.fillRect(0, 0, width, height );
@@ -3867,15 +3781,15 @@ function RefreshRaceChart()
 	// Sort by greatest distance and shortest time.
 	resultsData.sort( CmpCategoryResultsData );
 	
-	var iNum = 2;
-	var iRaceTimes = 3;
-	var iStatus = 4;
-	var iCategory = 6;
+	const iNum = 2;
+	const iRaceTimes = 3;
+	const iStatus = 4;
+	const iCategory = 6;
 
 	// Check if all the data have the same offset.
 	showStartOffsetOption.className = 'hidden';
-	var startOffset = resultsData[0][iRaceTimes][0];
-	for( var i = 1; i < resultsData.length; ++i ) {
+	let startOffset = resultsData[0][iRaceTimes][0];
+	for( let i = 1; i < resultsData.length; ++i ) {
 		if( resultsData[i][iRaceTimes][0] != startOffset ) {
 			showStartOffsetOption.className = 'shown';
 			startOffset = 0.0;
@@ -3883,23 +3797,23 @@ function RefreshRaceChart()
 		}
 	}
 	if( startOffset != 0.0 ) {
-		for( var i = 0; i < resultsData.length; ++i ) {
+		for( let i = 0; i < resultsData.length; ++i ) {
 			var raceTimes = resultsData[i][iRaceTimes];
-			for( var j = 0; j < raceTimes.length; ++j )
+			for( let j = 0; j < raceTimes.length; ++j )
 				raceTimes[j] -= startOffset;
 		}
 		dataMax -= startOffset;
 	}
 	else if( !showStartOffsets ) {
 		dataMax = 0;
-		for( var i = 0; i < resultsData.length; ++i ) {
-			var num = resultsData[i][iNum];
-			var d = data[num];
-			var raceTimes = resultsData[i][iRaceTimes];
+		for( let i = 0; i < resultsData.length; ++i ) {
+			const num = resultsData[i][iNum];
+			const d = data[num];
+			const raceTimes = resultsData[i][iRaceTimes];
 			if( raceTimes.length > 0 ) {
 				startOffset = raceTimes[0];
 				if( startOffset ) {
-					for( var j = 0; j < raceTimes.length; ++j )
+					for( let j = 0; j < raceTimes.length; ++j )
 						raceTimes[j] -= startOffset;
 				}
 				if( raceTimes.back() > dataMax )
@@ -3909,69 +3823,70 @@ function RefreshRaceChart()
 	}
 	
 	lapsMax = resultsData.length > 0 ? resultsData[0][iRaceTimes].length : 0;
-	var colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
-	var lighterColors = [];
-	for( var i = 0; i < colors.length; ++i )
+	const colors = makeColorGradient(2.4,2.4,2.4,0,2,4,128,127,500);
+	let lighterColors = [];
+	for( let i = 0; i < colors.length; ++i )
 		lighterColors.push( lighterColor(colors[i]) );
 
-	var barHeight = ~~(height / (resultsData.length + 3 + (categoryCur == 'All' ? categories.length-1 : 0)));
+	let barHeight = ~~(height / (resultsData.length + 3 + (categoryCur == 'All' ? categories.length-1 : 0)));
 	if( barHeight < 4 || dataMax == 0 )
 		return;
 	barHeight = Math.min( barHeight, 18 );
-	var minimizeLabels = false;
+	let minimizeLabels = false;
 
-	var normalTextHeight = barHeight * 0.80;
-	var textHeight = normalTextHeight;
-	var fontStr = textHeight + "px Arial";
+	const normalTextHeight = barHeight * 0.80;
+	let textHeight = normalTextHeight;
+	const fontStr = textHeight + "px Arial";
 	dc.font = fontStr;
 	
-	var textWidthLeft = dc.measureText('0000').width;
-	for( var i = 0; i < resultsData.length; ++i ) {
-		var rd = resultsData[i];
-		var num = rd[iNum];
+	let textWidthLeft = dc.measureText('0000').width;
+	for( let i = 0; i < resultsData.length; ++i ) {
+		let rd = resultsData[i];
+		let num = rd[iNum];
 		textWidthLeft = Math.max(	dc.measureText(getRiderNameNum(num) + '0:0').width,
 									dc.measureText(categories[rd[iCategory]] + '0:0').width,
 									textWidthLeft );
 	}
 	
-	var legendSep = 4;			// Separations between legend entries and the Gantt bars.
-	var labelsWidthLeft = textWidthLeft + legendSep;
-	var labelsWidthRight = dc.measureText('0000').width + legendSep;
-	var drawLabels = true;
+	const legendSep = 4;			// Separations between legend entries and the Gantt bars.
+	let labelsWidthLeft = textWidthLeft + legendSep;
+	const labelsWidthRight = dc.measureText('0000').width + legendSep;
+	let drawLabels = true;
 		
 	if( labelsWidthLeft + labelsWidthRight > width ) {
 		labelsWidthLeft = labelsWidthRight = 0;
 		drawLabels = false;
 	}
 
-	var xLeft = labelsWidthLeft;
-	var xRight = width - labelsWidthRight;
-	var yBottom = barHeight * (resultsData.length + categoryCount + 1);
-	var yTop = 2 * barHeight;
-	var lineWidth = 0.5;
+	let xLeft = labelsWidthLeft;
+	let xRight = width - labelsWidthRight;
+	let yBottom = barHeight * (resultsData.length + categoryCount + 1);
+	let yTop = 2 * barHeight;
+	let lineWidth = 0.5;
 
-	var fontLegendStr = (normalTextHeight*.75) + "px Arial";
+	const fontLegendStr = (normalTextHeight*.75) + "px Arial";
 	dc.font = fontLegendStr;
 	textHeight = (normalTextHeight * .75);
-	textWidth = dc.measureText( dataMax < 60*60 ? '00:00' : '00:00:00' ).width;
+	let textWidth = dc.measureText( dataMax < 60*60 ? '00:00' : '00:00:00' ).width;
 		
 	// Draw the horizontal labels.
 	// Find some reasonable tickmarks for the x axis.
-	var numLabels = (xRight - xLeft) / (textWidth * 2.0);
-	var idealInterval = dataMax / numLabels;
-	var intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60];
-	for( d = 1; d < intervals.length - 1 && intervals[d] < idealInterval; ++d )
+	const numLabels = (xRight - xLeft) / (textWidth * 2.0);
+	const idealInterval = dataMax / numLabels;
+	const intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 8*60*60, 12*60*60, 24*60*60];
+	let d = 1;
+	for( ; d < intervals.length - 1 && intervals[d] < idealInterval; ++d )
 		continue;
 	d = intervals[d];
-	var dFactor = (xRight - xLeft) / dataMax;
+	const dFactor = (xRight - xLeft) / dataMax;
 	
 	dc.strokeStyle = 'black';
 	dc.fillStyle = 'black';
 	dc.lineWidth = lineWidth;
-	for( var tCur = 0; tCur < dataMax; tCur += d ) {
-		var x = xLeft + tCur * dFactor;
-		var s = FormatTime(tCur);
-		var w = dc.measureText(s).width;
+	for( let tCur = 0; tCur < dataMax; tCur += d ) {
+		const x = xLeft + tCur * dFactor;
+		const s = FormatTime(tCur);
+		const w = dc.measureText(s).width;
 		dc.fillText( s, x - w/2, barHeight + 2 );
 		if( !minimizeLabels )
 			dc.fillText( s, x - w/2, yBottom + 4 );
@@ -3980,20 +3895,25 @@ function RefreshRaceChart()
 	
 	// Draw the Gantt chart.
 	dc.font = fontStr;
+	dc.textBaseline = 'middle';
+	
 	textHeight = normalTextHeight;
 	textWidth = dc.measureText('0000').width;
 
 	dc.lineCap = 'butt';
 	dc.lineJoin = 'miter';
 	
-	var categoryStartOffset = 0;
+	let categoryStartOffset = 0;
 
-	var xFactor = (width - labelsWidthLeft - labelsWidthRight) / dataMax;
-	var yLast = 2 * barHeight;
-	var yHighlight = null;
-	segmentsCur = [];
-	var iCategoryLast = -1;
-	for( var i = 0; i < resultsData.length; ++i ) {
+	const xFactor = (width - labelsWidthLeft - labelsWidthRight) / dataMax;
+	
+	let yCur;
+	let yLast = 2 * barHeight;
+	let yHighlight = null;
+	let segmentsCur = [];
+	let iCategoryLast = -1;
+	const yTextOffset = barHeight / 2;
+	for( let i = 0; i < resultsData.length; ++i ) {
 		// Leave a space between categories.
 		if( i == 0 || resultsData[i][iCategory] != iCategoryLast ) {
 			if( !showStartOffsets )
@@ -4001,57 +3921,71 @@ function RefreshRaceChart()
 			iCategoryLast = resultsData[i][iCategory];
 			if( i == 0 ) {
 				dc.fillStyle = '#FFFFFF';
-				var w = dc.measureText(categories[iCategoryLast] + '0:00').width;
+				const w = dc.measureText(categories[iCategoryLast] + '0:00').width;
 				dc.fillRect( legendSep, yLast, w + 1, barHeight + 1 );
 				dc.fillStyle = '#000000';
-				dc.fillText( categories[iCategoryLast], legendSep, yLast - barHeight );
+				dc.fillText( categories[iCategoryLast], legendSep, yLast - yTextOffset );
 				DrawLine( dc, 0, yLast, width - labelsWidthRight + 1, yLast );
 			}
 			else {
-				var negOffset = -4;
+				const negOffset = -4;
 				dc.fillStyle = '#FFFFFF';
 				dc.fillRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight + 1 );
 				dc.strokeRect( negOffset, yLast, width - labelsWidthRight + 1 - negOffset, barHeight );
 				dc.fillStyle = '#000000';
-				dc.fillText( categories[iCategoryLast], legendSep, yLast );
+				dc.fillText( categories[iCategoryLast], legendSep, yLast + yTextOffset );
 				yLast += barHeight;
 			}
 		}
 
+		const num = resultsData[i][iNum];
+		const raceTimes = resultsData[i][iRaceTimes];
+
+		let xLast = labelsWidthLeft;
+		let xCur = xLast;
 		yCur = yLast + barHeight;
-		xLast = labelsWidthLeft;
-		xCur = xLast;
-		var num = resultsData[i][iNum];
-		var raceTimes = resultsData[i][iRaceTimes];
-		
+
 		if( resultsData[i][iStatus] != 'Finisher' ) {
 			dc.fillStyle = dnfBackgroundColour;
 			dc.fillRect( 0, yLast, width, yCur - yLast + 1 );
 		}
 		
 		dc.strokeStyle = "#0F0F0F";
-		for( var j = 0; j < raceTimes.length; ++j ) {
+		for( let j = 0; j < raceTimes.length; ++j ) {
 			if( raceIsRunning && raceTimes[j] > t )
 				break;
-			var tCur = raceTimes[j] - categoryStartOffset;
+			const tCur = raceTimes[j] - categoryStartOffset;
 			xCur = ~~(labelsWidthLeft + tCur * xFactor);
-			if( j == 0 ) {
+			if( j === 0 ) {
 				dc.fillStyle = resultsData[i][iStatus] == 'Finisher' ? '#FFFFFF' : dnfBackgroundColour;
 				dc.fillRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 				dc.strokeRect( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 );
 			}
 			else {
-				var riderData = data[num];
-				var hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
+				const riderData = data[num];
+				const hover = j + ', ' + FormatTime(raceTimes[j] - raceTimes[j-1]);
 				drawSegment( dc, xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, colors[j], lighterColors[j] );
 				segmentsCur.push( [xLast, yLast, xCur - xLast + 1, yCur - yLast + 1, hover, num, j] );
 				
-				// Check for a note.
+				// Check for a lap note.
+				let hasDetails = false;
 				if( showDetails ) {
-					var detail = lapDetails[num + ',' + j];
+					const detail = lapDetails[num + ',' + j];
 					if( detail && detail[0] ) {
 						dc.fillStyle = '#000000';
-						dc.fillText( detail[0], xLast + 2, yLast + (yCur - yLast - textHeight) / 2 );
+						dc.fillText( detail[0], xLast + 2, yLast + yTextOffset );
+						hasDetails = true;
+					}
+				}
+				
+				// Check for showLapTime if no lapNote.
+				if( showLapTimes && !hasDetails ) {
+					const s = FormatTime( raceTimes[j] - raceTimes[j-1] );
+					const w = dc.measureText(s).width;
+					// Check if the lap time text fits.
+					if( w < (xCur - xLast) - legendSep * 2) {
+						dc.fillStyle = '#404040';
+						dc.fillText( s, xLast + legendSep, yLast + yTextOffset );
 					}
 				}
 			}
@@ -4066,21 +4000,21 @@ function RefreshRaceChart()
 		
 		// Draw the label on both ends.
 		dc.fillStyle = '#000000';
-		var lab = getRiderName( resultsData[i][iNum] );
+		let lab = getRiderName( resultsData[i][iNum] );
 		if( lab )
 			lab += ' ' + resultsData[i][iNum];
 		else
 			lab = resultsData[i][iNum] + '';
 		dc.fillStyle = '#000000';
-		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast );
+		dc.fillText( lab, labelsWidthLeft - dc.measureText(lab).width - legendSep, yLast + yTextOffset );
 		if( !minimizeLabels ) {
 			lab = resultsData[i][iNum] + '';
-			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast );
+			dc.fillText( lab, width - labelsWidthRight + legendSep, yLast + yTextOffset );
 		}
 		if( numsToWatch[resultsData[i][iNum]] != undefined ) {
 			dc.save()
 			dc.strokeStyle = "#000000";
-			var lineWidth = 2;
+			let lineWidth = 2;
 			dc.lineWidth = lineWidth;
 			dc.strokeRect( lineWidth / 2, yLast, width - lineWidth / 2, yCur - yLast + 1 - lineWidth );
 			dc.restore();
@@ -4090,24 +4024,23 @@ function RefreshRaceChart()
 		if( showDetails ) {
 			xLast = labelsWidthLeft;
 			xCur = xLast;
-			for( var j = 0; j < raceTimes.length; ++j ) {
+			for( let j = 0; j < raceTimes.length; ++j ) {
 				if( raceIsRunning && raceTimes[j] > t )
 					break;
-				var tCur = raceTimes[j] - categoryStartOffset;
+				const tCur = raceTimes[j] - categoryStartOffset;
 				xCur = ~~(labelsWidthLeft + tCur * xFactor);
 				
 				if( j != 0 ) {
-					var num = resultsData[i][iNum];
-					var d = data[num];
+					const num = resultsData[i][iNum];
+					const d = data[num];
 					if( d && d.interp[j] )
 						drawDiamond( dc, xCur, (yCur + yLast) / 2.0, barHeight / 2.0 );
 					else {
-						var detail = lapDetails[num + ',' + j];
+						const detail = lapDetails[num + ',' + j];
 						if( detail && detail[1] )
 							drawStar( dc, xCur, (yCur + yLast) / 2.0, 5, barHeight / 2.0, barHeight / 4.0 );
 					}
 				}
-				
 				xLast = xCur;
 			}
 		}
@@ -4164,15 +4097,14 @@ function GetValidResultsNums() {
 	
 	_resultsNums = [];
 	_raceTMax = null;
-	for( var c = 0; c < catDetails.length; ++c )
-	{
-		var catDetail = catDetails[c];
+	for( let c = 0; c < catDetails.length; ++c ) 	{
+		const catDetail = catDetails[c];
 		if( categoryCur != catDetail.name )
 			continue;
-		for( var p = 0; p < catDetail.pos.length; ++p ) {
-			var num = catDetail.pos[p];
-			var d = data[num];
-			var raceTimes = d['raceTimes'];
+		for( let p = 0; p < catDetail.pos.length; ++p ) {
+			const num = catDetail.pos[p];
+			const d = data[num];
+			const raceTimes = d['raceTimes'];
 			if( raceTimes && raceTimes.length >= 2 )
 				_resultsNums.push( num );
 		}
@@ -4186,12 +4118,12 @@ function GetRaceTMax() {
 	if( _lastCategory == categoryCur && _raceTMax != null )
 		return _raceTMax;
 	
-	var resultsNums = GetValidResultsNums();
+	const resultsNums = GetValidResultsNums();
 	_raceTMax = 0.0;
-	for( var i = 0; i < resultsNums.length; ++i ) {
-		var d = data[resultsNums[i]];
+	for( let i = 0; i < resultsNums.length; ++i ) {
+		const d = data[resultsNums[i]];
 		if( d ) {		
-			var raceTimes = d['raceTimes'];
+			const raceTimes = d['raceTimes'];
 			if( raceTimes.back() > _raceTMax )
 				_raceTMax = raceTimes.back();
 		}
@@ -4200,7 +4132,7 @@ function GetRaceTMax() {
 }
 
 function ShortFormatTimeGap( t ) {
-	var tStr = FormatTimeGap( t );
+	let tStr = FormatTimeGap( t );
 	if( tStr.substring(0, 3) == "0'0" )
 		tStr = tStr.substring(3);
 	else if( tStr.substring(0,2) == "0'" )
@@ -4209,21 +4141,21 @@ function ShortFormatTimeGap( t ) {
 }
 
 function GetLapLE( raceTimes, t ) {
-	var lap = raceTimes.binSearch( t );
+	let lap = raceTimes.binSearch( t );
 	if( lap >= raceTimes.length )
 		lap = raceTimes.length - 1;
 	return raceTimes[lap] > t ? lap-1 : lap;
 }
 
 function GetPositionSpeed( raceTimes, t ) {
-	var lap = GetLapLE( raceTimes, t );
-	var lapStartTime = raceTimes[lap];
-	var lapTime = 0.0;
+	const lap = GetLapLE( raceTimes, t );
+	const lapStartTime = raceTimes[lap];
+	let lapTime = 0.0;
 	if( lap+1 < raceTimes.length )
 		lapTime = raceTimes[lap+1] - raceTimes[lap];
 	else
 		lapTime = raceTimes[lap] - raceTimes[lap-1];
-	var speed = 1.0 / lapTime;
+	let speed = 1.0 / lapTime;
 	return {'position': lap + (t - lapStartTime) * speed, 'speed': speed};
 }
 
@@ -4239,10 +4171,10 @@ function GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, raceTimes, 
 		return {'gap':null, 'lapsDown':raceTimes.length - leaderRaceTimes.length};
 	}
 	
-	var ps = GetPositionSpeed( raceTimes, t );
-	var riderPosition = ps.position, riderSpeed = ps.speed;
-	var deltaPostion = leaderPosition - riderPosition;
-	var positionFraction = deltaPostion - Math.floor(deltaPostion);
+	const ps = GetPositionSpeed( raceTimes, t );
+	const riderPosition = ps.position, riderSpeed = ps.speed;
+	const deltaPostion = leaderPosition - riderPosition;
+	let positionFraction = deltaPostion - Math.floor(deltaPostion);
 	if( positionFraction < 0.0 )
 		positionFraction += 1.0;
 	return {'gap':positionFraction / leaderSpeed, 'lapsDown': -Math.floor(deltaPostion)};
@@ -4253,28 +4185,28 @@ function PathFromPoints( dc, points, xTranslate, yTranslate ) {
 	yTranslate = yTranslate ? yTranslate : 0;
 	dc.beginPath();
 	dc.moveTo( points[0][0] + xTranslate, points[0][1] + yTranslate );
-	for( var p = 1; p < points.length; ++p )
+	for( let p = 1; p < points.length; ++p )
 		dc.lineTo( points[p][0] + xTranslate, points[p][1] + yTranslate );
 }
 
 function GetSituationGaps( t ) {
-	var BigTime = 1000.0*24.0*60.0*60.0;
+	const BigTime = 1000.0*24.0*60.0*60.0;
 	
-	var resultsNums = GetValidResultsNums();
+	const resultsNums = GetValidResultsNums();
 	if( resultsNums.length == 0 )
 		return [];
 		
-	var maxLaps = 0;
-	for( var i = 0; i < resultsNums.length; ++i ) {
-		var d = data[resultsNums[i]];
+	let maxLaps = 0;
+	for( let i = 0; i < resultsNums.length; ++i ) {
+		const d = data[resultsNums[i]];
 		if( d && d.raceTimes && d.raceTimes.length - 1 > maxLaps )
 			maxLaps = d.raceTimes.length - 1;
 	}
 	
 	if( t == undefined ) {
 		if( raceIsRunning && timestamp ) {
-			var tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
-			var tBrowser = (new Date().getTime()) / 1000.0;
+			const tServer = (new Date(timestamp[0]).getTime()) / 1000.0;
+			const tBrowser = (new Date().getTime()) / 1000.0;
 			while( tBrowser - tServer < 0 )
 				tBrowser += 60*60;
 			t = timestamp[1] + (tBrowser - tServer);
@@ -4282,14 +4214,14 @@ function GetSituationGaps( t ) {
 		else
 			t = BigTime;
 	}
-	var raceTMax = GetRaceTMax();
+	const raceTMax = GetRaceTMax();
 	t = Math.min( t, raceTMax );
 	
-	var leaderRaceTimes = [];
-	for( var lap = 0; lap <= maxLaps; ++lap ) {
-		var tMinLap = BigTime;
+	let leaderRaceTimes = [];
+	for( let lap = 0; lap <= maxLaps; ++lap ) {
+		let tMinLap = BigTime;
 		for( var i = 0; i < resultsNums.length; ++i ) {
-			var d = data[resultsNums[i]];
+			const d = data[resultsNums[i]];
 			if( d && d.raceTimes.length > lap && d.raceTimes[lap] < tMinLap )
 				tMinLap = d.raceTimes[lap];
 		}
@@ -4297,8 +4229,8 @@ function GetSituationGaps( t ) {
 	}
 	
 	function getInfo( num, lapsDown ) {
-		var d = data[num];
-		var names = [];
+		const d = data[num];
+		let names = [];
 		if( d.LastName ) names.push( d.LastName );
 		if( d.FirstName ) names.push( d.FirstName.slice(0, 1) );
 		if( lapsDown != 0 )
@@ -4307,11 +4239,11 @@ function GetSituationGaps( t ) {
 	}
 	
 	var ps = GetPositionSpeed( leaderRaceTimes, t );
-	var leaderPosition = ps.position, leaderSpeed = ps.speed;
-	var gaps = [];
-	for( var i = 0; i < resultsNums.length; ++i ) {
-		var num = resultsNums[i];
-		var d = data[num];
+	const leaderPosition = ps.position, leaderSpeed = ps.speed;
+	let gaps = [];
+	for( let i = 0; i < resultsNums.length; ++i ) {
+		const num = resultsNums[i];
+		const d = data[num];
 		if( d ) {
 			gapLapsDown = GetLeaderGap( leaderPosition, leaderSpeed, leaderRaceTimes, d.raceTimes, t );
 			if( gapLapsDown != null && gapLapsDown.gap != null )
@@ -4322,22 +4254,22 @@ function GetSituationGaps( t ) {
 	gaps.sort( function(a, b) { return a[0] - b[0]; } );
 	
 	if( gaps.length > 0 ) {
-		var gapMin = gaps[0][0];
+		const gapMin = gaps[0][0];
 		if( gapMin > 0 ) {
-			for( var g = 0; g < gaps.length; ++g )
+			for( let g = 0; g < gaps.length; ++g )
 				gaps[g][0] -= gapMin;
 		}
 	}
 	
-	var thisLap = GetLapLE(leaderRaceTimes, t);
+	const thisLap = GetLapLE(leaderRaceTimes, t);
 	
-	var tCur = t;
-	var tAfterLeader = t - leaderRaceTimes[thisLap];
-	var laps = leaderRaceTimes.length - 1;
-	var lap = Math.min( thisLap + 1, laps );
-	var lapsToGo = Math.max(laps - lap, 0);
+	const tCur = t;
+	const tAfterLeader = t - leaderRaceTimes[thisLap];
+	const laps = leaderRaceTimes.length - 1;
+	const lap = Math.min( thisLap + 1, laps );
+	const lapsToGo = Math.max(laps - lap, 0);
 	
-	var title = 
+	const title = 
 			'   ' + _('Lap') + ': ' + lap + '/' + laps + '   ' + _('Laps to go') + ': ' + lapsToGo +
 			'    ' + _('Race Time') + ': ' + FormatTime(tCur);
 	
@@ -4349,15 +4281,15 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	this.timeRange = timeRange;
 	this.detailDiv = detailDiv;
 
-	var groupIndexColour = '#FFCC99';
-	var groupGapColour = 'rgb(255,255,102)';
-	var groupSizeColour = '#99CCFF';
-	var groupColour = 'rgb(128,128,255)';
-	var packColour = 'rgb(200,255,200)';
-	var greyPenColour = 'rgb(100,100,100, 0.64)';
-	var greyBrushColour = 'rgb(232,232,232)';
-	var blackColour = '#000000';
-	var whiteColour = '#FFFFFF';
+	const groupIndexColour = '#FFCC99';
+	const groupGapColour = 'rgb(255,255,102)';
+	const groupSizeColour = '#99CCFF';
+	const groupColour = 'rgb(128,128,255)';
+	const packColour = 'rgb(200,255,200)';
+	const greyPenColour = 'rgb(100,100,100, 0.64)';
+	const greyBrushColour = 'rgb(232,232,232)';
+	const blackColour = '#000000';
+	const whiteColour = '#FFFFFF';
 	
 	this.gaps = [];
 	this.groupRectList = [];
@@ -4392,9 +4324,9 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	this.Refresh = function() { this.Draw(); }
 
 	this.Draw = function() {
-		var dc = situationCanvas.getContext('2d');
-		var width = situationCanvas.width;
-		var height = situationCanvas.height;
+		let dc = situationCanvas.getContext('2d');
+		const width = situationCanvas.width;
+		const height = situationCanvas.height;
 		
 		dc.fillStyle = whiteColour;
 		dc.fillRect( 0, 0, width, height );
@@ -4405,12 +4337,12 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		function SetGreyPen() { dc.strokeStyle = greyPenColour; dc.lineWidth = 1; }
 			
 		// Partition the gaps into groups separated by at least one second.
-		var maxGapSec = 20.0*60.0*60.0;	// Ignore gaps that are too great.
-		var groups = [];
-		var group = [];
-		var gapPrev = null;
-		for( var g = 0; g < this.gaps.length; ++g ) {
-			var gap = this.gaps[g];
+		const maxGapSec = 20.0*60.0*60.0;	// Ignore gaps that are too great.
+		let groups = [];
+		let group = [];
+		let gapPrev = null;
+		for( let g = 0; g < this.gaps.length; ++g ) {
+			const gap = this.gaps[g];
 			if( gap[0] > maxGapSec )
 				break;
 			if( gapPrev == null || gap[0] - gapPrev[0] <= 1.0 )
@@ -4426,10 +4358,10 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 
 		// Make a copy of all the group info.  Also get the largest group.
 		this.groupFullData = [];
-		var groupMax = 0;
-		var groupTimeMaxSize = null;
-		for( var g = 0; g < groups.length; ++g ) {
-			var group = groups[g];
+		let groupMax = 0;
+		let groupTimeMaxSize = null;
+		for( let g = 0; g < groups.length; ++g ) {
+			const group = groups[g];
 			this.groupFullData.push( group.slice() );
 			if( group.length > groupMax ) {
 				groupMax = group.length;
@@ -4438,11 +4370,11 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		}
 		
 		// Add the group header (index, gap and size).
-		for( var i = 0; i < groups.length; ++i ) {
-			var group = groups[i];
+		for( let i = 0; i < groups.length; ++i ) {
+			const group = groups[i];
 			if( group.length == 0 )
 				continue;
-			var groupSize = group.length;
+			const groupSize = group.length;
 			if( group.length > 10 ) {
 				group = [].concat( group.slice(0,5), [[group[5][0], '...']], group.slice(group.length-5, group.length) );
 			}
@@ -4453,26 +4385,26 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			groups[i] = group;
 		}
 		
-		var fontHeight = height / 40;
+		const fontHeight = Math.floor(height / 40);
 		if( fontHeight == 0 )
 			return;
 
-		var font = fontHeight + 'px Arial';
+		const font = fontHeight + 'px Arial';
 		dc.font = font;
-		var spaceWidth = fontHeight / 2;
-		var boldFont = 'bold ' + fontHeight + 'px Arial';
+		const spaceWidth = fontHeight / 2;
+		const boldFont = 'bold ' + fontHeight + 'px Arial';
 		
-		var smallFontHeight = fontHeight * 0.75;
-		var smallFont = smallFontHeight + 'px Arial';
+		const smallFontHeight = fontHeight * 0.75;
+		const smallFont = smallFontHeight + 'px Arial';
 
 		// -------------------------------------------------------------
 		dc.font = font;
 		dc.fillStyle = blackColour;
 		dc.textBaseline = "top";
 
-		var border = Math.min( width, height ) / 25;
-		var xLeft = border*2;
-		var yTop = border*2.25 + fontHeight;
+		const border = Math.min( width, height ) / 25;
+		const xLeft = border*2;
+		const yTop = border*2.25 + fontHeight;
 		if( this.title != null )
 			dc.fillText( this.title, xLeft, border );
 		
@@ -4480,9 +4412,9 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			return;
 		
 		function GetGroupTextExtent( group ) {
-			var widthMax = 0;
-			var widthCur;
-			for( var g = 0; g < group.length; ++g ) {
+			let widthMax = 0;
+			let widthCur;
+			for( let g = 0; g < group.length; ++g ) {
 				if( numsToWatch[group[g][2]] != undefined ) {
 					dc.save();
 					dc.font = boldFont;
@@ -4497,29 +4429,29 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			return {"width":widthMax, "height":group.length*fontHeight*1.1};
 		}
 		
-		var lastWidth = GetGroupTextExtent( groups[groups.length-1] ).width;
+		const lastWidth = GetGroupTextExtent( groups[groups.length-1] ).width;
 		
-		var xRight = width - border - lastWidth;
-		var yBottom = height - border;
+		const xRight = width - border - lastWidth;
+		const yBottom = height - border;
 		
-		var gapMax = 0.0;
+		let gapMax = 0.0;
 		if( groups.length > 0 && groups[0].length > 0 ) {
-			var groupFirst = groups[0], groupLast = groups[groups.length-1];
-			var tFirst = groupFirst[0][0];
-			var tLast = groupLast[groupLast.length-1][0];
+			const groupFirst = groups[0], groupLast = groups[groups.length-1];
+			const tFirst = groupFirst[0][0];
+			const tLast = groupLast[groupLast.length-1][0];
 			gapMax = tLast - tFirst;
 		}
-		var xScale = (xRight - xLeft) / (gapMax != 0.0 ? gapMax : 1.0) * this.zoom;
+		const xScale = (xRight - xLeft) / (gapMax != 0.0 ? gapMax : 1.0) * this.zoom;
 		
 		function drawFinishLine() {
 			if( this.tAfterLeader == null )
 				return;
-			var x = xLeft + this.tAfterLeader * xScale;
-			var flWidth = width / 32;
+			const x = xLeft + this.tAfterLeader * xScale;
+			const flWidth = width / 32;
 			if( x - flWidth > width )
 				return;
-			var flTop = yTop - border / 2;
-			var flBottom = flTop + border;
+			const flTop = yTop - border / 2;
+			const flBottom = flTop + border;
 			dc.strokeStyle = 'rgb(220,220,220)';
 			dc.lineWidth = Math.max(width / 800, 1);
 			dc.fillStyle = whiteColour;
@@ -4539,29 +4471,29 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		dc.lineWidth = 1;
 		dc.fillStyle = blackColour;
 		DrawLine( dc, xLeft - border, yTop, width-border, yTop );
-		var arrowLength = border * 0.8;
-		var points = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
+		let arrowLength = border * 0.8;
+		let points = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
 		PathFromPoints( dc, points, border/2, yTop ); dc.closePath();
 		dc.fill();
 		dc.stroke();
 		
 		SetGreyPen();
 		
-		var groupTitleBrushes = [
+		const groupTitleBrushes = [
 			groupIndexColour,
 			groupGapColour,
 			groupSizeColour,
 		];
 		
-		var existingRects = [];	// Sequenced by decreasing GetRight().
-		var groupHeight = height / 40;
-		var groupRectList = [];
-		for( var g = 0; g < groups.length; ++g ) {
-			var group = groups[g];
+		let existingRects = [];	// Sequenced by decreasing GetRight().
+		const groupHeight = height / 40;
+		let groupRectList = [];
+		for( let g = 0; g < groups.length; ++g ) {
+			const group = groups[g];
 			
 			// Draw the group.
-			var xBegin = xLeft + group[0][0] * xScale;
-			var xEnd = xLeft + group[group.length-1][0] * xScale;
+			const xBegin = xLeft + group[0][0] * xScale;
+			const xEnd = xLeft + group[group.length-1][0] * xScale;
 			
 			dc.fillStyle = groupColour;
 			dc.fillRect( xBegin - groupHeight/2, yTop - groupHeight/2, xEnd - xBegin + groupHeight, groupHeight );
@@ -4571,18 +4503,18 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			DrawLine( dc, xBegin, yTop, xEnd, yTop );
 			
 			// Find a non-overlapping area to draw the group text.
-			var xText = xBegin;
-			var yText = yTop + groupHeight/2 + fontHeight;
-			var gte = GetGroupTextExtent( group );
-			var gWidth = gte.width;
-			var gHeight = gte.height;
-			var gRect = new Rect( xText, yText, gWidth + spaceWidth*2, gHeight + fontHeight*0.6 );
+			const xText = xBegin;
+			const yText = yTop + groupHeight/2 + fontHeight;
+			const gte = GetGroupTextExtent( group );
+			const gWidth = gte.width;
+			const gHeight = gte.height;
+			const gRect = new Rect( xText, yText, gWidth + spaceWidth*2, gHeight + fontHeight*0.6 );
 			
-			var conflict = true;
+			let conflict = true;
 			while( conflict ) {
 				conflict = false;
-				for( var ir = 0; ir < existingRects.length; ++ir ) {
-					var r = existingRects[ir];
+				for( let ir = 0; ir < existingRects.length; ++ir ) {
+					const r = existingRects[ir];
 					if( r.GetRight() < gRect.GetLeft() )
 						break;
 					if( r.Intersects(gRect) ) {
@@ -4594,7 +4526,7 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			
 			// Insert the new rectangle into the list.  Keep sequenced by decreasing GetRight().
 			existingRects.push( gRect );
-			for( var i = existingRects.length-2; i >= 0;  --i ) {
+			for( let i = existingRects.length-2; i >= 0;  --i ) {
 				if( existingRects[i].GetRight() < existingRects[i+1].GetRight() )
 					existingRects.swap(i, i+1);
 				else
@@ -4606,14 +4538,14 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		
 		// Connect the text to the group with a line.
 		SetGreyPen();
-		for( var g = 0; g < groupRectList.length; ++g ) {
-			var gRect = groupRectList[g][1];
+		for( let g = 0; g < groupRectList.length; ++g ) {
+			const gRect = groupRectList[g][1];
 			DrawLine( dc, gRect.GetLeft(), yTop, gRect.GetLeft(), gRect.GetTop() );
 		}
 		
 		dc.textBaseline = "top";
-		for( var ig = 0; ig < groupRectList.length; ++ig ) {
-			var group = groupRectList[ig][0], gRect = groupRectList[ig][1];
+		for( let ig = 0; ig < groupRectList.length; ++ig ) {
+			const group = groupRectList[ig][0], gRect = groupRectList[ig][1];
 			
 			// Draw the group outline.
 			SetGreyPen();
@@ -4621,22 +4553,22 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			dc.fillRect( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 );
 			dc.strokeRect( gRect.GetLeft(), gRect.GetTop(), gRect.GetWidth()-1, gRect.GetHeight()-fontHeight/2, fontHeight/3 );
 			
-			var xText = gRect.GetLeft();
+			const xText = gRect.GetLeft();
 			
 			// Draw the group text.
 			SetGreyPen();
 			dc.fillStyle = blackColour;
-			var yText = gRect.GetTop()
-			for( var i = 0; i < group.length; ++i ) {
-				var gap = group[i];
+			let yText = gRect.GetTop()
+			for( let i = 0; i < group.length; ++i ) {
+				const gap = group[i];
 				
 				if( i == 0 ) {
 					// Draw the coloured rectangles to highlight the title fields.
-					var title = gap[1];
-					var fieldWidths = [-spaceWidth+2];
-					var iSpace = 0;
+					const title = gap[1];
+					const fieldWidths = [-spaceWidth+2];
+					let iSpace = 0;
 					while( true ) {
-						var iSpace = title.indexOf( '  ', iSpace );
+						iSpace = title.indexOf( '  ', iSpace );
 						if( iSpace < 0 ) {
 							fieldWidths.push( dc.measureText(title).width + spaceWidth );
 							break;
@@ -4646,10 +4578,10 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 					}
 					
 					fieldWidths[fieldWidths.length-1] += spaceWidth/2;
-					var iBrush = (fieldWidths.length > 2 ? 0 : 2);
-					var xLast = xText;
-					for( var iField = 1; iField < fieldWidths.length; ++iField ) {
-						var tWidth = fieldWidths[iField] - fieldWidths[iField-1]
+					let iBrush = (fieldWidths.length > 2 ? 0 : 2);
+					let xLast = xText;
+					for( let iField = 1; iField < fieldWidths.length; ++iField ) {
+						const tWidth = fieldWidths[iField] - fieldWidths[iField-1]
 						dc.fillStyle = groupTitleBrushes[iBrush];
 						dc.fillRect( xLast, yText, tWidth, fontHeight*1.08 );
 						dc.strokeRect( xLast, yText, tWidth, fontHeight*1.08 );
@@ -4677,22 +4609,22 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		SetGreyPen();
 		dc.fillStule = greyBrushColour;
 		dc.font = smallFont;
-		var yUp = yTop - groupHeight - smallFontHeight
-		var yText = yUp + smallFontHeight/2;
-		var yTextCenter = yText + smallFontHeight * 0.5;
+		let yUp = yTop - groupHeight - smallFontHeight
+		yText = yUp + smallFontHeight/2;
+		const yTextCenter = yText + smallFontHeight * 0.5;
 		yUp += smallFontHeight/4;
 		
-		var arrowLength = smallFontHeight * 0.75;
-		var leftArrow = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
-		var rightArrow = [[0,0], [-arrowLength, arrowLength/4], [-arrowLength, -arrowLength/4]];
+		arrowLength = smallFontHeight * 0.75;
+		const leftArrow = [[0,0], [arrowLength, arrowLength/4], [arrowLength, -arrowLength/4]];
+		const rightArrow = [[0,0], [-arrowLength, arrowLength/4], [-arrowLength, -arrowLength/4]];
 
 		dc.textBaseline = "middle";
-		for( var iGroup = 1; iGroup < groups.length; ++iGroup ) {
-			var groupPrev = groups[iGroup-1], groupNext = groups[iGroup];
-			var tPrev = groupPrev[groupPrev.length-1][0], tNext = groupNext[0][0];
-			var xPrev = xLeft + tPrev * xScale, xNext = xLeft + tNext * xScale;
-			var sepStr = ShortFormatTimeGap(tNext - tPrev);
-			var tWidth = dc.measureText( sepStr ).width;
+		for( let iGroup = 1; iGroup < groups.length; ++iGroup ) {
+			const groupPrev = groups[iGroup-1], groupNext = groups[iGroup];
+			const tPrev = groupPrev[groupPrev.length-1][0], tNext = groupNext[0][0];
+			const xPrev = xLeft + tPrev * xScale, xNext = xLeft + tNext * xScale;
+			const sepStr = ShortFormatTimeGap(tNext - tPrev);
+			const tWidth = dc.measureText( sepStr ).width;
 			if( xNext - xPrev < tWidth * 1.25 )
 				continue;
 			
@@ -4712,12 +4644,12 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	}
 	
 	this.processClick = function( event ) {
-		var rect = this.situationCanvas.getBoundingClientRect();
-		var xEvent = event.clientX - rect.left;
-		var yEvent = event.clientY - rect.top;
+		const rect = this.situationCanvas.getBoundingClientRect();
+		const xEvent = event.clientX - rect.left;
+		const yEvent = event.clientY - rect.top;
 
-		for( var i = 0; i < this.groupRectList.length; ++i ) {
-			var gRect = this.groupRectList[i][1];
+		for( let i = 0; i < this.groupRectList.length; ++i ) {
+			const gRect = this.groupRectList[i][1];
 			if( gRect.ContainsXY( xEvent, yEvent ) ) {
 				this.DrawDetails( gRect, i, this.groupFullData[i], this.tCur, null );
 				return;
@@ -4729,36 +4661,36 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 	this.DrawDetails = function( gRect, groupIndex, groupInfo, raceTime, clockTime ) {
 		this.detailDiv.innerHTML = '';
 		if( groupIndex == undefined || groupIndex == null ) {
-			var text = '\u25C0&nbsp;&nbsp;' + _('TimeSliderInstructions') + '<br/><br/><br/><br/><br/>\u25C0&nbsp;&nbsp;' + _('ClickGroupInstructions');
-			var para = createChild( this.detailDiv, 'p' );
+			const text = '\u25C0&nbsp;&nbsp;' + _('TimeSliderInstructions') + '<br/><br/><br/><br/><br/>\u25C0&nbsp;&nbsp;' + _('ClickGroupInstructions');
+			let para = createChild( this.detailDiv, 'p' );
 			para.innerHTML = text;
 			para.id = 'detailTitle';
 			return;
 		}
 		
-		var bigSpace = '&nbsp;&nbsp;&nbsp;&nbsp;';
-		var title = 
+		const bigSpace = '&nbsp;&nbsp;&nbsp;&nbsp;';
+		const title = 
 			(groupIndex != 0 ? _('Chase Group') + ': ' + groupIndex : _('Leaders') + ': \u2714') + 
 			(groupIndex != 0 ? bigSpace + _('Gap') + ': ' + ShortFormatTimeGap(groupInfo[0][0]) : '') +
 			bigSpace +_('Size') + ': ' + groupInfo.length + 
 			(raceTime != null ? bigSpace + _('Race Time') + ': ' + FormatTime(raceTime) : '' ) + 
 			(clockTime != null ? bigSpace + _('Clock') + ': ' + FormatTime(clockTime) : '' );
 		
-		var para = createChild( this.detailDiv, 'p' );
+		let para = createChild( this.detailDiv, 'p' );
 		para.innerHTML = title;
 		para.id = 'detailTitle';
 		
 		// Get the bibs and laps down.
-		var nums = [];
-		var lapsDown = {};
-		var sequence = {};
-		var numGap = {};
-		for( var i = 0; i < groupInfo.length; ++i ) {
-			var gap = groupInfo[i][0];
-			var info = groupInfo[i][1];
-			var fields = info.split(' ');
-			var num = parseInt( fields[0].replace(/\D/g,'') );
-			var lastField = fields[fields.length-1];
+		let nums = [];
+		let lapsDown = {};
+		let sequence = {};
+		let numGap = {};
+		for( let i = 0; i < groupInfo.length; ++i ) {
+			const gap = groupInfo[i][0];
+			const info = groupInfo[i][1];
+			const fields = info.split(' ');
+			const num = parseInt( fields[0].replace(/\D/g,'') );
+			const lastField = fields[fields.length-1];
 			if( lastField.slice(0, 1) == '(' && lastField.slice(-1) == ')')
 				lapsDown[num] = lastField.slice(1).slice(0, -1);
 			nums.push( num );
@@ -4767,20 +4699,19 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		}
 		
 		// Adjust to get a combined name field.
-		var detailFields = infoFields.slice();
-		var curFields = {'Seq':true, 'Gap':true, 'Bib':true, 'LapsDown':true};
+		const detailFields = infoFields.slice();
+		let curFields = {'Seq':true, 'Gap':true, 'Bib':true, 'LapsDown':true};
 		
 		// Check for what information to present in the results.
-		for( var i = 0; i < nums.length; ++i ) {
-			var num = nums[i];
-			var d = data[num];			
+		for( const num of nums.length ) {
+			const d = data[num];			
 			// Get the union of all the defined fields.
-			for( var f = 0; f < detailFields.length; ++f )
+			for( let f = 0; f < detailFields.length; ++f )
 				if( d[infoFields[f]] )
 					curFields[infoFields[f]] = true;
 		}
 
-		var hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
+		let hasFirstLastName = (curFields['FirstName'] && curFields['LastName']);
 		if( hasFirstLastName ) {
 			curFields['FirstName'] = false;
 			curFields['LastName'] = false;
@@ -4788,10 +4719,10 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 		}
 		
 		detailFields.splice( 0, 0, 'Seq', 'Bib' );
-		var numericFields = {'Seq':true, 'Bib':true, 'LapsDown':true, 'Age':true};
-		for( var n in lapsDown ) {
-			var iInsert = 2;
-			for( var i = 0; i < detailFields.length; ++i ) {
+		let numericFields = {'Seq':true, 'Bib':true, 'LapsDown':true, 'Age':true};
+		for( let n in lapsDown ) {
+			let iInsert = 2;
+			for( let i = 0; i < detailFields.length; ++i ) {
 				if( detailFields[i] == 'Name' ) {
 					iInsert = i + 1;
 					break;
@@ -4801,39 +4732,39 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 			break;
 		}
 
-		var table = createChild( this.detailDiv, 'TABLE');
+		let table = createChild( this.detailDiv, 'TABLE');
 		table.className = 'results';
-		var thead = createChild( table, 'THEAD' );
+		let thead = createChild( table, 'THEAD' );
 		
-		var tr = createChild( thead, 'TR' );
-		for( var f = 0; f < detailFields.length; ++f ) {
-			var field = detailFields[f];
+		let tr = createChild( thead, 'TR' );
+		for( let f = 0; f < detailFields.length; ++f ) {
+			const field = detailFields[f];
 			if( curFields[field] ) {
 				createTextChild( td = createChild(tr, 'TH'), _(detailFields[f]) );
 				td.id = 'idNonNumeric';
 			}
 		}
 		
-		var tbody = createChild( table, 'TBODY' );
-		for( var i = 0; i < nums.length; ++i ) {
-			var num = nums[i];
-			var d = data[num];			
+		let tbody = createChild( table, 'TBODY' );
+		for( let i = 0; i < nums.length; ++i ) {
+			const num = nums[i];
+			const d = data[num];			
 			
 			function createTD( tr ) {
-				var td = createChild(tr, 'TD');
+				let td = createChild(tr, 'TD');
 				if( numsToWatch[num] )
 					td.className = 'highlight';
 				return td;
 			}
 			
-			var tr = createChild(tbody, 'TR');
+			let tr = createChild(tbody, 'TR');
 			tr.onclick = function(n) { return function() {ToggleNumberHighlight(n);}; }(num);
 
 			// Add the info fields.
-			for( var f = 0; f < detailFields.length; ++f ) {
-				var field = detailFields[f];
+			for( let f = 0; f < detailFields.length; ++f ) {
+				const field = detailFields[f];
 				if( curFields[field] ) {
-					var v;
+					let v;
 					if( field == 'Seq' )
 						v = i+1;
 					else if( field == 'Bib' )
@@ -4860,15 +4791,15 @@ function Situation( situationCanvas, timeRange, detailDiv) {
 }
 // ---------------------------------------------------------------------
 function pDistanceSquared(x, y, x1, y1, x2, y2) {
-	var A = x - x1, B = y - y1, C = x2 - x1, D = y2 - y1;
+	const A = x - x1, B = y - y1, C = x2 - x1, D = y2 - y1;
 
-	var dot = A * C + B * D;
-	var len_sq = C * C + D * D;
-	var param = -1;
+	const dot = A * C + B * D;
+	const len_sq = C * C + D * D;
+	let param = -1;
 	if (len_sq != 0) // 0 length line
 	  param = dot / len_sq;
 
-	var xx, yy;
+	let xx, yy;
 
 	if (param < 0) {
 		xx = x1;
@@ -4883,8 +4814,7 @@ function pDistanceSquared(x, y, x1, y1, x2, y2) {
 		yy = y1 + param * D;
 	}
 
-	var dx = x - xx;
-	var dy = y - yy;
+	const dx = x - xx, dy = y - yy;
 	return dx * dx + dy * dy;
 }
 var dnfBackgroundColour = "#E0E0E0";
@@ -4939,31 +4869,31 @@ function LapChart( ) {
 	this.moveTimer = null;
 	
 	this.doMouseMove = function( evt ) {
-		var numSelectOld = this.numSelect;
+		const numSelectOld = this.numSelect;
 		this.numSelect = null;
 		
-		var rect = this.canvas.getBoundingClientRect();
-		var x = evt.clientX - rect.left, y = evt.clientY - rect.top;
+		const rect = this.canvas.getBoundingClientRect();
+		let x = evt.clientX - rect.left, y = evt.clientY - rect.top;
 		
 		// Find the category of the mouse.
-		for( var c = 0; c < this.data.length; ++c ) {
+		for( let c = 0; c < this.data.length; ++c ) {
 			if( !(this.data[c].yTop <= y && y < this.data[c].yTop + this.data[c].height) )
 				continue;
 				
 			// Check that the mouse is on the name or number.
 			if( this.data[c].xRight <= x ) {
-				var i = parseInt(((y - this.data[c].yTop) / this.rowHeight) - 1);
+				const i = parseInt(((y - this.data[c].yTop) / this.rowHeight) - 1);
 				if( 0 <= i && i < this.data[c].nums.length )
 					this.numSelect = this.data[c].nums[i];
 				break;
 			}
 			if( this.data[c].xLeft <= x ) {
-				var numPos = this.data[c].numPos;
-				var lapsData = this.data[c].lapsData;
-				var xLeft = this.data[c].xLeft, xRight = this.data[c].xRight, lapWidth = this.data[c].lapWidth;
-				var yTop = this.data[c].yTop;
-				var rowHeight = this.rowHeight;
-				var lap = parseInt((x - xLeft) / lapWidth);
+				const numPos = this.data[c].numPos;
+				const lapsData = this.data[c].lapsData;
+				const xLeft = this.data[c].xLeft, xRight = this.data[c].xRight, lapWidth = this.data[c].lapWidth;
+				const yTop = this.data[c].yTop;
+				const rowHeight = this.rowHeight;
+				const lap = parseInt((x - xLeft) / lapWidth);
 				
 				function getX(lap) { return xLeft + lap * lapWidth; }
 				function getY(pos) { return yTop + rowHeight * (pos + 1); }
@@ -4971,8 +4901,8 @@ function LapChart( ) {
 				function getSegment( lapCur, j ) {
 					if( !lapsData[lapCur] || !lapsData[lapCur][j] )
 						return null;
-					var num = lapsData[lapCur][j].num;
-					var x1, y1;
+					const num = lapsData[lapCur][j].num;
+					let x1, y1;
 					if( lapCur == 0 ) {
 						x1 = getX(0);
 						y1 = getY(numPos[num][0]) + rowHeight/2;
@@ -4981,17 +4911,17 @@ function LapChart( ) {
 						x1 = getX(lapCur-1) + lapWidth/2;
 						y1 = getY(numPos[num][lapCur-1]) + rowHeight/2;
 					}
-					var x2 = getX(lapCur) + lapWidth/2;
-					var y2 = getY(numPos[num][lapCur]) + rowHeight/2;
+					const x2 = getX(lapCur) + lapWidth/2;
+					const y2 = getY(numPos[num][lapCur]) + rowHeight/2;
 					return {'x1':x1, 'y1':y1, 'x2':x2, 'y2':y2, 'num':num};
 				}
 				
-				var dBest = Number.MAX_VALUE;
-				for( var j = 0; j < lapsData[lap].length; ++j ) {
-					for( var lapCur = lap; lapCur < lap + 2; ++lapCur ) {
-						var segment = getSegment( lapCur, j );
+				let dBest = Number.MAX_VALUE;
+				for( let j = 0; j < lapsData[lap].length; ++j ) {
+					for( let lapCur = lap; lapCur < lap + 2; ++lapCur ) {
+						const segment = getSegment( lapCur, j );
 						if( segment !== null ) {
-							var dCur = pDistanceSquared( x, y, segment.x1, segment.y1, segment.x2, segment.y2 );
+							const dCur = pDistanceSquared( x, y, segment.x1, segment.y1, segment.x2, segment.y2 );
 							if( dCur < dBest ) {
 								dBest = dCur;
 								this.numSelect = segment.num;
@@ -5015,13 +4945,13 @@ function LapChart( ) {
 			}
 			clearTimeout( this.moveTimer );
 		}
-		var that = this;
+		let that = this;
 		this.moveTimer = setTimeout( function() { that.doMouseMove(evt); that.moveTimer=null; }, 25 );
 	}
 	
 	this.init = function( canvas ) {
 		this.canvas = canvas;
-		var that = this;
+		let that = this;
 		this.canvas.addEventListener( 'mousemove', function(evt) {that.onMouseMove(evt);} );
 	}
 	
@@ -5029,26 +4959,24 @@ function LapChart( ) {
 		this.data = [];
 		
 		this.lapsMax = 0;
-		for( var c = 0; c < catDetails.length; ++c )
-		{
-			var catDetail = catDetails[c];
-			var catName = catDetail.name;
+		for( let c = 0; c < catDetails.length; ++c ) {
+			const catDetail = catDetails[c];
+			const catName = catDetail.name;
 			if( catName === 'All' )
 				continue;
 			if( categoryCur !== 'All' && categoryCur !== catName )
 				continue;
 				
-			var lapsData = [];
-			var numIndex = {};
-			var nums = [];
-			for( var p = 0; p < catDetail.pos.length; ++p )
-			{
-				var num = catDetail.pos[p];
+			let lapsData = [];
+			let numIndex = {};
+			let nums = [];
+			for( let p = 0; p < catDetail.pos.length; ++p ) {
+				const num = catDetail.pos[p];
 				if( num in numIndex )
 					continue;
-				var d = data[num];
+				const d = data[num];
 				
-				var raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
+				const raceTimes = d['raceTimes'].slice(0);	// Make a copy so we don't disturb the original.
 				if( raceTimes.length === 0 )
 					continue
 				numIndex[num] = nums.length;
@@ -5056,12 +4984,12 @@ function LapChart( ) {
 				
 				// Remove the race start time if this is not a Wave category.
 				if( catDetail.catType != 'Start Wave' && raceTimes.length > 0 ) {
-					for( var j = 1; j < raceTimes.length; ++j )
+					for( let j = 1; j < raceTimes.length; ++j )
 						raceTimes[j] -= raceTimes[0];
 					raceTimes[0] = 0;
 				}
 				// Add all the lap information to the overall structure.
-				for( var j = 1; j < raceTimes.length; ++j ) {
+				for( let j = 1; j < raceTimes.length; ++j ) {
 					if( raceIsRunning && raceTimes[j] > t )
 						break;
 					while( lapsData.length < j )
@@ -5072,13 +5000,13 @@ function LapChart( ) {
 			}
 		
 			// Sort the race times by lap to get the current rank.
-			for( var lap = 0; lap < lapsData.length; ++lap )
+			for( let lap = 0; lap < lapsData.length; ++lap )
 				lapsData[lap].sort( function(x, y) { return x.raceTime - y.raceTime; } );
 			
 			// Set the laps down.
-			for( var lap = 0; lap < lapsData.length-1; ++lap ) {
-				for( var j = lapsData[lap].length-1; j > 0; --j ) {
-					for( var lapNext = lap+1; lapNext < lapsData.length && lapsData[lap][j].raceTime > lapsData[lapNext][0].raceTime; ++lapNext )
+			for( let lap = 0; lap < lapsData.length-1; ++lap ) {
+				for( let j = lapsData[lap].length-1; j > 0; --j ) {
+					for( let lapNext = lap+1; lapNext < lapsData.length && lapsData[lap][j].raceTime > lapsData[lapNext][0].raceTime; ++lapNext )
 						--lapsData[lap][j].lapsDown;
 					if( lapsData[lap][j] === 0 )
 						break;
@@ -5086,10 +5014,10 @@ function LapChart( ) {
 			}
 			
 			// Compute the position by lap for each rider.
-			var numPos = {};
-			for( var lap = 0; lap < lapsData.length; ++lap ) {
-				for( var pos = 0; pos < lapsData[lap].length; ++pos ) {
-					var num = lapsData[lap][pos].num;
+			let numPos = {};
+			for( let lap = 0; lap < lapsData.length; ++lap ) {
+				for( let pos = 0; pos < lapsData[lap].length; ++pos ) {
+					const num = lapsData[lap][pos].num;
 					if( num in numPos )
 						numPos[num].push( pos );
 					else
@@ -5106,46 +5034,46 @@ function LapChart( ) {
 		if( !this.canvas )
 			return;
 		
-		var that = this;
+		let that = this;
 		this.getData();
 		if( this.data.length == 0 || this.lapsMax <= 1 ) {
 			this.canvas.height = 0;
 			return;
 		}
 		
-		var primeLaps = {};
+		let primeLaps = {};
 		if( primes && primes.length > 0 ) {
-			var lapsMax = 0;
-			for( var c = 0; c < this.data.length; ++c ) {
+			let lapsMax = 0;
+			for( let c = 0; c < this.data.length; ++c ) {
 				lapsMax = Math.max( lapsMax, this.data[c].lapsData.length );
 			}
-			for( var i = 0; i < primes.length; ++i )
+			for( let i = 0; i < primes.length; ++i )
 				primeLaps[lapsMax-primes[i].lapsToGo-1] = true;
 		}
 		
-		var rowsTotal = 0;
-		for( var c = 0; c < this.data.length; ++c ) {
+		let rowsTotal = 0;
+		for( let c = 0; c < this.data.length; ++c ) {
 			rowsTotal += this.data[c].nums.length + 1.5 + 2;
 		}
 		
-		var rowHeight = this.rowHeight;
+		let rowHeight = this.rowHeight;
 		this.canvas.height = rowHeight * rowsTotal;
-		var width = this.canvas.width;
+		const width = this.canvas.width;
 		
-		var dc = this.canvas.getContext('2d');
+		let dc = this.canvas.getContext('2d');
 		dc.setTransform( 1, 0, 0, 1, 0, 0 );
 		
-		for( var c = 0; c < this.data.length; ++c ) {
-			var lapsData = this.data[c].lapsData;
-			var numPos = this.data[c].numPos;
-			var nums = this.data[c].nums;
+		for( let c = 0; c < this.data.length; ++c ) {
+			const lapsData = this.data[c].lapsData;
+			const numPos = this.data[c].numPos;
+			const nums = this.data[c].nums;
 			
-			var rowTextFraction = 0.7;
-			var fontHeight = rowHeight * rowTextFraction;
+			const rowTextFraction = 0.7;
+			const fontHeight = rowHeight * rowTextFraction;
 			dc.font = fontHeight + 'px Arial';
 			
 			dc.translate( 0, rowHeight / 2 );
-			var yTop = rowHeight / 2;
+			let yTop = rowHeight / 2;
 			
 			dc.fillStyle = '#000000';
 			dc.textBaseline = 'middle';
@@ -5154,39 +5082,39 @@ function LapChart( ) {
 			
 			dc.translate( 0, rowHeight );
 			yTop += rowHeight;
-			var height = rowHeight * (nums.length + 2);
+			let height = rowHeight * (nums.length + 2);
 			
 			this.data[c].yTop = (c == 0 ? yTop : this.data[c-1].yTop + this.data[c-1].height + yTop);
 			this.data[c].height = height;
 			
 			function getName( num ) {
-				var d = data[num];
-				var name = '';
+				const d = data[num];
+				let name = '';
 				if( d.LastName && d.FirstName ) name = d.LastName + ', ' + d.FirstName;
 				else if( d.LastName ) name = d.LastName;
 				else if( d.FirstName ) name = d.FirstName;
 				return name;
 			}
 			
-			var numWidth = 0;
-			var nameWidth = 0;
-			for( var j = 0; j < nums.length; ++j ) {
-				var num = nums[j];
+			let numWidth = 0;
+			let nameWidth = 0;
+			for( let j = 0; j < nums.length; ++j ) {
+				const num = nums[j];
 				numWidth = Math.max( dc.measureText(''+num).width, numWidth );
 				nameWidth = Math.max( dc.measureText(getName(num)).width, nameWidth );
 			}
-			var paddingWidth = dc.measureText('  ').width;
+			const paddingWidth = dc.measureText('  ').width;
 			nameWidth += paddingWidth;
 			
-			var posWidth = dc.measureText(''+(nums.length+1) ).width + paddingWidth;
-			var swatchColWidth = rowHeight;
-			var xLeft = posWidth;
-			var xRight = width - (swatchColWidth + numWidth + nameWidth + posWidth);
+			const posWidth = dc.measureText(''+(nums.length+1) ).width + paddingWidth;
+			const swatchColWidth = rowHeight;
+			const xLeft = posWidth;
+			const xRight = width - (swatchColWidth + numWidth + nameWidth + posWidth);
 			this.data[c].xLeft = xLeft;
 			this.data[c].xRight = xRight;
 			
-			var lapsWidth = xRight - xLeft;
-			var lapWidth = lapsWidth / lapsData.length;
+			const lapsWidth = xRight - xLeft;
+			const lapWidth = lapsWidth / lapsData.length;
 			this.data[c].lapWidth = lapWidth;
 			
 			// Draw the grid.
@@ -5203,10 +5131,10 @@ function LapChart( ) {
 			function getX(lap) { return xLeft + lapWidth * lap; }
 			
 			// Draw the primes.
-			var hasPrimes = false;
+			let hasPrimes = false;
 			dc.lineWidth = 1;
 			dc.fillStyle = this.primeColour;
-			for( var lap = 0; lap < lapsData.length; ++lap ) {
+			for( let lap = 0; lap < lapsData.length; ++lap ) {
 				if( lap in primeLaps ) {
 					dc.fillRect( getX(lap), getY(0), lapWidth, getY(nums.length) - getY(0) );
 					hasPrimes = true;
@@ -5214,10 +5142,10 @@ function LapChart( ) {
 			}
 			
 			// Set the background for lapped riders.
-			var hasLapped = false;
+			let hasLapped = false;
 			dc.fillStyle = this.lappedBackgroundColour;
-			for( var lap = 0; lap < lapsData.length; ++lap ) {
-				for( var row = 0; row < lapsData[lap].length; ++row ) {
+			for( let lap = 0; lap < lapsData.length; ++lap ) {
+				for( let row = 0; row < lapsData[lap].length; ++row ) {
 					if( lapsData[lap][row].lapsDown !== 0 ) {
 						hasLapped = true;
 						for( ; row < nums.length; ++row )
@@ -5236,7 +5164,7 @@ function LapChart( ) {
 			dc.fillStyle = '#FFFFFF';
 			dc.textBaseline = 'middle';
 			dc.textAlign = 'center';
-			for( var j = 0; j < nums.length; ++j ) {
+			for( let j = 0; j < nums.length; ++j ) {
 				dc.fillText( ''+(j+1), posWidth/2, getY(j) + rowHeight/2 );
 				if( data[nums[j]].status == 'Finisher' )
 					dc.fillText( ''+(j+1), width - posWidth/2, getY(j) + rowHeight/2 );
@@ -5245,7 +5173,7 @@ function LapChart( ) {
 			// Draw the lap lines.
 			dc.lineWidth = 1;
 			dc.strokeStyle = this.lapLineColour;
-			for( var lap = 0; lap <= lapsData.length; ++lap ) {
+			for( let lap = 0; lap <= lapsData.length; ++lap ) {
 				dc.beginPath();
 				dc.moveTo( getX(lap), 0 );
 				dc.lineTo( getX(lap), height );
@@ -5254,8 +5182,8 @@ function LapChart( ) {
 			
 			// Set the background of the rider bib and name.
 			dc.fillStyle = dnfBackgroundColour;
-			for( var j = 0; j < nums.length; ++j ) {
-				var d = data[nums[j]];
+			for( let j = 0; j < nums.length; ++j ) {
+				const d = data[nums[j]];
 				if( nums[j] == this.numSelect ) {
 					dc.save();
 					dc.fillStyle = '#FFFF66';
@@ -5269,14 +5197,14 @@ function LapChart( ) {
 			// Draw the numbers.
 			dc.fillStyle = '#000000';
 			dc.textAlign = 'right';
-			var xText = width - nameWidth - posWidth;
-			for( var j = 0; j < nums.length; ++j )
+			let xText = width - nameWidth - posWidth;
+			for( let j = 0; j < nums.length; ++j )
 				dc.fillText( nums[j], xText, getY(j) + rowHeight/2 );
 			
 			// Draw the names.
 			dc.textAlign = 'left';
-			var xText =  width - nameWidth - posWidth + paddingWidth/2;
-			for( var j = 0; j < nums.length; ++j )
+			xText =  width - nameWidth - posWidth + paddingWidth/2;
+			for( let j = 0; j < nums.length; ++j )
 				dc.fillText( getName(nums[j]), xText, getY(j) + rowHeight/2 );
 			
 			function drawPath( j, colour ) {
@@ -5307,7 +5235,7 @@ function LapChart( ) {
 			// Draw the position lines in reverse order so the winner ends on top.
 			dc.lineWidth = this.regularLineWidth;
 			dc.lineCap = 'round';
-			var jSelect = null;
+			let jSelect = null;
 			for( var j = nums.length - 1; j >= 0; --j ) {
 				if( nums[j] === this.numSelect )
 					jSelect = j;
@@ -5321,31 +5249,31 @@ function LapChart( ) {
 			}
 			
 			// Draw the colour swatches.
-			var swatchSize = rowHeight * rowTextFraction;
-			var swatchBorder = (rowHeight - swatchSize) / 2.0;
-			var swatchX = xRight + swatchBorder;
-			for( var j = 0; j < nums.length; ++j ) {
+			const swatchSize = rowHeight * rowTextFraction;
+			const swatchBorder = (rowHeight - swatchSize) / 2.0;
+			const swatchX = xRight + swatchBorder;
+			for( let j = 0; j < nums.length; ++j ) {
 				dc.fillStyle = this.lineColours[j % this.lineColours.length];
 				dc.fillRect( swatchX, getY(j) + swatchBorder, swatchSize, swatchSize );
 			}
 			
 			// Draw the lap numbers.
-			var lapNumHeight = fontHeight;
+			const lapNumHeight = fontHeight;
 			dc.font = lapNumHeight*0.8 + 'px Arial';
 			dc.textAlign = 'center';
 			dc.textBaseline = 'bottom';
 			dc.lineWidth = 1;
 			dc.setLineDash( [] );
-			var xLast = width;
-			for( var lap = lapsData.length - 1; lap >= 0; --lap ) {
-				var sLap = ' ' + (raceIsFinished ? (lapsData.length-lap) : (lap+1) ) + ' ';
-				var tWidth = dc.measureText(sLap).width;
-				var xMiddle = getX(lap) + lapWidth/2;
+			let xLast = width;
+			for( let lap = lapsData.length - 1; lap >= 0; --lap ) {
+				const sLap = ' ' + (raceIsFinished ? (lapsData.length-lap) : (lap+1) ) + ' ';
+				const tWidth = dc.measureText(sLap).width;
+				const xMiddle = getX(lap) + lapWidth/2;
 				if( xMiddle + tWidth / 2 > xLast )
 					continue;
 				
-				var x = getX(lap) + lapWidth/2;
-				var y = getY(0) - lapNumHeight;
+				const x = getX(lap) + lapWidth/2;
+				const y = getY(0) - lapNumHeight;
 				dc.beginPath()
 				dc.moveTo( x - tWidth/2, y );
 				dc.lineTo( x + tWidth/2, y );
@@ -5368,9 +5296,9 @@ function LapChart( ) {
 			dc.font = fontHeight + 'px Arial';
 			dc.textAlign = 'left';
 			dc.textBaseline = 'middle';
-			var x = xRight;
+			let x = xRight;
 			if( hasLapped ) {
-				var s = _('Lapped') || 'Lapped';
+				const s = _('Lapped') || 'Lapped';
 				x -= dc.measureText(s).width;
 				dc.fillStyle = '#000000';
 				dc.fillText( s, x, getY(nums.length) + rowHeight/2 );
@@ -5381,7 +5309,7 @@ function LapChart( ) {
 				x -= rowHeight;
 			}
 			if( hasPrimes ) {
-				var s = _('Prime') || 'Prime';
+				const s = _('Prime') || 'Prime';
 				x -= dc.measureText(s).width;
 				dc.fillStyle = '#000000';
 				dc.fillText( s, x, getY(nums.length) + rowHeight/2 );
@@ -5398,10 +5326,9 @@ function LapChart( ) {
 	}
 }
 // ---------------------------------------------------------------------
-function SelectCategory( i )
-{
+function SelectCategory( i ) {
 	categoryCur = categories[i];
-	var catButton = document.getElementById('idCat' + i);
+	let catButton = document.getElementById('idCat' + i);
 	if( catButton )
 		catButton.checked = true;
 	RefreshResultsTable();
@@ -5413,10 +5340,9 @@ function SelectCategory( i )
 		lapChartObj.draw();
 }
 
-function setCategory( catName )
-{
-	var catNameDecode = decode_utf8( decodeURIComponent(catName) );
-	for( var i = 0; i < categories.length; ++i ) {
+function setCategory( catName ) {
+	const catNameDecode = decode_utf8( decodeURIComponent(catName) );
+	for( let i = 0; i < categories.length; ++i ) {
 		if( catName == categories[i] || catNameDecode == categories[i] ) {
 			SelectCategory( i );
 			return;
@@ -5425,8 +5351,7 @@ function setCategory( catName )
 	SelectCategory( 0 );
 }
 		
-function StartAnimateRealtime()
-{
+function StartAnimateRealtime() {
 	_initAnimation();
 	speedup = 1.0;
 	tMax = 999999;
@@ -5451,10 +5376,9 @@ function SetTime( aT ) {
 		animationObj.Refresh();
 }
 
-function SetSpeed( i )
-{
+function SetSpeed( i ) {
 	animationSeconds = 90;
-	var factor = 0.65;
+	const factor = 0.65;
 	
 	for( ; i < 0; ++i )
 		animationSeconds /= factor;
@@ -5465,20 +5389,18 @@ function SetSpeed( i )
 	Animate( animationSeconds, tMax, t );
 }
 
-function SetNumsToWatch()
-{
-	var numsToWatchText = document.getElementById('idNumsToWatch');
-	var numStr = numsToWatchText.value;
+function SetNumsToWatch() {
+	let numsToWatchText = document.getElementById('idNumsToWatch');
+	let numStr = numsToWatchText.value;
 	numStr = numStr.replace( / /g, ',' );
 	numStr = numStr.replace( /[^\d,]/g, '' );
 	numStr = numStr.replace( /,+/g, ',' );
 	numsToWatchText.value = numStr;
 	
-	var nums = numStr.split(',');
+	let nums = numStr.split(',');
 	numsToWatch = {};
-	for( var i = 0; i < nums.length; ++i )
-	{
-		var num = parseInt( nums[i], 10 );
+	for( let i = 0; i < nums.length; ++i ) {
+		const num = parseInt( nums[i], 10 );
 		if( !isNaN(num) )
 			numsToWatch[num] = num;
 	}
@@ -5489,14 +5411,12 @@ function SetNumsToWatch()
 	SetSituationTime();
 }
 
-function ToggleNumberHighlight( num )
-{
-	var numsToWatchText = document.getElementById('idNumsToWatch');
+function ToggleNumberHighlight( num ) {
+	let numsToWatchText = document.getElementById('idNumsToWatch');
 	if( numsToWatch[num] == num )
 	{
-		var s = [];
-		for( var n in numsToWatch )
-		{
+		let s = [];
+		for( let n in numsToWatch ) {
 			if( n != num )
 				s.push( n + '' );
 		}
@@ -5507,18 +5427,15 @@ function ToggleNumberHighlight( num )
 	SetNumsToWatch();
 }
 
-function getStartTime()
-{
+function getStartTime() {
 	if( !data )
 		return 0.001;
 
 	// Show results for this category.
-	var t = 9999999;
-	for( var num in data )
-	{
+	let t = 9999999;
+	for( let num in data ) {
 		if( categoryCur == 'All' || data[num]['raceCat'] == categoryCur )
-			if( data[num]['raceTimes'][0] < t )
-			{
+			if( data[num]['raceTimes'][0] < t ) {
 				t = data[num]['raceTimes'][0];
 			}
 	}
@@ -5526,8 +5443,7 @@ function getStartTime()
 	return t;
 }
 
-function Rewind()
-{
+function Rewind() {
 	if( raceIsRunning )
 		return;
 	t = getStartTime();
@@ -5538,17 +5454,14 @@ function Rewind()
 	suspendAnimation = true;
 }
 
-function PlayStop()
-{
+function PlayStop() {
 	if( raceIsRunning )
 		return;
-	if( IsAnimating() )
-	{
+	if( IsAnimating() ) {
 		SuspendAnimate();
 		document.getElementById('idPlayStop').innerHTML = _('Play');
 	}
-	else
-	{
+	else {
 		Animate( animationSeconds, tMax, t );
 		document.getElementById('idPlayStop').innerHTML = _('Stop');
 	}
@@ -5562,26 +5475,24 @@ function normal_variate( mean, stdev )
 { return rnd_normal()*stdev + mean; }
 function rand_int( iMax )
 { if( iMax == null ) iMax = 100000000; return ~~(Math.random() * iMax); }
-function rand_str()
-{
-	var iMax = rand_int(7) + 1;
-	var s = '';
+function rand_str() {
+	const iMax = rand_int(7) + 1;
+	let s = '';
 	for( var i = 0; i < iMax; ++i )
 		s += rand_int( 10 );
 	return s
 }
-function GenerateRandomData()
-{
-	var cats = ['Test Data Junior', 'Test Data Senior', 'Test Data Women'];
+
+function GenerateRandomData() {
+	const cats = ['Test Data Junior', 'Test Data Senior', 'Test Data Women'];
 	infoFields = ['LastName', 'FirstName', 'Name', 'Team', 'Category','License', ];
 	data = {};
-	for( var num = 100; num < 150; ++num )
-	{
-		var iCat = num % cats.length;
-		var cat = cats[iCat];
-		var mean = normal_variate(6.0, 0.3);
-		var raceTimes = [60 * iCat];
-		for( var lap = 0; lap < 20; ++lap )
+	for( let num = 100; num < 150; ++num ) {
+		const iCat = num % cats.length;
+		const cat = cats[iCat];
+		const mean = normal_variate(6.0, 0.3);
+		let raceTimes = [60 * iCat];
+		for( let lap = 0; lap < 20; ++lap )
 			raceTimes.push( raceTimes.back() + normal_variate(mean, mean/20)*60.0 );
 		data[num] = { 'raceTimes': raceTimes, 'lastTime': raceTimes.back(), 'raceCat' : cat, 'status' : 'Finisher' };
 		data[num]['License']	= rand_str() + '';
@@ -5593,24 +5504,21 @@ function GenerateRandomData()
 	return data;
 }
 
-function getUrlParam( param, url )
-{
+function getUrlParam( param, url ) {
 	param = param.replace(/([\[\](){}*?+^$.\\|])/g, "\\$1");
-	var regex = new RegExp("[?&]" + param + "=([^&#]*)");
+	let regex = new RegExp("[?&]" + param + "=([^&#]*)");
 	url = url || decodeURIComponent(window.location.href);
-	var match = regex.exec(url);
+	let match = regex.exec(url);
 	return match ? match[1] : "";
 }
 
-function SetLapDataOption( opt )
-{
+function SetLapDataOption( opt ) {
 	lapDataOption = opt;
 	RefreshResultsTable();
 }
 
-function SetShowLaps()
-{
-	var showLaps = document.getElementById('idShowLaps');
+function SetShowLaps() {
+	let showLaps = document.getElementById('idShowLaps');
 	showLapsFrequency = parseInt( showLaps.options[showLaps.selectedIndex].value, 10 );
 	RefreshResultsTable();
 }
@@ -5620,40 +5528,35 @@ function ToggleCustomCategories() {
 	RefreshResultsTable();
 }
 
-function FormatDistance( distance, inUnit, showUnits )
-{
+function FormatDistance( distance, inUnit, showUnits ) {
 	if( (inUnit ? inUnit : 'km') != displayUnits )
 		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
-	var s = distance.toFixed(2);
+	let s = distance.toFixed(2);
 	if( showUnits )
 		s += ' ' + _(displayUnits);
 	return s;
 }
 
-function FormatSpeed( speed, inUnit, showUnits )
-{
+function FormatSpeed( speed, inUnit, showUnits ) {
 	if( inUnit.substring(0,1) != displayUnits.substring(0,1) )
 		speed *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
-	var s = speed.toFixed(2);
+	let s = speed.toFixed(2);
 	if( showUnits )
 		s += ' ' + (displayUnits == 'km' ? 'km/h' : 'mph');
 	return s;
 }
 
-function FormatDistanceGap( distance, inUnit )
-{
+function FormatDistanceGap( distance, inUnit ) {
 	if( inUnit != displayUnits )
 		distance *= (displayUnits == 'km' ? 1.609344 : 0.621371192237334);
-	var v = '';
-	if( displayUnits == 'km' )
-	{
+	let v = '';
+	if( displayUnits == 'km' ) {
 		if( Math.abs(distance) > 1.0 )
 			v = distance.toFixed(2) + ' km';
 		else
 			v = (distance*1000).toFixed(2) + ' m';
 	}
-	else
-	{
+	else {
 		if( Math.abs(distance) > 0.25 )
 			v = distance.toFixed(2) + ' ' + _('miles');
 		else if( Math.abs(distance) > 0.1 )
@@ -5669,36 +5572,29 @@ function FormatDistanceGap( distance, inUnit )
 	return v;
 }
 
-function SetDisplayUnits()
-{
-	var select = document.getElementById('idDisplayUnits');
+function SetDisplayUnits() {
+	let select = document.getElementById('idDisplayUnits');
 	displayUnits = select.options[select.selectedIndex].value;
 	RefreshResultsTable();
 	SetTotalElevationGain();
 	animationObj.widthLast = -1;
 }
 
-function LoopContinuously()
-{
+function LoopContinuously() {
 	loopContinuously ^= true;
 }
 
-function AdjustSize( increase )
-{
+function AdjustSize( increase ) {
 	if( !canvas )
 		return;
-	if( increase )
-	{
-		if( canvas.width < 4096 )
-		{
+	if( increase ) {
+		if( canvas.width < 4096 ) {
 			canvas.width *= 1.2;
 			canvas.height *= 1.2;
 		}
 	}
-	else
-	{
-		if( canvas.width > 100 )
-		{
+	else {
+		if( canvas.width > 100 ) {
 			canvas.width /= 1.2;
 			canvas.height /= 1.2;
 		}
@@ -5706,8 +5602,7 @@ function AdjustSize( increase )
 	if( animationObj != null )
 		animationObj.Refresh();
 }
-function AdjustFont( increase )
-{
+function AdjustFont( increase ) {
 	if( !canvas || !animationObj )
 		return;
 	if( increase )
@@ -5717,12 +5612,10 @@ function AdjustFont( increase )
 	animationObj.Refresh();
 }
 
-function SetShowTrack()
-{
-	var select = document.getElementById('idShowTrack');
-	var track = select.options[select.selectedIndex].value;
-	if( track == 'gpx' && gpsPoints )
-	{
+function SetShowTrack() {
+	let select = document.getElementById('idShowTrack');
+	let track = select.options[select.selectedIndex].value;
+	if( track == 'gpx' && gpsPoints ) {
 		animationObj = new GeoAnimation();
 		animationObj.geoTrack.setData( gpsPoints );
 		animationObj.altigraph.setData( gpsAltigraph );
@@ -5732,16 +5625,15 @@ function SetShowTrack()
 	animationObj.Refresh();
 }
 
-function ToggleTimeDecimals()
-{
-	var cb = document.getElementById('idShowTimeDecimals');
+function ToggleTimeDecimals() {
+	let cb = document.getElementById('idShowTimeDecimals');
 	showTimeDecimals = cb.checked;
 	RefreshResultsTable();
 }
 
 var replaceHtmlEntites = (function() {
-	var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
-	var translate = {
+	const translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+	const translate = {
 		"nbsp": " ", 
 		"amp" : "and", 
 		"quot": "\"",
@@ -5770,8 +5662,8 @@ function SetTotalElevationGain() {
 
 function setLanguage( langCode ) {
 	// Check for a specified language.
-	var langs = translations['languageCode'];
-	for( var i = 0; i < langs.length; ++i ) {
+	let langs = translations['languageCode'];
+	for( let i = 0; i < langs.length; ++i ) {
 		if( langs[i] == langCode ) {
 			langCur = i;
 			break;
@@ -5781,10 +5673,10 @@ function setLanguage( langCode ) {
 	// If no specified language, check the browser preferences for a supported language.
 	if( langCur == null ) {
 		// Try to get the language code from the user's preference.
-		var browser_languages = navigator.languages ? navigator.languages : [(navigator.language || navigator.userLanguage || 'en')];
-		for( var b = 0; b < browser_languages.length && langCur == null; ++b ) {
-			var base_lang = browser_languages[b].split('-')[0];
-			for( var i = 0; i < langs.length; ++i ) {
+		let browser_languages = navigator.languages ? navigator.languages : [(navigator.language || navigator.userLanguage || 'en')];
+		for( let b = 0; b < browser_languages.length && langCur == null; ++b ) {
+			const base_lang = browser_languages[b].split('-')[0];
+			for( let i = 0; i < langs.length; ++i ) {
 				if( base_lang == langs[i] ) {
 					langCur = i;
 					break;
@@ -5799,18 +5691,16 @@ function setLanguage( langCode ) {
 	
 	// Crawl the DOM tree and update any nodes with a data-tr attribute.
 	// Check for exceptions to updating with innerHTML.
-	var textAttr = {
+	const textAttr = {
 		'#text':	'nodeValue',
 		'OPTION':	'text'
 	};
-	var elements = document.getElementsByTagName('*');
-	for( var i = 0; i < elements.length; ++i )
-	{
-		e = elements[i];
+	let elements = document.getElementsByTagName('*');
+	for( let i = 0; i < elements.length; ++i ) {
+		let e = elements[i];
 		trTag = e.getAttribute('data-tr');
-		if( trTag )
-		{
-			var tAttr = textAttr[e.nodeName];
+		if( trTag ) {
+			let tAttr = textAttr[e.nodeName];
 			if( !tAttr )
 				tAttr = 'innerHTML';
 			//alert( 'e.nodeName=' + e.nodeName + ' trTag="' + trTag + '" _(trTag)="' + _(trTag) + '" tAttr=' + tAttr + ' e.id=' + e.id );
@@ -5828,20 +5718,20 @@ function getLanguageCode() {
 }
 
 function initLanguages() {
-	var languages = translations['language'];
-	var languageCodes = translations['languageCode'];
+	const languages = translations['language'];
+	const languageCodes = translations['languageCode'];
 	
 	// Show the specified language first.
 	langCur = (langCur || 0);
-	var iLang = [langCur];
-	for( var i = 0; i < languages.length; ++i )
+	let iLang = [langCur];
+	for( let i = 0; i < languages.length; ++i )
 		if( i != langCur )
 			iLang.push( i );
 	
-	var languageHTML = '<div id="buttongroup">';
-	for( var j = 0; j < languages.length; ++j )
+	let languageHTML = '<div id="buttongroup">';
+	for( let j = 0; j < languages.length; ++j )
 	{
-		var i = iLang[j];
+		let i = iLang[j];
 		languageHTML +=
 			'<label class="green">' +
 				'<input ' +
@@ -5878,10 +5768,10 @@ function SetSituationTime( value ) {
 		situationTimer = null;
 	}
 	
-	var tMax;
+	let tMax;
 	if( raceIsRunning ) {
-		var tServer = (new Date(timestamp[0])).getTime() / 1000.0;
-		var tBrowser = (new Date().getTime()) / 1000.0;
+		let tServer = (new Date(timestamp[0])).getTime() / 1000.0;
+		let tBrowser = (new Date().getTime()) / 1000.0;
 		while( tBrowser - tServer < 0 )
 			tBrowser += 60*60;
 		
@@ -5890,15 +5780,15 @@ function SetSituationTime( value ) {
 	else
 		tMax = GetRaceTMax();
 	
-	var tRace = tMax * (value / 10000.0);
-	var gs = GetSituationGaps( tRace );
+	let tRace = tMax * (value / 10000.0);
+	let gs = GetSituationGaps( tRace );
 	situationObj.SetData( gs.gaps, gs.tAfterLeader, gs.title, gs.tCur );
 	
 	if( value == 10000 && raceIsRunning )
 		situationTimer = setTimeout( SetSituationTime, 1001 - (new Date()).getTime() % 1000 );
 }
 function SituationRefresh() {
-	var timeRange = document.getElementById('idTimeRange');
+	let timeRange = document.getElementById('idTimeRange');
 	SetSituationTime( timeRange.value );
 }
 
@@ -5916,7 +5806,7 @@ function SelectCategoryNonAll() {
 	if( categories.length <= 1 || (categoryCur && categoryCur != 'All') )
 		return;
 	
-	var i;
+	let i;
 	for( i = 0; i < categories.length; ++i ) {
 		if( categoryCur == categories[i] )
 			break;
@@ -5934,7 +5824,7 @@ function GetNextValidCategory() {
 	if( categories.length <= 1 )
 		return null;
 	
-	var i;
+	let i;
 	for( i = 0; i < categories.length; ++i ) {
 		if( categoryCur == categories[i] )
 			break;
@@ -5951,7 +5841,7 @@ function GetNextValidCategory() {
 var cycleCount = 0;
 var cycleTimer = null;
 function SetNextCategory() {
-	var i = GetNextValidCategory();
+	const i = GetNextValidCategory();
 	if( i == null )
 		return;
 	SelectCategory( i );
@@ -5971,9 +5861,8 @@ function SetCycleCategoriesMode() {
 		cycleTimer = setInterval( SetNextCategory, 1000*15 );
 }
 
-function OpenGetDirections()
-{
-	var url = 'http://maps.google.com?daddr=' + courseCoordinates[1].toFixed(4) + ' ' + courseCoordinates[0].toFixed(4) + ' (' + raceName + ')';
+function OpenGetDirections() {
+	const url = 'http://maps.google.com?daddr=' + courseCoordinates[1].toFixed(4) + ' ' + courseCoordinates[0].toFixed(4) + ' (' + raceName + ')';
 	window.open( url, null, null, true );
 }
 
@@ -6004,11 +5893,11 @@ function eqTimestamp( ts1, ts2 ) {
 	
 function RefreshPayload() {
 	// Retrieve the same web page and parse out the payload.
-	var xhr = createXMLHttpRequest();
+	let xhr = createXMLHttpRequest();
 	if( !xhr || window.location.href.substring(0,5) == 'file:')
 		return doReload(true);
 	
-	var requestTimer = setTimeout( function() { xhr.abort(); }, 10*1000 );
+	let requestTimer = setTimeout( function() { xhr.abort(); }, 10*1000 );
 	
 	xhr.onreadystatechange = function() {
 		if( xhr.readyState != 4 )
@@ -6021,19 +5910,19 @@ function RefreshPayload() {
 		console.log( 'RefreshPayload: processing...' );
 		
 		// Parse the data payload out of the web page.
-		var startSearch = /\/\* !!! payload begin !!! \*\/[^{]+\{/g;
-		var result = startSearch.exec( xhr.responseText );
+		const startSearch = /\/\* !!! payload begin !!! \*\/[^{]+\{/g;
+		let result = startSearch.exec( xhr.responseText );
 		if( result == null ) return TryAgain( 'missing payload start', xhr.responseText );
-		var pStart = startSearch.lastIndex - 1;
+		let pStart = startSearch.lastIndex - 1;
 		
-		var endSearch = /\}\s*;\s*\/\* !!! payload end !!! \*\//g;
-		var result = endSearch.exec( xhr.responseText );
+		const endSearch = /\}\s*;\s*\/\* !!! payload end !!! \*\//g;
+		result = endSearch.exec( xhr.responseText );
 		if( result == null ) return TryAgain( 'missing payload end', xhr.responseText );
-		var pEnd = result.index + 1;
+		let pEnd = result.index + 1;
 		
-		var payloadJSON = xhr.responseText.substring(pStart, pEnd)
+		let payloadJSON = xhr.responseText.substring(pStart, pEnd);
 		
-		var payload = null;
+		let payload = null;
 		try {
 			payload = JSON.parse(payloadJSON);
 		}
@@ -6050,8 +5939,11 @@ function RefreshPayload() {
 				return;
 			}
 
+			// Set the values of the global variables to the payload.
 			raceWasRunning = raceIsRunning;
-			for( v in payload ) window[v] = payload[v]; payload = null;
+			for( let v in payload )
+				window[v] = payload[v];
+			payload = null;
 			
 			SetData( data, undefined );
 			SetRaceTime();
@@ -6086,7 +5978,7 @@ function QueryPayloadLoop() {
 }
 
 function SetRaceTime() {
-	var s = (organizer ? organizer : '');
+	let s = (organizer ? organizer : '');
 	
 	if( finishUpdateTimer ) {
 		clearTimeout( finishUpdateTimer );
@@ -6137,11 +6029,11 @@ function SetRaceTime() {
 }
 
 function displaySelect( select ) {
-	var k = (select.value.indexOf('kiosk') >= 0);
-	var a = (select.value.indexOf('arrival') >= 0);
-	var m = (select.value.indexOf('map') >= 0);
+	const k = (select.value.indexOf('kiosk') >= 0);
+	const a = (select.value.indexOf('arrival') >= 0);
+	const m = (select.value.indexOf('map') >= 0);
 	if( k || a || m ) {
-		var message;
+		let message;
 		if( k && a )
 			message = 'Switch to Kiosk Arrival Mode?';
 		else if( k && m )
@@ -6163,8 +6055,7 @@ function displaySelect( select ) {
 	doReload( true );
 }
 
-function onLoad()
-{
+function onLoad() {
 	if( payload ) { for( v in payload ) window[v] = payload[v]; payload = null; }
 
 	resultsDiv = document.getElementById('idResultsDiv');
@@ -6180,14 +6071,12 @@ function onLoad()
 		gpsPointsTest = null;
 		
 	if( showCourseAnimation ) {
-		if( gpsPoints )
-		{
+		if( gpsPoints ) {
 			animationObj = new GeoAnimation();
 			animationObj.geoTrack.setData( gpsPoints );
 			animationObj.altigraph.setData( gpsAltigraph );
 		}
-		else
-		{
+		else {
 			animationObj = new TrackAnimation();
 			document.getElementById('idShowTrack').className = 'hidden';
 		}
@@ -6219,9 +6108,8 @@ function onLoad()
 		document.getElementById('idTravelMap').className = 'hidden';
 	
 	canvasSupported = isCanvasSupported();
-	if( canvasSupported && !winAndOut )
-	{
-		var raceChartCanvas = document.getElementById('idRaceChart');
+	if( canvasSupported && !winAndOut ) {
+		let raceChartCanvas = document.getElementById('idRaceChart');
 		raceChartCanvas.addEventListener('click', function(event) { RaceChartProcessClick(event); }, false);
 		raceChartCanvas.addEventListener('mousemove', function(event) { RaceChartProcessMouse(event); }, false);
 		raceChartCanvas.addEventListener('mouseout', function(event) {
@@ -6234,9 +6122,9 @@ function onLoad()
 		);
 		
 		if( !isTimeTrial ) {
-			var situationCanvas = document.getElementById('idSituation');
-			var timeRange = document.getElementById( 'idTimeRange' );
-			var situationDetail = document.getElementById( 'idSituationDetailDiv' );
+			let situationCanvas = document.getElementById('idSituation');
+			let timeRange = document.getElementById( 'idTimeRange' );
+			let situationDetail = document.getElementById( 'idSituationDetailDiv' );
 			situationObj = new Situation( situationCanvas, timeRange, situationDetail );
 			situationCanvas.addEventListener('click', function(event) { situationObj.processClick(event); }, false);
 		}
@@ -6248,7 +6136,7 @@ function onLoad()
 		else
 			canvas = document.getElementById('idTrack');
 			
-		var lapChartCanvas = document.getElementById('idLapChart');
+		let lapChartCanvas = document.getElementById('idLapChart');
 		lapChartObj = new LapChart();
 		lapChartObj.init( lapChartCanvas );
 	}
@@ -6315,7 +6203,7 @@ function onLoad()
 		SetArrivalMode();
 		SetCycleCategoriesMode();		
 	}
-	var numbers = getUrlParam( 'highlight', undefined );
+	let numbers = getUrlParam( 'highlight', undefined );
 	if( numbers != '' )
 		numsToWatchStr = numbers;
 	if( numsToWatchStr )
@@ -6480,6 +6368,11 @@ Current versions of Chrome, FireFox and Opera work fine.
 	<span id="idShowStartOffsetOption">
 		<input type="checkbox" id="idShowStartOffsets" checked onClick="RefreshRaceChart()">
 		<label for="idShowStartOffsets" data-tr="Show Start Offsets"></label>
+	</span>
+	<span id="idShowLapTimesOption">
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="checkbox" id="idShowLapTimes" onClick="RefreshRaceChart()">
+		<label for="idShowLapTimes" data-tr="Show Lap Times"></label>
 	</span>
 	<span id="idShowDetailsOption">
 		&nbsp;&nbsp;&nbsp;&nbsp;

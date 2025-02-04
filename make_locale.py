@@ -1,7 +1,14 @@
 import os
+import sys
 import glob
 import shutil
 import subprocess
+try:
+	import babel
+except ImportError:
+	print( "This program requires babel." )
+	print( "    pip install babel" )
+	sys.exit( -1 )
 
 cmd = ['pybabel']
 

@@ -126,23 +126,8 @@ compileCode() {
 }
 
 buildLocale() {
-	PROGRAM=$1
-	getBuildDir $PROGRAM
-
-	localepath="${BUILDDIR}/${PROGRAM}Locale"
-	echo $localepath
-	locales=$(find $localepath -type d -depth 1)
-	for locale in $locales
-	do
-		pofile="${locale}/LC_MESSAGES/messages.po"
-		echo "Building Locale: $locale"
-		echo "python -mbabel compile -f -d $localepath -l $locale -i $pofile"
-		python -mbabel compile -f -d $localepath -l $locale -i $pofile
-		if [ $? -ne 0 ]; then
-			echo "Locale $locale failed. Aborting..."
-			exit 1
-		fi
-	done
+	echo "buildLocale: Building .mo files from .po locale files ..."
+	python3 po_to_mo.py
 }
 
 buildHelp() {
@@ -331,6 +316,48 @@ envSetup() {
 	fi
 }
 
+IsDevelopmentBranch() {
+  if [ ! -n "$GITHUB_REF" ]; then
+    echo "Can't get GITHUB_REF"
+    exit 1
+  fi
+
+  local GIT_TYPE=$(echo $GITHUB_REF | awk -F '/' '{print $2'})
+  if [ "$GIT_TYPE" != "heads" ]; then
+    return 0
+  fi
+
+  local GIT_TAG=$(echo $GITHUB_REF | awk -F '/' '{print $3'})
+
+  if [[ -z "$GIT_TAG" ]]; then
+    return 0
+  fi
+  if [[ "$GIT_TAG" == "dev" ]]; then
+    return 1
+  fi
+  if [[ "$GIT_TAG" == develop/* ]]; then
+    return 1
+  fi
+  if [[ "$GIT_TAG" == fix/* ]]; then
+    return 1
+  fi
+  return 0
+}
+
+CheckBranch() {
+  if IsDevelopmentBranch "$GITHUB_REF"; then
+    APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""
+    VERSION="$VERSION-beta-$SHORTSHA"
+  fi
+
+  if [ -z "$APPVERNAME" ]; then
+    echo "APPVERNAME is empty! [$APPVERNAME] Aborting..."
+    exit 1
+  fi
+
+  return 0
+}
+
 updateversion() {
 	if [ -z "$PROGRAMS" ]; then
 		echo "Updateversion: no programs defined!!"
@@ -348,10 +375,10 @@ updateversion() {
 			SHORTSHA=$(echo $GITHUB_SHA | cut -c 1-7)
 			VERSION=$(echo $VERSION | awk -F - '{print $1}')
 			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "master" ]; then
-                echo "Refusing to build an untagged master build. Release builds on a tag only!"
-                exit 1
-            fi
-			if [ "$GIT_TYPE" == "heads" -a "$GIT_TAG" == "dev" ]; then
+        echo "Refusing to build an untagged master build. Release builds on a tag only!"
+        exit 1
+      fi
+			if IsDevelopmentBranch "$GITHUB_REF"; then
 				APPVERNAME="AppVerName=\"$program $VERSION-beta-$SHORTSHA\""
 				VERSION="$VERSION-beta-$SHORTSHA"
 			fi
@@ -368,12 +395,12 @@ updateversion() {
 				APPVERNAME="AppVerName=\"$program $VERSION-$REFDATE\""
 				VERSION="$GIT_TAG"
 			fi
-            if [ -z "$APPVERNAME" ]; then
-                echo "APPVERNAME is empty! [$APPVERNAME] Aborting..."
-                exit 1
-            fi
+      if [ -z "$APPVERNAME" ]; then
+        echo "APPVERNAME is empty! [$APPVERNAME] Aborting..."
+        exit 1
+      fi
 			echo "$program version is now $VERSION"
-            echo "New Version.py: [$APPVERNAME] - [$BUILDDIR/Version.py]"
+      echo "New Version.py: [$APPVERNAME] - [$BUILDDIR/Version.py]"
 			echo "$APPVERNAME" > $BUILDDIR/Version.py
 		done
 	else
@@ -517,6 +544,8 @@ $0 -a -A
 EOF
 	exit
 }
+
+CheckBranch
 
 gotarg=0
 while getopts "hcitaveiCdPBASkomzlTfyqswVZUr" option

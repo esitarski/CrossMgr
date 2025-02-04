@@ -1,7 +1,7 @@
-![](https://github.com/esitarski/CrossMgr/workflows/DevelopmentBuild/badge.svg)
-![](https://github.com/esitarski/CrossMgr/workflows/ReleaseBuild/badge.svg)
-
 # Cross Manager Race Scoring Software
+
+![Development Build status](https://github.com/esitarski/CrossMgr/workflows/DevelopmentBuild/badge.svg)
+![Release Build status](https://github.com/esitarski/CrossMgr/workflows/ReleaseBuild/badge.svg)
 
 Welcome to Cross Manager! Cross Manager is software used to score bike races. It has many features including support for RFID chip readers. Full documentation is in the CrossMgrHtml directory or under Help in the application.
 
@@ -33,21 +33,21 @@ The minimum system requires are as follows:
 
 ### Windows
 
-- Windows 11 x64
-- 4G RAM
-- 10G HD space
+* Windows 11 x64
+* 4G RAM
+* 10G HD space
 
 ### MacOSX
 
-- Apple MacOSX 10.10 or better
-- 4G RAM
-- 10G HD space
+* Apple MacOSX 10.10 or better
+* 4G RAM
+* 10G HD space
 
 ### Linux
 
-- ubuntu (and flavors) or centos, debian, fedora, rocky on x64
-- 4G RAM
-- 10G HD space
+* ubuntu (and flavors) or centos, debian, fedora, rocky on x64
+* 4G RAM
+* 10G HD space
 
 ## User Installation
 
@@ -70,13 +70,17 @@ From the Releases tab, download the CrossMgr-VERSION.dmg file. From the finder, 
 
 If you still get a message that the dmg file is damaged and to delete it, you will need to temporarily disable GateKeeper to complete the install.  To do so, open a Terminal and enter:
 
-    sudo spctl --master-disable
-    
+```bash
+sudo spctl --master-disable
+```
+
 Then, double-click on the CrossMgr .dmg file.
 
 Re-enable GateKeeper from the terminal as follows:
 
-    sudo spctl --master-enable
+```bash
+sudo spctl --master-enable
+```
 
 Some Mac OSX versions accept pressing CTRL before clicking on the app for the first time, and then clicking open.
 The app is non-signed and MacOSX may not open it otherwise.
@@ -157,19 +161,19 @@ Linux dependancies are contained in the linuxdeps.sh script.
 
 The build procedure for Linux and MacOSX platforms are as follows:
 
-- Install the Linux dependancies (Linux only!)
+* Install the Linux dependancies (Linux only!)
 
 ```bash
-  bash linuxdeps.sh
+bash linuxdeps.sh
 ```
 
-- Setup a virtual env, download the required python modules:
+* Setup a virtual env, download the required python modules:
 
 ```bash
 bash compile.sh -S
 ```
 
-- Build all the code and publish to releases directory
+* Build all the code and publish to releases directory
 
 ```bash
 bash compile.sh -a -A
@@ -179,17 +183,19 @@ When the build is complete, the resultant DMG/AppImage files will be in the rele
 
 The build procedure for windows are as follows:
 
-- Setup a virtual env, download the required python modules:
+* Setup a virtual env, download the required python modules:
 
 ```powershell
+`virtualenv env`
 .\compile.ps1 -setupenv
 ```
 
-- Build all the code and publish to releases directory
+* Build all the code and publish to releases directory
 
 ```powershell
 .\compile.ps1 -all -everything
 ```
+
 When the build is complete, the resultant exe installer files will be in the release directory. The above process is what the build.yml Workflow file (.github/workflows/devbuild.yaml) uses to build the code on GitHub.
 
 ### Making a Release
@@ -219,4 +225,3 @@ Windows:
 You must be on the dev branch without any pending changes to make a release. If the version number of an application is to be incremented, it should be done in the dev branch, and checked in prior to making the release.
 
 A build can also be forced by tagging the master branch.  This is done with the -T option (Linux/Mac) and -tag (windows). You can only tag the master branch with this option.
-

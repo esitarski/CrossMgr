@@ -36,6 +36,7 @@
 [Announcer]:		Announcer.html
 [Prizes]:			Prizes.html
 [Primes]:			Primes.html
+[ResultNotes]:		ResultNotes.html
 [Histogram]:		Histogram.html
 [TeamResults]:		TeamResults.html
 [Restart]:			Restart.html

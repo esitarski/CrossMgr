@@ -33,17 +33,9 @@ if not os.path.exists( distDirParent ):
 	os.makedirs( distDirParent )
 
 # Compile all the language files.
+from po_to_mo import po_to_mo
 print( "Compiling language files..." )
-cmd = ['pybabel']
-CrossMgrLocale = 'CrossMgrLocale'
-languages = [d for d in os.listdir(CrossMgrLocale) if os.path.isdir(os.path.join(CrossMgrLocale,d))]
-for lang in languages:
-	#-----------------------------------------------------------------------
-	# Compile the translation file.
-	#
-	po = os.path.join(CrossMgrLocale, lang, 'LC_MESSAGES', 'messages.po')
-	if os.path.isfile(po):
-		subprocess.call( cmd + ["compile", "-f", "-d", CrossMgrLocale, "-l", lang, "-i", po] )
+po_to_mo('CrossMgrLocale' )
 
 subprocess.call( [
 	'pyinstaller',

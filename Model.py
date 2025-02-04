@@ -320,7 +320,7 @@ class Category:
 			self.sequence = 0
 		
 		try:
-			self.distance = Utils.floatLocale( distance )
+			self.distance = Utils.positiveFloatLocale( distance )
 		except (ValueError, TypeError):
 			self.distance = None
 		if self.distance is not None and self.distance <= 0.0:
@@ -335,7 +335,7 @@ class Category:
 			self.distanceType = Category.DistanceByLap
 			
 		try:
-			self.firstLapDistance = Utils.floatLocale( firstLapDistance )
+			self.firstLapDistance = Utils.positiveFloatLocale( firstLapDistance )
 		except (ValueError, TypeError):
 			self.firstLapDistance = None
 		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:

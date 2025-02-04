@@ -8,6 +8,7 @@ isWindows = sys.platform.startswith('win')
 #
 import wx
 import os
+from Log import getLogger
 
 import wx.lib.agw.genericmessagedialog
 
@@ -532,6 +533,21 @@ def getDocumentsDir():
 	return dd
 	
 #------------------------------------------------------------------------
+def positiveFloatLocale( v ):
+	if isinstance( v, float ):
+		return v if v > 0.0 else 0.0
+	if isinstance( v, int ):
+		return float(v if v > 0 else 0)
+	if isinstance( v, str ):
+		v = v.strip()
+		if v.startswith('-'):
+			return 0.0
+		if '.' not in v:
+			v = v.replace(',', '.')			# Normalize decimal sep.
+		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
+	return float( v )
+
 def floatLocale( v ):
 	if isinstance( v, float ):
 		return v
@@ -577,20 +593,8 @@ def approximateMatch( s1, s2 ):
 PlatformName = platform.system()
 AppVer = 'v' + AppVerName.split(' ')[1]
 def writeLog( message ):
-	try:
-		dt = datetime.datetime.now()
-		dt = dt.replace( microsecond = 0 )
-		msg = '{} ({} {}) {}{}'.format(
-			dt.isoformat(),
-			AppVer,
-			PlatformName,
-			message,
-			'\n' if not message or message[-1] != '\n' else '',
-		)
-		sys.stdout.write( removeDiacritic(msg) )
-		sys.stdout.flush()
-	except IOError:
-		pass
+	log = getLogger()
+	log.info( message )
 
 def disable_stdout_buffering():
 	# No longer necessary as if output goes to the terminal it will be flushed if it ends in newline.
@@ -606,14 +610,9 @@ def logCall( f ):
 		return f( *args, **kwargs)
 	return new_f
 	
-def logException( e, exc_info ):
-	eType, eValue, eTraceback = exc_info
-	ex = traceback.format_exception( eType, eValue, eTraceback )
-	writeLog( '**** Begin Exception ****' )
-	for d in ex:
-		for line in d.split( '\n' ):
-			writeLog( line )
-	writeLog( '**** End Exception ****' )
+def logException( e: Exception, exc_info ) -> None:
+	log = getLogger()
+	log.exception( e )
 
 #------------------------------------------------------------------------
 mainWin = None
@@ -644,7 +643,9 @@ def writeRace():
 		
 def writeConfig( key, value ):
 	try:
-		return mainWin.config.Write( key, value )
+		ret = mainWin.config.Write( key, value )
+		mainWin.config.Flush()
+		return ret
 	except Exception:
 		pass
 
