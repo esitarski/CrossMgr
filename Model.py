@@ -319,12 +319,7 @@ class Category:
 		except (ValueError, TypeError):
 			self.sequence = 0
 		
-		try:
-			self.distance = Utils.positiveFloatLocale( distance )
-		except (ValueError, TypeError):
-			self.distance = None
-		if self.distance is not None and self.distance <= 0.0:
-			self.distance = None
+		self.distance = Utils.positiveFloatLocale(distance) or None
 			
 		try:
 			self.distanceType = int(distanceType)
@@ -334,12 +329,7 @@ class Category:
 		if self.distanceType not in (Category.DistanceByLap, Category.DistanceByRace):
 			self.distanceType = Category.DistanceByLap
 			
-		try:
-			self.firstLapDistance = Utils.positiveFloatLocale( firstLapDistance )
-		except (ValueError, TypeError):
-			self.firstLapDistance = None
-		if self.firstLapDistance is not None and self.firstLapDistance <= 0.0:
-			self.firstLapDistance = None
+		self.firstLapDistance = Utils.positiveFloatLocale( firstLapDistance ) or None
 			
 		self.gender = 'Open'
 		gender = gender or 'Open'

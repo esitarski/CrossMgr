@@ -543,9 +543,12 @@ def positiveFloatLocale( v ):
 			return 0.0
 		if '.' not in v:
 			v = v.replace(',', '.')			# Normalize decimal sep.
-		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = re.sub(r'[^0-9.]', '', v )		# Remove any thousands seps or other non-digits.
 		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
-	return float( v )
+	try:
+		return float( v )
+	except (ValueError, TypeError):
+		return 0.0
 
 def floatLocale( v ):
 	if isinstance( v, float ):
@@ -556,9 +559,12 @@ def floatLocale( v ):
 		v = v.strip()
 		if '.' not in v:
 			v = v.replace(',', '.')			# Normalize decimal sep.
-		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = re.sub(r'[^-0-9.]', '', v )		# Remove any thousands seps or other non-digs.
 		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
-	return float( v )
+	try:
+		return float( v )
+	except (ValueError, TypeError):
+		return 0.0
 	
 def floatFormatLocale( v, width=-1, precision=6 ):
 	s = str(int( round(v * (10**precision)) ))
