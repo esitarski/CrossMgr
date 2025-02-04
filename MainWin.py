@@ -4088,7 +4088,7 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 			self.callPageCommit( event.GetOldSelection() )
 			self.callPageRefresh( event.GetSelection() )
 		try:
-			Utils.writeLog( 'page: {}\n'.format(notebook.GetPage(event.GetSelection()).__class__.__name__) )
+			Utils.writeLog( 'page: {}'.format(notebook.GetPage(event.GetSelection()).__class__.__name__) )
 		except IndexError:
 			pass
 		event.Skip()	# Required to properly repaint the screen.

@@ -592,9 +592,9 @@ def approximateMatch( s1, s2 ):
 #------------------------------------------------------------------------
 PlatformName = platform.system()
 AppVer = 'v' + AppVerName.split(' ')[1]
-def writeLog( message ):
+def writeLog( message:str ) -> None:
 	log = getLogger()
-	log.info( message )
+	log.info(message.strip() if message else '')
 
 def disable_stdout_buffering():
 	# No longer necessary as if output goes to the terminal it will be flushed if it ends in newline.
