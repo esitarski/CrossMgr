@@ -270,7 +270,7 @@ Spin Doctors
 	firstNames = [line.split('.')[1].strip() for line in firstNames.split('\n') if line.strip()]
 	lastNames = [line.split('.')[1].strip() for line in lastNames.split('\n') if line.strip()]
 	teams = [line.strip() for line in teams.split('\n') if line.strip()]
-	bibs = [n for n in range(1,1+starters)]
+	bibs = list( range(1,1+starters) )
 	
 	random.shuffle( firstNames )
 	random.shuffle( lastNames )
