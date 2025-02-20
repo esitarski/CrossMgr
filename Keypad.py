@@ -11,15 +11,23 @@ from GetResults import GetResults
 import Model
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
-from Log import getLogger
+from Log import getLogger, CrossMgrLogger
 from ManualTimeEntryPanel import ManualTimeEntryPanel, TimeEntryController
 
 SplitterMinPos = 390
 SplitterMaxPos = 530
 
 class Keypad( ManualTimeEntryPanel ):
+	__log: CrossMgrLogger
+
+	@property
+	def log(self) -> CrossMgrLogger:
+		if self.__log is None:
+			self.__log = getLogger('CrossMgr.Keypad')
+		return self.__log
+
 	def __init__( self, parent: wx.Window, controller: TimeEntryController|None = None, id = wx.ID_ANY ):
-		super().__init__(parent, controller, id)
+		super().__init__(parent=parent, controller=controller, id=id)
 
 		fontPixels = 36
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
@@ -111,8 +119,7 @@ class Keypad( ManualTimeEntryPanel ):
 			sashOwner = self.GetParent().GetParent().GetParent()
 			sashOwner.SetSashPosition( SplitterMinPos if self.showTouchScreen else SplitterMaxPos )
 		except Exception as e:
-			log = getLogger()
-			log.error('Keypad control was not placed on panel with a sash great-grandparent.')
+			self.log.error('Keypad control was not placed on panel with a sash great-grandparent.')
 		try:
 			self.GetParent().GetSizer().Layout()
 		except Exception:
@@ -184,6 +191,18 @@ class Keypad( ManualTimeEntryPanel ):
 		for b in self.num:
 			b.Enable()
 
+	def __SafeSetFocus(self):
+		try:
+			super().SetFocus()
+			try:
+				self.numEdit.SetFocus()
+			except Exception as e:
+				self.log.error( f'Error setting on Keypad numEdit: {e}' )
+		except Exception as e:
+			self.log.error( f'Error setting on Keypad: {e}' )
+
+	def SetFocus(self):
+		self.__SafeSetFocus()
 
 def getLapInfo( lap, lapsTotal, tCur, tNext, leader ):
 	race = Model.race

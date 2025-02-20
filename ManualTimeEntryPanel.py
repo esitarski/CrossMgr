@@ -14,7 +14,7 @@ class ManualTimeEntryPanel( wx.Panel, TimeEntryController ):
 	_infoBarSizer: wx.BoxSizer
 
 	def __init__(self, parent: wx.Window, controller: TimeEntryController | None = None, id = wx.ID_ANY):
-		super().__init__(parent, id)
+		super().__init__(parent=parent, id=id)
 		self._disableReason = None
 		self._controller = controller
 
