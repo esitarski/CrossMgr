@@ -2,6 +2,7 @@ import bisect
 import datetime
 import os
 import sys
+from typing import cast
 
 import wx
 
@@ -11,7 +12,8 @@ from BibTimeRecord import BibTimeRecord
 from ClockDigital import ClockDigital
 from GetResults import GetResultsWithData, GetLastRider
 from LapsToGoCount import LapsToGoCountGraph
-from ManualTimeEntryPanel import TimeEntryController
+from Log import getLogger
+from ManualTimeEntryPanel import TimeEntryController, ManualTimeEntryPanel
 from NonBusyCall import NonBusyCall
 from Keypad import Keypad, getLapInfo, SplitterMinPos
 from RaceHUD import RaceHUD
@@ -50,8 +52,8 @@ class Record(wx.Panel, TimeEntryController):
 		self.notebook.SetBackgroundColour( wx.WHITE )
 
 		self.keypad = Keypad( self.notebook, self )
-		self.timeTrialRecord = TimeTrialRecord( self.notebook, self )
-		self.bibTimeRecord = BibTimeRecord( self.notebook, self )
+		self.timeTrialRecord = TimeTrialRecord( self.notebook )
+		self.bibTimeRecord = BibTimeRecord( self.notebook, controller=cast(ManualTimeEntryPanel, self) )
 
 		self.notebook.AddPage( self.keypad, _("Bib"), select=True )
 		self.notebook.AddPage( self.timeTrialRecord, _("TimeTrial") )
@@ -503,9 +505,13 @@ class Record(wx.Panel, TimeEntryController):
 		self.refreshInputUpdateNonBusy()
 
 		if self.isKeypadInputMode():
-			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
+			if self.keypad.numEdit.IsEditable():
+				getLogger('Record').debug('Setting focus to keypad edit field.')
+				wx.CallLater( 100, self.keypad.SetFocus )
 		elif self.isBibTimeInputMode():
-			wx.CallLater( 100, self.bibTimeRecord.numEdit.SetFocus )
+			if self.bibTimeRecord.numEdit.IsEditable():
+				getLogger('Record').debug('Setting focus to bibTimeRecord edit field.')
+				wx.CallLater( 100, self.bibTimeRecord.SetFocus )
 
 
 if __name__ == '__main__':

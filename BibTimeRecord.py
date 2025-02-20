@@ -4,14 +4,23 @@ import wx.lib.buttons
 
 import Model
 import Utils
+from Log import CrossMgrLogger, getLogger
 from ManualTimeEntryPanel import ManualTimeEntryPanel, TimeEntryController
 from ReorderableGrid import ReorderableGrid
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
 
 class BibTimeRecord( ManualTimeEntryPanel, TimeEntryController ):
-	def __init__( self, parent: wx.Window, controller: ManualTimeEntryPanel = None, id = wx.ID_ANY ):
-		super().__init__(parent, controller, id)
+	__log: CrossMgrLogger
+
+	@property
+	def log(self):
+		if self.__log is None:
+			self.__log = getLogger('CrossMgr.BibTimeRecord')
+		return self.__log
+
+	def __init__( self, parent: wx.Window, controller: ManualTimeEntryPanel|None = None, id = wx.ID_ANY ):
+		super().__init__(parent=parent, controller=controller, id=id)
 
 		fontPixels = 36
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
@@ -19,7 +28,7 @@ class BibTimeRecord( ManualTimeEntryPanel, TimeEntryController ):
 		dc.SetFont( font )
 		wNum, hNum = dc.GetTextExtent( '999' )
 		wNum += 8
-		hNum += 8		
+		hNum += 8
 
 		outsideBorder = 4
 
@@ -248,11 +257,25 @@ class BibTimeRecord( ManualTimeEntryPanel, TimeEntryController ):
 		if self.bibCur and mainWin:
 			mainWin.forecastHistory.SelectNumShowPage( self.bibCur, 'iChartPage' )
 
-	def _EnableControls(self):
-		pass
+	def _EnableControls(self) -> None:
+		self.log.todo('BibTimeRecord._EnableControls() not yet implemented.')
 
-	def _DisableControls(self):
-		pass
+	def _DisableControls(self) -> None:
+		self.log.todo('BibTimeRecord._DisableControls() not yet implemented.')
+
+	def __SafeSetFocus(self):
+		try:
+			super().SetFocus()
+			try:
+				self.numEdit.SetFocus()
+			except Exception as e:
+				self.log.error( f'Error setting on BibTimeRecord numEdit: {e}' )
+		except Exception as e:
+			self.log.error( f'Error setting on BibTimeRecord: {e}' )
+
+	def SetFocus(self):
+		self.__SafeSetFocus()
+
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
