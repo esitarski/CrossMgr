@@ -11,7 +11,7 @@ import random
 import datetime
 now = datetime.datetime.now
 import threading
-from Queue import Queue, Empty
+from queue import Queue, Empty
 from openpyxl.workbook import Workbook
 
 #------------------------------------------------------------------------------	
@@ -275,7 +275,7 @@ Spin Doctors
 	firstNames = [line.split('.')[1].strip() for line in firstNames.split('\n') if line.strip()]
 	lastNames = [line.split('.')[1].strip() for line in lastNames.split('\n') if line.strip()]
 	teams = [line.strip() for line in teams.split('\n') if line.strip()]
-	bibs = range( 100, 100+starters )
+	bibs = list( range( 1, 1+starters ) )
 	
 	random.shuffle( firstNames )
 	random.shuffle( lastNames )
@@ -289,18 +289,17 @@ Spin Doctors
 # Write out as a .xlsx file with the number tag data.
 #
 wb = Workbook()
-ws = wb.get_active_sheet()
-ws.title = "UltraTest"
+ws = wb.create_sheet( "UltraTest", 0 )
 for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag'.split(',')):
-	ws.cell( row = 0, column = col ).value = label
+	ws.cell( row = 1, column = col+1 ).value = label
 rdata = [d for d in getRandomData(len(tag))]
-rowCur = 1
+rowCur = 2
 for r, (n, t) in enumerate(tag.items()):
 	if t in ('1', '2'):
 		continue
 	
 	bib, firstName, lastName, Team = rdata[r]
-	for c, v in enumerate([n, lastName, firstName, Team, t]):
+	for c, v in enumerate([n, lastName, firstName, Team, t], 1):
 		ws.cell( row = rowCur, column = c ).value = v
 	rowCur += 1
 wb.save('UltraTest.xlsx')
@@ -312,7 +311,7 @@ wb = None
 with open('UltraTest.csv', 'w') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
-		f.write( '%d,%s\n' % (n, tag[n]) )
+		f.write( f'{n},{tag[n]}\n' )
 
 sendDate = True
 

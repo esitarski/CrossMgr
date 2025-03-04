@@ -479,16 +479,16 @@ var translations = {
 	var key = 'Show Every {} Laps';
 	var showLaps = [2, 3, 5, 10, 15, 20, 25, 50, 100];
 	var showTr = translations[key];
-	for( var i = 0; i < showLaps.length; ++i ) {
-		var tr = [];
-		for( var j = 0; j < showTr.length; ++j )
+	for( let i = 0; i < showLaps.length; ++i ) {
+		let tr = [];
+		for( let j = 0; j < showTr.length; ++j )
 			tr.push( showTr[j].replace('{}', showLaps[i]) );
 		translations[key.replace('{}', showLaps[i])] = tr;
 	}
 })();
 
 function _( f ) {
-	var t = translations[f];
+	let t = translations[f];
 	return t ? t[langCur] : f;
 }
 
@@ -1474,8 +1474,8 @@ function Altigraph() {
 		{
 			dc.textBaseline = 'top';
 			dc.textAlign = 'left';
-			const xCur = x + width - tegWidth;
-			const yCur = y + (height - fontSize * 1.05 * 4) / 2;
+			let xCur = x + width - tegWidth;
+			let yCur = y + (height - fontSize * 1.05 * 4) / 2;
 			for( let i = 0; i < tegText.length; ++i ) {
 				dc.fillText( tegText[i], xCur, yCur );
 				yCur += fontSize * 1.05;
