@@ -57,6 +57,9 @@ from collections import defaultdict
 from html.parser import HTMLParser
 import urllib.request
 
+if platform.system() == 'Darwin':
+	os.environ["no_proxy"] = "*"
+
 do_debug=False
 
 zip_file_url = 'https://github.com/esitarski/CrossMgr/archive/refs/heads/master.zip'	# url of the CrossMgr source code zip file on github.
@@ -107,14 +110,46 @@ def get_install_dir():
 def dir_setup():
 	os.chdir( get_install_dir() )
 
+def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+	"""
+	Call in a loop to create terminal progress bar
+	@params:
+		iteration   - Required  : current iteration (Int)
+		total       - Required  : total iterations (Int)
+		prefix      - Optional  : prefix string (Str)
+		suffix      - Optional  : suffix string (Str)
+		decimals    - Optional  : positive number of decimals in percent complete (Int)
+		length      - Optional  : character length of bar (Int)
+		fill        - Optional  : bar fill character (Str)
+		printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+	"""
+	percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+	filledLength = int(length * iteration // total)
+	bar = fill * filledLength + '-' * (length - filledLength)
+	print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd )
+	if iteration >= total: 
+		print( flush=True )
+
 def src_download():
 	# Pull the source and resources from github.
 	zip_file_name = 'CrossMgrSrc.zip'
 	
-	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", end='', flush=True )
-	urllib.request.urlretrieve( zip_file_url, filename=zip_file_name )
-	print( 'Done.' )
+	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
 	
+	def reporthook( block_count, block_size, file_size ):
+		print_progress_bar( block_count * block_size, file_size, prefix='Download', length=70, printEnd='' )
+		
+	for i in [1,2,3,4,5]:
+		try:
+			urllib.request.urlretrieve( zip_file_url, filename=zip_file_name, reporthook=reporthook )
+			break
+		except Exception as e:
+			print( f'Got Exception: {e}.' )
+			if i == 5:
+				sys.stderr.write( f'urlretrieve failed: zip_file_url="{zip_file_url}" zip_file_name="{zip_file_name}"' )
+				raise e
+		print( 'Trying again...', flush=True )
+			
 	# Unzip everything to the new folder.
 	print( f"Extracting CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
 	
@@ -125,7 +160,7 @@ def src_download():
 	
 	remove_ignore( zip_file_name, True )
 
-	print( 'Done.' )
+	print( 'Done.', flush=True )
 	
 def get_wxpython_versions():
 	# Read the extras page.
