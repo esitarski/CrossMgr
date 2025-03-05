@@ -55,15 +55,8 @@ import subprocess
 import contextlib
 from collections import defaultdict
 from html.parser import HTMLParser
-#-----------------------------------------------------------------------
-# import the requests module and install it if missing.
-#
-try:
-	import requests
-except ModuleNotFoundError:
-	subprocess.check_call( [sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'] )
-	subprocess.check_call( [sys.executable, '-m', 'pip', 'install', 'requests'] )
-	import requests
+
+print( f'python: {sys.executable}', flush=True )
 
 do_debug=False
 
@@ -115,32 +108,31 @@ def get_install_dir():
 def dir_setup():
 	os.chdir( get_install_dir() )
 	
-def download_zip_file( zip_file_url, zip_file_name ):
-	with requests.get(zip_file_url, stream=True) as r:
-		r.raise_for_status()
-		with open(zip_file_name, 'wb') as f:
-			for chunk in r.iter_content(chunk_size=8192):
-				f.write( chunk )
+def download_file_from_url( python_exe, file_url, file_name ):
+	# Downloads a url and writes the contents into a file.
+	# Run the download script inside the python environment so we have access to the requests module.
+	# This is necessary as we can't install into the global python path.
+	download_src_fname = os.path.expanduser(os.path.join( '~', src_dir, 'download_src_tmp.py' ) )
+	content = '\n'.join( [
+		"import requests",
+		f"with requests.get('{file_url}', stream=True) as r:",
+		"    r.raise_for_status()",
+		f"    with open('{file_name}', 'wb') as f:",
+		"        for chunk in r.iter_content(chunk_size=8192):",
+		"            f.write( chunk )",
+	] )
+	# print( content )
+	with open(download_src_fname, 'w', encoding='utf8') as f:
+		f.write( content )
+	subprocess.check_output( [python_exe, download_src_fname] )
+	remove_ignore( download_src_fname, True )
 
-	'''
-	for i in [1,2,3,4,5]:
-		try:
-			urllib.request.urlretrieve( zip_file_url, filename=zip_file_name, reporthook=reporthook )
-			break
-		except Exception as e:
-			print( f'Got Exception: {e}.' )
-			if i == 5:
-				sys.stderr.write( f'urlretrieve failed: zip_file_url="{zip_file_url}" zip_file_name="{zip_file_name}"' )
-				raise e
-		print( 'Trying again...', flush=True )
-	'''
-
-def src_download():
+def src_download( python_exe ):
 	# Pull the source and resources from github.
-	zip_file_name = 'CrossMgrSrc.zip'
+	zip_file_name = os.path.expanduser(os.path.join( '~', 'CrossMgrSrc.zip' ) )
 	
 	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
-	download_zip_file( zip_file_url, zip_file_name )
+	download_file_from_url( python_exe, zip_file_url, zip_file_name )
 			
 	# Unzip everything to the new folder.
 	print( f"Extracting CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
@@ -154,10 +146,12 @@ def src_download():
 
 	print( 'Done.', flush=True )
 	
-def get_wxpython_versions():
+def get_wxpython_versions( python_exe ):
 	# Read the extras page.
-	with requests.get(wxpython_extras_url) as r:
-		contents = r.content.decode( encoding='utf8' )
+	extras_fname = os.path.expanduser( os.path.join('~', 'wxpytyhon_extras.txt') )
+	download_file_from_url( python_exe, wxpython_extras_url, extras_fname )
+	with open( extras_fname, 'r', encoding='utf8' ) as f:
+		contents = f.read()
 
 	distro_versions = defaultdict( list )
 	class DVHTMLParser(HTMLParser):
@@ -193,9 +187,11 @@ def get_python_exe( env_dir ):
 		python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
 	return python_exe
 
-def env_setup( full=False ):	
+def env_setup( full=False, pre_src_download=False ):	
 	python_exe = get_python_exe( env_dir )
-
+	
+	os.makedirs( src_dir, exist_ok=True)
+	
 	# Create a local environment for Python.  Install all our dependencies here.
 	if full or not os.path.isdir(env_dir) or not os.path.isfile(python_exe):
 		print( f"Removing existing python environment {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
@@ -211,12 +207,18 @@ def env_setup( full=False ):
 	else:
 		print( f"Using existing python environment {os.path.abspath(os.path.join('.',env_dir))}.", flush=True )
 
-	print( "Updating python environment (may take a few minutes, especially on first install)... ", end='', flush=True )
 	os.chdir( src_dir )
 	
 	# Upgrade pip first.
 	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'] )
 	
+	# If pre_src_download option, just install requests and return.  Don't do the full requirements.txt dependency install.
+	if pre_src_download:
+		subprocess.check_output( [python_exe, '-m', 'pip', 'install', 'requests'] )
+		return python_exe
+	
+	print( "Updating python environment (may take a few minutes, especially on first install)... ", end='', flush=True )
+
 	if is_linux:
 		# Install wxPython from the "extras" folder.
 		with open('requirements.txt', encoding='utf8') as f_in, open('requirements_os.txt', 'w', encoding='utf8') as f_out:
@@ -239,7 +241,7 @@ def env_setup( full=False ):
 		os_name = os_name.lower()
 		if any( f in os_name for f in ('buntu', 'mint') ):
 			os_name = 'ubuntu'
-		wxpython_versions = get_wxpython_versions()
+		wxpython_versions = get_wxpython_versions( python_exe )
 
 		'''
 		# Check if this os is supported.
@@ -665,8 +667,9 @@ def restore_archive():
 def install( full=False ):
 	dir_setup()
 	make_archive()					# Make a copy of the existing install if it exists.
-	src_download()
-	python_exe = env_setup( full )
+	python_exe = env_setup( full, pre_src_download=True )
+	src_download( python_exe )
+	python_exe = env_setup( full, pre_src_download=False )
 	fix_dependencies( python_exe )
 	make_bin( python_exe )
 	make_shortcuts( python_exe )
