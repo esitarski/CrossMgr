@@ -55,10 +55,15 @@ import subprocess
 import contextlib
 from collections import defaultdict
 from html.parser import HTMLParser
-import urllib.request
-
-if platform.system() == 'Darwin':
-	os.environ["no_proxy"] = "*"
+#-----------------------------------------------------------------------
+# import the requests module and install it if missing.
+#
+try:
+	import requests
+except ModuleNotFoundError:
+	subprocess.check_call( [sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'] )
+	subprocess.check_call( [sys.executable, '-m', 'pip', 'install', 'requests'] )
+	import requests
 
 do_debug=False
 
@@ -109,36 +114,15 @@ def get_install_dir():
 
 def dir_setup():
 	os.chdir( get_install_dir() )
-
-def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-	"""
-	Call in a loop to create terminal progress bar
-	@params:
-		iteration   - Required  : current iteration (Int)
-		total       - Required  : total iterations (Int)
-		prefix      - Optional  : prefix string (Str)
-		suffix      - Optional  : suffix string (Str)
-		decimals    - Optional  : positive number of decimals in percent complete (Int)
-		length      - Optional  : character length of bar (Int)
-		fill        - Optional  : bar fill character (Str)
-		printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-	"""
-	percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-	filledLength = int(length * iteration // total)
-	bar = fill * filledLength + '-' * (length - filledLength)
-	print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd )
-	if iteration >= total: 
-		print( flush=True )
-
-def src_download():
-	# Pull the source and resources from github.
-	zip_file_name = 'CrossMgrSrc.zip'
 	
-	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
-	
-	def reporthook( block_count, block_size, file_size ):
-		print_progress_bar( block_count * block_size, file_size, prefix='Download', length=70, printEnd='' )
-		
+def download_zip_file( zip_file_url, zip_file_name ):
+	with requests.get(zip_file_url, stream=True) as r:
+		r.raise_for_status()
+		with open(zip_file_name, 'wb') as f:
+			for chunk in r.iter_content(chunk_size=8192):
+				f.write( chunk )
+
+	'''
 	for i in [1,2,3,4,5]:
 		try:
 			urllib.request.urlretrieve( zip_file_url, filename=zip_file_name, reporthook=reporthook )
@@ -149,6 +133,14 @@ def src_download():
 				sys.stderr.write( f'urlretrieve failed: zip_file_url="{zip_file_url}" zip_file_name="{zip_file_name}"' )
 				raise e
 		print( 'Trying again...', flush=True )
+	'''
+
+def src_download():
+	# Pull the source and resources from github.
+	zip_file_name = 'CrossMgrSrc.zip'
+	
+	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
+	download_zip_file( zip_file_url, zip_file_name )
 			
 	# Unzip everything to the new folder.
 	print( f"Extracting CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
@@ -164,8 +156,8 @@ def src_download():
 	
 def get_wxpython_versions():
 	# Read the extras page.
-	with urllib.request.urlopen(wxpython_extras_url) as request:
-		contents = request.read().decode( encoding='utf8' )
+	with requests.get(wxpython_extras_url) as r:
+		contents = r.content.decode( encoding='utf8' )
 
 	distro_versions = defaultdict( list )
 	class DVHTMLParser(HTMLParser):
