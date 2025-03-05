@@ -55,7 +55,15 @@ import subprocess
 import contextlib
 from collections import defaultdict
 from html.parser import HTMLParser
-import urllib.request
+#-----------------------------------------------------------------------
+# import the requests module and install it if missing.
+#
+try:
+	import requests
+except ModuleNotFoundError:
+	subprocess.check_call( [sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'] )
+	subprocess.check_call( [sys.executable, '-m', 'pip', 'install', 'requests'] )
+	import requests
 
 do_debug=False
 
@@ -106,15 +114,34 @@ def get_install_dir():
 
 def dir_setup():
 	os.chdir( get_install_dir() )
+	
+def download_zip_file( zip_file_url, zip_file_name ):
+	with requests.get(zip_file_url, stream=True) as r:
+		r.raise_for_status()
+		with open(zip_file_name, 'wb') as f:
+			for chunk in r.iter_content(chunk_size=8192):
+				f.write( chunk )
+
+	'''
+	for i in [1,2,3,4,5]:
+		try:
+			urllib.request.urlretrieve( zip_file_url, filename=zip_file_name, reporthook=reporthook )
+			break
+		except Exception as e:
+			print( f'Got Exception: {e}.' )
+			if i == 5:
+				sys.stderr.write( f'urlretrieve failed: zip_file_url="{zip_file_url}" zip_file_name="{zip_file_name}"' )
+				raise e
+		print( 'Trying again...', flush=True )
+	'''
 
 def src_download():
 	# Pull the source and resources from github.
 	zip_file_name = 'CrossMgrSrc.zip'
 	
-	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", end='', flush=True )
-	urllib.request.urlretrieve( zip_file_url, filename=zip_file_name )
-	print( 'Done.' )
-	
+	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
+	download_zip_file( zip_file_url, zip_file_name )
+			
 	# Unzip everything to the new folder.
 	print( f"Extracting CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
 	
@@ -125,12 +152,12 @@ def src_download():
 	
 	remove_ignore( zip_file_name, True )
 
-	print( 'Done.' )
+	print( 'Done.', flush=True )
 	
 def get_wxpython_versions():
 	# Read the extras page.
-	with urllib.request.urlopen(wxpython_extras_url) as request:
-		contents = request.read().decode( encoding='utf8' )
+	with requests.get(wxpython_extras_url) as r:
+		contents = r.content.decode( encoding='utf8' )
 
 	distro_versions = defaultdict( list )
 	class DVHTMLParser(HTMLParser):
