@@ -111,7 +111,7 @@ def dir_setup():
 def download_file_from_url( python_exe, file_url, file_name ):
 	# Downloads a url and writes the contents into a file.
 	# Run the download script inside the python environment so we have access to the requests module.
-	# This is necessary as we can't install into the global python path.
+	# This is necessary as we can't install into the global python install.
 	download_src_fname = os.path.expanduser(os.path.join( '~', src_dir, 'download_src_tmp.py' ) )
 	content = '\n'.join( [
 		"import requests",
@@ -536,49 +536,36 @@ def make_shortcuts( python_exe ):
 	
 	shortcuts_fname = os.path.abspath( os.path.join('.', 'make_shortcuts_tmp.py') )
 	
-	context = {
-		'python_launch_exe': python_launch_exe,
-		'shortcut_info': [ {
-				'script':pyw,
-				'icon':get_ico_file(pyw),
-				'name':get_name(pyw)
-			} for pyw in pyws
-		],
-	}
-	contents = '\n'.join( [
-		'from sys import exit',
-		'from pyshortcuts import make_shortcut',
-		f'context = {json.dumps(context)}',
-		"for shortcut_args in context['shortcut_info']:",
-		"    make_shortcut( terminal=False, startmenu=False, executable=context['python_launch_exe'], **shortcut_args )",
-		"exit(0)",
-	] )
+	update_script = f"'{__file__}' install"
 	
-	with open(shortcuts_fname, 'w', encoding='utf8') as f:
-		f.write( contents )
-	
-	try:
-		subprocess.check_output( [python_exe, shortcuts_fname] )
-	except subprocess.CalledProcessError as e:
-		print( 'Error:', e )
-	finally:
-		remove_ignore( shortcuts_fname )
-	
+	args = ([
+		{
+			'name':get_name(pyw),
+			'script':f"'{python_launch_exe}' '{pyw}'",
+			'noexe': True,
+			'icon':get_ico_file(pyw),
+			'terminal': False,
+			'startmenu': False,
+		} for pyw in pyws
+	] +
 	# Create a shortcut for this update script.
 	# Remember, we are in the CrossMgr-master directory.
-	context = {
-		'python_exe': python_exe,	# Use the stock python, not the env python.
-		'shortcut_args': {
-			'script': __file__ + ' install',	# Add "install" command to the script.
-			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png') ),
+	[
+		{
 			'name': 'Update CrossMgr',
+			'script':f"'{python_launch_exe}' {update_script}",
+			'noexe': True,
+			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png') ),
+			'terminal': False,
+			'startmenu': False,
 		}
-	}
+	])
+
 	contents = '\n'.join( [
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
-		f'context = {json.dumps(context)}',
-		"make_shortcut( terminal=True, startmenu=False, executable=context['python_exe'], **context['shortcut_args'] )",
+		f"for args in {args}:",
+		"    make_shortcut( **args )",
 		"exit(0)",
 	] )
 	
