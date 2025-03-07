@@ -361,7 +361,7 @@ while True:
 			sock.connect((DEFAULT_HOST, DEFAULT_PORT))
 			break
 		except Exception as e:
-			print( 'Connection failed.  Waiting 5 seconds... ({})'.format(e) )
+			print( f'Connection failed.  Waiting 5 seconds... ({e})' )
 			sock = None
 			time.sleep( 5 )
 
@@ -373,7 +373,7 @@ while True:
 	name = '{}-{}'.format(socket.gethostname(), os.getpid())
 	
 	print( 'Sending Pong...', name )
-	message = "{}@Pong@$".format(name)
+	message = f"{name}@Pong@$"
 	sock.send( message.encode() )
 
 	#------------------------------------------------------------------------------
@@ -403,7 +403,7 @@ while True:
 		print( 'Timed out [2]' )
 		continue
 	
-	print('Received: "{}" from CrossMgr'.format(received) )
+	print( f'Received: "{received}" from CrossMgr' )
 	if 'AckMarker' not in received:
 		print( 'Unknown cmd [2]' )
 		continue
@@ -418,7 +418,7 @@ while True:
 		tLast = t
 		
 		# Send offsets relative to the transmit start time.
-		message = '{}@Passing@'.format( name )
+		message = f'{name}@Passing@'
 		iMessageLast = min(iMessage+3, len(numLapTimes))
 		for i in range(iMessage, iMessageLast):
 			n, lap, t = numLapTimes[i]
@@ -426,14 +426,14 @@ while True:
 			message += 'c={}|t={}|d={}@'.format( tag[n], tCur.strftime('%H:%M:%S.%f'), tCur.strftime('%y%m%d') )
 		iMessage = iMessageLast
 		messageNumber += 1
-		message += '{}@$'.format( messageNumber )
+		message += f'{messageNumber}@$'
 		
-		print( 'sending: {}\n'.format(message) )
+		print( f'sending: {message}\n' )
 		try:
 			sock.send( message.encode() )
 			iMessage += 1
 		except Exception as e:
-			print( 'Error: {}  Attempting to reconnect...', e )
+			print( f'Error: {e}  Attempting to reconnect...' )
 			break
 		
 		print( 'Waiting for AckPassing...' )
@@ -442,7 +442,7 @@ while True:
 			print( 'Timed out [3]' )
 			break
 			
-		print('Received: "{}" from CrossMgr'.format(received) )
+		print(f'Received: "{received}" from CrossMgr' )
 		if 'AckPassing' not in received:
 			print( 'Unknown cmd [3]' )
 			break

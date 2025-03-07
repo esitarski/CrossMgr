@@ -11,7 +11,7 @@ from qrcode import QRCode
 from io import StringIO
 
 from urllib.parse import urlparse, parse_qs
-from cgi import parse_header, parse_multipart
+from email.message import Message
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -118,14 +118,16 @@ class CrossMgrVideoHandler( BaseHTTPRequestHandler ):
 	re_jpeg_request = re.compile( r'^\/img([0-9]+)c?s?g?\.jpeg$' )
 	
 	def parse_POST( self ):
-		ctype, pdict = parse_header(self.headers['content-type'])
-		if ctype == 'multipart/form-data':
-			postvars = parse_multipart(self.rfile, pdict)
-		elif ctype == 'application/x-www-form-urlencoded':
+		m = Message()
+		m['content_type'] = self.headers['content-type']
+		ctype, pdict = m.get_params()
+		# Do not support multipart/form-data (which we should not be getting anyway).
+		if ctype == 'application/x-www-form-urlencoded':
 			length = int(self.headers['content-length'])
 			postvars = parse_qs(
-					self.rfile.read(length), 
-					keep_blank_values=1)
+				self.rfile.read(length), 
+				keep_blank_values=True
+			)
 		else:
 			postvars = {}
 		return postvars

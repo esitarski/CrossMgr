@@ -538,6 +538,10 @@ def make_shortcuts( python_exe ):
 	
 	update_script = f"'{__file__}' install"
 	
+	def esc( s ):
+		s = s.replace( '\\', '/' ).replace( '"', r'\"' ).replace( ' ', r'\ ' )
+		return s
+	
 	args = ([
 		{
 			'name':get_name(pyw),
