@@ -5,6 +5,7 @@ import wx.lib.buttons
 
 import Model
 import Utils
+from ManualTimeEntryPanel import ManualTimeEntryPanel
 from ReorderableGrid import ReorderableGrid
 from HighPrecisionTimeEdit import HighPrecisionTimeEdit
 from PhotoFinish import TakePhoto
@@ -61,12 +62,9 @@ class HighPrecisionTimeEditor(gridlib.GridCellEditor):
 	def Clone( self ):
 		return HighPrecisionTimeEditor()
 
-class TimeTrialRecord( wx.Panel ):
-	def __init__( self, parent, controller, id = wx.ID_ANY ):
+class TimeTrialRecord( ManualTimeEntryPanel ):
+	def __init__( self, parent: wx.Window, id = wx.ID_ANY ):
 		super().__init__(parent, id)
-		self.SetBackgroundColour( wx.WHITE )
-
-		self.controller = controller
 
 		self.headerNames = ('       {}       '.format(_('Time')), '   {}   '.format(_('Bib')))
 		
@@ -142,21 +140,20 @@ class TimeTrialRecord( wx.Panel ):
 		self.Bind(wx.EVT_MENU, self.doRecordTime, id=idRecordAcceleratorId)
 		self.Bind(wx.EVT_MENU, self.doSave, id=idSaveAccelleratorId)
 		self.Bind(wx.EVT_MENU, self.doCleanup, id=idCleanupAccelleratorId)
-		accel_tbl = wx.AcceleratorTable([
+		self._accel_tbl = wx.AcceleratorTable([
 			(wx.ACCEL_NORMAL,  ord('T'), idRecordAcceleratorId),
 			(wx.ACCEL_NORMAL,  ord('S'), idSaveAccelleratorId),
 			(wx.ACCEL_NORMAL,  ord('C'), idCleanupAccelleratorId),
 		])
-		self.SetAcceleratorTable(accel_tbl)
-		
+
 		self.SetSizer(self.vbs)
 		self.Fit()
 		
 	def doClickLabel( self, event ):
 		if event.GetCol() == 0:
 			self.doRecordTime( event )
-	
-	def doRecordTime( self, event ):
+
+	def doRecordTime( self, _event ):
 		race = Model.race
 		if not race:
 			return
@@ -203,7 +200,7 @@ class TimeTrialRecord( wx.Panel ):
 				
 		return timesBibs, timesNoBibs
 	
-	def doSave( self, event ):
+	def doSave( self, _event ):
 		timesBibs, timesNoBibs = self.getTimesBibs()
 				
 		if timesBibs and Model.race:
@@ -227,7 +224,7 @@ class TimeTrialRecord( wx.Panel ):
 		if timesNoBibs:
 			self.grid.SetGridCursor( 0, 1, )
 	
-	def doCleanup( self, event ):
+	def doCleanup( self, _event ):
 		timesBibs, timesNoBibs = self.getTimesBibs()
 
 		with gridlib.GridUpdateLocker(self.grid):
@@ -273,14 +270,29 @@ class TimeTrialRecord( wx.Panel ):
 		
 	def commit( self ):
 		pass
-		
+
+	def _DisableControls(self):
+		self.recordTimeButton.Disable()
+		self.saveButton.Disable()
+		self.cleanupButton.Disable()
+		self.grid.Disable()
+		self.SetAcceleratorTable(wx.AcceleratorTable([]))
+
+	def _EnableControls(self):
+		self.recordTimeButton.Enable()
+		self.saveButton.Enable()
+		self.cleanupButton.Enable()
+		self.grid.Enable()
+		self.SetAcceleratorTable(self._accel_tbl)
+
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	timeTrialRecord = TimeTrialRecord(mainWin, None)
+	timeTrialRecord = TimeTrialRecord(mainWin)
+	# timeTrialRecord.Disable(reason='For testing')
 	timeTrialRecord.refresh()
 	mainWin.Show()
 	app.MainLoop()
