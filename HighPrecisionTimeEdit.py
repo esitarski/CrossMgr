@@ -129,14 +129,15 @@ else:
 					self.defaultValue = '00:00'
 				elif not display_milliseconds:
 					self.defaultValue = '00:00:00'
-			value = self.defaultValue if value is None else reNonTimeChars.sub( '', '{}'.format(value) )
+			value = self.defaultValue if value is None else reNonTimeChars.sub( '', f'{value}' )
 			super().__init__(
 				parent, id,
 				value		= value,
 				style		= style & ~(wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.TE_PASSWORD),
 				size        = size,
 			)
-			if value is None and seconds is not None:
+			# Seconds, if given, overrides value.
+			if seconds is not None:
 				self.SetSeconds( seconds )
 			self.Bind(wx.EVT_CHAR, self.onKeypress)
 			self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
