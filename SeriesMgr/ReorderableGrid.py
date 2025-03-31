@@ -235,9 +235,9 @@ class CornerReorderableGridLabelRenderer(glr.GridLabelRenderer):
 		
 	def Draw(self, grid, dc, rect, rc):
 		if grid._enableReorderRows:
-			x = rect.left + (rect.width - self._bmp.GetWidth()) // 2
-			y = rect.top + (rect.height - self._bmp.GetHeight()) // 2
-			dc.DrawBitmap(self._bmp, x, y, True)
+			x = rect.left + (rect.width - self._bmp.GetWidth()) / 2
+			y = rect.top + (rect.height - self._bmp.GetHeight()) / 2
+			dc.DrawBitmap(self._bmp, int(x), int(y), True)
 
 class ReorderableGrid(	gridlib.Grid,
 						ReorderableGridRowMixin,

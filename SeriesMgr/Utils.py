@@ -532,6 +532,24 @@ def getDocumentsDir():
 	return dd
 	
 #------------------------------------------------------------------------
+def positiveFloatLocale( v ):
+	if isinstance( v, float ):
+		return v if v > 0.0 else 0.0
+	if isinstance( v, int ):
+		return float(v if v > 0 else 0)
+	if isinstance( v, str ):
+		v = v.strip()
+		if v.startswith('-'):
+			return 0.0
+		if '.' not in v:
+			v = v.replace(',', '.')			# Normalize decimal sep.
+		v = re.sub(r'[^0-9.]', '', v )		# Remove any thousands seps or other non-digits.
+		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
+	try:
+		return float( v )
+	except (ValueError, TypeError):
+		return 0.0
+
 def floatLocale( v ):
 	if isinstance( v, float ):
 		return v
@@ -541,9 +559,12 @@ def floatLocale( v ):
 		v = v.strip()
 		if '.' not in v:
 			v = v.replace(',', '.')			# Normalize decimal sep.
-		v = re.sub('[^0-9.]', '', v )		# Remove any thousands seps.
+		v = re.sub(r'[^-0-9.]', '', v )		# Remove any thousands seps or other non-digs.
 		v = '.'.join( v.split('.')[:2] )	# Enforce one decimal only.
-	return float( v )
+	try:
+		return float( v )
+	except (ValueError, TypeError):
+		return 0.0
 	
 def floatFormatLocale( v, width=-1, precision=6 ):
 	s = str(int( round(v * (10**precision)) ))
@@ -629,8 +650,10 @@ def refresh():
 		mainWin.refresh()
 
 def refreshForecastHistory():
-	if mainWin is not None:
+	try:
 		mainWin.forecastHistory.refresh()
+	except AttributeError:
+		pass
 
 def updateUndoStatus():
 	if mainWin is not None:
@@ -642,7 +665,9 @@ def writeRace():
 		
 def writeConfig( key, value ):
 	try:
-		return mainWin.config.Write( key, value )
+		ret = mainWin.config.Write( key, value )
+		mainWin.config.Flush()
+		return ret
 	except Exception:
 		pass
 
