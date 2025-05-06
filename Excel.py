@@ -137,6 +137,7 @@ class ReadExcelXlsx:
 	def __init__(self, filename):
 		if not os.path.isfile(filename):
 			raise ValueError( "{} is not a valid filename".format(filename) )
+		openpyxl.reader.excel.warnings.simplefilter(action='ignore')
 		self.book = openpyxl.load_workbook( filename, data_only=True )
 		
 	def is_nonempty_row(self, sheet, i):

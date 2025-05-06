@@ -32,6 +32,7 @@ import Dependencies
 import Utils
 import SeriesModel
 from Races				import Races
+from Competitions		import Competitions
 from Points				import Points
 from Upgrades			import Upgrades
 from Results			import Results
@@ -282,6 +283,7 @@ class MainWin( wx.Frame ):
 			[ 'results',		Results,			'Results' ],
 			[ 'teamResults',	TeamResults,		'Team Results' ],
 			[ 'points',			Points,				'Scoring Criteria' ],
+			[ 'competitions',	Competitions,		'Competitions' ],
 			[ 'categorySequence',CategorySequence,	'Category Options' ],
 			[ 'upgrades',		Upgrades,			'Upgrades' ],
 			[ 'errors',			Errors,				'Errors' ],

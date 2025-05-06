@@ -2713,14 +2713,14 @@ def setCategoryChoice( iSelection, categoryAttribute = None ):
 		return
 	setCategoryChoice( iSelection, categoryAttribute )
 
-def getCurrentHtml():
+def getCurrentHtml( isLive=False ):
 	if not race:
 		return None
 	htmlFile = os.path.join(Utils.getHtmlFolder(), 'RaceAnimation.html')
 	try:
 		with open(htmlFile, 'r', encoding='utf8') as fp:
 			html = fp.read()
-		return Utils.mainWin.addResultsToHtmlStr( html )
+		return Utils.mainWin.addResultsToHtmlStr( html, isLive )
 	except Exception as e:
 		Utils.logException( e, sys.exc_info() )
 		return None

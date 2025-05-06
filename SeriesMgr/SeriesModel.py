@@ -1,6 +1,8 @@
 import os
 from html import escape
+from uuid import uuid4
 import copy
+
 import operator
 import functools
 import datetime
@@ -162,6 +164,7 @@ class PointStructure:
 
 class Race:
 	grade = 'A'
+	competition = None	# UUID of the competition.
 	
 	IndividualResultsOnly = 0
 	TeamResultsOnly = 1
@@ -171,11 +174,12 @@ class Race:
 	pureTeam = False	# True if the results are by pure teams, that is, no individual results.
 	teamPointStructure = None	# If specified, team points will be recomputed from the top individual results.
 	
-	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None ):
+	def __init__( self, fileName, pointStructure, teamPointStructure=None, grade=None, competition=None ):
 		self.fileName = fileName
 		self.pointStructure = pointStructure
 		self.teamPointStructure = teamPointStructure
 		self.grade = grade or 'A'
+		self.competition = competition
 		
 	def getRaceName( self ):
 		return RaceNameFromPath( self.fileName )
@@ -243,6 +247,15 @@ class Category:
 		
 	def getName( self ):
 		return self.longName or self.name
+
+class Competition:
+	def __init__( self, name, uuid=None, iSequence=0 ):
+		self.name = name
+		self.uuid = uuid or str(uuid4())
+		self.iSequence = iSequence
+
+	def __repr__( self ):
+		return f'Competition(name="{self.name}", iSequence={self.iSequence}, uuid="{self.uuid}")'
 
 def nameToAliasKey( name ):
 	no_accent_name = Utils.removeDiacritic( name )
@@ -316,6 +329,7 @@ class SeriesModel:
 	colorTheme = GreenTheme
 	
 	teamResultsNames = []
+	competitions = []		# Used to group race results.
 	
 	@property
 	def scoreByPoints( self ):
@@ -390,7 +404,7 @@ class SeriesModel:
 		pass
 	
 	def setRaces( self, raceList ):
-		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade) for r in self.races] == raceList:
+		if [(r.fileName, r.pointStructure.name, r.teamPointStructure.name if r.teamPointStructure else None, r.grade, r.competition) for r in self.races] == raceList:
 			return False
 		
 		self.setChanged()
@@ -398,7 +412,7 @@ class SeriesModel:
 		racesSeen = set()
 		newRaces = []
 		ps = { p.name:p for p in self.pointStructures }
-		for fileName, pname, pteamname, grade in raceList:
+		for fileName, pname, pteamname, grade, competition in raceList:
 			fileName = fileName.strip()
 			if not fileName or fileName in racesSeen:
 				continue
@@ -410,11 +424,44 @@ class SeriesModel:
 			except KeyError:
 				continue
 			pt = ps.get( pteamname, None )
-			newRaces.append( Race(fileName, p, pt, grade) )
+			newRaces.append( Race(fileName, p, pt, grade, competition) )
 			
 		self.races = newRaces
 		for i, r in enumerate(self.races):
 			r.iSequence = i
+		return True
+		
+	def setCompetitions( self, competitionList ):
+		if [(c.name, c.uuid) for c in self.competitions] == competitionList:
+			return False
+		
+		self.setChanged()
+		
+		competitionsSeen = set()
+		uuidsSeen = set()
+		newCompetitions = []
+		for name, uuid in competitionList:
+			if not name or name in competitionsSeen:
+				continue
+			
+			if uuid in uuidsSeen:
+				uuid = None
+			c = Competition( name, uuid, len(newCompetitions) )
+			newCompetitions.append( c )
+			
+			competitionsSeen.add( c.name )
+			uuidsSeen.add( c.uuid )
+			
+		self.competitions = newCompetitions
+		for i, c in enumerate(self.competitions):
+			c.iSequence = i
+			
+		# Ensure we don't have any dangling references to old/deleted competitions.
+		uuidToComp = { c.uuid:c for c in self.competitions }
+		for r in self.races:
+			if r.competition:
+				r.competition = uuidToComp.get( r.competition.uuid, None )
+			
 		return True
 		
 	def setReferences( self, references ):
@@ -800,6 +847,11 @@ class SeriesModel:
 					(isIndividual and r.resultsType == Race.IndividualResultsOnly) or
 					(not isIndividual and r.resultsType == Race.TeamResultsOnly)
 		}
-		return [rr for rr in raceResults if rr.raceFileName in rt]
+		raceResults = [rr for rr in raceResults if rr.raceFileName in rt]
+		
+		# Adjust for aggregated competitions.
+		raceResults = GetModelInfo.AggregateCompetitions( raceResults )
+		
+		return raceResults
 			
 model = SeriesModel()

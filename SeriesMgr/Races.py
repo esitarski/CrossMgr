@@ -9,14 +9,15 @@ import Utils
 	
 class Races(wx.Panel):
 	#----------------------------------------------------------------------
-	headerNames = ['Race', 'Grade', 'Default Points', 'Default Team Pts', 'Race File']
+	headerNames = ['Race', 'Comp', 'Grade', 'Default Points', 'Default Team Pts', 'Race File']
 	
 	RaceCol = 0
-	GradeCol = 1
-	PointsCol = 2
-	TeamPointsCol = 3
-	RaceFileCol = 4
-	RaceStatusCol = 5
+	CompetitionCol = 1
+	GradeCol = 2
+	PointsCol = 3
+	TeamPointsCol = 4
+	RaceFileCol = 5
+	RaceStatusCol = 6
 	
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
@@ -52,6 +53,11 @@ class Races(wx.Panel):
 		attr = gridlib.GridCellAttr()
 		attr.SetEditor( self.pointsChoiceEditor )
 		self.grid.SetColAttr( self.PointsCol, attr )
+		
+		self.competitionChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
+		attr = gridlib.GridCellAttr()
+		attr.SetEditor( self.competitionChoiceEditor )
+		self.grid.SetColAttr( self.CompetitionCol, attr )
 		
 		self.teamPointsChoiceEditor = gridlib.GridCellChoiceEditor([], allowOthers=False)
 		attr = gridlib.GridCellAttr()
@@ -177,6 +183,13 @@ class Races(wx.Panel):
 			return
 		teamComboBox.SetItems( [''] + [p.name for p in SeriesModel.model.pointStructures] )
 	
+	def updateCompetitionChoices( self ):
+		try:
+			competitionComboBox = self.competitionComboBox
+		except AttributeError:
+			return
+		competitionComboBox.SetItems( [''] + [c.name for c in SeriesModel.model.competitions] )
+	
 	def onGridEditorCreated(self, event):
 		if event.GetCol() == self.PointsCol:
 			self.comboBox = event.GetControl()
@@ -184,6 +197,9 @@ class Races(wx.Panel):
 		elif event.GetCol() == self.TeamPointsCol:
 			self.teamComboBox = event.GetControl()
 			self.updateTeamPointsChoices()
+		elif event.GetCol() == self.CompetitionCol:
+			self.competitionComboBox = event.GetControl()
+			self.updateCompetitionChoices()
 		event.Skip()
 
 	def gridAutoSize( self ):
@@ -198,9 +214,13 @@ class Races(wx.Panel):
 	
 	def refresh( self ):
 		model = SeriesModel.model
+		
+		uuidToCompetition = {c.uuid:c for c in model.competitions}
+		
 		Utils.AdjustGridSize( self.grid, len(model.races) )
 		for row, race in enumerate(model.races):
 			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )
+			self.grid.SetCellValue( row, self.CompetitionCol, race.competition.name if race.competition else '')
 			self.grid.SetCellValue( row, self.GradeCol, race.grade )
 			self.grid.SetCellValue( row, self.PointsCol, race.pointStructure.name )
 			self.grid.SetCellValue( row, self.TeamPointsCol, race.teamPointStructure.name if race.teamPointStructure else '' )
@@ -214,6 +234,10 @@ class Races(wx.Panel):
 		self.grid.SaveEditControlValue()
 		self.grid.DisableCellEditControl()	# Make sure the current edit is committed.
 		
+		model = SeriesModel.model
+		
+		nameToCompetition = {c.name:c for c in model.competitions}
+		
 		raceList = []
 		for row in range(self.grid.GetNumberRows()):
 			fileName = self.grid.GetCellValue(row, self.RaceFileCol).strip()
@@ -222,11 +246,12 @@ class Races(wx.Panel):
 			grade = self.grid.GetCellValue(row, self.GradeCol).strip().upper()[:1]
 			if not (grade and ord('A') <= ord(grade) <= ord('Z')):
 				grade = 'A'
+			pcompetition = self.grid.GetCellValue( row, self.CompetitionCol ).strip()
+			competition = nameToCompetition.get( pcompetition, None ) if pcompetition else None
 			if not fileName or not pname:
 				continue
-			raceList.append( (fileName, pname, pteamname, grade) )
+			raceList.append( (fileName, pname, pteamname, grade, competition) )
 		
-		model = SeriesModel.model
 		racesChanged = model.setRaces( raceList )
 		
 		if self.seriesName.GetValue() != model.name:

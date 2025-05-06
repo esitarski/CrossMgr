@@ -198,7 +198,7 @@ function sortTable( table, col, reverse ) {
 	let parseRank = function( s ) {
 		if( !s )
 			return 999999;
-		var fields = s.split( '(' );
+		let fields = s.split( '(' );
 		return parseInt( fields[1] );
 	}
 	
@@ -218,8 +218,8 @@ function sortTable( table, col, reverse ) {
 	}
 	else if( col >= 6 ) {				// Race Points/Time and Rank
 		cmpFunc = function( a, b ) {
-			var x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
-			var y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
+			const x = parseRank( a.cells[6+(col-6)*2+1].textContent.trim() );
+			const y = parseRank( b.cells[6+(col-6)*2+1].textContent.trim() );
 			return MakeCmpStable( a, b, x - y );
 		};
 	}
@@ -401,7 +401,7 @@ function sortTableId( iTable, iCol ) {
 										write( '{}'.format(points or '') )
 									with tag(html, 'td', {'class':'rightAlign noprint'}):
 										write( '{}'.format(gap or '') )
-									for rPoints, rRank, rPrimePoints, rTimeBonus in racePoints:
+									for rPoints, rRank, rPrimePoints, rTimeBonus, rr in racePoints:
 										if rPoints:
 											with tag(html, 'td', {'class':'leftBorder rightAlign noprint' + (' ignored' if '**' in '{}'.format(rPoints) else '')}):
 												write( '{}'.format(rPoints).replace('[','').replace(']','').replace(' ', '&nbsp;') )
@@ -412,7 +412,10 @@ function sortTableId( iTable, iCol ) {
 										if rRank <= SeriesModel.rankDNF:
 											if rPrimePoints:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( '({})&nbsp;+{}'.format(ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
+													if hasattr(rr, 'points_explanation'):
+														write( '({})'.format( rr.points_explanation.replace(' ','&nbsp;') )
+													else:
+														write( '({})&nbsp;+{}'.format(ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:
 												with tag(html, 'td', {'class':'rank noprint'}):
 													write( '({})&nbsp;-{}'.format(
@@ -779,6 +782,7 @@ class Results(wx.Panel):
 		
 		results = filterValidResults( results )
 		headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
+		
 		headerNames.extend( '{}\n{}'.format(r[1],r[0].strftime('%Y-%m-%d') if r[0] else '') for r in races )
 		
 		Utils.AdjustGridSize( self.grid, len(results), len(headerNames) )
@@ -798,14 +802,22 @@ class Results(wx.Panel):
 				self.grid.SetCellValue( row, iCol, '{}'.format(team or '') ); iCol += 1
 			self.grid.SetCellValue( row, iCol, '{}'.format(points) ); iCol += 1
 			self.grid.SetCellValue( row, iCol, '{}'.format(gap) ); iCol += 1
-			for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-				self.grid.SetCellValue( row, iCol + q,
-					'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-					else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
-					else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
-					else '({})'.format(Utils.ordinal(rRank)) if rRank <= SeriesModel.rankDNF
-					else ''
-				)
+			for q, (rPoints, rRank, rPrimePoints, rTimeBonus, rr) in enumerate(racePoints):
+					
+				if hasattr(rr, 'points_explanation'):
+					points_explanation = f'{rPoints} ({rr.points_explanation})'
+				elif rPoints and rPrimePoints:
+					 points_explanation = '{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints)
+				elif rPoints and rRank and rTimeBonus:
+					points_explanation = '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) 
+				elif rPoints:
+					points_explanation = '{} ({})'.format(rPoints, Utils.ordinal(rRank)) 
+				elif rRank <= SeriesModel.rankDNF:
+					points_explanation = '({})'.format(Utils.ordinal(rRank)) 
+				else:
+					points_explanation = ''
+
+				self.grid.SetCellValue( row, iCol + q, points_explanation )
 				
 			for c in range( len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
