@@ -526,7 +526,7 @@ class RRPoints:
 		
 	def __call__( self, rr ):
 		if hasattr(rr, 'competition_results'):
-			return sum( self(rc)[0] for rc in rr.competition_results )
+			return sum( self(rc)[0] for rc in rr.competition_results ), 0
 		
 		primePoints = rr.primePoints if self.model.considerPrimePointsOrTimeBonus else 0
 		earnedPoints = self.getPointStructure(rr.raceFileName, self.categoryName)[rr.rank] + primePoints
@@ -576,8 +576,14 @@ def AggregateCompetitions( raceResults ):
 				rr_category.append( rr_competition )
 				
 			rr_category.sort( key=rr_points, reverse=True )
-			for rank, rr in enumerate(rr_category, 1):
+			rr_last = None
+			rank = 1
+			for rr in rr_category:
+				if rr_last and rr_points(rr_last)[0] != rr_points(rr)[0]:
+					rank += 1
 				rr.rank = rank
+				rr_last = rr
+				
 				rr.competition_results.sort( key=lambda rc: rc.raceInSeries.iSequence )
 				points_explanation = []
 				for i, rc in enumerate(rr.competition_results):
