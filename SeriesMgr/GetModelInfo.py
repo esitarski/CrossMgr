@@ -552,10 +552,20 @@ def AggregateCompetitions( raceResults ):
 	
 	# If the event name contains an event type, add it to the explanation.	
 	for competition, categories in competitionCategoryParticipantResults.items():
+		rrBest = None
+		for category, participants in categories.items():
+			for participant, results in participants.items():
+				for rr in results:
+					if not rrBest:
+						rrBest = rr
+					elif rr.raceDate and rr.raceDate < rrBest.raceDate:
+						rrBest = rr
+				
 		for category, participants in categories.items():
 			rr_points = RRPoints( model, category )
 			rr_category = []
-			for participant, results in participants.items():
+
+			for participant, results in participants.items():			
 				rr_competition = copy.copy( results[0] )
 				rr_competition.raceName = competition.name
 				rr_competition.raceFileName = f'/dev/null/{competition.name}'
@@ -566,7 +576,7 @@ def AggregateCompetitions( raceResults ):
 				rr_competition.rank = None
 				rr_competition.bib = None
 				rr_competition.competition_results = results
-				rr_competition.raceInSeries = results[0].raceInSeries
+				rr_competition.raceInSeries = rrBest.raceInSeries if rrBest else None
 				for rr in rr_competition.competition_results[1:]:
 					if rr_competition.raceInSeries.iSequence > rr.raceInSeries.iSequence:
 						rr_competition.raceInSeries = rr.raceInSeries
@@ -576,6 +586,7 @@ def AggregateCompetitions( raceResults ):
 				rr_category.append( rr_competition )
 				
 			rr_category.sort( key=rr_points, reverse=True )
+			
 			rr_last = None
 			rank = 1
 			for rr in rr_category:
