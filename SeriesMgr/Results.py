@@ -413,7 +413,7 @@ function sortTableId( iTable, iCol ) {
 											if rPrimePoints:
 												with tag(html, 'td', {'class':'rank noprint'}):
 													if hasattr(rr, 'points_explanation'):
-														write( '({})'.format( rr.points_explanation.replace(' ','&nbsp;') )
+														write( '({})'.format( rr.points_explanation.replace(' ','&nbsp;') ) )
 													else:
 														write( '({})&nbsp;+{}'.format(ordinal(rRank).replace(' ', '&nbsp;'), rPrimePoints) )
 											elif rTimeBonus:

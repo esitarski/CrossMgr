@@ -579,13 +579,15 @@ def AggregateCompetitions( raceResults ):
 			for rank, rr in enumerate(rr_category, 1):
 				rr.rank = rank
 				rr.competition_results.sort( key=lambda rc: rc.raceInSeries.iSequence )
-				points_explanation = ['=' ]
+				points_explanation = []
 				for i, rc in enumerate(rr.competition_results):
 					if i:
 						points_explanation.append( '+' )
 					points = rr_points( rc )[0]
 					if isinstance(points, float):
 						points = f'{points:.2f}'
+					elif isinstance(points, int):
+						points = str(points)
 						
 					exp = [points, Utils.ordinal(rc.rank)]
 					event_type = reEventType.search( rc.raceName )
