@@ -578,9 +578,6 @@ def AggregateCompetitions( raceResults ):
 				rr_competition.raceInSeries = rrBest.raceInSeries
 				rr_competition.raceDate = rrBest.raceDate
 				rr_competition.raceOrganizer = rrBest.raceOrganizer
-				for rr in rr_competition.competition_results:
-					if rr_competition.raceInSeries.iSequence > rr.raceInSeries.iSequence:
-						rr_competition.raceInSeries = rr.raceInSeries
 				rr_competition.competition = competition
 				
 				raceResultsNew.append( rr_competition )
