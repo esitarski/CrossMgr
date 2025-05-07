@@ -198,6 +198,9 @@ class Race:
 	def relativeToFull( self, source ):
 		self.fileName = RelativeToFull( source, self.fileName )
 		
+	def isCompetition( self ):
+		return self.competition is not None
+		
 	def __repr__( self ):
 		return ', '.join( '{}={}'.format(a, repr(getattr(self, a))) for a in ['fileName', 'pointStructure'] )
 

@@ -373,7 +373,7 @@ function sortTableId( iTable, iCol ) {
 											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( '{}'.format(r[0].strftime('%b %d, %Y')) )
-										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill:
+										if not scoreByTime and not scoreByPercent and not scoreByTrueSkill and not r[3].isCompetition():
 											write( '<br/>' )
 											with tag(html, 'span', {'class': 'smallFont'}):
 												write( 'Top {}'.format(len(r[3].pointStructure)) )
@@ -424,7 +424,10 @@ function sortTableId( iTable, iCol ) {
 													)
 											else:
 												with tag(html, 'td', {'class':'rank noprint'}):
-													write( '({})'.format(ordinal(rRank).replace(' ', '&nbsp;')) )
+													if hasattr(rr, 'points_explanation'):
+														write( '({})'.format( rr.points_explanation.replace(' ','&nbsp;') ) )
+													else:
+														write( '({})'.format(ordinal(rRank).replace(' ', '&nbsp;')) )
 										else:
 											with tag(html, 'td', {'class':'noprint'}):
 												pass
@@ -969,15 +972,20 @@ class Results(wx.Panel):
 					wsFit.write( rowCur, iCol, team, textStyle ); iCol += 1
 				wsFit.write( rowCur, iCol, points, numberStyle ); iCol += 1
 				wsFit.write( rowCur, iCol, gap, numberStyle ); iCol += 1
-				for q, (rPoints, rRank, rPrimePoints, rTimeBonus) in enumerate(racePoints):
-					wsFit.write( rowCur, iCol + q,
-						'{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints) if rPoints and rPrimePoints
-						else '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False)) if rPoints and rRank and rTimeBonus
-						else '{} ({})'.format(rPoints, Utils.ordinal(rRank)) if rPoints
-						else '({})'.format(Utils.ordinal(rRank)) if rRank <= SeriesModel.rankDNF
-						else '',
-						centerStyle
-					)
+				for q, (rPoints, rRank, rPrimePoints, rTimeBonus, rr) in enumerate(racePoints):
+					if hasattr(rr, 'points_explanation'):
+						explanation = f'{rPoints} ({rr.points_explanation})'
+					elif rPoints and rPrimePoints:
+						explanation = '{} ({}) +{}'.format(rPoints, Utils.ordinal(rRank), rPrimePoints)
+					elif rPoints and rRank and rTimeBonus:
+						explanation =  '{} ({}) -{}'.format(rPoints, Utils.ordinal(rRank), Utils.formatTime(rTimeBonus, twoDigitMinutes=False))
+					elif rPoints:
+						 explanation = '{} ({})'.format(rPoints, Utils.ordinal(rRank))
+					elif rRank <= SeriesModel.rankDNF:
+						explanation = '({})'.format(Utils.ordinal(rRank))
+					else:
+						explanation = ''
+					wsFit.write( rowCur, iCol + q, explanation, centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.
