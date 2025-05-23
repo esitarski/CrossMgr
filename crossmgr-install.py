@@ -113,11 +113,17 @@ def download_file_from_url( python_exe, file_url, file_name ):
 	# Run the download script inside the python environment so we have access to the requests module.
 	# This is necessary as we can't install into the global python install.
 	download_src_fname = os.path.expanduser(os.path.join( '~', src_dir, 'download_src_tmp.py' ) )
+	context = {
+		'file_url': file_url,
+		'file_name': file_name,
+	}
 	content = '\n'.join( [
 		"import requests",
-		f"with requests.get('{file_url}', stream=True) as r:",
+		"import json",
+		f'context = {json.dumps(context)}',
+		"with requests.get(context['file_url'], stream=True) as r:",
 		"    r.raise_for_status()",
-		f"    with open('{file_name}', 'wb') as f:",
+		f"    with open(context['file_name'], 'wb') as f:",
 		"        for chunk in r.iter_content(chunk_size=8192):",
 		"            f.write( chunk )",
 	] )
