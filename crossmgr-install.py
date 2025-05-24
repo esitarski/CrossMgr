@@ -81,7 +81,9 @@ def python_check_output( args, **kwargs ):
 		 print( 'python subprocess error:' )
 		 print( f'    args={args}' )
 		 print( f'    kwargs={kwargs}' )
-		 print( f'    returncode={e.returncode}')
+		 print( f'    returncode={e.returncode}' )
+		 print( f'    output=\n{e.output}' )
+		 print( f'    stderr=\n{e.stderr}' )
 		 print( f'{e}', flush=True )
 		 raise
 
@@ -148,7 +150,7 @@ def download_file_from_url( python_exe, file_url, file_name ):
 
 def src_download( python_exe ):
 	# Pull the source and resources from github.
-	zip_file_name = os.path.expanduser(os.path.join( '~', 'CrossMgrSrc.zip' ) )
+	zip_file_name = os.path.expanduser(os.path.join('~', 'CrossMgrSrc.zip') )
 	
 	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
 	download_file_from_url( python_exe, zip_file_url, zip_file_name )
