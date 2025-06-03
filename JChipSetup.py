@@ -123,8 +123,7 @@ class JChipSetupDialog( wx.Dialog ):
 		gridBagSizer.Add( iphs, pos=(row, 1), border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
 		
 		row += 1
-		self.port = wx.lib.intctrl.IntCtrl( self, -1, min=1, max=65535, value=PORT,
-											limited=True, style = wx.TE_READONLY )
+		self.port = wx.lib.intctrl.IntCtrl( self, max=65535, value=PORT, limited=True, style=wx.TE_READONLY )
 		gridBagSizer.Add( wx.StaticText(self, label = _('Remote Port:')), pos=(row,0),
 						flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL )
 		gridBagSizer.Add( self.port, pos=(row,1), border=border, flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_LEFT )
