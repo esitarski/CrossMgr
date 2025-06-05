@@ -384,7 +384,7 @@ def get_versions():
 		if os.path.isfile(version_file):
 			with open(version_file, 'r', encoding='utf-8') as f:
 				version_text = f.read()
-			ver = version_text.split('=')[1].strip().replace('"','').replace("'".'')
+			ver = version_text.split('=')[1].strip().replace('"','').replace("'",'')
 			yield app, ver, version_file
 
 def make_bin( python_exe ):
