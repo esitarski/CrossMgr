@@ -56,7 +56,8 @@ import contextlib
 from collections import defaultdict
 from html.parser import HTMLParser
 
-print( f'python: {sys.executable}', flush=True )
+print( f'python executable: {sys.executable}', flush=True )
+print( f'python version:    {sys.version}', flush=True )
 
 do_debug=False
 
@@ -71,6 +72,20 @@ wxpython_extras_url = 'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/'
 is_linux    = (platform.system() == 'Linux')
 is_mac      = (platform.system() == 'Darwin')
 is_windows  = (platform.system() == 'Windows')
+
+def python_check_output( args, **kwargs ):
+	# Run python as a subprocess and print out more error details on failure.
+	try:
+		return subprocess.check_output( args, **kwargs )
+	except subprocess.CalledProcessError as e:
+		 print( 'python subprocess error:' )
+		 print( f'    args={args}' )
+		 print( f'    kwargs={kwargs}' )
+		 print( f'    returncode={e.returncode}' )
+		 print( f'    output=\n{e.output}' )
+		 print( f'    stderr=\n{e.stderr}' )
+		 print( f'{e}', flush=True )
+		 raise
 
 @contextlib.contextmanager
 def in_dir( x ):
@@ -113,23 +128,29 @@ def download_file_from_url( python_exe, file_url, file_name ):
 	# Run the download script inside the python environment so we have access to the requests module.
 	# This is necessary as we can't install into the global python install.
 	download_src_fname = os.path.expanduser(os.path.join( '~', src_dir, 'download_src_tmp.py' ) )
+	context = {
+		'file_url': file_url,
+		'file_name': file_name,
+	}
 	content = '\n'.join( [
 		"import requests",
-		f"with requests.get('{file_url}', stream=True) as r:",
+		"import json",
+		f'context = {json.dumps(context)}',
+		"with requests.get(context['file_url'], stream=True) as r:",
 		"    r.raise_for_status()",
-		f"    with open('{file_name}', 'wb') as f:",
+		f"    with open(context['file_name'], 'wb') as f:",
 		"        for chunk in r.iter_content(chunk_size=8192):",
 		"            f.write( chunk )",
 	] )
 	# print( content )
 	with open(download_src_fname, 'w', encoding='utf8') as f:
 		f.write( content )
-	subprocess.check_output( [python_exe, download_src_fname] )
+	python_check_output( [python_exe, download_src_fname] )
 	remove_ignore( download_src_fname, True )
 
 def src_download( python_exe ):
 	# Pull the source and resources from github.
-	zip_file_name = os.path.expanduser(os.path.join( '~', 'CrossMgrSrc.zip' ) )
+	zip_file_name = os.path.expanduser(os.path.join('~', 'CrossMgrSrc.zip') )
 	
 	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
 	download_file_from_url( python_exe, zip_file_url, zip_file_name )
@@ -202,19 +223,20 @@ def env_setup( full=False, pre_src_download=False ):
 		print( 'Done.' )
 		
 		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
-		subprocess.check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
+		python_check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	else:
 		print( f"Using existing python environment {os.path.abspath(os.path.join('.',env_dir))}.", flush=True )
 
 	os.chdir( src_dir )
 	
-	# Upgrade pip first.
-	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'] )
+	# Ensure pip is installed and upgrade it if necessary.
+	python_check_output( [python_exe, '-m', 'ensurepip'] )
+	python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'] )
 	
 	# If pre_src_download option, just install requests and return.  Don't do the full requirements.txt dependency install.
 	if pre_src_download:
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', 'requests'] )
+		python_check_output( [python_exe, '-m', 'pip', 'install', 'requests'] )
 		return python_exe
 	
 	print( "Updating python environment (may take a few minutes, especially on first install)... ", end='', flush=True )
@@ -227,7 +249,7 @@ def env_setup( full=False, pre_src_download=False ):
 					f_out.write( line )
 
 		# Install all the regular modules.
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
+		python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 
 		# Get the name and version of this Linux so we can download it from the wxPython extras folder.
 		os_name, os_version = None, None
@@ -265,7 +287,7 @@ def env_setup( full=False, pre_src_download=False ):
 			url = f'{wxpython_extras_url}/{os_name}-{os_version}'
 			
 			# Install wxPyhon from the extras url.
-			subprocess.check_output( [
+			python_check_output( [
 				python_exe, '-m',
 				'pip', 'install', '--upgrade', '-f', url, 'wxPython',
 			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
@@ -274,7 +296,7 @@ def env_setup( full=False, pre_src_download=False ):
 			print( 'wxPython will be installed and built from source.' )
 			print( 'This could take 30 min or longer on the first install.  Be very patient.' )
 						
-			subprocess.check_output( [
+			python_check_output( [
 				python_exe, '-m',
 				'pip', 'install', '--upgrade', 'wxPython',
 			], stderr=subprocess.DEVNULL )		# Hide stderr so we don't scare the user with DEPRECATED warnings.
@@ -287,12 +309,12 @@ def env_setup( full=False, pre_src_download=False ):
 			
 			for line in f_in:
 				f_out.write( line )
-		subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
+		python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', '-r', 'requirements_os.txt'] )
 
 	# Install pyshortcuts for building the mo translation files and setting up the desktop shortcuts, respectively.
 	# If Windows, include the win32 module.
 	extra_modules = ['pyshortcuts'] + (['pywin32'] if is_windows else [])
-	subprocess.check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )
+	python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )
 	print( 'Done.' )
 
 	return python_exe
@@ -309,7 +331,7 @@ def fix_dependencies( python_exe ):
 			):
 				# Fix code dependencies and build help files.
 				with in_dir( subdir ):
-					subprocess.check_output( [python_exe, fname] )
+					python_check_output( [python_exe, fname] )
 			elif fname == 'Version.py':
 				# Remove the "private" from the Version.
 					with open(fname, encoding='utf8') as f:
@@ -338,12 +360,12 @@ def fix_dependencies( python_exe ):
 	with open(po_to_mo_fname, 'w', encoding='utf8') as f:
 		f.write( content )
 	
-	subprocess.check_output( [python_exe, po_to_mo_fname] )
+	python_check_output( [python_exe, po_to_mo_fname] )
 	remove_ignore( po_to_mo_fname, True )
 	print( 'Done.' )
 
 	print( "Compiling all .py files... ", end='', flush=True )
-	subprocess.check_output( [python_exe, '-m', 'compileall', '-q', ] )
+	python_check_output( [python_exe, '-m', 'compileall', '-q', ] )
 	print( 'Done.' )
 
 def get_pyws():
@@ -577,7 +599,7 @@ def make_shortcuts( python_exe ):
 		f.write( contents )
 	
 	try:
-		subprocess.check_output( [python_exe, shortcuts_fname] )
+		python_check_output( [python_exe, shortcuts_fname] )
 	except subprocess.CalledProcessError as e:
 		print( 'Error:', e )
 	finally:

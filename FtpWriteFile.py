@@ -146,12 +146,12 @@ def FtpTest():
 	return FtpUploadFile()
 
 def FtpUploadFileAsync( fname ):
-	thread = threading.Thread( target=FtpUploadFile, args=(fname,), name='FtpUploadFileAsync: {}'.format(fname) )
+	thread = threading.Thread( target=FtpUploadFile, args=(fname,), name=f'FtpUploadFileAsync: {fname}' )
 	thread.daemon = True
 	thread.start()
 
-def FtpWriteRaceHTML():
-	html = Model.getCurrentHtml()
+def FtpWriteRaceHTML( isLive=False ):
+	html = Model.getCurrentHtml( isLive )
 	if not html:
 		return None
 	
@@ -161,7 +161,7 @@ def FtpWriteRaceHTML():
 			fp.write( html )
 		html = None
 	except Exception as e:
-		Utils.writeLog( 'FtpWriteRaceHTML: (2) "{}"'.format(e) )
+		Utils.writeLog( f'FtpWriteRaceHTML: (2) "{e}"' )
 		return None
 	
 	files = [fname]
@@ -185,10 +185,10 @@ class RealTimeFtpPublish:
 
 	def publish( self ):
 		self.timer = None	# Cancel the one-shot timer.
-		FtpWriteRaceHTML()
+		FtpWriteRaceHTML( True )
 		self.lastUpdateTime = datetime.datetime.now()
 
-	def publishEntry( self, publishNow = False ):
+	def publishEntry( self, publishNow=False ):
 		'''
 		This function attempts to publish competiton results with low latency but without wasting bandwidth.
 		It was inspired by TCP/IP and double-exponential backoff.

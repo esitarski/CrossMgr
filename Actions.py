@@ -151,8 +151,8 @@ class StartRaceAtTime( wx.Dialog ):
 		
 		wx.CallLater( 100, self.autoStartTime.SetSize, autoStartTimeSize )
 
-	def startInFuture( self, event, seconds ):
-		startSeconds = GetNowSeconds() + seconds
+	def setAutoStartTime( self, secondsFuture=0 ):
+		startSeconds = GetNowSeconds() + secondsFuture
 		
 		dt = wx.DateTime()
 		dt.SetToCurrent()
@@ -160,6 +160,10 @@ class StartRaceAtTime( wx.Dialog ):
 		dt.SetMinute( (startSeconds//60)%60 )
 		self.autoStartTime.SetValue( dt )
 		
+		return startSeconds
+
+	def startInFuture( self, event, seconds ):
+		startSeconds = self.setAutoStartTime( seconds )
 		return self.onOK( event, startSeconds )
 		
 	def onCountdown( self, event ):

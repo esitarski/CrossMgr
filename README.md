@@ -106,7 +106,7 @@ If anyone has any suggestions, please let me know.
 To install from the script:
 
 1. Make sure you have an internet connection.
-1. On Windows and Mac only, install Python onto your maching from [here](https://www.python.org/) if you don't currently have it.  If presented with an option to add Python to your PATH, choose Yes.  You only need to install Python once.  Python is the computer language CrossMgr is written in.  Skip this step on Linux as Python is already installed.
+1. On Windows and Mac only, install Python onto your machine from [here](https://www.python.org/) if you don't currently have it.  If presented with an option to add Python to your PATH, choose Yes.  You only need to install Python once.  Python is the computer language CrossMgr is written in.  Skip this step on Linux as Python is already installed.
 1. Download [crossmgr-install.py](https://github.com/esitarski/CrossMgr/blob/master/crossmgr-install.py) and save it into a folder on your machine.  You only need to do this once.
 1. Open a terminal and "cd" to the directory you downloaded crossmgr-install.py
 1. In the terminal, enter:  __python3 crossmgr-install.py install__

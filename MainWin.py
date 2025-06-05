@@ -1949,10 +1949,11 @@ class MainWin( wx.Frame ):
 		
 		return payload
 	
-	def addResultsToHtmlStr( self, html ):
+	def addResultsToHtmlStr( self, html, isLive=False ):
 		html = self.cleanHtml( html )
 		
 		payload = self.getBasePayload()		
+		payload['isLive'] = isLive
 		race = Model.race
 		
 		year, month, day = [int(v) for v in race.date.split('-')]

@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import math
 import pickle
 import datetime
@@ -511,6 +512,107 @@ def AdjustForUpgrades( raceResults ):
 		
 			break
 
+def asInt( v ):
+	return int(v) if int(v) == v else v
+
+class RRPoints:
+	def __init__( self, model, categoryName ):
+		self.model = model
+		self.categoryName = categoryName
+		self.pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }
+		
+	def getPointStructure( self, raceFileName, categoryName ):
+		return self.model.categories[categoryName].pointStructure or self.pointStructureFromRaceFileName[raceFileName]
+		
+	def __call__( self, rr ):
+		if hasattr(rr, 'competition_results'):
+			return sum( self(rc)[0] for rc in rr.competition_results ), 0
+		
+		primePoints = rr.primePoints if self.model.considerPrimePointsOrTimeBonus else 0
+		earnedPoints = self.getPointStructure(rr.raceFileName, self.categoryName)[rr.rank] + primePoints
+		points = asInt( earnedPoints * rr.upgradeFactor )
+		
+		return points, primePoints
+
+def AggregateCompetitions( raceResults ):
+	model = SeriesModel.model
+	if not model.competitions or not model.scoreByPoints:
+		return raceResults
+	
+	reEventType = re.compile('E-MTB|E-EDR|XCO|XCM|XCP|XCC|XCE|XCT|XCR|XCS|DHI|DHM|4X|EDR|PUM|SNO|CX|ITT|TT')
+
+	raceResultsNew = []
+	competitionCategoryParticipantResults = defaultdict( lambda: defaultdict(lambda: defaultdict(list)) )
+	for rr in raceResults:
+		r = rr.raceInSeries
+		if r.competition:
+			competitionCategoryParticipantResults[r.competition][rr.categoryName][rr.key()].append( rr )
+		else:
+			raceResultsNew.append( rr )
+	
+	# If the event name contains an event type, add it to the explanation.	
+	for competition, categories in competitionCategoryParticipantResults.items():
+		for category, participants in categories.items():
+			rrBest = None
+			for participant, results in participants.items():
+				for rr in results:
+					if not rrBest:
+						rrBest = rr
+					elif rr.raceInSeries.iSequence < rrBest.raceInSeries.iSequence:
+						rrBest = rr
+			
+			rr_points = RRPoints( model, category )		# Aggregate comparison class.
+			rr_category = []
+
+			for participant, results in participants.items():
+				rr_competition = copy.copy( results[0] )
+				rr_competition.raceName = competition.name
+				rr_competition.raceFileName = f'/dev/null/{competition.name}'
+				rr_competition.raceURL = None
+				rr_competition.pointsInput = None
+				rr_competition.tFinish = None
+				rr_competition.tProjected = None
+				rr_competition.rank = None
+				rr_competition.bib = None
+				rr_competition.competition_results = results
+				rr_competition.raceInSeries = rrBest.raceInSeries
+				rr_competition.raceDate = rrBest.raceDate
+				rr_competition.raceOrganizer = rrBest.raceOrganizer
+				rr_competition.competition = competition
+				
+				raceResultsNew.append( rr_competition )
+				rr_category.append( rr_competition )
+			
+			# Rank the participants in the competition by combined points.
+			rr_category.sort( key=rr_points, reverse=True )
+			rr_last = None
+			rank = 1
+			for rr in rr_category:
+				if rr_last and rr_points(rr_last)[0] != rr_points(rr)[0]:
+					rank += 1
+				rr.rank = rank
+				rr_last = rr
+				
+				rr.competition_results.sort( key=lambda rc: rc.raceInSeries.iSequence )
+				points_explanation = []
+				for i, rc in enumerate(rr.competition_results):
+					if i:
+						points_explanation.append( '+' )
+					points = rr_points( rc )[0]
+					if isinstance(points, float):
+						points = f'{points:.2f}'
+					elif isinstance(points, int):
+						points = str(points)
+						
+					exp = [points, Utils.ordinal(rc.rank)]
+					event_type = reEventType.search( rc.raceName )
+					if event_type:
+						exp.append( event_type.group(0) )
+					points_explanation.append( ':'.join(exp) )
+				rr.points_explanation = ' '.join( points_explanation )
+			
+	return raceResultsNew
+
 def GetPotentialDuplicateFullNames( riderNameLicenseUCIID ):
 	nameLicenseUCIID = defaultdict( list )
 	for (full_name, license, uci_id) in riderNameLicenseUCIID.values():
@@ -524,9 +626,10 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 	scoreByTime						= model.scoreByTime
 	scoreByPercent					= model.scoreByPercent
 	scoreByTrueSkill				= model.scoreByTrueSkill
+	scoreByPointsInput				= model.scoreByPointsInput
+
 	showLastToFirst					= model.showLastToFirst
 	considerPrimePointsOrTimeBonus	= model.considerPrimePointsOrTimeBonus
-	scoreByPointsInput				= model.scoreByPointsInput
 	bestResultsToConsider			= (bestResultsToConsider or 0)
 	mustHaveCompleted				= (mustHaveCompleted or 0)
 	
@@ -554,9 +657,6 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 	riderUpgrades = defaultdict( lambda : [False] * len(races) )
 	riderNameLicenseUCIID = {}
 	
-	def asInt( v ):
-		return int(v) if int(v) == v else v
-	
 	ignoreFormat = '[{}**]'
 	upgradeFormat = '{} pre-upg'
 	
@@ -568,7 +668,7 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 					v = riderResults[rider][i]
 					riderResults[rider][i] = tuple([upgradeFormat.format(v[0] if v[0] else '')] + list(v[1:]))
 	
-	riderResults = defaultdict( lambda : [(0,SeriesModel.rankDidNotParticipate,0,0)] * len(races) )	# (points, rr.rank, primePoints, 0) for each result.
+	riderResults = defaultdict( lambda : [(0,SeriesModel.rankDidNotParticipate,0,0,None)] * len(races) )	# (points, rr.rank, primePoints, 0, rr=None) for each result.
 	riderFinishes = defaultdict( lambda : [None] * len(races) )
 	if scoreByTime:
 	
@@ -595,12 +695,12 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (
-				formatTime(tFinish, True), rr.rank, 0, rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0
+				formatTime(tFinish, True), rr.rank, 0, rr.timeBonus if considerPrimePointsOrTimeBonus else 0.0, rr
 			)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = tFinish
 			riderTFinish[rider] += tFinish
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
-			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
+			riderPlaceCount[rider][(raceGrade.get(rr.raceFileName,'A'),rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
 
 		# Adjust for the best times.
@@ -663,12 +763,12 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 				riderTeam[rider] = rr.team
 			percent = min( 100.0, (tFastest / tFinish) * 100.0 if tFinish > 0.0 else 0.0 ) * (rr.upgradeFactor if rr.upgradeResult else 1)
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (
-				'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, 0, 0
+				'{}, {}'.format(percentFormat.format(percent), formatTime(tFinish, False)), rr.rank, 0, 0, rr,
 			)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = percent
 			riderPercentTotal[rider] += percent
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
-			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)]
+			riderPlaceCount[rider][(raceGrade.get(rr.raceFileName,'A'),rr.rank)]
 			riderEventsCompleted[rider] += 1
 
 		# Adjust for the best percents.
@@ -723,9 +823,9 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
 			if rr.rank != SeriesModel.rankDNF:
-				riderResults[rider][raceSequence[rr.raceInSeries]] = (0, rr.rank, 0, 0)
+				riderResults[rider][raceSequence[rr.raceInSeries]] = (0, rr.rank, 0, 0, rr)
 				riderFinishes[rider][raceSequence[rr.raceInSeries]] = rr.rank
-				riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)]
+				riderPlaceCount[rider][(raceGrade.get(rr.raceFileName,'A'),rr.rank)]
 
 		riderRating = { rider:tsEnv.Rating() for rider in riderResults.keys() }
 		for iRace in range(len(races)):
@@ -746,7 +846,7 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 			# Update the partial results.
 			for rider, rank in riderRank:
 				rating = riderRating[rider]
-				riderResults[rider][iRace] = (formatRating(rating), rank, 0, 0)
+				riderResults[rider][iRace] = (formatRating(rating), rank, 0, 0, None)
 
 		# Assign rider points based on mu-3*sigma.
 		riderPoints = { rider:rating.mu-sigmaMultiple*rating.sigma for rider, rating in riderRating.items() }
@@ -778,9 +878,7 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 	else: # Score by points.
 		# Get the individual results for each rider, and the total points.
 		
-		pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }
-		def getPointStructure( raceFileName, categoryName ):
-			return model.categories[categoryName].pointStructure or pointStructureFromRaceFileName[raceFileName]
+		rr_points = RRPoints( model, categoryName )
 					
 		riderPoints = defaultdict( int )
 		for rr in raceResults:
@@ -788,15 +886,23 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 			riderNameLicenseUCIID[rider] = (rr.full_name, rr.license, rr.uci_id)
 			if rr.team and rr.team != '0':
 				riderTeam[rider] = rr.team
-			primePoints = rr.primePoints if considerPrimePointsOrTimeBonus else 0
-			earnedPoints = getPointStructure(rr.raceFileName, categoryName)[rr.rank] + primePoints
-			points = asInt( earnedPoints * rr.upgradeFactor )
-			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0)
+			
+			if hasattr( rr, 'competition_results' ):
+				points = primePoints = 0
+				for rc in rr.competition_results:
+					pointsRace, primePointsRace = rr_points( rc )
+					
+					primePoints += primePointsRace
+					points += pointsRace
+			else:
+				points, primePoints = rr_points( rc )
+			
+			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0, rr)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
 			riderPoints[rider] += points
 			riderPoints[rider] = asInt( riderPoints[rider] )
 			riderUpgrades[rider][raceSequence[rr.raceInSeries]] = rr.upgradeResult
-			riderPlaceCount[rider][(raceGrade[rr.raceFileName],rr.rank)] += 1
+			riderPlaceCount[rider][(raceGrade.get(rr.raceFileName,0),rr.rank)] += 1
 			riderEventsCompleted[rider] += 1
 
 		# Apply scoring by points input if set in the last race.
@@ -836,7 +942,7 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 			key = lambda r:	[-riderPoints[r]] +
 							([-riderEventsCompleted[r]] if useMostEventsCompleted else []) +
 							[-riderPlaceCount[r][(g,k)] for g,k in itertools.product(gradesUsed, range(1, numPlacesTieBreaker+1))] +
-							[rank if rank>0 else rankDNF for points, rank, primePoints, timeBonus in reversed(riderResults[r])]
+							[rank if rank>0 else rankDNF for points, rank, primePoints, timeBonus, rr in reversed(riderResults[r])]
 		)
 		
 		# Compute the points gap.
@@ -1043,7 +1149,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 				newTeamPoints = getTeamPointsForRank(t, rank)
 				teamPoints[t] += newTeamPoints - teamResultsPoints[raceInSeries][t]
 				teamResultsPoints[raceInSeries][t] = newTeamPoints
-				teamPlaceCount[t][(raceGrade[raceInSeries.getFileName()],rank)] += 1
+				teamPlaceCount[t][(raceGrade.get(raceInSeries.getFileName(), 'A'),rank)] += 1
 				teamRanks[raceInSeries][t] = rank
 
 		# Sort by team points - greatest number of points first.  Break ties with the number of place count by race grade, then the last result.
