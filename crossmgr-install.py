@@ -377,6 +377,16 @@ def get_pyws():
 			if fname.endswith('.pyw') and not any( d in fname for d in deprecated ):
 				yield os.path.abspath( os.path.join(subdir, fname) )
 
+def get_versions():
+	for pyw in get_pyws():
+		app = os.path.basename(os.path.dirname(pyw))
+		version_file = os.path.join(os.path.dirname(pyw), 'Version.py')
+		if os.path.isfile(version_file):
+			with open(version_file, 'r', encoding='utf-8') as f:
+				version_text = f.read()
+			ver = version_text.split('=')[1].strip().replace('"','').replace("'",'').replace('-private','')
+			yield app, ver, version_file
+
 def make_bin( python_exe ):
 	# Make scripts in CrossMgr-master/bin
 	# These scripts can be used to auto-launch from file extensions.
@@ -687,6 +697,12 @@ def install( full=False ):
 	make_bin( python_exe )
 	make_shortcuts( python_exe )
 	make_file_associations( python_exe )
+	
+	print()
+	print( "Installed Versions:" )
+	for app, ver, version_file in get_versions():
+		print( f'    {ver}' )
+	print()
 
 	print( "CrossMgr updated successfully." )
 	print( "Check your desktop for shortcuts which allow you to run the CrossMgr applications." )
