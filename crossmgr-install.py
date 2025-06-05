@@ -237,7 +237,7 @@ def env_setup( full=False, pre_src_download=False ):
 		python_check_output( [sys.executable, '-m', 'venv', get_env_dir()] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	else:
-		print( f"Using existing python environment {os.path.abspath(os.path.join('.',get_env_dir()))}.", flush=True )
+		print( f"Using existing python environment {get_env_dir()}.", flush=True )
 
 	# Ensure pip is installed and upgrade it if necessary.
 	python_check_output( [python_exe, '-m', 'ensurepip'] )
@@ -406,9 +406,8 @@ def make_bin():
 	
 	python_exe = get_python_env_exe()
 	
-	bin_dir = 'bin'
-	print( f"Making scripts in directory {os.path.abspath(os.path.join('.',bin_dir))}... ", end='', flush=True )
-
+	bin_dir = os.path.join( get_src_dir(), 'bin' )
+	print( f"Making launch scripts in directory {bin_dir}... ", end='', flush=True )
 	try:
 		os.mkdir( bin_dir )
 	except Exception as e:
