@@ -44,6 +44,7 @@ import os
 import re
 import sys
 import json
+import time
 import shutil
 import bisect
 import zipfile
@@ -223,6 +224,7 @@ def env_setup( full=False, pre_src_download=False ):
 	python_exe = get_python_env_exe()
 	
 	os.makedirs( get_src_dir(), exist_ok=True )
+	os.chdir( os.path.dirname(get_src_dir()) )
 	
 	# Create a local environment for Python.  Install all our dependencies here.
 	if full or not os.path.isdir(get_env_dir()) or not os.path.isfile(python_exe):
@@ -328,8 +330,6 @@ def env_setup( full=False, pre_src_download=False ):
 	extra_modules = ['pyshortcuts'] + (['pywin32'] if is_windows else [])
 	python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )
 	print( 'Done.' )
-
-	return python_exe
 
 def fix_dependencies():
 	print( "Fixing dependencies, building/indexing help files... ", end='', flush=True )
@@ -605,18 +605,17 @@ def make_shortcuts():
 		} for pyw in pyws
 	] +
 	# Create a shortcut for this update script.
-	# Remember, we are in the CrossMgr-master directory.
 	[
 		{
 			'name': 'UpdateCrossMgr',
 			'script':f"'{python_launch_exe}' {update_script}",
 			'noexe': True,
 			'icon': os.path.join(get_src_dir(), 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png'),
-			'terminal': False,
+			'terminal': True,
 			'startmenu': False,
 		}
 	])
-
+	
 	contents = '\n'.join( [
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
@@ -706,6 +705,7 @@ def restore_archive():
 			rmdir_ignore( archive_dir )
 		# Check if the entire 
 		print( 'Done.' )
+	time.sleep( 3 )
 
 def install( full=False ):
 	dir_setup()
@@ -737,9 +737,10 @@ def install( full=False ):
 	print( 'The CrossMgr users group is here: https://groups.google.com/g/crossmgrsoftware' )
 	print()
 	print( 'Thank you for using CrossMgr.' )
-	
-def uninstall():
-	install_dir = get_install_dir()
+	time.sleep( 3 )
+
+def remove_shortcuts():
+	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
 	home_dir = os.path.expanduser('~')
 	
 	cross_mgr_source_dir = get_src_dir()
@@ -747,14 +748,10 @@ def uninstall():
 		# Get all pyw files from the src dir.
 		with in_dir( cross_mgr_source_dir ):
 			pyws = list( get_pyws() )
-		pyws.append( 'UpdateCrossMgr.pyw' )	# Add the install shortcut itself.
+		pyws.append( 'UpdateCrossMgr.pyw' )		# Add the install shortcut name itself.
 	else:
 		pyws = []
-	
-	make_file_associations( uninstall_assoc=True )
-	
-	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
-	
+		
 	if is_windows:
 		desktop_dir = os.path.join( home_dir, 'Desktop' )
 		if not os.path.isdir(desktop_dir):
@@ -773,12 +770,14 @@ def uninstall():
 	else:
 		print( '\nError removing CrossMgr desktop shortcuts.  You must remove them manually.' )
 	
-	print( "Removing CrossMgr source... ", end='', flush=True )
-	try:
-		shutil.rmtree( get_src_dir(), ignore_errors=True )
-	except Exception as e:
-		print( 'Error: ', e )
-	print( 'Done.' )
+	return pyws
+	
+def uninstall():
+	install_dir = get_install_dir()
+	home_dir = os.path.expanduser('~')
+	
+	make_file_associations( uninstall_assoc=True )
+	pyws = remove_shortcuts()
 
 	print( "Removing CrossMgr python environment... ", end='', flush=True )
 	try:
@@ -801,7 +800,7 @@ def uninstall():
 			if pyw_log in pyws_set:
 				remove_ignore( fname, True )
 	print( 'Done.' )
-
+	time.sleep( 3 )
 	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
