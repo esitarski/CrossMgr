@@ -44,6 +44,7 @@ import os
 import re
 import sys
 import json
+import time
 import shutil
 import bisect
 import zipfile
@@ -63,8 +64,6 @@ do_debug=False
 
 zip_file_url = 'https://github.com/esitarski/CrossMgr/archive/refs/heads/master.zip'	# url of the CrossMgr source code zip file on github.
 
-src_dir = 'CrossMgr-master'			# directory of the source code files.
-env_dir = 'CrossMgr-env'			# directory of the python environment.
 archive_dir = 'CrossMgr-archive'	# directory of previous releases.
 
 wxpython_extras_url = 'https://extras.wxpython.org/wxPython4/extras/linux/gtk3/'
@@ -123,11 +122,13 @@ def get_install_dir():
 def dir_setup():
 	os.chdir( get_install_dir() )
 	
-def download_file_from_url( python_exe, file_url, file_name ):
+def download_file_from_url( file_url, file_name ):
 	# Downloads a url and writes the contents into a file.
 	# Run the download script inside the python environment so we have access to the requests module.
 	# This is necessary as we can't install into the global python install.
-	download_src_fname = os.path.expanduser(os.path.join( '~', src_dir, 'download_src_tmp.py' ) )
+	python_exe = get_python_env_exe()
+	
+	download_src_fname = os.path.join( get_src_dir(), 'download_src_tmp.py' )
 	context = {
 		'file_url': file_url,
 		'file_name': file_name,
@@ -148,29 +149,34 @@ def download_file_from_url( python_exe, file_url, file_name ):
 	python_check_output( [python_exe, download_src_fname] )
 	remove_ignore( download_src_fname, True )
 
-def src_download( python_exe ):
-	# Pull the source and resources from github.
-	zip_file_name = os.path.expanduser(os.path.join('~', 'CrossMgrSrc.zip') )
+def src_download():
+	python_exe = get_python_env_exe()
 	
-	print( f"Downloading CrossMgr source to: {os.path.abspath('.')}... ", flush=True )
-	download_file_from_url( python_exe, zip_file_url, zip_file_name )
+	# Pull the source and resources from github.
+	zip_file_name = os.path.join(os.path.dirname(get_src_dir()), 'CrossMgrSrc.zip')
+	
+	print( f"Downloading CrossMgr source to: {zip_file_name}... ", flush=True )
+	download_file_from_url( zip_file_url, zip_file_name )
 			
 	# Unzip everything to the new folder.
-	print( f"Extracting CrossMgr source to: {os.path.abspath(os.path.join('.',src_dir))}... ", end='', flush=True )
+	print( f"Extracting CrossMgr source to: {get_src_dir()}... ", end='', flush=True )
 	
-	rmdir_ignore( src_dir, True )
+	rmdir_ignore( get_src_dir(), True )
 	
+	# We extract to the parent of the src_dir as the source code unzips to the CrossMgr-master directory.
 	with zipfile.ZipFile( zip_file_name ) as z:
-		z.extractall( '.' )
-	
+		z.extractall( os.path.dirname(get_src_dir()) )
+		
 	remove_ignore( zip_file_name, True )
 
 	print( 'Done.', flush=True )
 	
-def get_wxpython_versions( python_exe ):
+def get_wxpython_versions():
+	python_exe = get_python_env_exe()
+	
 	# Read the extras page.
-	extras_fname = os.path.expanduser( os.path.join('~', 'wxpytyhon_extras.txt') )
-	download_file_from_url( python_exe, wxpython_extras_url, extras_fname )
+	extras_fname = os.path.join(get_src_dir(), 'wxpytyhon_extras.txt')
+	download_file_from_url( wxpython_extras_url, extras_fname )
 	with open( extras_fname, 'r', encoding='utf8' ) as f:
 		contents = f.read()
 
@@ -200,36 +206,41 @@ def get_wxpython_versions( python_exe ):
 		versions.sort( key = operator.itemgetter(0) )
 	return distro_versions
 
-def get_python_exe( env_dir ):
-	# Get the path to python in the env.
+def get_env_dir():
+	return os.path.join(os.path.expanduser("~"), 'CrossMgr-env')
+
+def get_src_dir():
+	return os.path.join(os.path.expanduser("~"), 'CrossMgr-master')
+
+def get_python_env_exe():
+	# Get the path to python in the created env.
 	if is_windows:
-		python_exe = os.path.abspath( os.path.join('.', env_dir, 'Scripts', 'python.exe') )
+		python_exe = os.path.join(get_env_dir(), 'Scripts', 'python.exe')
 	else:
-		python_exe = os.path.abspath( os.path.join('.', env_dir, 'bin', 'python3') )
+		python_exe = os.path.join(get_env_dir(), 'bin', 'python3')
 	return python_exe
 
-def env_setup( full=False, pre_src_download=False ):	
-	python_exe = get_python_exe( env_dir )
+def env_setup( full=False, pre_src_download=False ):
+	python_exe = get_python_env_exe()
 	
-	os.makedirs( src_dir, exist_ok=True)
+	os.makedirs( get_src_dir(), exist_ok=True )
+	os.chdir( os.path.dirname(get_src_dir()) )
 	
 	# Create a local environment for Python.  Install all our dependencies here.
-	if full or not os.path.isdir(env_dir) or not os.path.isfile(python_exe):
-		print( f"Removing existing python environment {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
+	if full or not os.path.isdir(get_env_dir()) or not os.path.isfile(python_exe):
+		print( f"Removing existing python environment {get_env_dir()}... ", end='', flush=True )
 		try:
-			shutil.rmtree( env_dir, ignore_errors=True )
+			shutil.rmtree( get_env_dir(), ignore_errors=True )
 		except Exception as e:
 			print( f"Failure: {e}... ", end='', flush=True )
 		print( 'Done.' )
 		
-		print( f"Creating python environment in {os.path.abspath(os.path.join('.',env_dir))}... ", end='', flush=True )
-		python_check_output( [sys.executable, '-m', 'venv', env_dir] )	# Call this with the script's python as we don't have an environment yet.
+		print( f"Creating python environment in {get_env_dir()}... ", end='', flush=True )
+		python_check_output( [sys.executable, '-m', 'venv', get_env_dir()] )	# Call this with the script's python as we don't have an environment yet.
 		print( 'Done.' )
 	else:
-		print( f"Using existing python environment {os.path.abspath(os.path.join('.',env_dir))}.", flush=True )
+		print( f"Using existing python environment {get_env_dir()}.", flush=True )
 
-	os.chdir( src_dir )
-	
 	# Ensure pip is installed and upgrade it if necessary.
 	python_check_output( [python_exe, '-m', 'ensurepip'] )
 	python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'] )
@@ -237,9 +248,12 @@ def env_setup( full=False, pre_src_download=False ):
 	# If pre_src_download option, just install requests and return.  Don't do the full requirements.txt dependency install.
 	if pre_src_download:
 		python_check_output( [python_exe, '-m', 'pip', 'install', 'requests'] )
-		return python_exe
+		return
 	
 	print( "Updating python environment (may take a few minutes, especially on first install)... ", end='', flush=True )
+
+	# Make sure we are in the source folder as that is where we will get requirements.text
+	os.chdir( get_src_dir() )
 
 	if is_linux:
 		# Install wxPython from the "extras" folder.
@@ -263,7 +277,7 @@ def env_setup( full=False, pre_src_download=False ):
 		os_name = os_name.lower()
 		if any( f in os_name for f in ('buntu', 'mint') ):
 			os_name = 'ubuntu'
-		wxpython_versions = get_wxpython_versions( python_exe )
+		wxpython_versions = get_wxpython_versions()
 
 		'''
 		# Check if this os is supported.
@@ -317,11 +331,10 @@ def env_setup( full=False, pre_src_download=False ):
 	python_check_output( [python_exe, '-m', 'pip', 'install', '--upgrade'] + extra_modules )
 	print( 'Done.' )
 
-	return python_exe
-
-def fix_dependencies( python_exe ):
+def fix_dependencies():
 	print( "Fixing dependencies, building/indexing help files... ", end='', flush=True )
 
+	python_exe = get_python_env_exe()
 	pofiles = []
 	for subdir, dirs, files in os.walk('.'):
 		for fname in files:
@@ -345,7 +358,7 @@ def fix_dependencies( python_exe ):
 	# Write a python script to convert the po files to mo files with polib.
 	# This is a big hacky and I wish there was an easier way...
 	print( "Formatting translation files... ", end='', flush=True )
-	po_to_mo_fname = 'po_to_mo_tmp.py'
+	po_to_mo_fname = os.path.join( get_src_dir(), 'po_to_mo_tmp.py' )
 	context = {
 		'pofiles': pofiles,
 	}
@@ -387,13 +400,14 @@ def get_versions():
 			ver = version_text.split('=')[1].strip().replace('"','').replace("'",'').replace('-private','')
 			yield app, ver, version_file
 
-def make_bin( python_exe ):
+def make_bin():
 	# Make scripts in CrossMgr-master/bin
 	# These scripts can be used to auto-launch from file extensions.
 	
-	bin_dir = 'bin'
-	print( f"Making scripts in directory {os.path.abspath(os.path.join('.',bin_dir))}... ", end='', flush=True )
-
+	python_exe = get_python_env_exe()
+	
+	bin_dir = os.path.join( get_src_dir(), 'bin' )
+	print( f"Making launch scripts in directory {bin_dir}... ", end='', flush=True )
 	try:
 		os.mkdir( bin_dir )
 	except Exception as e:
@@ -424,7 +438,7 @@ def make_bin( python_exe ):
 	print( 'Done.' )
 
 def get_name( pyw_file ):
-	return os.path.splitext( os.path.basename( pyw_file ) )[0]
+	return os.path.splitext( os.path.basename(pyw_file) )[0]
 
 def get_ico_file( pyw_file ):
 	extension = {
@@ -438,7 +452,10 @@ def get_ico_file( pyw_file ):
 	dirimages = os.path.join( dirname, basename + 'Images' )
 	return os.path.join( dirimages, basename + extension.get(platform.system(), '.png') )
 		
-def make_file_associations( python_exe='', uninstall_assoc=False ):
+def make_file_associations( uninstall_assoc=False ):
+	
+	python_exe = get_python_env_exe()
+	
 	suffix_for_name = {
 		'CrossMgr':			'.cmn',
 		'SeriesMgr':		'.smn',
@@ -451,7 +468,7 @@ def make_file_associations( python_exe='', uninstall_assoc=False ):
 
 		python_launch_exe = python_exe.replace( 'python.exe', 'pythonw.exe' )
 
-		assoc_fname = os.path.abspath( os.path.join('.', 'make_assoc_tmp.bat') )
+		assoc_fname = os.path.join(get_src_dir(), 'make_assoc_tmp.bat')
 		with open(assoc_fname, 'w', encoding='utf8') as f:
 			for pyw in get_pyws():
 				name = get_name( pyw )
@@ -556,8 +573,10 @@ def make_file_associations( python_exe='', uninstall_assoc=False ):
 					return
 			
 
-def make_shortcuts( python_exe ):
+def make_shortcuts():
 	print( "Making desktop shortcuts... ", end='', flush=True )
+
+	python_exe = get_python_env_exe()
 	
 	if is_windows:
 		python_launch_exe = python_exe.replace( 'python.exe', 'pythonw.exe' )
@@ -566,9 +585,10 @@ def make_shortcuts( python_exe ):
 
 	pyws = sorted( get_pyws(), reverse=True )
 	
-	shortcuts_fname = os.path.abspath( os.path.join('.', 'make_shortcuts_tmp.py') )
+	shortcuts_fname = os.path.join( get_src_dir(), 'make_shortcuts_tmp.py' )
 	
-	update_script = f"'{__file__}' install"
+	install_script = os.path.join( get_src_dir(), 'crossmgr-install.py' )
+	update_script = f"'{install_script}' install"
 	
 	def esc( s ):
 		s = s.replace( '\\', '/' ).replace( '"', r'\"' ).replace( ' ', r'\ ' )
@@ -585,18 +605,17 @@ def make_shortcuts( python_exe ):
 		} for pyw in pyws
 	] +
 	# Create a shortcut for this update script.
-	# Remember, we are in the CrossMgr-master directory.
 	[
 		{
-			'name': 'Update CrossMgr',
+			'name': 'UpdateCrossMgr',
 			'script':f"'{python_launch_exe}' {update_script}",
 			'noexe': True,
-			'icon': os.path.abspath( os.path.join('.', 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png') ),
-			'terminal': False,
+			'icon': os.path.join(get_src_dir(), 'CrossMgrImages', 'CrossMgrDownload.ico' if is_windows else 'CrossMgrDownload.png'),
+			'terminal': True,
 			'startmenu': False,
 		}
 	])
-
+	
 	contents = '\n'.join( [
 		'from sys import exit',
 		'from pyshortcuts import make_shortcut',
@@ -624,11 +643,11 @@ def make_archive():
 	timestamp = datetime.datetime.now().strftime( '%Y%m%dT%H%M%S-%f' )
 	
 	archive_dir_version = os.path.join( archive_dir, timestamp )
-	src_dir_archive = os.path.join( archive_dir, timestamp, src_dir )
-	env_dir_archive = os.path.join( archive_dir, timestamp, env_dir )
+	src_dir_archive = os.path.join( archive_dir, timestamp, os.path.basename(get_src_dir()) )
+	env_dir_archive = os.path.join( archive_dir, timestamp, os.path.basename(get_env_dir()) )
 						
 	with in_dir( install_dir ):
-		if os.path.isdir(env_dir) and os.path.isdir(src_dir):
+		if os.path.isdir(get_env_dir()) and os.path.isdir(get_src_dir()):
 			print( f"Archiving current version to: {os.path.join(install_dir,archive_dir_version)}... ", end='', flush=True )
 			
 			if not os.path.isdir( archive_dir_version ):
@@ -636,11 +655,11 @@ def make_archive():
 			
 			# Move the src dir as we download it completely on install.
 			rmdir_ignore( src_dir_archive )
-			shutil.move( src_dir, src_dir_archive )
+			shutil.move( get_src_dir(), src_dir_archive )
 			
 			# Copy the env dir as we incrementally update it on install.
 			rmdir_ignore( env_dir_archive )
-			shutil.copytree( env_dir, env_dir_archive )
+			shutil.copytree( get_env_dir(), env_dir_archive )
 			
 			# Clean up excessive archive versions.
 			with os.scandir( archive_dir ) as contents:
@@ -652,7 +671,7 @@ def make_archive():
 
 def restore_archive():
 	install_dir = get_install_dir()
-	with in_dir( get_install_dir() ):
+	with in_dir( install_dir ):
 		if not os.path.isdir( archive_dir ):
 			print( "Archive directory does not exist." )
 			return
@@ -668,12 +687,12 @@ def restore_archive():
 		archive_dir_version = os.path.join( archive_dir, timestamp )
 		
 		print( f"Restoring from archive {timestamp}... ", end='', flush=True )
-		src_dir_archive = os.path.join( archive_dir_version, src_dir )
-		env_dir_archive = os.path.join( archive_dir_version, env_dir )
+		src_dir_archive = os.path.join( archive_dir_version, os.path.basename(get_src_dir()) )
+		env_dir_archive = os.path.join( archive_dir_version, os.path.basname(get_env_dir()) )
 		
 		# Delete the current src and env.
-		for d in (src_dir, env_dir):
-			rmdir_ignore( d )
+		rmdir_ignore( get_src_dir() )
+		rmdir_ignore( get_env_dir() )
 
 		# Restore src and env from the archive.
 		# It is safe to move the files instead of copy as we don't need to preserve the archive after the restore.
@@ -686,17 +705,18 @@ def restore_archive():
 			rmdir_ignore( archive_dir )
 		# Check if the entire 
 		print( 'Done.' )
+	time.sleep( 3 )
 
 def install( full=False ):
 	dir_setup()
 	make_archive()					# Make a copy of the existing install if it exists.
-	python_exe = env_setup( full, pre_src_download=True )
-	src_download( python_exe )
-	python_exe = env_setup( full, pre_src_download=False )
-	fix_dependencies( python_exe )
-	make_bin( python_exe )
-	make_shortcuts( python_exe )
-	make_file_associations( python_exe )
+	env_setup( full, pre_src_download=True )
+	src_download()
+	env_setup( full, pre_src_download=False )
+	fix_dependencies()
+	make_bin()
+	make_shortcuts()
+	make_file_associations()
 	
 	print()
 	print( "Installed Versions:" )
@@ -708,7 +728,7 @@ def install( full=False ):
 	print( "Check your desktop for shortcuts which allow you to run the CrossMgr applications." )
 	print()
 	print( "Additionally, there are scripts which will can run the programs." )
-	bin_dir = os.path.abspath( os.path.join( '.', src_dir, 'bin') )
+	bin_dir = os.path.join( '.', get_src_dir(), 'bin')
 	print( f"These can be found in {bin_dir}." )
 	print()
 	print( 'Use these scripts to configure file associations, if necessary.' )
@@ -717,24 +737,21 @@ def install( full=False ):
 	print( 'The CrossMgr users group is here: https://groups.google.com/g/crossmgrsoftware' )
 	print()
 	print( 'Thank you for using CrossMgr.' )
-	
-def uninstall():
-	install_dir = get_install_dir()
+	time.sleep( 3 )
+
+def remove_shortcuts():
+	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
 	home_dir = os.path.expanduser('~')
 	
-	cross_mgr_source_dir = os.path.join(install_dir, src_dir)
+	cross_mgr_source_dir = get_src_dir()
 	if os.path.isdir( cross_mgr_source_dir ):
 		# Get all pyw files from the src dir.
 		with in_dir( cross_mgr_source_dir ):
 			pyws = list( get_pyws() )
-		pyws.append( 'Update CrossMgr.pyw' )	# Add the install shortcut itself.
+		pyws.append( 'UpdateCrossMgr.pyw' )		# Add the install shortcut name itself.
 	else:
 		pyws = []
-	
-	make_file_associations( uninstall_assoc=True )
-	
-	print( "Removing CrossMgr desktop shortcuts... ", end='', flush=True )
-	
+		
 	if is_windows:
 		desktop_dir = os.path.join( home_dir, 'Desktop' )
 		if not os.path.isdir(desktop_dir):
@@ -742,7 +759,7 @@ def uninstall():
 	else:
 		desktop_dir = os.path.join( home_dir, 'Desktop' )
 	
-	print( 'desktop_dir', desktop_dir, os.path.isdir(desktop_dir) )
+	# print( 'desktop_dir', desktop_dir, os.path.isdir(desktop_dir) )
 	if desktop_dir is not None and os.path.isdir(desktop_dir):
 		for pyw in pyws:
 			fname = os.path.join( desktop_dir, get_name(pyw) ) + ('.lnk' if is_windows else '.desktop')
@@ -753,16 +770,18 @@ def uninstall():
 	else:
 		print( '\nError removing CrossMgr desktop shortcuts.  You must remove them manually.' )
 	
-	print( "Removing CrossMgr source... ", end='', flush=True )
-	try:
-		shutil.rmtree( os.path.join(install_dir, src_dir), ignore_errors=True )
-	except Exception as e:
-		print( 'Error: ', e )
-	print( 'Done.' )
+	return pyws
+	
+def uninstall():
+	install_dir = get_install_dir()
+	home_dir = os.path.expanduser('~')
+	
+	make_file_associations( uninstall_assoc=True )
+	pyws = remove_shortcuts()
 
 	print( "Removing CrossMgr python environment... ", end='', flush=True )
 	try:
-		shutil.rmtree( os.path.join(install_dir, env_dir), ignore_errors=True )
+		shutil.rmtree( get_src_dir(), ignore_errors=True )
 	except Exception as e:
 		print( 'Error: ', e )		
 	print( 'Done.' )
@@ -781,7 +800,7 @@ def uninstall():
 			if pyw_log in pyws_set:
 				remove_ignore( fname, True )
 	print( 'Done.' )
-
+	time.sleep( 3 )
 	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
