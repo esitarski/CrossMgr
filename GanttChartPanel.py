@@ -10,7 +10,14 @@ def SetScrollbarParameters( sb, thumbSize, rng, pageSize ):
 	thumbSize = int(thumbSize)
 	rng = int(rng)
 	pageSize = int(pageSize)
-	sb.SetScrollbar( min(sb.GetThumbPosition(), rng - thumbSize), thumbSize, rng, pageSize )
+	position = min(sb.GetThumbPosition(), rng - thumbSize)
+	
+	# Don't reset the scrollbar values if they have not changed as this does a Refresh on the parent window.
+	# This causes an infinite loop if called within the Draw function.
+	new = (position,				thumbSize,			rng,			pageSize)
+	old = (sb.GetThumbPosition(),	sb.GetThumbSize(),	sb.GetRange(),	sb.GetPageSize())
+	if new != old:
+		sb.SetScrollbar( *new )
 
 def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
@@ -78,7 +85,7 @@ class GanttChartPanel(wx.Panel):
 		self.yMove = -1
 		self.moveIRider = None
 		self.moveLap = None
-		self.moveTimer = wx.Timer( self, wx.ID_ANY )
+		self.moveTimer = wx.Timer( self )
 		
 		self.barHeight = 8
 		self.labelsWidthLeft = 8000
@@ -123,7 +130,7 @@ class GanttChartPanel(wx.Panel):
 		if pos != sb.GetThumbPosition():
 			sb.SetThumbPosition( pos )
 			self.OnVerticalScroll( event )
-		
+	
 	def DoGetBestSize(self):
 		return wx.Size(128, 100)
 
@@ -169,7 +176,7 @@ class GanttChartPanel(wx.Panel):
 			self.data = data
 			self.dataMax = max(max(s) if s else -sys.float_info.max for s in self.data)
 			if labels:
-				self.labels = ['{}'.format(lab) for lab in labels]
+				self.labels = [f'{lab}' for lab in labels]
 				if len(self.labels) < len(self.data):
 					self.labels = self.labels + [None] * (len(self.data) - len(self.labels))
 				elif len(self.labels) > len(self.data):
@@ -184,9 +191,8 @@ class GanttChartPanel(wx.Panel):
 		self.Refresh()
 	
 	def OnPaint(self, event ):
-		dc = wx.PaintDC(self)
-		self.Draw(dc)
-
+		self.Draw( wx.PaintDC(self) )
+		
 	def OnVerticalScroll( self, event ):
 		self.Refresh()
 		
@@ -229,10 +235,10 @@ class GanttChartPanel(wx.Panel):
 	def OnMove( self, event ):
 		# Set a timer to update the screen a few milliseconds after the mouse stops moving.
 		# This prevents redraw performance problems.
-		self.moveTimer.Start( 25, True )	# If the timer is already running, it will be stopped and restarted.
+		self.moveTimer.StartOnce( 25 )	# If the timer is already running, it will be stopped and restarted.
 	
 	def OnMoveTimer( self, event ):
-		# Get latest mouse coordinates to eliminate last-minute movement errors.
+		# Get latest mouse coordinates to eliminate last-second movement errors.
 		self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
 		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
 		self.Refresh()
@@ -362,18 +368,19 @@ class GanttChartPanel(wx.Panel):
 		barHeight = max( barHeight, minBarHeight )
 		barHeight = min( barHeight, maxBarHeight )
 		drawHeight = height - 2 * barHeight
+
 		if barHeight * len(self.data) > drawHeight:
-			self.verticalSB.Show( True )
-			self.verticalSB.SetPosition( (width - self.scrollbarWidth, barHeight) )
 			self.verticalSB.SetSize( (self.scrollbarWidth, drawHeight) )
 			pageSize = int(drawHeight / barHeight)
 			SetScrollbarParameters( self.verticalSB, pageSize-1, len(self.data)-1, pageSize )
+			self.verticalSB.SetPosition( (width - self.scrollbarWidth, barHeight) )
+			self.verticalSB.Show( True )
 		else:
 			self.verticalSB.Show( False )
 			
 		if self.verticalSB.IsShown():
 			width -= self.scrollbarWidth
-			
+		
 		iDataShowStart = self.verticalSB.GetThumbPosition() if self.verticalSB.IsShown() else 0
 		iDataShowEnd = iDataShowStart + self.verticalSB.GetThumbSize() + 1 if self.verticalSB.IsShown() else len(self.data)
 
@@ -409,6 +416,7 @@ class GanttChartPanel(wx.Panel):
 			ratio = float(xRight - xLeft) / float(viewWidth)
 			sbMax = int(self.dataMax) + 1
 			pageSize = int(sbMax * ratio) / 2.0
+		
 			SetScrollbarParameters( self.horizontalSB, pageSize-1, sbMax, pageSize )
 			self.horizontalSB.SetPosition( (labelsWidthLeft, height) )
 			self.horizontalSB.SetSize( (xRight - xLeft, self.scrollbarWidth) )
@@ -782,13 +790,13 @@ class GanttChartPanel(wx.Panel):
 			dc.SetTextForeground( ctTextColour )
 			dc.DrawText( tStr, x - labelWidth // 2, 0 )
 			if not self.minimizeLabels:
-				dc.DrawText( tStr, x - labelWidth // 2, yLast + 2 )			
+				dc.DrawText( tStr, x - labelWidth // 2, yLast + 2 )
 		
 		# Store the drawing scale parameters.
 		self.xFactor = xFactor
 		self.barHeight = barHeight
 		self.labelsWidthLeft = labelsWidthLeft
-			
+		
 	def OnEraseBackground(self, event):
 		# This is intentionally empty.
 		pass

@@ -4173,6 +4173,9 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 		if not race.tagNums:
 			return False
 		
+		if not data:
+			return False
+		
 		for d in data:
 			if d[0] != 'data':
 				continue
@@ -4198,39 +4201,63 @@ Computers fail, screw-ups happen.  Always use a manual backup.
 				if not race.isTimeTrial or not race.timeTrialNoRFIDStart:
 					self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 				else:
-					#Only process the time if the rider has already started
+					# Only process the time if the rider has already started
 					rider = race.getRider( num )
 					if rider.firstTime is not None:
 						self.numTimes.append( (num, (dt - race.startTime).total_seconds()) )
 		
+		# Handle the refreshNow case.
+		if refreshNow:
+			self.processRfidRefresh()
+			return False
+		
 		# Ensure that we don't update too often if riders arrive in a bunch.
 		if not self.callLaterProcessRfidRefresh:
+			# Define a class that sets a delay timer on updates and extends it if updates arrive close the end of the timer.
 			class ProcessRfidRefresh( wx.Timer ):
+				DelayMin = 0.25
+				DelayMax = 3.0
+				
 				def __init__( self, *args, **kwargs ):
 					self.mainWin = kwargs.pop('mainWin')
 					super().__init__(*args, **kwargs)
+					self.timerStart = self.timeLast = now()
+					self.delaySeconds = None
+				
+				def restartTimer( self, timeNow, delaySeconds ):
+					# Restart the timer with the new delaySeconds as if it started at self.timerStart.
+					self.delaySeconds = delaySeconds
+					timerEnd = self.timerStart + datetime.timedelta( seconds=delaySeconds )
+					if not self.StartOnce( max( 1, int((timerEnd - timeNow).total_seconds() * 1000.0) ) ):
+						self.mainWin.processRfidRefresh()
+				
 				def Notify( self ):
-					self.mainWin.processRfidRefresh()
+					# When the timer fires, check if we have reached max delay or if the last recorded event was within .75 of the delay interval.
+					if self.delaySeconds >= self.DelayMax or self.timeLast < self.timerStart + datetime.timedelta( seconds=self.delaySeconds*.75 ):
+						# Do the refresh.  Do not restart the timer.
+						self.delaySeconds = None
+						self.mainWin.processRfidRefresh()
+						#print( '--ProcessRfidRefresh: done.' )
+					else:
+						# Extend the delay time and restart the timer.
+						self.restartTimer( now(), min(self.delaySeconds*2.0, self.DelayMax) )
+						#print( f'--ProcessRfidRefresh: extending delay: {self.delaySeconds}.' )
+				
+				def update( self ):
+					self.timeLast = now()
+					if not self.IsRunning():
+						self.timerStart = self.timeLast
+						self.restartTimer( self.timeLast, self.DelayMin )
+						#print( f'ProcessRfidRefresh: start timer: {self.timeLast}.' )
+					else:
+						#print( f'-ProcessRfidRefresh: update: {self.timeLast}.' )
+						pass
+				
 			self.callLaterProcessRfidRefresh = ProcessRfidRefresh( mainWin=self )
 		
-		#delayIntervals = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
-		delayIntervals = (0.1, 0.25, 0.5, 0.75, 1.0)
-		if not self.callLaterProcessRfidRefresh.IsRunning():
-			# Start the timer for the first interval.
-			self.clprIndex = 0
-			self.clprTime = now() + datetime.timedelta( seconds=delayIntervals[0] )
-			if refreshNow or not self.callLaterProcessRfidRefresh.Start( int(delayIntervals[0]*1000.0), True ):
-				self.processRfidRefresh()
-		elif (		(self.clprTime - now()).total_seconds() > delayIntervals[self.clprIndex] * 0.75 and
-					self.clprIndex < len(delayIntervals)-1 ):
-			# If we get another read within the last 25% of the interval, increase the update to the next interval.
-			self.callLaterProcessRfidRefresh.Stop()
-			self.clprIndex += 1
-			self.clprTime += datetime.timedelta( seconds = delayIntervals[self.clprIndex] - delayIntervals[self.clprIndex-1] )
-			delayToGo = max( 10, int((self.clprTime - now()).total_seconds() * 1000.0) )
-			if refreshNow or not self.callLaterProcessRfidRefresh.Start( delayToGo, True ):
-				self.processRfidRefresh()
-		return False	# Never signal for an update.
+		self.callLaterProcessRfidRefresh.update()
+		
+		return False	# Never signal for an update refresh as we handle this internally.
 
 	def updateRaceClock( self, event = None ):
 		self.record.refreshAll()

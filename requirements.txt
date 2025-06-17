@@ -27,3 +27,4 @@ virustotal-api
 metaphone
 pyllrp
 wxPython
+wxasync
