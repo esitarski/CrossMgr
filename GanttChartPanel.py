@@ -13,7 +13,14 @@ def SetScrollbarParameters( sb, thumbSize, rng, pageSize ):
 	thumbSize = int(thumbSize)
 	rng = int(rng)
 	pageSize = int(pageSize)
-	sb.SetScrollbar( min(sb.GetThumbPosition(), rng - thumbSize), thumbSize, rng, pageSize )
+	position = min(sb.GetThumbPosition(), rng - thumbSize)
+	
+	# Don't reset the scrollbar values if they have not changed as this does a Refresh on the parent window.
+	# This causes an infinite loop if called within the Draw function.
+	new = (position,				thumbSize,			rng,			pageSize)
+	old = (sb.GetThumbPosition(),	sb.GetThumbSize(),	sb.GetRange(),	sb.GetPageSize())
+	if new != old:
+		sb.SetScrollbar( *new )
 
 def makeColourGradient(frequency1, frequency2, frequency3,
                         phase1, phase2, phase3,
@@ -192,7 +199,25 @@ class GanttChartPanel(wx.Panel):
 		print( f'{datetime.datetime.now()}' )
 		print( event.GetEventObject() )
 		traceback.print_stack( limit=8 )
+		
+		if not hasattr(self, 'paintTimer'):
+			class PaintTimer( wx.Timer ):
+				def __init__( self, *args, **kwargs ):
+					super().__init__(*args, **kwargs)
+				
+				def Notify( self ):
+					self.fn()
+				
+				def update( self, fn ):
+					self.fn = fn
+					if not self.IsRunning():
+						self.StartOnce( 200 )
+				
+			self.paintTimer = PaintTimer()
+
+		self.paintTimer.update( lambda: self.Draw(wx.PaintDC(self)) )
 		'''
+
 		self.Draw( wx.PaintDC(self) )
 		
 	def OnVerticalScroll( self, event ):
