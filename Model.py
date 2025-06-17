@@ -2679,8 +2679,8 @@ class Race:
 		random.seed( 1010101 )
 		mean = 5 * 60
 		var = 30
-		lapsTotal = 5
-		riders = 30
+		lapsTotal = 50
+		riders = 200
 		self.startTime = datetime.datetime.now()
 		tMax = 0.0
 		for num in range(100,100+riders+1):

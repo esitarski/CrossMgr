@@ -5,7 +5,7 @@
 # Copyright (C) Edward Sitarski, 2012.
 import os
 import time
-import xlwt
+import xlsxwriter
 import socket
 import random
 import operator
@@ -280,10 +280,11 @@ Spin Doctors
 		yield bibs[i], firstNames[i%len(firstNames)], lastNames[i%len(lastNames)], teams[i%len(teams)]
 		
 #------------------------------------------------------------------------------	
-# Write out as a .xls file with the number tag data.
+# Write out as a .xlsx file with the number tag data.
 #
-wb = xlwt.Workbook()
-ws = wb.add_sheet( "JChipTest" )
+wb = xlsxwriter.Workbook( 'JChipTest.xlsx' )
+ws = wb.add_worksheet( 'JChipTest' )
+
 for col, label in enumerate('Bib#,LastName,FirstName,Team,Tag,StartTime'.split(',')):
 	ws.write( 0, col, label )
 rdata = [d for d in getRandomData(len(tag))]
@@ -296,9 +297,8 @@ for r, (n, t) in enumerate(tag.items()):
 	for c, v in enumerate([n, lastName, firstName, Team, t, 5*rowCur/(24.0*60.0*60.0)]):
 		ws.write( rowCur, c, v )
 	rowCur += 1
-wb.save('JChipTest.xls')
-wb = None
-print( 'Created JChipTest.xls.' )
+wb.close()
+print( 'Created JChipTest.xlsx.' )
 
 #------------------------------------------------------------------------------	
 # Also write out as a .csv file.
@@ -306,7 +306,7 @@ print( 'Created JChipTest.xls.' )
 with open('JChipTest.csv', 'w', encoding='utf8') as f:
 	f.write( 'Bib#,Tag,dummy3,dummy4,dummy5\n' )
 	for n in nums:
-		f.write( '{},{}\n'.format(n, tag[n]) )
+		f.write( f'{n},{tag[n]}\n' )
 
 sendDate = True
 
@@ -373,7 +373,7 @@ while True:
 			
 	#------------------------------------------------------------------------------	
 	print( 'Connection succeeded!' )
-	name = '{}-{}'.format(socket.gethostname(), os.getpid())
+	name = f'{socket.gethostname()}-{os.getpid()}'
 	print( 'Sending name...', name )
 	message = "N0000{}{}".format(name, CR)
 	sock.send( message.encode() )
@@ -424,12 +424,12 @@ while True:
 		n, lap, t = numLapTimes[iMessage]
 		dt = t - numLapTimes[iMessage-1][2]
 		
-		time.sleep( dt )
+		time.sleep( max(0,dt) )
 		
 		# Send offsets relative to the transmit start time (for testing).
 		message = formatMessage( n, lap, dBaseStart + datetime.timedelta(seconds = t - 0.5) )
 		if iMessage & 15 == 0:
-			print( 'sending: {}: {}\n'.format(iMessage, message[:-1]) )
+			print( f'sending update: {iMessage}: {message[:-1]}\n' )
 		try:
 			sock.send( message.encode() )
 			iMessage += 1
