@@ -6,9 +6,6 @@ import bisect
 import Utils
 from PhotoFinish import hasPhoto
 
-import traceback
-import datetime
-
 def SetScrollbarParameters( sb, thumbSize, rng, pageSize ):
 	thumbSize = int(thumbSize)
 	rng = int(rng)
@@ -194,30 +191,6 @@ class GanttChartPanel(wx.Panel):
 		self.Refresh()
 	
 	def OnPaint(self, event ):
-		'''
-		print( '*' * 50 )
-		print( f'{datetime.datetime.now()}' )
-		print( event.GetEventObject() )
-		traceback.print_stack( limit=8 )
-		
-		if not hasattr(self, 'paintTimer'):
-			class PaintTimer( wx.Timer ):
-				def __init__( self, *args, **kwargs ):
-					super().__init__(*args, **kwargs)
-				
-				def Notify( self ):
-					self.fn()
-				
-				def update( self, fn ):
-					self.fn = fn
-					if not self.IsRunning():
-						self.StartOnce( 200 )
-				
-			self.paintTimer = PaintTimer()
-
-		self.paintTimer.update( lambda: self.Draw(wx.PaintDC(self)) )
-		'''
-
 		self.Draw( wx.PaintDC(self) )
 		
 	def OnVerticalScroll( self, event ):
@@ -318,12 +291,6 @@ class GanttChartPanel(wx.Panel):
 	intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60] + [24*60*60*k for k in range(1,200)]
 	
 	def Draw( self, dc ):
-		'''
-		print( '*'*50 )
-		print( f'Draw: {datetime.datetime.now()}.' )
-		traceback.print_stack( limit=8 )
-		'''
-		
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
