@@ -3,6 +3,7 @@ import random
 import math
 import sys
 import bisect
+import functools
 import Utils
 from PhotoFinish import hasPhoto
 
@@ -83,6 +84,7 @@ class GanttChartPanel(wx.Panel):
 		self.headerSet = set()
 		self.xMove = -1
 		self.yMove = -1
+		self.timelineWidth = self.timelineHeight = -1	# Dimensions of the tineline.
 		self.moveIRider = None
 		self.moveLap = None
 		self.moveTimer = wx.Timer( self )
@@ -191,7 +193,12 @@ class GanttChartPanel(wx.Panel):
 		self.Refresh()
 	
 	def OnPaint(self, event ):
-		self.Draw( wx.PaintDC(self) )
+		dc = wx.PaintDC( self )
+		upd = wx.RegionIterator(self.GetUpdateRegion())
+		while upd.HaveRects():
+			rect = upd.GetRect()
+			self.Draw( dc, rect )
+			upd.Next()
 		
 	def OnVerticalScroll( self, event ):
 		self.Refresh()
@@ -235,13 +242,39 @@ class GanttChartPanel(wx.Panel):
 	def OnMove( self, event ):
 		# Set a timer to update the screen a few milliseconds after the mouse stops moving.
 		# This prevents redraw performance problems.
-		self.moveTimer.StartOnce( 25 )	# If the timer is already running, it will be stopped and restarted.
+		self.moveTimer.StartOnce( 20 )	# If the timer is already running, it will be stopped and restarted.
 	
 	def OnMoveTimer( self, event ):
 		# Get latest mouse coordinates to eliminate last-second movement errors.
+		dx = self.timelineWidth + 2
+		dy = self.timelineHeight + 2
+		size = self.GetClientSize()
+
+		# The following works because RefreshRect does not call Draw right away.
+		# Rather, it schedules an EVT_PAINT which includes all the update rects.
+		# This means that the previous time cursor is drawn before the new one.
+		xMoveLast, yMoveLast = self.xMove, self.yMove
+		
+		verticalRectOld = wx.Rect(max(0, self.xMove-dx), 0, dx*2, size.height)
+		horizontalRectOld = wx.Rect(0, max(0, self.yMove-dy), size.width, dy*2)
+		
 		self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
 		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
-		self.Refresh()
+		
+		verticalRectNew = wx.Rect(max(0, self.xMove-dx), 0, dx*2, size.height)
+		horizontalRectNew = wx.Rect(0, max(0, self.yMove-dy), size.width, dy*2)
+		
+		if verticalRectNew.Intersects(verticalRectOld):
+			self.RefreshRect( verticalRectNew.Union(verticalRectOld) )
+		else:
+			self.RefreshRect( verticalRectOld )
+			self.RefreshRect( verticalRectNew )
+
+		if horizontalRectNew.Intersects(horizontalRectOld):
+			self.RefreshRect( horizontalRectNew.Union(horizontalRectOld) )
+		else:
+			self.RefreshRect( horizontalRectOld )
+			self.RefreshRect( horizontalRectNew )
 	
 	def getRiderLapXY( self, x, y ):
 		if not self.data:
@@ -290,7 +323,7 @@ class GanttChartPanel(wx.Panel):
 
 	intervals = [1, 2, 5, 10, 15, 20, 30, 1*60, 2*60, 5*60, 10*60, 15*60, 20*60, 30*60, 1*60*60, 2*60*60, 4*60*60, 6*60*60, 8*60*60, 12*60*60] + [24*60*60*k for k in range(1,200)]
 	
-	def Draw( self, dc ):
+	def Draw( self, dc, rect=None ):
 		size = self.GetClientSize()
 		width = size.width
 		height = size.height
@@ -306,7 +339,11 @@ class GanttChartPanel(wx.Panel):
 		greyBrush = wx.Brush( wx.Colour(196,196,196), wx.SOLID )
 		lightGreyBrush = wx.Brush( wx.Colour(220,220,220), wx.SOLID )
 		dc.SetBackground(backBrush)
-		dc.Clear()
+		#dc.Clear()
+
+		dc.SetBrush( backBrush )
+		dc.SetPen( wx.NullPen )
+		dc.DrawRectangle( rect )
 		
 		tooSmall = (width < 50 or height < 24)
 		self.tCursor = None
@@ -529,6 +566,32 @@ class GanttChartPanel(wx.Panel):
 		# Set inverse function to get from screen x coords to time.
 		xToT = lambda x: (x-labelsWidthLeft) / xFactor + tAdjust
 		
+		@functools.cache
+		def getShadedBitmap( ic ):
+			# Create a bitmap to use for all bars with the same colors.
+			# Repeated calls to CreateLinearGardeentBrush are very slow.
+			bitmap = wx.Bitmap( width, barHeight )
+			
+			dc = wx.MemoryDC( bitmap )
+			
+			dd = int(barHeight * .3)
+			ctx = wx.GraphicsContext.Create( dc )
+			ctx.SetBrush( ctx.CreateLinearGradientBrush(0, 0, 0, dd + 1, self.colours[ic], self.lighterColours[ic]) )
+			ctx.DrawRectangle(0, 0, width, dd+1)
+			
+			ctx.SetBrush( ctx.CreateLinearGradientBrush(0, dd, 0, barHeight, self.lighterColours[ic], self.colours[ic]) )
+			ctx.DrawRectangle(0, dd, width, barHeight-dd )
+			
+			return dc, bitmap
+		
+		def drawGanttBar( x, y, w, h, ic ):
+			if x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom:
+				return
+			dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
+			dc.SetPen( penBar )
+			dc.SetBrush( transparentBrush )
+			dc.DrawRectangle( x, y, w, h )
+		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
 			if tLeaderLast is None:
@@ -547,90 +610,81 @@ class GanttChartPanel(wx.Panel):
 			tTooShort = 9.0	# If a lap is shorter than 9 seconds, consider it a duplicate entry.
 			
 			# Quickly find the first visible gantt chart rectangle.
-			for j in range(max(0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1), len(s)):
-				if xLast >= xRight:
-					break
-				t = s[j]
-				xCur = xOriginal = tToX( t )
-				if xCur < labelsWidthLeft:
-					continue
-					
-				if xCur > xRight:
-					xCur = xRight
-				if j == 0:
-					brushBar.SetColour( wx.WHITE )
-					dc.SetBrush( brushBar )
-					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
-				else:
-					ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
-					dy = yCur - yLast + 1
-					dd = int(dy * 0.3)
-					ic = j % len(self.colours)
-					
-					ctx.SetBrush( ctx.CreateLinearGradientBrush(0, yLast, 0, yLast + dd + 1, self.colours[ic], self.lighterColours[ic]) )
-					ctx.DrawRectangle(xLast, yLast, xCur - xLast + 1, dd + 1)
-					
-					ctx.SetBrush( ctx.CreateLinearGradientBrush(0, yLast + dd, 0, yLast + dy, self.lighterColours[ic], self.colours[ic]) )
-					ctx.DrawRectangle(xLast, yLast + dd, xCur - xLast + 1, dy-dd )
-					
-					dc.SetBrush( transparentBrush )
-					dc.SetPen( penBar )
-					dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, dy )
-					
-					if self.lapNote:
-						note = self.lapNote.get( (num, j), None )
-						if note:
-							dc.SetFont( fontNote )
-							noteWidth, noteHeight = dc.GetTextExtent( note )
-							noteBorderWidth = int(dc.GetTextExtent( '   ' )[0] / 2)
-							noteBarWidth = xCur - xLast - noteBorderWidth * 2
-							if noteBarWidth <= 0:
-								noteBarWidth = xCur - xLast
-								noteBorderWidth = 0
-								note = '...'
+			if yCur + barHeight >= rect.top and yCur <= rect.bottom:	# Skip row if out of refresh rectangle.
+				for j in range(max(0, bisect.bisect_left(KeyWrapper(s, tToX), labelsWidthLeft)-1), len(s)):
+					if xLast >= xRight:
+						break
+					t = s[j]
+					xCur = xOriginal = tToX( t )
+					if xCur < labelsWidthLeft:
+						continue
+						
+					if xCur > xRight:
+						xCur = xRight
+					if j == 0:
+						brushBar.SetColour( wx.WHITE )
+						dc.SetBrush( brushBar )
+						dc.DrawRectangle( xLast, yLast, xCur - xLast + 1, yCur - yLast + 1 )
+					else:
+						ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
+						dy = yCur - yLast + 1
+						dd = int(dy * 0.3)
+						ic = j % len(self.colours)
+						
+						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, ic )
+						
+						if self.lapNote:
+							note = self.lapNote.get( (num, j), None )
+							if note:
+								dc.SetFont( fontNote )
 								noteWidth, noteHeight = dc.GetTextExtent( note )
-							elif noteWidth > noteBarWidth:
-								lenLeft, lenRight = 1, len(note)
-								while lenRight - lenLeft > 1:
-									lenMid = (lenRight + lenLeft) // 2
-									noteWidth, noteHeight = dc.GetTextExtent( note[:lenMid].strip() + '...' )
-									if noteWidth < noteBarWidth:
-										lenLeft = lenMid
-									else:
-										lenRight = lenMid
-								note = note[:lenLeft].strip() + '...'
-								noteWidth, noteHeight = dc.GetTextExtent( note )
-							dc.DrawText( note, round(xLast + noteBorderWidth), round(yLast + (dy - noteHeight) / 2) )
-							dc.SetFont( fontBarLabel )
-					
-					if j == self.moveLap and self.moveIRider == i:
-						if hasPhoto(num, t):
-							# Draw a little camera icon.
-							cameraHeight = int(dy * 0.75)
-							cameraWidth = int(cameraHeight * 1.5)
-							dc.SetBrush( wx.BLACK_BRUSH )
-							dc.DrawRoundedRectangle( round(xCur - 2 - cameraWidth), round(yLast + (dy - cameraHeight) / 2), cameraWidth, cameraHeight, round(cameraHeight/5) )
-							dc.SetPen( wx.WHITE_PEN )
-							dc.SetBrush( transparentBrush )
-							dc.DrawCircle( round(xCur - 2 - cameraWidth / 2), round(yLast + dy / 2), round(cameraHeight * (0.6 / 2)) ) 
-					
-					if xOriginal <= xRight:
-						try:
-							if self.interp[i][j]:
-								xyInterp.append( (xOriginal, yLast) )
-						except (TypeError, ValueError, IndexError):
-							pass
-						if self.numTimeInfo and self.numTimeInfo.getInfo(num, t) is not None:
-							xyNumTimeInfo.append( (xOriginal, yLast) )
-						if t - s[j-1] < tTooShort:
-							xyDuplicate.append( (xOriginal, yLast) )
+								noteBorderWidth = int(dc.GetTextExtent( '   ' )[0] / 2)
+								noteBarWidth = xCur - xLast - noteBorderWidth * 2
+								if noteBarWidth <= 0:
+									noteBarWidth = xCur - xLast
+									noteBorderWidth = 0
+									note = '...'
+									noteWidth, noteHeight = dc.GetTextExtent( note )
+								elif noteWidth > noteBarWidth:
+									lenLeft, lenRight = 1, len(note)
+									while lenRight - lenLeft > 1:
+										lenMid = (lenRight + lenLeft) // 2
+										noteWidth, noteHeight = dc.GetTextExtent( note[:lenMid].strip() + '...' )
+										if noteWidth < noteBarWidth:
+											lenLeft = lenMid
+										else:
+											lenRight = lenMid
+									note = note[:lenLeft].strip() + '...'
+									noteWidth, noteHeight = dc.GetTextExtent( note )
+								dc.DrawText( note, round(xLast + noteBorderWidth), round(yLast + (dy - noteHeight) / 2) )
+								dc.SetFont( fontBarLabel )
+						
+						if j == self.moveLap and self.moveIRider == i:
+							if hasPhoto(num, t):
+								# Draw a little camera icon.
+								cameraHeight = int(dy * 0.75)
+								cameraWidth = int(cameraHeight * 1.5)
+								dc.SetBrush( wx.BLACK_BRUSH )
+								dc.DrawRoundedRectangle( round(xCur - 2 - cameraWidth), round(yLast + (dy - cameraHeight) / 2), cameraWidth, cameraHeight, round(cameraHeight/5) )
+								dc.SetPen( wx.WHITE_PEN )
+								dc.SetBrush( transparentBrush )
+								dc.DrawCircle( round(xCur - 2 - cameraWidth / 2), round(yLast + dy / 2), round(cameraHeight * (0.6 / 2)) ) 
+						
+						if xOriginal <= xRight:
+							try:
+								if self.interp[i][j]:
+									xyInterp.append( (xOriginal, yLast) )
+							except (TypeError, ValueError, IndexError):
+								pass
+							if self.numTimeInfo and self.numTimeInfo.getInfo(num, t) is not None:
+								xyNumTimeInfo.append( (xOriginal, yLast) )
+							if t - s[j-1] < tTooShort:
+								xyDuplicate.append( (xOriginal, yLast) )
 
-				xLast = xCur
-			
+					xLast = xCur
+				
 			# Draw the last empty bar.
-			xCur = int(labelsWidthLeft + self.dataMax * xFactor)
-			if xCur > xRight:
-				xCur = xRight
+			xCur = min( xRight, int(labelsWidthLeft + self.dataMax * xFactor) )
 			dc.SetPen( penBar )
 			brushBar.SetColour( wx.WHITE )
 			dc.SetBrush( brushBar )
@@ -687,12 +741,14 @@ class GanttChartPanel(wx.Panel):
 		radius = (dy/2) * 0.9
 		
 		# Define a path for the interp indicator about the origin.
-		diamondPath = ctx.CreatePath()
-		diamondPath.MoveToPoint( 0, -radius )
-		diamondPath.AddLineToPoint( -radius, 0 )
-		diamondPath.AddLineToPoint( 0, radius )
-		diamondPath.AddLineToPoint( radius, 0 )
-		diamondPath.AddLineToPoint( 0, -radius )
+		def getDiamondPath( ctx, radius ):
+			diamondPath = ctx.CreatePath()
+			diamondPath.MoveToPoint( 0, -radius )
+			diamondPath.AddLineToPoint( -radius, 0 )
+			diamondPath.AddLineToPoint( 0, radius )
+			diamondPath.AddLineToPoint( radius, 0 )
+			diamondPath.AddLineToPoint( 0, -radius )
+			return diamondPath
 		
 		def getStarPath( ctx, numPoints, radius, radiusInner ):
 			path = ctx.CreatePath()
@@ -706,32 +762,36 @@ class GanttChartPanel(wx.Panel):
 				path.AddLineToPoint( math.cos(a) * radius, -math.sin(a) * radius )
 			path.AddLineToPoint( 0, -radius )
 			return path
-		starPath = getStarPath( ctx, 5, radius, radius / 2 )
 
 		# Draw the interp indicators.
-		ctx.SetPen( penBar )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.yellowColour ) )
-		for xCur, yCur in xyInterp:
-			ctx.PushState()
-			ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
-			ctx.DrawPath( diamondPath )
-			ctx.PopState()
+		if xyInterp:
+			diamondPath = getDiamondPath( ctx, radius )
+			ctx.SetPen( penBar )
+			ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.yellowColour ) )
+			for xCur, yCur in xyInterp:
+				ctx.PushState()
+				ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
+				ctx.DrawPath( diamondPath )
+				ctx.PopState()
 		
 		# Draw the edit indictors.
-		ctx.SetPen( penBar )
-		ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.orangeColour ) )
-		for xCur, yCur in xyNumTimeInfo:
-			ctx.PushState()
-			ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
-			ctx.DrawPath( starPath )
-			ctx.PopState()
+		if xyNumTimeInfo:
+			starPath = getStarPath( ctx, 5, radius, radius / 2 )
+			ctx.SetPen( penBar )
+			ctx.SetBrush( ctx.CreateRadialGradientBrush( 0, - radius*0.50, 0, 0, radius + 1, wx.WHITE, self.orangeColour ) )
+			for xCur, yCur in xyNumTimeInfo:
+				ctx.PushState()
+				ctx.Translate( xCur, yCur + dy/2.0 - (dy/2.0 - radius) / 4 )
+				ctx.DrawPath( starPath )
+				ctx.PopState()
 			
 		# Draw the duplicate indicators.
-		radius = int(radius * 1.5)
-		ctx.SetPen( wx.Pen(wx.RED, 3) )
-		ctx.SetBrush( wx.TRANSPARENT_BRUSH )
-		for xCur, yCur in xyDuplicate:
-			ctx.DrawEllipse( xCur - radius, yCur + dy/2.0 - radius, radius*2, radius*2 )
+		if xyDuplicate:
+			radiusDup = int(radius * 1.5)
+			ctx.SetPen( wx.Pen(wx.RED, 3) )
+			ctx.SetBrush( wx.TRANSPARENT_BRUSH )
+			for xCur, yCur in xyDuplicate:
+				ctx.DrawEllipse( xCur - radiusDup, yCur + dy/2.0 - radiusDup, radiusDup*2, radiusDup*2 )
 		
 		# Draw the now timeline.
 		timeLineTime = self.nowTime if self.nowTime and self.nowTime < self.dataMax else tLeaderLast
@@ -763,8 +823,10 @@ class GanttChartPanel(wx.Panel):
 			x = self.xMove
 			self.tCursor = xToT( self.xMove )
 			
-			tStr = Utils.formatTime( self.tCursor )
-			labelWidth, labelHeight = dc.GetTextExtent( nowTimeStr )
+			cursorTimeStr = Utils.formatTime( self.tCursor )
+			labelWidth, labelHeight = dc.GetTextExtent( cursorTimeStr )
+			self.timelineWidth = labelWidth
+			self.timelineHeight = labelHeight
 			
 			# Draw the vertical and horizontal lines.
 			ctColour = '#3F3F3F'
@@ -788,9 +850,9 @@ class GanttChartPanel(wx.Panel):
 				dc.DrawRectangle( rect )
 
 			dc.SetTextForeground( ctTextColour )
-			dc.DrawText( tStr, x - labelWidth // 2, 0 )
+			dc.DrawText( cursorTimeStr, x - labelWidth // 2, 0 )
 			if not self.minimizeLabels:
-				dc.DrawText( tStr, x - labelWidth // 2, yLast + 2 )
+				dc.DrawText( cursorTimeStr, x - labelWidth // 2, yLast + 2 )
 		
 		# Store the drawing scale parameters.
 		self.xFactor = xFactor
