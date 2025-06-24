@@ -212,27 +212,27 @@ class Impinj:
 		try:
 			message.send( self.readerSocket )
 		except Exception as e:
-			self.messageQ.put( ('Impinj', 'Send command fails: {}'.format(e)) )
+			self.messageQ.put( ('Impinj', f'Send command fails: {e}') )
 			return False
 			
 		try:
 			response = WaitForMessage( message.MessageID, self.readerSocket )
 		except Exception as e:
-			self.messageQ.put( ('Impinj', 'Get response fails: {}'.format(e)) )
+			self.messageQ.put( ('Impinj', f'Get response fails: {e}') )
 			return False
 			
-		self.messageQ.put( ('Impinj', 'Received Response:\n{}\n'.format(response)) )
+		self.messageQ.put( ('Impinj', f'Received Response:\n{response}\n') )
 		return True, response
 		
 	def sendCommands( self ):
 		self.connectedAntennas = []
 		self.antennaReadCount = defaultdict(int)
 		
-		self.messageQ.put( ('Impinj', 'Connected to: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
+		self.messageQ.put( ('Impinj', f'Connected to: ({self.impinjHost}:{self.impinjPort})' ) )
 		
 		self.messageQ.put( ('Impinj', 'Waiting for READER_EVENT_NOTIFICATION...') )
 		response = UnpackMessageFromSocket( self.readerSocket )
-		self.messageQ.put( ('Impinj', '\nReceived Response:\n{}\n'.format(response)) )
+		self.messageQ.put( ('Impinj', f'\nReceived Response:\n{response}\n') )
 		
 		# Compute a correction between the reader's time and the computer's time.
 		readerTime = response.getFirstParameterByClass(UTCTimestamp_Parameter).Microseconds
@@ -435,8 +435,8 @@ class Impinj:
 		
 		self.messageQ.put( ('BackupFile', self.fname) )
 		
-		self.messageQ.put( ('Impinj', '*****************************************' ) )
-		self.messageQ.put( ('Impinj', 'Reader Server Started: ({}:{})'.format(self.impinjHost, self.impinjPort) ) )
+		self.messageQ.put( ('Impinj', '*****************************************') )
+		self.messageQ.put( ('Impinj', f'Reader Server Started: ({self.impinjHost}:{self.impinjPort})') )
 			
 		utcfromtimestamp = datetime.datetime.utcfromtimestamp
 		
@@ -452,15 +452,15 @@ class Impinj:
 			
 			self.messageQ.put( ('Impinj', 'state', False) )
 			self.messageQ.put( ('Impinj', '') )
-			self.messageQ.put( ('Impinj', 'Trying to Connect to Reader: ({}:{})...'.format(self.impinjHost, self.impinjPort) ) )
+			self.messageQ.put( ('Impinj', f'Trying to Connect to Reader: ({self.impinjHost}:{self.impinjPort})...') )
 			self.messageQ.put( ('Impinj', 'ConnectionTimeout={:.2f} seconds'.format(ConnectionTimeoutSeconds) ) )
 			
 			try:
 				self.readerSocket.connect( (self.impinjHost, self.impinjPort) )
 			except Exception as e:
-				self.messageQ.put( ('Impinj', 'Reader Connection Failed: {}'.format(e) ) )
+				self.messageQ.put( ('Impinj', f'Reader Connection Failed: {e}') )
 				self.readerSocket.close()
-				self.messageQ.put( ('Impinj', 'Attempting Reconnect in {} seconds...'.format(ReconnectDelaySeconds)) )
+				self.messageQ.put( ('Impinj', f'Attempting Reconnect in {ReconnectDelaySeconds} seconds...') )
 				self.reconnectDelay()
 				continue
 
@@ -472,7 +472,7 @@ class Impinj:
 			try:
 				success = self.sendCommands()
 			except Exception as e:
-				self.messageQ.put( ('Impinj', 'Send Command Error={}'.format(e)) )
+				self.messageQ.put( ('Impinj', f'Send Command Error={e}') )
 				success = False
 				
 			if not success:
@@ -480,7 +480,7 @@ class Impinj:
 				self.messageQ.put( ('Impinj', 'Disconnecting Reader.' ) )
 				self.messageQ.put( ('Impinj', 'state', False) )
 				self.readerSocket.close()
-				self.messageQ.put( ('Impinj', 'Attempting Reconnect in {} seconds...'.format(ReconnectDelaySeconds)) )
+				self.messageQ.put( ('Impinj', f'Attempting Reconnect in {ReconnectDelaySeconds} seconds...') )
 				self.reconnectDelay()
 				self.statusCB()
 				continue
@@ -518,7 +518,7 @@ class Impinj:
 						with tAntennaConnectedLastLock:
 							tAntennaConnectedLast = t
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'GET_READER_CONFIG send fails: {}'.format(e)) )
+						self.messageQ.put( ('Impinj', f'GET_READER_CONFIG send fails: {e}') )
 						self.readerSocket.close()
 						self.messageQ.put( ('Impinj', 'Attempting Reconnect...') )
 						break
@@ -610,24 +610,24 @@ class Impinj:
 					try:
 						self.antennaReadCount[antennaID] += 1
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'Received {}.  Missing AntennaID.'.format(self.tagCount)) )
+						self.messageQ.put( ('Impinj', f'Received {self.tagCount}.  Missing AntennaID.') )
 					
 					try:
 						tagID = tag['EPC']
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: missing tagID.'.format(self.tagCount)) )
+						self.messageQ.put( ('Impinj', f'Received {self.tagCount}.  Skipping: missing tagID.') )
 						continue
 						
 					try:
 						tagID = HexFormatToStr( tagID )
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: HexFormatToStr fails.  Error={}'.format(self.tagCount, e)) )
+						self.messageQ.put( ('Impinj', f'Received {self.tagCount}.  Skipping: HexFormatToStr fails.  Error={e}') )
 						continue
 					
 					try:
 						discoveryTime = tag['Timestamp']		# In microseconds since Jan 1, 1970
 					except Exception as e:
-						self.messageQ.put( ('Impinj', 'Received {}.  Skipping: Missing Timestamp'.format(self.tagCount)) )
+						self.messageQ.put( ('Impinj', f'Received {self.tagCount}.  Skipping: Missing Timestamp') )
 						continue
 					
 					peakRSSI = tag.get('PeakRSSI', None)		# -127..127 in db.

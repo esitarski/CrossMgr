@@ -585,12 +585,11 @@ class GanttChartPanel(wx.Panel):
 			return dc, bitmap
 		
 		def drawGanttBar( x, y, w, h, ic ):
-			if x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom:
-				return
-			dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
-			dc.SetPen( penBar )
-			dc.SetBrush( transparentBrush )
-			dc.DrawRectangle( x, y, w, h )
+			if not (x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom):
+				dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
+				dc.SetPen( penBar )
+				dc.SetBrush( transparentBrush )
+				dc.DrawRectangle( x, y, w, h )
 		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
@@ -628,10 +627,8 @@ class GanttChartPanel(wx.Panel):
 					else:
 						ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
 						dy = yCur - yLast + 1
-						dd = int(dy * 0.3)
-						ic = j % len(self.colours)
 						
-						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, ic )
+						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, j % len(self.colours) )
 						
 						if self.lapNote:
 							note = self.lapNote.get( (num, j), None )
