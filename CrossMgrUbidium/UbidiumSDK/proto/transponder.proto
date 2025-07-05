@@ -1,0 +1,33 @@
+syntax = "proto3";
+package raceresult.ubidium;
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+// Transponder represents an active or passive transponder or a marker
+message Transponder {
+  // ID of the transponder
+  string id = 1;
+
+  // Additional data if it is an active transponder
+  message ActiveData {
+    uint32 wakeup_counter = 1;  // wakeup counter
+    uint32 battery = 2;         // battery level as reported from the transponder
+    int32 temperature = 3;     // transponder's temperature
+  }
+
+  // Additional data if it is a passive transponder
+  message PassiveData {
+    uint32 order_id = 1;        // Order ID of normal single use transponders
+  }
+
+  // Additional data if this is a marker (currently empty)
+  message MarkerData {
+  }
+
+  // data holds additional data depending on the transponder type
+  oneof data {
+    ActiveData active = 3;      // Active data if this is an active transponder
+    PassiveData passive = 2;    // Passive data if this is a passive transponder
+    MarkerData marker = 4;      // Marker dat aif this is a marker
+  }
+}

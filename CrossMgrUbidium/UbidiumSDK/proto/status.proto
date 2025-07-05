@@ -1,0 +1,201 @@
+syntax = "proto3";
+package raceresult.ubidium;
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+import "common.proto";
+import "google/protobuf/duration.proto";
+
+// Status represents a status (update) message.
+message Status {
+  Time time = 1;                                      // Ubidium's time when the status message was generated
+
+  optional string id = 2;                             // device ID
+  optional string name = 3;                           // name
+  optional string version = 4;                        // Firmware version
+
+  optional uint32 cust_no = 5;                        // configured customer number
+
+  optional uint64 passing_id = 6;                     // ID of most current passing
+
+  // Passing and/or file number
+  message PassingNo {
+    optional uint32 file = 1;
+    optional uint32 no = 2;
+  }
+  optional PassingNo passing_no = 7;                  // number of most current passing
+
+  // Status of an active device
+  message Active {
+    message Beacon {                                  // Beacon
+      reserved 1;
+      optional uint32 channel = 2;                    // loop channel
+      optional uint32 loop_id = 3;                    // loop ID
+      optional uint32 power = 4;                      // loop power
+      optional uint32 loop_status = 5;                // loop status
+      optional Time last_seen = 6;                    // beacon time
+
+      optional uint32 mode = 7;                       // mode
+      optional uint32 power_con = 8;                  // power con
+      optional uint32 power_status = 9;               // power status
+      optional uint32 beacon_index = 10;              // beacon index
+
+      optional uint32 ch_noise_avg = 11;              // channel noise average
+      optional uint32 trans_lqi = 12;                 // transponder LQI
+      optional uint32 trans_energy_detect = 13;       // transponder energy detect
+      optional uint32 beacon_lqi = 14;                // beacon LQI
+      optional uint32 beacon_energy_detect = 15;      // beacon energy detect
+
+
+      optional uint32 mode_box = 19;                  // beacon box mode
+      optional int32 temperature = 20;                // temperature
+    }
+
+    // OptionalBeacon is an optional beacon
+    message OptionalBeacon {
+      optional Beacon beacon = 1;                     // beacon
+    }
+
+    optional ActiveStatus status = 3;                 // active status
+
+    Beacon self = 1;                                  // our beacon data
+    map<uint32, OptionalBeacon> others = 2;            // other known beacon data, key is ID
+  }
+
+
+  // internal active status
+  optional Active active_internal = 8;
+
+  // Status of passive equipment
+  message Passive {
+    reserved 1;
+    // Status of a single antenna element
+    message Element {
+      optional uint32 position = 2;                     // element position
+      optional uint32 string_no = 3;                    // string number the element is part of
+      optional ElementStatus status = 4;                // element status
+    }
+    // OptionalElement is an optional element
+    message OptionalElement {
+      optional Element element = 1;                     // element
+    }
+    map<uint32, OptionalElement> elements = 2;          // known element data, key is ID
+    
+    optional TransponderType transponder_type = 3; 			// transponder type setting
+    optional PassivePower power = 4;                    // power setting
+  }
+  // Status of the connected passive equipment
+  optional Passive passive = 9;
+
+  // GPS has either a fix with location or no_fix
+  message GPS {
+    oneof data {
+      bool no_fix = 1;                                // set if there is no GPS fix
+      Location location = 2;                          // set to the location if there is GPS reception
+    }
+  }
+  optional GPS gps = 10;                              // GPS status
+
+  // Status of a battery
+  message BatteryData {
+    optional uint32 level = 1;                        // power level
+    optional google.protobuf.Duration remaining = 2;  // time until full if charging, time until empty if discharging
+    optional BatteryState state = 3;                  // charging state of the battery
+  }
+
+  // A BatterySlot is either empty or has a battery (with its values)
+  message BatterySlot {
+    oneof data {
+      bool empty = 1;
+      BatteryData battery = 2;
+    }
+  }
+
+  optional BatterySlot battery_slot1 = 11;            // status of battery slot 1
+  optional BatterySlot battery_slot2 = 12;            // status of battery slot 2
+
+  optional double temperature = 13;                   // current temperature (measured on the main board)
+
+  // Status of power supply
+  message Power {
+    optional PowerSource source = 1;                  // (additional) source of power
+  }
+  
+  optional Power power = 14;                          // power status
+
+  // Status of available Update
+  message Update {    
+    optional bool installed = 1;		                  // set if update has been downloaded and installed
+    optional UpdateSeverity severity = 2;		          // type of firmware update
+    optional string update_version = 3;		            // version of firmware update
+  }
+  
+  optional Update update = 15;			                  // update status
+}
+
+// BatteryState represents the current charging state of the battery
+enum BatteryState {
+  BATTERY_STATE_UNSPECIFIED = 0;
+  BATTERY_STATE_DISCHARGING = 1;                      // battery is currently discharging
+  BATTERY_STATE_CHARGING = 2;                         // battery is currently charging
+  BATTERY_STATE_IDLE = 3;                             // battery is idle (i.e. not charging or discharging)
+}
+
+// PowerSource represents the current power source.
+enum PowerSource {
+  POWER_SOURCE_UNSPECIFIED = 0;
+  POWER_SOURCE_NONE = 1;                              // no additional power source is used
+  POWER_SOURCE_AC = 2;                                // AC is used as power source. (Battery might be used additionally.)
+  POWER_SOURCE_DC = 3;                                // DC is used as power source. (Battery might be used additionally.)
+  POWER_SOURCE_USBPD = 4;                             // USBPD is used as power source. (Battery might be used additionally.)
+  POWER_SOURCE_POE = 5;                               // POE is used as power source. (Battery might be used additionally.)
+}
+
+// ElementStatus represents the status of a passive antenna element
+enum ElementStatus {
+  ELEMENT_STATUS_UNKNOWN = 0;                       // Element status is unknown
+  ELEMENT_STATUS_OK = 1;                            // Element is OK
+  ELEMENT_STATUS_BAD = 2;                           // Element reports bad RSSI
+  ELEMENT_STATUS_MUTE = 3;                          // Element is muted
+  ELEMENT_STATUS_UNAVAILABLE = 4;                   // Element is unavailable
+}
+
+// ActiveStatus represents the status of an active device
+enum ActiveStatus {
+  ACTIVE_STATUS_UNKNOWN = 0;                       // Active status is unknown
+  ACTIVE_STATUS_INITIALIZING = 1;                  // Active is initializing
+  ACTIVE_STATUS_RUNNING = 2;                       // Active is running
+  ACTIVE_STATUS_UPDATING = 3;
+  ACTIVE_STATUS_FAILED = 4;                         // Active reports an error
+}
+
+// UpdateSeverity represents the severity of an firmware update
+enum UpdateSeverity {
+  UPDATE_SEVERITY_UNKNOWN = 0;
+  UPDATE_SEVERITY_NORMAL = 1;
+  UPDATE_SEVERITY_CRITICAL = 2;
+}
+
+// TagType represents the type a passive transponder
+enum TransponderType {
+  TRANSPONDER_TYPE_UNKNOWN = 0;
+  TRANSPONDER_TYPE_BIB = 1;
+  TRANSPONDER_TYPE_TRIATHLON = 2;
+  TRANSPONDER_TYPE_HUTAG = 3;
+  TRANSPONDER_TYPE_SHOE = 4;
+}
+
+// PassivePower represents the power setting for passive timing
+enum PassivePower {
+  PASSIVE_POWER_UNKNOWN = 0;
+  PASSIVE_POWER_MINIMUM = 1;
+  PASSIVE_POWER_LOW = 2;
+  PASSIVE_POWER_MEDIUM = 3;
+  PASSIVE_POWER_AUTO = 4;
+  PASSIVE_POWER_MAXIMUM = 5;
+}
+
+// Shout is used by Ubidiums to broadcast their availability in the local network
+message Shout {
+  Status status = 1;                                  // current status
+  string address = 2;                                 // Ubidium's address of the network that is used to send this broadcast message
+}

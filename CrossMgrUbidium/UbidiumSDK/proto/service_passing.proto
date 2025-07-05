@@ -1,0 +1,90 @@
+syntax = "proto3";
+package raceresult.ubidium;
+import "common.proto";
+import "passing.proto";
+
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+/*
+A PassingRequest requests old and/or future passings or requests the stream of passings to stop.
+It also allows to acknowledge received passings.
+Sending a new get request will stop any other ongoing get request in the stream.
+ */
+message PassingRequest {
+  oneof cmd {
+    CmdGetPassings get = 1;                         // request passings
+    CmdStopPassings stop = 2;                       // stop the current stream of passings
+    CmdAckPassing ack = 3;                          // acknowledge received passings
+  }
+}
+
+/*
+PassingResponses are sent from the Ubidium on a PassingStream.
+ */
+message PassingResponse {
+  oneof response {
+    Error error = 1;                                // an error that occurred
+    Passing passing = 2;                            // a requested passing
+    Welcome welcome = 3;                            // a welcome message
+  }
+}
+
+/*
+CmdGetPassings requests past and/or future passings from an Ubidium.
+ */
+message CmdGetPassings {
+  enum StartReference {
+    START_REFERENCE_UNSPECIFIED = 0;
+    START_REFERENCE_NOW = 1;                        // request only new passings from the time the request is processed by an Ubidium
+    START_REFERENCE_BEGINNING_OF_CURRENT_FILE = 2;  // request passings starting with the beginning of the current file
+    START_REFERENCE_BEGINNING_OF_FIRST_FILE = 3;    // request passings starting with the beginning of the first existing file
+  }
+
+  // starts specifies the fist passing that is requested
+  oneof start {
+    StartReference start_ref = 1;                   // start with the given StartReference
+    Passing.No no = 2;                              // start with the given passing (and file) number
+    uint64 id = 3;                                  // start with the given passing ID
+  }
+
+  enum EndReference {
+    END_REFERENCE_UNSPECIFIED = 0;
+    END_REFERENCE_UNTIL_STOPPED = 1;                // request passings until told so explicitly with a CmdStopPassings
+    END_REFERENCE_CURRENTLY_EXISTING = 2;           // request passings until the newest passing known when the request is processed by an Ubidium
+    END_REFERENCE_END_OF_FILE = 3;                  // request passings until the end of file that corresponds to start
+  }
+
+  // end specifies when the Ubidium stops sending passings
+  oneof end {
+    EndReference end_ref = 4;                       // stop when the given EndReference is reached
+    uint32 count = 5;                               // stop when at most count passings have been sent
+  }
+}
+
+/*
+CmdStopPassings tells the Ubidium to stop sending passings
+*/
+message CmdStopPassings {
+}
+
+/*
+Using CmdAckPassing one can confirm that passings until the given one were received and processed.
+This is currently only used to display the progress bar on the Ubidium when working with a TimingServer.
+ */
+message CmdAckPassing {
+  // Latest passing received
+  oneof latest {
+    uint64 id = 1;                                  // passing ID of the latest processed passing
+    Passing.No no = 2;                              // passing (and file) number of the latest processed passing
+  }
+}
+
+/*
+A Welcome message is sent by the Ubidium after it actively opened an PassingsStream when connecting to a TimingServer
+ */
+message Welcome {
+  uint64 current_id = 1;                            // ID of the newest passing
+  Passing.No current_no = 2;                        // passing (and file) number of the newest passing
+  uint32 cust_no = 3;                               // currently configured customer number
+}

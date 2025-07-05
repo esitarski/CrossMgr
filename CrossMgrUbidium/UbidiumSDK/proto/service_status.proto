@@ -1,0 +1,46 @@
+syntax = "proto3";
+package raceresult.ubidium;
+import "google/protobuf/duration.proto";
+import "common.proto";
+import "status.proto";
+
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+/*
+A StatusRequest requests the current status (and future status updates) or requests the stream of status updates to stop.
+Sending a new get request will stop any other ongoing get request in the stream.
+ */
+message StatusRequest {
+  oneof cmd {
+    CmdGetStatus get = 1;                 // request status (updates)
+    CmdStopStatus stop = 2;               // stop the current stream of status updates
+  }
+}
+
+/*
+StatusResponses are sent from the Ubidium on a StatusStream.
+ */
+message StatusResponse {
+  oneof response {
+    Error error = 1;                      // an error occurred
+    Status status = 2;                    // status (update)
+  }
+}
+
+/*
+CmdGetStatus requests the current status.
+After the first status is sent, if continue is set, the Ubidium will send status updates whenever a status field changes or
+the push_time interval is reached. These updates only contain the fields that changed. They have to be merged
+into the known status to get an updated complete status overview.
+ */
+message CmdGetStatus {
+  bool continues = 1;                      // continue to send status updates after the first status is received
+  google.protobuf.Duration push_time = 2; // send a status update at least with the given interval
+}
+
+/*
+CmdStopStatus tells the Ubidium to stop sending status updates
+*/
+message CmdStopStatus {
+}

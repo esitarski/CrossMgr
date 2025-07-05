@@ -1,0 +1,16 @@
+syntax = "proto3";
+package raceresult.ubidium;
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+// A Prewarn holds information about an upcoming passing. They are available before the final time is determinedas,
+// as soon as an transponder ID is known.
+message Prewarn {
+  // Src is the source that is currently recording the passing.
+  message Src {
+    string input = 1;         // name of the input (sub) device that generated the passing
+  }
+  Src src = 3;                // source of the prewarn
+
+  string transponder_id = 2;  // ID of the transponder
+}
