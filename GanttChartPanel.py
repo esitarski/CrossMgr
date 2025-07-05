@@ -4,6 +4,7 @@ import math
 import sys
 import bisect
 import functools
+import platform
 import Utils
 from PhotoFinish import hasPhoto
 
@@ -244,7 +245,7 @@ class GanttChartPanel(wx.Panel):
 		# This prevents redraw performance problems.
 		self.moveTimer.StartOnce( 20 )	# If the timer is already running, it will be stopped and restarted.
 	
-	if True or platform.system() == 'Windows':
+	if platform.system() == 'Windows':
 		def OnMoveTimer( self, event ):
 			self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
 			self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
