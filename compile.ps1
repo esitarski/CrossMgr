@@ -19,6 +19,7 @@ param (
 	
 	[switch]$cmgr = $false,
 	[switch]$cmgri = $false,
+	[switch]$cmgru = $false,
 	[switch]$trw = $false,
 	[switch]$smgr = $false,
 	[switch]$cmgra = $false,
@@ -155,6 +156,7 @@ function Cleanup($program)
 	$dirs = @(
 		'__pycache__',
 		'CrossMgrImpinj/__pycache__',
+		'CrossMgrUbidium/__pycache__',
 		'TagReadWrite/__pycache__',
 		'CrossMgrAlien/__pycache__',
 		'SeriesMgr/__pycache__',
@@ -480,7 +482,7 @@ function BuildAll($programs)
 	CheckEnvActive
 	if ($programs.Length -eq 0)
 	{
-		Write-Host "No programs selected. -cmgr, -cmgri, -cmgra, -trw, -smgr, -pts, -call, -spr or -all required"
+		Write-Host "No programs selected. -cmgr, -cmgri, -cmgru, -cmgra, -trw, -smgr, -pts, -call, -spr or -all required"
 		exit 1
 	}
 	Cleanup
@@ -602,6 +604,7 @@ function doHelp
 	-pythonexe [pythonexe]  - Python version (Default $pythonver)
 	-cmgr        - Build CrossMgr
 	-cmgri       - Build CrossMgrImpinj
+	-cmgru       - Build CrossMgrUbidium
 	-trw         - Build TagReadWrite
 	-smgr        - Build SeriesMgr
 	-cmgra       - Build CrossMgrAlien
@@ -665,6 +668,7 @@ if ($checkver)
 if ((($clean -eq $false) -and ($setupenv -eq $false) -and ($fix -eq $false)) -and
 		($cmgr -eq $false) -and
 		($cmgri -eq $false) -and
+		($cmgru -eq $false) -and
 		($trw -eq $false) -and
 		($smgr -eq $false) -and
 		($cmgra -eq $false) -and
@@ -688,6 +692,11 @@ if ($cmgr -eq $true)
 if ($cmgri -eq $true)
 {
 	$programs += 'CrossMgrImpinj'
+}
+
+if ($cmgru -eq $true)
+{
+	$programs += 'CrossMgrUbidium'
 }
 
 if ($trw -eq $true)

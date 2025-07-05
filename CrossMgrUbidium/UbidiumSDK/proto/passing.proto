@@ -1,0 +1,64 @@
+syntax = "proto3";
+package raceresult.ubidium;
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+import "common.proto";
+import "transponder.proto";
+
+//Passing represents a single transponder passing.
+message Passing {
+  uint64 id = 1;                      // per Ubidium unique ID
+
+  // No combines a file and a passing number.
+  message No {
+    uint32 file = 1;                  // file number
+    uint32 no = 2;                    // passing number
+  }
+  No no = 2;                          // passing number
+
+  // Src defines a source of a passing.
+  message Src {
+    string device_id = 1;             // device ID
+    string device_name = 2;           // device name at the time of recording
+    string input = 3;                 // name of the input (sub) device that generated the passing
+    uint32 no = 4;                    // per source number of the passing
+  }
+  Src src = 3;                        // source of the passing
+
+  Transponder transponder = 4;        // transponder that passed
+
+  Time time = 5;                      // passing time
+  Time received = 14;                 // approximate time the passing was received by the Ubidium
+
+  uint32 hits = 6;                    // Number of hits
+  int32 rssi = 7;                     // RSSI
+
+  optional Location location = 8;     // Location of passing
+
+
+  // ActiveData holds additional data of an active passing.
+  message ActiveData {
+    bool loop_only = 1;               // loop only flag
+    uint32 loop_id = 2;               // loop ID
+    uint32 channel = 3;               // loop channel
+    uint32 flags = 4;                 // flags
+  }
+
+  // PassiveData holds additional data of a passive passing (currently empty).
+  message PassiveData {
+  }
+
+  // MarkerData holds additional data of a marker.
+  message MarkerData {
+    uint32 loop_id = 2;               // loop ID
+    uint32 channel = 3;               // loop channel
+  }
+
+  // data holds additional data depending on the passing type.
+  oneof data {
+    ActiveData active = 10;           // active data if this passing is an active passing
+    PassiveData passive = 11;         // passive data if this passing is a passive passing
+    MarkerData marker = 13;           // marker data if this passing is a marker
+  }
+
+}

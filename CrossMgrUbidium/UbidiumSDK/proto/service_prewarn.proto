@@ -1,0 +1,23 @@
+syntax = "proto3";
+package raceresult.ubidium;
+import "common.proto";
+import "prewarn.proto";
+
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+/*
+A PrewarnRequest tells the Ubidium to send Prewarns from now on.
+ */
+message PrewarnRequest {
+}
+
+/*
+A PrewarnResponse is sent by the Ubidium on a PrewarnStream
+ */
+message PrewarnResponse {
+  oneof response {
+    Error error = 1;      // an error that occurred
+    Prewarn prewarn = 2;  // prewarn
+  }
+}

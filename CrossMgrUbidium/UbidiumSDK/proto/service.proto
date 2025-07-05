@@ -1,0 +1,60 @@
+syntax = "proto3";
+package raceresult.ubidium;
+import "service_passing.proto";
+import "service_prewarn.proto";
+import "service_status.proto";
+import "service_command.proto";
+
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+/*
+TimingSystem is the service that is running as a server on Ubidiums. You can create
+a TimingSystem client to communicate with local Ubidiums.
+ */
+service TimingSystem {
+  // OpenPassingStream opens a bi-directional passing stream to receive passings.
+  rpc OpenPassingStream(stream PassingRequest) returns (stream PassingResponse) {}
+  // OpenPrewarnStream opens a bi-directional prewarn stream to receive prewarns.
+  rpc OpenPrewarnStream (PrewarnRequest) returns (stream PrewarnResponse) {}
+  // OpenStatusStream opens a bi-directional status stream to receive status updates.
+  rpc OpenStatusStream(stream StatusRequest) returns (stream StatusResponse) {}
+  // OpenCommandStream opens a bi-directional command stream to send commands.
+  // Note that a TimingSystem client does not need to work with command streams,
+  // but can call the commands directly.
+  rpc OpenCommandStream(stream CommandRequest) returns (stream CommandResponse) {}
+
+  // NewFile creates a new file.
+  rpc NewFile(CmdNewFile) returns (CmdNewFileResponse) {}
+  // SetTime sets the time.
+  rpc SetTime(CmdSetTime) returns (CmdSetTimeResponse) {}
+  // GetScreen gets an image of the current screen contents.
+  rpc GetScreen(CmdGetScreen) returns (CmdGetScreenResponse) {}
+  // PressKey simulates a key press.
+  rpc PressKey(CmdPressKey) returns (CmdPressKeyResponse) {}
+  // SetSetting sets the values of a set of settings.
+  rpc SetSettings(CmdSetSettings) returns (CmdSetSettingsResponse) {}
+  // GetSetting receives the values of a set of settings.
+  rpc GetSettings(CmdGetSettings) returns (CmdGetSettingsResponse) {}
+    // Reboot sends a reboot command.
+  rpc Reboot(CmdReboot) returns (CmdRebootResponse) {}
+}
+
+/*
+TimingServer is the service that you can use to communicate with non-local Ubidiums.
+You can create a TimingServer server and configure Ubidiums to connect to it.
+In this case the Ubidium acts as RPC client so the requests and responses are swapped, when compared to the
+TimingSystem service.
+ */
+service TimingServer {
+  // OpenPassingStream opens a bi-directional passing stream to receive passings. Ubidiums will call this method and
+  // always try to hold one stream open.
+  rpc OpenPassingStream(stream PassingResponse) returns (stream PassingRequest) {}
+  // OpenStatusStream opens a bi-directional status stream to receive status updates. Ubidiums will call this method and
+  // always try to hold one stream open.
+  rpc OpenStatusStream(stream StatusResponse) returns (stream StatusRequest) {}
+  // OpenCommandStream opens a bi-directional command stream to receive commands. Ubidiums will call this method and
+  // always try to hold one stream open.
+  // Since the timing server acts as RPC server, the stream is required to allow the TimingServer to execute commands on the clients (Ubidiums).
+  rpc OpenCommandStream(stream CommandResponse) returns (stream CommandRequest) {}
+}

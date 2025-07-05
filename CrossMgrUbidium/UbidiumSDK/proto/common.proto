@@ -1,0 +1,24 @@
+syntax = "proto3";
+package raceresult.ubidium;
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+import "google/protobuf/timestamp.proto";
+
+// Time combines a UTC timestamp and an offset to calculate (Ubidium's) local time.
+message Time {
+  google.protobuf.Timestamp utc = 1;  // UTC time
+  int32  offset = 2;                  // offset to local time in seconds
+}
+
+// Location combines latitude + longitude and an altitude.
+message Location {
+  double lat = 1;                     // latitude
+  double long = 2;                    // longitude
+  double alt = 3;                     // altitude
+}
+
+// Error is an error with code and description.
+message Error {
+  string message = 1;                 // text message
+  uint32 code = 2;                    // error number; currently used: 5 - not found
+}

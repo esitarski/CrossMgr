@@ -4,6 +4,7 @@ import math
 import sys
 import bisect
 import functools
+import platform
 import Utils
 from PhotoFinish import hasPhoto
 
@@ -244,37 +245,44 @@ class GanttChartPanel(wx.Panel):
 		# This prevents redraw performance problems.
 		self.moveTimer.StartOnce( 20 )	# If the timer is already running, it will be stopped and restarted.
 	
-	def OnMoveTimer( self, event ):
-		# Get latest mouse coordinates to eliminate last-second movement errors.
-		dx = self.timelineWidth + 2
-		dy = self.timelineHeight + 2
-		size = self.GetClientSize()
+	if platform.system() == 'Windows':
+		def OnMoveTimer( self, event ):
+			self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
+			self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
+			self.Refresh()
 
-		# The following works because RefreshRect does not call Draw right away.
-		# Rather, it schedules an EVT_PAINT which includes all the update rects.
-		# This means that the previous time cursor is drawn before the new one.
-		xMoveLast, yMoveLast = self.xMove, self.yMove
-		
-		verticalRectOld = wx.Rect(max(0, self.xMove-dx), 0, dx*2, size.height)
-		horizontalRectOld = wx.Rect(0, max(0, self.yMove-dy), size.width, dy*2)
-		
-		self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
-		self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
-		
-		verticalRectNew = wx.Rect(max(0, self.xMove-dx), 0, dx*2, size.height)
-		horizontalRectNew = wx.Rect(0, max(0, self.yMove-dy), size.width, dy*2)
-		
-		if verticalRectNew.Intersects(verticalRectOld):
-			self.RefreshRect( verticalRectNew.Union(verticalRectOld) )
-		else:
-			self.RefreshRect( verticalRectOld )
-			self.RefreshRect( verticalRectNew )
+	else:
+		def OnMoveTimer( self, event ):
+			# Get latest mouse coordinates to eliminate last-second movement errors.
+			dx = self.timelineWidth + 2
+			dy = self.timelineHeight + 2
+			size = self.GetClientSize()
 
-		if horizontalRectNew.Intersects(horizontalRectOld):
-			self.RefreshRect( horizontalRectNew.Union(horizontalRectOld) )
-		else:
-			self.RefreshRect( horizontalRectOld )
-			self.RefreshRect( horizontalRectNew )
+			# The following works because RefreshRect does not call Draw right away.
+			# Rather, it schedules an EVT_PAINT which includes all the update rects.
+			# This means that the previous time cursor is drawn before the new one.
+			xMoveLast, yMoveLast = self.xMove, self.yMove
+			
+			verticalRectOld = wx.Rect(max(0, self.xMove-dx), 0, dx*2, size.height)
+			horizontalRectOld = wx.Rect(0, max(0, self.yMove-dy), size.width, dy*2)
+			
+			self.xMove, self.yMove = self.ScreenToClient(wx.GetMousePosition())
+			self.moveIRider, self.moveLap = self.getRiderLapXY( self.xMove, self.yMove )
+			
+			verticalRectNew = wx.Rect(max(0, self.xMove-dx), 0, dx*2, size.height)
+			horizontalRectNew = wx.Rect(0, max(0, self.yMove-dy), size.width, dy*2)
+			
+			if verticalRectNew.Intersects(verticalRectOld):
+				self.RefreshRect( verticalRectNew.Union(verticalRectOld) )
+			else:
+				self.RefreshRect( verticalRectOld )
+				self.RefreshRect( verticalRectNew )
+
+			if horizontalRectNew.Intersects(horizontalRectOld):
+				self.RefreshRect( horizontalRectNew.Union(horizontalRectOld) )
+			else:
+				self.RefreshRect( horizontalRectOld )
+				self.RefreshRect( horizontalRectNew )
 	
 	def getRiderLapXY( self, x, y ):
 		if not self.data:
@@ -585,12 +593,11 @@ class GanttChartPanel(wx.Panel):
 			return dc, bitmap
 		
 		def drawGanttBar( x, y, w, h, ic ):
-			if x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom:
-				return
-			dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
-			dc.SetPen( penBar )
-			dc.SetBrush( transparentBrush )
-			dc.DrawRectangle( x, y, w, h )
+			if not (x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom):
+				dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
+				dc.SetPen( penBar )
+				dc.SetBrush( transparentBrush )
+				dc.DrawRectangle( x, y, w, h )
 		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
@@ -628,10 +635,8 @@ class GanttChartPanel(wx.Panel):
 					else:
 						ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
 						dy = yCur - yLast + 1
-						dd = int(dy * 0.3)
-						ic = j % len(self.colours)
 						
-						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, ic )
+						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, j % len(self.colours) )
 						
 						if self.lapNote:
 							note = self.lapNote.get( (num, j), None )

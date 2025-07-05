@@ -1,0 +1,222 @@
+syntax = "proto3";
+package raceresult.ubidium;
+import "google/protobuf/duration.proto";
+import "common.proto";
+
+option go_package = "raceresult/ubidium";                                           
+option csharp_namespace = "RaceResult.Ubidium";                                     
+
+/*
+A CommandRequest executes a command on the Ubidium.
+ */
+message CommandRequest {
+  uint32 id = 1;                                        // unique ID of the command request, will be returned with the command response
+  oneof cmd {
+    CmdNewFile new_file = 11;                           // creates a new file
+    CmdSetTime set_time = 12;                           // sets the time
+    CmdGetScreen get_screen = 14;                       // gets screen contents
+    CmdPressKey press_key = 15;                         // simulates a key press
+    CmdGetSettings get_settings = 16;                   // gets settings
+    CmdSetSettings set_settings = 17;                   // sets settings
+    CmdReboot reboot = 18;                 		          // reboots Ubidium
+  }
+}
+/*
+A CommandResponse is a response to a CommandRequest.
+ */
+message CommandResponse {
+  uint32 request_id = 1;                                // unique ID which was given with the request
+  oneof response {
+    Error error = 6;                                    // error
+    CmdNewFileResponse new_file_response = 11;          // response to a new_file command
+    CmdSetTimeResponse set_time_response = 12;          // response to a set_time command
+    CmdGetScreenResponse get_screen_response = 14;      // response to a get_screen command
+    CmdPressKeyResponse press_key_response = 15;        // response to a press_key command
+    CmdGetSettingsResponse get_settings_response = 16;  // response to a get_settings command
+    CmdSetSettingsResponse set_settings_response = 17;  // response to a set_settings command
+    CmdRebootResponse reboot_response = 18;		          // response to a reboot command
+  }
+}
+
+/*
+CmdNewFile starts a new file.
+ */
+message CmdNewFile {
+}
+/*
+CmdNewFileResponse is the response to a CmdNewFile call.
+ */
+message CmdNewFileResponse {
+  uint32 file_no = 1;                                   // file number of the newly created file
+}
+
+/*
+CmdSetTime sets the time.
+ */
+message CmdSetTime {
+  // A Source says which time source should be used to set the time
+  enum Source {
+    SOURCE_UNSPECIFIED = 0;
+    SOURCE_GPS_OR_NTP = 1;                              // set time via GPS if available, otherwise use NTP
+    SOURCE_GPS = 2;                                     // set time via GPS
+    SOURCE_NTP = 3;                                     // set time using NTP
+  }
+
+  oneof cmd {
+    Source automatic = 1;                               // set time automatically via GPS or NTP
+    Time manual = 2;                                    // set time manually to a specific value. Always set the time to the correct value.
+  }
+}
+/*
+CmdSetTimeResponse is the response to a CmdSetTime call.
+ */
+message CmdSetTimeResponse {
+  Time time = 1;                                        // time of the system when generating the response
+
+  // Source tells which time source was used to set the time
+  enum Source {
+    SOURCE_UNSPECIFIED = 0;
+    SOURCE_MANUAL = 1;                                  // time set using given time
+    SOURCE_GPS = 2;                                     // time set using GPS
+    SOURCE_NTP = 3;                                     // time set using NTP
+  }
+  Source source = 2;                                    // source used to set the time
+}
+
+
+/*
+CmdGetScreen returns the current display contents as an image.
+ */
+message CmdGetScreen {
+
+}
+/*
+CmdGetScreenResponse is the response to a CmdGetScreen call.
+ */
+message CmdGetScreenResponse {
+  bytes image = 1;                                      // screen contents as a PNG image
+}
+
+/*
+CmdPressKey simulates a key press.
+ */
+message CmdPressKey {
+  Key key = 1;                                          // key to be pressed
+}
+/*
+CmdPressKeyResponse is the response to a CmdPressKey call.
+ */
+message CmdPressKeyResponse {
+}
+
+/*
+CmdGetSettings gets a number of settings.
+ */
+message CmdGetSettings {
+  repeated string keys = 1;                             // list of settings to be fetched
+}
+
+/*
+CmdGetSettingsResponse is a response to a CmdGetSettings command.
+ */
+message CmdGetSettingsResponse {
+  repeated Setting settings = 1;                         // list of settings
+}
+
+/*
+CmdSetSettings sets a number of settings.
+ */
+message CmdSetSettings {
+  repeated Setting settings = 1;                        // list of settings
+}
+/*
+CmdSetSettingsResponse is a response to a CmdSetSettings command.
+ */
+message CmdSetSettingsResponse {
+  repeated Setting settings = 1;                        // list of (updated) settings
+}
+
+/*
+CmdReboot reboots Ubidium.
+ */
+message CmdReboot {
+}
+
+/*
+CmdRebootResponse is the response to a CmdReboot call.
+ */
+message CmdRebootResponse {
+}
+
+/*
+Setting is a setting with a key (name) and value.
+Currently valid keys are:
+<table>
+<tr><td>General.Name</td>                                          <td>string_val</td></td>     <td></td></tr>
+
+<tr><td>Active.Internal.Channel</td>                               <td>int_val</td></td>        <td></td></tr>
+<tr><td>Active.Internal.LoopID</td>                                <td>int_val</td>             <td></td></tr>
+<tr><td>Active.Internal.Power</td>                                 <td>int_val</td>             <td></td></tr>
+
+<tr><td>Display.Backlight.Brightness</td>                          <td>int_val</td>             <td>0,10,50,100</td>
+
+<tr><td>LEDs.Brightness</td>                                       <td>int_val</td>             <td>0,10,50,100</td>
+
+<tr><td>Detection.Indicator</td>                                   <td>string_val</td>          <td>Nothing,Beep,Blink,Beep+Blink</td>
+
+<tr><td>Network.Ethernet.Method</td>                               <td>string_val</td>          <td>auto,manual</td>
+<tr><td>Network.Ethernet.IP</td>                                   <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Ethernet.Netmask</td>                              <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Ethernet.Gateway</td>                              <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Ethernet.DNS</td>                                  <td>string_val</td>          <td></td></tr>
+
+<tr><td>Network.WIFI.Mode</td>                                     <td>string_val</td>          <td>Client,Access Point,Off</td>
+
+<tr><td>Network.Mobile.SIM</td>                                    <td>string_val</td>          <td>internal,external</td>
+<tr><td>Network.Mobile.SIMExternal.PIN</td>                        <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Mobile.SIMExternal.Method</td>                     <td>string_val</td>          <td>auto,manual</td>
+<tr><td>Network.Mobile.SIMExternal.Method.Provider.APN</td>        <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Mobile.SIMExternal.Method.Provider.User</td>       <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Mobile.SIMExternal.Method.Provider.Password</td>   <td>string_val</td>          <td></td></tr>
+<tr><td>Network.Mobile.ExternalAntenna</td>                        <td>bool_val</td>            <td></td></tr>
+
+<tr><td>Network.Cloud.CustNo</td>                                  <td>int_val</td>             <td></td></tr>
+<tr><td>Network.Cloud.EnableOnStartup</td>                         <td>bool_val</td>            <td></td></tr>
+
+<tr><td>Time.Zone</td>                                             <td>string_val</td>          <td></td></tr>
+
+<tr><td>Trigger.MarkerNo</td>                                      <td>int_val</td>             <td></td></tr>
+<tr><td>Trigger.IncMarkerNo</td>                                   <td>bool_val</td>            <td></td></tr>
+</table>
+*/
+message Setting {
+  string key = 1;                                       // name of the setting
+  oneof value {                                         // value of the setting
+    int32  int_val = 2;                                 // value of the setting if it is an int
+    string string_val = 3;                              // value of the setting if it is a string
+    bool bool_val = 4;                                  // value of the setting if it is a bool
+    google.protobuf.Duration duration_val = 5;          // value of the setting if it is a duration
+  }
+}
+
+/*
+Key specifies a key of the Ubidium keypad.
+ */
+enum Key {
+  KEY_UNSPECIFIED = 0;
+
+  KEY_OK = 28;                                          // OK
+  KEY_BACK = 14;                                        // back/menu key
+
+  KEY_UP = 103;                                         // up arrow
+  KEY_DOWN = 108;                                       // down arrow
+  KEY_LEFT = 105;                                       // left key
+  KEY_RIGHT = 106;                                      // right key
+
+  KEY_SCREEN_1 = 59;                                    // counting from top, first key next to the screen
+  KEY_SCREEN_2 = 60;                                    // counting from top, second key next to the screen
+  KEY_SCREEN_3 = 61;                                    // counting from top, third key next to the screen
+  KEY_SCREEN_4 = 62;                                    // counting from top, fourth key next to the screen
+
+  KEY_START = 88;                                       // START
+}

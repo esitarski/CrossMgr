@@ -126,7 +126,7 @@ class TagGroupEntry:
 			return trToDatetime(tr), sampleSize, a+1
 		
 	def __repr__( self ):
-		return 'TagGroupEntry({},{})'.format(self.firstReadMin, self.lastReadMax)
+		return f'TagGroupEntry({self.firstReadMin},{self.lastReadMax})'
 	
 class TagGroup:
 	'''
@@ -171,7 +171,7 @@ class TagGroup:
 		toDelete = []
 		
 		with self.tagInfoLock:
-			for tag, tge in list(self.tagInfo.items()):				# Make a local copy to avoid updpate conflicts.
+			for tag, tge in list(self.tagInfo.items()):				# Make a local copy to avoid update conflicts.
 				if trNow - tge.lastReadMax >= tQuiet:				# Tag has left read range.
 					if not tge.isStray:
 						t, sampleSize, antennaID = tge.getBestEstimate(method, antennaChoice, removeOutliers)
@@ -187,7 +187,7 @@ class TagGroup:
 			for tag in toDelete:
 				del self.tagInfo[tag]
 		
-		reads.sort( key=operator.itemgetter(1,0))
+		reads.sort( key=operator.itemgetter(1,0) )
 		strays.sort( key=operator.itemgetter(1,0) )
 		return reads, strays
 	

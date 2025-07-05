@@ -382,7 +382,7 @@ def fix_dependencies():
 	print( 'Done.' )
 
 def get_pyws():
-	deprecated = ('CrossMgrCamera', 'CrossMgrAlien')
+	deprecated = ('CrossMgrCamera', 'CrossMgrAlien', 'CrossMgrUbidium')
 	
 	# Return all the pyw files.
 	for subdir, dirs, files in os.walk('.'):

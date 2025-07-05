@@ -26,5 +26,8 @@ simplejpeg
 virustotal-api
 metaphone
 pyllrp
+grpcio
+protobuf
+grpcio_tools
 wxPython
 wxasync

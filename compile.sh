@@ -92,7 +92,7 @@ getVersion() {
 
 cleanup() {
 	echo "Cleaning up everything..."
-	rm -rf __pycache__ CrossMgrImpinj/__pycache__ CrossMgrVideo/__pycache__ SprintMgr/__pycache__ PointsRaceMgr/__pycache__ TagReadWrite/__pycache__ CrossMgrAlien/__pycache__ SeriesMgr/__pycache__
+	rm -rf __pycache__ CrossMgrImpinj/__pycache__ CrossMgrUbidium/__pycache__ CrossMgrVideo/__pycache__ SprintMgr/__pycache__ PointsRaceMgr/__pycache__ TagReadWrite/__pycache__ CrossMgrAlien/__pycache__ SeriesMgr/__pycache__
 	rm -rf dist build release
 	rm -f *.spec
 }
@@ -434,7 +434,7 @@ dorelease() {
         exit 1
 	fi
     if ! git diff-index --quiet HEAD --; then
-        echo "$CURRENT_BRANCH has uncommited changed. Refusing to release. Commit your code."
+        echo "$CURRENT_BRANCH has uncommited changes. Refusing to release. Commit your code."
         exit 1
     fi
     if [ x"$(git rev-parse $CURRENT_BRANCH)" != x"$(git rev-parse origin/$CURRENT_BRANCH)" ]; then
@@ -467,6 +467,7 @@ $0 [ -hcitywVqseCtaep: ]
  -p [pythonexe]  - Python version (Default $PYTHONVER)
  -c        - Build CrossMgr
  -i        - Build CrossMgrImpinj
+ -u        - Build CrossMgrUbidium
  -t        - Build TagReadWrite
  -y        - Build SeriesMgr
  -w        - Build CrossMgrAlien
@@ -504,7 +505,7 @@ EOF
 }
 
 gotarg=0
-while getopts "hcitaveiCdPBASkomzlTfyqswVZUr" option
+while getopts "hcitaveiuCdPBASkomzlTfyqswVZUr" option
 do
 	gotarg=1
 	case ${option} in
@@ -516,6 +517,8 @@ do
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
 		i) PROGRAMS="$PROGRAMS CrossMgrImpinj"
+		;;
+		u) PROGRAMS="$PROGRAMS CrossMgrUbidium"
 		;;
 		t) PROGRAMS="$PROGRAMS TagReadWrite"
 		;;
@@ -535,6 +538,7 @@ do
 		;;
 		v) 	getVersion "CrossMgr"
 			getVersion "CrossMgrImpinj"
+			getVersion "CrossMgrUbidium"
 			getVersion "TagReadWrite"
 			getVersion "SeriesMgr"
 			getVersion "CrossMgrAlien"
@@ -626,6 +630,8 @@ do
 		r) dorelease
 		;;
 		f) fixDependencies 'SeriesMgr'
+		   fixDependencies 'CrossMgrImpinj'
+		   fixDependencies 'CrossMgrUbidium'
 		   fixDependencies 'CrossMgrVideo'
 		   fixDependencies 'SprintMgr'
 		   fixDependencies 'CallupSeedingMgr'
