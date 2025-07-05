@@ -156,6 +156,7 @@ function Cleanup($program)
 	$dirs = @(
 		'__pycache__',
 		'CrossMgrImpinj/__pycache__',
+		'CrossMgrUbidium/__pycache__',
 		'TagReadWrite/__pycache__',
 		'CrossMgrAlien/__pycache__',
 		'SeriesMgr/__pycache__',
