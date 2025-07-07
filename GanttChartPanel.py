@@ -333,8 +333,9 @@ class GanttChartPanel(wx.Panel):
 	
 	def Draw( self, dc, rect=None ):
 		size = self.GetClientSize()
-		width = size.width
-		height = size.height
+		width, height = size.width, size.height
+		if not rect:
+			rect = wx.Rect( 0, 0, width, height )
 		
 		maxBib = '999999'
 		
@@ -347,7 +348,6 @@ class GanttChartPanel(wx.Panel):
 		greyBrush = wx.Brush( wx.Colour(196,196,196), wx.SOLID )
 		lightGreyBrush = wx.Brush( wx.Colour(220,220,220), wx.SOLID )
 		dc.SetBackground(backBrush)
-		#dc.Clear()
 
 		dc.SetBrush( backBrush )
 		dc.SetPen( wx.NullPen )
