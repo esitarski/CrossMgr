@@ -512,7 +512,7 @@ do
 		h) doHelp
 		;;
 		a) 
- 		    PROGRAMS="StageRaceGC CallupSeedingMgr CrossMgrImpinj TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
+ 		    PROGRAMS="StageRaceGC CallupSeedingMgr CrossMgrImpinj CrossMgrUbidium TagReadWrite SeriesMgr CrossMgrAlien CrossMgrVideo PointsRaceMgr SprintMgr CrossMgr"
 		;;
 		c) PROGRAMS="$PROGRAMS CrossMgr"
 		;;
