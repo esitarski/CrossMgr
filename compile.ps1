@@ -743,6 +743,7 @@ if ($all -eq $true)
 	$programs = @(
 		'CrossMgr',
 		'CrossMgrImpinj',
+		'CrossMgrUbidium',
 		'TagReadWrite',
 		'SeriesMgr',
 		'CrossMgrAlien',
