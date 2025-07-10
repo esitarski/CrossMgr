@@ -6,7 +6,7 @@ import MyLapsServer
 
 class ChipReader:
 	JChip, RaceResult, Ultra, WebReader, MyLaps = tuple( range(5) )	# Add new options at the end.
-	Choices = (_('JChip/Impinj/Alien'), _('RaceResult'), _('Ultra'), _('WebReader'), _('MyLaps'))
+	Choices = (_('CrossMgr(Impinj|Ubidium)'), _('RaceResult'), _('Ultra'), _('WebReader'), _('MyLaps'))
 	
 	def __init__( self ):
 		self.chipReaderType = None
