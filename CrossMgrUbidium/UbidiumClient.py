@@ -9,7 +9,6 @@ Description:	Contains class and methods for Ubidium Client.
 """
 
 import os
-import datetime
 import asyncio
 import grpc
 from google.protobuf import duration_pb2 as _duration_pb2
@@ -254,11 +253,8 @@ Description:	This script shows an example how to connect a user (client) to Ubid
 """
 
 # Imports from python
-import asyncio
-import sys
-import time
 import os
-import grpc
+import sys
 import logging
 import signal
 
@@ -321,7 +317,7 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 				for ip, devID in watcher.foundIPs.items():
 					# print(f"Found IP {ip} with ID {devID}")
 					if ip not in watcher.activeCons:
-						client = ubidiumclient.UbidiumClient( messageQ )
+						client = UbidiumClient( messageQ )
 
 						client.SetChannelSettings()
 						client.CreateSecureChannel( f"{ip}:443", devID )

@@ -1,18 +1,15 @@
 import os
 import sys
-import atexit
 import datetime
-from queue import Queue, Empty
 from threading import Thread as Process
 
 import wx
 import wx.lib.masked			as masked
-import wx.lib.intctrl			as intctrl
 import wx.adv
-import wx.lib.agw.hyperlink as hl
 
 import asyncio
-from wxasync import AsyncBind, WxAsyncApp, StartCoroutine
+from wxasync import AsyncBind, WxAsyncApp, StartCoroutine, AsyncShowDialogModal
+
 
 import Utils
 import Ubidium
@@ -130,7 +127,7 @@ class MainWin( wx.Frame ):
 			self.editMenu = wx.Menu()
 			item = self.editMenu.Append(wx.MenuItem(self.editMenu, ID_MENU_COPYLOGS,"&Copy Logs to Clipboard"))
 
-			sekf,Bind( wx.EVT_MENU, self.doCopyToClipboard, self.editMenu, item )
+			self.Bind( wx.EVT_MENU, self.doCopyToClipboard, self.editMenu, item )
 			self.menuBar.Append(self.editMenu, "&Edit")
 
 		else:

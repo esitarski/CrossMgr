@@ -1,5 +1,4 @@
 import os
-import time
 import socket
 import asyncio
 import datetime
@@ -83,7 +82,7 @@ class Ubidium2JChip:
 					async with asyncio.timeout(5):
 						writer.close()
 						await writer.wait_close()
-				except Exception as e:
+				except Exception:
 					pass
 				return None, None
 				
@@ -168,7 +167,7 @@ class Ubidium2JChip:
 				try:
 					async with asyncio.timeout(1):
 						d = await self.dataQ.get()
-				except TimoutError:
+				except TimeoutError:
 					continue
 				except Exception as e:
 					await self.messageQ.put( ('Ubidium2JChip', f'Ubidium error: {e}.  Attempting to reconnect...') )
@@ -198,7 +197,7 @@ class Ubidium2JChip:
 				
 			try:
 				reader, writer = await reset_connection()
-			except Exception as e:
+			except Exception:
 				pass
 
 ubidium2JChip = None

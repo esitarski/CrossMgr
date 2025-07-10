@@ -37,14 +37,14 @@ class UbidiumWatcher:
 			self.udpTask = None
 	
 	async def stopTasks(self):
-		await stopMonitoringBC()
+		await self.stopMonitoringBC()
 		for client in self.activeCons.values():
 			await client.CloseStatusStream()
 			await client.ClosePassingStream()
 			await client.StopTasks()
 		self.foundIPs.clear()
 		self.lastSeen.clear()
-		sellf.activeCons.clear()
+		self.activeCons.clear()
 	
 	async def runUDPServer(self):
 		loop = asyncio.get_running_loop()
