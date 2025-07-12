@@ -1,7 +1,6 @@
 import os
 import sys
 import datetime
-from threading import Thread as Process
 
 import wx
 import wx.lib.masked			as masked
@@ -9,7 +8,6 @@ import wx.adv
 
 import asyncio
 from wxasync import AsyncBind, WxAsyncApp, StartCoroutine, AsyncShowDialogModal
-
 
 import Utils
 import Ubidium

@@ -3,6 +3,7 @@ import sys
 import atexit
 import datetime
 from queue import Queue, Empty
+from threading import Thread as Process
 
 import wx
 import wx.lib.masked			as masked

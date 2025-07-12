@@ -1,1 +1,1 @@
-AppVerName="CrossMgrImpinj 3.0.22-private"
+AppVerName="CrossMgrImpinj 3.0.23-private"
