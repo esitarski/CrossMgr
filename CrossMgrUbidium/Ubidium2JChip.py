@@ -50,8 +50,7 @@ class Ubidium2JChip:
 		received = b''
 		while self.keepGoing and received[-1:] != bCR:
 			try:
-				async with asyncio.timeout(5):
-					received += await reader.read(4096)
+				received += await asyncio.wait_for( reader.read(4096), 5 )
 			except Exception as e:
 				return received.decode(), e
 		return received[:-1].decode(), None
@@ -68,9 +67,8 @@ class Ubidium2JChip:
 			self.tagCount = 0
 			while self.checkKeepGoing():
 				try:
-					async with asyncio.timeout(4):
-						reader, writer = await asyncio.open_connection( self.crossMgrHost, self.crossMgrPort )
-						break
+					reader, writer = await asyncio.wait_for( asyncio.open_connection(self.crossMgrHost, self.crossMgrPort), 4 )
+					break
 				except Exception as e:
 					reader = writer = None
 					await self.messageQ.put( ('Ubidium2JChip', f'CrossMgr Connection Failed: {e}.') )
@@ -79,9 +77,8 @@ class Ubidium2JChip:
 
 			async def reset_connection():
 				try:
-					async with asyncio.timeout(5):
-						writer.close()
-						await writer.wait_close()
+					writer.close()
+					await asyncio.wait_for( writer.wait_close(), 5 )
 				except Exception:
 					pass
 				return None, None
@@ -97,9 +94,8 @@ class Ubidium2JChip:
 			await self.messageQ.put( ('Ubidium2JChip', 'CrossMgr Connection succeeded!' ) )
 			await self.messageQ.put( ('Ubidium2JChip', f'Sending identifier "{instance_name}"...') )
 			try:
-				async with asyncio.timeout(5):
-					writer.write( f"N0000{instance_name}{CR}".encode() )
-					await writer.drain()
+				writer.write( f"N0000{instance_name}{CR}".encode() )
+				await asyncio.wait_for( writer.drain(), 5 )
 			except Exception as e:
 				await self.messageQ.put( ('Ubidium2JChip', f'CrossMgr error: {e}.') )
 				reader, writer = await reset_connection()
@@ -130,9 +126,8 @@ class Ubidium2JChip:
 				CR)
 			self.messageQ.put( ('Ubidium2JChip', message[:-1]) )
 			try:
-				async with asyncio.timeout(5):
-					writer.write( message.encode() )
-					await writer.drain()
+				writer.write( message.encode() )
+				await asyncio.wait_for( writer.drain(), 5 )
 			except Exception as e:
 				await self.messageQ.put( ('Ubidium2JChip', f'CrossMgr exception: {e}.') )
 				reader, writer = await reset_connection()
@@ -165,8 +160,7 @@ class Ubidium2JChip:
 			while self.checkKeepGoing():
 				# Get all the entries from the receiver and forward them to CrossMgr.
 				try:
-					async with asyncio.timeout(1):
-						d = await self.dataQ.get()
+					d = await asyncio.wait_for( self.dataQ.get(), 1 )
 				except TimeoutError:
 					continue
 				except Exception as e:
@@ -183,8 +177,7 @@ class Ubidium2JChip:
 				message = formatMessage( d[0], d[1] )
 				try:
 					writer.write( message.encode() )
-					async with asyncio.timeout(5):
-						await writer.drain()
+					await asyncio.wait_for( writer.drain(), 5 )
 					self.tagCount += 1
 					await self.messageQ.put( ('Ubidium2JChip', f'Forwarded {self.tagCount}: {message[:-1]}') )
 				except Exception as e:
