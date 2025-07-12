@@ -50,7 +50,7 @@ class Ubidium2JChip:
 		received = b''
 		while self.keepGoing and received[-1:] != bCR:
 			try:
-				received += await syncio.wait_for( reader.read(4096), 5 )
+				received += await asyncio.wait_for( reader.read(4096), 5 )
 			except Exception as e:
 				return received.decode(), e
 		return received[:-1].decode(), None
