@@ -55,6 +55,7 @@ class UbidiumClient:
 			if not os.path.exists( self.fname ):
 				with open(self.fname, 'w', encoding='utf-8') as f:
 					f.write( 'Tag,Discover Time\n' )
+				await self.messageQ.put( ('BackupFile', self.fname) )
 				
 			with open(self.fname, 'a', encoding='utf-8') as f:
 				while not self.terminateSig:

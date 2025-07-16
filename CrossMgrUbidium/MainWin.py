@@ -198,6 +198,12 @@ class MainWin( wx.Frame ):
 		hh.Add( wx.StaticText( self, label=f'{UbidiumInboundPort}' ), flag=wx.ALIGN_CENTER_VERTICAL )
 		ucs.Add( hh, flag=wx.ALL, border=4 )
 		
+		hh = wx.BoxSizer( wx.HORIZONTAL )
+		hh.Add( wx.StaticText(self, label='Backup File:') )
+		self.backupFile = wx.StaticText( self, label='                                                   ' )
+		hh.Add( self.backupFile )
+		ucs.Add( hh, flag=wx.ALL, border=4 )
+		
 		#------------------------------------------------------------------------------------------------
 		# CrossMgr configuration.
 		#
@@ -353,9 +359,12 @@ class MainWin( wx.Frame ):
 			with wx.MessageDialog(self, 'Configuration and Logs copied to the Clipboard.',
 									'Copy to Clipboard Succeeded',
 									wx.OK | wx.ICON_INFORMATION ) as dlg:
-				AsyncShowDialogModal( dlg )
+				dlg.ShowModal()
 		else:
-			wx.MessageBox("Unable to open the clipboard", "Error")
+			with wx.MessageDialog(self, 'Cannot Open Clipboard.',
+									'Cannot Open Clipboard.',
+									wx.OK | wx.ICON_INFORMATION ) as dlg:
+				dlg.ShowModal()
 
 	def getCrossMgrHost( self ):
 		return self.crossMgrHost.GetAddress()
