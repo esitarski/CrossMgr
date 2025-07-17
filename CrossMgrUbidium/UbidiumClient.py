@@ -63,6 +63,10 @@ class UbidiumClient:
 						self.logQ.task_done()
 						break
 					
+					if msg[0] == 'init':
+						self.logQ.task_done()
+						continue
+					
 					f.write( msg[1] if msg[1].endswith('\n') else msg[1] + '\n' )
 					self.logQ.task_done()
 					

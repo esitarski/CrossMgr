@@ -345,7 +345,7 @@ class MainWin( wx.Frame ):
 		
 		cc.append( '\nLog: Application\n' )
 		try:
-			with open(redirectFileName, 'r') as fp:
+			with open(redirectFileName, 'r', encoding='utf8') as fp:
 				for line in fp:
 					cc.append( line )
 		except Exception:
@@ -396,6 +396,7 @@ class MainWin( wx.Frame ):
 				except asyncio.QueueEmpty:
 					break
 				
+				self.messageQ.task_done()
 				message = ' '.join( f'{x}' for x in d[1:] )
 				if   d[0] == 'Ubidium':
 					if 'state' in d:
@@ -451,7 +452,7 @@ async def MainLoop():
 			pass
 			
 		try:
-			with open(redirectFileName, 'a') as pf:
+			with open(redirectFileName, 'a', encoding='utf8') as pf:
 				pf.write( '********************************************\n' )
 				pf.write( '{}: {} Started.\n'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'), AppVerName) )
 		except Exception:
