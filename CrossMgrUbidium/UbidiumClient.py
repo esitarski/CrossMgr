@@ -322,7 +322,7 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 				for ip, devID in watcher.foundIPs.items():
 					# print(f"Found IP {ip} with ID {devID}")
 					if ip not in watcher.activeCons:
-						client = UbidiumClient( messageQ )
+						client = UbidiumClient( dataQ, messageQ )
 
 						client.SetChannelSettings()
 						client.CreateSecureChannel( f"{ip}:443", devID )
@@ -367,10 +367,10 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 		messageQ.put_nowait( ('Ubidium', f"Attempting to create Ubidium device connecton: {serverIP}, {ubidiumID}") )
 
 		# Set up client
-		client = global_client = UbidiumClient(dataQ, messageQ)
+		client = global_client = UbidiumClient( dataQ, messageQ )
 
 		client.SetChannelSettings()
-		client.CreateSecureChannel(serverIP, ubidiumID)
+		client.CreateSecureChannel( serverIP, ubidiumID )
 
 		# Open streams
 		client.OpenStatusStream()

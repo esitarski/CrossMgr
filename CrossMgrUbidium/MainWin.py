@@ -200,7 +200,7 @@ class MainWin( wx.Frame ):
 		
 		hh = wx.BoxSizer( wx.HORIZONTAL )
 		hh.Add( wx.StaticText(self, label='Backup File:') )
-		self.backupFile = wx.StaticText( self, label='                                                   ' )
+		self.backupFile = wx.StaticText( self, label='<<< Waiting for Ubidium Backup File >>>            ' )
 		hh.Add( self.backupFile )
 		ucs.Add( hh, flag=wx.ALL, border=4 )
 		

@@ -1,1 +1,1 @@
-AppVerName="CrossMgrUbidium 1.0.2-private"
+AppVerName="CrossMgrUbidium 1.0.3-private"
