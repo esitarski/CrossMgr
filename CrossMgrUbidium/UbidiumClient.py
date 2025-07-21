@@ -55,12 +55,17 @@ class UbidiumClient:
 			if not os.path.exists( self.fname ):
 				with open(self.fname, 'w', encoding='utf-8') as f:
 					f.write( 'Tag,Discover Time\n' )
+				await self.messageQ.put( ('BackupFile', self.fname) )
 				
 			with open(self.fname, 'a', encoding='utf-8') as f:
 				while not self.terminateSig:
 					if msg[0] == 'shutdown':
 						self.logQ.task_done()
 						break
+					
+					if msg[0] == 'init':
+						self.logQ.task_done()
+						continue
 					
 					f.write( msg[1] if msg[1].endswith('\n') else msg[1] + '\n' )
 					self.logQ.task_done()
@@ -317,7 +322,7 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 				for ip, devID in watcher.foundIPs.items():
 					# print(f"Found IP {ip} with ID {devID}")
 					if ip not in watcher.activeCons:
-						client = UbidiumClient( messageQ )
+						client = UbidiumClient( dataQ, messageQ )
 
 						client.SetChannelSettings()
 						client.CreateSecureChannel( f"{ip}:443", devID )
@@ -362,10 +367,10 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 		messageQ.put_nowait( ('Ubidium', f"Attempting to create Ubidium device connecton: {serverIP}, {ubidiumID}") )
 
 		# Set up client
-		client = global_client = UbidiumClient(dataQ, messageQ)
+		client = global_client = UbidiumClient( dataQ, messageQ )
 
 		client.SetChannelSettings()
-		client.CreateSecureChannel(serverIP, ubidiumID)
+		client.CreateSecureChannel( serverIP, ubidiumID )
 
 		# Open streams
 		client.OpenStatusStream()
