@@ -29,7 +29,6 @@ class Ubidium2JChip:
 		''' Queues:
 				dataQ:		tag/timestamp data to be written out to CrossMgr.
 				messageQ:	queue to write status messages.
-				shutdownQ:	queue to receive shutdown message to stop gracefully.
 		'''
 		self.dataQ = dataQ
 		self.messageQ = messageQ
