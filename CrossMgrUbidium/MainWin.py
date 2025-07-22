@@ -316,10 +316,11 @@ class MainWin( wx.Frame ):
 		Ubidium2JChip.Shutdown()
 		await self.dataQ.put( 'shutdown' )
 		await self.messageQ.put( 'shutdown' )
+		await syncio.sleep( 1 )
 		await Ubidium.Shutdown()
 	
 	def onCloseWindow( self, event ):
-		self.gracefulShutdown()
+		#self.gracefulShutdown()
 		wx.Exit()
 		
 	def doCopyToClipboard( self, event ):
