@@ -314,10 +314,13 @@ class MainWin( wx.Frame ):
 	async def gracefulShutdown( self ):
 		# Shutdown the async processes.
 		Ubidium2JChip.Shutdown()
+		await self.dataQ.put( 'shutdown' )
+		await self.messageQ.put( 'shutdown' )
+		await asyncio.sleep( 1 )
 		await Ubidium.Shutdown()
 	
 	def onCloseWindow( self, event ):
-		self.gracefulShutdown()
+		#self.gracefulShutdown()
 		wx.Exit()
 		
 	def doCopyToClipboard( self, event ):

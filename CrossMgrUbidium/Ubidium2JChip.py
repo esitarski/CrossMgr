@@ -29,7 +29,6 @@ class Ubidium2JChip:
 		''' Queues:
 				dataQ:		tag/timestamp data to be written out to CrossMgr.
 				messageQ:	queue to write status messages.
-				shutdownQ:	queue to receive shutdown message to stop gracefully.
 		'''
 		self.dataQ = dataQ
 		self.messageQ = messageQ
@@ -159,12 +158,20 @@ class Ubidium2JChip:
 			await self.messageQ.put( ('Ubidium2JChip', 'Waiting for RFID reader data...') )
 			while self.checkKeepGoing():
 				# Get all the entries from the receiver and forward them to CrossMgr.
+				'''
+				# Strangely, in this code, the value of "e" is blank.
 				try:
 					d = await asyncio.wait_for( self.dataQ.get(), 1 )
 				except TimeoutError:
 					continue
 				except Exception as e:
-					await self.messageQ.put( ('Ubidium2JChip', f'Ubidium error: {e}.  Attempting to reconnect...') )
+					await self.messageQ.put( ('Ubidium2JChip', f'dataQ Error: {e}.  Attempting to reconnect...') )
+					break
+				'''
+				try:
+					d = await self.dataQ.get()
+				except Exception as e:
+					await self.messageQ.put( ('Ubidium2JChip', f'dataQ Error: {e}.  Attempting to reconnect...') )
 					break
 				
 				# Process the shutdown message.
@@ -200,4 +207,6 @@ def CrossMgrServer( dataQ, messageQ, crossMgrHost, crossMgrPort ):
 	asyncio.create_task( ubidium2JChip.runServer() )
 	
 def Shutdown():
-	ubidium2JChip.keepGoing = False
+	global ubidium2JChip
+	if ubidium2JChip:
+		ubidium2JChip.keepGoing = False
