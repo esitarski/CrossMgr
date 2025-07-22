@@ -207,4 +207,6 @@ def CrossMgrServer( dataQ, messageQ, crossMgrHost, crossMgrPort ):
 	asyncio.create_task( ubidium2JChip.runServer() )
 	
 def Shutdown():
-	ubidium2JChip.keepGoing = False
+	global ubidium2JChip
+	if ubidium2JChip:
+		ubidium2JChip.keepGoing = False
