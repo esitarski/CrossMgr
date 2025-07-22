@@ -314,6 +314,8 @@ class MainWin( wx.Frame ):
 	async def gracefulShutdown( self ):
 		# Shutdown the async processes.
 		Ubidium2JChip.Shutdown()
+		await self.dataQ.put( 'shutdown' )
+		await self.messageQ.put( 'shutdown' )
 		await Ubidium.Shutdown()
 	
 	def onCloseWindow( self, event ):
