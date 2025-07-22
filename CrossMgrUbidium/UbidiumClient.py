@@ -84,7 +84,7 @@ class UbidiumClient:
 		try:
 			self.creds = grpc.ssl_channel_credentials(self.cert_bytes)
 		except Exception as err:
-			messageQ( ('Ubidium', f"Client: Could not create channel credentials. Error: {err}") )
+			self.messageQ.put_nowait( ('Ubidium', f"Client: Could not create channel credentials. Error: {err}") )
 
 	def CreateSecureChannel(self, ServerIP, UbidiumID):
 		self.channel = grpc.aio.secure_channel(ServerIP, self.creds,
@@ -118,19 +118,19 @@ class UbidiumClient:
 
 	async def CloseStatusStream(self):
 		if self.StatusStream is None:
-			messageQ.put_nowait( ('Ubidium', "UbidiumClient: Status stream not initialized") )
+			self.messageQ.put_nowait( ('Ubidium', "UbidiumClient: Status stream not initialized") )
 			return
 
 		await self.StatusStream.done_writing()
-		messageQ.put_nowait( ('Ubidium', f"UbidiumClient: Status stream closed for: {self.address}") )
+		self.messageQ.put_nowait( ('Ubidium', f"UbidiumClient: Status stream closed for: {self.address}") )
 
 	async def ClosePassingStream(self):
 		if self.PassingStream is None:
-			messageQ.put_nowait( ('Ubidium', "UbidiumClient: Passing stream not initialized") )
+			self.messageQ.put_nowait( ('Ubidium', "UbidiumClient: Passing stream not initialized") )
 			return
 
 		await self.PassingStream.done_writing()
-		messageQ.put_nowait( ('Ubidium', f"UbidiumClient: Passing stream closed for: {self.address}") )
+		self.messageQ.put_nowait( ('Ubidium', f"UbidiumClient: Passing stream closed for: {self.address}") )
 
 	# RequestStatus requests status updates from Ubidium and sets time interval for automated updates
 	async def RequestStatus(self):
@@ -151,7 +151,7 @@ class UbidiumClient:
 
 	# GetUbidiumStatus opens Status stream, awaits response from Server and prints received status data
 	async def GetUbidiumStatus(self):
-		messageQ.put_nowait( ('Ubidium', f"Client: Started to read status for: {self.address}") )
+		self.messageQ.put_nowait( ('Ubidium', f"Client: Started to read status for: {self.address}") )
 
 		while not self.terminateSig:
 			try:
@@ -160,15 +160,14 @@ class UbidiumClient:
 					break
 				await self.HandleStatus(response)
 			except Exception as err:
-				messageQ.put_nowait( ('Ubidium', f"Client: Error GetUbidiumStatus for {self.deviceID}: {err.details()}") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Error GetUbidiumStatus for {self.deviceID}: {err.details()}") )
 				break
 
-		messageQ.put_nowait( ('Ubidium', f"Client: Reading status is stopped for: {self.address}") )
-
+		self.messageQ.put_nowait( ('Ubidium', f"Client: Reading status is stopped for: {self.address}") )
 		
 	# GetUbidiumPassing opens Passing stream, awaits response from Server and prints received passing data
 	async def GetUbidiumPassing(self):
-		messageQ.put_nowait( ('Ubidium', f"Client: Started to read passings for: {self.address}") )
+		self.messageQ.put_nowait( ('Ubidium', f"Client: Started to read passings for: {self.address}") )
 
 		while not self.terminateSig:
 			try:
@@ -177,10 +176,10 @@ class UbidiumClient:
 					break
 				await self.HandlePassing(response)
 			except Exception as err:
-				messageQ.put_nowait( ('Ubidium', f"Client: Error inside GetUbidiumPassing for {self.deviceID}: {err.details()}") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Error inside GetUbidiumPassing for {self.deviceID}: {err.details()}") )
 				break
 
-		messageQ.put_nowait( ('Ubidium', f"Client: Reading passings is stopped for: {self.address}") )
+		self.messageQ.put_nowait( ('Ubidium', f"Client: Reading passings is stopped for: {self.address}") )
 
 	# TransmitKey takes key parameter and transmits to Ubidium
 	async def TransmitKey(self, Key: service_command_pb2.Key):
@@ -191,7 +190,7 @@ class UbidiumClient:
 	async def HandleStatus(self, response):
 		try:
 			if response.WhichOneof("response") == "error":
-				messageQ.put_nowait( ('Ubidium', f"Client: Error: {response.error}\n") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Error: {response.error}\n") )
 
 			elif response.WhichOneof("response") == "status":
 				if self.deviceID == "":
@@ -199,11 +198,11 @@ class UbidiumClient:
 				# Compute a time correction between the Ubidium device and this computer.
 				t_reader = response.status.time
 				self.passing_correction = datetime.now() - t_reader
-				messageQ.put_nowait( ('Ubidium', f"Client: Status (update) from: {self.deviceID} {response.status}") )
-				messageQ.put_nowait( ('Ubidium', f"Client: Ubidium-Computer time correction: {self.passing_correction}") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Status (update) from: {self.deviceID} {response.status}") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Ubidium-Computer time correction: {self.passing_correction}") )
 
 		except Exception as err:
-			messageQ.put_nowait( ('Ubidium', f"Client: Error occurred on reading status stream. Error: {err}") )
+			self.messageQ.put_nowait( ('Ubidium', f"Client: Error occurred on reading status stream. Error: {err}") )
 
 	# HandlePassing displays received passing via serial console
 	async def HandlePassing(self, response):
@@ -212,21 +211,24 @@ class UbidiumClient:
 				deviceID = response.passing.src.device_id
 
 				if response.passing.WhichOneof("data") == "active":
-					t = response.passing.time + self.passing_correction
-					tag = response.passing.transponder.id
-					self.dataQ.put_nowait( (tag, t) )
-					self.logQ.put_nowait( ('msg', f'{tag}, {t}') )
+					try:
+						tag = response.passing.transponder.id
+						t = response.passing.time + self.passing_correction
+						self.dataQ.put_nowait( (tag, t) )
+						self.logQ.put_nowait( ('msg', f'{tag}, {t}') )
+					except Exception as e:
+						self.messageQ.put_nowait( ('Ubidium', f"Handle Passing Error: {e}") )
 				elif response.passing.WhichOneof("data") == "marker":
-					messageQ.put_nowait( ('Ubidium', f"Client: Got marker from {deviceID}") )
+					self.messageQ.put_nowait( ('Ubidium', f"Client: Got marker from {deviceID}") )
 
 			elif response.WhichOneof("response") == "welcome":
-				messageQ.put_nowait( ('Ubidium', f"Client: Welcome: {response.welcome}") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Welcome: {response.welcome}") )
 
 			elif response.WhichOneof("response") == "error":
-				messageQ.put_nowait( ('Ubidium', f"Client: Error: {response.error}") )
+				self.messageQ.put_nowait( ('Ubidium', f"Client: Error: {response.error}") )
 
 		except Exception as err:
-			messageQ.put_nowait( ('Ubidium', f"Client: Error occurred on reading passing stream. Error: {err}") )
+			self.messageQ.put_nowait( ('Ubidium', f"Client: Error occurred on reading passing stream. Error: {err}") )
 
 #-----------------------------------------------------------------------
 
@@ -278,16 +280,16 @@ def signalHandler(signum, frame):
 
 global_watcher = None
 global_client = None
-async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
+async def StartClient( dataQ, messQ, serverIP=None, ubidiumID=None ):
 	global global_watcher
 	global global_client
 
-	await messageQ.put( ('Ubidium', 'state', False) )
+	await messQ.put( ('Ubidium', 'state', False) )
 
 	if not (serverIP or ubidiumID):
-		messageQ.put_nowait( ('Ubidium', "Listening for Ubidium devices...") )
+		messQ.put_nowait( ('Ubidium', "Listening for Ubidium devices...") )
 
-		watcher = global_watcher = UbidiumWatcher( messageQ )
+		watcher = global_watcher = UbidiumWatcher( messQ )
 		watcher.startMonitorBC()
 
 		while not terminateSig:
@@ -300,7 +302,7 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 					if ip not in watcher.foundIPs:
 						client = watcher.activeCons[ip]
 
-						messageQ.put_nowait( ('Ubidium', f"Closing Secure Channel ip={ip} device={client.deviceID}") )
+						messQ.put_nowait( ('Ubidium', f"Closing Secure Channel ip={ip} device={client.deviceID}") )
 						
 						await client.CloseStatusStream()
 						await client.ClosePassingStream()
@@ -309,11 +311,11 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 						# Close channel
 						try:
 							await asyncio.wait_for(client.channel.close(), timeout=1.0)
-							messageQ.put_nowait( ('Ubidium', f"Secure Channel closed for: {client.deviceID}") )
+							messQ.put_nowait( ('Ubidium', f"Secure Channel closed for: {client.deviceID}") )
 						except asyncio.TimeoutError:
-							messageQ.put_nowait( ('Ubidium', f"Timeout on closing channel for: {client.deviceID}") )
+							messQ.put_nowait( ('Ubidium', f"Timeout on closing channel for: {client.deviceID}") )
 						except grpc.RpcError as err:
-							messageQ.put_nowait( ('Ubidium', f"Could not close Secure Channel. Error: {err}") )
+							messQ.put_nowait( ('Ubidium', f"Could not close Secure Channel. Error: {err}") )
 
 						del watcher.activeCons[ip]
 
@@ -322,7 +324,7 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 				for ip, devID in watcher.foundIPs.items():
 					# print(f"Found IP {ip} with ID {devID}")
 					if ip not in watcher.activeCons:
-						client = UbidiumClient( dataQ, messageQ )
+						client = UbidiumClient( dataQ, messQ )
 
 						client.SetChannelSettings()
 						client.CreateSecureChannel( f"{ip}:443", devID )
@@ -337,8 +339,8 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 
 						client.StartTasks()
 						watcher.activeCons[ip] = client
-						messageQ.put_nowait( ('Ubidium', f"Created client connection for {ip}:443, {devID}") )
-						messageQ.put_nowait( ('Ubidium', 'state', True) )
+						messQ.put_nowait( ('Ubidium', f"Created client connection for {ip}:443, {devID}") )
+						messQ.put_nowait( ('Ubidium', 'state', True) )
 
 			await asyncio.sleep(3)
 
@@ -356,18 +358,18 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 				# Close channel
 				try:
 					await asyncio.wait_for(client.channel.close(), timeout=1.0)
-					messageQ.put_nowait( ('Ubidium', f"Secure Channel closed for: {client.deviceID}") )
+					messQ.put_nowait( ('Ubidium', f"Secure Channel closed for: {client.deviceID}") )
 				except asyncio.TimeoutError:
-					messageQ.put_nowait( ('Ubidium', f"Timeout on closing channel for: {client.deviceID}") )
+					messQ.put_nowait( ('Ubidium', f"Timeout on closing channel for: {client.deviceID}") )
 				except grpc.RpcError as err:
-					messageQ.put_nowait( ('Ubidium', f"Could not close Secure Channel. Error: {err}") )
+					messQ.put_nowait( ('Ubidium', f"Could not close Secure Channel. Error: {err}") )
 
 				del watcher.activeCons[ip]
 	else:
-		messageQ.put_nowait( ('Ubidium', f"Attempting to create Ubidium device connecton: {serverIP}, {ubidiumID}") )
+		messQ.put_nowait( ('Ubidium', f"Attempting to create Ubidium device connecton: {serverIP}, {ubidiumID}") )
 
 		# Set up client
-		client = global_client = UbidiumClient( dataQ, messageQ )
+		client = global_client = UbidiumClient( dataQ, messQ )
 
 		client.SetChannelSettings()
 		client.CreateSecureChannel( serverIP, ubidiumID )
@@ -392,13 +394,13 @@ async def StartClient( dataQ, messageQ, serverIP=None, ubidiumID=None ):
 		# Close channel
 		try:
 			await asyncio.wait_for(client.channel.close(), timeout=1.0)
-			messageQ.put_nowait( ('Ubidium', f"Secure Channel closed for: {client.deviceID}") )
+			messQ.put_nowait( ('Ubidium', f"Secure Channel closed for: {client.deviceID}") )
 		except asyncio.TimeoutError:
-			messageQ.put_nowait( ('Ubidium', f"Timeout on closing channel for: {client.deviceID}") )
+			messQ.put_nowait( ('Ubidium', f"Timeout on closing channel for: {client.deviceID}") )
 		except grpc.RpcError as err:
-			messageQ.put_nowait( ('Ubidium', f"Could not close Secure Channel. Error: {err}") )
+			messQ.put_nowait( ('Ubidium', f"Could not close Secure Channel. Error: {err}") )
 
-	messageQ.put_nowait( ('Ubidium', "StartClient: exiting.") )
+	messQ.put_nowait( ('Ubidium', "StartClient: exiting.") )
 	dataQ.put_nowait( 'shutdown' )
 
 async def StopClient():
