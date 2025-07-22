@@ -895,7 +895,7 @@ def GetCategoryResults( categoryName, raceResults, useMostEventsCompleted=False,
 					primePoints += primePointsRace
 					points += pointsRace
 			else:
-				points, primePoints = rr_points( rc )
+				points, primePoints = rr_points( rr )
 			
 			riderResults[rider][raceSequence[rr.raceInSeries]] = (points, rr.rank, primePoints, 0, rr)
 			riderFinishes[rider][raceSequence[rr.raceInSeries]] = points
