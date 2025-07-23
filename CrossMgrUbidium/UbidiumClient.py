@@ -12,7 +12,7 @@ import os
 import asyncio
 import grpc
 from google.protobuf import duration_pb2 as _duration_pb2
-import datetime
+from datetime import datetime, timedelta
 
 from UbidiumSDK.ubidium import service_pb2_grpc, service_command_pb2, service_status_pb2, service_passing_pb2
 from UbidiumSDK.Certificates import Certificates
@@ -32,11 +32,11 @@ class UbidiumClient:
 		self.UbidiumStub = None
 		self.StatusStream = None
 		self.PassingStream = None
-		self.passing_correction = datetime.timedelta( seconds=0 )	# Correction between Ubidium's clock and our local clock.
+		self.passing_correction = timedelta( seconds=0 )	# Correction between Ubidium's clock and our local clock.
 		self.deviceID = ""
 		self.address = ""
 		
-		self.tStart = datetime.datetime.now()
+		self.tStart = datetime.now()
 		self.logQ = asyncio.Queue()
 		asyncio.create_task( self.handleLogFile() )
 
