@@ -12,7 +12,7 @@ import os
 import asyncio
 import grpc
 from google.protobuf import duration_pb2 as _duration_pb2
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from UbidiumSDK.ubidium import service_pb2_grpc, service_command_pb2, service_status_pb2, service_passing_pb2
 from UbidiumSDK.Certificates import Certificates
@@ -21,6 +21,9 @@ HOME_DIR = os.path.expanduser("~")
 
 global_watcher = None
 global_client = None
+
+def UbidiumTimeToDatetime( t_proto ):
+	return datetime.fromtimestamp( t_proto.utc.toMicroseconds()/1000000.0, UTC )
 
 class UbidiumClient:
 
@@ -195,14 +198,16 @@ class UbidiumClient:
 			elif response.WhichOneof("response") == "status":
 				if self.deviceID == "":
 					self.deviceID = response.status.id
+				# Extract the passing time and convert it to python format.
+				t_reader = UbidiumTimeToDatetime( response.status.time )
 				# Compute a time correction between the Ubidium device and this computer.
-				t_reader = response.status.time
+				# No need to worry about the timezone it will be handled by the correction.
 				self.passing_correction = datetime.now() - t_reader
 				self.messageQ.put_nowait( ('Ubidium', f"Client: Status (update) from: {self.deviceID} {response.status}") )
 				self.messageQ.put_nowait( ('Ubidium', f"Client: Ubidium-Computer time correction: {self.passing_correction}") )
 
 		except Exception as err:
-			self.messageQ.put_nowait( ('Ubidium', f"Client: Error occurred on reading status stream. Error: {err}") )
+			self.messageQ.put_nowait( ('Ubidium', f"Client: Error on reading Status stream. {err}") )
 
 	# HandlePassing displays received passing via serial console
 	async def HandlePassing(self, response):
@@ -213,7 +218,7 @@ class UbidiumClient:
 				if response.passing.WhichOneof("data") == "active":
 					try:
 						tag = response.passing.transponder.id
-						t = response.passing.time + self.passing_correction
+						t = UbidiumTimeToDatetime( response.passing.time.utc ) + self.passing_correction
 						self.dataQ.put_nowait( (tag, t) )
 						self.logQ.put_nowait( ('msg', f'{tag}, {t}') )
 					except Exception as e:
@@ -228,7 +233,7 @@ class UbidiumClient:
 				self.messageQ.put_nowait( ('Ubidium', f"Client: Error: {response.error}") )
 
 		except Exception as err:
-			self.messageQ.put_nowait( ('Ubidium', f"Client: Error occurred on reading passing stream. Error: {err}") )
+			self.messageQ.put_nowait( ('Ubidium', f"Client: Error on reading Passing stream. {err}") )
 
 #-----------------------------------------------------------------------
 
