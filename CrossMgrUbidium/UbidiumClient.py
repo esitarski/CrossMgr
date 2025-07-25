@@ -12,7 +12,7 @@ import os
 import asyncio
 import grpc
 from google.protobuf import duration_pb2 as _duration_pb2
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 
 from UbidiumSDK.ubidium import service_pb2_grpc, service_command_pb2, service_status_pb2, service_passing_pb2
 from UbidiumSDK.Certificates import Certificates
@@ -23,7 +23,7 @@ global_watcher = None
 global_client = None
 
 def UbidiumTimeToDatetime( t_proto ):
-	return datetime.fromtimestamp( t_proto.utc.toMicroseconds()/1000000.0, UTC )
+	return datetime.fromtimestamp( t_proto.utc.toMicroseconds()/1000000.0 )
 
 class UbidiumClient:
 
