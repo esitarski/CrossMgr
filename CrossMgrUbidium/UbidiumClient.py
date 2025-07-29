@@ -23,7 +23,7 @@ global_watcher = None
 global_client = None
 
 def UbidiumTimeToDatetime( t_proto ):
-	return datetime.fromtimestamp( t_proto.utc.toMicroseconds()/1000000.0 )
+	return datetime.fromtimestamp( t_proto.utc.ToMicroseconds()/1000000.0 )
 
 class UbidiumClient:
 
