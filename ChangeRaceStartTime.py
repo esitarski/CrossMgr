@@ -139,17 +139,20 @@ class ChangeRaceStartTimeDialog( wx.Dialog ):
 			else:
 				for rider in race.riders.values():
 					try:
-						rider.firstTime = max( 0.0, rider.firstTime - dTime )
+						ft = rider.firstTime - dTime
+						rider.firstTime = ft if ft >= 0.0 else None
 					except TypeError:
 						pass
-					rider.times[:] = [max(0.0, v - dTime) for v in rider.times]
+					rider.times[:] = [(v-dTime) for v in rider.times if (v-dTime >= 0.0)]
+					if rider.times and not rider.firstTime:
+						rider.firstTime = rider.times[0]
 			
 				race.numTimeInfo.adjustAllTimes( -dTime )
 				
 			# Fix unmatched tags too.
 			if race.unmatchedTags:
 				for times in race.unmatchedTags.values():
-					times[:] = [max(0.0, v - dTime) for v in times]
+					times[:] = [(v-dTime) for v in times if (v-dTime > 0.0)]
 			
 			race.startTime = startTimeNew
 			race.setChanged()
