@@ -66,7 +66,7 @@ def UbidiumImport( fname ):
 				# Add tag and time.	
 				tags.append( (id, dt) )
 				
-		except Exception as e:
-			errors.append( f'File Open Error: {e}' )
+	except Exception as e:
+		errors.append( f'File Open Error: {e}' )
 
 	return tags, errors
