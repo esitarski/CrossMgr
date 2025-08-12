@@ -922,6 +922,8 @@ class Results(wx.Panel):
 		font_size = 16
 		headerStyle.set_font_size( font_size )
 		
+		uesn = Utils.UniqueExcelSheetName()
+		
 		for categoryName in categoryNames:
 			category = model.categories[categoryName]				
 			bestResultsToConsider = (category.bestResultsToConsider if category.bestResultsToConsider is not None else model.bestResultsToConsider)
@@ -939,7 +941,7 @@ class Results(wx.Panel):
 			headerNames, hasTeam, hasLicense, hasUCIID = fixHeaderNames( results )
 			headerNames.extend( '{}'.format(r[1]) for r in races )
 			
-			ws = wb.add_worksheet( re.sub('[:\\/?*\\[\\]]', ' ', categoryName) )
+			ws = wb.add_worksheet( uesn.getSheetName(categoryName) )
 			wsFit = FitSheetWrapperXLSX( ws )
 
 			rowCur = 0

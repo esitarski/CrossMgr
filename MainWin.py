@@ -93,6 +93,7 @@ import JChip
 import OrionImport
 import AlienImport
 import ImpinjImport
+import UbidiumImport
 import IpicoImport
 import OutputStreamer
 import GpxImport
@@ -740,6 +741,9 @@ class MainWin( wx.Frame ):
 		item = self.chipMenu.Append( wx.ID_ANY, _("Import Orion File..."), _("Orion Formatted File") )
 		self.Bind(wx.EVT_MENU, self.menuOrionImport, item )
 		
+		#item = self.chipMenu.Append( wx.ID_ANY, _("Import Ubidium File..."), _("Ubidium File") )
+		#self.Bind(wx.EVT_MENU, self.menuUbidiumImport, item )
+		
 		item = self.chipMenu.Append( wx.ID_ANY, _("Import RaceResult File..."), _("RaceResult File") )
 		self.Bind(wx.EVT_MENU, self.menuRaceResultImport, item )
 		
@@ -1356,6 +1360,21 @@ class MainWin( wx.Frame ):
 			return
 			
 		with RaceResultImport.RaceResultImportDialog(self) as dlg:
+			dlg.ShowModal()
+		wx.CallAfter( self.refresh )
+		
+	def menuUbidiumImport( self, event ):
+		correct, reason = JChipSetup.CheckExcelLink()
+		explain = '{}\n\n{}'.format(
+			_('You must have a valid Excel sheet with associated tags and Bib numbers.'),
+			_('See documentation for details.')
+		)
+		if not correct:
+			Utils.MessageOK( self, '{}\n\n    {}\n\n{}'.format(_('Problems with Excel sheet.'), reason, explain),
+									title = _('Excel Link Problem'), iconMask = wx.ICON_ERROR )
+			return
+			
+		with UbidiumImport.UbidiumImportDialog(self) as dlg:
 			dlg.ShowModal()
 		wx.CallAfter( self.refresh )
 		
