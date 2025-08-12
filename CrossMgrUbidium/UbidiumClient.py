@@ -23,7 +23,6 @@ global_watcher = None
 global_client = None
 
 def UbidiumTimeToDatetime( t_proto ):
-	#return datetime.fromtimestamp( t_proto.utc.ToMicroseconds()/1000000.0 )
 	return t_proto.utc.ToDatetime()
 
 class UbidiumClient:
@@ -189,7 +188,6 @@ class UbidiumClient:
 	async def TransmitKey(self, Key: service_command_pb2.Key):
 		await self.UbidiumStub.PressKey(service_command_pb2.CmdPressKey(key=Key))
 
-
 	# HandleStatus displays received ubidium status via serial console
 	async def HandleStatus(self, response):
 		try:
@@ -197,15 +195,15 @@ class UbidiumClient:
 				self.messageQ.put_nowait( ('Ubidium', f"Client: Error: {response.error}\n") )
 
 			elif response.WhichOneof("response") == "status":
-				if self.deviceID == "":
+				if self.deviceID != response.status.id:
 					self.deviceID = response.status.id
-				# Extract the passing time and convert it to python format.
-				t_reader = UbidiumTimeToDatetime( response.status.time )
-				# Compute a time correction between the Ubidium device and this computer.
-				# No need to worry about the timezone it will be handled by the correction.
-				self.passing_correction = datetime.now() - t_reader
-				self.messageQ.put_nowait( ('Ubidium', f"Client: Status (update) from: {self.deviceID} {response.status}") )
-				self.messageQ.put_nowait( ('Ubidium', f"Client: Ubidium-Computer time correction: {self.passing_correction}") )
+					# Extract the passing time and convert it to python format.
+					t_reader = UbidiumTimeToDatetime( response.status.time )
+					# Compute a time correction between the Ubidium device and this computer.
+					# No need to worry about the timezone it will be handled by the correction.
+					self.passing_correction = datetime.now() - t_reader
+					self.messageQ.put_nowait( ('Ubidium', f"Client: Status (update) from: {self.deviceID} with datetime {t_reader}") )
+					self.messageQ.put_nowait( ('Ubidium', f"Client: Ubidium-Computer time correction: {self.passing_correction}") )
 
 		except Exception as err:
 			self.messageQ.put_nowait( ('Ubidium', f"Client: Error on reading Status stream. {err}") )
