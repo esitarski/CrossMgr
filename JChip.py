@@ -264,7 +264,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						# Close the previous connection as it is no longer needed.
 						if name in nameReader:
 							s_dropped = nameReader[name]
-							qLog( 'transmitting', '"{}" is reconnecting'.format(readerName[s]) )
+							qLog( 'transmitting', f'"{name} {s_dropped}" is reconnecting' )
 							closeReader( s_dropped )
 						
 						readerName[s] = name
@@ -273,8 +273,8 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 						
 						# Now, get the reader's current time.
 						cmd = 'GT'
-						qLog( 'transmitting', '{} command to "{}" (gettime)'.format(cmd, readerName[s]) )
-						socketWrite( s, '{}{}'.format(cmd, CR) )
+						qLog( 'transmitting', f'{cmd} command to "{readerName[s]}" (gettime)' )
+						socketWrite( s, f'{cmd}{CR}' )
 					
 					elif line.startswith( 'GT' ):
 						tNow = datetime.datetime.now()

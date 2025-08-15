@@ -20,7 +20,7 @@ jobs:
             - name: Setup Python environment
               uses: actions/setup-python@v5
               with:
-                python-version: 3.10.*
+                python-version: 3.13.*
             - name: Checkout code
               #uses: actions/checkout@master
               uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
             - name: Setup Python environment
               uses: actions/setup-python@v5
               with:
-                python-version: 3.10.*
+                python-version: 3.13.*
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Setup Environment
@@ -84,7 +84,7 @@ jobs:
             #~ - name: Setup Python Environment
               #~ uses: actions/setup-python@v5git opu
               #~ with:
-                #~ python-version: 3.10.*
+                #~ python-version: 3.13.*
             #~ - name: Checkout code
               ##~ uses: actions/checkout@master
               #~ uses: actions/checkout@v4

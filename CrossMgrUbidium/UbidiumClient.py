@@ -218,9 +218,9 @@ class UbidiumClient:
 					try:
 						tag = response.passing.transponder.id
 						t = UbidiumTimeToDatetime( response.passing.time.utc ) + self.passing_correction
-						self.logQ.put_nowait( ('msg', f'tag/time: {tag}, {t}') )
-						self.logQ.put_nowait( ('msg', f'response.passing: {reponse.passing}') )
 						self.dataQ.put_nowait( (tag, t) )
+						self.logQ.put_nowait( ('msg', f'{tag}, {t}') )
+						self.messageQ.put_nowait( ('Ubidium', f'response.passing= {reponse.passing}') )
 					except Exception as e:
 						self.messageQ.put_nowait( ('Ubidium', f"Handle Passing Error: {e}") )
 				elif response.passing.WhichOneof("data") == "marker":
