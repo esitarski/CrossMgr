@@ -598,6 +598,8 @@ class Results(wx.Panel):
 		self.publishToFtp.Bind( wx.EVT_BUTTON, self.onPublishToFtp )
 		self.publishToExcel = wx.Button( self, label='Publish to Excel' )
 		self.publishToExcel.Bind( wx.EVT_BUTTON, self.onPublishToExcel )
+		self.errorsLabel = wx.StaticText( self, label='' )
+		self.setErrorsLabel( True )
 		
 		self.postPublishCmdLabel = wx.StaticText( self, label='Post Publish Cmd:' )
 		self.postPublishCmd = wx.TextCtrl( self, size=(300,-1) )
@@ -613,6 +615,8 @@ class Results(wx.Panel):
 		hs.Add( self.publishToHtml, flag=wx.LEFT, border=48 )
 		hs.Add( self.publishToFtp, flag=wx.LEFT, border=4 )
 		hs.Add( self.publishToExcel, flag=wx.LEFT, border=4 )
+		hs.AddSpacer( 8 )
+		hs.Add( self.errorsLabel, flag=wx.EXPAND, border=4 )
 		
 		hs2 = wx.BoxSizer( wx.HORIZONTAL )
 		hs2.Add( self.postPublishCmdLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
@@ -751,6 +755,17 @@ class Results(wx.Panel):
 		self.categoryChoice.SetSelection( iCurSelection )
 		self.GetSizer().Layout()
 
+	def setErrorsLabel( self, clear=False ):
+		if clear or not SeriesModel.model.errors:
+			self.errorsLabel.SetLabel( ' '*64 )
+			self.errorsLabel.SetBackgroundColour(wx.NullColour)
+			self.errorsLabel.SetForegroundColour(wx.NullColour)
+		else:
+			error_count = len(SeriesModel.model.errors)
+			self.errorsLabel.SetLabel( f'   {error_count} Error(s).  See Errors screen.   ' )
+			self.errorsLabel.SetBackgroundColour( wx.Colour(238,75,43) )
+			self.errorsLabel.SetForegroundColour( wx.WHITE )
+
 	def refresh( self, backgroundUpdate=False ):
 		model = SeriesModel.model
 		
@@ -764,6 +779,7 @@ class Results(wx.Panel):
 				self.raceResults = model.extractAllRaceResults()
 			self.fixCategories()
 		
+		self.setErrorsLabel( True )
 		self.grid.ClearGrid()
 		
 		categoryName = self.categoryChoice.GetStringSelection()
@@ -874,6 +890,7 @@ class Results(wx.Panel):
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )
 		
+		self.setErrorsLabel()
 		self.GetSizer().Layout()
 		
 	def onPublishToExcel( self, event ):
