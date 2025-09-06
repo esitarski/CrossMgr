@@ -598,7 +598,8 @@ class Results(wx.Panel):
 		self.publishToFtp.Bind( wx.EVT_BUTTON, self.onPublishToFtp )
 		self.publishToExcel = wx.Button( self, label='Publish to Excel' )
 		self.publishToExcel.Bind( wx.EVT_BUTTON, self.onPublishToExcel )
-		self.errorsLabel = wx.StaticText( self, label=' '*64 )
+		self.errorsLabel = wx.StaticText( self, label='' )
+		self.setErrorsLabel( True )
 		
 		self.postPublishCmdLabel = wx.StaticText( self, label='Post Publish Cmd:' )
 		self.postPublishCmd = wx.TextCtrl( self, size=(300,-1) )
@@ -755,12 +756,12 @@ class Results(wx.Panel):
 		self.GetSizer().Layout()
 
 	def setErrorsLabel( self, clear=False ):
-		model = SeriesModel.model
-		if clear or not model.errors:
+		if clear or not SeriesModel.model.errors:
 			self.errorsLabel.SetLabel( ' '*64 )
 			self.errorsLabel.SetBackgroundColour(wx.NullColour)
 			self.errorsLabel.SetForegroundColour(wx.NullColour)
 		else:
+			model = SeriesModel.model
 			self.errorsLabel.SetLabel( f'   {len(model.errors)} Errors.  See Errors screen.   ' )
 			self.errorsLabel.SetBackgroundColour( wx.Colour(238,75,43) )
 			self.errorsLabel.SetForegroundColour( wx.WHITE )
