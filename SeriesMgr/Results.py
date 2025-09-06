@@ -761,8 +761,8 @@ class Results(wx.Panel):
 			self.errorsLabel.SetBackgroundColour(wx.NullColour)
 			self.errorsLabel.SetForegroundColour(wx.NullColour)
 		else:
-			model = SeriesModel.model
-			self.errorsLabel.SetLabel( f'   {len(model.errors)} Errors.  See Errors screen.   ' )
+			error_count = len(SeriesModel.model.errors)
+			self.errorsLabel.SetLabel( f'   {error_count} Error(s).  See Errors screen.   ' )
 			self.errorsLabel.SetBackgroundColour( wx.Colour(238,75,43) )
 			self.errorsLabel.SetForegroundColour( wx.WHITE )
 
