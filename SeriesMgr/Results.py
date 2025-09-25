@@ -763,7 +763,7 @@ class Results(wx.Panel):
 		else:
 			error_count = len(SeriesModel.model.errors)
 			self.errorsLabel.SetLabel( f'   {error_count} Error(s).  See Errors screen.   ' )
-			self.errorsLabel.SetBackgroundColour( wx.Colour(238,75,43) )
+			self.errorsLabel.SetBackgroundColour( wx.Colour(255,44,44) )
 			self.errorsLabel.SetForegroundColour( wx.WHITE )
 
 	def refresh( self, backgroundUpdate=False ):

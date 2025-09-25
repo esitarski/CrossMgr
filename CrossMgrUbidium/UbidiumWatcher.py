@@ -71,9 +71,10 @@ class UbidiumWatcher:
 
 			ip = addr[0]
 			async with self.IPLock:
-				self.foundIPs[ip] = shout.status.id
+				if ip not in self.foundIPs:
+					self.foundIPs[ip] = shout.status.id
+					self.messageQ.put_nowait( ('Ubidium', f"UbidiumWatcher: Found Ubidium Server on {ip}.") )
 				self.lastSeen[ip] = datetime.now()
-				self.messageQ.put_nowait( ('Ubidium', f"UbidiumWatcher: Found Ubidium Server on {ip}.") )
 		
 		self.messageQ.put_nowait( ('Ubidium', "UbidiumWatcher: Stopped listening to Ubidium devices.") )
 		sock.close()
