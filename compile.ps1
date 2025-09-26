@@ -347,7 +347,7 @@ OutputDir=$releasepath
 	}
 	else
 	{
-		Write-Host "Cant find Inno Setup 6.x! Is it installed? Aborting...."
+		Write-Host "Cannot find Inno Setup 6.x! Is it installed? Aborting...."
 		exit 1
 	}
 	
