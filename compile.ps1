@@ -310,6 +310,9 @@ VersionInfoCopyright=Copyright (C) 2004-$yeartoday Edward Sitarski
 OutputBaseFilename=$newinstallname
 OutputDir=$releasepath
 "
+
+	winget install --id JRSoftware.InnoSetup -e -s winget -i
+	
 	Set-Content -Path "$builddir\inno_setup.txt" -Value "$setup"
 	# Scan the registry for innosetup 6.x
 	$apps=(Get-ChildItem HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | % { Get-ItemProperty $_.PsPath } | Select DisplayName, InstallLocation | Sort-Object Displayname -Descending)
