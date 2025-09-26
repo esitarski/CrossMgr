@@ -214,7 +214,9 @@ class UbidiumClient:
 			if response.WhichOneof("response") == "passing":
 				deviceID = response.passing.src.device_id
 
-				if response.passing.WhichOneof("data") == "active":
+				if response.passing.WhichOneof("data") == "marker":
+					self.messageQ.put_nowait( ('Ubidium', f"Client: Got marker from {deviceID}") )
+				else:	# Handle active or passive tag passing.
 					try:
 						tag = response.passing.transponder.id
 						t = UbidiumTimeToDatetime( response.passing.time.utc ) + self.passing_correction
@@ -224,8 +226,7 @@ class UbidiumClient:
 						self.messageQ.put_nowait( ('Ubidium', f'tag={tag} t={t}') )
 					except Exception as e:
 						self.messageQ.put_nowait( ('Ubidium', f"Handle Passing Error: {e}") )
-				elif response.passing.WhichOneof("data") == "marker":
-					self.messageQ.put_nowait( ('Ubidium', f"Client: Got marker from {deviceID}") )
+						self.logQ.put_nowait( ('msg', f"Handle Passing Error: {e}") )
 
 			elif response.WhichOneof("response") == "welcome":
 				self.messageQ.put_nowait( ('Ubidium', f"Client: Welcome: {response.welcome}") )
