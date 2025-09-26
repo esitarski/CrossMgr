@@ -43,7 +43,7 @@ jobs:
                  title: "Development Build"
                  files: release/*
     buildwindows:
-        name: Windows-2022
+        name: Windows
         needs: buildmac
         runs-on: windows-latest
         timeout-minutes: 120
