@@ -311,7 +311,7 @@ OutputBaseFilename=$newinstallname
 OutputDir=$releasepath
 "
 
-	winget install --id JRSoftware.InnoSetup -e -s winget -h --disable-interactivity --ignore-warnings
+	# winget install --id JRSoftware.InnoSetup -e -s winget -h --disable-interactivity --ignore-warnings
 	
 	Set-Content -Path "$builddir\inno_setup.txt" -Value "$setup"
 	# Scan the registry for innosetup 6.x

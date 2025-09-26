@@ -45,7 +45,7 @@ jobs:
     buildwindows:
         name: Windows
         needs: buildmac
-        runs-on: windows-latest
+        runs-on: windows-2022
         timeout-minutes: 120
         steps:
             - name: Setup Python environment

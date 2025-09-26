@@ -42,13 +42,14 @@ jobs:
     buildwindows:
         name: Windows
         needs: buildmac
-        runs-on: windows-latest
+        runs-on: windows-2022
         timeout-minutes: 120
         steps:
             - name: Setup Python environment
               uses: actions/setup-python@v5
               with:
                 python-version: 3.13.*
+
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Setup Environment
