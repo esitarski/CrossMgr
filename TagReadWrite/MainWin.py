@@ -602,7 +602,7 @@ class MainWin( wx.Frame ):
 			try:
 				tagInventory, otherMessages = self.tagWriter.GetTagInventory()
 				tagDetail = { t['Tag']:t for t in self.tagWriter.tagDetail }
-				tagInventory = ['{}, PeakRSSI={}db, ANT={}'.format(t or '0', tagDetail[t].get('PeakRSSI',''), tagDetail[t].get('AntennaID',''))
+				tagInventory = ['Tag Count: {}'.format(len(tagInventory))] + ['{}, PeakRSSI={}db, ANT={}'.format(t or '0', tagDetail[t].get('PeakRSSI',''), tagDetail[t].get('AntennaID',''))
 					for t in sorted(tagInventory, key = tagInventoryKey)]
 				self.tags.SetValue( '\n'.join(tagInventory) )
 			except Exception as e:
