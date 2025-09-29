@@ -394,7 +394,7 @@ class SummaryPage(adv.WizardPageSimple):
 			infoLen = len(info)
 		except TypeError:
 			infoLen = 0
-		self.riderNumber.SetLabel( '{}'.format(infoLen) )
+		self.riderNumber.SetLabel( f'{infoLen}' )
 		
 		errStr = '\n'.join( [err for num, err in errors] if errors else ['None'] )
 		
