@@ -597,6 +597,7 @@ class GanttChartPanel(wx.Panel):
 		if showLapTimes:
 			dc.SetFont( fontBarLabel )
 			formatTime = Utils.formatTime
+			lapTimeOffset = int( barHeight/2.0 + 1.0 )
 
 		def drawGanttBar( x, y, w, h, ic, t_lap=None ):
 			if not (x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom):
@@ -605,10 +606,11 @@ class GanttChartPanel(wx.Panel):
 				dc.SetBrush( transparentBrush )
 				dc.DrawRectangle( x, y, w, h )
 				if showLapTimes and t_lap:
-					lapTimeText = '   ' + formatTime(t_lap, twoDigitSeconds=True)
+					xLapTime = x + lapTimeOffset
+					lapTimeText = formatTime(t_lap, twoDigitSeconds=True)
 					lapTimeTextWidth, lapTimeTextHeight = dc.GetTextExtent( lapTimeText )
-					if x + lapTimeTextWidth < xRight:
-						dc.DrawText( lapTimeText, x, y )
+					if xLapTime + lapTimeTextWidth < xRight:
+						dc.DrawText( lapTimeText, xLapTime, y )
 		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
