@@ -68,6 +68,8 @@ class Gantt( wx.Panel ):
 		self.Bind( wx.EVT_CHOICE, self.doChooseCategory, self.categoryChoice )
 		self.showFullNamesInChart = wx.CheckBox( self, label=_('Show Full Names') )
 		self.showFullNamesInChart.Bind( wx.EVT_CHECKBOX, self.doShowFullNames )
+		self.showLapTimes = wx.CheckBox( self, label=_('Show Lap Times') )
+		self.showLapTimes.Bind( wx.EVT_CHECKBOX, self.doShowLapTimes )
 		self.groupByStartWave = wx.CheckBox( self, label=_('Group by Start Wave') )
 		self.groupByStartWave.Bind( wx.EVT_CHECKBOX, self.doGroupByStartWave )
 		self.statsLabel = wx.StaticText( self )
@@ -75,6 +77,7 @@ class Gantt( wx.Panel ):
 		self.hbs.Add( self.categoryLabel, flag=wx.TOP | wx.BOTTOM | wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.categoryChoice, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showFullNamesInChart, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showLapTimes, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.groupByStartWave, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.statsLabel, flag=wx.ALL | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		
@@ -107,6 +110,11 @@ class Gantt( wx.Panel ):
 	def doShowFullNames( self, event ):
 		if Model.race:
 			Model.race.showFullNamesInChart = self.showFullNamesInChart.GetValue()
+		wx.CallAfter( self.refresh )
+	
+	def doShowLapTimes( self, event ):
+		if Model.race:
+			Model.race.showLapTimesInChart = self.showLapTimes.GetValue()
 		wx.CallAfter( self.refresh )
 	
 	def doGroupByStartWave( self, event ):
@@ -669,6 +677,7 @@ class Gantt( wx.Panel ):
 								headerSet = headerSet,
 								status = status,
 								earlyBellTimes = earlyBellTimes,
+								showLapTimes = race.showLapTimesInChart,
 		)
 		self.updateStats( results )
 	

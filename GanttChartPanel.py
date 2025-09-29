@@ -161,7 +161,7 @@ class GanttChartPanel(wx.Panel):
 
 	def SetData( self, data, labels = None, nowTime = None, interp = None, greyOutSet = set(),
 					numTimeInfo = None, lapNote = None, status = None,
-					headerSet = None, earlyBellTimes = None ):
+					headerSet = None, earlyBellTimes = None, showLapTimes = False ):
 		"""
 		* data is a list of lists.  Each list is a list of times.
 		* labels are the names of the series.  Optional.
@@ -191,6 +191,7 @@ class GanttChartPanel(wx.Panel):
 			
 		self.interp = interp
 		self.earlyBellTimes = earlyBellTimes or []
+		self.showLapTimes = showLapTimes
 		self.Refresh()
 	
 	def OnPaint(self, event ):
@@ -592,12 +593,22 @@ class GanttChartPanel(wx.Panel):
 			
 			return dc, bitmap
 		
-		def drawGanttBar( x, y, w, h, ic ):
+		showLapTimes = self.showLapTimes
+		if showLapTimes:
+			dc.SetFont( fontBarLabel )
+			formatTime = Utils.formatTime
+
+		def drawGanttBar( x, y, w, h, ic, t_lap=None ):
 			if not (x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom):
 				dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
 				dc.SetPen( penBar )
 				dc.SetBrush( transparentBrush )
 				dc.DrawRectangle( x, y, w, h )
+				if showLapTimes and t_lap:
+					lapTimeText = '   ' + formatTime(t_lap, twoDigitSeconds=True)
+					lapTimeTextWidth, lapTimeTextHeight = dc.GetTextExtent( lapTimeText )
+					if x + lapTimeTextWidth < xRight:
+						dc.DrawText( lapTimeText, x, y )
 		
 		for i, s in enumerate(self.data):
 			# Record the leader's last x position.
@@ -636,7 +647,7 @@ class GanttChartPanel(wx.Panel):
 						ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
 						dy = yCur - yLast + 1
 						
-						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, j % len(self.colours) )
+						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, j % len(self.colours), s[j] - s[j-1] )
 						
 						if self.lapNote:
 							note = self.lapNote.get( (num, j), None )

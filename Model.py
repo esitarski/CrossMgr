@@ -1147,6 +1147,7 @@ class Race:
 	minPossibleLapTime = 2.0	# Default to 2 seconds to avoid bounce read lap blowup in timed races.
 	
 	showFullNamesInChart = False
+	showLapTimesInChart = False
 	
 	city = ''
 	stateProv = ''
