@@ -858,7 +858,19 @@ class BatchPublishProperties( wx.Panel ):
 				ftpCB = None
 				fgs.AddSpacer( 8 )
 			if attr.note:
-				fgs.Add( wx.StaticText(self, label=attr.note), flag=wx.ALIGN_CENTRE_VERTICAL )
+				if attr.name.lower() == 'pdf':
+					hs = wx.BoxSizer( wx.HORIZONTAL )
+					self.printFormat = wx.Choice(
+						self,
+						choices=[_('Fit to Page'), _('Small Text'), _('Big Text')],
+					)
+		
+					hs.Add( wx.StaticText(self, label=attr.note), flag=wx.ALIGN_CENTRE_VERTICAL )
+					hs.Add( self.printFormat, flag=wx.LEFT, border=4 )
+					
+					fgs.Add( hs, flag=wx.ALIGN_CENTRE_VERTICAL )
+				else:
+					fgs.Add( wx.StaticText(self, label=attr.note), flag=wx.ALIGN_CENTRE_VERTICAL )
 			else:
 				fgs.AddSpacer( 0 )
 				
@@ -903,16 +915,19 @@ class BatchPublishProperties( wx.Panel ):
 		self.SetSizer( vs )
 	
 	def onTest( self, iAttr ):
+		race = Model.race
+		mainWin = Utils.getMainWin()		
+		attr = batchPublishAttr[iAttr]
+
+		if attr.name.lower() == 'pdf':
+			race.printFormat = self.printFormat.GetSelection()
+
 		if self.testCallback:
 			self.testCallback()
 			
 		attrCB, ftpCB, testBtn = self.widget[iAttr]
 		doFtp = ftpCB and ftpCB.GetValue()
 		doBatchPublish( iAttr, silent=False )
-		
-		race = Model.race
-		mainWin = Utils.getMainWin()
-		attr = batchPublishAttr[iAttr]
 		
 		if attr.filecode:
 			fname = mainWin.getFormatFilename(attr.filecode)
@@ -955,6 +970,7 @@ class BatchPublishProperties( wx.Panel ):
 				testBtn.Enable( False )
 		self.bikeRegChoice.SetSelection( getattr(race, 'publishFormatBikeReg', 0) )
 		self.postPublishCmd.SetValue( race.postPublishCmd )
+		self.printFormat.SetSelection( getattr(race, 'printFormat', 0) )
 	
 	def commit( self ):
 		race = Model.race
@@ -964,6 +980,7 @@ class BatchPublishProperties( wx.Panel ):
 			setattr( race, raceAttr, 0 if not attrCB.GetValue() else (1 + (2 if ftpCB and ftpCB.GetValue() else 0)) )
 		race.publishFormatBikeReg = self.bikeRegChoice.GetSelection()
 		race.postPublishCmd = self.postPublishCmd.GetValue().strip()
+		race.printFormat = self.printFormat.GetSelection()
 
 def doBatchPublish( iAttr=None, silent=True, cmdline=False ):
 	race = Model.race

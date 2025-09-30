@@ -66,6 +66,7 @@ class Template:
 			'notes',
 			'minPossibleLapTime',
 			'showFullNamesInChart',
+			'showLapTimesInChart',
 
 			'allCategoriesFinishAfterFastestRidersLastLap',
 		
