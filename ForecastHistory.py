@@ -7,7 +7,7 @@ import Model
 from Utils import formatTime, formatTimeGap
 import ColGrid
 import OutputStreamer
-import NumKeypad
+import Keypad
 from PhotoFinish import TakePhoto, okTakePhoto
 from GetResults import GetResults, GetResultsWithData, IsRiderFinished
 from EditEntry import CorrectNumber, SplitNumber, ShiftNumber, InsertNumber, DeleteEntry
