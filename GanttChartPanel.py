@@ -172,7 +172,7 @@ class GanttChartPanel(wx.Panel):
 		self.nowTime = None
 		self.greyOutSet = greyOutSet
 		self.numTimeInfo = numTimeInfo
-		self.lapNote = lapNote
+		self.lapNote = lapNote or {}
 		self.headerSet = headerSet or set()
 		self.earlyBellTimes = earlyBellTimes
 		if data and any( s for s in data ):
@@ -594,25 +594,43 @@ class GanttChartPanel(wx.Panel):
 			return dc, bitmap
 		
 		showLapTimes = self.showLapTimes
-		if showLapTimes:
-			dc.SetFont( fontBarLabel )
-			formatTime = Utils.formatTime
-			lapTimeOffset = int( barHeight/2.0 + 1.0 )
+		formatTime = Utils.formatTime
+		r_textOffset = int( barHeight/2.0 + 1.0 )
 
-		def drawGanttBar( x, y, w, h, ic, t_lap=None ):
+		def drawGanttBar( x, y, w, h, ic, t_lap=None, note='' ):
 			if not (x + w < rect.left or x > rect.right or y + h < rect.top or y > rect.bottom):
 				dc.Blit( x, y, w, h, getShadedBitmap(ic)[0], 0, 0 )
 				dc.SetPen( penBar )
 				dc.SetBrush( transparentBrush )
 				dc.DrawRectangle( x, y, w, h )
-				if showLapTimes and t_lap:
-					xLapTime = x + lapTimeOffset
-					lapTimeText = formatTime(t_lap, twoDigitSeconds=True)
-					lapTimeTextWidth, lapTimeTextHeight = dc.GetTextExtent( lapTimeText )
-					if xLapTime + lapTimeTextWidth < xRight:
-						dc.DrawText( lapTimeText, xLapTime, y )
+				
+				r_text = formatTime(t_lap, twoDigitSeconds=True) if (showLapTimes and t_lap) else ''
+				if note:
+					r_text += (" | " if r_text else '') + note
+								
+				if r_text:
+					r_textWidth, r_textHeight = dc.GetTextExtent( r_text )
+					r_textBarWidth = w - r_textOffset
+					if r_textBarWidth <= 0:
+						r_textBarWidth = w
+						r_text = '...'
+						r_textWidth, r_textHeight = dc.GetTextExtent( r_text )
+					elif r_textWidth > r_textBarWidth:
+						lenLeft, lenRight = 1, len(r_text)
+						while lenRight - lenLeft > 1:
+							lenMid = (lenRight + lenLeft) // 2
+							r_textWidth, r_textHeight = dc.GetTextExtent( r_text[:lenMid].strip() + '...' )
+							if r_textWidth < r_textBarWidth:
+								lenLeft = lenMid
+							else:
+								lenRight = lenMid
+						r_text = r_text[:lenLeft].strip() + '...'
+						r_textWidth, r_textHeight = dc.GetTextExtent( r_text )
+					dc.DrawText( r_text, round(x + r_textOffset), round(y + (h - r_textHeight) / 2) )						
 		
 		for i, s in enumerate(self.data):
+			dc.SetFont( fontNote )
+			
 			# Record the leader's last x position.
 			if tLeaderLast is None:
 				tLeaderLast = s[-1] if s else 0.0
@@ -649,33 +667,7 @@ class GanttChartPanel(wx.Panel):
 						ctx.SetPen( wx.Pen(wx.WHITE, 1, style=wx.TRANSPARENT ) )
 						dy = yCur - yLast + 1
 						
-						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, j % len(self.colours), s[j] - s[j-1] )
-						
-						if self.lapNote:
-							note = self.lapNote.get( (num, j), None )
-							if note:
-								dc.SetFont( fontNote )
-								noteWidth, noteHeight = dc.GetTextExtent( note )
-								noteBorderWidth = int(dc.GetTextExtent( '   ' )[0] / 2)
-								noteBarWidth = xCur - xLast - noteBorderWidth * 2
-								if noteBarWidth <= 0:
-									noteBarWidth = xCur - xLast
-									noteBorderWidth = 0
-									note = '...'
-									noteWidth, noteHeight = dc.GetTextExtent( note )
-								elif noteWidth > noteBarWidth:
-									lenLeft, lenRight = 1, len(note)
-									while lenRight - lenLeft > 1:
-										lenMid = (lenRight + lenLeft) // 2
-										noteWidth, noteHeight = dc.GetTextExtent( note[:lenMid].strip() + '...' )
-										if noteWidth < noteBarWidth:
-											lenLeft = lenMid
-										else:
-											lenRight = lenMid
-									note = note[:lenLeft].strip() + '...'
-									noteWidth, noteHeight = dc.GetTextExtent( note )
-								dc.DrawText( note, round(xLast + noteBorderWidth), round(yLast + (dy - noteHeight) / 2) )
-								dc.SetFont( fontBarLabel )
+						drawGanttBar( xLast, yLast, xCur-xLast+1, dy, j % len(self.colours), s[j] - s[j-1], self.lapNote.get((num, j), '') )
 						
 						if j == self.moveLap and self.moveIRider == i:
 							if hasPhoto(num, t):
@@ -700,7 +692,9 @@ class GanttChartPanel(wx.Panel):
 								xyDuplicate.append( (xOriginal, yLast) )
 
 					xLast = xCur
-				
+			
+			dc.SetFont( fontBarLabel )
+
 			# Draw the last empty bar.
 			xCur = min( xRight, int(labelsWidthLeft + self.dataMax * xFactor) )
 			dc.SetPen( penBar )

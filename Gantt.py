@@ -608,6 +608,7 @@ class Gantt( wx.Panel ):
 		self.groupByStartWave.Enable( not category )
 		
 		self.showFullNamesInChart.SetValue( race.showFullNamesInChart )
+		self.showLapTimes.SetValue( race.showLapTimesInChart )
 		
 		if race and race.isRunning():
 			if self.refreshTimer:
