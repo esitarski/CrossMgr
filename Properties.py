@@ -919,7 +919,9 @@ class BatchPublishProperties( wx.Panel ):
 		mainWin = Utils.getMainWin()		
 		attr = batchPublishAttr[iAttr]
 
+		printFormatSave = None
 		if attr.name.lower() == 'pdf':
+			printFormatSave = getattr( race, 'printFormat', 0 )
 			race.printFormat = self.printFormat.GetSelection()
 
 		if self.testCallback:
@@ -929,6 +931,9 @@ class BatchPublishProperties( wx.Panel ):
 		doFtp = ftpCB and ftpCB.GetValue()
 		doBatchPublish( iAttr, silent=False )
 		
+		if printFormatSave is not None:
+			race.printFormat = printFormatSave
+			
 		if attr.filecode:
 			fname = mainWin.getFormatFilename(attr.filecode)
 			if doFtp and race.urlFull and race.urlFull != 'http://':
