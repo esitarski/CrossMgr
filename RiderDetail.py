@@ -1486,14 +1486,17 @@ class RiderDetail( wx.Panel ):
 			self.grid.MakeCellVisible( min(visibleRow, self.grid.GetNumberRows()-1), 0 )
 	
 	def commitChange( self ):
-		num = self.num.GetValue()
+		if self.num.GetValue() is None:
+			return
+		num = int(self.num.GetValue())
+
 		status = self.statusOption.GetSelection()
 		relegatedPosition = self.relegatedPosition.GetValue()
 		resultNote = self.resultNote.GetValue().strip() or None
 		
 		undo.pushState()
 		with Model.LockRace() as race:
-			# Allow new numbers to be added if status is DNS, DNF or DQ.
+			# Only allow new numbers to be added if status is DNS, DNF or DQ.
 			if race is None or (num not in race.riders and status not in (Model.Rider.DNS, Model.Rider.DNF, Model.Rider.DQ)):
 				return
 				
