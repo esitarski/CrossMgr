@@ -102,6 +102,76 @@ class SheetNamePage(adv.WizardPageSimple):
 	def getSheetName( self ):
 		return self.choices[self.ch.GetCurrentSelection()]
 
+standard_field_aliases = (
+	('LastName',
+		('LastName','Last Name','LName','Rider Last Name','Nom de famille'),
+		"Participant's last name",
+	),
+	('FirstName',
+		('FirstName','First Name','FName','Rider First Name','Prénom'),
+		"Participant's first name",
+	),
+	('Name',
+		('Name','Nom',),
+		"Participant's name in \"LASTNAME, Firstname\" format",
+	),
+	('Gender',
+		('Gender', 'Rider Gender', 'Sex', 'Race Gender','Genre',),
+		"Gender",
+	),
+	('Team',
+		('Team','Team Name','TeamName','Rider Team','Club','Club Name','ClubName','Rider Club','Rider Club/Team','Équipe','Affiliates',),
+		"Team",
+	),
+	('License',
+		(
+			'Lic', 'Lic #', 'Lic#',
+			'Lic Num', 'LicNum', 'Lic Number',
+			'Lic Nums','LicNums','Lic Numbers',
+			
+			'License','License #', 
+			'License Number','LicenseNumber',
+			'License Numbers','LicenseNumbers',
+			'License Num', 'LicenseNum',
+			'License Nums','LicenseNums',
+			'License Code','LicenseCode','LicenseCodes',
+			
+			'Licence','Licence #', 
+			'Licence Number','LicenceNumber',
+			'Licence Numbers','LicenceNumbers',
+			'Licence Num', 'LicenceNum',
+			'Licence Nums','LicenceNums',
+			'Licence Code','LicenceCode','LicenceCodes',
+			'Rider License #',
+		),
+		"License code (not UCI code)",
+	),
+	('UCIID',
+		('UCI ID','UCIID',),
+		"UCI ID of the form NNNNNNNNNNN",
+	),
+	('Bib#',
+		('Bib','BibNum','Bib Num', 'Bib #', 'Bib#', 'Rider Bib #', 'Rider #', 'Rider#', 'Plate', 'Plate #', 'Plate#','Numéro','plaque'),
+		"Bib number",
+	),
+	('City',
+		('City','ville'),
+		"City",
+	),
+	('StateProv',
+		('State','Prov','Province','Stateprov','State Prov',),
+		"State or Province",
+	),
+	('EventCategory',
+		('EventCategory','Event Category'),
+		"Event Category",
+	),
+	('Category',
+		('Category','catégorie','Race Category','RaceCategory','Race_Category','code de catégorie'),
+		"Category Name",
+	),
+)
+
 def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 	reader = GetExcelReader( fileName )
 	headers, fieldCol = [], {}
@@ -136,27 +206,53 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 	# Set a blank final entry.
 	headers.append( '' )
 		
+	# Transform headers that match aliases into the alias.
+
+	# Process the field aliases to track aliases to accepted names.
+	def normalize( s ):
+		return Utils.removeDiacritic( s.replace('.','').replace('_',' ').strip().lower() )
+	
+	field_set = set(Fields + ['Name'])
+	field_aliases = {}
+	for field_name, aliases, description in standard_field_aliases:
+		assert field_name in field_set, f"field_name={field_name}, field_set={field_set}"
+		f_normalize = normalize( field_name )
+		field_aliases[f_normalize] = f_normalize
+		for a in aliases:
+			field_aliases[normalize(a)] = f_normalize
+			
+	GetTranslation = _
+	iNoMatch = len(headers) - 1
+	
+	# Add all the header names to the exactMatch lookup.
+	exactMatch = { normalize(h):(100.0, i) for i, h in enumerate(headers) }
+	
+	# Add all the aliased names to the exactMatch lookup.
+	for i, h in enumerate(headers):
+		h_normal = normalize(h)
+		if h_normal in field_aliases:
+			exactMatch[field_aliases[h_normal]] = (100.0, i)
+	
+	# For Tag fields, try remove spaces.
+	exactMatch.update( {normalize(h).replace(' ', ''):(100.0, i) for i, h in enumerate(headers) if normalize(h).startswith('tag')} )
+	
 	# Create a map for the field names we are looking for
 	# and the headers we found in the Excel sheet.
 	sStateField = 'State'
 	sProvField = 'Prov'
 	sStateProvField = 'StateProv'
 	
-	GetTranslation = _
-	iNoMatch = len(headers) - 1
-	exactMatch = { h.lower():(100.0, i) for i, h in enumerate(headers) }
-	# For Tag fields, try remove spaces.
-	exactMatch.update( {h.lower().replace(' ', ''):(100.0, i) for i, h in enumerate(headers) if h.lower().startswith('tag')} )
-	
 	matchStrength = {}
 	for c, f in enumerate(Fields):
-		# Figure out some reasonable defaults for headers.
+		# Get some reasonable header mapping defaults.
 		
-		# First look for a perfect match ignoring case.
-		matchBest, iBest = exactMatch.get( f.lower(), (0.0, iNoMatch) )
+		f_normal = normalize( f )
+		# Look for a perfect match ignoring case.  This takes aliases into account.
+		matchBest, iBest = exactMatch.get( f_normal, (0.0, iNoMatch) )
 		
-		if not f.lower().startswith('tag'):
-			# Then try the local translation of the header name.
+		# If not teamcode and not a tag, try a partial match.
+		if matchBest < 100.0 and f_normal != 'teamcode' and not f_normal.startswith('tag'):
+			# Try the local translation of the header name.
 			if matchBest < 2.0:
 				fTrans = GetTranslation( f )
 				matchBest, iBest = max( ((Utils.approximateMatch(fTrans, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
@@ -165,17 +261,21 @@ def getDefaultFieldMap( fileName, sheetName, expectedFieldCol = None ):
 			if matchBest <= 0.34:
 				matchBest, iBest = max( ((Utils.approximateMatch(f, h), i) for i, h in enumerate(headers)), key=lambda x: x[0] )
 			
-			# If we don't get a high enough match, set to blank.
+			# If we don't get a high enough match, set to unmatched.
 			if matchBest <= 0.34:
 				try:
 					iBest = min( expectedFieldCol[c], iNoMatch )
 				except (TypeError, KeyError):
 					iBest = iNoMatch			
 		
-		fieldCol[f] = iBest
-		matchStrength[f] = matchBest
+		fieldCol[f], matchStrength[f] = iBest, matchBest
 	
-	# If we already have a match for State of Prov, don't match on StateProv, etc.
+	# If FirstName and LastName are missing, but there is a Name column, set FirstName to Name.
+	# If the text contains a comma, it will get parsed as "LastName, FirstName" when the spreadsheet is read.
+	if 'name' in exactMatch and 'firstname' not in exactMatch and 'lastname' not in exactMatch:
+		fieldCol['FirstName'] = exactMatch['name'][1]
+		
+	# If we already have a match for State or Prov, don't match on StateProv, etc.
 	if matchStrength.get(sStateProvField,0.0) > matchStrength.get(sStateField,0.0):
 		fieldCol[sStateField] = iNoMatch
 		fieldCol[sProvField] = iNoMatch
@@ -238,7 +338,7 @@ class HeaderNamesPage(adv.WizardPageSimple):
 		vbs.Add( sp, flag=wx.ALL, border = border )
 		
 		self.mapSummary = wx.ListCtrl( self, wx.ID_ANY, style = wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_HRULES|wx.BORDER_NONE )
-		self.mapSummary.InsertColumn( 0, _('CrossMgr'),		wx.LIST_FORMAT_RIGHT,	120 )
+		self.mapSummary.InsertColumn( 0, _('CrossMgr'),		wx.LIST_FORMAT_RIGHT,	150 )
 		self.mapSummary.InsertColumn( 1, _('Spreadsheet'),	wx.LIST_FORMAT_LEFT,	120 )
 		vbs.Add( self.mapSummary, 1, flag=wx.ALL|wx.EXPAND, border = border )
 		
@@ -824,7 +924,7 @@ class ExcelLink:
 						
 					if field == 'LastName':
 						try:
-							data[field] = '{}'.format(data[field] or '').upper()
+							data[field] = '{}'.format(data[field] or '')
 						except Exception:
 							data[field] = _('Unknown')
 					elif field.startswith('Tag'):
@@ -870,6 +970,16 @@ class ExcelLink:
 				pass
 			else:
 				data[Fields[0]] = num
+				
+				# Check for a single name field.
+				if 'LastName' in data:
+					if 'FirstName' not in data and ',' in data['LastName']:
+						data['LastName'], data['FirstName'] = [s.strip() for s in data['LastName'].split(',', 2)]
+					data['LastName'].upper()
+				elif 'FirstName' in data and 'LastName' not in data and ',' in data['FirstName']:
+					data['LastName'], data['FirstName'] = [s.strip() for s in data['FirstName'].split(',', 2)]
+					data['LastName'].upper()
+
 				info[num] = data
 				rowInfo.append( (r+1, num, data) )	# Add one to the row to make error reporting consistent.
 			
@@ -1031,11 +1141,9 @@ class BibInfo:
 			return {}
 		
 		try:
-			data = { k:'{}'.format(v) for k, v in self.externalInfo.get(bib, {}).items() }
+			data = { k:f'{v}' for k, v in self.externalInfo.get(bib, {}).items() }
 		except ValueError:
 			data = {}
-		
-		data['Name'] = ', '.join( v for v in (data.get('LastName',None), data.get('FirstName',None)) if v )
 		
 		category = self.race.getCategory( bib )
 		data['Wave'] = category.name if category else ''
