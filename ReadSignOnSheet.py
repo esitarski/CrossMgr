@@ -971,7 +971,8 @@ class ExcelLink:
 			else:
 				data[Fields[0]] = num
 				
-				# Check for a single name field.
+				'''
+				# Check for a single name field and convert it to LASTNAME, Firstname.
 				if 'LastName' in data:
 					if 'FirstName' not in data and ',' in data['LastName']:
 						data['LastName'], data['FirstName'] = [s.strip() for s in data['LastName'].split(',', 2)]
@@ -979,6 +980,7 @@ class ExcelLink:
 				elif 'FirstName' in data and 'LastName' not in data and ',' in data['FirstName']:
 					data['LastName'], data['FirstName'] = [s.strip() for s in data['FirstName'].split(',', 2)]
 					data['LastName'].upper()
+				'''
 
 				info[num] = data
 				rowInfo.append( (r+1, num, data) )	# Add one to the row to make error reporting consistent.

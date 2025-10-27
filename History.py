@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import sys
+import datetime
 from string import Template
 import operator
 
@@ -24,6 +25,7 @@ class History( wx.Panel ):
 		self.showTimes = False
 		self.showPosition = False
 		self.showLapTimes = False
+		self.showTimeOfDay = False
 		self.showTimeDown = False
 		self.showRiderName = False
 		self.numSelect = None
@@ -62,6 +64,10 @@ class History( wx.Panel ):
 		self.showLapTimesToggle.SetValue( self.showLapTimes )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowLapTimes, self.showLapTimesToggle )
 		
+		self.showTimeOfDayToggle = wx.ToggleButton( self, label=_('Time of Day'), style=wx.BU_EXACTFIT )
+		self.showTimeOfDayToggle.SetValue( self.showTimeOfDay )
+		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeOfDay, self.showTimeOfDayToggle )
+		
 		self.showTimeDownToggle = wx.ToggleButton( self, label=_('Time Down per Lap'), style=wx.BU_EXACTFIT )
 		self.showTimeDownToggle.SetValue( self.showTimeDown )
 		self.Bind( wx.EVT_TOGGLEBUTTON, self.onShowTimeDown, self.showTimeDownToggle )
@@ -89,6 +95,7 @@ class History( wx.Panel ):
 		self.hbs.Add( self.showPositionToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=18 )
 		self.hbs.Add( self.showTimesToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showLapTimesToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
+		self.hbs.Add( self.showTimeOfDayToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showTimeDownToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( self.showRiderNameToggle, flag=wx.LEFT | wx.ALIGN_CENTRE_VERTICAL, border=4 )
 		self.hbs.Add( wx.StaticText(self, label = ' '), proportion=2 )
@@ -321,6 +328,10 @@ class History( wx.Panel ):
 		
 	def onShowLapTimes( self, event ):
 		self.showLapTimes ^= True
+		self.refresh()
+		
+	def onShowTimeOfDay( self, event ):
+		self.showTimeOfDay ^= True
 		self.refresh()
 		
 	def onShowTimeDown( self, event ):
@@ -563,6 +574,7 @@ class History( wx.Panel ):
 		formatStr = ['$num']
 		if self.showTimes:		formatStr.append(', $raceTime')
 		if self.showLapTimes:	formatStr.append(', $lapTime')
+		if self.showTimeOfDay:	formatStr.append(', $timeOfDay')
 		if self.showTimeDown:	formatStr.append(', $downTime')
 		if self.showRiderName:	formatStr.append(', $riderName')
 		template = Template( ''.join(formatStr) )
@@ -576,6 +588,9 @@ class History( wx.Panel ):
 			d = info.get(num, {})
 			return ', '.join( v for v in [d.get('LastName',None), d.get('FirstName',None)] if v )
 		
+		startTime = race.startTime
+		timedelta = datetime.timedelta
+		
 		templateSave = template
 		data = []
 		for col, h in enumerate(self.history):
@@ -584,7 +599,7 @@ class History( wx.Panel ):
 				if self.showPosition:
 					formatStr.insert(0, '$pos$lapsDown: ')
 				template = Template( ''.join(formatStr) )
-			
+				
 			data.append( [ template.safe_substitute(
 				{
 					'num':		e.num,
@@ -592,6 +607,7 @@ class History( wx.Panel ):
 					'lapsDown':	' ({})'.format(lapsDown[e.num]) if e.num in lapsDown else '',
 					'raceTime':	formatTime(e.t) if self.showTimes else '',
 					'lapTime':	formatTime(e.t - numTimes[(e.num,e.lap-1)]) if self.showLapTimes and (e.num,e.lap-1) in numTimes else '',
+					'timeOfDay': (startTime+timedelta(seconds=e.t)).strftime('%H:%M:%S.%f')[:-4] if self.showTimeOfDay and startTime and (e.num,e.lap-1) in numTimes else '',
 					'downTime':	formatTimeDiff(e.t, leaderTimes[col]) if self.showTimeDown and col < len(leaderTimes) else '',
 					'riderName': getName(e.num) if self.showRiderName else '',
 				} ) for e in h] )
