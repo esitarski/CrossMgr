@@ -501,7 +501,7 @@ class Categories( wx.Panel ):
 			r, c = event.GetRow(), event.GetCol()
 			if c == self.iCol['active']:
 				active = (self.grid.GetCellValue(r, self.iCol['active']) == '1')
-				wx.CallAfter( self.fixRowColours, r, self.CategoryTypeChoices.index(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
+				wx.CallAfter( self.fixRowColours, r, self.getCatTypeFromStr(self.grid.GetCellValue(r, self.iCol['catType'])), not active )
 			self.grid.SetCellValue( r, c, '1' if self.grid.GetCellValue(r, c)[:1] != '1' else '0' )
 		event.Skip()
 		
@@ -721,11 +721,23 @@ and remove them from other categories.'''),
 				self.grid.SetCellBackgroundColour( row, col, self.inactiveColour )
 			else:
 				self.grid.SetCellBackgroundColour( row, col, colour if col in self.dependentCols else activeColour )
-		
+	
+	def getCatTypeFromStr( self, catType ):
+		try:
+			return self.CategoryTypeChoices.index(catType)
+		except ValueError:
+			return 0
+	
+	def getDistanceTypeFromStr( self, distanceType ):
+		try:
+			return self.DistanceTypeChoices.index(distanceType)
+		except ValueError:
+			return 0
+	
 	def fixCells( self, event = None ):
 		for row in range(self.grid.GetNumberRows()):
 			active = self.grid.GetCellValue( row, self.iCol['active'] )[:1] in 'TtYy1'
-			catType = self.CategoryTypeChoices.index(self.grid.GetCellValue(row, self.iCol['catType']) )
+			catType = self.getCatTypeFromStr( self.grid.GetCellValue(row, self.iCol['catType']) )
 			self.fixRowColours( row, catType, active )
 	
 	def onActivateAll( self, event ):
@@ -852,8 +864,8 @@ and remove them from other categories.'''),
 					self.grid.SetCellValue( r, self.iCol[field], s )
 					values[field] = s
 				
-				values['catType'] = self.CategoryTypeChoices.index(values['catType'])
-				values['distanceType'] = self.DistanceTypeChoices.index(values['distanceType'])
+				values['catType'] = self.getCatTypeFromStr(values['catType'])
+				values['distanceType'] = self.getDistanceTypeFromStr(values['distanceType'])
 				numStrTuples.append( values )
 				
 			race.setCategories( numStrTuples )
