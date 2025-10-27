@@ -17,6 +17,14 @@ from RaceInputState import RaceInputState
 from SetLaps import SetLaps
 from wx.grid import GridCellNumberEditor
 
+class GridCellPositiveNumberEditorBlank( GridCellNumberEditor ):
+	def __init__( self ):
+		super().__init__( min=0, max=999999 )
+	
+	def ApplyEdit( self, row, col, grid ):
+		value = str(self.GetValue())
+		grid.GetTable().SetValue( row, col, '' if value == '0' else value )
+
 #--------------------------------------------------------------------------------
 
 allName = _('All')
@@ -399,12 +407,12 @@ class Categories( wx.Panel ):
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'numLaps':
-				attr.SetEditor( GridCellNumberEditor() )
+				attr.SetEditor( GridCellPositiveNumberEditorBlank() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'raceMinutes':
-				attr.SetEditor( GridCellNumberEditor() )
+				attr.SetEditor( GridCellPositiveNumberEditorBlank() )
 				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
