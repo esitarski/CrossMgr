@@ -4,25 +4,31 @@ import wx.lib.buttons
 
 import Model
 import Utils
+from Log import CrossMgrLogger, getLogger
+from ManualTimeEntryPanel import ManualTimeEntryPanel, TimeEntryController
 from ReorderableGrid import ReorderableGrid
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
 from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
 
-class BibTimeRecord( wx.Panel ):
-	def __init__( self, parent, controller, id = wx.ID_ANY ):
-		super().__init__(parent, id)
-		# self.SetBackgroundColour( wx.Colour(173, 216, 230) )
-		self.SetBackgroundColour( wx.WHITE )
+class BibTimeRecord( ManualTimeEntryPanel, TimeEntryController ):
+	__log: CrossMgrLogger
 
-		self.controller = controller
-		
+	@property
+	def log(self):
+		if self.__log is None:
+			self.__log = getLogger('CrossMgr.BibTimeRecord')
+		return self.__log
+
+	def __init__( self, parent: wx.Window, controller: ManualTimeEntryPanel|None = None, id = wx.ID_ANY ):
+		super().__init__(parent=parent, controller=controller, id=id)
+
 		fontPixels = 36
 		font = wx.Font((0,fontPixels), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		dc = wx.WindowDC( self )
 		dc.SetFont( font )
 		wNum, hNum = dc.GetTextExtent( '999' )
 		wNum += 8
-		hNum += 8		
+		hNum += 8
 
 		outsideBorder = 4
 
@@ -101,14 +107,7 @@ class BibTimeRecord( wx.Panel ):
 		elif keycode in clearCodes:
 			self.numEdit.SetValue( '' )
 		elif keycode in actionCodes:
-			if   keycode == ord('/'):	# DNF
-				pass	
-			elif keycode == ord('*'):	# DNS
-				pass
-			elif keycode == ord('-'):	# PUL
-				pass
-			elif keycode == ord('+'):	# DQ
-				pass
+			pass
 		elif keycode < 255:
 			if keycode in validKeyCodes:
 				event.Skip()
@@ -138,8 +137,7 @@ class BibTimeRecord( wx.Panel ):
 			mainWin = Utils.getMainWin()
 			if mainWin is not None:
 				mainWin.forecastHistory.logNum( int(num) )
-			if self.controller:
-				self.controller.refreshLaps()
+			self.refreshLaps()
 		if row < self.grid.GetNumberRows():
 			self.grid.DeleteRows( row, 1 )
 	
@@ -258,6 +256,26 @@ class BibTimeRecord( wx.Panel ):
 		mainWin = Utils.getMainWin()
 		if self.bibCur and mainWin:
 			mainWin.forecastHistory.SelectNumShowPage( self.bibCur, 'iChartPage' )
+
+	def _EnableControls(self) -> None:
+		self.log.todo('BibTimeRecord._EnableControls() not yet implemented.')
+
+	def _DisableControls(self) -> None:
+		self.log.todo('BibTimeRecord._DisableControls() not yet implemented.')
+
+	def __SafeSetFocus(self):
+		try:
+			super().SetFocus()
+			try:
+				self.numEdit.SetFocus()
+			except Exception as e:
+				self.log.error( f'Error setting on BibTimeRecord numEdit: {e}' )
+		except Exception as e:
+			self.log.error( f'Error setting on BibTimeRecord: {e}' )
+
+	def SetFocus(self):
+		self.__SafeSetFocus()
+
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
@@ -265,7 +283,12 @@ if __name__ == '__main__':
 	mainWin = wx.Frame(None,title="CrossMan", size=(600,600))
 	Model.setRace( Model.Race() )
 	Model.getRace()._populate()
-	bibTimeRecord = BibTimeRecord(mainWin, None)
+
+	AnonymousTimeEntryController = type('TimeEntryController', (object,), {'refreshLaps': lambda self: print ('Laps refreshed')})
+	testController = AnonymousTimeEntryController()
+
+	bibTimeRecord = BibTimeRecord(mainWin, testController)
+	bibTimeRecord.Disable()
 	bibTimeRecord.refresh()
 	mainWin.Show()
 	app.MainLoop()

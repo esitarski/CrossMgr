@@ -2,7 +2,7 @@ import wx
 import Utils
 import Model
 from EditEntry import DoDNF, DoDNS, DoPull, DoDQ
-from NumKeypad import getRiderNumsFromText, enterCodes, validKeyCodes
+from Keypad import getRiderNumsFromText, enterCodes, validKeyCodes
 
 class BibEnter( wx.Dialog ):
 	def __init__( self, parent, id = wx.ID_ANY ):
