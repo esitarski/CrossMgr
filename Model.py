@@ -1198,6 +1198,10 @@ class Race:
 	
 	googleMapsApiKey = ''
 	
+	soundEnterMask = (1<<0)
+	soundLeaderMask = (1<<1)
+	soundMask = 0xffffff
+	
 	#--------------------------------------
 	
 	def __init__( self ):

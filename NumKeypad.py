@@ -603,7 +603,8 @@ class NumKeypad( wx.Panel ):
 				if tLeaderArrival is not None:
 					if 0.0 <= tLeaderArrival <= 3.0:
 						if category not in self.lapReminder:
-							self.lapReminder[category] = Utils.PlaySound( 'reminder.wav' )
+							self.lapReminder[category] = Utils.PlaySound('reminder.wav') if (race.soundMask & race.soundLeaderMask) else True
+
 					elif category in self.lapReminder:
 						del self.lapReminder[category]
 		

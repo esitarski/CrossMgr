@@ -238,7 +238,7 @@ def removeDiacritic( s ):
 	without any diacritical marks.
 	'''
 	try:
-		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
+		return unicodedata.normalize('NFKD', f'{s}').encode('ASCII', 'ignore').decode()
 	except Exception:
 		return s
 	

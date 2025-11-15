@@ -447,9 +447,6 @@ class ForecastHistory( wx.Panel ):
 				
 	#--------------------------------------------------------------------
 	
-	def playBlip( self ):
-		Utils.PlaySound( 'blip6.wav' )
-	
 	def logNum( self, nums ):
 		if not nums:
 			return
@@ -485,8 +482,9 @@ class ForecastHistory( wx.Panel ):
 					continue
 				
 				race.photoCount += TakePhoto(num, t) if okTakePhoto(num, t) else 0
-			
-		self.playBlip()
+		
+		if race.soundMask & race.soundEnterMask:
+			Utils.PlaySound( 'blip6.wav' )
 		race.setChanged()
 		
 		mainWin = Utils.getMainWin()
