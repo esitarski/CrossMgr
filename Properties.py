@@ -717,6 +717,51 @@ class CameraProperties( wx.Panel ):
 			race.photosAtRaceEndOnly = True
 
 #------------------------------------------------------------------------------------------------
+
+class OtherProperties( wx.Panel ):
+	def __init__( self, parent, id=wx.ID_ANY ):
+		super().__init__( parent, id )
+		
+		vs = wx.BoxSizer( wx.VERTICAL )
+		
+		ms = wx.StaticBoxSizer( wx.VERTICAL, self, _('Plan Sound') )
+
+		self.soundEnter = wx.CheckBox( self, label=_("on Bib Entry or RFID Read") )
+		self.soundEnter.SetValue( True )
+		self.soundLeader = wx.CheckBox( self, label=_("to Announce the Leader") )
+		self.soundLeader.SetValue( True )
+		
+		ms.Add( self.soundEnter, flag=wx.ALL, border=4 )
+		ms.Add( self.soundLeader, flag=wx.ALL, border=4 )
+		vs.Add( ms, flag=wx.ALL, border=4 )
+		
+		self.SetSizer( vs )
+
+	def refresh( self ):
+		race = Model.race
+		if not race:
+			self.soundEnter.SetValue( True )
+			self.soundLeader.SetValue( True )
+		else:
+			self.soundEnter.SetValue( bool(race.soundMask & race.soundEnterMask) )
+			self.soundLeader.SetValue( bool(race.soundMask & race.soundLeaderMask) )
+		
+	def commit( self ):
+		race = Model.race
+		if not race:
+			return
+		
+		if self.soundEnter.GetValue():
+			race.soundMask |= race.soundEnterMask
+		else:
+			race.soundMask &= ~race.soundEnterMask
+		
+		if self.soundLeader.GetValue():
+			race.soundMask |= race.soundLeaderMask
+		else:
+			race.soundMask &= ~race.soundLeaderMask
+		
+#------------------------------------------------------------------------------------------------
 class AnimationProperties( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__( parent, id )
@@ -1301,6 +1346,7 @@ class Properties( wx.Panel ):
 			('animationProperties',		AnimationProperties,		_('Animation') ),
 			('filesProperties',			FilesProperties,			_('Files/Excel') ),
 			('teamResultsProperties',	TeamResultsProperties,		_('Team Results') ),
+			('otherProperties',			OtherProperties,			_('Other') ),
 		]
 		for prop, PropClass, name in self.propClassName:
 			setattr( self, prop, PropClass(self.notebook) )

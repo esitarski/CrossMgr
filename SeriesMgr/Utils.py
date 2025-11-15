@@ -238,7 +238,7 @@ def removeDiacritic( s ):
 	without any diacritical marks.
 	'''
 	try:
-		return unicodedata.normalize('NFKD', '{}'.format(s)).encode('ASCII', 'ignore').decode()
+		return unicodedata.normalize('NFKD', f'{s}').encode('ASCII', 'ignore').decode()
 	except Exception:
 		return s
 	
@@ -499,7 +499,7 @@ def ordinal( value ):
 		try:
 			value = int(value)
 		except ValueError:
-			return f'{value}'
+			return '{}'.format(value)
 		
 	if value == 999999:				# rankDNF.
 		return translate('DNF')

@@ -96,6 +96,8 @@ class Template:
 			
 			'googleMapsApiKey',
 			'gaTrackingID',
+			
+			'soundMask',
 		},
 		set(batchPublishRaceAttr),
 	)

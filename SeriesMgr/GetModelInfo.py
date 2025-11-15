@@ -381,7 +381,7 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 	if not HasExcelLink(race):	# Force a refresh of the Excel link before reading the categories.
 		pass
 		
-	if race.licenseLinkTemplate:
+	if getattr(race, 'licenseLinkTemplate', None):
 		ret['licenseLinkTemplate'] = race.licenseLinkTemplate
 	
 	Finisher = Model.Rider.Finisher
