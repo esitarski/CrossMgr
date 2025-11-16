@@ -419,7 +419,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 
 		try:
 			category = self.pageInfo[page][0]
-		except Exception as e:
+		except Exception:
 			# Handle case of no data.
 			return True
 		

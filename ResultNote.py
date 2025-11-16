@@ -2,7 +2,6 @@ import wx
 import os
 import re
 import operator
-import itertools
 
 import Utils
 import Model
@@ -92,7 +91,7 @@ class ResultNoteContents( wx.TextCtrl ):
 			return
 		
 		race = Model.race
-		colnames = rnd['colnames']
+		#colnames = rnd['colnames']
 		riderAttributes = rnd['riderAttributes']
 		resultNotes = rnd['resultNotes']
 		externalInfo = rnd['externalInfo']

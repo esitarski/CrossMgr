@@ -84,7 +84,7 @@ def CrossResultsExport( fname ):
 			for rr in results:
 				try:
 					finishTime = formatTimeGap(rr.lastTime - rr.raceTimes[0], forceHours=True) if rr.status == Model.Rider.Finisher else ''
-				except Exception as e:
+				except Exception:
 					finishTime = ''
 				
 				dataRow = []
@@ -102,7 +102,7 @@ def CrossResultsExport( fname ):
 				for i in range(maxLaps):
 					try:
 						lapTime = formatTimeGap(rr.lapTimes[i])
-					except (AttributeError, IndexError) as e:
+					except (AttributeError, IndexError):
 						lapTime = ''
 					dataRow.append( lapTime )
 				

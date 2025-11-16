@@ -50,7 +50,7 @@ def ParseHtmlPayload( fname=None, content=None ):
 				datetime.datetime( *[int(f) for f in re.split('[^0-9]+', payload['raceDate'] )] ) +
 				datetime.timedelta( seconds = payload['raceStartTime'] )
 			)
-		except Exception as e:
+		except Exception:
 			pass
 			
 	if not raceScheduledStart:
@@ -66,7 +66,7 @@ def ParseHtmlPayload( fname=None, content=None ):
 		iStart = content.index( '"', iStart + len(imgHeaderStart) ) + 1
 		iEnd = content.index( '"', iStart )
 		payload['logoSrc'] = content[iStart:iEnd]
-	except ValueError as e:
+	except ValueError:
 		payload['logoSrc'] = None
 	
 	# Remove unneeded payload fields to save space.

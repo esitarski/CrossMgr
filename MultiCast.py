@@ -56,19 +56,19 @@ class MultiCastSender( threading.Thread ):
 		]
 		try:
 			sock.sendto(ToJson(message).encode(), (multicast_group, multicast_port))
-		except Exception as e:
+		except Exception:
 			return receivers
 		
 		# Look for responses from all recipients
 		while True:
 			try:
 				data, server = sock.recvfrom(4096)
-			except Exception as e:
+			except Exception:
 				break
 			
 			try:
 				response = json.loads( data.decode() )
-			except Exception as e:
+			except Exception:
 				continue
 			
 			if response[0] == 'idreply':
@@ -221,7 +221,7 @@ class MultiCastReceiver( threading.Thread ):
 			
 			try:
 				message = json.loads( data.decode() )
-			except Exception as e:
+			except Exception:
 				continue
 			
 			if message[0] == 'trigger':

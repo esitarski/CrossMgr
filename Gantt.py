@@ -308,7 +308,7 @@ class Gantt( wx.Panel ):
 					return
 				race.getRider(self.entry.num).setStatus( Model.Rider.Pulled, self.entry.t + 1 )
 				race.setChanged()
-		except Exception as e:
+		except Exception:
 			pass
 		wx.CallAfter( self.refresh )
 		
@@ -459,7 +459,7 @@ class Gantt( wx.Panel ):
 				race.setChanged()
 				wx.CallAfter( self.refresh )
 		
-		except Exception as e:
+		except Exception:
 			pass
 		
 	def OnPopupLapDetail( self, event ):
@@ -661,7 +661,7 @@ class Gantt( wx.Panel ):
 				status.append( translate(statusNames[riderStatus]) if riderStatus != Finisher else '' )
 				if riderStatus == Finisher:
 					resultBest = min( resultBest, (-r.laps, r.raceTimes[-1]) )
-			except (IndexError, KeyError) as e:
+			except (IndexError, KeyError):
 				status.append( '' )
 
 		data	= [r.raceTimes for r in results]

@@ -168,7 +168,7 @@ def FtpWriteRaceHTML( isLive=False ):
 	try:
 		if (getattr(Model.race, 'publishFormatIndexHtml', 3) & 3) == 3:
 			files.append( WriteHtmlIndexPage() )
-	except Exception as e:
+	except Exception:
 		pass
 	
 	FtpUploadFile( files )

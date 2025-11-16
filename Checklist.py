@@ -173,7 +173,7 @@ class Checklist( wx.Panel ):
 				fname = os.path.join(dir, 'CrossMgrChecklist.txt')
 				try:
 					fp = open(fname, 'r', encoding='utf8')
-				except Exception as e:
+				except Exception:
 					continue
 					
 				self.checklist = createTasks( fname, fp )

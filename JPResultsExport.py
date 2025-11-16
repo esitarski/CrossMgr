@@ -58,7 +58,7 @@ def JPResultsExport( workbook, sheet ):
 				if race.roadRaceFinishTimes:
 					finishTime = floor(finishTime)[0]	# Truncate decimal seconds.
 				finishTime /= (24.0*60.0*60.0)			# Convert to fraction of a day.
-			except Exception as e:
+			except Exception:
 				finishTime = None
 
 			valueStyle = {

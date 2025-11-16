@@ -118,7 +118,7 @@ class CategoryPredicate:
 					r = self.nonDigits.sub( '', r )
 					try:
 						self.ageRange.append( int(r) )
-					except Exception as e:
+					except Exception:
 						self.ageRange = None
 						break
 				if self.ageRange is not None:

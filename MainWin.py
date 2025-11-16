@@ -222,7 +222,7 @@ def ShowTipAtStartup():
 		if mainWin:
 			mainWin.config.WriteBool('showTipAtStartup', showTipAtStartup)
 			mainWin.config.Flush()
-	except Exception as e:
+	except Exception:
 		pass
 
 class SimulateDialog(wx.Dialog):
@@ -1104,7 +1104,7 @@ class MainWin( wx.Frame ):
 		
 		try:
 			Utils.LaunchApplication( excelLink.fileName )
-		except Exception as e:
+		except Exception:
 			pass
 		
 	@logCall
@@ -1413,7 +1413,7 @@ class MainWin( wx.Frame ):
 			if Model.race:
 				try:
 					Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
-				except Exception as e:
+				except Exception:
 					pass
 	
 	def menuSetDefaultContactEmail( self, event = None ):
@@ -1438,7 +1438,7 @@ class MainWin( wx.Frame ):
 			if Model.race:
 				try:
 					Model.race.headerImage = ImageIO.toBufFromFile( imgPath )
-				except Exception as e:
+				except Exception:
 					pass
 	
 	#--------------------------------------------------------------------------------------------
@@ -2058,7 +2058,7 @@ class MainWin( wx.Frame ):
 						payload['travelMap'] = sanitize( template )
 					except Exception:
 						pass
-			except Exception as e:
+			except Exception:
 				pass
 		
 		if totalElevationGain:
@@ -2202,7 +2202,7 @@ class MainWin( wx.Frame ):
 				self.menuSetContactEmail()
 			
 		with BatchPublishPropertiesDialog( self ) as dialog:
-			ret = dialog.ShowModal()
+			dialog.ShowModal()
 		
 	@logCall
 	def menuPublishHtmlRaceResults( self, event=None, silent=False ):

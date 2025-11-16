@@ -147,7 +147,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 		safeRemove( outputs, s )
 		try:
 			del nameReader[readerName[s]]
-		except Exception as e:
+		except Exception:
 			pass
 		for state in [readerReadBytes, readerWriteBytes, readerName, readerComputerTimeDiff]:
 			state.pop( s, None )

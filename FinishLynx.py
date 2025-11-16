@@ -127,7 +127,7 @@ def ReadLIF( fname ):
 			
 			try:
 				yield getFields(raceStart, row)
-			except Exception as e:
+			except Exception:
 				pass
 		break
 	else:

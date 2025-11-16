@@ -205,7 +205,7 @@ class ChipImportDialog( wx.Dialog ):
 		
 		try:
 			image = wx.Image( os.path.join(Utils.getImageFolder(), '{}Logo.png'.format(chipName)), wx.BITMAP_TYPE_PNG )
-		except Exception as e:
+		except Exception:
 			image = wx.EmptyImage( 32, 32, True )
 		hs.Add( wx.StaticBitmap(self, wx.ID_ANY, image.ConvertToBitmap()), 0 )
 		hs.Add( wx.StaticText(self, label = intro), 1, wx.EXPAND|wx.LEFT, border*2 )

@@ -197,7 +197,7 @@ class JChipSetupDialog( wx.Dialog ):
 			if rfidReaderHost:
 				try:
 					self.ipaddr.SetValue( rfidReaderHost )
-				except Exception as e:
+				except Exception:
 					self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( True )
 		
@@ -209,7 +209,7 @@ class JChipSetupDialog( wx.Dialog ):
 			if rfidReaderHost:
 				try:
 					self.ipaddr.SetValue( rfidReaderHost )
-				except Exception as e:
+				except Exception:
 					self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( True )
 		
@@ -220,7 +220,7 @@ class JChipSetupDialog( wx.Dialog ):
 			rfidReaderHost = ''
 			try:
 				self.ipaddr.SetValue( rfidReaderHost )
-			except Exception as e:
+			except Exception:
 				self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( False )
 		
@@ -231,7 +231,7 @@ class JChipSetupDialog( wx.Dialog ):
 			rfidReaderHost = ''
 			try:
 				self.ipaddr.SetValue( rfidReaderHost )
-			except Exception as e:
+			except Exception:
 				self.ipaddr.SetValue( Utils.GetDefaultHost() )
 			self.autoDetect.Show( False )
 		

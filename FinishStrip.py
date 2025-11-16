@@ -151,7 +151,7 @@ class FinishStrip( wx.Panel ):
 	def getPhotoTime( self, fname ):
 		try:
 			bib, raceTime, count, photoTime = Utils.ParsePhotoFName(fname)
-		except Exception as e:
+		except Exception:
 			return None
 			
 		if photoTime is None:

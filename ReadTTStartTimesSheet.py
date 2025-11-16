@@ -311,7 +311,7 @@ class GetExcelTTStartTimeLink:
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
 					except ValueError as e:
-						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + '\n' + _('Check the Excel format.'),
+						Utils.MessageOK( self.wizard, _('Problem extracting rider info.') + '\n' + _('Check the Excel format.') + '\n\n' + str(e),
 											title=_('Data Error'), iconMask=wx.ICON_ERROR)
 						evt.Veto()
 		

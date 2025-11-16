@@ -626,7 +626,7 @@ class GetExcelLink:
 						evt.Veto()
 		
 	def onPageChanged( self, evt ):
-		isForward = evt.GetDirection()
+		pass
 		
 #----------------------------------------------------------------------------------
 
@@ -966,7 +966,7 @@ class ExcelLink:
 			
 			try:
 				num = int(float(data[Fields[0]]))
-			except (ValueError, TypeError, KeyError) as e:
+			except (ValueError, TypeError, KeyError):
 				pass
 			else:
 				data[Fields[0]] = num
@@ -1105,7 +1105,7 @@ def IsValidRaceDBExcel( fileName ):
 
 def HasExcelLink( race ):
 	try:
-		externalInfo = race.excelLink.read()
+		race.excelLink.read()
 		return True
 	except Exception as e:
 		#Utils.logException( e, sys.exc_info() )

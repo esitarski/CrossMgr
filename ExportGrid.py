@@ -956,7 +956,7 @@ class ExportGrid:
 							iCol += 1
 							if iCol >= colsMax:
 								break
-						except IndexError as e:
+						except IndexError:
 							break
 				
 				# Pad out the rest of the columns.
@@ -966,7 +966,7 @@ class ExportGrid:
 						try:
 							data[iCol].append( '' )
 							iCol += 1
-						except IndexError as e:
+						except IndexError:
 							break
 		
 		self.data = data

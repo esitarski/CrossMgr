@@ -491,7 +491,7 @@ class History( wx.Panel ):
 		else:
 			try:
 				maxLaps = race.getNumLapsFromCategory(category)
-			except Exception as e:
+			except Exception:
 				maxLaps = race.numLaps
 			doLapsToGo = True
 			if not maxLaps:
@@ -572,11 +572,16 @@ class History( wx.Panel ):
 							)
 		
 		formatStr = ['$num']
-		if self.showTimes:		formatStr.append(', $raceTime')
-		if self.showLapTimes:	formatStr.append(', $lapTime')
-		if self.showTimeOfDay:	formatStr.append(', $timeOfDay')
-		if self.showTimeDown:	formatStr.append(', $downTime')
-		if self.showRiderName:	formatStr.append(', $riderName')
+		for a, s in (
+			('showTimes', 		'$raceTime'),
+			('showLapTimes',	'$lapTime'),
+			('showTimeOfDay',	'$timeOfDay'),
+			('showTimeDown',	'$downTime'),
+			('showRiderName',	'$riderName'),
+		):
+			if getattr(self, a):
+				formatStr.append( ', ' )
+				formatStr.append( s )
 		template = Template( ''.join(formatStr) )
 		
 		try:

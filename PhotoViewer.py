@@ -8,16 +8,12 @@ except Exception:
 
 import os
 import sys
-import math
 import types
-import threading
-import datetime
 
 import Model
 import Utils
-import ReadSignOnSheet
 
-from PhotoFinish import GetPhotoFName, TakePhoto
+from PhotoFinish import GetPhotoFName
 from FinishStrip import ShowFinishStrip
 from SendPhotoRequests import getPhotoDirName, SendPhotoRequests
 from LaunchFileBrowser import LaunchFileBrowser
@@ -268,7 +264,7 @@ class PhotoViewerDialog( wx.Dialog ):
 	
 	def OnPrint( self, event ):
 		try:
-			bitmap = wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
+			wx.Bitmap( self.thumbFileName, wx.BITMAP_TYPE_JPEG )
 		except Exception:
 			Utils.MessageOK( self, _('No Photo Available.'), _('Print Failed'), iconMask = wx.ICON_ERROR )
 			return

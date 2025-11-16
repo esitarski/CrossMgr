@@ -1,3 +1,4 @@
+'''
 import wx
 import os
 import sys
@@ -280,3 +281,4 @@ if __name__ == '__main__':
 		wx.CallLater( max(1,d), doRefresh, bib )
 		bib += 1
 	app.MainLoop()
+'''

@@ -31,7 +31,7 @@ def updatePhotoFNameCache():
 	photoDir = getPhotoDirName( Utils.getFileName() )
 	try:
 		photoCache = { fname[:-6] for fname in os.listdir(photoDir) if fname.startswith('bib') and fname.endswith('.jpg')  }
-	except Exception as e:
+	except Exception:
 		pass
 		
 def HasPhotoCache():
@@ -47,7 +47,7 @@ def hasPhoto( bib, t ):
 		
 	try:
 		return os.path.basename(GetPhotoFName(getPhotoDirName(Utils.getFileName()), bib, t, 0))[:-6] in photoCache
-	except Exception as e:
+	except Exception:
 		return False
 	
 def okTakePhoto( num, t ):
@@ -64,7 +64,7 @@ def okTakePhoto( num, t ):
 		if leader.status == Model.Rider.Finisher:
 			leaderFinishTime = leader.raceTimes[-1]
 			return t > leaderFinishTime - 60.0
-	except Exception as e:
+	except Exception:
 		pass
 	
 	return False

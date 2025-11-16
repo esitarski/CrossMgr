@@ -289,7 +289,6 @@ def _GetResultsCore( category ):
 	for e in entries:
 		allRiderTimes[e.num].append( e )
 	
-	startOffset = category.getStartOffsetSecs() if category else 0.0
 	raceSeconds = race.minutes * 60.0
 	
 	# Enforce All Categories Finish After Fastest Rider's Last Lap
@@ -714,7 +713,7 @@ def GetResultsWithData( category ):
 		for rr in riderResults:
 			try:
 				factor = float(externalInfo[rr.num]['Factor'])
-			except Exception as e:
+			except Exception:
 				factor = 1.0
 		
 			if factor > 1.0:
@@ -750,7 +749,7 @@ def GetResults( category ):
 		excelLink.read()
 		if excelLink.readFromFile:
 			Model.resetCache()
-	except Exception as e:
+	except Exception:
 		pass
 		
 	return GetResultsWithData( category )

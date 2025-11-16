@@ -19,7 +19,7 @@ from BibTimeRecord import BibTimeRecord
 from ClockDigital import ClockDigital
 from NonBusyCall import NonBusyCall
 from SetLaps import SetLaps
-from InputUtils import enterCodes, validKeyCodes, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
+from InputUtils import enterCodes, validKeyCodes, validKeyCodesRFID, clearCodes, actionCodes, getRiderNumsFromText, MakeKeypadButton
 from LapsToGoCount import LapsToGoCountGraph
 
 SplitterMinPos = 390
@@ -147,12 +147,13 @@ class Keypad( wx.Panel ):
 			elif keycode == ord('+'):	# DQ
 				pass
 		elif keycode < 255:
-			if keycode in validKeyCodes:
+			race = Model.race
+			if keycode in (validKeyCodes if (not race or not race.allowManualRFID) else validKeyCodesRFID):
 				event.Skip()
 			else:
-				Utils.writeLog( 'handleNumKeypress: ignoring keycode < 255: {}'.format(keycode) )
+				Utils.writeLog( f'handleNumKeypress: ignoring keycode < 255: {keycode}' )
 		else:
-			Utils.writeLog( 'handleNumKeypress: ignoring keycode: >= 255 {}'.format(keycode) )
+			Utils.writeLog( f'handleNumKeypress: ignoring keycode: >= 255 {keycode}' )
 			event.Skip()
 	
 	def onEnterPress( self, event = None ):
