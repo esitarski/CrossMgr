@@ -724,7 +724,7 @@ class OtherProperties( wx.Panel ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		ms = wx.StaticBoxSizer( wx.VERTICAL, self, _('Plan Sound') )
+		ms = wx.StaticBoxSizer( wx.VERTICAL, self, _('Play Sound') )
 
 		self.soundEnter = wx.CheckBox( self, label=_("on Bib Entry or RFID Read") )
 		self.soundEnter.SetValue( True )
