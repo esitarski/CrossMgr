@@ -43,7 +43,7 @@ def getHeaderBitmap():
 			'.jpeg':wx.BITMAP_TYPE_JPEG }.get( extension, wx.BITMAP_TYPE_ANY )
 		try:
 			return wx.Bitmap( graphicFName, bitmapType )
-		except Exception as e:
+		except Exception:
 			pass
 	
 	return wx.Bitmap( os.path.join(Utils.getImageFolder(), 'SprintMgr.png'), wx.BITMAP_TYPE_PNG )

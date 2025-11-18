@@ -306,7 +306,7 @@ class GetExcelStartListLink:
 					try:
 						info = excelLink.read()
 						self.summaryPage.setFileNameSheetNameInfo(self.fileNamePage.getFileName(), self.sheetNamePage.getSheetName(), info)
-					except ValueError as e:
+					except ValueError:
 						Utils.MessageOK( self.wizard, 'Problem extracting rider info.\nCheck the Excel format.',
 											title='Data Error', iconMask=wx.ICON_ERROR)
 						evt.Veto()

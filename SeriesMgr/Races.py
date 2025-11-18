@@ -215,8 +215,6 @@ class Races(wx.Panel):
 	def refresh( self ):
 		model = SeriesModel.model
 		
-		uuidToCompetition = {c.uuid:c for c in model.competitions}
-		
 		Utils.AdjustGridSize( self.grid, len(model.races) )
 		for row, race in enumerate(model.races):
 			self.grid.SetCellValue( row, self.RaceCol, race.getRaceName() )

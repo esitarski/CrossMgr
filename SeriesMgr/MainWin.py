@@ -775,7 +775,7 @@ table.results tr td.fastest{
 			with open(fileName, 'rb') as fp:
 				try:
 					SeriesModel.model = pickle.load( fp, encoding='latin1', errors='replace' )
-				except Exception as e:
+				except Exception:
 					fp.seek( 0 )
 					SeriesModel.model = ModuleUnpickler( fp, module='SeriesMgr', encoding='latin1', errors='replace' ).load()
 		except IOError:
@@ -940,14 +940,14 @@ table.results tr td.fastest{
 			return
 		try:
 			self.pages[i].refresh()
-		except (AttributeError, IndexError) as e:
+		except (AttributeError, IndexError):
 			pass
 
 	def callPageCommit( self, i ):
 		try:
 			self.pages[i].commit()
 			self.setTitle()
-		except (AttributeError, IndexError) as e:
+		except (AttributeError, IndexError):
 			pass
 
 	def onPageChanging( self, event ):

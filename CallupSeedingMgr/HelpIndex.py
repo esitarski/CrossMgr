@@ -1,7 +1,7 @@
 
 from whoosh.index import create_in, open_dir
 from whoosh.analysis import StemmingAnalyzer
-from whoosh.fields import *
+from whoosh.fields import Schema, ID, TEXT, NUMERIC
 
 import os
 import shutil

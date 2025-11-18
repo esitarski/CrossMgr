@@ -292,8 +292,6 @@ if 'MAC' in wx.Platform:
 # Add access functions for all resource folders.
 from GetFolder import GetFolders
 globals().update( {'get' + folder[0].upper() + folder[1:]:lambda v=location: v for folder, location in GetFolders().items()} )
-def getImageFile( fname, folder=getImageFolder() ):
-	return os.path.join( folder, fname )
 
 def AlignHorizontalScroll( gFrom, gTo ): 
 	xFrom, yFrom = gFrom.GetViewStart()

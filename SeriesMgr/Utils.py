@@ -499,7 +499,7 @@ def ordinal( value ):
 		try:
 			value = int(value)
 		except ValueError:
-			return '{}'.format(value)
+			return f'{value}'
 		
 	if value == 999999:				# rankDNF.
 		return translate('DNF')

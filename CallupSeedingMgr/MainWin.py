@@ -384,7 +384,7 @@ class MainWin( wx.Frame ):
 		dirchild = 'CallupsOutput' if self.getIsCallup() else 'SeedingOutput'
 		try:
 			os.makedirs( os.path.join(dirname, dirchild) )
-		except Exception as e:
+		except Exception:
 			pass
 		fname_excel = os.path.join(
 			dirname,

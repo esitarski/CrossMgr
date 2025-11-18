@@ -351,7 +351,6 @@ class HeaderNamesPage(adv.WizardPageSimple):
 	
 	def setFileNameSheetName( self, fileName, sheetName ):
 		self.headers, fieldCol = getDefaultFieldMap( fileName, sheetName, self.expectedFieldCol )
-		iNoMatch = len(self.headers) - 1
 		for c, f in enumerate(Fields):
 			self.choices[c].Clear()
 			self.choices[c].AppendItems( self.headers )

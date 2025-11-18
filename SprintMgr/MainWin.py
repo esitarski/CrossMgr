@@ -426,7 +426,7 @@ class MainWin( wx.Frame ):
 		
 		wb = xlsxwriter.Workbook( xlFName )
 		sheetName = pageTitle
-		sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\[\] ]+', ' ', sheetName)[:31]
+		sheetName = re.sub('[+!#$%&+~`".:;|\\/?*\\[\\] ]+', ' ', sheetName)[:31]
 		sheetCur = wb.add_worksheet( sheetName )
 		export = ExportGrid( title, grid )
 		formats = ExportGrid.getExcelFormatsXLSX( wb )
@@ -449,13 +449,13 @@ class MainWin( wx.Frame ):
 		image = None
 		try:
 			grid = page.getGrid()
-		except Exception as e:
+		except Exception:
 			pass
 		
 		if not grid:
 			try:
 				image = page.getImage()
-			except Exception as e:
+			except Exception:
 				pass
 				
 		if not (grid or image):
@@ -633,7 +633,7 @@ table.results tr td.fastest{
 				return
 			
 		fileName, ext = os.path.splitext( self.fileName )
-		s = re.search( ' \((\d+)\)$', fileName )
+		s = re.search( ' \\((\\d+)\\)$', fileName )
 		if s:
 			fileName = fileName[:fileName.index(' (')] + ' ({})'.format(int(s.group(1))+1) + ext
 		else:
@@ -907,14 +907,14 @@ table.results tr td.fastest{
 	def callPageRefresh( self, i ):
 		try:
 			self.pages[i].refresh()
-		except (AttributeError, IndexError) as e:
+		except (AttributeError, IndexError):
 			pass
 
 	def callPageCommit( self, i ):
 		try:
 			self.pages[i].commit()
 			self.setTitle()
-		except (AttributeError, IndexError) as e:
+		except (AttributeError, IndexError):
 			pass
 
 	def onPageChanging( self, event ):

@@ -30,18 +30,18 @@ import zipfile
 
 try:
     import poster
-except:
+except Exception:
     print('Module poster missing: https://pypi.python.org/pypi/poster')
     exit()
 
 try:
     import json
     jsonalias = json
-except:
+except Exception:
     try:
         import simplejson
         jsonalias = simplejson
-    except:
+    except Exception:
         print('Modules json and simplejson missing')
         exit()
 
@@ -60,7 +60,7 @@ def VTHTTPScanRequest(filename, options):
             file = oZipfile.open(oZipfile.infolist()[0], 'r', 'infected')
             data = file.read()
             postfilename = oZipfile.infolist()[0].filename
-        except:
+        except Exception:
             return None, sys.exc_info()[1]
         finally:
             if file:
@@ -92,7 +92,7 @@ def VTHTTPScanRequest(filename, options):
         return None, str(e)
     try:
         data = hRequest.read()
-    except:
+    except Exception:
         return None, 'Error'
     finally:
         hRequest.close()
@@ -101,11 +101,11 @@ def VTHTTPScanRequest(filename, options):
 def File2Strings(filename):
     try:
         f = open(filename, 'r')
-    except:
+    except Exception:
         return None
     try:
         return map(lambda line:line.rstrip('\n'), f.readlines())
-    except:
+    except Exception:
         return None
     finally:
         f.close()

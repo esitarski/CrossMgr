@@ -85,7 +85,7 @@ class ReadExcelXls:
 						else:
 							# time only - no date component
 							if datetuple[0] == 0 and datetuple[1] == 0 and  datetuple[2] == 0:
-								value = "{:02d}:{02d}:{02d}".format(datetuple[3:])
+								value = "{:02d}:{02d}:{02d}".format(*datetuple[3:])
 							# date only, no time
 							elif datetuple[3] == 0 and datetuple[4] == 0 and datetuple[5] == 0:
 								value = "{:%04d}/{:02d}/{:02d}".format( *datetuple[:3] )
@@ -107,8 +107,7 @@ class ReadExcelXlsx:
 	def __init__(self, filename):
 		if not os.path.isfile(filename):
 			raise ValueError( "{} is not a valid filename".format(filename) )
-		with open(filename,'rb') as f:
-			self.book = openpyxl.load_workbook( filename, data_only=True )
+		self.book = openpyxl.load_workbook( filename, data_only=True )
 		
 	def is_nonempty_row(self, sheet, i):
 		values = sheet.row_values(i)

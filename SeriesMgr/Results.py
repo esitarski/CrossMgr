@@ -7,6 +7,7 @@ import xlsxwriter
 import webbrowser
 import subprocess
 import platform
+import itertools
 from html import escape
 from urllib.parse import quote
 
@@ -143,11 +144,17 @@ def getHtml( htmlfileName=None, seriesFileName=None ):
 	
 	html = open( htmlfileName, 'w', encoding='utf-8', newline='' )
 	
+	# Substitute special ranks for names.
 	def ordinal( x ):
-		return f'{x}'
+		if x < SeriesModel.rankDNF:
+			return f'{x}'
+		elif x == SeriesModel.rankDNF:
+			return Utils.translate('DNF')
+		else:
+			return ''
 	
 	def write( s ):
-		html.write( '{}'.format(s) )
+		html.write( f'{s}' )
 	
 	with tag(html, 'html'):
 		with tag(html, 'head'):
@@ -808,20 +815,20 @@ class Results(wx.Panel):
 		self.setColNames( headerNames )
 		
 		for row, (name, license, uci_id, team, points, gap, racePoints) in enumerate(results):
-			iCol = 0
-			self.grid.SetCellValue( row, iCol, '{}'.format(row+1) ); iCol += 1
-			self.grid.SetCellValue( row, iCol, '{}'.format(name or '') )
-			self.grid.SetCellBackgroundColour( row, iCol, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
-			iCol += 1
+			iCol = itertools.count()
+			self.grid.SetCellValue( row, next(iCol), '{}'.format(row+1) )
+			iColCur = next(iCol)
+			self.grid.SetCellValue( row, iColCur, '{}'.format(name or '') )
+			self.grid.SetCellBackgroundColour( row, iColCur, wx.Colour(255,255,0) if name in potentialDuplicates else wx.Colour(255,255,255) )
 			if hasLicense:
-				self.grid.SetCellValue( row, iCol, '{}'.format(license or '') ); iCol += 1
+				self.grid.SetCellValue( row, next(iCol), '{}'.format(license or '') )
 			if hasUCIID:
-				self.grid.SetCellValue( row, iCol, formatUCIID(uci_id) ); iCol += 1
+				self.grid.SetCellValue( row, next(iCol), formatUCIID(uci_id) )
 			if hasTeam:
-				self.grid.SetCellValue( row, iCol, '{}'.format(team or '') ); iCol += 1
-			self.grid.SetCellValue( row, iCol, '{}'.format(points) ); iCol += 1
-			self.grid.SetCellValue( row, iCol, '{}'.format(gap) ); iCol += 1
-			for q, (rPoints, rRank, rPrimePoints, rTimeBonus, rr) in enumerate(racePoints):
+				self.grid.SetCellValue( row, next(iCol), '{}'.format(team or '') )
+			self.grid.SetCellValue( row, next(iCol), '{}'.format(points) )
+			self.grid.SetCellValue( row, next(iCol), '{}'.format(gap) )
+			for rPoints, rRank, rPrimePoints, rTimeBonus, rr in racePoints:
 					
 				if hasattr(rr, 'points_explanation'):
 					points_explanation = f'{rPoints} ({rr.points_explanation})'
@@ -836,7 +843,7 @@ class Results(wx.Panel):
 				else:
 					points_explanation = ''
 
-				self.grid.SetCellValue( row, iCol + q, points_explanation )
+				self.grid.SetCellValue( row, next(iCol), points_explanation )
 				
 			for c in range( len(headerNames) ):
 				self.grid.SetCellBackgroundColour( row, c, wx.WHITE )
@@ -980,18 +987,18 @@ class Results(wx.Panel):
 			rowCur += 1
 			
 			for pos, (name, license, uci_id, team, points, gap, racePoints) in enumerate(results):
-				iCol = 0
-				wsFit.write( rowCur, iCol, pos+1, numberStyle ); iCol += 1
-				wsFit.write( rowCur, iCol, name, textStyle ); iCol += 1
+				iCol = itertools.count()
+				wsFit.write( rowCur, next(iCol), pos+1, numberStyle )
+				wsFit.write( rowCur, next(iCol), name, textStyle )
 				if hasLicense:
-					wsFit.write( rowCur, iCol, license, textStyle ); iCol += 1
+					wsFit.write( rowCur, next(iCol), license, textStyle )
 				if hasUCIID:
-					wsFit.write( rowCur, iCol, formatUCIID(uci_id), textStyle ); iCol += 1
+					wsFit.write( rowCur, next(iCol), formatUCIID(uci_id), textStyle )
 				if hasTeam:
-					wsFit.write( rowCur, iCol, team, textStyle ); iCol += 1
-				wsFit.write( rowCur, iCol, points, numberStyle ); iCol += 1
-				wsFit.write( rowCur, iCol, gap, numberStyle ); iCol += 1
-				for q, (rPoints, rRank, rPrimePoints, rTimeBonus, rr) in enumerate(racePoints):
+					wsFit.write( rowCur, next(iCol), team, textStyle )
+				wsFit.write( rowCur, next(iCol), points, numberStyle )
+				wsFit.write( rowCur, next(iCol), gap, numberStyle )
+				for rPoints, rRank, rPrimePoints, rTimeBonus, rr in racePoints:
 					if hasattr(rr, 'points_explanation'):
 						explanation = f'{rPoints} ({rr.points_explanation})'
 					elif rPoints and rPrimePoints:
@@ -1004,7 +1011,7 @@ class Results(wx.Panel):
 						explanation = '({})'.format(Utils.ordinal(rRank))
 					else:
 						explanation = ''
-					wsFit.write( rowCur, iCol + q, explanation, centerStyle )
+					wsFit.write( rowCur, next(iCol), explanation, centerStyle )
 				rowCur += 1
 		
 			# Add branding at the bottom of the sheet.

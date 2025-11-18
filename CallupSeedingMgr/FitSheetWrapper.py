@@ -29,7 +29,7 @@ class FitSheetWrapper(object):
 		elif isinstance(label, datetime.time):
 			label = '00:00:00'
 		else:
-			label = Utils.removeDiacritic( '{}'.format(label) )
+			label = Utils.removeDiacritic( f'{label}' )
 		width = min( len(label), 65535 )
 		if width > self.widths.get(c, 0):
 			self.widths[c] = width
