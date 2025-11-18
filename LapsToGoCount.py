@@ -237,12 +237,8 @@ class LapsToGoCountGraph( wx.Control ):
 		
 		greyPen = wx.Pen( greyColour )
 
-		backBrush = wx.Brush(backColour, wx.SOLID)
-		greyBrush = wx.Brush( greyColour, wx.SOLID )
-		
-		lightGreyBrush = wx.Brush( wx.Colour(220,220,220), wx.SOLID )
-
-		dc.SetBackground(backBrush)
+		backBrush = wx.Brush(backColour, wx.SOLID)		
+		dc.SetBackground( backBrush )
 		dc.Clear()
 				
 		lapsToGoCount, statusCount = LapsToGoCount()

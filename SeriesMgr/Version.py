@@ -1,1 +1,1 @@
-AppVerName="SeriesMgr 3.0.490.-private"
+AppVerName="SeriesMgr 3.0.50.-private"

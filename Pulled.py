@@ -16,7 +16,7 @@ def getRiderInfo( bib ):
 	race = Model.race
 	try:
 		riderInfo = race.excelLink.read()[bib]
-	except (KeyError, AttributeError) as e:
+	except (KeyError, AttributeError):
 		return '', '', ''
 	
 	CatComponent = Model.Category.CatComponent

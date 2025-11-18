@@ -31,7 +31,7 @@ def timeFromStr( value ):
 	# First check that we have an am/pm time.
 	# This will accept formats like 9:00a, 09:00am, 09:00 A, 09:00 AM, etc.
 	v = value.strip().lower()
-	if not (':' in v) or not ('a' in v or 'p' in v) or not v[0].isdigit() or not re.match('^[0-9: apm]+$', v):
+	if ':' not in v or not ('a' in v or 'p' in v) or not v[0].isdigit() or not re.match('^[0-9: apm]+$', v):
 		return value
 	
 	isPM = ('p' in v)			# Check for pm.

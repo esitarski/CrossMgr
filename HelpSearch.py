@@ -64,7 +64,7 @@ def showHelp( url ):
 		url = getHelpURL( url )
 	try:
 		webbrowser.open( url )
-	except Exception as e:
+	except Exception:
 		pass
 	
 class HelpSearch( wx.Panel ):
@@ -164,7 +164,7 @@ def HelpServer():
 		try:
 			server = HTTPServer(('localhost', PORT_NUMBER), HelpHandler)
 			server.serve_forever( poll_interval = 2 )
-		except Exception as e:
+		except Exception :
 			server = None
 			time.sleep( 5 )
 		

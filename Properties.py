@@ -469,14 +469,14 @@ class WebProperties( wx.Panel ):
 		self.commit()
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage(), new=2, autoraise=True )
-		except Exception as e:
+		except Exception:
 			pass
 	
 	def doWebQRCodePage( self, event ):
 		self.commit()
 		try:
 			webbrowser.open( WebServer.GetCrossMgrHomePage() + '/qrcode.html' , new=2, autoraise=True )
-		except Exception as e:
+		except Exception:
 			pass
 
 	def getDefaultGraphicFNameType( self ):
@@ -724,16 +724,21 @@ class OtherProperties( wx.Panel ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		ms = wx.StaticBoxSizer( wx.VERTICAL, self, _('Play Sound') )
+		ms = wx.StaticBoxSizer( wx.VERTICAL, self, _('Play Sounds') )
 
-		self.soundEnter = wx.CheckBox( self, label=_("on Bib Entry or RFID Read") )
+		self.soundEnter = wx.CheckBox( self, label=_("when Bibs are Entered") )
 		self.soundEnter.SetValue( True )
 		self.soundLeader = wx.CheckBox( self, label=_("to Announce the Leader") )
 		self.soundLeader.SetValue( True )
 		
 		ms.Add( self.soundEnter, flag=wx.ALL, border=4 )
 		ms.Add( self.soundLeader, flag=wx.ALL, border=4 )
+		
+		self.allowManualRFID = wx.CheckBox( self, label=_("Allow Manual RFID Entry") )
+		self.allowManualRFID.SetValue( False )
+		
 		vs.Add( ms, flag=wx.ALL, border=4 )
+		vs.Add( self.allowManualRFID, flag=wx.ALL, border=4 )
 		
 		self.SetSizer( vs )
 
@@ -742,9 +747,11 @@ class OtherProperties( wx.Panel ):
 		if not race:
 			self.soundEnter.SetValue( True )
 			self.soundLeader.SetValue( True )
+			self.allowManualRFID.SetValue( False )
 		else:
 			self.soundEnter.SetValue( bool(race.soundMask & race.soundEnterMask) )
 			self.soundLeader.SetValue( bool(race.soundMask & race.soundLeaderMask) )
+			self.allowManualRFID.SetValue( race.allowManualRFID )
 		
 	def commit( self ):
 		race = Model.race
@@ -760,6 +767,8 @@ class OtherProperties( wx.Panel ):
 			race.soundMask |= race.soundLeaderMask
 		else:
 			race.soundMask &= ~race.soundLeaderMask
+			
+		race.allowManualRFID = self.allowManualRFID.GetValue()
 		
 #------------------------------------------------------------------------------------------------
 class AnimationProperties( wx.Panel ):
@@ -891,7 +900,8 @@ class BatchPublishProperties( wx.Panel ):
 			fgs.Add( st, flag=wx.ALL, border=4 )
 		
 		for i, attr in enumerate(batchPublishAttr):
-			for k in range(len(headers)): fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
+			for k in range(len(headers)):
+				fgs.Add( wx.StaticLine(self, size=(1,1)), flag=wx.EXPAND )
 		
 			attrCB = wx.CheckBox(self, label=attr.uiname)
 			attrCB.Bind( wx.EVT_CHECKBOX, lambda event, iAttr=i: self.onSelect(iAttr) )
@@ -1422,7 +1432,7 @@ class Properties( wx.Panel ):
 		templatesFolder = GetTemplatesFolder()
 		try:
 			os.makedirs( templatesFolder )
-		except Exception as e:
+		except Exception:
 			pass
 		fd = wx.FileDialog(
 			self,
@@ -1462,7 +1472,7 @@ class Properties( wx.Panel ):
 		templatesFolder = os.path.join( os.path.expanduser("~"), 'CrossMgrTemplates' )
 		try:
 			os.makedirs( templatesFolder )
-		except Exception as e:
+		except Exception:
 			pass
 		with wx.FileDialog(
 				self,

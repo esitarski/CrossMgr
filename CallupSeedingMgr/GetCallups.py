@@ -8,7 +8,8 @@ RegistrationSheet = 'Registration'
 
 def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callbackfunc=None, callbackupdate=None, cycleLast=None ):
 
-	if callbackupdate: callbackupdate( _('Reading spreadsheet...') )
+	if callbackupdate:
+		callbackupdate( _('Reading spreadsheet...') )
 	reader = GetExcelReader( fname )
 	
 	sheet_names = [name for name in reader.sheet_names()]
@@ -19,22 +20,26 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callback
 	if registration_sheet_count > 1:
 		raise ValueError( '{}: "{}"'.format('Spreadsheet must have exactly one sheet named', RegistrationSheet ) )
 	
-	if callbackupdate: callbackupdate( '{}: {}'.format(_('Reading'), RegistrationSheet) )
+	if callbackupdate:
+		callbackupdate( '{}: {}'.format(_('Reading'), RegistrationSheet) )
 	
 	reader = GetExcelReader( fname )
 	
 	registration = Source( fname, RegistrationSheet, False )
 	registrationErrors = registration.read( reader )
 	
-	if callbackfunc: callbackfunc( [registration], [registrationErrors] )
+	if callbackfunc:
+		callbackfunc( [registration], [registrationErrors] )
 		
 	sources = []
 	errors = []
 	for sheet in sheet_names:
 		if sheet == RegistrationSheet:
 			continue
-		if callbackfunc: callbackfunc( sources + [registration], errors + [registrationErrors] )
-		if callbackupdate: callbackupdate( '{}: {}'.format(_('Reading'), sheet) )
+		if callbackfunc:
+			callbackfunc( sources + [registration], errors + [registrationErrors] )
+		if callbackupdate:
+			callbackupdate( '{}: {}'.format(_('Reading'), sheet) )
 		source = Source( fname, sheet, soundalike=soundalike, useUciId=useUciId, useLicense=useLicense )
 		errs = source.read( reader )
 		sources.append( source )
@@ -46,7 +51,8 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callback
 	sources.append( registration )
 	errors.append( registrationErrors )
 	
-	if callbackfunc: callbackfunc( sources, errors )
+	if callbackfunc:
+		callbackfunc( sources, errors )
 	
 	for reg in registration.results:
 		reg.result_vector = [source.find(reg) for source in sources]

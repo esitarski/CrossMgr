@@ -1,9 +1,7 @@
-import socket
 import sys
 import time
 import datetime
 import atexit
-import subprocess
 import threading
 import re
 import wx
@@ -206,7 +204,7 @@ def Server( q, shutdownQ, comPort, startTime ):
 		if s:
 			try:
 				s.close()
-			except Exception as e:
+			except Exception:
 				pass
 			time.sleep( delaySecs )
 		

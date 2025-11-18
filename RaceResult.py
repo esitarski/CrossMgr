@@ -67,33 +67,33 @@ def AutoDetect( raceResultPort=3601, callback=None ):
 			
 		raceResultHost = '.'.join( '{}'.format(v) for v in ipTest )
 		if callback:
-			if not callback( '{}:{}'.format(raceResultHost,raceResultPort) ):
+			if not callback( f'{raceResultHost}:{raceResultPort}' ):
 				return None
 		
 		try:
 			s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
 			s.settimeout( 0.5 )
 			s.connect( (raceResultHost, raceResultPort) )
-		except Exception as e:
+		except Exception:
 			continue
 
 		cmd = 'GETSTATUS'
 		try:
-			socketSend( s, '{}{}'.format(cmd, EOL) )
-		except Exception as e:
+			socketSend( s, f'{cmd}{EOL}' )
+		except Exception:
 			continue
 			
 		try:
 			buffer = socketReadDelimited( s )
-		except Exception as e:
+		except Exception:
 			continue
 			
 		try:
 			s.close()
-		except Exception as e:
+		except Exception:
 			pass
 		
-		if buffer.startswith( '{};'.format(cmd) ):
+		if buffer.startswith( f'{cmd};' ):
 			return raceResultHost
 			
 	return None
@@ -157,7 +157,7 @@ def Server( q, shutdownQ, HOST, PORT, startTime ):
 			try:
 				s.shutdown( socket.SHUT_RDWR )
 				s.close()
-			except Exception as e:
+			except Exception:
 				pass
 			time.sleep( delaySecs )
 		

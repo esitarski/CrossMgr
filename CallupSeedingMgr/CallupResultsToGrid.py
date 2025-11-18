@@ -80,7 +80,7 @@ def CallupResultsToGrid( grid, registration_headers, callup_headers, callup_resu
 						colour = characterMatchFail
 					elif s == 2:
 						colour = soundalikeMatchFail
-			except AttributeError as e:
+			except AttributeError:
 				pass
 			grid.SetCellBackgroundColour( row, col, colour )
 			

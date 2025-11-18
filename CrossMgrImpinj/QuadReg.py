@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 try:
 	warnings.simplefilter('ignore', np.exceptions.RankWarning)
-except Exception as e:
+except Exception:
 	warnings.simplefilter('ignore', np.RankWarning)
 
 def QuadReg( data ):

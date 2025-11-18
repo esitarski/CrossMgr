@@ -14,7 +14,7 @@ from queue import Queue, Empty
 import Utils
 from Utils import stripLeadingZeros
 import Model
-from JChip import ChipReaderEvent, EVT_CHIP_READER
+from JChip import ChipReaderEvent
 
 readerEventWindow = None
 def sendReaderEvent( tagTimes ):

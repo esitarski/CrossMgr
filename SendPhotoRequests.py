@@ -22,7 +22,7 @@ def getFtpInfo( race ):
 				'password':		race.ftpPassword,
 				'photoPath':	race.ftpPhotoPath,
 			}
-	except Exception as e:
+	except Exception:
 		pass
 	
 	return None

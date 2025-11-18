@@ -807,7 +807,7 @@ class Results( wx.Panel ):
 			for r, result in enumerate(results):
 				try:
 					k = (getFunc(data[sortCol][r]), r)
-				except Exception as e:
+				except Exception:
 					k = (maxVal, r)
 				sortPairs.append( (k, r) )
 			sortPairs.sort()

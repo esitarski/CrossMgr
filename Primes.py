@@ -18,7 +18,7 @@ def getWinnerInfo( bib ):
 	
 	try:
 		riderInfo = race.excelLink.read()[bib]
-	except Exception as e:
+	except Exception:
 		return ''
 
 	fields = [
@@ -255,7 +255,7 @@ class Primes( wx.Panel ):
 			race.primes = getattr(race, 'primes', [])
 			try:
 				del race.primes[rowDelete]
-			except Exception as e:
+			except Exception:
 				return
 			self.updateGrid()
 			if race.primes:

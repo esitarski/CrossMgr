@@ -27,6 +27,14 @@ class FieldDef:
 	TimeType		= 'time'
 	ChoiceType		= 'choice'
 	
+	type_ids = {
+		str:			StringType,
+		float:			FloatType,
+		int:			IntType,
+		datetime.date:	DateType,
+		datetime.time:	TimeType,
+	}
+		
 	def __init__( self, attr, name = None, type = None, choices = None, changeCallback = None, data = None ):
 		if name is None:
 			name = niceName( attr )
@@ -46,15 +54,17 @@ class FieldDef:
 		self.changeCallback = changeCallback
 		
 	def __repr__( self ):
-		return 'Field: {}, {}'.format(self.name, self.type)
-		
+		return f'Field: {self.name}, {self.type}'
+
 	@staticmethod
 	def getType( v ):
-		if isinstance(v, str):				return FieldDef.StringType
-		if isinstance(v, float):			return FieldDef.FloatType
-		if isinstance(v, int):				return FieldDef.IntType
-		if isinstance(v, datetime.date):	return FieldDef.DateType
-		if isinstance(v, datetime.time):	return FieldDef.TimeType
+		try:
+			return FieldDef.type_ids[type(v)]
+		except KeyError:
+			pass
+		for t_class, t_id in FieldDef.type_ids.items():
+			if isinstance(v, t_class):
+				return t_id
 		raise ValueError( "unknown type" )
 	
 	def makeCtrls( self, parent ):

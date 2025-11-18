@@ -98,6 +98,7 @@ class Template:
 			'gaTrackingID',
 			
 			'soundMask',
+			'allowManualRFID',
 		},
 		set(batchPublishRaceAttr),
 	)

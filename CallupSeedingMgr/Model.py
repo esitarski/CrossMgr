@@ -684,17 +684,20 @@ class Source:
 	def match_indices( self, search, indices ):
 		# Look for a set intersection of one element between all source criteria.
 		
-		if self.debug: print( 'match_indices: searchKeys=', indices )
+		if self.debug:
+			print( 'match_indices: searchKeys=', indices )
 		
 		soundalike = False
 		setCur = None
 		for idx_name in indices:
-			if self.debug: print( "match_indices: matching on key:", idx_name )
+			if self.debug:
+				print( "match_indices: matching on key:", idx_name )
 			idx = getattr( self, idx_name )
 			v = getattr( search, self.field_from_index(idx_name), None )
 			if not v or not idx:
 				setCur = None
-				if self.debug: print( 'match_indices: missing attribute' )
+				if self.debug:
+					print( 'match_indices: missing attribute' )
 				break
 
 			try:
@@ -702,7 +705,8 @@ class Source:
 			except Exception:
 				pass
 				
-			if self.debug: print( 'match_indices: value=', v )
+			if self.debug:
+				print( 'match_indices: value=', v )
 			
 			found = set()
 			if idx_name.startswith( 'by_mp_' ):
@@ -719,10 +723,12 @@ class Source:
 				setCur &= set(found)
 			
 			if not setCur:
-				if self.debug: print( "match_indices: match failed. found=", found )
+				if self.debug:
+					print( "match_indices: match failed. found=", found )
 				break
 			
-			if self.debug: print( "matched:", setCur )
+			if self.debug:
+				print( "matched:", setCur )
 		
 		return FindResult( search, setCur, self, soundalike )
 	
@@ -753,7 +759,8 @@ class Source:
 		)
 		for pi in perfectIndices:
 			if self.has_all_index_fields(search, pi):
-				if self.debug: print( 'found index:', pi )
+				if self.debug:
+					print( 'found index:', pi )
 				findResult = self.match_indices( search, pi )
 				if findResult.get_status() == FindResult.Success:
 					return findResult
@@ -768,7 +775,8 @@ class Source:
 			
 			for pi in potentialIndices:
 				if self.has_all_index_fields(search, pi):
-					if self.debug: print( 'found index:', pi )
+					if self.debug:
+						print( 'found index:', pi )
 					indices = pi
 					break
 		
@@ -784,10 +792,12 @@ class Source:
 			if not self.soundalike and any(i.startswith('by_mp_') for i in pi):
 				continue
 			if self.has_all_index_fields(search, pi):
-				if self.debug: print( 'matching on fields:', pi )
+				if self.debug:
+					print( 'matching on fields:', pi )
 				findResult = self.match_indices( search, pi )
 				if findResult.get_status() != findResult.NoMatch:
-					if self.debug: print( 'success', findResult )
+					if self.debug:
+						print( 'success', findResult )
 					return findResult
 		
 		return FindResult( search, [], self, False )

@@ -23,7 +23,7 @@ from InSortedIntervalList import InSortedIntervalList
 from getuser import lookup_username
 try:
 	CurrentUser = lookup_username()
-except Exception as e:
+except Exception:
 	CurrentUser = ''
 	
 CurrentComputer = socket.gethostname()
@@ -226,7 +226,7 @@ class Category:
 				else:
 					self.intervals.append( tuple(bounds) )
 					
-			except Exception as e:
+			except Exception:
 				# Ignore any parsing errors.
 				pass
 				
@@ -670,7 +670,7 @@ class Rider:
 		# Make sure we don't include times that exceed the number of laps.
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(self.times) )
-		except Exception as e:
+		except Exception:
 			numLaps = len(self.times)
 			
 		if not numLaps:
@@ -690,7 +690,7 @@ class Rider:
 		# Make sure we don't include times that exceed the number of laps.
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(self.times) )
-		except Exception as e:
+		except Exception:
 			numLaps = len(self.times)
 		
 		try:
@@ -747,7 +747,7 @@ class Rider:
 		
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes) )
-		except Exception as e:
+		except Exception:
 			numLaps = len(iTimes)
 
 		'''
@@ -836,7 +836,7 @@ class Rider:
 				for t in self.times:
 					if t < startOffset:
 						count += 1
-		except Exception as e:
+		except Exception:
 			pass
 		return count
 	
@@ -947,7 +947,7 @@ class Rider:
 		
 		try:
 			numLaps = min( race.getCategory(self.num)._numLaps or 999999, len(iTimes)-1 )
-		except Exception as e:
+		except Exception:
 			numLaps = len(iTimes)-1
 		iTimes = iTimes[:numLaps+1]
 		if len(iTimes) > 2:			# Ignore the first lap.
@@ -1201,6 +1201,9 @@ class Race:
 	soundEnterMask = (1<<0)
 	soundLeaderMask = (1<<1)
 	soundMask = 0xffffff
+	
+	# If True, allow RIFD codes to be entered manually.
+	allowManualRFID = False
 	
 	#--------------------------------------
 	
@@ -2349,7 +2352,7 @@ class Race:
 			return self.startOffsetCache[num]
 		except KeyError:
 			return 0.0
-		except (TypeError, AttributeError) as e:
+		except (TypeError, AttributeError):
 			pass
 			
 		self._buildCategoryCache()	

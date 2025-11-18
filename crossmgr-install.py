@@ -139,7 +139,7 @@ def download_file_from_url( file_url, file_name ):
 		f'context = {json.dumps(context)}',
 		"with requests.get(context['file_url'], stream=True) as r:",
 		"    r.raise_for_status()",
-		f"    with open(context['file_name'], 'wb') as f:",
+		"    with open(context['file_name'], 'wb') as f:",
 		"        for chunk in r.iter_content(chunk_size=8192):",
 		"            f.write( chunk )",
 	] )
@@ -150,7 +150,7 @@ def download_file_from_url( file_url, file_name ):
 	remove_ignore( download_src_fname, True )
 
 def src_download():
-	python_exe = get_python_env_exe()
+	# python_exe = get_python_env_exe()
 	
 	# Pull the source and resources from github.
 	zip_file_name = os.path.join(os.path.dirname(get_src_dir()), 'CrossMgrSrc.zip')
@@ -172,7 +172,7 @@ def src_download():
 	print( 'Done.', flush=True )
 	
 def get_wxpython_versions():
-	python_exe = get_python_env_exe()
+	# python_exe = get_python_env_exe()
 	
 	# Read the extras page.
 	extras_fname = os.path.join(get_src_dir(), 'wxpytyhon_extras.txt')
@@ -410,7 +410,7 @@ def make_bin():
 	print( f"Making launch scripts in directory {bin_dir}... ", end='', flush=True )
 	try:
 		os.mkdir( bin_dir )
-	except Exception as e:
+	except Exception:
 		pass
 
 	home_dir = os.path.expanduser( '~' )
@@ -482,7 +482,7 @@ def make_file_associations( uninstall_assoc=False ):
 						f.write( fr'reg add hkcr\{name}\DefaultIcon /ve /d "{get_ico_file(pyw)}"' + '\n' )
 
 		import ctypes
-		ret = ctypes.windll.shell32.ShellExecuteW(0, 'runas', assoc_fname,  '', os.path.dirname(assoc_fname), 1)
+		ctypes.windll.shell32.ShellExecuteW(0, 'runas', assoc_fname,  '', os.path.dirname(assoc_fname), 1)
 		
 		#subprocess.check_output( [assoc_fname], shell=True, cwd=os.path.dirname(assoc_fname) )
 		remove_ignore( assoc_fname )
@@ -512,7 +512,7 @@ def make_file_associations( uninstall_assoc=False ):
 			if uninstall_assoc:
 				try:
 					os.path.remove( fname )
-				except:
+				except Exception:
 					pass
 			else:				
 				with open( fname, 'w', encoding='utf-8' ) as f:

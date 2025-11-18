@@ -27,11 +27,11 @@ def GetRaceDBConfig():
 	config = configparser.ConfigParser()
 	try:
 		config.read( GetRaceDBConfigFile() )
-	except Exception as e:
+	except Exception:
 		return {}
 	try:
 		return config['RaceDB']
-	except Exception as e:
+	except Exception:
 		return {}
 
 globalRaceDBUrl = ''
@@ -106,7 +106,7 @@ def RaceDBUrlDefault():
 	config = GetRaceDBConfig()
 	try:
 		return config['url']
-	except Exception as e:
+	except Exception:
 		pass
 	return globalRaceDBUrl or 'http://{}:8000/RaceDB'.format( 'www.localhost' )
 
@@ -114,7 +114,7 @@ def RaceDBUserPassword():
 	config = GetRaceDBConfig()
 	try:
 		return config.get('user',''), config['password']
-	except Exception as e:
+	except Exception:
 		pass
 	return '', ''
 
@@ -384,14 +384,14 @@ class RaceDB( wx.Dialog ):
 	def selectChangedCB( self, evt ):
 		try:
 			self.dataSelect = self.tree.GetItemData(evt.GetItem())
-		except Exception as e:
+		except Exception:
 			self.dataSelect = None
 	
 	def onEventSelect( self, evt ):
 		try:
 			self.dataSelect = self.tree.GetItemData(evt.GetItem())
 			self.doOK( evt )
-		except Exception as e:
+		except Exception:
 			self.dataSelect = None
 	
 	def refresh( self, events=None ):
@@ -606,7 +606,7 @@ class RaceDBUpload( wx.Dialog ):
 			url = self.fixUrl()
 			try:
 				response = PostEventCrossMgr( url )
-			except Exception as e:
+			except Exception:
 				response = {'errors':['{}'.format(traceback.format_exc())], 'warnings':[], 'info':[] }
 			
 			errors		= response.get('errors',[])

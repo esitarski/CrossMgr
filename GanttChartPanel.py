@@ -47,7 +47,7 @@ def numFromLabel( s ):
 		if firstSpace < 0:
 			return int(s)
 		return int(s[:firstSpace])
-	except Exception as e:
+	except Exception:
 		return None
 
 class KeyWrapper:

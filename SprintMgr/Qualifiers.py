@@ -129,7 +129,7 @@ class Qualifiers(wx.Panel):
 				
 			try:
 				qualifyingTimes[int(row[headerMap['bib']])] = Utils.StrToSeconds(str(row[headerMap['time']]))
-			except Exception as e:
+			except Exception:
 				pass
 	
 		if len(headerMap) < 2:

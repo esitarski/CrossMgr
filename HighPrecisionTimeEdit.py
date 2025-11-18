@@ -1,6 +1,5 @@
 import wx
 import re
-import platform
 import datetime
 import Utils
 
@@ -45,6 +44,8 @@ def getSeconds( v, display_seconds, display_milliseconds ):
 		return 0.0
 
 # Masked controls still don't work on anything but Windows.  Sigh :(
+# Update - masked controls stopped working entirely.
+# import platform
 if False: # platform.system() == 'Windows':
 	import wx.lib.masked as masked
 	
