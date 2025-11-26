@@ -3,7 +3,7 @@ import sys
 import string
 import Model
 from keybutton import KeyButton
-from ReadSignInSheet import GetTagNums
+from ReadSignOnSheet import GetTagNums
 
 # key codes recognized as Enter.
 enterCodes = {
