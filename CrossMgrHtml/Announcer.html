@@ -33,6 +33,10 @@ body { font-family: sans-serif; }
 	font-weight: bold;
 }
 
+button {
+	border-radius: 10px;
+}
+
 input[type=range]::-ms-tooltip {
 	display: none;
 }
@@ -143,7 +147,7 @@ var winAndOut = null;
 var curRaceTime = null;
 var data = null;
 var catDetails = null;
-var iCategoryCur = 1;
+var iCategoryCur = 0;		// iCategoryCur is the index of the current category shown.  If 0, this shows the Passings table.
 var winAndOut = null;
 var version = null;
 var flags = null;
@@ -620,24 +624,21 @@ function getScaleColour( eta ) {
 	return eta < 0.0 ? greenScale[greenScale.length-1] : null
 }
 
+var numSelect = null;
 function setCategory( i ) {
-	i = i || iCategoryCur;
-	if( !catDetails || catDetails.length == 0 || i >= catDetails.length )
-		i = 1;
 	iCategoryCur = i;
 	for( let j = 0; j < categoryButtons.length; ++j ) {
-		categoryButtons[j].style.borderWidth = ((j == i-1 ) ? 4 : 1) + 'px';
-		categoryButtons[j].style.border = (j == i-1) ? 'dotted orange' : 'black';
+		categoryButtons[j].style.borderWidth = (j == i) ? '4px' : '1px';
 	}
 }
 
 var categoryButtons = [];
 var categoryNames = [];
 function RefreshCategories() {
-	var rebuildButtons = ( catDetails.length-1 != categoryNames.length );
+	var rebuildButtons = ( catDetails.length != categoryNames.length );
 	if( !rebuildButtons ) {
 		for( let i = 0; i < categoryNames.length; ++i ) {
-			if( categoryNames[i] != catDetails[i+1].name ) {
+			if( categoryNames[i] != catDetails[i].name ) {
 				rebuildButtons = true;
 				break;
 			}
@@ -645,33 +646,33 @@ function RefreshCategories() {
 	}
 	
 	if( rebuildButtons ) {
-		categoryButtons = [];
+		categoryButtons = []
 		categoryNames = [];
 		categoriesDiv.innerHTML = '';
-		if( catDetails.length > 2 ) {
-			for( let i = 1; i < catDetails.length; ++i ) {
-				let b = document.createElement('BUTTON');
-				b.innerHTML = catDetails[i].name.escapeHTML();
-				b.style.margin = '8px';
-				b.style.fontSize = '120%';
-				b.onclick = (function( iCategory ) { return function() {setCategory(iCategory); RefreshResultsTable();} })( i );
-				categoryButtons.push( b );
-				categoryNames.push( catDetails[i].name );
-				categoriesDiv.appendChild( b );
-			}
+		for( let i = 0; i < catDetails.length; ++i ) {
+			let b = document.createElement('BUTTON');
+			b.style.margin = '8px';
+			b.style.fontSize = '140%';
+			b.onclick = (function( iCategory ) { return function() {numSelect = null; setCategory(iCategory); RefreshResultsTable();} })( i );
+
+			b.innerHTML = i === 0 ? "Passings" : catDetails[i].name.escapeHTML();
+			
+			categoryButtons.push( b );
+			categoryNames.push( catDetails[i].name );
+			categoriesDiv.appendChild( b );
 		}
 	}
 	
 	let tRace = getRaceTime();
 	if( tRace && !isTimeTrial ) {
-		for( let i = 0; i < categoryButtons.length; ++i ) {
+		for( let i = 1; i < categoryButtons.length; ++i ) {
 			let v = '', colour = null;
-			if( catDetails[i+1].pos.length > 0 && tExpected[catDetails[i+1].pos[0]] ) {
-				let eta = tExpected[catDetails[i+1].pos[0]] - tRace;
+			if( catDetails[i].pos.length > 0 && tExpected[catDetails[i].pos[0]] ) {
+				let eta = tExpected[catDetails[i].pos[0]] - tRace;
 				v = FormatTime( eta );
 				colour = getScaleColour( eta );
 			}
-			categoryButtons[i].innerHTML = v + (v!='' ? ' ' : '') + catDetails[i+1].name.escapeHTML();
+			categoryButtons[i].innerHTML = v + (v!='' ? ' ' : '') + catDetails[i].name.escapeHTML();
 			categoryButtons[i].style.background = (colour || unrecordedColour);
 		}
 	}
@@ -680,6 +681,7 @@ function RefreshCategories() {
 function RefreshETA() {
 	if( document.hidden )
 		return;
+	
 	if( !catDetails || catDetails.length == 0 || iCategoryCur === null )
 	{
 		categoriesDiv.innerHTML = '';
@@ -689,13 +691,10 @@ function RefreshETA() {
 		return;
 	}
 
-	setCategory();
+	setCategory( iCategoryCur );
 
 	let categoryCur = catDetails[iCategoryCur];
-	if( !categoryCur )
-		return;
-	
-	if( !isTimeTrial ) {
+	if( categoryCur && iCategoryCur && !isTimeTrial ) {
 		let resultsBody = document.getElementById('idResultsBody');
 		let iETA = iCol['ETA'];
 		
@@ -731,15 +730,22 @@ function strToMillis( s ) {
 }
 
 function RefreshResultsTable() {
-	setCategory();
-
+	if( iCategoryCur == 0 ) {
+		return RefreshPassingsTable();
+	}
+	
 	resultsDiv.innerHTML = '';
 	titleDiv.innerHTML = '';
 	isRecorded = [];
 
 	if( !data || !catDetails || !catDetails.length )
 		return;
+	
+	setCategory( iCategoryCur );
+	
 	let categoryCur = catDetails[iCategoryCur];
+	if( !categoryCur )
+		return;
 	
 	// Show results for this category.
 	getExpectedRecorded();
@@ -780,7 +786,7 @@ function RefreshResultsTable() {
 		
 	titleDiv.innerHTML = v;
 	if( lapsToGo == 0 )
-		titleDiv.appendChild( checkeredFlag );
+		titleDiv.appendChild( checkered );
 	
 	// Update the results information.	
 	let table = document.createElement('TABLE');
@@ -806,6 +812,7 @@ function RefreshResultsTable() {
 	let rowGroup = [], groupCount = {};
 	let tdGroup = [];
 	let numPrev = null;
+	let scrollRow = null;
 	for( let r = 0; r < categoryCur.pos.length; ++r ) {
 		let num = categoryCur.pos[r];
 		let rr = data[num];
@@ -819,6 +826,11 @@ function RefreshResultsTable() {
 				break;
 		}
 		tr = createChild( tbody, 'TR' );
+		
+		if( num === numSelect ) {
+			tr.style.border = '2px solid red';
+			scrollRow = tr;
+		}
 		
 		let pos, bg;
 		let e = bibRecorded[num];
@@ -922,6 +934,9 @@ function RefreshResultsTable() {
 	}
 	
 	resultsDiv.appendChild( table );
+	if( scrollRow )
+		scrollRow.scrollIntoView();
+
 	RefreshETA();
 }
 
@@ -948,6 +963,109 @@ function lighterColour( k, factor ) {
 }
 
 // ---------------------------------------------------------------------
+function passingsClick( num, categoryName ) {
+	console.log( ['passingsClick', num, categoryName] );
+	for( let i = 0; i < catDetails.length; ++i ) {
+		if( catDetails[i].name == categoryName ) {
+			setCategory( i );
+			break;
+		}
+	}
+	numSelect = Number( num );
+	RefreshResultsTable();
+}
+
+function RefreshPassingsTable() {
+	resultsDiv.innerHTML = '';
+	titleDiv.innerHTML = "Passings";
+	
+	if( !raceIsRunning )
+		return;
+		
+	// Show passings for all categories.
+	// Get the category of each bib number.
+	let numCategory = {};
+	let numPos = {};
+	for( let i = 1; i < catDetails.length; ++i ) {
+		let pos = catDetails[i].pos;
+		let name = catDetails[i].name;
+		for( let j = 0; j < pos.length; ++j ) {
+			const num = pos[j];
+			numCategory[num] = name;
+			numPos[num] = j+1;
+		}
+	}
+	
+	getExpectedRecorded();
+	
+	let tRace = getRaceTime();
+
+	// Update the title information.
+	
+	// Update the passings information.	
+	let table = document.createElement('TABLE');
+	table.className = 'results';
+	let thead = createChild( table, 'THEAD' );
+	let tr = createChild( thead, 'TR' );
+	let td;
+	createTextChild( td = createChild(tr, 'TH'), 'Category' );
+	td.style.textAlign = "left";
+	for( let i = 0; i < cols.length; ++i ) {
+		let colName = cols[i];
+		if( colName == 'ETA' || colName == 'Group'  || colName == 'Gap' )
+			continue;
+		createTextChild( td = createChild(tr, 'TH'), colName );
+		if( colName == 'Name' || colName == 'Team' )
+			td.style.textAlign = "left";
+	}
+	
+	let tbody = createChild( table, 'TBODY' );
+	tbody.id = 'idResultsBody';
+	
+	// Get the last 20 reads.
+	let recordedShow = recorded.slice( -20 ).reverse();
+	let bg = recordedColour;
+	let foundNumSelect = false;
+	for( let r = 0; r < recordedShow.length; ++r ) {
+		let e = recordedShow[r];
+		if( e.interp ) // Ignore projected reads - use actual reads only.
+			continue;
+		const num = e.num;
+		if( num === numSelect )
+			foundNumSelect = true;
+		let rr = data[num];
+		
+		tr = createChild( tbody, 'TR' );
+		
+		const category = numCategory[num];
+		createTextChild( td = createChild(tr, 'TD'), category );								// Category
+		td.style.backgroundColor = bg;
+		
+		createTextChild( td = createChild(tr, 'TD'), numPos[num] );								// Pos
+		td.style.backgroundColor = bg;
+
+		createTextChild( td = createChild(tr, 'TD'), getRiderName(num) );						// Name
+		td.style.backgroundColor = bg;
+		td.style.textAlign = "left";
+		
+		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(num) );						// Team
+		td.style.backgroundColor = bg;
+		td.style.textAlign = "left";
+		
+		createTextChild( td = createChild(tr, 'TD'), num );										// Bib
+		td.style.backgroundColor = bg;
+
+		tr.onclick = ( event ) => { (function(n,c) { return passingsClick(n,c); })( num, category ); }
+	}
+	if( !foundNumSelect )
+		numSelect = null;
+	
+	resultsDiv.appendChild( table );
+	RefreshETA();
+}
+
+
+// ---------------------------------------------------------------------
 function onLoad() {
 	categoriesDiv = document.getElementById('idCategoriesDiv');
 	titleDiv = document.getElementById('idTitleDiv');
@@ -955,6 +1073,7 @@ function onLoad() {
 	var s = '<p style="padding-top:10px; font-size:40px; color:#AAAAAA;"><img src="/favicon.ico" style="width:32px; height:32px; padding-left:30px; padding-right:30px" />Powered by CrossMgr</p>';
 	document.getElementById('idBrandingDiv').innerHTML = s;
 	ResetWebSocket();
+	iCategoryCur = 0;	// Default to Passings page.
 	setInterval( RefreshETA, 1000 );
 }
 

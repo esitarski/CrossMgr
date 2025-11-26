@@ -100,11 +100,16 @@ with open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf8
 	lapCounterTemplate = f.read().encode()
 def getLapCounterHtml():
 	return lapCounterTemplate
-	
+
+'''
 with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf8') as f:
 	announcerHTML = f.read().encode()
 def getAnnouncerHtml():
 	return announcerHTML
+'''
+def getAnnouncerHtml():
+	with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf8') as f:
+		return f.read().encode()
 	
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
