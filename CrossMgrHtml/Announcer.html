@@ -981,7 +981,7 @@ function RefreshPassingsTable() {
 	
 	if( !raceIsRunning )
 		return;
-		
+	
 	// Show passings for all categories.
 	// Get the category of each bib number.
 	let numCategory = {};
@@ -994,6 +994,23 @@ function RefreshPassingsTable() {
 			numCategory[num] = name;
 			numPos[num] = j+1;
 		}
+	}
+	
+	const tCur = getRaceTime();
+	function getSymbol( bib ) {
+		const rr = data[bib];
+		if( rr.status != 'Finisher' )
+			return "";
+		try {
+			if( tCur >= rr.raceTimes.back() )
+				return "🏁";
+			if( tCur >= rr.raceTimes[rr.raceTimes.length-2] )
+				return "🔔";
+		}
+		catch( err ) {
+			;
+		}
+		return "";
 	}
 	
 	getExpectedRecorded();
@@ -1017,6 +1034,8 @@ function RefreshPassingsTable() {
 		createTextChild( td = createChild(tr, 'TH'), colName );
 		if( colName == 'Name' || colName == 'Team' )
 			td.style.textAlign = "left";
+		if( colName == 'Pos' )
+			createChild(tr, 'TH');
 	}
 	
 	let tbody = createChild( table, 'TBODY' );
@@ -1024,7 +1043,6 @@ function RefreshPassingsTable() {
 	
 	// Get the last 20 reads.
 	let recordedShow = recorded.slice( -20 ).reverse();
-	let bg = recordedColour;
 	let foundNumSelect = false;
 	for( let r = 0; r < recordedShow.length; ++r ) {
 		let e = recordedShow[r];
@@ -1034,26 +1052,26 @@ function RefreshPassingsTable() {
 		if( num === numSelect )
 			foundNumSelect = true;
 		let rr = data[num];
+		if( rr.status != 'Finisher' )
+			continue;
 		
 		tr = createChild( tbody, 'TR' );
 		
 		const category = numCategory[num];
 		createTextChild( td = createChild(tr, 'TD'), category );								// Category
-		td.style.backgroundColor = bg;
+		td.style.textAlign = "left";
 		
 		createTextChild( td = createChild(tr, 'TD'), numPos[num] );								// Pos
-		td.style.backgroundColor = bg;
+			
+		createTextChild( td = createChild(tr, 'TD'), getSymbol(num) );							// Finish/Last Lap Flag
 
 		createTextChild( td = createChild(tr, 'TD'), getRiderName(num) );						// Name
-		td.style.backgroundColor = bg;
 		td.style.textAlign = "left";
 		
 		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(num) );						// Team
-		td.style.backgroundColor = bg;
 		td.style.textAlign = "left";
 		
 		createTextChild( td = createChild(tr, 'TD'), num );										// Bib
-		td.style.backgroundColor = bg;
 
 		tr.onclick = ( event ) => { (function(n,c) { return passingsClick(n,c); })( num, category ); }
 	}
