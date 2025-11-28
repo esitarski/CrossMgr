@@ -70,9 +70,6 @@ icons = {
 	'AnnouncerIconSrc': readBase64('announcer.png'),
 }
 
-with open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf8') as f:
-	indexTemplate = Template( f.read() )
-
 PORT_NUMBER = 8765
 
 def gzipEncode( content ):
@@ -96,20 +93,44 @@ def getCurrentTTCountdownHtml():
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
 
-with open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf8') as f:
-	lapCounterTemplate = f.read().encode()
-def getLapCounterHtml():
-	return lapCounterTemplate
+do_debug = False
+if do_debug:
+	''' Cache the first return of a lazy function call. '''
+	class cached_return:
+		def __init__( self, func ):
+			self.func = func
 
-with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf8') as f:
-	announcerHTML = f.read().encode()
-def getAnnouncerHtml():
-	return announcerHTML
-'''
+		def __call__( self ):
+			# Unconditionally call the function.
+			return self.func()
+else:
+	class cached_return:
+		def __init__( self, func ):
+			self.func = func
+
+		def __call__( self ):
+			# Try to return the cached result.
+			# If that fails, call the function to get it.
+			try:
+				return self.result
+			except AttributeError:
+				self.result = self.func()
+				return self.result
+
+@cached_return
+def getIndexTemplate():
+	with open(os.path.join(Utils.getHtmlFolder(), 'Index.html'), encoding='utf8') as f:
+		return Template( f.read() )
+
+@cached_return
+def getLapCounterHtml():
+	with open(os.path.join(Utils.getHtmlFolder(), 'LapCounter.html'), encoding='utf8') as f:
+		return f.read().encode()
+
+@cached_return
 def getAnnouncerHtml():
 	with open(os.path.join(Utils.getHtmlFolder(), 'Announcer.html'), encoding='utf8') as f:
 		return f.read().encode()
-'''
 	
 def coreName( fname ):
 	return os.path.splitext(os.path.basename(fname).split('?')[0])[0].replace('_TTCountdown','').replace('_TTStartList','').strip('-')
@@ -370,7 +391,7 @@ def getIndexPage( share=True ):
 		return ''
 	info['share'] = share
 	info.update( icons )
-	return indexTemplate.generate( **info )
+	return getIndexTemplate().generate( **info )
 
 #---------------------------------------------------------------------------
 
