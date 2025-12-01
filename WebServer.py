@@ -93,7 +93,7 @@ def getCurrentTTCountdownHtml():
 def getCurrentTTStartListHtml():
 	return Model.getCurrentTTStartListHtml()
 
-do_debug = True
+do_debug = False
 if do_debug:
 	''' Cache the first return of a lazy function call. '''
 	class cached_return:
