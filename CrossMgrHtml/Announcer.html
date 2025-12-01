@@ -871,13 +871,14 @@ function RefreshResultsTable() {
 		createTextChild( td = createChild(tr, 'TD'), num );										// Bib
 		td.style.backgroundColor = bg;
 		
-		let gapValue = categoryCur.gapValue[r];
+		const gapValue = categoryCur.gapValue[r];
+		let gap;
 		if( r == 0 )
 			gap = '';
 		else if ( isTimeTrial ) {
 			gap = (isComplete ? FormatTimeGap( gapValue ) : '');
 		}
-		else if ( gapValue > 0 )
+		else if ( gapValue >= 0 )
 			gap = FormatTimeGap( gapValue );
 		else
 			gap = gapValue + '';
@@ -982,21 +983,37 @@ function RefreshPassingsTable() {
 	if( !raceIsRunning )
 		return;
 	
+	const tCur = getRaceTime();
+
 	// Show passings for all categories.
-	// Get the category of each bib number.
+	// Get the category, position and gap of each bib number.
 	let numCategory = {};
+	let numGap = {};
 	let numPos = {};
 	for( let i = 1; i < catDetails.length; ++i ) {
-		let pos = catDetails[i].pos;
-		let name = catDetails[i].name;
+		const categoryCur = catDetails[i];
+		const pos = categoryCur.pos;
+		const name = categoryCur.name;
 		for( let j = 0; j < pos.length; ++j ) {
 			const num = pos[j];
 			numCategory[num] = name;
 			numPos[num] = j+1;
+			
+			const gapValue = categoryCur.gapValue[j];
+			let gap;
+			if( j == 0 )
+				gap = '';
+			else if ( isTimeTrial ) {
+				gap = (isComplete ? FormatTimeGap( gapValue ) : '');
+			}
+			else if ( gapValue >= 0 )
+				gap = FormatTimeGap( gapValue );
+			else
+				gap = gapValue + '';
+			numGap[num] = gap;
 		}
 	}
 	
-	const tCur = getRaceTime();
 	function getSymbol( bib ) {
 		const rr = data[bib];
 		if( rr.status != 'Finisher' )
@@ -1028,14 +1045,17 @@ function RefreshPassingsTable() {
 	createTextChild( td = createChild(tr, 'TH'), 'Category' );
 	td.style.textAlign = "left";
 	for( let i = 0; i < cols.length; ++i ) {
-		let colName = cols[i];
+		const colName = cols[i];
 		if( colName == 'ETA' || colName == 'Group'  || colName == 'Gap' )
 			continue;
+
 		createTextChild( td = createChild(tr, 'TH'), colName );
+		if( colName == 'Pos' ) {
+			createChild(tr, 'TH');
+			createTextChild( td = createChild(tr, 'TH'), "Gap" );
+		}
 		if( colName == 'Name' || colName == 'Team' )
 			td.style.textAlign = "left";
-		if( colName == 'Pos' )
-			createChild(tr, 'TH');
 	}
 	
 	let tbody = createChild( table, 'TBODY' );
@@ -1058,20 +1078,22 @@ function RefreshPassingsTable() {
 		tr = createChild( tbody, 'TR' );
 		
 		const category = numCategory[num];
-		createTextChild( td = createChild(tr, 'TD'), category );								// Category
+		createTextChild( td = createChild(tr, 'TD'), category );					// Category
 		td.style.textAlign = "left";
 		
-		createTextChild( td = createChild(tr, 'TD'), numPos[num] );								// Pos
+		createTextChild( td = createChild(tr, 'TD'), numPos[num] );					// Pos
 			
-		createTextChild( td = createChild(tr, 'TD'), getSymbol(num) );							// Finish/Last Lap Flag
+		createTextChild( td = createChild(tr, 'TD'), getSymbol(num) );				// Finish/Last Lap Flag
 
-		createTextChild( td = createChild(tr, 'TD'), getRiderName(num) );						// Name
+		createTextChild( td = createChild(tr, 'TD'), numGap[num] );					// Gap
+
+		createTextChild( td = createChild(tr, 'TD'), getRiderName(num) );			// Name
 		td.style.textAlign = "left";
 		
-		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(num) );						// Team
+		createTextChild( td = createChild(tr, 'TD'), getRiderTeam(num) );			// Team
 		td.style.textAlign = "left";
 		
-		createTextChild( td = createChild(tr, 'TD'), num );										// Bib
+		createTextChild( td = createChild(tr, 'TD'), num );							// Bib
 
 		tr.onclick = ( event ) => { (function(n,c) { return passingsClick(n,c); })( num, category ); }
 	}
@@ -1081,7 +1103,6 @@ function RefreshPassingsTable() {
 	resultsDiv.appendChild( table );
 	RefreshETA();
 }
-
 
 // ---------------------------------------------------------------------
 function onLoad() {
