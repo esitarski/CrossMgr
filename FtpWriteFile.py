@@ -1,13 +1,13 @@
 import os
-import wx
-import wx.lib.intctrl
-import webbrowser
 import ftputil
 import paramiko
-from urllib.parse import quote
 import datetime
 import threading
+import webbrowser
+from urllib.parse import quote
 
+import wx
+import wx.lib.intctrl
 import Utils
 import Model
 from ExportGrid import getHeaderBitmap, drawQRCode
@@ -15,15 +15,17 @@ from WebServer import WriteHtmlIndexPage
 
 import inspect
 def lineno():
-	"""Returns the current line number in our program."""
+	""" Returns the current line number in our program. """
 	return inspect.currentframe().f_back.f_lineno
 	
 class CallCloseOnExit:
-	def __enter__(self, obj):
+	def __init__( self, obj ):
 		self.obj = obj
-		return obj
+	
+	def __enter__( self ):
+		return self.obj
 
-	def __exit__(self, exc_type, exc_val, exc_tb):
+	def __exit__( self, exc_type, exc_val, exc_tb ):
 		self.obj.close()
 
 class SftpCallback:
