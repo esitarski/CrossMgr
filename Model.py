@@ -1305,7 +1305,7 @@ class Race:
 			'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
 			'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
 			'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
-			'PhotoCount':	f'{self.photoCount}'
+			'PhotoCount':	f'{self.photoCount}',
 			'ExcelLink':	excelLinkStr,
 			'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 
