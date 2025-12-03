@@ -85,7 +85,6 @@ def inv_cdf(mu, sigma, p):
 
 class LapStats:
 	pMin, pMax = 0.85, 1.20
-
 	
 	def __init__( self, lap_times ):
 		self.set_lap_times( lap_times )

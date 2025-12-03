@@ -11,6 +11,7 @@ import itertools
 import functools
 import operator
 import threading
+import numpy as np
 from os.path import commonprefix
 from collections import defaultdict
 
@@ -797,13 +798,17 @@ class Rider:
 			category = race.getCategory( self.num )
 			return d / category.firstLapRatio if category else d
 		
-		# Return the median of the lap times ignoring the first lap.
+		# Return the median of the lap times (ignoring the first lap).
+		'''
 		dTimes = sorted( b-a for b, a in zip(iTimes[2:], iTimes[1:]) )
 		if not dTimes:
 			return None
 			
 		dTimesLen = len(dTimes)
 		return dTimes[dTimesLen // 2] if dTimesLen & 1 else (dTimes[dTimesLen//2-1] + dTimes[dTimesLen//2]) / 2.0
+		'''
+		dTimes = np.fromiter( (b-a for a, b in itertools.pairwise(iTimes[1:])), dtype=float, count=len(iTimes)-2 )
+		return None if dTimes.size == 0 else float(np.median( dTimes, overwrite_input=True ))
 
 	def removeEarlyTimes( self, times ):
 		try:
@@ -950,9 +955,7 @@ class Rider:
 		except Exception:
 			numLaps = len(iTimes)-1
 		iTimes = iTimes[:numLaps+1]
-		if len(iTimes) > 2:			# Ignore the first lap.
-			del iTimes[0]
-		return [b-a for b, a in zip(iTimes[1:], iTimes)]
+		return [b-a for a, b in itertools.pairwise(iTimes[1:] if len(iTimes) > 2 else iTimes) ] # Ignore the first lap.
 	
 	def riderTimeToRaceTime( self, t ):
 		if not race or not race.isTimeTrial or self.firstTime is None or t is None:
@@ -1198,6 +1201,7 @@ class Race:
 	
 	googleMapsApiKey = ''
 	
+	# Control which sounds play.
 	soundEnterMask = (1<<0)
 	soundLeaderMask = (1<<1)
 	soundMask = 0xffffff
@@ -1286,7 +1290,7 @@ class Race:
 		return {
 			'EventName':	self.name,
 			'EventTitle':	self.title,
-			'RaceNum':		'{}'.format(self.raceNum),
+			'RaceNum':		f'{self.raceNum}',
 			'City':			self.city,
 			'StateProv':	self.stateProv,
 			'Country':		self.country,
@@ -1301,7 +1305,7 @@ class Race:
 			'StartTime':	self.startTime.strftime('%H:%M:%S.%f')[:-3] if self.startTime else '{}'.format(self.scheduledStart),
 			'StartMethod':	_('Automatic: Triggered by first tag read') if self.enableJChipIntegration and self.resetStartClockOnFirstTag else _('Manual'),
 			'CameraStatus': _('USB Camera Enabled') if self.enableUSBCamera else _('USB Camera Not Enabled'),
-			'PhotoCount':	'{}'.format(self.photoCount),
+			'PhotoCount':	f'{self.photoCount}'
 			'ExcelLink':	excelLinkStr,
 			'GPXFile':		os.path.basename(self.geoTrackFName or ''),
 
@@ -1412,11 +1416,6 @@ class Race:
 
 	def curRaceTime( self ):
 		return (self.startTime and (datetime.datetime.now() - self.startTime).total_seconds()) or 0.0
-		'''
-		if self.startTime is None:
-			return 0.0
-		return (datetime.datetime.now() - self.startTime).total_seconds()
-		'''
 
 	def lastRaceTime( self ):
 		if self.finishTime is not None:
@@ -1601,6 +1600,7 @@ class Race:
 	@memoize
 	def getMedianLapTime( self, category=None ):
 		Finisher = Rider.Finisher
+		'''
 		lapTimes = sorted( itertools.chain.from_iterable( r.getLapTimesForMedian()
 			for r in self.riders.values() if r.status == Finisher and race.inCategory(r.num, category) ) )
 		if not lapTimes:
@@ -1608,6 +1608,17 @@ class Race:
 		lapTimesLen = len(lapTimes)
 		return	lapTimes[lapTimesLen//2] if lapTimesLen & 1 else (
 				lapTimes[lapTimesLen//2-1] + lapTimes[lapTimesLen//2]) / 2.0
+		'''
+		if category:
+			rc = self.groupRidersByCategory()
+			lapTimes = np.fromiter( itertools.chain.from_iterable( r.getLapTimesForMedian()
+				for r in rc[category] if r.status == Finisher ), dtype=float )
+		else:
+			lapTimes = np.fromiter( itertools.chain.from_iterable( r.getLapTimesForMedian()
+				for r in self.riders.values() if r.status == Finisher ), dtype=float )
+		if lapTimes.size == 0:
+			return 8.0 * 60.0	# Default to 8 minutes.
+		return float(np.median( lapTimes, overwrite_input=True ))
 
 	@memoize
 	def interpolate( self ):
@@ -1620,8 +1631,11 @@ class Race:
 	def interpolateCategory( self, category ):
 		if category is None:
 			return self.interpolate()
-		inCategory = self.inCategory
-		return [e for e in self.interpolate() if inCategory(e.num, category)]
+		rc = self.groupRidersByCategory()
+		return sorted(
+			itertools.chain.from_iterable( rider.interpolate() for rider in rc[category] ),
+			key=Entry.key
+		)
 
 	def getLastRecordedTime( self ):
 		try:
@@ -1678,17 +1692,16 @@ class Race:
 	def getRule80LapTime( self, category = None ):
 		if not category:
 			return None
-		entries = self.interpolate()
+		entries = self.interpolateCategory( category )
 		if not entries:
 			return None
 			
-		inCategory = self.inCategory
 		rule80MinLapCount = self.rule80MinLapCount
 		
 		categoryTimes = [self.categoryStartOffset(category)]
 		lapCur = 1
 		for e in entries:
-			if e.lap == lapCur and inCategory(e.num, category):
+			if e.lap == lapCur:
 				categoryTimes.append( e.t )
 				if len(categoryTimes) > rule80MinLapCount:
 					return categoryTimes[-1] - categoryTimes[-2]
@@ -1704,7 +1717,7 @@ class Race:
 	@memoize
 	def getMaxLap( self, category = None ):
 		try:
-			return max( e.lap for e in self.interpolate() if not e.interp and self.inCategory(e.num, category) )
+			return max( e.lap for e in self.interpolateCategory(category) if not e.interp )
 		except ValueError:
 			return 0
 
@@ -1725,7 +1738,7 @@ class Race:
 
 	@memoize
 	def getLeaderTimesNums( self, category=None ):
-		entries = self.interpolate()
+		entries = self.interpolateCategory( category )
 		if not entries:
 			return None, None
 			
@@ -1733,8 +1746,6 @@ class Race:
 		leaderNums = [ None ]
 		leaderTimesLen = 1
 		for e in entries:
-			if category and self.getCategory(e.num) != category:
-				continue
 			if e.lap == leaderTimesLen:
 				leaderTimes.append( e.t )
 				leaderNums.append( e.num )
