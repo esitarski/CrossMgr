@@ -807,8 +807,14 @@ class Rider:
 		dTimesLen = len(dTimes)
 		return dTimes[dTimesLen // 2] if dTimesLen & 1 else (dTimes[dTimesLen//2-1] + dTimes[dTimesLen//2]) / 2.0
 		'''
-		dTimes = np.fromiter( (b-a for a, b in itertools.pairwise(iTimes[1:])), dtype=float, count=len(iTimes)-2 )
-		return None if dTimes.size == 0 else float(np.median( dTimes, overwrite_input=True ))
+		# Skip the first lap time.
+		itr = itertools.pairwise( iTimes )
+		try:
+			next( itr )
+		except StopIteration:
+			return None
+		dTimes = np.fromiter( (b-a for a, b in itr), dtype=float, count=len(iTimes)-2 )	# -2 because we skipped the first entry.
+		return None if dTimes.size == 0 else float(np.median(dTimes, overwrite_input=True))
 
 	def removeEarlyTimes( self, times ):
 		try:

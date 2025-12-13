@@ -13,6 +13,8 @@ import Utils
 
 def getLynxDir( race ):
 	fileName = Utils.getFileName()
+	if not fileName:
+		fileName = 'test.test'
 	baseName = os.path.splitext(fileName)[0]
 	while baseName.endswith('-'):
 		baseName = baseName[:-1]
@@ -47,15 +49,18 @@ def strToInt( s ):
 		
 def getStatus( p ):
 	p = p.upper().strip()
-	if p.isdigit():
+	if p.isdigit():					# All numeric == Finisher.
 		return Model.Rider.Finisher
 	if p == 'DNS':
 		return Model.Rider.DNS
 	if 'Q' in p:
 		return Model.Rider.DQ
-	return Model.Rider.DNF			# default DNF
+	return Model.Rider.DNF			# default to DNF
 
 def ReadLIF( fname ):
+	# Read the FinishLynx .LIF finish file.
+	# This code assumes that the Export function below was used to create the .ppl, .sch and .evt files for this race.
+	# In particular, the 'ID' field is the bib number.
 	race = Model.race
 	if not race:
 		return
@@ -134,6 +139,8 @@ def ReadLIF( fname ):
 		raise ValueError( 'FinishLynx results file is empty or does not end with newline' )
 	
 def ImportLIF( fname ):
+	# Update all time entries from FinishLynx.
+	# Assume that 'id' is the bib number.
 	race = Model.race
 	if not race:
 		return
@@ -146,6 +153,30 @@ def ImportLIF( fname ):
 			rider.firstTime = None
 		for t in r['race_times']:
 			race.addTime( r['id'], t, False )
+		rider.setStatus( r['status'] )
+		race.setChanged()
+
+def ImportLIFFinish( fname ):
+	# Update the last entry from FinishLynx.
+	# This is to support the case where we are use RFID for each lap (including the last lap),
+	# then use FinishLynx to get the last lap time at the finish.
+	# Assume that 'id' is the bib number.
+	race = Model.race
+	if not race:
+		return
+	
+	race.resetAllCaches()
+	for r in ReadLIF( fname ):
+		# Update the last entry only.
+		rider = race.getRider( r['id'] )
+		try:
+			if rider.times:
+				del rider.times[-1:]	# Delete the last known time.
+			
+			# Add the last time from FinishLynx.
+			race.addTime( r['id'], r['race_times'][-1] )
+		except Exception:
+			pass
 		rider.setStatus( r['status'] )
 		race.setChanged()
 
@@ -199,27 +230,30 @@ class FinishLynxDialog( wx.Dialog ):
 						style=wx.DEFAULT_DIALOG_STYLE|wx.TAB_TRAVERSAL )
 					
 		mainSizer = wx.BoxSizer( wx.VERTICAL )	
-		fgs = wx.FlexGridSizer( 2, 4, 4 )
 		
-		self.exportButton = wx.Button( self, label=_('Export CrossMgr Data to FinishLynx Files (linx.ppl, linx.evt, linx.sch)') )
+		sz = wx.StaticBoxSizer( wx.VERTICAL, self, _('Export to FinishLynx') + ' (lynx.ppl, lynx.evt, lynx.sch)' )
+		
+		self.exportButton = wx.Button( self, label=_('Export FinishLynx Files') )
 		self.exportButton.Bind( wx.EVT_BUTTON, self.onExport )
-		fgs.Add( self.exportButton )
-		self.exportText = wx.StaticText( self, label=_('') )
-		fgs.Add( self.exportText )
+		sz.Add( self.exportButton, flag=wx.ALL, border=4 )
 		
-		self.importButton = wx.Button( self, label=_('Import FinishLynx Results Files into CrossMgr (*.lif)') )
-		self.importButton.Bind( wx.EVT_BUTTON, self.onImport )
-		self.importText = wx.StaticText( self, label=_('') )
-		fgs.Add( self.importButton )
-		fgs.Add( self.importText )
+		mainSizer.Add( sz, flag=wx.EXPAND|wx.ALL, border=8 )
+
+		sz = wx.StaticBoxSizer( wx.VERTICAL, self, _('Import from FinishLynx') +  ' (.lif)' )
 		
-		fgs.AddGrowableCol( 1 )
+		self.importFinishButton = wx.Button( self, label=_('FINISH Times ONLY') )
+		self.importFinishButton.Bind( wx.EVT_BUTTON, self.onImportFinish )
+		sz.Add( self.importFinishButton, flag=wx.ALL, border=4 )
+				
+		self.importAllButton = wx.Button( self, label=_('ALL Times') )
+		self.importAllButton.Bind( wx.EVT_BUTTON, self.onImportAll )
+		sz.Add( self.importAllButton, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM, border=4 )
+
+		mainSizer.Add( sz, flag=wx.EXPAND|wx.ALL, border=8 )
 		
-		mainSizer.Add( fgs, flag=wx.EXPAND|wx.ALL, border=8 )
-		
-		btnSizer = self.CreateStdDialogButtonSizer( wx.CLOSE )
+		btnSizer = self.CreateStdDialogButtonSizer( wx.CANCEL )
 		if btnSizer:
-			mainSizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border = 8 )
+			mainSizer.Add( btnSizer, flag=wx.ALL|wx.EXPAND, border=8 )
 			
 		self.SetSizerAndFit( mainSizer )
 
@@ -232,8 +266,8 @@ class FinishLynxDialog( wx.Dialog ):
 		pplname = os.path.join( folder, 'lynx.ppl' )
 		if (os.path.isfile(pplname) and
 			wx.OK != wx.MessageBox(
-				'{}\n\n\t{}\n\n{}'.format(
-					_("FinishLynx files already exist in."),
+				'{}:\n\n\t{}\n\n{}'.format(
+					_("FinishLynx files already exist in"),
 					folder,
 					_("Replace them?"),
 				),
@@ -243,16 +277,45 @@ class FinishLynxDialog( wx.Dialog ):
 		
 		try:
 			Export()
-			wx.MessageBox( '{}.\n{}:\n\n  {}'.format( _("Export successful"), _(".ppl, .evt, .sch files written to folder"), getLynxDir(race) ), _("FinishLynx Export"), wx.OK, self )
+			wx.MessageBox( '{}.\n\n{}:\n\n  {}'.format( _("Export successful"), _(".ppl, .evt, .sch files written to folder"), getLynxDir(race) ), _("FinishLynx Export"), wx.OK )
 		except Exception as e:
-			wx.MessageBox( '{}:\n\n\t{}'.format( _("Export failure"), e), _("FinishLynx Export"), wx.OK, self )
+			wx.MessageBox( '{}:\n\n\t{}'.format( _("Export failure"), e), _("FinishLynx Export"), wx.OK )
 		
-	def onImport( self, event ):
+	def onImportFinish( self, event ):
+		race = Model.race
+		if not Model.race:
+			return
+			
+		with wx.MessageBox( _('Replace CrossMgr FINISH times with FinishLynx times?'),
+				_('Replace CrossMgr Finish Times?'), style=wx.OK|wx.CANCEL) as d:
+			if d.ShowModal() != wx.ID_OK:
+				return
+		
+		with wx.FileDialog(self, _("FinishLynx Results Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif;*.LIF)|*.lif;*.LIF",
+						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return
+			pathname = fileDialog.GetPath()
+			
+		try:
+			ImportLIFFinish( pathname )
+			wx.MessageBox( _("Import Finish Times successful"), _("FinishLynx Import"), wx.OK, self )
+			Utils.refresh()
+		except Exception as e:
+			wx.MessageBox( '{}:\n\n\t{}'.format( _("Import failure"), e), _("FinishLynx Import"), wx.OK, self )
+
+	def onImportAll( self, event ):
 		race = Model.race
 		if not Model.race:
 			return
 		
-		with wx.FileDialog(self, _("FinishLynx Results Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif)|*.lif",
+		with wx.MessageBox( _('Replace ALL CrossMgr times with FinishLynx times?'),
+				_('Replace ALL CrossMgr Times?'), style=wx.OK|wx.CANCEL) as d:
+			if d.ShowModal() != wx.ID_OK:
+				return
+		
+		with wx.FileDialog(self, _("FinishLynx All Results Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif;*.LIF)|*.lif;*.LIF",
 						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
 
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -261,23 +324,21 @@ class FinishLynxDialog( wx.Dialog ):
 			
 		try:
 			ImportLIF( pathname )
-			wx.MessageBox( _("Import successful"), _("FinishLynx Import"), wx.OK, self )
+			wx.MessageBox( _("Import All successful"), _("FinishLynx Import"), wx.OK, self )
 			Utils.refresh()
 		except Exception as e:
 			wx.MessageBox( '{}:\n\n\t{}'.format( _("Import failure"), e), _("FinishLynx Import"), wx.OK, self )
-		
+				
 if __name__ == "__main__":
 	Model.race = Model.Race()
 	Model.race._populate()
 	
 	#Export( 'finishlynx' )
-	ImportLIF( '/home/edward/Downloads/Wave 1  _1 Default.lif' )
+	ImportLIF( '/home/esitarski/Projects/CrossMgr/data/003-1-01 Default.lif' )
 	
-	'''
 	app = wx.App(False)
 	mainWin = wx.Frame(None,title="CrossMan", size=(1024,600))
 	finishLynx = FinishLynxDialog( mainWin )
 	Model.newRace()
 	finishLynx.ShowModal()
 	app.MainLoop()
-	'''
