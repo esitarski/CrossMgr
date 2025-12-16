@@ -10,6 +10,7 @@ import random
 
 import Model
 import Utils
+from Undo import undo
 
 def getLynxDir( race ):
 	fileName = Utils.getFileName()
@@ -146,6 +147,7 @@ def ImportLIF( fname ):
 		return
 	
 	race.resetAllCaches()
+	undo.pushState()
 	for r in ReadLIF( fname ):
 		rider = race.getRider( r['id'] )
 		rider.times = []
@@ -166,6 +168,7 @@ def ImportLIFFinish( fname ):
 		return
 	
 	race.resetAllCaches()
+	undo.pushState()
 	for r in ReadLIF( fname ):
 		# Update the last entry only.
 		rider = race.getRider( r['id'] )
