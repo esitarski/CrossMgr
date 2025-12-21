@@ -2325,12 +2325,12 @@ class MainWin( wx.Frame ):
 						return c
 			return category
 		
-		Finisher = Model.Rider.Finisher
+		NP = Model.Rider.NP
 		startList = []
 		nationCodes = set()
 		category = None
 		for bib, rider in race.riders.items():
-			if rider.status == Finisher:
+			if rider.status == NP:
 				try:
 					firstTime = int(rider.firstTime + 0.1)
 				except Exception:
