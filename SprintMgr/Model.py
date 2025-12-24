@@ -639,7 +639,7 @@ class Competition:
 					e.competition.name, e.system.name, e.winner, ','.join( sorted(outLabels) ))
 				outLabels.add( e.winner )
 				for c in e.others:
-					assert c not in outLabels, '{}-{} other label: {} is already in outLabels={}'.format(
+					assert c not in outLabels, '{}-{} other label: {} already exists in outLabels={}'.format(
 						e.competition.name, e.system.name, c, ','.join( outLabels ))
 					outLabels.add( c )
 				assert len(outLabels) <= len(inLabels), '{}-{} len(outLabels)={} exceeds len(inLabels)={}\n    {}\n    {}'.format(
