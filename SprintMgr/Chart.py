@@ -135,7 +135,13 @@ class Chart(wx.Panel):
 							writeCell( '' )
 				
 				out = [event.winner] + event.others
-				cv = '\n'.join( out )
+				
+				def formatOut( v ):
+					if '#' in v and '_' in v:
+						return v.split('_')[-1]
+					return v
+				cv = '\n'.join( formatOut(v) for v in out )
+				
 				if len(out) > 4:
 					cv = cv.replace('\n',' ({})\n'.format(len(out)),1)
 				writeCell( cv )

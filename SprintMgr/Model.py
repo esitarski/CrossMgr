@@ -355,13 +355,13 @@ class Event:
 		self.winner = fields[iSep+1]	# Winner of competition.
 		self.others = fields[iSep+2:]	# Other non-winners.
 		
-		# If "others" are incomplete, pad out using TT code.
-		# Fix this up later depending on the competition type.
+		# If "others" is incomplete, pad out using TT code.
+		# Fix this up later depending on the sompetition finish options.
 		self.others.extend( ['#TT'] * (len(self.composition)-1 - len(self.others)) )
 		
 		assert len(self.composition) == len(self.others) + 1, 'Rule output count cannot exceed input count.'
 		
-		if len(self.composition) == 1:	# Force bys to be one-ups.
+		if len(self.composition) == 1:	# Force byes to be one-ups.
 			heatsMax = 1
 		
 		if len(self.composition) > 2:
@@ -387,34 +387,6 @@ class Event:
 				return (1 if self.heatsMax == 1 else 1.5) * SprintFinalCompetitionTime
 		return None
 	
-	@property
-	def isSemiFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-2]
-		except IndexError:
-			return False
-	
-	@property
-	def isFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-1]
-		except IndexError:
-			return False
-	
-	@property
-	def isSmallFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-2]
-		except IndexError:
-			return False
-		
-	@property
-	def isBigFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-1]
-		except IndexError:
-			return False
-		
 	@property
 	def output( self ):
 		return [self.winner] + self.others
