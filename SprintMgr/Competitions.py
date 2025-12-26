@@ -593,7 +593,7 @@ def getCompetitions():
 		competitions.append( fcX )
 	
 	#-----------------------------------------------------------------------------------------
-	
+	'''
 	competitions.append(
 		Competition( 'Road: 16 3-Sprint Challenge', [
 			System( '1/4 Finals', [
@@ -616,6 +616,7 @@ def getCompetitions():
 			]),
 		])
 	)
+	'''
 	
 	#-----------------------------------------------------------------------------------------
 	'''

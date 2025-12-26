@@ -106,7 +106,7 @@ class Rider:
 	
 	@property
 	def bib_full_name( self ):
-		return '({}) {}'.format( self.bib, self.full_name ) if self.bib else self.full_name
+		return f'({self.bib}) {self.full_name}' if self.bib else self.full_name
 	
 	@property
 	def short_name( self ):
@@ -116,15 +116,15 @@ class Rider:
 	
 	@property
 	def bib_short_name( self ):
-		return '{} {}'.format(self.bib, self.short_name)
+		return f'{self.bib} {self.short_name}'
 	
 	@property
 	def long_name( self ):
 		n = self.full_name
-		return '{} ({})'.format(n, self.team) if self.team else n
+		return f'{n} ({self.team})' if self.team else n
 		
 	def __repr__( self ):
-		return '{}'.format(self.bib)
+		return f'{self.bib}'
 
 #------------------------------------------------------------------------------------------------
 
@@ -565,7 +565,14 @@ class Event:
 #------------------------------------------------------------------------------------------------
 
 class Competition:
-	def __init__( self, name, systems, isMTB=None, isKeirin=None ):
+	
+	# Defaults: eliminated riders scored by qualifying times only.
+	isSprint = True
+	isMtb = False
+	isKeirin = False
+	isNoRank = False
+	
+	def __init__( self, name, systems, isMTB=None, isKeirin=None, isNoRank=None ):
 		self.name = name
 		self.systems = systems
 		self.state = State()
@@ -576,12 +583,25 @@ class Competition:
 		self.starters = 0
 		starterLabels = set()
 		
-		# If isMTB, non-winners get credit for the round and finish position.  Otherwise, eliminated riders are ranked by qualifying time.
+		# If self.isSprint=True, self.isMTB=False, self.isKeirin=False and self.isNoRank=False,
+		# eliminated riders will be ranked by their qualifying times.
+		
+		# If isMTB, eliminated riders get credit for the round and finish position.  Ties are broken with qualifying time.
 		self.isMTB = ('MTB' in name) if isMTB is None else isMTB
 		self.isSprint = not self.isMTB
 		
-		# If isKeirin, eliminated riders can have duplcate rankings if they were eliminated in the same position in different rounds.
-		self.isKeirin = self.isSprint and (('Keirin' in name) if isKeirin is None else isKeirin)
+		# If isKeirin, eliminated riders get credit for the round and finish position.  Ties are given if round and position are equal.
+		self.isKeirin = ('Keirin' in name) if isKeirin is None else isKeirin
+		if self.isKeirin:
+			self.isMTB = False
+			self.isSprint = True
+		
+		# If isNoRank, eliminated riders are excluded from the results.
+		self.isNoRank = False if isNoRank is None else isNoRank
+		if self.isNoRank:
+			self.isMTB = False
+			self.isSprint = True
+			self.isKeirin = False
 		
 		byeEvents = set()
 		byeOutcomeMap = {}
@@ -704,6 +724,7 @@ class Competition:
 		out = ['***** {}'.format(self.name)]
 		out.append( f'isMTB: {self.isMTB}' )
 		out.append( f'isKeirin: {self.isKeirin}' )
+		out.append( f'isNoRank: {self.isNoRank}' )
 		for s, e in self.allEvents():
 			out.append( ' '.join( [s.name, '[{}]'.format(','.join(e.composition)), ' -> ', '[{}]'.format(','.join(e.output))] ) )
 		return '\n'.join( out )
@@ -758,13 +779,14 @@ class Competition:
 				except KeyError:
 					pass
 
-			# Rank the remaining riders based on qualifying time (TT).
-			iTT = self.starters
-			tts = [rider for label, rider in self.state.labels.items() if label.endswith('#TT')]
-			tts.sort( key = lambda r: r.qualifying_time, reverse = True )	# Sort these in reverse as we assign them in from most to least.
-			for rider in tts:
-				iTT -= 1
-				results[iTT] = rider
+			if not self.noRank:
+				# Rank the remaining riders based on qualifying time (TT).
+				iTT = self.starters
+				tts = [rider for label, rider in self.state.labels.items() if label.endswith('#TT')]
+				tts.sort( key = lambda r: r.qualifying_time, reverse = True )	# Sort these in reverse as we assign them in from most to least.
+				for rider in tts:
+					iTT -= 1
+					results[iTT] = rider
 			results = [('Finisher', r) for r in results if not r or not r.isOpen()]
 		
 			# Purge unfillable spots from the results.
