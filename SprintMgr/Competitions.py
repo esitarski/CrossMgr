@@ -383,13 +383,13 @@ def getCompetitions():
 				Event( 'N8  N9 N24 N25 N40 N41 N56 -> QH1 QH2 QH3 QH4 QH5 QH6 QH7' ),
 			]),
 			System( 'Repechages 1', [
-				Event( 'QA2 QH2 QG3 QF4 QE5 QD6 QC7 -> rA1 rA2  1EE  2EE  3EE  4EE  5EE' ),
-				Event( 'QB2 QA3 QH3 QG4 QF5 QE6 QD7 -> rB1 rB2  6EE  7EE  8EE  9EE 10EE' ),
-				Event( 'QC2 QB3 QA4 QH4 QG5 QF6 QE7 -> rC1 rC2 11EE 12EE 13EE 14EE 15EE' ),
-				Event( 'QD2 QC3 QB4 QA5 QH5 QG6 QF7 -> rD1 rD2 16EE 17EE 18EE 19EE 20EE' ),
-				Event( 'QE2 QD3 QC4 QB5 QA6 QH6 QG7 -> rE1 rE2 21EE 22EE 23EE 24EE 25EE' ),
-				Event( 'QF2 QE3 QD4 QC5 QB6 QA7 QH7 -> rF1 rF2 26EE 27EE 28EE 29EE 30EE' ),
-				Event( 'QG2 QF3 QE4 QD5 QC6 QB7     -> rG1 rG2 31EE 32EE 33EE 34EE' ),
+				Event( 'QA2 QH2 QG3 QF4 QE5 QD6 QC7 -> rA1 rA2' ),
+				Event( 'QB2 QA3 QH3 QG4 QF5 QE6 QD7 -> rB1 rB2' ),
+				Event( 'QC2 QB3 QA4 QH4 QG5 QF6 QE7 -> rC1 rC2' ),
+				Event( 'QD2 QC3 QB4 QA5 QH5 QG6 QF7 -> rD1 rD2' ),
+				Event( 'QE2 QD3 QC4 QB5 QA6 QH6 QG7 -> rE1 rE2' ),
+				Event( 'QF2 QE3 QD4 QC5 QB6 QA7 QH7 -> rF1 rF2' ),
+				Event( 'QG2 QF3 QE4 QD5 QC6 QB7     -> rG1 rG2' ),
 			]),
 			System( '1/4 Finals', [
 				Event( 'QA1 QH1 rA1 rB2 rC2     -> SA1 SA2 SA3 SA4 SA5 SA6' ),
@@ -398,9 +398,9 @@ def getCompetitions():
 				Event( 'QD1 QE1 rD1 rF1 rF2 rG2 -> SD1 SD2 SD3 SD4 SD5 SD6 SD7' ),
 			]),
 			System( 'Repechages 2', [
-				Event( 'SA3 SD3 SA5 SB5 SC6 SD6 -> sA1 sA2 35EE 36EE 37EE 38EE 39EE' ),
-				Event( 'SB3 SA4 SD4 SC5 SB6 SD7 -> sB1 sB2 40EE 41EE 42EE 43EE 44EE' ),
-				Event( 'SC3 SB4 SC4 SD5 SA6     -> sC1 sC2 45EE 46EE 47EE 48EE' ),
+				Event( 'SA3 SD3 SA5 SB5 SC6 SD6 -> sA1 sA2' ),
+				Event( 'SB3 SA4 SD4 SC5 SB6 SD7 -> sB1 sB2' ),
+				Event( 'SC3 SB4 SC4 SD5 SA6     -> sC1 sC2' ),
 			]),
 			System( '1/2 Finals', [
 				Event( 'SA1 SD1 SB2 SC2 sA1 sC1 sB2 -> FA1 FA2 FA3 FA4 FA5 FA6' ),

@@ -15,6 +15,7 @@ def competition_read( fname ):
 			e = e.strip()
 			if not e:
 				continue
+			assert '#' not in e, 'Rules cannot contain '#'"
 			rule = e.strip()
 			rule = rule.replace('=', '->')
 			assert rule.count('->') == 1, "Rule must contain one '->'"

@@ -341,14 +341,13 @@ class Start:
 
 class Event:
 	def __init__( self, rule, heatsMax=1 ):
-		assert '->' in rule, 'Rule must contain ->'
+		assert '->' in rule, "Rule must contain ->"
+		assert '#' not in rule, "Rule cannot contain '#'"
 		
 		self.rule = rule.upper()
 		rule = rule.replace( '->', ' -> ').replace('-',' ')
 		
-		fields = rule.split()
-		assert not any(('TT' in v or 'EE' in v or 'RR' in v) for v in fields), 'Rule labels cannot contain TT, EE or RR')
-		
+		fields = rule.split()		
 		iSep = fields.index( '>' )
 		
 		# Event transformation.
@@ -358,7 +357,7 @@ class Event:
 		
 		# If "others" are incomplete, pad out using TT code.
 		# Fix this up later depending on the competition type.
-		self.others.extend( ['TT'] * (len(self.composition)-1 - len(self.others)) )
+		self.others.extend( ['#TT'] * (len(self.composition)-1 - len(self.others)) )
 		
 		assert len(self.composition) == len(self.others) + 1, 'Rule output count cannot exceed input count.'
 		
@@ -624,19 +623,19 @@ class Competition:
 				
 				# Assign outcomes for eliminated riders.
 				for i, other in enumerate(e.others):
-					if other == 'TT':
+					if other == '#TT':
 						if self.isMTB:
 							# If MTB, the non-winners get credit for the round and finish position.
 							rrCount += 1
-							e.others[i] = '{}RR_{}_{}'.format(rrCount, iSystem+1, i+2)	# Label is nnRR_ro_fo where nn=unique#, ro=round, fo=finishOrder
+							e.others[i] = '{}#RR_{}_{}'.format(rrCount, iSystem+1, i+2)	# Label is nnRR_ro_fo where nn=unique#, ro=round, fo=finishOrder
 						elif self.isKeirin:
 							# If Keirin, give eliminated riders duplicate positions by round and position.
 							rrCount += 1
-							e.others[i] = '{}EE_{}_{}'.format(rrCount, iSystem+1, i+2)
+							e.others[i] = '{}#EE_{}_{}'.format(rrCount, iSystem+1, i+2)
 						else:
 							# Otherwise, assign ranking based on TT qualification times only.
 							ttCount += 1
-							e.others[i] = f'{ttCount}TT'
+							e.others[i] = f'{ttCount}#TT'
 					
 				# print( 'Event:', ' - '.join(e.composition), ' -> ', e.winner, e.others )
 			
@@ -789,7 +788,7 @@ class Competition:
 
 			# Rank the remaining riders based on qualifying time (TT).
 			iTT = self.starters
-			tts = [rider for label, rider in self.state.labels.items() if label.endswith('TT')]
+			tts = [rider for label, rider in self.state.labels.items() if label.endswith('#TT')]
 			tts.sort( key = lambda r: r.qualifying_time, reverse = True )	# Sort these in reverse as we assign them in from most to least.
 			for rider in tts:
 				iTT -= 1
@@ -834,7 +833,7 @@ class Competition:
 					# Get the round of the event.
 					round = None
 					for id in event.output:
-						if 'EE' in id:
+						if '#EE' in id:
 							round = int(id.split('_')[-2])
 							break
 					else:
@@ -859,7 +858,7 @@ class Competition:
 								rank = int(id.split('_')[-1])
 							except ValueError:
 								rank = i + 1
-							isFinish = ('EE' in id)
+							isFinish = ('#EE' in id)
 							
 						if (isFinish and riderStatus.get(rider,1) == 1) or (round >= 1 and riderStatus.get(rider,1) != 1):
 							if riderStatus.get(rider,1) != 1:
@@ -933,7 +932,7 @@ class Competition:
 					# Get the round of the event.
 					round = None
 					for id in event.output:
-						if 'RR' in id:
+						if '#RR' in id:
 							round = int(id.split('_')[-2])
 							break
 					else:
@@ -958,7 +957,7 @@ class Competition:
 								rank = int(id.split('_')[-1])
 							except ValueError:
 								rank = i + 1
-							isFinish = ('RR' in id)
+							isFinish = ('#RR' in id)
 							
 						if (isFinish and riderStatus.get(rider,1) == 1) or (round >= 1 and riderStatus.get(rider,1) != 1):
 							if riderStatus.get(rider,1) != 1:
