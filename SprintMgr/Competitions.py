@@ -234,8 +234,8 @@ def getCompetitions():
 				Event( 'N3 N4 N9 N10 N15 N16     -> QC1 QC2 QC3 QC4 QC5 QC6' ),
 			]),
 			System( 'Repechages', [
-				Event( 'QA3 QA4 QB4 QB5 QC5 QC6 QA7 -> rA1 rA2 rA3 1EE 2EE 3EE' ),
-				Event( 'QB3 QC3 QC4 QA5 QA6 QB6 QB7 -> rB1 rB2 rB3 4EE 5EE 6EE' ),
+				Event( 'QA3 QA4 QB4 QB5 QC5 QC6 QA7 -> rA1 rA2 rA3' ),
+				Event( 'QB3 QC3 QC4 QA5 QA6 QB6 QB7 -> rB1 rB2 rB3' ),
 			]),
 			System( '2nd Round (1/2 Finals)', [
 				Event( 'QA1 QC1 QB2 rA1 rB2 rA3 -> FA1 FA2 FA3 FA4 FA5 FA6' ),
@@ -257,9 +257,9 @@ def getCompetitions():
 				Event( 'N3 N4 N9 N10 N15 N16 N21 -> QC1 QC2 QC3 QC4 QC5 QC6 QC7' ),
 			]),
 			System( 'Repechages', [
-				Event( 'QA3 QC4 QA5 QC6 QA7 -> rA1 rA2 1EE 2EE 3EE' ),
-				Event( 'QB3 QB4 QB5 QB6 QB7 -> rB1 rB2 4EE 5EE 6EE' ),
-				Event( 'QC3 QA4 QC5 QA6 QC7 -> rC1 rC2 7EE 8EE 9EE' ),
+				Event( 'QA3 QC4 QA5 QC6 QA7 -> rA1 rA2' ),
+				Event( 'QB3 QB4 QB5 QB6 QB7 -> rB1 rB2' ),
+				Event( 'QC3 QA4 QC5 QA6 QC7 -> rC1 rC2' ),
 			]),
 			System( '2nd Round (1/2 Finals)', [
 				Event( 'QA1 QC1 QB2 rA1 rC1 rB2 -> FA1 FA2 FA3 FA4 FA5 FA6' ),
@@ -282,10 +282,10 @@ def getCompetitions():
 				Event( 'N4 N5 N12 N13 N20 N21 N28 -> QD1 QD2 QD3 QD4 QD5 QD6 QD7' ),
 			]),
 			System( 'Repechages', [
-				Event( 'QA3 QD4 QC5 QB6 QA7 -> rA1  1EE  2EE  3EE  4EE' ),
-				Event( 'QB3 QC4 QB5 QA6 QD7 -> rB1  5EE  6EE  7EE  8EE' ),
-				Event( 'QC3 QB4 QA5 QD6 QC7 -> rC1  9EE 10EE 11EE 12EE' ),
-				Event( 'QD3 QA4 QD5 QC6 QB7 -> rD1 13EE 14EE 15EE 16EE' ),
+				Event( 'QA3 QD4 QC5 QB6 QA7 -> rA1' ),
+				Event( 'QB3 QC4 QB5 QA6 QD7 -> rB1' ),
+				Event( 'QC3 QB4 QA5 QD6 QC7 -> rC1' ),
+				Event( 'QD3 QA4 QD5 QC6 QB7 -> rD1' ),
 			]),
 			System( '2nd Round (1/2 Finals)', [
 				Event( 'QA1 QD1 QB2 QC2 rA1 rD1 -> FA1 FA2 FA3 FA4 FA5 FA6' ),
@@ -310,12 +310,12 @@ def getCompetitions():
 				Event( 'N6  N7 N18 N19 N30 N31 N42 -> QF1 QF2 QF3 QF4 QF5 QF6 QF7' ),
 			]),
 			System( 'Repechages', [
-				Event( 'QA2 QF3 QE4 QD5 QC6 QB7 -> rA1  1EE  2EE  3EE  4EE' ),
-				Event( 'QB2 QE3 QD4 QC5 QB6 QA7 -> rB1  5EE  6EE  7EE  8EE' ),
-				Event( 'QC2 QD3 QC4 QB5 QA6 QF7 -> rC1  9EE 10EE 11EE 12EE' ),
-				Event( 'QD2 QC3 QB4 QA5 QF6 QE7 -> rD1 13EE 14EE 15EE 16EE' ),
-				Event( 'QE2 QB3 QA4 QF5 QE6 QD7 -> rE1 17EE 18EE 19EE 20EE' ),
-				Event( 'QF2 QA3 QF4 QE5 QD6 QC7 -> rF1 21EE 22EE 23EE 24EE' ),
+				Event( 'QA2 QF3 QE4 QD5 QC6 QB7 -> rA1' ),
+				Event( 'QB2 QE3 QD4 QC5 QB6 QA7 -> rB1' ),
+				Event( 'QC2 QD3 QC4 QB5 QA6 QF7 -> rC1' ),
+				Event( 'QD2 QC3 QB4 QA5 QF6 QE7 -> rD1' ),
+				Event( 'QE2 QB3 QA4 QF5 QE6 QD7 -> rE1' ),
+				Event( 'QF2 QA3 QF4 QE5 QD6 QC7 -> rF1' ),
 			]),
 			System( '2nd Round (1/2 Finals)', [
 				Event( 'QA1 QD1 QE1 rA1 rD1 rE1 -> FA1 FA2 FA3 FA4 FA5 FA6' ),
@@ -341,12 +341,12 @@ def getCompetitions():
 				Event( 'N7  N8 N21 N22 N35 N36 N49 -> QG1 QG2 QG3 QG4 QG5 QG6 QG7' ),
 			]),
 			System( 'Repechages 1', [
-				Event( 'QA2 QG2 QF3 QE4 QD5 QC6 QB7 -> rA1 rA2  1EE  2EE  3EE  4EE  5EE' ),
-				Event( 'QB2 QA3 QG3 QF4 QE5 QD6 QC7 -> rB1 rB2  6EE  7EE  8EE  9EE 10EE' ),
-				Event( 'QC2 QB3 QA4 QG4 QF5 QE6 QD7 -> rC1 rC2 11EE 12EE 13EE 14EE 15EE' ),
-				Event( 'QD2 QC3 QB4 QA5 QG5 QF6 QE7 -> rD1 rD2 16EE 17EE 18EE 19EE 20EE' ),
-				Event( 'QE2 QD3 QC4 QB5 QA6 QG6 QF7 -> rE1 rE2 21EE 22EE 23EE 24EE 25EE' ),
-				Event( 'QF2 QE3 QD4 QC5 QB6 QA7 QG7 -> rF1 rF2 26EE 27EE 28EE 29EE 30EE' ),
+				Event( 'QA2 QG2 QF3 QE4 QD5 QC6 QB7 -> rA1 rA2' ),
+				Event( 'QB2 QA3 QG3 QF4 QE5 QD6 QC7 -> rB1 rB2' ),
+				Event( 'QC2 QB3 QA4 QG4 QF5 QE6 QD7 -> rC1 rC2' ),
+				Event( 'QD2 QC3 QB4 QA5 QG5 QF6 QE7 -> rD1 rD2' ),
+				Event( 'QE2 QD3 QC4 QB5 QA6 QG6 QF7 -> rE1 rE2' ),
+				Event( 'QF2 QE3 QD4 QC5 QB6 QA7 QG7 -> rF1 rF2' ),
 			]),
 			System( '1/4 Finals', [
 				Event( 'QA1 QF1 QG1 rC1 rB2 rC2     -> SA1 SA2 SA3 SA4 SA5 SA6' ),
@@ -354,8 +354,8 @@ def getCompetitions():
 				Event( 'QC1 QD1 rB1 rE1 rF1 rE2 rF2 -> SC1 SC2 SC3 SC4 SC5 SC6 SC7' ),
 			]),
 			System( 'Repechages 2', [
-				Event( 'SA3 SA4 SB4 SB5 SC5 SC6 SC7 -> sA1 sA2 sA3 31EE 32EE 33EE 34EE' ),
-				Event( 'SB3 SC3 SC4 SA5 SA6 SB6     -> sB1 sB2 sB3 35EE 36EE 37EE' ),
+				Event( 'SA3 SA4 SB4 SB5 SC5 SC6 SC7 -> sA1 sA2 sA3' ),
+				Event( 'SB3 SC3 SC4 SA5 SA6 SB6     -> sB1 sB2 sB3' ),
 			]),
 			System( '1/2 Finals', [
 				Event( 'SA1 SC1 SB2 sA1 sB2 sA3 -> FA1 FA2 FA3 FA4 FA5 FA6' ),
