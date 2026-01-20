@@ -409,7 +409,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			fname = '{fileBase}.pdf'.format( fileBase=self.fileBase )
 			self.pdf.set_title( '{}'.format(os.path.splitext(fname)[0].replace('-', ' ')) )
 			fname = os.path.join( self.dir, fname )
-			self.pdf.output( fname, 'F' )
+			self.pdf.output( fname )
 			self.lastFName = fname
 			self.pdf = None
 		return super().OnEndPrinting()
@@ -446,7 +446,7 @@ class CrossMgrPrintoutPDF( CrossMgrPrintout ):
 			if self.dir and not os.path.isdir( self.dir ):
 				os.mkdir( self.dir )
 			fname = os.path.join( self.dir, fname )
-			self.pdf.output( fname, 'F' )
+			self.pdf.output( fname )
 			self.lastFName = fname
 			self.pdf = None
 		

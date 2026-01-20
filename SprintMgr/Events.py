@@ -381,7 +381,7 @@ class EventPosition(EnablePanel):
 			self.drawLotsDisplay.SetBitmap( self.emptyBitmap )
 			return
 		
-		self.drawLotsDisplay.Show( not Model.model.competition.isMTB )
+		self.drawLotsDisplay.Show( Model.model.competition.drawLots )
 		
 		DQs, DNSs, DNFs = Model.model.competition.getRiderStates()
 		
@@ -398,7 +398,7 @@ class EventPosition(EnablePanel):
 			rider = state.labels[p]
 			for col, v in enumerate([rider.bib, rider.full_name, rider.team,
 					'DNS' if (rider in DNSs or rider.bib in CacheDNSs) else ''] ):
-				self.grid.SetCellValue( row, col, '{}'.format(v) )
+				self.grid.SetCellValue( row, col, f'{v}' )
 		
 		self.grid.AutoSizeColumns( False )
 		self.grid.AutoSizeRows( False )

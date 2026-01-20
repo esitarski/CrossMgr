@@ -6,9 +6,28 @@ def competition_read( fname ):
 	with open(fname, encoding='utf-8') as f:
 		y = yaml.safe_load( f )
 	
-	extra = set(y.keys()) - {'competition', 'consider_rounds', 'duplicate_rank', 'no_rank', 'systems'}
+	extra = set(y.keys()) - {'competition', 'elimination_ranking_policy', 'draw_lots', 'systems'}
 	assert not extra, f'Unrecognized competition attribute(s): {extra}'
+	
+	assert 'competition' in y, "Missing 'competition:' name"
+	competitonName = y['competition']
+	assert isinstance(competitonName, str), 'competition: name must be a string'
+	
 	assert 'systems' in y, "Missing 'systems:' in competition"
+	
+	eliminationRankingPolicy = y.get('elimination_ranking_policy', 'QualifyingTime')
+	assert isinstance(eliminationRankingPolicy, str), 'elimination_ranking_policy must be a string'
+	eliminationRankingPolicy = eliminationRankingPolicy.strip()
+
+	for i, name in enumerate(Competition.EliminationRankingPolicyNames):
+		if name == eliminationRankingPolicy:
+			eliminationRankingPolicy = i
+			break
+	else:
+		raise ValueError( f'Unknown elimination_ranking_policy: {eliminationRankingPolicy}' )
+	
+	drawLots = y.get('draw_lots', True)
+	assert isinstance( drawLots, bool ), 'draw_lots must be true or false'
 
 	systems = []
 	for s in y['systems']:
@@ -31,7 +50,7 @@ def competition_read( fname ):
 			events.append( Event(rule, heatsMax) )
 		systems.append( System(s['system'], events) )
 		
-	return Competition( y['competition'], systems, y.get('consider_rounds',False), y.get('duplicate_rank',False), y.get('no_rank',False)  )
+	return Competition( competitonName, eliminationRankingPolicy, drawLots, systems )
 	
 if __name__ == '__main__':
 	c = competition_read( 'TestComp.smc' )

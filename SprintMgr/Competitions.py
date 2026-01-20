@@ -7,7 +7,7 @@ from TestData import getTestData, getRandomTestData
 def getCompetitions():
 	competitions = [
 		Competition( 'Track: Sprint Nations Cup and World Championships', [
-			System( '1/16 Finals', [
+			System( '1/16 Finals', Competition.QualifyingTime, True, [
 				Event( 'N1 - -> 1A' ),
 				Event( 'N2 - -> 2A' ),
 				Event( 'N3 - -> 3A' ),
@@ -51,7 +51,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Olympic Games', [
+		Competition( 'Track: Sprint Olympic Games', Competition.QualifyingTime, True, [
 			System( '1/32 Finals', [
 				Event( 'N1 - N24 -> 1A1 - 1A2' ),
 				Event( 'N2 - N23 -> 2A1 - 2A2' ),
@@ -116,7 +116,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Half WC', [
+		Competition( 'Track: Sprint Half WC', Competition.QualifyingTime, True, [
 			System( '1/8 Finals', [
 				Event( 'N1 - N16 -> 1B' ),
 				Event( 'N2 - N15 -> 2B' ),
@@ -143,7 +143,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Quarter WC', [
+		Competition( 'Track: Sprint Quarter WC', Competition.QualifyingTime, True, [
 			System( '1/4 Finals', [
 				Event( 'N1 - N8 -> 1C', 3 ),
 				Event( 'N2 - N7 -> 2C', 3 ),
@@ -160,7 +160,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Eighth WC + 2', [
+		Competition( 'Track: Sprint Eighth WC + 2', Competition.QualifyingTime, True, [
 			System( '5-6 Final', [
 				Event( 'N5 - N6 -> 5R - 6R' ),
 			]),
@@ -174,7 +174,7 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Sixteenth WC', [
+		Competition( 'Track: Sprint Sixteenth WC', Competition.QualifyingTime, True, [
 			System( '1/2 Finals', [
 				Event( 'N1 - N4 -> 1C1 - 1C2', 3 ),
 				Event( 'N2 - N3 -> 2C1 - 2C2', 3 ),
@@ -185,13 +185,13 @@ def getCompetitions():
 			]),
 		]),
 		
-		Competition( 'Track: Sprint Direct Final', [
+		Competition( 'Track: Sprint Direct Final', Competition.QualifyingTime, True, [
 			System( 'Finals', [
 				Event( 'N1 - N2 -> 1R - 2R', 3 ),
 			]),
 		]),
 		
-		Competition( 'Track(MTB): Sprint Track Champions League', [
+		Competition( 'Track(MTB): Sprint Track Champions League', Competition.QualifyingTime, True, [
 			System( '1/4 Finals', [
 				Event( 'N1 N12 N13 -> 4A' ),
 				Event( 'N2 N11 N14 -> 4B' ),
@@ -213,7 +213,7 @@ def getCompetitions():
 	
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
-		Competition( 'Track: Keirin 12-14', [
+		Competition( 'Track: Keirin 12-14', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N4 N5 N8  N9 N12 N13 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N3 N6 N7 N10 N11 N14 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -227,7 +227,7 @@ def getCompetitions():
 		])
 	)
 	competitions.append(
-		Competition( 'Track: Keirin 15-20', [
+		Competition( 'Track: Keirin 15-20', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N6 N7 N12 N13 N18 N19 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N5 N8 N11 N14 N17 N20 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -250,7 +250,7 @@ def getCompetitions():
 		])
 	)
 	competitions.append(
-		Competition( 'Track: Keirin 21', [
+		Competition( 'Track: Keirin 21', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N6 N7 N12 N13 N18 N19 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N5 N8 N11 N14 N17 N20 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -274,7 +274,7 @@ def getCompetitions():
 		])
 	)
 	competitions.append(
-		Competition( 'Track: Keirin 22-28', [
+		Competition( 'Track: Keirin 22-28', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N8  N9 N16 N17 N24 N25 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N7 N10 N15 N18 N23 N26 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -300,7 +300,7 @@ def getCompetitions():
 		])
 	)
 	competitions.append(
-		Competition( 'Track: Keirin 29-42', [
+		Competition( 'Track: Keirin 29-42', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N12 N13 N24 N25 N36 N37 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N11 N14 N23 N26 N35 N38 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -330,7 +330,7 @@ def getCompetitions():
 		])
 	)
 	competitions.append(
-		Competition( 'Track: Keirin 43-49', [
+		Competition( 'Track: Keirin 43-49', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N14 N15 N28 N29 N42 N43 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N13 N16 N27 N30 N41 N44 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -371,7 +371,7 @@ def getCompetitions():
 	)
 	'''
 	competitions.append(
-		Competition( 'Track: Keirin 50-56', [
+		Competition( 'Track: Keirin 50-56', Competition.RoundPositionTies, True, [
 			System( '1st Round', [
 				Event( 'N1 N16 N17 N32 N33 N48 N49 -> QA1 QA2 QA3 QA4 QA5 QA6 QA7' ),
 				Event( 'N2 N15 N18 N31 N34 N47 N50 -> QB1 QB2 QB3 QB4 QB5 QB6 QB7' ),
@@ -418,7 +418,7 @@ def getCompetitions():
 
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
-		Competition( 'MTB: XCE 36', [
+		Competition( 'MTB: XCE 36', Competition.RoundPositionQualifying, False, [
 			System( 'Round 1', [
 				Event( 'N1 N12 N13 N24 N25 N36 -> 1A 2A' ),
 				Event( 'N6  N7 N18 N19 N30 N31 -> 3A 4A' ),
@@ -440,7 +440,7 @@ def getCompetitions():
 	
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
-		Competition( 'MTB: XCE 12', [
+		Competition( 'MTB: XCE 12', Competition.RoundPositionQualifying, False, [
 			System( '1/2 Finals', [
 				Event( 'N1 N3 N6 N7 N10 N12 -> 1C 2C 3C 4C 5C 6C' ),
 				Event( 'N2 N4 N5 N8 N9  N11 -> 1D 2D 3D 4D 5D 6D' ),
@@ -454,7 +454,7 @@ def getCompetitions():
 	
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
-		Competition( 'MTB: XCE 32', [
+		Competition( 'MTB: XCE 32', Competition.RoundPositionQualifying, False, [
 			System( '1/8 Finals', [
 				Event( 'N1 N16 N17 N32 -> 1A1 1A2' ),
 				Event( 'N8  N9 N24 N25 -> 2A3 2A4' ),
@@ -484,7 +484,7 @@ def getCompetitions():
 
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
-		Competition( 'MTB: XCE 16', [
+		Competition( 'MTB: XCE 16', Competition.RoundPositionQualifying, False, [
 			System( '1/4 Finals', [
 				Event( 'N1 N8  N9 N16 -> 1E1 1E2' ),
 				Event( 'N4 N5 N12 N13 -> 2E3 2E4' ),
@@ -503,7 +503,7 @@ def getCompetitions():
 	)
 	
 	competitions.append(
-		Competition( 'MTB: XCE 8', [
+		Competition( 'MTB: XCE 8', Competition.RoundPositionQualifying, False, [
 			System( '1/2 Finals', [
 				Event( 'N1 N4 N5 N8 -> 1G1 1G2 1G3 1G4' ),
 				Event( 'N2 N3 N6 N7 -> 2H1 2H2 2H3 2H4' ),
@@ -516,7 +516,7 @@ def getCompetitions():
 	)
 	
 	competitions.append(
-		Competition( 'MTB: XCE 6', [
+		Competition( 'MTB: XCE 6', Competition.RoundPositionQualifying, False, [
 			System( 'Finals', [
 				Event( 'N1 N2 N3 N4 N5 N6 -> 1R 2R 3R 4R 5R 6R' ),
 			]),
@@ -524,7 +524,7 @@ def getCompetitions():
 	)
 	
 	competitions.append(
-		Competition( 'MTB: XCE 4', [
+		Competition( 'MTB: XCE 4', Competition.RoundPositionQualifying, False, [
 			System( 'Finals', [
 				Event( 'N1 N2 N3 N4 -> 1R 2R 3R 4R' ),
 			]),
@@ -533,7 +533,7 @@ def getCompetitions():
 	
 	#-----------------------------------------------------------------------------------------
 	competitions.append(
-		Competition( 'MTB: Four Cross 64', [
+		Competition( 'MTB: Four Cross 64', Competition.RoundPositionQualifying, False, [
 			System( 'Round 1', [
 				Event( 'N64  N1 N33 N32 -> 32A  1A' ),
 				Event( 'N17 N49 N16 N48 -> 17A 16A' ),
@@ -595,7 +595,7 @@ def getCompetitions():
 	#-----------------------------------------------------------------------------------------
 	'''
 	competitions.append(
-		Competition( 'Road: 16 3-Sprint Challenge', [
+		Competition( 'Road: 16 3-Sprint Challenge', Competition.NoRank, True, [
 			System( '1/4 Finals', [
 				Event( 'N1 N8  N9 N16 -> 1E1 1E2 1P1 1P2' ),
 				Event( 'N4 N5 N12 N13 -> 2E3 2E4 2P3 2P4' ),

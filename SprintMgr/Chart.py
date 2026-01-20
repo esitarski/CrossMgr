@@ -114,7 +114,7 @@ class Chart(wx.Panel):
 				
 				writeCell( '{}'.format(i+1) )
 				if heatsMax > 1:
-					writeCell( ' {}'.format(event.heatsMax) )
+					writeCell( f' {event.heatsMax}' )
 				cv = '\n'.join( event.composition )
 				if len(event.composition) > 4:
 					cv = cv.replace('\n',' ({})\n'.format(len(event.composition)),1)
