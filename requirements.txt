@@ -28,6 +28,7 @@ metaphone
 pyllrp
 grpcio
 protobuf
+pyyaml
 grpcio_tools
 wxPython
 wxasync

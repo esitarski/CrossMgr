@@ -114,7 +114,7 @@ class Chart(wx.Panel):
 				
 				writeCell( '{}'.format(i+1) )
 				if heatsMax > 1:
-					writeCell( ' {}'.format(event.heatsMax) )
+					writeCell( f' {event.heatsMax}' )
 				cv = '\n'.join( event.composition )
 				if len(event.composition) > 4:
 					cv = cv.replace('\n',' ({})\n'.format(len(event.composition)),1)
@@ -135,7 +135,13 @@ class Chart(wx.Panel):
 							writeCell( '' )
 				
 				out = [event.winner] + event.others
-				cv = '\n'.join( out )
+				
+				def formatOut( v ):
+					if '#' in v and '_' in v:
+						return v.split('_')[-1]
+					return v
+				cv = '\n'.join( formatOut(v) for v in out )
+				
 				if len(out) > 4:
 					cv = cv.replace('\n',' ({})\n'.format(len(out)),1)
 				writeCell( cv )

@@ -110,7 +110,7 @@ class TeamResults( wx.Panel ):
 				eg = self.toExportGrid( category )
 				if eg:
 					eg.drawToFitPDF( pdf, orientation=wx.PORTRAIT )
-			pdf.output( pdfFileName, 'F' )
+			pdf.output( pdfFileName )
 		except Exception as e:
 			logException( e, sys.exc_info() )
 	

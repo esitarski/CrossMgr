@@ -169,7 +169,7 @@ class Qualifiers(wx.Panel):
 		model = Model.model
 		riders = model.riders
 		
-		self.renumberButton.Show( model.competition.isMTB )
+		self.renumberButton.Show( model.competition.drawLots )
 		
 		Utils.AdjustGridSize( self.grid, rowsRequired = len(riders) )
 		for row, r in enumerate(riders):

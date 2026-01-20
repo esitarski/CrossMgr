@@ -106,7 +106,7 @@ class Rider:
 	
 	@property
 	def bib_full_name( self ):
-		return '({}) {}'.format( self.bib, self.full_name ) if self.bib else self.full_name
+		return f'({self.bib}) {self.full_name}' if self.bib else self.full_name
 	
 	@property
 	def short_name( self ):
@@ -116,15 +116,15 @@ class Rider:
 	
 	@property
 	def bib_short_name( self ):
-		return '{} {}'.format(self.bib, self.short_name)
+		return f'{self.bib} {self.short_name}'
 	
 	@property
 	def long_name( self ):
 		n = self.full_name
-		return '{} ({})'.format(n, self.team) if self.team else n
+		return f'{n} ({self.team})' if self.team else n
 		
 	def __repr__( self ):
-		return '{}'.format(self.bib)
+		return f'{self.bib}'
 
 #------------------------------------------------------------------------------------------------
 
@@ -227,7 +227,7 @@ class Start:
 					
 		state = event.competition.state
 		self.startPositions = [c for c in self.startPositions if state.inContention(c)]
-		if self.event.competition.isMTB:
+		if not self.event.competition.drawLots:
 			self.startPositions.sort( key=lambda c: state.labels[c].bib )
 
 	def isHanging( self ):
@@ -340,13 +340,17 @@ class Start:
 #------------------------------------------------------------------------------------------------
 
 class Event:
+	def __eq__( self, e ):
+		return self.composition == e.composition and self.winner = e.winner and self.others == e.others and self.heatsMax == s.heatsMax
+	
 	def __init__( self, rule, heatsMax=1 ):
-		assert '->' in rule, 'Rule must contain ->'
+		assert '->' in rule, "Rule must contain ->"
+		assert '#' not in rule, "Rule cannot contain '#'"
 		
 		self.rule = rule.upper()
 		rule = rule.replace( '->', ' -> ').replace('-',' ')
 		
-		fields = rule.split()
+		fields = rule.split()		
 		iSep = fields.index( '>' )
 		
 		# Event transformation.
@@ -354,14 +358,22 @@ class Event:
 		self.winner = fields[iSep+1]	# Winner of competition.
 		self.others = fields[iSep+2:]	# Other non-winners.
 		
-		# If "others" are incomplete, assume classification by TT time.
-		self.others.extend( ['TT'] * (len(self.composition)-1 - len(self.others)) )
+		# If "others" is incomplete, pad out using TT code.
+		# Fix this up later depending on the sompetition finish options.
+		self.others.extend( ['#TT'] * (len(self.composition)-1 - len(self.others)) )
 		
-		assert len(self.composition) == len(self.others) + 1, 'Rule outputs cannot exceed inputs.'
+		assert len(self.composition) == len(self.others) + 1, 'Rule output count cannot exceed input count.'
+		
+		if len(self.composition) == 1:	# Force byes to be one-ups.
+			heatsMax = 1
+		
+		if len(self.composition) > 2:
+			assert heatsMax == 1, 'best-of heats exceeding 1 can only be used for 2-up events'
+		assert 1 <= heatsMax <= 3, "best-of heats must be 1 or 3"
 			
 		self.heatsMax = heatsMax	# Number of heats required to decide the outcome.
 				
-		# Convenience fields and are set by the competition.
+		# Convenience fields set by the competition.
 		self.competition = None
 		self.system = None
 
@@ -372,41 +384,12 @@ class Event:
 	
 	@property
 	def competitionTime( self ):
-		if self.competition.isSprint:
-			if self.competition.isKeirin:
-				return KeirinCompetitionTime
-			else:
-				return (1 if self.heatsMax == 1 else 1.5) * SprintFinalCompetitionTime
+		if self.competition.eliminationRankingPolicy == Competition.RoundPositionTies:
+			return KeirinCompetitionTime
+		elif self.competition.eliminationRankingPolicy == Competition.QualifyingTime:
+			return (1 if self.heatsMax == 1 else 1.5) * SprintFinalCompetitionTime
 		return None
 	
-	@property
-	def isSemiFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-2]
-		except IndexError:
-			return False
-	
-	@property
-	def isFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-1]
-		except IndexError:
-			return False
-	
-	@property
-	def isSmallFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-2]
-		except IndexError:
-			return False
-		
-	@property
-	def isBigFinal( self ):
-		try:
-			return self.competition.isMTB and self.system == self.competition.systems[-1] and self == self.system.events[-1]
-		except IndexError:
-			return False
-		
 	@property
 	def output( self ):
 		return [self.winner] + self.others
@@ -584,8 +567,44 @@ class Event:
 
 #------------------------------------------------------------------------------------------------
 
+class System:
+	def __eq__( self, s ):
+		return self.name == s.name and len(self.events) == len(s.events) and all( e0 == e1 in zip(self.events, s.events) )
+	
+	def __init__( self, name, events ):
+		self.name = name
+		self.events = events
+	
+	@property
+	def competitionTime( self ):
+		try:
+			return sum( event.competitionTime for event in self.events )	
+		except TypeError:
+			return None
+
+#------------------------------------------------------------------------------------------------
+
 class Competition:
-	def __init__( self, name, systems ):
+	# Elimination ranking policy
+	QualifyingTime, RoundPositionQualifying, RoundPositionTies, NoRank = list(range(4))
+	EliminationRankingPolicyNames = [
+		'QualifyingTime',
+		'RoundPositionQualifying',
+		'RoundPositionTies',
+		'NoRank',
+	]
+	PolicyConsiderRank = { RoundPositionQualifying, RoundPositionTies }
+	
+	drawLots = False
+	
+	def __eq__( self, s ) : bool
+		return (
+			all( getattr(self,a) == getattr(s,a) for a in ('name', 'eliminationRankingPolicy', 'drawLots') ) and
+			all( len(self.systems) == len(s.systems) ) and
+			all( s0 == s1 for s0, s1 in zip(self.systems, s.systems) )
+		)
+	
+	def __init__( self, name, eliminationRankingPolicy, drawLots, systems ):
 		self.name = name
 		self.systems = systems
 		self.state = State()
@@ -595,9 +614,9 @@ class Competition:
 		outLabels = set()
 		self.starters = 0
 		starterLabels = set()
-		self.isMTB = 'MTB' in name
-		self.isSprint = not self.isMTB
-		self.isKeirin = self.isSprint and 'Keirin' in name
+		
+		self.eliminationRankingPolicy = eliminationRankingPolicy
+		self.drawLots = drawLots
 		
 		byeEvents = set()
 		byeOutcomeMap = {}
@@ -609,19 +628,15 @@ class Competition:
 				e.competition = self
 				e.system = system
 				
-				# Assign unique outcomes for eliminated riders.
-				if not self.isMTB:
-					# If Track, non-winners in each round are ranked based on qualifying time only.
-					for i, other in enumerate(e.others):
-						if other == 'TT':
+				# Assign outcomes for eliminated riders.
+				for i, other in enumerate(e.others):
+					if other == '#TT':
+						if self.eliminationRankingPolicy == self.QualifyingTime:
 							ttCount += 1
-							e.others[i] = '{}TT'.format(ttCount)			
-				else:
-					# If MTB, the non-winners get credit for the round and finish position.
-					for i, other in enumerate(e.others):
-						if other == 'TT':
+							e.others[i] = f'{ttCount}#TT'
+						elif self.eliminationRankingPolicy in self.PolicyConsiderRank:
 							rrCount += 1
-							e.others[i] = '{}RR_{}_{}'.format(rrCount, iSystem+1, i+2)	# Label is nnRR_ro_fo where nn=unique#, ro=round, fo=finishOrder
+							e.others[i] = '{}#RR_{}_{}'.format(rrCount, iSystem+1, i+2)	# Label is nnRR_ro_fo where nn=unique#, ro=round, fo=finishOrder
 					
 				# print( 'Event:', ' - '.join(e.composition), ' -> ', e.winner, e.others )
 			
@@ -630,10 +645,10 @@ class Competition:
 					inLabels.add( c )
 					if c.startswith('N'):
 						self.starters += 1
-						assert c[1:].isdigit(), '{}-{} Non-numeric starter reference "{}"'.format(e.competition.name, e.system.name, c)
+						assert c[1:].isdigit(), f'{e.competition.name}-{e.system.name} Non-numeric starter N value "{c}"'
 						starterLabels.add( int(c[1:]) )
 					else:
-						assert c in outLabels, '{}-{} Rule uses undefined input label "{}"'.format(e.competition.name, e.system.name, c)
+						assert c in outLabels, f'{e.competition.name}-{e.system.name} Rule left side has undefined value "{c}"'
 							
 				assert e.winner not in outLabels, '{}-{} winner: {}, outLabels={}'.format(
 					e.competition.name, e.system.name, e.winner, ','.join( sorted(outLabels) ))
@@ -651,12 +666,9 @@ class Competition:
 					byeEvents.add( e )
 					byeOutcomeMap[e.winner] = e.composition[0]
 			
-		assert self.starters != 0, '{}-{} No starters.  Check for missing N values'.format(
-					e.competition.name, e.system.name )
-		assert self.starters == len(starterLabels), '{}-{} Starters reused in input'.format(
-					e.competition.name, e.system.name )
-		assert self.starters == max( s for s in starterLabels), '{}-{} Starter references are not sequential'.format(
-					e.competition.name, e.system.name )
+		assert self.starters != 0, f'{e.competition.name}-{e.system.name} No starters.  Check for missing N values'
+		assert self.starters == len(starterLabels), f'{e.competition.name}-{e.system.name} Duplicate starter N values'
+		assert self.starters == max( s for s in starterLabels), f'{e.competition.name}-{e.system.name} Starter N values must be sequential'
 		
 		# Process Bye events (substitute outcome into composition of subsequent events, delete bye event).
 		# Assign indexes to each component for sorting purposes.
@@ -710,7 +722,11 @@ class Competition:
 	
 	@property
 	def competitionTime( self ):
-		return None if not self.isSprint else sum( event.competitionTime for system, event in self.allEvents() )
+		try:
+			return sum( event.competitionTime for system, event in self.allEvents() )
+		except Exception:
+			pass
+		return None
 	
 	def reset( self ):
 		for system, event in self.allEvents():
@@ -719,8 +735,10 @@ class Competition:
 	
 	def __repr__( self ):
 		out = ['***** {}'.format(self.name)]
+		out.append( f'eliminationRankingPolicy: {self.EliminationRankingPolicyNames[self.eliminationRankingPolicy]}' )
+		out.append( f'drawLots: {self.drawLots}' )
 		for s, e in self.allEvents():
-			out.append( ' '.join( [s.name, '[{}]'.format(','.join(e.composition)), ' --> ', '[{}]'.format(','.join(e.output))] ) )
+			out.append( ' '.join( [s.name, '[{}]'.format(','.join(e.composition)), ' -> ', '[{}]'.format(','.join(e.output))] ) )
 		return '\n'.join( out )
 	
 	def fixHangingStarts( self ):
@@ -739,7 +757,7 @@ class Competition:
 			if not success:
 				break
 		labels = self.state.labels
-		return [ labels.get('{}R'.format(r+1), None) for r in range(self.starters) ]
+		return [ labels.get(f'{r}R', None) for r in range(1, self.starters+1) ]
 
 	def getRiderStates( self ):
 		riderState = defaultdict( set )
@@ -752,7 +770,6 @@ class Competition:
 		
 	def getResults( self ):
 		DQs, DNSs, DNFs = self.getRiderStates()
-		semiFinalRound, smallFinalRound, bigFinalRound = 60, 61, 62
 		
 		riders = { rider for label, rider in self.state.labels.items() if label.startswith('N') }
 		
@@ -765,24 +782,26 @@ class Competition:
 			DQ:			'DQ',
 		}
 		
-		if not self.isMTB:
+		if self.eliminationRankingPolicy in { self.QualifyingTime, self.NoRank }:
 			# Rank the rest of the riders based on their results in the competition.
 			results = [None] * self.starters
 			for i in range(self.starters):
 				try:
-					results[i] = self.state.labels['{}R'.format(i+1)]
+					results[i] = self.state.labels[f'{i+1}R']
 				except KeyError:
 					pass
 
-			# Rank the remaining riders based on qualifying time (TT).
-			iTT = self.starters
-			tts = [rider for label, rider in self.state.labels.items() if label.endswith('TT')]
-			tts.sort( key = lambda r: r.qualifying_time, reverse = True )	# Sort these in reverse as we assign them in from most to least.
-			for rider in tts:
-				iTT -= 1
-				results[iTT] = rider
-			results = [('Finisher', r) for r in results if not r or not r.isOpen()]
+			if not self.eliminationRankingPolicy != self.NoRank:
+				# Rank the remaining riders based on qualifying time (TT).
+				iTT = self.starters
+				tts = [rider for label, rider in self.state.labels.items() if label.endswith('#TT')]
+				tts.sort( key = lambda r: r.qualifying_time, reverse = True )	# Sort these in reverse as we assign them in from most to least.
+				for rider in tts:
+					iTT -= 1
+					results[iTT] = rider
 			
+			results = [('Finisher', r) for r in results if not r or not r.isOpen()]
+		
 			# Purge unfillable spots from the results.
 			for r in (DNFs | DNSs | DQs):
 				try:
@@ -809,26 +828,23 @@ class Competition:
 			DNFs = set()
 			DNSs = set()
 		
-		else:
-			# Rank the rest of the riders based on their results also considering the result of their last round.
+		elif self.eliminationRankingPolicy == self.RoundPositionTies:
+
+			# Rank the rest of the riders considering the finish position of their last round.
+			# As there are no qualifiers, assign tie finish positions for riders with the same round and rank.
 			abnormalFinishers = set()
 			compResults = []
-			for system in self.systems:
+			for i_system, system in enumerate(self.systems):
 				for event in system.events:
 					
 					# Get the round of the event.
-					round = 1
-					if event.isSemiFinal:
-						round = semiFinalRound
-					elif event.isSmallFinal:
-						round = smallFinalRound
-					elif event.isBigFinal:
-						round = bigFinalRound
+					round = None
+					for id in event.output:
+						if '#RR' in id:
+							round = int(id.split('_')[-2])
+							break
 					else:
-						for id in event.output:
-							if 'RR' in id:
-								round = int(id.split('_')[-2])
-								break
+						round = i_system + 60
 					
 					# Rank the finishers.
 					rank = 0
@@ -849,7 +865,107 @@ class Competition:
 								rank = int(id.split('_')[-1])
 							except ValueError:
 								rank = i + 1
-							isFinish = ('RR' in id)
+							isFinish = ('#RR' in id)
+							
+						if (isFinish and riderStatus.get(rider,1) == 1) or (round >= 1 and riderStatus.get(rider,1) != 1):
+							if riderStatus.get(rider,1) != 1:
+								abnormalFinishers.add( rider )
+							
+							status = riderStatus.get(rider,1)
+							#statTxt = statusText[Finisher] if status != DQ and round > 1 else statusText[status]
+							compResults.append( (
+								-round, status, rank,	# Core results criteria.  Do not change without also changing resultsKey below!
+								rider.bib if rider else 999999,
+								random.random(),		# Some insurance so that the sort does not fail.
+								statusText[status],
+								rider
+							) )
+			
+			try:
+				compResults.sort()
+			except Exception as e:
+				print( '****', self.name )
+				raise e
+				
+			resultKey = {rr[-1]: rr[:3] for rr in compResults}	# Keep results criteria.  Use it to detect ties later.
+			results = [rr[-2:] for rr in compResults]
+			
+			# Adjust the available finisher positions for the abnormal finishes.
+			for i in range(len(abnormalFinishers)):
+				try:
+					results.remove( (statusText[Finisher], None) )
+				except ValueError:
+					break
+				
+			# Purge empty results, except at the top.
+			try:
+				i = next( j for j, r in enumerate(results) if r[1] )	# Find first non-empty result.
+				if i != 0:
+					results[i:] = [r for r in results[i:] if r[1]]
+			except StopIteration:
+				pass
+			
+			# Investigate later - should not have to do this!
+			already_seen = set()
+			results_non_duplicated = []
+			for classification, rider in results:
+				if not rider or rider not in already_seen:
+					already_seen.add( rider )
+					results_non_duplicated.append( (classification, rider) )
+			
+			results = results_non_duplicated
+			
+			# Assign classification for all finishers.
+			p = 1
+			rider_last = None
+			results_final = []
+			for classification, rider in results:
+				if rider_last and resultKey[rider_last] != resultKey[rider]:
+					p += 1
+				results_final.append( (p if classification == 'Finisher' or rider in abnormalFinishers else classification, rider) )
+				rider_last = rider
+			
+			results = results_final
+				
+			DNFs = set()
+			DNSs = set()
+
+		elif self.eliminationRankingPolicy == self.RoundPositionQualifying:
+			# Rank the rest of the riders based on their results also considering the result of their last round.
+			abnormalFinishers = set()
+			compResults = []
+			for i_system, system in enumerate(self.systems):
+				for event in system.events:
+					
+					# Get the round of the event.
+					round = None
+					for id in event.output:
+						if '#RR' in id:
+							round = int(id.split('_')[-2])
+							break
+					else:
+						round = i_system + 60
+					
+					# Rank the finishers.
+					rank = 0
+					for i, id in enumerate(event.output):
+						try:
+							rider = event.finishRiders[i]
+						except IndexError:
+							rider = None
+						
+						if rider in DQs:
+							continue
+						
+						if id.endswith('R'):
+							rank = int(id[:-1])
+							isFinish = True
+						else:
+							try:
+								rank = int(id.split('_')[-1])
+							except ValueError:
+								rank = i + 1
+							isFinish = ('#RR' in id)
 							
 						if (isFinish and riderStatus.get(rider,1) == 1) or (round >= 1 and riderStatus.get(rider,1) != 1):
 							if riderStatus.get(rider,1) != 1:
@@ -911,18 +1027,6 @@ class Competition:
 			sorted(DQs,  key = lambda r: (r.qualifying_time, -r.uci_points, r.iSeeding))
 		)
 
-class System:
-	def __init__( self, name, events ):
-		self.name = name
-		self.events = events
-	
-	@property
-	def competitionTime( self ):
-		try:
-			return sum( event.competitionTime for event in self.events )	
-		except TypeError:
-			return None
-
 class Model:
 	communique_start = 100
 	modifier = 0
@@ -949,7 +1053,9 @@ class Model:
 			
 	@property
 	def qualifyingCompetitionTime( self ):
-		return None if self.competition.isMTB else len(self.riders) * Sprint200mQualificationCompetitionTime
+		if self.competition.eliminationRankingPolicy == Competition.QualifyingTime:
+			return len(self.riders) * Sprint200mQualificationCompetitionTime
+		return None
 	
 	@property
 	def isKeirin( self ):
@@ -981,7 +1087,11 @@ class Model:
 		self.changed = changed
 		
 	def setCompetition( self, competitionNew, modifier=0 ):
-		if self.competition.name == competitionNew.name and self.modifier == modifier:
+		if (self.competition.name == competitionNew.name and
+			self.competition.eliminationRankingPolicy == competitionNew.eliminationRankingPolicy and
+			self.competition.drawLots == competitionNew.drawLots and
+			self.modifier == modifier
+			):
 			return
 		
 		stateSave = self.competition.state
