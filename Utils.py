@@ -8,6 +8,7 @@ isWindows = sys.platform.startswith('win')
 #
 import wx
 import os
+from Log import getLogger
 
 import wx.lib.agw.genericmessagedialog
 
@@ -597,21 +598,9 @@ def approximateMatch( s1, s2 ):
 #------------------------------------------------------------------------
 PlatformName = platform.system()
 AppVer = 'v' + AppVerName.split(' ')[1]
-def writeLog( message ):
-	try:
-		dt = datetime.datetime.now()
-		dt = dt.replace( microsecond = 0 )
-		msg = '{} ({} {}) {}{}'.format(
-			dt.isoformat(),
-			AppVer,
-			PlatformName,
-			message,
-			'\n' if not message or message[-1] != '\n' else '',
-		)
-		sys.stdout.write( removeDiacritic(msg) )
-		sys.stdout.flush()
-	except IOError:
-		pass
+def writeLog( message:str ) -> None:
+	log = getLogger()
+	log.info(message.strip() if message else '')
 
 def disable_stdout_buffering():
 	# No longer necessary as if output goes to the terminal it will be flushed if it ends in newline.
@@ -627,14 +616,9 @@ def logCall( f ):
 		return f( *args, **kwargs)
 	return new_f
 	
-def logException( e, exc_info ):
-	eType, eValue, eTraceback = exc_info
-	ex = traceback.format_exception( eType, eValue, eTraceback )
-	writeLog( '**** Begin Exception ****' )
-	for d in ex:
-		for line in d.split( '\n' ):
-			writeLog( line )
-	writeLog( '**** End Exception ****' )
+def logException( e: Exception, exc_info ) -> None:
+	log = getLogger()
+	log.exception( e )
 
 #------------------------------------------------------------------------
 mainWin = None
