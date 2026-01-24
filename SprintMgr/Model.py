@@ -86,8 +86,8 @@ class Rider:
 		return tuple( getattr(self, a) for a in ('bib', 'first_name', 'last_name', 'team', 'team_code', 'uci_id', 'qualifying_time', 'uci_points', 'seeding_rank', ) )
 	
 	@staticmethod
-	def getKeyQualifying( isKeirin ):
-		if isKeirin:
+	def getKeyQualifying( competition ):
+		if competition.eliminationRankingPolicy == Competition.RoundPositionTies:	# Keirin.
 			return attrgetter('status', 'iSeeding')
 		else:
 			return attrgetter('status', 'qualifying_time', 'iSeeding')
@@ -137,7 +137,7 @@ class State:
 	def setQualifyingInfo( self, riders, competition ):
 		riders = sorted(
 			(r for r in riders if r.status != 'DNQ'),
-			key = Rider.getKeyQualifying(competition.isKeirin),
+			key = Rider.getKeyQualifying(competition),
 		)[:competition.starters]
 		
 		self.labels = { 'N{}'.format(i):rider for i, rider in enumerate(riders,1) }
@@ -341,7 +341,9 @@ class Start:
 
 class Event:
 	def __eq__( self, e ):
-		return self.composition == e.composition and self.winner = e.winner and self.others == e.others and self.heatsMax == s.heatsMax
+		if not e:
+			return False
+		return self.composition == e.composition and self.winner == e.winner and self.others == e.others and self.heatsMax == e.heatsMax
 	
 	def __init__( self, rule, heatsMax=1 ):
 		assert '->' in rule, "Rule must contain ->"
@@ -569,7 +571,7 @@ class Event:
 
 class System:
 	def __eq__( self, s ):
-		return self.name == s.name and len(self.events) == len(s.events) and all( e0 == e1 in zip(self.events, s.events) )
+		return self.name == s.name and len(self.events) == len(s.events) and all( e0 == e1 for e0, e1 in zip(self.events, s.events) )
 	
 	def __init__( self, name, events ):
 		self.name = name
@@ -597,7 +599,7 @@ class Competition:
 	
 	drawLots = False
 	
-	def __eq__( self, s ) : bool
+	def __eq__( self, s ) -> bool:
 		return (
 			all( getattr(self,a) == getattr(s,a) for a in ('name', 'eliminationRankingPolicy', 'drawLots') ) and
 			all( len(self.systems) == len(s.systems) ) and
@@ -618,7 +620,7 @@ class Competition:
 		self.eliminationRankingPolicy = eliminationRankingPolicy
 		self.drawLots = drawLots
 		
-		byeEvents = set()
+		byeEvents = []
 		byeOutcomeMap = {}
 		
 		ttCount = 0
@@ -663,7 +665,7 @@ class Competition:
 				# Check if this is a bye Event.
 				# We handle this by deleting the event and substituting the output value as the input in subsequent events.
 				if not e.others:
-					byeEvents.add( e )
+					byeEvents.append( e )
 					byeOutcomeMap[e.winner] = e.composition[0]
 			
 		assert self.starters != 0, f'{e.competition.name}-{e.system.name} No starters.  Check for missing N values'
@@ -678,6 +680,9 @@ class Competition:
 			for k, event in enumerate(system.events):
 				event.i = k
 				event.composition = [byeOutcomeMap.get(c,c) for c in event.composition]
+	
+	def isKeirin( self ):
+		return self.eliminationRankingPolicy == self.RoundPositionTies
 	
 	def getRelegationsWarnings( self, bib, eventCur, before=False ):
 		relegations = 0
@@ -1059,7 +1064,7 @@ class Model:
 	
 	@property
 	def isKeirin( self ):
-		return self.competition and self.competition.isKeirin
+		return self.competition and self.competition.isKeirin()
 	
 	def getProperties( self ):
 		return { a : getattr(self, a) for a in ('competition_name', 'date', 'category', 'track', 'organizer', 'chief_official') }

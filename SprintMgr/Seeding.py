@@ -42,7 +42,7 @@ class SortDialog( wx.Dialog ):
 		sizer.Add( explain, flag=wx.EXPAND|wx.ALL, border=4 )
 
 		self.ttOrder = wx.CheckBox( self, label="Time Trial Order (highest goes last)" )
-		self.ttOrder.SetValue( Model.model.competition and not Model.model.competition.isKeirin )
+		self.ttOrder.SetValue( Model.model.competition and not Model.model.competition.isKeirin() )
 
 		self.randomize = wx.CheckBox( self, label="Randomize Ties" )
 		self.randomize.SetValue( False )

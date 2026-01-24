@@ -713,7 +713,7 @@ table.results tr td.fastest{
 		else:
 			title = '{}: {}'.format( model.category, Version.AppVerName )
 		self.SetTitle( title )
-		isKeirin = (model.competition and model.competition.isKeirin)
+		isKeirin = (model.competition and model.competition.isKeirin())
 		self.notebook.EnableTab( self.iQualifiersPage, not isKeirin )
 		self.notebook.SetPageText( self.iQualifiersPage, ' ' if isKeirin else self.attrClassName[self.iQualifiersPage][2] )
 			
@@ -927,7 +927,7 @@ table.results tr td.fastest{
 			pass
 		event.Skip()	# Required to properly repaint the screen.
 		
-		if event.GetSelection() == self.iQualifiersPage and (Model.model and Model.model.competition and Model.model.competition.isKeirin):
+		if event.GetSelection() == self.iQualifiersPage and (Model.model and Model.model.competition and Model.model.competition.isKeirin()):
 			wx.CallAfter( self.callPageRefresh, self.iSeedingPage )
 			wx.CallAfter( notebook.SetSelection, self.iSeedingPage )
 
