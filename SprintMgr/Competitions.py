@@ -6,8 +6,8 @@ from TestData import getTestData, getRandomTestData
 
 def getCompetitions():
 	competitions = [
-		Competition( 'Track: Sprint Nations Cup and World Championships', [
-			System( '1/16 Finals', Competition.QualifyingTime, True, [
+		Competition( 'Track: Sprint Nations Cup and World Championships', Competition.QualifyingTime, True, [
+			System( '1/16 Finals', [
 				Event( 'N1 - -> 1A' ),
 				Event( 'N2 - -> 2A' ),
 				Event( 'N3 - -> 3A' ),
