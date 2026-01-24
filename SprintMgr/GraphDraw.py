@@ -90,7 +90,7 @@ class Graph( wx.Control ):
 				return ''
 		
 		# Set the list of qualifiers/seeding.  Double-space the rows.
-		grid = [[{'title':'Seeding' if competition.isKeirin() else 'Qualifiers'}, {}]]
+		grid = [[{'title':'Seeding' if competition.noQualifiers else 'Qualifiers'}, {}]]
 		for i in range(competition.starters):
 			grid[0].append( {'rider':state.labels.get('N{}'.format(i+1),None),'iStarting':(i+1)} )
 			grid[0].append( {} )

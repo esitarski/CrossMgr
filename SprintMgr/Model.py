@@ -643,7 +643,7 @@ class Competition:
 				# print( 'Event:', ' - '.join(e.composition), ' -> ', e.winner, e.others )
 			
 				for c in e.composition:
-					assert c not in inLabels, '{}-{} c={}, outLabels={}'.format(e.competition.name, e.system.name, c, ','.join( sorted(outLabels) ))
+					assert c not in inLabels, '{}-{} c={}, outLabels={}'.format(e.competition.name, e.system.name, c, ','.join(sorted(outLabels)) )
 					inLabels.add( c )
 					if c.startswith('N'):
 						self.starters += 1
@@ -657,7 +657,7 @@ class Competition:
 				outLabels.add( e.winner )
 				for c in e.others:
 					assert c not in outLabels, '{}-{} other label: {} already exists in outLabels={}'.format(
-						e.competition.name, e.system.name, c, ','.join( outLabels ))
+						e.competition.name, e.system.name, c, ','.join(outLabels) )
 					outLabels.add( c )
 				assert len(outLabels) <= len(inLabels), '{}-{} len(outLabels)={} exceeds len(inLabels)={}\n    {}\n    {}'.format(
 						e.competition.name, e.system.name, len(outLabels), len(inLabels), ','.join(inLabels), ','.join(outLabels) )
@@ -676,13 +676,14 @@ class Competition:
 		# Assign indexes to each component for sorting purposes.
 		for j, system in enumerate(self.systems):
 			system.i = j
-			system.events = [e for e in system.events if e not in byeEvents]
+			system.events = [e for e in system.events if not any(e is eBye for eBye in byeEvents) ]
 			for k, event in enumerate(system.events):
 				event.i = k
 				event.composition = [byeOutcomeMap.get(c,c) for c in event.composition]
 	
-	def isKeirin( self ):
-		return self.eliminationRankingPolicy == self.RoundPositionTies
+	@property
+	def noQualifiers( self ):
+		return self.eliminationRankingPolicy == self.RoundPositionTies or self.eliminationRankingPolicy == self.NoRank
 	
 	def getRelegationsWarnings( self, bib, eventCur, before=False ):
 		relegations = 0
@@ -708,9 +709,9 @@ class Competition:
 		relegations, warnings = self.getRelegationsWarnings(bib, eventCur, before)
 		s = []
 		if warnings:
-			s.append( '{} {}'.format(warnings, 'Warn') )
+			s.append( f'{warnings} Warn' )
 		if relegations:
-			s.append( '{} {}'.format(relegations, 'Rel') )
+			s.append( f'{relegations} Rel' )
 		return ','.join( s )
 	
 	def canReassignStarters( self ):
@@ -1063,8 +1064,8 @@ class Model:
 		return None
 	
 	@property
-	def isKeirin( self ):
-		return self.competition and self.competition.isKeirin()
+	def noQualifiers( self ):
+		return self.competition and self.competition.noQualifiers
 	
 	def getProperties( self ):
 		return { a : getattr(self, a) for a in ('competition_name', 'date', 'category', 'track', 'organizer', 'chief_official') }
