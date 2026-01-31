@@ -150,11 +150,20 @@ def ImportLIF( fname ):
 	undo.pushState()
 	for r in ReadLIF( fname ):
 		rider = race.getRider( r['id'] )
-		rider.times = []
-		if not race.isTimeTrial:
-			rider.firstTime = None
-		for t in r['race_times']:
-			race.addTime( r['id'], t, False )
+		
+		if 'race_times' in r and r['race_times']:
+			# If we have split times.  If so, replace the rider times with the splits.
+			rider.times = []
+			if not race.isTimeTrial:
+				rider.firstTime = None
+			for t in r['race_times']:
+				race.addTime( r['id'], t, False )		
+		elif 'time' in r and r['time']:
+			# If not split times, just replace the finish time.
+			if rider.times:
+				del rider.times[-1:]	# Delete the last known time.			
+			race.addTime( r['id'], r['time'] )
+		
 		rider.setStatus( r['status'] )
 		race.setChanged()
 
@@ -170,14 +179,14 @@ def ImportLIFFinish( fname ):
 	race.resetAllCaches()
 	undo.pushState()
 	for r in ReadLIF( fname ):
-		# Update the last entry only.
+		# Update the last entry only (finish time).
 		rider = race.getRider( r['id'] )
 		try:
 			if rider.times:
 				del rider.times[-1:]	# Delete the last known time.
 			
-			# Add the last time from FinishLynx.
-			race.addTime( r['id'], r['race_times'][-1] )
+			# Add the time recorded from FinishLynx.  Ignore the splits.
+			race.addTime( r['id'], r['time'] )
 		except Exception:
 			pass
 		rider.setStatus( r['status'] )
@@ -212,7 +221,7 @@ def Export( folder=None ):
 	with open(fnameBase + '.ppl', 'w', newline='', encoding='utf8') as f:
 		writer = csv.writer( f )
 		for id, info in sorted( externalInfo.items(), key=operator.itemgetter(0) ):
-			writer.writerow( [id] + [externalInfo.get(field,'') for field in fields] )
+			writer.writerow( [id] + [info.get(field,'') for field in fields] )
 
 	# Event number, round number, heat number, event name
 	# <tab, space or comma>ID, lane # lane=0 as there are no assigned lanes.
