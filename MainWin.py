@@ -3451,7 +3451,16 @@ class MainWin( wx.Frame ):
 						if not header:
 							header = line.split(',')
 							continue
-						riderInfo.append( [r+100] + line.split(',') )
+						row = [r+100]
+						row.extend( line.split(',') )	# LastName, FirstName, Team
+						# Add simulated uci_id.
+						uci_id = random.choices('123456789', k=1)[0] + ''.join( random.choices('0123456789', k=8) )
+						c = int(uci_id) % 97
+						uci_id += f'{c:02d}'
+						row.append( uci_id )
+						# Add simulated License.
+						row.append( ''.join( random.choices('0123456789', k=6) ) )
+						riderInfo.append( row )
 			except IOError:
 				pass
 			
@@ -3460,7 +3469,8 @@ class MainWin( wx.Frame ):
 			sheetName = 'Registration'
 			wb = xlsxwriter.Workbook( fnameRiderInfo )
 			ws = wb.add_worksheet(sheetName)
-			for c, h in enumerate(['Bib#', 'LastName', 'FirstName', 'Team']):
+			headers = ('Bib#', 'LastName', 'FirstName', 'Team', 'UCIID', 'License')
+			for c, h in enumerate(headers):
 				ws.write(0, c, h)
 			for r, row in enumerate(riderInfo):
 				for c, v in enumerate(row):
@@ -3470,7 +3480,7 @@ class MainWin( wx.Frame ):
 			race.excelLink = ExcelLink()
 			race.excelLink.setFileName( fnameRiderInfo )
 			race.excelLink.setSheetName( sheetName )
-			race.excelLink.setFieldCol( {'Bib#':0, 'LastName':1, 'FirstName':2, 'Team':3} )
+			race.excelLink.setFieldCol( {h:i for i, h in enumerate(headers)} )
 
 		# Start the simulation.
 		self.showPage( self.iRecordPage if isTimeTrial else self.iChartPage )

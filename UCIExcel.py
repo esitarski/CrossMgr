@@ -243,9 +243,9 @@ Race Type	IRR	Individual Road Race
 def formatUciId( uci_id ):
 	# Normalize to a string.
 	if isinstance(uci_id, float):
-		uci_id = '{:.0f}'.format( uci_id )
+		uci_id = f'{uci_id:.0f}'
 	else:
-		uci_id = '{}'.format( uci_id )
+		uci_id = str( uci_id )
 	#s = ' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id	# add separating spaces to UCI ID.
 	s = uci_id
 	return s.replace( ' ', '' )		# UCI does not accept spaces in UCI IDs.

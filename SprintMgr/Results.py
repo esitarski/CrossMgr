@@ -94,7 +94,7 @@ class Results(wx.Panel):
 	def getResultChoices( self ):
 		model = Model.model
 		competition = model.competition
-		choices = ['Seeding' if competition.isKeirin() else 'Qualifiers'] + [system.name for system in competition.systems]
+		choices = ['Seeding' if competition.noQualifiers else 'Qualifiers'] + [system.name for system in competition.systems]
 		choices.append( 'Final Classification' )
 		return choices
 	
@@ -164,7 +164,7 @@ class Results(wx.Panel):
 			hideCols = self.getHideCols( self.headerNames )
 			self.headerNames = [h for c, h in enumerate(self.headerNames) if c not in hideCols]
 			
-			riders = sorted( model.riders, key = Model.Rider.getKeyQualifying(competition.isKeirin()) )
+			riders = sorted( model.riders, key = Model.Rider.getKeyQualifying(competition.noQualifiers) )
 			for row, r in enumerate(riders):
 				if row >= starters or r.status == 'DNQ':
 					riders[row:] = sorted( riders[row:], key=attrgetter('iSeeding') )

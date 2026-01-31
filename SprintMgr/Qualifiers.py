@@ -224,13 +224,13 @@ class Qualifiers(wx.Panel):
 			
 	def doRenumber( self, event ):
 		model = Model.model
-		message = 'Sequence Bib numbers by Decreasing UCI Points.\n\nContinue?' if model.isKeirin() else 'Sequence Bib numbers by Increasing Qualifying Time.\n\nContinue?'
+		message = 'Sequence Bib numbers by Decreasing UCI Points.\n\nContinue?' if model.noQualifiers else 'Sequence Bib numbers by Increasing Qualifying Time.\n\nContinue?'
 		if not Utils.MessageOKCancel( self, message, 'Renumber Riders' ):
 			return
 	
 		self.setQualifyingInfo()
 		
-		key = (lambda x: x.keyPoints()) if model.isKeirin() else (lambda x: x.keyQualifying())
+		key = (lambda x: x.keyPoints()) if model.noQualifiers else (lambda x: x.keyQualifying())
 		riders = sorted( model.riders, key = key )
 		for r, rider in enumerate(riders, 1):
 			rider.bib = r

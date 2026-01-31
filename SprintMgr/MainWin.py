@@ -713,9 +713,9 @@ table.results tr td.fastest{
 		else:
 			title = '{}: {}'.format( model.category, Version.AppVerName )
 		self.SetTitle( title )
-		isKeirin = (model.competition and model.competition.isKeirin())
-		self.notebook.EnableTab( self.iQualifiersPage, not isKeirin )
-		self.notebook.SetPageText( self.iQualifiersPage, ' ' if isKeirin else self.attrClassName[self.iQualifiersPage][2] )
+		noQualifiers = (model.competition and model.competition.noQualifiers)
+		self.notebook.EnableTab( self.iQualifiersPage, not noQualifiers )
+		self.notebook.SetPageText( self.iQualifiersPage, ' ' if noQualifiers else self.attrClassName[self.iQualifiersPage][2] )
 			
 	def menuSaveAs( self, event ):
 		dlg = wx.FileDialog( self, message="Choose a file for your Competition",
@@ -927,7 +927,7 @@ table.results tr td.fastest{
 			pass
 		event.Skip()	# Required to properly repaint the screen.
 		
-		if event.GetSelection() == self.iQualifiersPage and (Model.model and Model.model.competition and Model.model.competition.isKeirin()):
+		if event.GetSelection() == self.iQualifiersPage and (Model.model and Model.model.competition and Model.model.competition.noQualifiers):
 			wx.CallAfter( self.callPageRefresh, self.iSeedingPage )
 			wx.CallAfter( notebook.SetSelection, self.iSeedingPage )
 
