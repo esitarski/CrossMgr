@@ -214,6 +214,15 @@ def Export( folder=None ):
 		os.mkdir( folder )
 	
 	fnameBase = os.path.join( folder, 'lynx' )
+
+	def formatUciId( uci_id ):
+		if not isinstance(uci_id, str):
+			if isinstance(uci_id, float):
+				uci_id = f'{uci_id:.0f}'
+			else:
+				uci_id = f'{uci_id}'
+		uci_id = uci_id.replace( ' ', '' )
+		return ' '.join( uci_id[i:i+3] for i in range(0, len(uci_id), 3) ) if uci_id.isdigit() else uci_id	# add separating spaces in groups of 3.
 	
 	# Create the people reference file.
 	# ID number, last name, first name, affiliation
@@ -221,7 +230,10 @@ def Export( folder=None ):
 	with open(fnameBase + '.ppl', 'w', newline='', encoding='utf8') as f:
 		writer = csv.writer( f )
 		for id, info in sorted( externalInfo.items(), key=operator.itemgetter(0) ):
-			writer.writerow( [id] + [info.get(field,'') for field in fields] )
+			row = [id]
+			row.extend( info.get(field,'') for field in fields )
+			row.append( formatUciId(info.get('UCIID','')) or info.get('License','') )
+			writer.writerow( row )
 
 	# Event number, round number, heat number, event name
 	# <tab, space or comma>ID, lane # lane=0 as there are no assigned lanes.
