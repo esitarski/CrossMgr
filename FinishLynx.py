@@ -148,6 +148,9 @@ def ImportLIF( fname ):
 	
 	race.resetAllCaches()
 	undo.pushState()
+	race.setChanged()
+
+	count = 0
 	for r in ReadLIF( fname ):
 		rider = race.getRider( r['id'] )
 		
@@ -157,15 +160,18 @@ def ImportLIF( fname ):
 			if not race.isTimeTrial:
 				rider.firstTime = None
 			for t in r['race_times']:
-				race.addTime( r['id'], t, False )		
+				race.addTime( r['id'], t, False )
+			count += 1
 		elif 'time' in r and r['time']:
 			# If not split times, just replace the finish time.
 			if rider.times:
 				del rider.times[-1:]	# Delete the last known time.			
 			race.addTime( r['id'], r['time'] )
+			count += 1
 		
 		rider.setStatus( r['status'] )
-		race.setChanged()
+	
+	return count
 
 def ImportLIFFinish( fname ):
 	# Update the last entry from FinishLynx.
@@ -178,6 +184,9 @@ def ImportLIFFinish( fname ):
 	
 	race.resetAllCaches()
 	undo.pushState()
+	race.setChanged()
+
+	count = 0
 	for r in ReadLIF( fname ):
 		# Update the last entry only (finish time).
 		rider = race.getRider( r['id'] )
@@ -187,10 +196,12 @@ def ImportLIFFinish( fname ):
 			
 			# Add the time recorded from FinishLynx.  Ignore the splits.
 			race.addTime( r['id'], r['time'] )
+			count += 1
 		except Exception:
 			pass
 		rider.setStatus( r['status'] )
-		race.setChanged()
+		
+	return count
 
 #-----------------------------------------------------------------------
 
@@ -310,12 +321,7 @@ class FinishLynxDialog( wx.Dialog ):
 		if not Model.race:
 			return
 			
-		with wx.MessageBox( _('Replace CrossMgr FINISH times with FinishLynx times?'),
-				_('Replace CrossMgr Finish Times?'), style=wx.OK|wx.CANCEL) as d:
-			if d.ShowModal() != wx.ID_OK:
-				return
-		
-		with wx.FileDialog(self, _("FinishLynx Results Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif;*.LIF)|*.lif;*.LIF",
+		with wx.FileDialog(self, _("FinishLynx FINISH Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif;*.LIF)|*.lif;*.LIF",
 						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
 
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -323,9 +329,10 @@ class FinishLynxDialog( wx.Dialog ):
 			pathname = fileDialog.GetPath()
 			
 		try:
-			ImportLIFFinish( pathname )
-			wx.MessageBox( _("Import Finish Times successful"), _("FinishLynx Import"), wx.OK, self )
+			count = ImportLIFFinish( pathname )
+			wx.MessageBox( '{} ({})'.format(_("Import FINISH successful"),count), _("FinishLynx Import"), wx.OK, self )
 			Utils.refresh()
+			self.Destroy()
 		except Exception as e:
 			wx.MessageBox( '{}:\n\n\t{}'.format( _("Import failure"), e), _("FinishLynx Import"), wx.OK, self )
 
@@ -334,12 +341,7 @@ class FinishLynxDialog( wx.Dialog ):
 		if not Model.race:
 			return
 		
-		with wx.MessageBox( _('Replace ALL CrossMgr times with FinishLynx times?'),
-				_('Replace ALL CrossMgr Times?'), style=wx.OK|wx.CANCEL) as d:
-			if d.ShowModal() != wx.ID_OK:
-				return
-		
-		with wx.FileDialog(self, _("FinishLynx All Results Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif;*.LIF)|*.lif;*.LIF",
+		with wx.FileDialog(self, _("FinishLynx ALL Import "), defaultDir=getLynxDir(race), wildcard="FinishLynx Results (*.lif;*.LIF)|*.lif;*.LIF",
 						   style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
 
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -347,9 +349,10 @@ class FinishLynxDialog( wx.Dialog ):
 			pathname = fileDialog.GetPath()
 			
 		try:
-			ImportLIF( pathname )
-			wx.MessageBox( _("Import All successful"), _("FinishLynx Import"), wx.OK, self )
+			count = ImportLIF( pathname )
+			wx.MessageBox( '{} ({})'.format(_("Import ALL successful"),count), _("FinishLynx Import"), wx.OK, self )
 			Utils.refresh()
+			self.Destroy()
 		except Exception as e:
 			wx.MessageBox( '{}:\n\n\t{}'.format( _("Import failure"), e), _("FinishLynx Import"), wx.OK, self )
 				
