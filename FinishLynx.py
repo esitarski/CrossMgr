@@ -58,151 +58,6 @@ def getStatus( p ):
 		return Model.Rider.DQ
 	return Model.Rider.DNF			# default to DNF
 
-def ReadLIF( fname ):
-	# Read the FinishLynx .LIF finish file.
-	# This code assumes that the Export function below was used to create the .ppl, .sch and .evt files for this race.
-	# In particular, the 'ID' field is the bib number.
-	race = Model.race
-	if not race:
-		return
-
-	reader = csv.reader( fname )
-	# Place, ID, lane, last name, first name, affiliation, <time>, <license>, <delta time>, <ReacTime>, <splits>, time trial start time, user 1, user 2, user 3
-	
-	fields = ('place', 'id', 'lane', 'last_name', 'first_name', 'affiliation', 'time', 'license', 'delta_time', 'react_time', 'splits', 'tt_start_time')
-	int_fields = {'id', 'lane'}
-	time_fields = {'time', 'react_time', 'delta_time', 'tt_start_time'}
-	
-	def getFields( raceStart, row ):
-		record = {f:None for f in fields}
-		del record['splits']
-		record['race_times'] = []
-		record['lap_times'] = []
-		record['status'] = Model.Rider.Finisher
-		for i, f in enumerate(fields):
-			try:
-				v = row[i]
-			except IndexError:
-				break
-				
-			if f == 'splits':
-				# "splits" is a comma separated field of "race_time (lap_time)" pairs.
-				race_times = []
-				lap_times = []
-				for split in v.split(','):
-					sv = split.split(' ')
-					try:
-						race_times.append( strToSeconds(sv[0]) )
-						lap_times.append( strToSeconds(sv[1][1:-1]) )	# Remove brackets.
-					except IndexError:
-						break
-				record['race_times'] = race_times
-				record['lap_times'] = lap_times
-				continue
-
-			if f == 'place':
-				record['status'] = getStatus( v )
-			
-			if f in time_fields:
-				v = strToSeconds( v )
-			elif f in int_fields:
-				v = strToInt( v )
-				
-			record[f] = v
-			
-		return record
-
-	for i in range(3):
-		with open(fname, encoding='utf8') as f:
-			s = f.read()
-			
-		# Check for trailing newline.
-		if not (s and s.endswith('\n')):
-			# Empty file or no newline.  File is likely being written.  Wait a little and try again.
-			time.sleep( 0.5 + random.random() )
-			continue
-			
-		raceStart = None
-		reader = csv.reader( io.StringIO(s) )
-		for i, row in enumerate(reader):
-			if i == 0:
-				# Get the race start time from the header.
-				raceStart = strToSeconds( row[-1] )
-				race.startTime = datetime.datetime( *(tuple(int(v) for v in race.date.split('-')) + hhmmssmsFromSeconds(raceStart)) )
-				continue
-			
-			try:
-				yield getFields(raceStart, row)
-			except Exception:
-				pass
-		break
-	else:
-		raise ValueError( 'FinishLynx results file is empty or does not end with newline' )
-	
-def ImportLIF( fname ):
-	# Update all time entries from FinishLynx.
-	# Assume that 'id' is the bib number.
-	race = Model.race
-	if not race:
-		return
-	
-	race.resetAllCaches()
-	undo.pushState()
-	race.setChanged()
-
-	count = 0
-	for r in ReadLIF( fname ):
-		rider = race.getRider( r['id'] )
-		
-		if 'race_times' in r and r['race_times']:
-			# If we have split times.  If so, replace the rider times with the splits.
-			rider.times = []
-			if not race.isTimeTrial:
-				rider.firstTime = None
-			for t in r['race_times']:
-				race.addTime( r['id'], t, False )
-			count += 1
-		elif 'time' in r and r['time']:
-			# If not split times, just replace the finish time.
-			if rider.times:
-				del rider.times[-1:]	# Delete the last known time.			
-			race.addTime( r['id'], r['time'] )
-			count += 1
-		
-		rider.setStatus( r['status'] )
-	
-	return count
-
-def ImportLIFFinish( fname ):
-	# Update the last entry from FinishLynx.
-	# This is to support the case where we are use RFID for each lap (including the last lap),
-	# then use FinishLynx to get the last lap time at the finish.
-	# Assume that 'id' is the bib number.
-	race = Model.race
-	if not race:
-		return
-	
-	race.resetAllCaches()
-	undo.pushState()
-	race.setChanged()
-
-	count = 0
-	for r in ReadLIF( fname ):
-		# Update the last entry only (finish time).
-		rider = race.getRider( r['id'] )
-		try:
-			if rider.times:
-				del rider.times[-1:]	# Delete the last known time.
-			
-			# Add the time recorded from FinishLynx.  Ignore the splits.
-			race.addTime( r['id'], r['time'] )
-			count += 1
-		except Exception:
-			pass
-		rider.setStatus( r['status'] )
-		
-	return count
-
 #-----------------------------------------------------------------------
 
 def Export( folder=None ):
@@ -256,6 +111,155 @@ def Export( folder=None ):
 	# event number, round number, heat number
 	with open(fnameBase + '.sch', 'w', encoding='utf8') as f:
 		f.write( '1,1,1\n' )
+
+#-----------------------------------------------------------------------
+
+def ReadLIF( fname ):
+	# Read the FinishLynx .LIF finish file.
+	# This code assumes that the Export function below was used to create the .ppl, .sch and .evt files for this race.
+	# In particular, the 'ID' field is the bib number.
+	race = Model.race
+	if not race:
+		return
+
+	reader = csv.reader( fname )
+	# Place, ID, lane, last name, first name, affiliation, <time>, <license>, <delta time>, <ReacTime>, <splits>, time trial start time, user 1, user 2, user 3
+	
+	fields = ('place', 'id', 'lane', 'last_name', 'first_name', 'affiliation', 'time', 'license', 'delta_time', 'react_time', 'splits', 'tt_start_time')
+	int_fields = {'id', 'lane'}
+	time_fields = {'time', 'react_time', 'delta_time', 'tt_start_time'}
+	
+	def getFields( raceStart, row ):
+		record = {f:None for f in fields}
+		del record['splits']
+		record['race_times'] = []
+		record['status'] = None
+		for i, f in enumerate(fields):
+			try:
+				v = row[i]
+			except IndexError:
+				break
+				
+			if f == 'splits':
+				# "splits" may be a comma separated field of "race_time (lap_time)" pairs.
+				race_times = []
+				for split in v.split(','):
+					sv = split.split(' ')
+					try:
+						t = strToSeconds(sv[0])
+						if t:
+							race_times.append( t )
+					except IndexError:
+						continue
+						
+				record['race_times'] = race_times
+				continue
+
+			if f == 'place':
+				record['status'] = getStatus( v )
+			
+			if f in time_fields:
+				v = strToSeconds( v )
+			elif f in int_fields:
+				v = strToInt( v )
+				
+			record[f] = v
+			
+		return record
+
+	for i in range(3):
+		with open(fname, encoding='utf8') as f:
+			s = f.read()
+			
+		# Check for trailing newline.
+		if not (s and s.endswith('\n')):
+			# Empty file or no newline.  File is likely being written.  Wait a little and try again.
+			time.sleep( 0.5 + random.random() )
+			continue
+			
+		raceStart = None
+		reader = csv.reader( io.StringIO(s) )
+		for i, row in enumerate(reader):
+			if i == 0:
+				# Get the race start time from the header.
+				raceStart = strToSeconds( row[-1] )
+				race.startTime = datetime.datetime( *(tuple(int(v) for v in race.date.split('-')) + hhmmssmsFromSeconds(raceStart)) )
+				continue
+			
+			try:
+				yield getFields(raceStart, row)
+			except Exception:
+				pass
+		break
+	else:
+		raise ValueError( 'FinishLynx results file is empty or does not end with newline' )
+	
+def ImportLIF( fname ):
+	# Update all time entries from FinishLynx.
+	# Assume that 'id' is the bib number.
+	race = Model.race
+	if not race:
+		return
+		
+	race.resetAllCaches()
+	undo.pushState()
+	race.setChanged()
+
+	count = 0
+	for r in ReadLIF( fname ):
+		rider = race.getRider( r['id'] )
+		
+		success = False
+		if 'race_times' in r and r['race_times'] and 'time' in r and r['time']:
+			# If we have split times, replace the rider times with the splits.
+			rider.times = []
+			if not race.isTimeTrial:
+				rider.firstTime = None
+			for t in r['race_times']:
+				race.addTime( r['id'], t, False )
+			success = True
+			count += 1
+		elif 'time' in r and r['time']:
+			# If not split times, just replace the finish time.
+			if rider.times:
+				del rider.times[-1:]	# Delete the last known time.			
+			race.addTime( r['id'], r['time'], False )
+			success = True
+			count += 1
+	
+	race.setChanged()
+	return count
+
+def ImportLIFFinish( fname ):
+	# Update the last entry from FinishLynx.
+	# This is to support the case where we are use RFID for each lap (including the last lap),
+	# then use FinishLynx to get the last lap time at the finish.
+	# Assume that 'id' is the bib number.
+	race = Model.race
+	if not race:
+		return
+	
+	race.resetAllCaches()
+	undo.pushState()
+
+	count = 0
+	for r in ReadLIF( fname ):
+		# Update the last entry only (finish time).
+		rider = race.getRider( r['id'] )
+		
+		if 'time' in r and r['time']:
+			try:
+				if rider.times:
+					del rider.times[-1:]	# Delete the last previous time.
+				
+				# Add the time recorded from FinishLynx.  Ignore the lap splits.
+				race.addTime( r['id'], r['time'], False )
+				count += 1
+			except Exception:
+				pass
+	
+	race.setChanged()
+	return count
 
 #-----------------------------------------------------------------------
 
@@ -328,6 +332,9 @@ class FinishLynxDialog( wx.Dialog ):
 				return
 			pathname = fileDialog.GetPath()
 			
+		if wx.OK != wx.MessageBox( _('Replace FINISH timess from FinishLynx.  Confirm?'), _('FinishLynx Import Confirm'),  wx.OK|wx.CANCEL|wx.ICON_WARNING, self ):
+			return
+			
 		try:
 			count = ImportLIFFinish( pathname )
 			wx.MessageBox( '{} ({})'.format(_("Import FINISH successful"),count), _("FinishLynx Import"), wx.OK, self )
@@ -348,6 +355,9 @@ class FinishLynxDialog( wx.Dialog ):
 				return
 			pathname = fileDialog.GetPath()
 			
+		if wx.OK != wx.MessageBox( _('Replace ALL lap times from FinishLynx.  Confirm?'), _('FinishLynx Import Confirm'),  wx.OK|wx.CANCEL|wx.ICON_WARNING, self ):
+			return
+		
 		try:
 			count = ImportLIF( pathname )
 			wx.MessageBox( '{} ({})'.format(_("Import ALL successful"),count), _("FinishLynx Import"), wx.OK, self )
