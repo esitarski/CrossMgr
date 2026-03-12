@@ -22,7 +22,7 @@ from GpxImport import GetGeoTrack
 from TemplateSubstitute import TemplateSubstitute
 import Template
 from BatchPublishAttrs import batchPublishAttr, batchPublishRaceAttr
-from HighPrecisionTimeEdit import HighPrecisionTimeEdit
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit, trimTimeLeadingZeros
 import JChipSetup
 import WebServer
 import ChipReader
@@ -224,7 +224,7 @@ class RaceOptionsProperties( wx.Panel ):
 		self.showCourseAnimationInHtml.SetValue( True )
 
 		self.minPossibleLapTimeLabel = wx.StaticText( self, label=_('Min. Possible Lap Time: ') )
-		self.minPossibleLapTime = HighPrecisionTimeEdit( self, seconds = 0.0 )
+		self.minPossibleLapTime = HighPrecisionTimeEdit( self, seconds = 0.0, size=(110,-1), trim_leading_zeros=True )
 		self.minPossibleLapTimeUnit = wx.StaticText( self, label=_('hh:mm:ss.ddd') )
 		mplths = wx.BoxSizer( wx.HORIZONTAL )
 		mplths.Add( self.minPossibleLapTime )		

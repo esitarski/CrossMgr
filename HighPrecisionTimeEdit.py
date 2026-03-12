@@ -1,5 +1,6 @@
 import wx
 import re
+import string
 import datetime
 import Utils
 
@@ -43,186 +44,152 @@ def getSeconds( v, display_seconds, display_milliseconds ):
 	else:
 		return 0.0
 
-# Masked controls still don't work on anything but Windows.  Sigh :(
-# Update - masked controls stopped working entirely.
-# import platform
-if False: # platform.system() == 'Windows':
-	import wx.lib.masked as masked
-	
-	class HighPrecisionTimeEdit( masked.TextCtrl ):
-		mask         = '##:##:##.###'
-		validRegex   = r'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]\.[0-9][0-9][0-9]'
+def trimTimeLeadingZeros( s ):
+	if m := re.search('^[:0]+', s):
+		s = s[len(m.group(0)):]
+	if s and not s[0].isdigit():
+		s = '0' + s
+	return s
 
-		def __init__( self, parent, id=wx.ID_ANY, seconds=None, display_seconds=True, display_milliseconds=True, value=None, allow_none=False, style=0, size=wx.DefaultSize ):
-			# Utils.writeLog( 'HighPrecisionTimeEdit: Windows' )
-			
-			self.allow_none = allow_none
-			self.display_seconds = display_seconds
-			self.display_milliseconds = display_seconds and display_milliseconds
+class TextBoxTipPopup( wx.PopupTransientWindow ):
+	"""Basic Tooltip"""
+	def __init__(self, parent, style, text):
+		super().__init__(parent, style)
+		self.SetBackgroundColour(wx.YELLOW)
+		border = 10
+		st = wx.StaticText(self, label = text, pos=(border/2,border/2))
+		sz = st.GetBestSize()
+		self.SetSize( (sz.width+border, sz.height+border) )
+
+class HighPrecisionTimeEdit( wx.TextCtrl ):
+	emptyValue   = ''
+
+	def __init__( self, parent, id=wx.ID_ANY, seconds=None, value=None, display_seconds=True, display_milliseconds=True, allow_none=False, trim_leading_zeros=False, style=0, size=wx.DefaultSize ):	
+		self.allow_none = allow_none
+		self.display_seconds = display_seconds
+		self.display_milliseconds = display_seconds and display_milliseconds
+		self.trim_leading_zeros = trim_leading_zeros
+		if self.allow_none:
+			self.defaultValue = ''
+		else:
+			self.defaultValue = '00:00:00.000'
 			if not display_seconds:
-				self.mask       = '##:##'
-				self.validRegex = r'[0-9][0-9]:[0-5][0-9]'
+				self.defaultValue = '00:00'
 			elif not display_milliseconds:
-				self.mask       = '##:##:##'
-				self.validRegex = r'[0-9][0-9]:[0-5][0-9]:[0-5][0-9]'			
-			
-			self.defaultValue = self.mask.replace('#', '0')
-			self.emptyValue   = self.mask.replace('#', ' ')
-			super().__init__(
-				parent, id,
-				mask		 = self.mask,
-				defaultValue = value or self.defaultValue,
-				validRegex   = self.validRegex,
-				useFixedWidthFont = False,
-				style		 = style & ~(wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.TE_PASSWORD),
-				size         = size,
-			)
-			if seconds is not None:
-				self.SetSeconds( seconds )
+				self.defaultValue = '00:00:00'
+			if self.trim_leading_zeros:
+				self.defaultValue = trimTimeLeadingZeros( self.defaultValue )
+		value = self.defaultValue if value is None else reNonTimeChars.sub( '', f'{value}' )
+		super().__init__(
+			parent, id,
+			value		= value,
+			style		= style & ~(wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.TE_PASSWORD),
+			size        = size,
+		)
+		# Seconds, if given, overrides value.
+		if seconds is not None:
+			self.SetSeconds( seconds )
+		self.Bind(wx.EVT_CHAR, self.onKeypress)
+		self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
+		self.Bind(wx.EVT_LEFT_DCLICK, self.onDoubleClick)
+
+	ALLOWED_CODES = {
+		9, 58,
+		wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_CLEAR, wx.WXK_SHIFT, wx.WXK_ESCAPE, wx.WXK_TAB, 	
+		wx.WXK_CANCEL, wx.WXK_SHIFT,
+		wx.WXK_RETURN, wx.WXK_HOME, wx.WXK_END, wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_SHIFT, wx.WXK_SELECT, wx.WXK_INSERT,
+		wx.WXK_NUMPAD_DELETE,
+		wx.WXK_NUMPAD_ENTER, wx.WXK_NUMPAD_HOME, wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT,
+		wx.WXK_NUMPAD_INSERT, wx.WXK_NUMPAD_END, wx.WXK_NUMPAD_BEGIN, wx.WXK_NUMPAD_DELETE,
+		wx.WXK_NUMPAD0, wx.WXK_NUMPAD1, wx.WXK_NUMPAD2, wx.WXK_NUMPAD3, wx.WXK_NUMPAD4,
+		wx.WXK_NUMPAD5, wx.WXK_NUMPAD6, wx.WXK_NUMPAD7, wx.WXK_NUMPAD8, wx.WXK_NUMPAD9,
+	}
+	def onKeypress(self, event):
+		keycode = event.GetKeyCode()
+		obj = event.GetEventObject()
+		val = super(HighPrecisionTimeEdit, obj).GetValue()	# Use the unformatted text value.
 		
-		def GetSeconds( self ):
-			v = self.GetValue()
-			if self.allow_none and v == self.emptyValue:
-				return None
-			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
-			
-		def SetSeconds( self, secs ):
-			super().SetValue(
-				secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds)
-					if secs is not None
-					else self.emptyValue
-			)
-			
-		def SetValue( self, v ):
-			if self.allow_none and v is None:
-				super().SetValue( '' )
+		# filter unicode characters
+		if keycode == wx.WXK_NONE:
+			pass 
+		# allow special key codes.
+		elif keycode in HighPrecisionTimeEdit.ALLOWED_CODES:
+			event.Skip()
+		# allow digits
+		elif chr(keycode) in string.digits:
+			event.Skip()
+		# allow other special, non-printable keycodes
+		elif chr(keycode) not in string.printable:
+			event.Skip() # allow all other special keycodes
+		# accept one '.' in the string
+		elif (chr(keycode) == '.' or keycode in (wx.WXK_DECIMAL, wx.WXK_NUMPAD_DECIMAL)) and val and '.' not in val:
+			event.Skip()
+		return
+	
+	def onPaste(self, event):
+		self.text_data = wx.TextDataObject()
+		if wx.TheClipboard.Open():
+			success = wx.TheClipboard.GetData(self.text_data)
+			wx.TheClipboard.Close()
+		if success:
+			self.text_data = self.text_data.GetText()
+			if self.ValidateTimeFormat(self.text_data):
+				self.SetValue(self.text_data)
+				return
 			else:
-				self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
+				WarnTip = TextBoxTipPopup(self, wx.SIMPLE_BORDER, "Incorrect time format on the clipboard")
+				xPos, yPos = self.GetPosition()
+				height = WarnTip.GetClientSize()[1]
+				pos = self.ClientToScreen( (xPos - xPos, yPos - yPos + height) )
+				WarnTip.Position( pos, (0,0) )
+				WarnTip.Popup()
 
-else:
-	import string
+	def onDoubleClick(self, event):
+		self.SetSelection(-1,-1)
 
-	class TextBoxTipPopup( wx.PopupTransientWindow ):
-		"""Basic Tooltip"""
-		def __init__(self, parent, style, text):
-			super().__init__(parent, style)
-			self.SetBackgroundColour(wx.YELLOW)
-			border = 10
-			st = wx.StaticText(self, label = text, pos=(border/2,border/2))
-			sz = st.GetBestSize()
-			self.SetSize( (sz.width+border, sz.height+border) )
-
-	class HighPrecisionTimeEdit( wx.TextCtrl ):
-		emptyValue   = ''
-
-		def __init__( self, parent, id=wx.ID_ANY, seconds=None, value=None, display_seconds=True, display_milliseconds=True, allow_none=False, style=0, size=wx.DefaultSize ):
+	def ValidateTimeFormat(self, time):
+		if not time and self.allow_none:
+			return True
 		
-			# Utils.writeLog( 'HighPrecisionTimeEdit: Mac/Linux' )
-			
-			self.allow_none = allow_none
-			self.display_seconds = display_seconds
-			self.display_milliseconds = display_seconds and display_milliseconds
-			if self.allow_none:
-				self.defaultValue = ''
-			else:
-				self.defaultValue = '00:00:00.000'
-				if not display_seconds:
-					self.defaultValue = '00:00'
-				elif not display_milliseconds:
-					self.defaultValue = '00:00:00'
-			value = self.defaultValue if value is None else reNonTimeChars.sub( '', f'{value}' )
-			super().__init__(
-				parent, id,
-				value		= value,
-				style		= style & ~(wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.TE_PASSWORD),
-				size        = size,
-			)
-			# Seconds, if given, overrides value.
-			if seconds is not None:
-				self.SetSeconds( seconds )
-			self.Bind(wx.EVT_CHAR, self.onKeypress)
-			self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
-			self.Bind(wx.EVT_LEFT_DCLICK, self.onDoubleClick)
-
-		def onKeypress(self, event):
-			keycode = event.GetKeyCode()
-			obj = event.GetEventObject()
-			val = super(HighPrecisionTimeEdit, obj).GetValue()	# Use the actual text value, not the formatted value.
-			
-			# filter unicode characters
-			if keycode == wx.WXK_NONE:
-				pass 
-			# allow digits and colon
-			elif chr(keycode) in string.digits or keycode == 9 or keycode == 58:
-				event.Skip()
-			# allow special, non-printable keycodes
-			elif chr(keycode) not in string.printable:
-				event.Skip() # allow all other special keycode
-			# allow one '.'
-			elif chr(keycode) == '.' and val and '.' not in val:
-				event.Skip()
-			return
-		
-		def onPaste(self, event):
-			self.text_data = wx.TextDataObject()
-			if wx.TheClipboard.Open():
-				success = wx.TheClipboard.GetData(self.text_data)
-				wx.TheClipboard.Close()
-			if success:
-				self.text_data = self.text_data.GetText()
-				if self.ValidateTimeFormat(self.text_data):
-					self.SetValue(self.text_data)
-					return
-				else:
-					WarnTip = TextBoxTipPopup(self, wx.SIMPLE_BORDER, "Incorrect time format on the clipboard")
-					xPos, yPos = self.GetPosition()
-					height = WarnTip.GetClientSize()[1]
-					pos = self.ClientToScreen( (xPos - xPos, yPos - yPos + height) )
-					WarnTip.Position( pos, (0,0) )
-					WarnTip.Popup()
-
-		def onDoubleClick(self, event):
-			self.SetSelection(-1,-1)
-
-		def ValidateTimeFormat(self, time):
-			if not time and self.allow_none:
+		for format in ('%H:%M', '%H:%M:%S', '%H:%M:%S.%f'):
+			try:
+				datetime.datetime.strptime(time, format)
 				return True
+			except Exception:
+				pass
 			
-			for format in ('%H:%M', '%H:%M:%S', '%H:%M:%S.%f'):
-				try:
-					datetime.datetime.strptime(time, format)
-					return True
-				except Exception:
-					pass
-				
-			return False
+		return False
 
-		def GetSeconds( self ):
-			v = self.GetValue()
-			if self.allow_none and v == self.emptyValue:
-				return None
-			return valueToSecs( v, self.display_seconds, self.display_milliseconds )
-			
-		def SetSeconds( self, secs ):
-			super().SetValue( secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) or '' )
-			
-		def SetValue( self, v ):
-			if self.allow_none and v is None:
-				super().SetValue( '' )
-			else:
-				self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
+	def GetSeconds( self ):
+		v = self.GetValue()
+		if self.allow_none and v == self.emptyValue:
+			return None
+		return valueToSecs( v, self.display_seconds, self.display_milliseconds )
 		
-		def GetValue( self ):
-			v = super().GetValue()
-			if v is None:
-				return None
-			v = reNonTimeChars.sub( '', v )
-			if v == self.emptyValue and self.allow_none:
-				return None
-			if not self.display_seconds and len(v.split(':')) < 3:
-				v += ':00'
-			secs = Utils.StrToSeconds( v )
-			return secsToValue( secs, self.allow_none, self.display_seconds, self.display_milliseconds )
+	def SetSeconds( self, secs ):
+		value = secsToValue(secs, self.allow_none, self.display_seconds, self.display_milliseconds) or ''
+		if self.trim_leading_zeros:
+			value = trimTimeLeadingZeros( value )
+		super().SetValue( value )
+		
+	def SetValue( self, v ):
+		if self.allow_none and v is None:
+			super().SetValue( '' )
+		else:
+			self.SetSeconds( getSeconds(v, self.display_seconds, self.display_milliseconds) )
+	
+	def GetValue( self ):
+		v = super().GetValue()
+		if v is None:
+			return None
+		v = reNonTimeChars.sub( '', v )
+		if v == self.emptyValue and self.allow_none:
+			return None
+		if not self.display_seconds and len(v.split(':')) < 3:
+			v += ':00'
+		secs = Utils.StrToSeconds( v )
+		value = secsToValue( secs, self.allow_none, self.display_seconds, self.display_milliseconds )
+		return trimTimeLeadingZeros(value) if self.trim_leading_zeros else value
 
 if __name__ == '__main__':
 
