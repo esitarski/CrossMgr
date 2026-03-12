@@ -9,7 +9,7 @@ from AddExcelInfo import AddExcelInfo
 
 from Undo import undo
 from ReorderableGrid import ReorderableGrid
-from HighPrecisionTimeEdit import HighPrecisionTimeEdit
+from HighPrecisionTimeEdit import HighPrecisionTimeEdit, trimTimeLeadingZeros
 
 from GetResults import GetCategoryDetails, UnstartedRaceWrapper
 from ExportGrid import ExportGrid
@@ -157,7 +157,7 @@ class TimeEditor(gridlib.GridCellEditor):
 		gridlib.GridCellEditor.__init__(self)
 		
 	def Create( self, parent, id = wx.ID_ANY, evtHandler = None ):
-		self._tc = HighPrecisionTimeEdit( parent, id, style=wx.TE_CENTRE, value=self.defaultValue, display_milliseconds=False )
+		self._tc = HighPrecisionTimeEdit( parent, id, style=wx.TE_CENTRE, value=self.defaultValue, display_milliseconds=False, trim_leading_zeros=True )
 		self.SetControl( self._tc )
 		if evtHandler:
 			self._tc.PushEventHandler( evtHandler )
@@ -325,7 +325,7 @@ class Categories( wx.Panel ):
 			(_('Name'),					'name'),
 			(_('Gender'),				'gender'),
 			(_('Numbers'),				'catStr'),
-			(_('Start\nOffset'),		'startOffset'),
+			(_('Start\nOffset\nhh:mm:ss'),'startOffset'),
 			(_('Race\nLaps'),			'numLaps'),
 			('',						'setLaps'),
 			(_('Race\nMinutes'),		'raceMinutes'),
@@ -398,7 +398,7 @@ class Categories( wx.Panel ):
 				
 			elif fieldName == 'startOffset':
 				attr.SetEditor( TimeEditor() )
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 				self.dependentCols.add( col )
 				
 			elif fieldName == 'earlyBellTime':
@@ -418,7 +418,7 @@ class Categories( wx.Panel ):
 				
 			elif fieldName in ['rule80Time', 'suggestedLaps']:
 				attr.SetReadOnly( True )
-				attr.SetAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+				attr.SetAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTRE )
 				self.readOnlyCols.add( col )
 				self.dependentCols.add( col )
 				
@@ -674,8 +674,10 @@ and remove them from other categories.'''),
 			return ('0','1')[int(b)]
 		
 		startOffset = cat.startOffset
-		while len(startOffset) < len('00:00:00'):
-			startOffset = '00:' + startOffset
+		#while len(startOffset) < len('00:00:00'):
+		#	startOffset = '00:' + startOffset
+		startOffset = trimTimeLeadingZeros( startOffset )
+		
 		earlyBellTime = cat.earlyBellTime or ''
 		if isinstance( earlyBellTime, (float, int) ):
 			earlyBellTime = Utils.formatTime( float(earlyBellTime) ) if earlyBellTime else ''
@@ -712,7 +714,7 @@ and remove them from other categories.'''),
 		if race:		
 			rule80Time = race.getRule80CountdownTime( cat ) if race else None
 			if rule80Time:
-				self.grid.SetCellValue( r, self.iCol['rule80Time'], Utils.formatTime(rule80Time) )
+				self.grid.SetCellValue( r, self.iCol['rule80Time'], trimTimeLeadingZeros(Utils.formatTime(rule80Time)) )
 			
 			laps = race.getNumLapsFromCategory( cat ) if race else None
 			if laps:
