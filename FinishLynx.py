@@ -104,7 +104,7 @@ def Export( folder=None ):
 	# Event number, round number, heat number, event name
 	# <tab, space or comma>ID, lane # lane=0 as there are no assigned lanes.
 	with open(fnameBase + '.evt', 'w', encoding='utf8') as f:
-		f.write( '1,1,1,{}\n'.format( os.path.splitext(race.getFileName(includeMemo=False))[0] ) )
+		f.write( '1,1,1,{}\n'.format( os.path.splitext(race.getFileName())[0] ) )
 		for id in sorted( externalInfo.keys() ):
 			f.write( ',{},0\n'.format(id) )
 	

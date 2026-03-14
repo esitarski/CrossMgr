@@ -242,8 +242,8 @@ def removeDiacritic( s ):
 	except Exception:
 		return s
 	
-def GetFileName( rDate, rName, rNum, rMemo ):
-	return '{}-{}-r{}-{}.cmn'.format(*[RemoveDisallowedFilenameChars(v) for v in (rDate, rName, rNum, rMemo)])
+def GetFileName( rDate, rName, rNum ):
+	return '{}-{}-r{}.cmn'.format(*[RemoveDisallowedFilenameChars(str(v)) for v in (rDate, rName, rNum)])
 		
 # Attempt at portable sound player.
 if sys.platform.startswith('win'):

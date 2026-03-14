@@ -750,9 +750,19 @@ class NumKeypad( wx.Panel ):
 		self.refreshInputUpdateNonBusy()
 		
 		if self.isKeypadInputMode():
-			wx.CallLater( 100, self.keypad.numEdit.SetFocus )
+			def SafeSetFocus():
+				try:
+					self.keypad.numEdit.SetFocus()
+				except Exception:
+					pass
+			wx.CallLater( 100, SafeSetFocus )
 		elif self.isBibTimeInputMode():
-			wx.CallLater( 100, self.bibTimeRecord.numEdit.SetFocus )
+			def SafeSetFocus():
+				try:
+					self.bibTimeRecord.numEdit.SetFocus()
+				except Exception:
+					pass
+			wx.CallLater( 100, SafeSetFocus )
 	
 if __name__ == '__main__':
 	Utils.disable_stdout_buffering()
