@@ -3217,7 +3217,7 @@ class MainWin( wx.Frame ):
 			self.writeRace()
 		
 		path, fnameCur = os.path.split( self.fileName )
-		prefix, suffix = os.path.splitext( race.getFileName(raceNum=race.raceNum+1, includeMemo=False) )
+		prefix, suffix = os.path.splitext( race.getFileName(raceNum=race.raceNum+1) )
 
 		try:
 			self.openRace( sorted(glob.glob(os.path.join(path, prefix) + '*' + suffix), reverse=True, key=lambda v: len(v))[0] )

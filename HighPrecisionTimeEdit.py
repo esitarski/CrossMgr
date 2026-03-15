@@ -93,17 +93,24 @@ class HighPrecisionTimeEdit( wx.TextCtrl ):
 		self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
 		self.Bind(wx.EVT_LEFT_DCLICK, self.onDoubleClick)
 
-	ALLOWED_CODES = {
-		9, 58,
-		wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_CLEAR, wx.WXK_SHIFT, wx.WXK_ESCAPE, wx.WXK_TAB, 	
-		wx.WXK_CANCEL, wx.WXK_SHIFT,
-		wx.WXK_RETURN, wx.WXK_HOME, wx.WXK_END, wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_SHIFT, wx.WXK_SELECT, wx.WXK_INSERT,
-		wx.WXK_NUMPAD_DELETE,
-		wx.WXK_NUMPAD_ENTER, wx.WXK_NUMPAD_HOME, wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT,
-		wx.WXK_NUMPAD_INSERT, wx.WXK_NUMPAD_END, wx.WXK_NUMPAD_BEGIN, wx.WXK_NUMPAD_DELETE,
-		wx.WXK_NUMPAD0, wx.WXK_NUMPAD1, wx.WXK_NUMPAD2, wx.WXK_NUMPAD3, wx.WXK_NUMPAD4,
-		wx.WXK_NUMPAD5, wx.WXK_NUMPAD6, wx.WXK_NUMPAD7, wx.WXK_NUMPAD8, wx.WXK_NUMPAD9,
-	}
+	ALLOWED_CODES = (
+		{										# Allow tab, colon and control codes.
+			9, 58,
+			wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_CLEAR, wx.WXK_SHIFT, wx.WXK_ESCAPE, wx.WXK_TAB, 	
+			wx.WXK_CANCEL, wx.WXK_SHIFT,
+			wx.WXK_RETURN, wx.WXK_HOME, wx.WXK_END, wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_SELECT, wx.WXK_INSERT,
+		} |
+		{										# Allow keypad codes.
+			wx.WXK_NUMPAD_DELETE,
+			wx.WXK_NUMPAD_ENTER, wx.WXK_NUMPAD_HOME, wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT,
+			wx.WXK_NUMPAD_INSERT, wx.WXK_NUMPAD_END, wx.WXK_NUMPAD_BEGIN, wx.WXK_NUMPAD_DELETE,
+			wx.WXK_NUMPAD0, wx.WXK_NUMPAD1, wx.WXK_NUMPAD2, wx.WXK_NUMPAD3, wx.WXK_NUMPAD4,
+			wx.WXK_NUMPAD5, wx.WXK_NUMPAD6, wx.WXK_NUMPAD7, wx.WXK_NUMPAD8, wx.WXK_NUMPAD9,
+		} |
+		{ ord(c) for c in string.digits }		# Allow digit codes.
+	)
+	PRINTABLE = { ord(c) for c in string.printable }
+	DECIMAL_POINT = { wx.WXK_DECIMAL, wx.WXK_NUMPAD_DECIMAL, ord('.') }
 	def onKeypress(self, event):
 		keycode = event.GetKeyCode()
 		obj = event.GetEventObject()
@@ -112,17 +119,14 @@ class HighPrecisionTimeEdit( wx.TextCtrl ):
 		# filter unicode characters
 		if keycode == wx.WXK_NONE:
 			pass 
-		# allow special key codes.
+		# allow digits and other valid key codes.
 		elif keycode in HighPrecisionTimeEdit.ALLOWED_CODES:
 			event.Skip()
-		# allow digits
-		elif chr(keycode) in string.digits:
+		# allow other special, non-printable keycodes.
+		elif keycode not in HighPrecisionTimeEdit.PRINTABLE:
 			event.Skip()
-		# allow other special, non-printable keycodes
-		elif chr(keycode) not in string.printable:
-			event.Skip() # allow all other special keycodes
-		# accept one '.' in the string
-		elif (chr(keycode) == '.' or keycode in (wx.WXK_DECIMAL, wx.WXK_NUMPAD_DECIMAL)) and val and '.' not in val:
+		# accept one decimal point ('.') in the value.
+		elif keycode in HighPrecisionTimeEdit.DECIMAL_POINT and val and '.' not in val:
 			event.Skip()
 		return
 	
@@ -132,7 +136,8 @@ class HighPrecisionTimeEdit( wx.TextCtrl ):
 			success = wx.TheClipboard.GetData(self.text_data)
 			wx.TheClipboard.Close()
 		if success:
-			self.text_data = self.text_data.GetText()
+			# Change non-time characters to ':' with the exception of "'" (seconds), which we can delete.
+			self.text_data = reNonTimeChars.sub( ':', self.text_data.GetText().replace("'", ' ' ).strip() )
 			if self.ValidateTimeFormat(self.text_data):
 				self.SetValue(self.text_data)
 				return
@@ -150,15 +155,7 @@ class HighPrecisionTimeEdit( wx.TextCtrl ):
 	def ValidateTimeFormat(self, time):
 		if not time and self.allow_none:
 			return True
-		
-		for format in ('%H:%M', '%H:%M:%S', '%H:%M:%S.%f'):
-			try:
-				datetime.datetime.strptime(time, format)
-				return True
-			except Exception:
-				pass
-			
-		return False
+		return bool(re.match('^[0-9:.]+$', time))
 
 	def GetSeconds( self ):
 		v = self.GetValue()

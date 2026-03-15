@@ -1273,12 +1273,11 @@ class Race:
 		self.lastOpened = datetime.datetime.now()
 		memoize.clear()
 	
-	def getFileName( self, raceNum=None, includeMemo=True ):
+	def getFileName( self, raceNum=None ):
 		return Utils.GetFileName(
 			self.date,
 			self.name,
 			self.raceNum if raceNum is None else raceNum,
-			self.memo if includeMemo else ''
 		)
 	
 	@property

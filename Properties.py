@@ -1544,13 +1544,15 @@ class Properties( wx.Panel ):
 		except ValueError:
 			return ''
 	
-		fname = Utils.GetFileName(
-			gi.date.GetValue().Format(Properties.dateFormat),
-			gi.raceName.GetValue(),
-			gi.raceNum.GetValue(),
-			gi.memo.GetValue(),
-		)
-		fi.fileName.SetLabel( fname )
+		try:
+			fname = Utils.GetFileName(
+				gi.date.GetValue().Format(Properties.dateFormat),	# For some reason, this can fail when wxPython thinks gi.date has been deleted.
+				gi.raceName.GetValue(),
+				gi.raceNum.GetValue(),
+			)
+			fi.fileName.SetLabel( fname )
+		except RuntimeError:
+			fname = ''
 		return fname
 	
 	def saveFileNameFields( self ):
@@ -1558,7 +1560,7 @@ class Properties( wx.Panel ):
 			gi = self.generalInfoProperties
 		except AttributeError:
 			return ''		
-		for f in ('date', 'raceName', 'raceNum', 'memo'):
+		for f in ('date', 'raceName', 'raceNum'):
 			setattr(self, f + 'Original', getattr(gi, f).GetValue())
 		
 	def restoreFileNameFields( self ):
@@ -1566,7 +1568,7 @@ class Properties( wx.Panel ):
 			gi = self.generalInfoProperties
 		except AttributeError:
 			return ''
-		for f in ('date', 'raceName', 'raceNum', 'memo'):
+		for f in ('date', 'raceName', 'raceNum'):
 			getattr(gi, f).SetValue( getattr(self, f + 'Original') )
 	
 	def getFileName( self ):
