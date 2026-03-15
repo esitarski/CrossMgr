@@ -8,6 +8,7 @@ from roundbutton import RoundButton
 import wx
 import wx.adv
 import wx.lib.filebrowsebutton as filebrowse
+from wx.lib.intctrl import IntCtrl
 
 import Utils
 from ReorderableGrid import ReorderableGrid
@@ -139,16 +140,24 @@ class MainWin( wx.Frame ):
 				_("Seeding: Highest ranked LAST (Time Trials)"),
 			],
 		)
+		
+		self.rankTopCountLabel = wx.StaticText(self, label=_('Rank Count'))
+		self.rankTopCount = wx.lib.intctrl.IntCtrl( self, value=None, min=0, max=1024, allow_none=True, limited=True )
+		
 		self.cycleLabel = wx.StaticText(self, label=_('Cycle Criteria'))
 		self.cycle = wx.Choice( self, choices=(_('None'), _('Last 2'), _('Last 3'), _('Last 4')) )
 		self.cycle.SetSelection( 0 )
 		self.cycle.Bind( wx.EVT_CHOICE, lambda w: self.doUpdate() )
-		cycleSizer = wx.BoxSizer( wx.HORIZONTAL )
-		cycleSizer.Add( self.cycleLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
-		cycleSizer.Add( self.cycle, flag=wx.LEFT, border=2 )
+		
+		horizontalOptionSizer = wx.BoxSizer( wx.HORIZONTAL )
+		horizontalOptionSizer.Add( self.rankTopCountLabel, flag=wx.ALIGN_CENTRE_VERTICAL )
+		horizontalOptionSizer.Add( self.rankTopCount, flag=wx.LEFT, border=2 )
+
+		horizontalOptionSizer.Add( self.cycleLabel, flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=8 )
+		horizontalOptionSizer.Add( self.cycle, flag=wx.LEFT, border=2 )
 		
 		verticalControlSizer.Add( self.callupSeedingRB, flag=wx.EXPAND|wx.ALL, border=4 )
-		verticalControlSizer.Add( cycleSizer, flag=wx.EXPAND|wx.ALL, border=4 )
+		verticalControlSizer.Add( horizontalOptionSizer, flag=wx.EXPAND|wx.ALL, border=4 )
 		verticalControlSizer.Add( wx.StaticText(self, label=_('Riders with no criteria will be sequenced randomly.')), flag=wx.ALL, border=4 )
 		
 		horizontalControlSizer.Add( verticalControlSizer, flag=wx.EXPAND )
@@ -445,6 +454,9 @@ class MainWin( wx.Frame ):
 			return None
 		return selection + 1 if selection >= 1 else None
 	
+	def getRankTopCount( self ):
+		return self.rankTopCount.GetValue()
+	
 	def doUpdate( self, event=None, fnameNew=None ):
 		try:
 			self.fname = fnameNew or (event and event.GetString()) or self.fileBrowse.GetValue()
@@ -479,9 +491,10 @@ class MainWin( wx.Frame ):
 					soundalike = self.getIsSoundalike(),
 					useUciId = self.getUseUciId(),
 					useLicense = self.getUseLicense(),
+					rankTopCount = self.getRankTopCount(),
+					cycleLast = self.getCycleLast(),
 					callbackfunc = self.updateSourceList,
 					callbackupdate = self.callbackUpdate,
-					cycleLast = self.getCycleLast(),
 				)
 			except Exception as e:
 				traceback.print_exc()

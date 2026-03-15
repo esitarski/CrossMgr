@@ -6,7 +6,7 @@ from Excel import GetExcelReader
 
 RegistrationSheet = 'Registration'
 
-def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callbackfunc=None, callbackupdate=None, cycleLast=None ):
+def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, rankTopCount=None, cycleLast=None, callbackfunc=None, callbackupdate=None ):
 
 	if callbackupdate:
 		callbackupdate( _('Reading spreadsheet...') )
@@ -112,9 +112,9 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, callback
 		callup_order_cycle.extend( noCriteria )
 		callup_order = callup_order_cycle
 
-	# Randomize riders with no criteria.
+	# Randomize riders with no criteria, or riders after rankTopCount.
 	for i_random, reg in enumerate(callup_order):
-		if all( r.get_status() == r.NoMatch for r in reg.result_vector[:-1] ):
+		if all( r.get_status() == r.NoMatch for r in reg.result_vector[:-1] ) or (rankTopCount and i_random==rankTopCount):
 			cu2 = callup_order[i_random:]
 			random.seed()
 			random.shuffle(cu2)
