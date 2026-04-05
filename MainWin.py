@@ -2985,51 +2985,52 @@ class MainWin( wx.Frame ):
 				self.writeRace()					# Write the race to save any processed tags.
 				return
 			
-			ret = dlg.ShowModal()
+			if dlg.ShowModal() != wx.ID_OK:
+				Model.race = raceSave
+				return
+			
 			fileName = dlg.GetPath()
 			Utils.writeLog( f'New CrossMgr file: "{fileName}"' )
 			categoriesFile = dlg.GetCategoriesFile()
 			properties = dlg.properties
+			# properties will only be valid as long as the dlg has not been destroyed.
+			# So, keep all the usage in the with block.
 
-		# Check if user cancelled.
-		if ret != wx.ID_OK:
-			Model.race = raceSave
-			return
-		
-		race = Model.race
-		geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
+			race = Model.race
+			geoTrack, geoTrackFName = getattr(race, 'geoTrack', None), getattr(race, 'geoTrackFName', None)
 
-		if os.path.isfile(fileName):
-			if not Utils.MessageOKCancel( self,
-				'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
-				_('File Exists') ):
+			if os.path.isfile(fileName):
+				if not Utils.MessageOKCancel( self,
+					'{}\n\n    "{}"'.format(_("File already exists.  Overwrite?"), fileName),
+					_('File Exists') ):
+					Model.race = raceSave
+					return
+
+			# Try to open the new CrossMgr file.
+			try:
+				with open(fileName, 'wb'):
+					pass
+			except IOError:
+				Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
 				Model.race = raceSave
 				return
 
-		# Try to open the new CrossMgr file.
-		try:
-			with open(fileName, 'wb'):
-				pass
-		except IOError:
-			Utils.MessageOK(self, '{}\n\n    "{}".'.format(_('Cannot Open File'), fileName), _('Cannot Open File'), iconMask=wx.ICON_ERROR )
-			Model.race = raceSave
-			return
-
-		if HasDefaultTemplate() and Utils.MessageYesNo(self, _("Apply Default Template?"), _("Apply Default Template?")):
-			ApplyDefaultTemplate( race )
+			if HasDefaultTemplate() and Utils.MessageYesNo(self, _("Apply Default Template?"), _("Apply Default Template?")):
+				ApplyDefaultTemplate( race )
+			
+			# Get the start times from the spreadsheet.
+			AutoImportTTStartTimes()
+			
+			# Set the new race with the updated properties.
+			self.fileName = fileName
+			WebServer.SetFileName( self.fileName )
+			Model.resetCache()
+			Model.race.resetAllCaches()
+			ResetExcelLinkCache()
+			
+			properties.commit()		# Apply the new properties to the race before closing the dialog.
 		
-		# Get the start times from the spreadsheet.
-		AutoImportTTStartTimes()
-		
-		# Set the new race with the updated properties.
-		self.fileName = fileName
-		WebServer.SetFileName( self.fileName )
-		Model.resetCache()
-		Model.race.resetAllCaches()
-		ResetExcelLinkCache()
-		
-		properties.commit()			# Apply the new properties
-		ftpPublish.commit()			# Apply the ftp properties
+		ftpPublish.commit()			# Apply the ftp properties to the race.
 		ftpPublish.Destroy()
 		
 		ChipReader.chipReaderCur.reset( race.chipReaderType )
