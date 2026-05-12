@@ -32,9 +32,11 @@ class ValueContext( object ):
 	def __gt__(self, vc):
 		return self.value >  vc.value
 	
+	def __neg__( self ):
+		return ValueContext( -self.value, self.context )
+		
 	def __repr__( self ):
-		return 'ValueContext({}, {})'.format( self.value, self.context )
-		#return u'{}'.format(self.value)
+		return f'ValueContext({self.value}, {self.context})'
 
 if __name__ == '__main__':
 	v = ValueContext(10, 100)
