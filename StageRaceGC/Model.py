@@ -721,7 +721,7 @@ class Model:
 		for tgc_el in tgc:
 			for p in tgc_el:
 				if isinstance(p, VC) and p.value < 0:
-					p.value = -p.value
+					p.value *= -1
 		
 		self.team_gc = tgc
 		self.unranked_teams = sorted( team for team in self.all_teams if team not in teams )

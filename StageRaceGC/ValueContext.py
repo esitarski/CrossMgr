@@ -11,6 +11,14 @@ class ValueContext( object ):
 		self.context.extend( vc.context )
 		return self
 		
+	def __imul__( self, vc ):
+		if isinstance(vc, ValueContext):
+			self.value *= vc.value
+			self.context.extend( vc.context )
+		else:
+			self.value *= vc
+		return self
+		
 	def __add__( self, vc ):
 		return ValueContext( self.value + vc.value, self.context + vc.context )
 		
