@@ -711,10 +711,17 @@ class Model:
 			if team not in best_rider_gc:
 				best_rider_gc[team] = VC(place, (place, c.bib))
 		
+		# Ensure that 1sts, 2nds and 3rds counts are sorted in decreasing order.
 		tgc = [ [team_top_times[team] + VC(self.team_penalties.team_penalties[team])] +
-					team_place_count[team] + [best_rider_gc[team], team]
+					[-p for p in team_place_count[team]] + [best_rider_gc[team], team]
 			for team in teams ]
 		tgc.sort()
+		
+		# After the sort, fix 1sts, 2nds and 3rds counts to positive for display.
+		for tgc_el in tgc:
+			for p in tgc_el:
+				if isinstance(p, VC) and p.value < 0:
+					p.value *= -1
 		
 		self.team_gc = tgc
 		self.unranked_teams = sorted( team for team in self.all_teams if team not in teams )

@@ -11,6 +11,14 @@ class ValueContext( object ):
 		self.context.extend( vc.context )
 		return self
 		
+	def __imul__( self, vc ):
+		if isinstance(vc, ValueContext):
+			self.value *= vc.value
+			self.context.extend( vc.context )
+		else:
+			self.value *= vc
+		return self
+		
 	def __add__( self, vc ):
 		return ValueContext( self.value + vc.value, self.context + vc.context )
 		
@@ -32,9 +40,11 @@ class ValueContext( object ):
 	def __gt__(self, vc):
 		return self.value >  vc.value
 	
+	def __neg__( self ):
+		return ValueContext( -self.value, self.context )
+		
 	def __repr__( self ):
-		return 'ValueContext({}, {})'.format( self.value, self.context )
-		#return u'{}'.format(self.value)
+		return f'ValueContext({self.value}, {self.context})'
 
 if __name__ == '__main__':
 	v = ValueContext(10, 100)

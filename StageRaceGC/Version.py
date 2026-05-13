@@ -1,1 +1,1 @@
-AppVerName="StageRaceGC 1.0.2-private"
+AppVerName="StageRaceGC 1.0.3-private"
