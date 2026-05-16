@@ -58,7 +58,6 @@ function formatTimeNoLeadingZero( secs ) {
 		t = t.substring( 1 )
 	return t;
 }
-	
 
 function strToMillis( s ) {
 	if( s == null )
@@ -69,6 +68,61 @@ function strToMillis( s ) {
 		parseInt(v[0],10), parseInt(v[1],10)-1, parseInt(v[2],10),
 		parseInt(v[3],10), parseInt(v[4],10), parseInt(v[5],10), parseInt(v[6],10)
 	)).getTime();
+}
+
+const lineHeightFactor = 1.2;
+function fitTextToBoundingBox(ctx, text, boxWidth, boxHeight, options = {}) {
+    const {
+        fontFamily  = 'Arial',
+        fontStyle   = '',
+        lineHeight  = lineHeightFactor,
+        minFontSize = 1,
+        maxFontSize = 500,
+    } = options;
+
+	if( text === "" ) {
+		const fontSize = 16;
+		ctx.font = `${fontStyle} ${fontSize}px ${fontFamily}`.trim();
+		return fontSize;
+	}
+	
+    const lines = text.split('\n');
+
+    function measureAtSize(fontSize) {
+        ctx.font = `${fontStyle} ${fontSize}px ${fontFamily}`.trim();
+        let maxWidth = 0;
+        for (const line of lines) {
+            maxWidth = Math.max(maxWidth, ctx.measureText(line).width);
+        }
+        const totalHeight = lines.length * fontSize * lineHeight;
+        return { maxWidth, totalHeight };
+    }
+
+    // Step 1: measure at a known reference size to get a scale factor
+    const refSize = 16;
+    const { maxWidth: refWidth, totalHeight: refHeight } = measureAtSize(refSize);
+
+    // Step 2: since width & height scale linearly with fontSize,
+    //         calculate the exact size that fills each dimension
+    const sizeByWidth  = refSize * (boxWidth  / refWidth);
+    const sizeByHeight = refSize * (boxHeight / refHeight);
+
+    // Step 3: take whichever constraint is tighter
+    let fontSize = Math.min(sizeByWidth, sizeByHeight);
+    fontSize = Math.min(Math.max(fontSize, minFontSize), maxFontSize);
+
+    // Step 4: nudge up if we have room (rounding may leave a little space)
+    const { maxWidth, totalHeight } = measureAtSize(fontSize);
+    if (maxWidth <= boxWidth && totalHeight <= boxHeight) {
+        while (true) {
+            const { maxWidth: w, totalHeight: h } = measureAtSize(fontSize + 1);
+            if (w > boxWidth || h > boxHeight) break;
+            fontSize += 1;
+        }
+    }
+
+    ctx.font = `${fontStyle} ${fontSize}px ${fontFamily}`.trim();
+    return fontSize;
 }
 
 var MaxLabels = 6;
@@ -84,26 +138,26 @@ function LapCounter( aCanvas ) {
 	this.lapElapsedClock = true;
 	this.tRaceStart = null;
 
-	this.tessellate = function ( numLabels ) {
-		var width = this.canvas.width, height = this.canvas.height;
+	this.tessellate = function ( numLabels=999 ) {
+		const width = this.canvas.width, height = this.canvas.height;
 		if( numLabels == 1 ) {
 			return [[0, 0, width, height]];
 		}
 		else if( numLabels == 2 ) {
-			w = Math.floor(width / 2);
+			const w = Math.floor(width / 2);
 			return [[0, 0, w, height], [w, 0, w, height]];
 		}
 		else if( numLabels <= 4 ) {
-			w = Math.floor(width / 2);
-			h = Math.floor(height / 2);
+			const w = Math.floor(width / 2);
+			const h = Math.floor(height / 2);
 			return [
 				[0, 0, w, h], [w, 0, w, h],
 				[0, h, w, h], [w, h, w, h],
 			];
 		}
 		else {
-			w = Math.floor(width / 3);
-			h = Math.floor(height / 2);
+			const w = Math.floor(width / 3);
+			const h = Math.floor(height / 2);
 			return [
 				[0, 0, w, h], [w, 0, w, h], [2*w, 0, w, h],
 				[0, h, w, h], [w, h, w, h], [2*w, h, w, h],
@@ -112,10 +166,10 @@ function LapCounter( aCanvas ) {
 	}
 	
 	this.getRectangles = function( lcLabel ) {
-		var colsPerRow = [0];
-		var lcs = [];
-		for( var i = 0; i < lcLabel.length; ++i ) {
-			var c = lcLabel.charAt(i);
+		let colsPerRow = [0];
+		let lcs = [];
+		for( let i = 0; i < lcLabel.length; ++i ) {
+			let c = lcLabel.charAt(i);
 			if( '1' <= c && c <= '9' )
 				c = String.fromCharCode( c.charCodeAt(0) - '1'.charCodeAt(0) + 'A'.charCodeAt(0) );
 			if( c == '-' )
@@ -126,16 +180,16 @@ function LapCounter( aCanvas ) {
 			}
 		}
 		
-		var lcPositions = new Array( MaxLabels );
+		let lcPositions = new Array( MaxLabels );
 		if( colsPerRow.length == 1 && colsPerRow[0] == 0 )
 			return lcPositions;
 		
-		var width = this.canvas.width, height = this.canvas.height;
-		var h = height / colsPerRow.length;
-		var iLC = 0;
-		for( var row = 0; row < colsPerRow.length; ++row ) {
-			var w = width / colsPerRow[row];
-			for( var col = 0; col < colsPerRow[row]; ++col )
+		const width = this.canvas.width, height = this.canvas.height;
+		const h = height / colsPerRow.length;
+		let iLC = 0;
+		for( let row = 0; row < colsPerRow.length; ++row ) {
+			const w = width / colsPerRow[row];
+			for( let col = 0; col < colsPerRow[row]; ++col )
 				lcPositions[lcs[iLC++]] = [Math.floor(col*w), Math.floor(row*h), Math.floor(w), Math.floor(h)];
 		}
 		return lcPositions;
@@ -153,13 +207,13 @@ function LapCounter( aCanvas ) {
 	}
 	
 	this.needsTimer = function() {
-		for( var i = 0; i < this.labels.length; ++i ) {
+		for( let i = 0; i < this.labels.length; ++i ) {
 			if( this.labels[i][1] ) {
 				return true;
 			}
 		}
 		if( this.lapElapsedClock ) {
-			for( var i = 0; i < this.labels.length; ++i ) {
+			for( let i = 0; i < this.labels.length; ++i ) {
 				if( this.labels[i][2] != null ) {
 					return true;
 				}
@@ -193,113 +247,146 @@ function LapCounter( aCanvas ) {
 		this.foregrounds = msg.foregrounds;
 		this.backgrounds = msg.backgrounds;
 		this.lapElapsedClock = msg.lapElapsedClock;
+		this.isTimeTrial = msg.isTimeTrial;
+		this.ttSpotText = msg.ttSpotText;
 		this.setLabels( msg.labels );
 	}
 	
 	this.draw = function() {
-		var dc = this.canvas.getContext('2d');
-		var width = this.canvas.width, height = this.canvas.height;
-		
-		// Get the labels to draw from the url path.
-		var lcLabel = GetLCLabel();
-
-		// Check if we are drawing anything.
-		var drawSomething = (this.labels.length > 0);
-		if( lcLabel ) {
-			drawSomething = false;
-			for( var i = 0; !drawSomething && i < this.labels.length; ++i )
-				drawSomething = (lcLabel.indexOf(String.fromCharCode('A'.charCodeAt(0) + i)) >= 0);
-		}
-		if( !drawSomething ) {
-			dc.fillStyle = '#D3D3D3';
-			dc.fillRect( 0, 0, width, height );
-			return;
-		}
+		let dc = this.canvas.getContext('2d');
+		let width = this.canvas.width, height = this.canvas.height;
 		
 		dc.fillStyle = '#000000';
 		dc.fillRect( 0, 0, width, height );
 		
 		function getFontSizeToFit( dc, text, w, h ) {
-			w = Math.floor( w * 0.95 );
-			h = Math.floor( h * 0.95 );
-			var fontSize = h * 1.15;
-			dc.font = 'bold ' + fontSize + "px Arial";
-			var wText = dc.measureText( text ).width;
-			if( wText > w ) {
-				fontSize *= w / wText;
-				dc.font = 'bold ' + fontSize + "px Arial";
-			}
-			return fontSize;
+			return fitTextToBoundingBox( dc, text, w, h, {'style':'bold'} );
 		}
 		
 		function drawText( dc, label, colour, x, y, w, h ) {
-			var fontSize = getFontSizeToFit( dc, label, w, h );
-			var xText = x + w/2, yText = y + h / 2;
-			dc.textAlign = 'center';
-			dc.textBaseline = 'middle';
+			const fontSize = getFontSizeToFit( dc, label, w, h );
+			const lineHeight = fontSize * lineHeightFactor;
+			const lines = label.split( '\n' );
+			let yText = y + (h - lineHeight * lines.length) / 2;
+			dc.textAlign = 'left';
+			dc.textBaseline = 'top';
 			dc.fillStyle = colour;
-			dc.fillText( label, xText, yText );
+			for( const line of lines ) {
+				const xText = x + (w - dc.measureText(line).width) / 2;
+				dc.fillText( line, xText, yText );
+				yText += lineHeight;
+			}
 		}
 		
 		function drawLapText( dc, label, colour, x, y, w, h ) {
-			var fontSize = getFontSizeToFit( dc, label, w, h );
-			var xText = x + w/2, yText = y + h / 2;
-			dc.textAlign = 'center';
-			dc.textBaseline = 'middle';
-			if( colour != '#000000' ) {
-				dc.fillStyle = '#000000';
-				var shadowOffset = fontSize/52;
-				dc.fillText( label, xText + shadowOffset, yText + shadowOffset );
+			const fontSize = getFontSizeToFit( dc, label, w, h );
+			const lineHeight = fontSize * lineHeightFactor;
+			const lines = label.split( '\n' );
+			let yText = y + (h - lineHeight * lines.length) / 2;
+			dc.textAlign = 'left';
+			dc.textBaseline = 'top';
+			for( const line of lines ) {
+				const xText = x + (w - dc.measureText(line).width) / 2;
+				if( colour != '#000000' ) {
+					dc.fillStyle = '#000000';
+					const shadowOffset = fontSize/52;
+					dc.fillText( line, xText + shadowOffset, yText + shadowOffset );
+				}
+				dc.fillStyle = colour;
+				dc.fillText( line, xText, yText );
+				yText += lineHeight;
 			}
-			dc.fillStyle = colour;
-			dc.fillText( label, xText, yText );
 		}
 		
-		// Get the position of each label on the screen.
-		var rects = (lcLabel ? this.getRectangles(lcLabel) : this.tessellate(this.labels.length));
+		const footerMult = 0.18;
+		const lineBorderWidth = 4;
+
+		if( this.isTimeTrial ) {
+			// Draw the TT text.
+			const rects = this.tessellate(this.ttSpotText.length);
+			
+			const background = this.backgrounds[0];
+			const foreground = this.foregrounds[0];
+			
+			for( let i = 0; i < this.ttSpotText.length; ++i ) {
+				const rect = rects[i];
+				if( rect == undefined )
+					continue;
+				const [x, y, w, h] = rect;
+				
+				dc.fillStyle = background;
+				dc.fillRect( x, y, w, h );
+				dc.lineWidth = lineBorderWidth;
+				dc.strokeStyle = '#000000';
+				dc.strokeRect( x, y, w, h );
+
+				const shrink = 0.9;	// Add more whitespace around the text.
+				const wText = w * shrink, hText = h * shrink;
+				const xText = x + (w-wText)/2, yText = y + (h-hText)/2;
+				drawLapText( dc, this.ttSpotText[i], foreground, xText, yText, wText, hText );
+			}
+		}
+		else {
+			// Draw the lap counter data.
+			// Get the labels to draw from the url path.
+			const lcLabel = GetLCLabel();
+
+			// Check if we are drawing anything.
+			let drawSomething = (this.labels.length > 0);
+			if( lcLabel ) {
+				drawSomething = false;
+				for( let i = 0; !drawSomething && i < this.labels.length; ++i )
+					drawSomething = (lcLabel.indexOf(String.fromCharCode('A'.charCodeAt(0) + i)) >= 0);
+			}
+			if( !drawSomething ) {
+				dc.fillStyle = '#D3D3D3';
+				dc.fillRect( 0, 0, width, height );
+				return;
+			}
 		
-		var footerMult = 0.18;
-		var lineBorderWidth = 4;
-		for(var i = 0; i < this.labels.length; ++i ) {
-			var rect = rects[i];
-			if( rect == undefined )
-				continue;
-			var hCC, yCC;
-			var entry = this.labels[i];
-			var label = entry[0] + '', flash = entry[1], tLapStart = entry[2];
-			var x = rect[0], y = rect[1], w = rect[2], h = rect[3];
+			const rects = (lcLabel ? this.getRectangles(lcLabel) : this.tessellate(this.labels.length));
 			
-			dc.fillStyle = this.backgrounds[i];
-			dc.fillRect( x, y, w, h );
-			dc.lineWidth = lineBorderWidth;
-			dc.strokeStyle = '#000000';
-			dc.strokeRect( x, y, w, h );
-			
-			if( this.labels.length > 1 ) {
-				hCC = h * footerMult;
-				yCC = y + h - hCC;
-				drawText( dc, String.fromCharCode('A'.charCodeAt(0) + i), this.foregrounds[i], x, yCC, hCC, hCC );
-			}
-			
-			if( label == '1' ) {
-				// Draw a bell in the last lap.
-				hCC = h * footerMult;
-				yCC = y + h - hCC;
-				drawText( dc, '\uD83D\uDD14', this.foregrounds[i], x + w - hCC, yCC, hCC, hCC );
-			}
-			
-			if( this.lapElapsedClock ) {
-				hCC = h * footerMult;
-				yCC = y + h - hCC;
-				h -= hCC;
-				if( tLapStart != null && this.tRaceStart ) {
-					var tLap = this.tRaceStart + tLapStart*1000.0;
-					var secs = ((new Date).getTime() - tLap)/1000.0;
-					drawText( dc, formatTimeNoLeadingZero(secs), this.foregrounds[i], x, yCC, w, hCC );
+			for( let i = 0; i < this.labels.length; ++i ) {
+				const rect = rects[i];
+				if( rect == undefined )
+					continue;
+				let [x, y, w, h] = rect;
+				const [label, flash, tLapStart] = this.labels[i];
+				
+				let hCC, yCC;
+
+				dc.fillStyle = this.backgrounds[i];
+				dc.fillRect( x, y, w, h );
+				dc.lineWidth = lineBorderWidth;
+				dc.strokeStyle = '#000000';
+				dc.strokeRect( x, y, w, h );
+				
+				if( this.labels.length > 1 ) {
+					hCC = h * footerMult;
+					yCC = y + h - hCC;
+					drawText( dc, String.fromCharCode('A'.charCodeAt(0) + i), this.foregrounds[i], x, yCC, hCC, hCC );
 				}
+				
+				if( label == '1' ) {
+					// Draw a bell in the last lap.
+					hCC = h * footerMult;
+					yCC = y + h - hCC;
+					drawText( dc, '\uD83D\uDD14', this.foregrounds[i], x + w - hCC, yCC, hCC, hCC );
+				}
+				
+				if( this.lapElapsedClock ) {
+					hCC = h * footerMult;
+					yCC = y + h - hCC;
+					h -= hCC;
+					if( tLapStart != null && this.tRaceStart ) {
+						var tLap = this.tRaceStart + tLapStart*1000.0;
+						var secs = ((new Date).getTime() - tLap)/1000.0;
+						drawText( dc, formatTimeNoLeadingZero(secs), this.foregrounds[i], x, yCC, w, hCC );
+					}
+				}
+				if( !flash || this.flashOn )
+					drawLapText( dc, label, this.foregrounds[i], x, y, w, h );
 			}
-			if( !flash || this.flashOn )
-				drawLapText( dc, label, this.foregrounds[i], x, y, w, h );
 		}
 	}
 	this.setLabels( this.labels );
@@ -329,7 +416,7 @@ function ResetWebSocket() {
 		websocket = new window.WebSocket( wsurl );
 
 		websocket.onmessage = function( evt ) {
-			var msg = JSON.parse( evt.data );
+			const msg = JSON.parse( evt.data );
 			if( msg.cmd == 'refresh' ) {
 				lapCounter.onRefresh( msg );
 			}
@@ -353,8 +440,8 @@ function CloseWebSocket() {
 }
 
 function SetLabelsToDraw() {
-	var lcLabel = GetLCLabel();
-	var lcLabelNew = prompt("Enter the Lap Counters to Display (eg. A, B, AB, CD, ABC-DE):", lcLabel);
+	let lcLabel = GetLCLabel();
+	let lcLabelNew = prompt("Enter the Lap Counters to Display (eg. A, B, AB, CD, ABC-DE):", lcLabel);
 	if( lcLabelNew == null || lcLabelNew == lcLabel )
 		return;
 	
@@ -367,7 +454,6 @@ function onLoad() {
 	window.addEventListener('resize', lapCounter.onResize.bind(lapCounter), false);
 	lapCounter.onResize();
 	ResetWebSocket();
-	
 	document.body.addEventListener('click', SetLabelsToDraw, true );
 }
 </script>

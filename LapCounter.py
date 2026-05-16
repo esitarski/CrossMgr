@@ -1,12 +1,56 @@
+import sys
+import math
+import datetime
+import operator
+from bisect import bisect_left
+
 import wx
 import wx.lib.colourselect as  csel
 import wx.lib.intctrl as intctrl
-import math
-import datetime
+
 import Model
 import Utils
 
 from SetLaps import SetLaps
+from GetResults import GetResultsWithData
+
+import heapq
+
+class TopNTracker:
+	"""Tracks the top N largest elements seen so far using a min-heap."""
+
+	def __init__(self, n: int):
+		if n <= 0:
+			raise ValueError("n must be a positive integer")
+		self.n = n
+		self._heap = []  # min-heap: heap[0] is always the smallest of the top-N
+
+	def add(self, value) -> None:
+		"""Add a new element. O(log N) time."""
+		if len(self._heap) < self.n:
+			heapq.heappush(self._heap, value)
+		elif value > self._heap[0]:
+			heapq.heapreplace(self._heap, value)  # pop min, push new in one step
+
+	def top(self) -> list:
+		"""Return the top N elements in descending order. O(N log N)."""
+		return sorted(self._heap, reverse=True)
+
+	def topUnsorted( self ) -> list:
+		"""Return a copy of the top elements unsorted."""
+		return self._heap[:]
+
+	def peek_min(self):
+		"""Return the smallest element among the top N (the threshold). O(1)."""
+		if not self._heap:
+			raise IndexError("tracker is empty")
+		return self._heap[0]
+
+	def __len__(self) -> int:
+		return len(self._heap)
+
+	def __repr__(self) -> str:
+		return f"TopNTracker(n={self.n}, top={self.top()})"
 
 defaultBackgroundColours = [
 	wx.Colour(16,16,16), wx.Colour(34,139,34), wx.Colour(235,155,0),
@@ -128,7 +172,58 @@ def LapCounterOptions( *args, **kwargs ):
 	
 def LapCounterProperties( *args, **kwargs ):
 	return getLapCounterOptions(False)( *args, **kwargs )
-	
+
+#-----------------------------------------------------------------------
+
+textHeightFactor = 1
+
+def getFontSizeToFit( dc, text, w, h ):
+	w, h = max( 1, int(w * 0.9) ), max( 1, int(h * 0.9) )
+	fontSize = h
+	lines = text.split( '\n' )
+	while True:
+		dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
+		extents = [dc.GetTextExtent(line) for line in lines]
+		wText = max( wText for wText, hText in extents )
+		hText = round( extents[0][1] * len(lines) * textHeightFactor )
+		if fontSize == 1:
+			break
+		elif wText > w:
+			fontSize = max( 1, int(fontSize * w / wText) )
+		elif hText > h:
+			fontSize = max( 1, int(fontSize * h / hText) )
+		else:
+			break
+	return fontSize
+
+def drawText( dc, label, colour, x, y, w, h ):
+	lines = label.split( '\n' )
+	lineHeight = dc.GetTextExtent( lines[0] )[1] * textHeightFactor
+	yCur = y + (h - lineHeight*len(lines)) // 2
+	for line in lines:
+		lineWidth, lineHeight = dc.GetTextExtent( line )
+		xText, yText = x + (w - lineWidth) // 2, round(yCur)
+		dc.SetTextForeground( colour )
+		dc.DrawText( line, xText, yText )
+		y += lineHeight
+
+def drawLapText( dc, label, colour, x, y, w, h ):
+	lines = label.split( '\n' )
+	lineHeight = round( dc.GetTextExtent( lines[0] )[1] * textHeightFactor )
+	yCur = y + (h - lineHeight*len(lines)) // 2
+	for line in lines:
+		lineWidth, lineHeight = dc.GetTextExtent( line )
+		xText, yText = x + (w - lineWidth) // 2, round(yCur)
+		if colour.GetAsString(wx.C2S_HTML_SYNTAX) != '#000000':
+			dc.SetTextForeground( wx.BLACK )
+			shadowOffset = lineHeight//52
+			dc.DrawText( line, xText + shadowOffset, yText + shadowOffset )
+		dc.SetTextForeground( colour )
+		dc.DrawText( line, xText, yText )
+		yCur += lineHeight
+
+#-----------------------------------------------------------------------
+
 class LapCounter( wx.Panel ):
 	millis = 333
 	lapCounterCycle = None
@@ -157,6 +252,8 @@ class LapCounter( wx.Panel ):
 		self.foregrounds = [wx.WHITE] * len(defaultBackgroundColours)
 		self.backgrounds = list(defaultBackgroundColours)
 		
+		self.ttSpots = []	# Used to manage the spots in the TT lap counter.
+		
 		self.xClick = 0
 		self.yClick = 0
 
@@ -164,9 +261,12 @@ class LapCounter( wx.Panel ):
 		lenLabels = len(self.labels)
 		fg, bg = getForegroundsBackgrounds()
 		race = Model.race
+		isTimeTrial = (race and race.isTimeTrial)
 		return {
 			'cmd': 'refresh',
-			'labels': self.labels,
+			'isTimeTrial': (race and race.isTimeTrial),
+			'labels': self.labels if not isTimeTrial else [],
+			'ttSpotText': self.getTTSpotText() if isTimeTrial else [],
 			'foregrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in fg[:lenLabels]],
 			'backgrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in bg[:lenLabels]],
 			'raceStartTime': race.startTime.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] if race and race.startTime else None,
@@ -327,7 +427,8 @@ class LapCounter( wx.Panel ):
 	
 	MaxLabels = 6
 	
-	def tessellate( self, numLabels ):
+	def tessellate( self, numLabels=999 ):
+		# Defaults to returning the maximum number of tesselations.
 		width, height = self.GetSize()
 		if numLabels == 1:
 			return ((0, 0, width, height),)
@@ -348,13 +449,8 @@ class LapCounter( wx.Panel ):
 				(0, 0, w, h), (w, 0, w, h), (2*w, 0, w, h),
 				(0, h, w, h), (w, h, w, h), (2*w, h, w, h),
 			)
-			
-	def OnPaint( self, event ):
-		dc = wx.AutoBufferedPaintDC( self )
-		dc.SetBackground( wx.Brush(self.GetBackgroundColour(), wx.SOLID) )
-		dc.SetTextForeground( self.GetForegroundColour() )
-		dc.Clear()
-		
+	
+	def paintMassStart( self, dc ):
 		width, height = self.GetSize()
 		border = 0
 
@@ -386,35 +482,9 @@ class LapCounter( wx.Panel ):
 				lapCur %= self.lapCounterCycle
 				if lapCur == 0:
 					lapCur = self.lapCounterCycle
-			return '{}'.format(lapCur)
+			return f'{lapCur}'
 		
 		dc.SetPen( wx.TRANSPARENT_PEN )
-		
-		def getFontSizeToFit( text, w, h ):
-			w, h = max( 1, int(w * 0.9) ), max( 1, int(h * 0.9) )
-			fontSize = h
-			dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
-			wText, hText = dc.GetTextExtent( text )
-			if wText > w:
-				fontSize = max( 1, int(fontSize * w / wText) )
-				dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
-			return fontSize
-
-		def drawText( label, colour, x, y, w, h ):
-			labelWidth, labelHeight = dc.GetTextExtent( label )
-			xText, yText = x + (w - labelWidth) // 2, y + (h - labelHeight) // 2
-			dc.SetTextForeground( colour )
-			dc.DrawText( label, xText, yText )			
-		
-		def drawLapText( label, colour, x, y, w, h ):
-			labelWidth, labelHeight = dc.GetTextExtent( label )
-			xText, yText = x + (w - labelWidth) // 2, y + (h - labelHeight) // 2
-			if colour.GetAsString(wx.C2S_HTML_SYNTAX) != '#000000':
-				dc.SetTextForeground( wx.BLACK )
-				shadowOffset = labelHeight//52
-				dc.DrawText( label, xText + shadowOffset, yText + shadowOffset )
-			dc.SetTextForeground( colour )
-			dc.DrawText( label, xText, yText )
 		
 		race = Model.race
 		tRace = race.curRaceTime() if self.lapElapsedClock and race and race.isRunning() else None
@@ -436,15 +506,15 @@ class LapCounter( wx.Panel ):
 				text = chr( ord('A') + i )
 				hCC = int( h * footerMult )
 				yCC = y + h - hCC
-				getFontSizeToFit( text, hCC, hCC )
-				drawText( text, self.foregrounds[i], x, yCC, hCC, hCC )
+				getFontSizeToFit( dc, text, hCC, hCC )
+				drawText( dc, text, self.foregrounds[i], x, yCC, hCC, hCC )
 
 			if label == '1':
 				text = '\U0001F514'
 				hCC = int( h * footerMult )
 				yCC = y + h - hCC
-				getFontSizeToFit( text, hCC, hCC )
-				drawText( text, self.foregrounds[i], x + w - hCC, yCC, hCC, hCC )
+				getFontSizeToFit( dc, text, hCC, hCC )
+				drawText( dc, text, self.foregrounds[i], x + w - hCC, yCC, hCC, hCC )
 
 			if self.lapElapsedClock:
 				hCC = int( h * footerMult )
@@ -453,13 +523,150 @@ class LapCounter( wx.Panel ):
 				if tLapStart is not None and tRace:
 					secs = tRace - tLapStart
 					tElapsed = Utils.formatTime( secs )
-					getFontSizeToFit( tElapsed, w, hCC )
-					drawText( tElapsed, self.foregrounds[i], x, yCC, w, hCC )
+					getFontSizeToFit( dc, tElapsed, w, hCC )
+					drawText( dc, tElapsed, self.foregrounds[i], x, yCC, w, hCC )
 			
 			if not flash or self.flashOn:
 				label = getCycleLap(label)
-				getFontSizeToFit( label, w, h )
-				drawLapText( label, self.foregrounds[i], x, y, w, h )
+				getFontSizeToFit( dc, label, w, h )
+				drawLapText( dc, label, self.foregrounds[i], x, y, w, h )
+	
+	#-------------------------------------------------------------------
+	def getTTSpotText( self ):
+		rects = self.tessellate()
+
+		race = Model.race
+		if not race or not race.isRunning() or not race.isTimeTrial:
+			return [''] * len(rects)
+		
+		if len(self.ttSpots) < len(rects):
+			self.ttSpots = [None] * (len(rects) - len(self.ttSpots))
+
+		tRace = race.curRaceTime()
+		
+		rects = self.tessellate()
+		if len(self.ttSpots) < len(rects):
+			self.ttSpots = [None] * (len(rects) - len(self.ttSpots))
+
+		# Find the closest interpreted times to tRace.
+		Finisher = Model.Rider.Finisher
+		resultsAll = []
+		topN = TopNTracker( len(rects) )
+		for category in race.getCategories( startWaveOnly=True ):
+			numLaps = category.getNumLaps()
+			if numLaps <= 1:
+				continue	# Can't show a lap counter on a 1-lap race.
+			
+			for rr in GetResultsWithData( category ):
+				# If not a Finisher, or if the last lap is recorded then this rider is done.
+				# In either case we can skip the rider as no lap counter is necessary.
+				if rr.status != Finisher or not rr.interp or not rr.interp[-1]:
+					continue
+				
+				# Find the closest interpolated raceTime before or after the current race time.
+				rider = race.riders[rr.num]
+				startTime = rider.firstTime
+				
+				# Since raceTimes are in elapsed time, so we have to adjust for the startTime in the search.
+				iClosest = max(0, bisect_left(rr.raceTimes, tRace - startTime) )
+				dtBest = (-sys.float_info.max, None)
+				for lap in range(max(1, iClosest-1), min(len(rr.interp), iClosest+1)):
+					if rr.interp[lap]:
+						t = rr.raceTimes[lap] + startTime
+						dt = -abs(t - tRace)
+						if dt > dtBest[0]:	# As the values are negative, do the opposite comparison.
+							dtBest = (dt, t, startTime, rr.num, numLaps - lap, rr)
+						
+				# Add the closest time for this rider to the overall closest laps.
+				if dtBest[-1] is not None:
+					topN.add( dtBest )
+		
+		# Sort by time and startTime.
+		ttEntries = sorted( topN.topUnsorted(), key = operator.itemgetter(1, 2) )
+		if not ttEntries:
+			return [''] * len(rects)
+		
+		# Clean up spots displaying expired data.
+		# self.ttSpots[i] will either be None (empty) or contain the tuple (num, lapsToGo, t).
+		ttNums = { num:(num, lapsToGo, t) for dt, t, startTime, num, lapsToGo, rr in ttEntries }
+		ttSpotNums = set()
+		ttEmptySpots = []
+		for i in range(len(self.ttSpots)):
+			try:
+				num = self.ttSpots[i][0]
+				self.ttSpots[i] = ttNums[num]
+				ttSpotNums.add( num )
+			except (TypeError, KeyError):
+				self.ttSpots[i] = None
+				ttEmptySpots.append( i )
+		
+		# Fill any open spots with the closest data.
+		iEmptySpotCur = 0
+		for num, lapsToGo, t in ttNums.values():
+			if num not in ttSpotNums:
+				self.ttSpots[ttEmptySpots[iEmptySpotCur]] = (num, lapsToGo, t)
+				iEmptySpotCur += 1;
+		
+		# Format each spot as text.
+		flag = '\U0001F3C1'
+		bell = '\U0001F514'
+
+		spotText = []
+		for e in self.ttSpots:
+			if e is None:
+				spotText.append( '' )
+				continue
+				
+			num, lapsToGo, t = e
+			match lapsToGo:
+				case 0:
+					text = f'{num}\n{flag}'
+				case 1:
+					text = f'{num}\n{lapsToGo} {bell}'
+				case _:
+					text = f'{num}\n{lapsToGo}'
+			
+			spotText.append( text );
+		
+		if len(spotText) < len(rects):
+			spotText.extend( [''] * (len(rects) - len(spotText)) )
+			
+		return spotText
+	
+	def paintTT( self, dc ):		
+		spotText = self.getTTSpotText()
+		width, height = self.GetSize()
+		border = 0
+
+		dc.SetPen( wx.TRANSPARENT_PEN )
+		
+		rects = self.tessellate()
+		foreground, background = self.foregrounds[0], self.backgrounds[0]
+		for i, text in enumerate(self.getTTSpotText()):
+			x, y, w, h = rects[i]
+						
+			dc.SetBrush( wx.Brush(background, wx.SOLID) )
+			dc.DrawRectangle( x, y, w, h )
+			
+			lineBorderWidth = 4
+			dc.SetPen( wx.Pen(wx.BLACK, lineBorderWidth) )
+			dc.DrawRectangle( x, y, w, h )
+			
+			if text:
+				getFontSizeToFit( dc, text, w, h )
+				drawLapText( dc, text, foreground, x, y, w, h )
+			
+	def OnPaint( self, event ):
+		dc = wx.AutoBufferedPaintDC( self )
+		dc.SetBackground( wx.Brush(self.GetBackgroundColour(), wx.SOLID) )
+		dc.SetTextForeground( self.GetForegroundColour() )
+		dc.Clear()
+		
+		if Model.race:
+			if not Model.race.isTimeTrial:
+				self.paintMassStart( dc )
+			else:
+				self.paintTT( dc )
 	
 	def commit( self ):
 		pass
