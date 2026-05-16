@@ -722,7 +722,9 @@ def GetLapCounterRefresh():
 	except Exception:
 		return {
 			'cmd': 'refresh',
+			'isTimeTrial': False,
 			'labels': [],
+			'ttSpotText': [],
 			'foregrounds': [],
 			'backgrounds': [],
 			'raceStartTime': None,

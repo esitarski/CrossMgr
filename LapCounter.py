@@ -261,9 +261,12 @@ class LapCounter( wx.Panel ):
 		lenLabels = len(self.labels)
 		fg, bg = getForegroundsBackgrounds()
 		race = Model.race
+		isTimeTrial = (race and race.isTimeTrial)
 		return {
 			'cmd': 'refresh',
-			'labels': self.labels,
+			'isTimeTrial': (race and race.isTimeTrial),
+			'labels': self.labels if not isTimeTrial else [],
+			'ttSpotText': self.getTTSpotText() if isTimeTrial else [],
 			'foregrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in fg[:lenLabels]],
 			'backgrounds': [c.GetAsString(wx.C2S_CSS_SYNTAX) for c in bg[:lenLabels]],
 			'raceStartTime': race.startTime.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] if race and race.startTime else None,
@@ -533,7 +536,7 @@ class LapCounter( wx.Panel ):
 		rects = self.tessellate()
 
 		race = Model.race
-		if not race or not race.isRunning():
+		if not race or not race.isRunning() or not race.isTimeTrial:
 			return [''] * len(rects)
 		
 		if len(self.ttSpots) < len(rects):
