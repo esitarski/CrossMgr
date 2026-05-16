@@ -3392,8 +3392,8 @@ class MainWin( wx.Frame ):
 			for c in categories:
 				c.pop( 'raceMinutes', None )
 				c['lappedRidersMustContinue'] = True
-			categories[0]['numLaps'] = 3
-			categories[1]['numLaps'] = 2
+			categories[0]['numLaps'] = 4
+			categories[1]['numLaps'] = 3
 			race.setCategories( categories )
 			for c in race.getCategories():
 				c.distance = 0.5
@@ -3415,8 +3415,8 @@ class MainWin( wx.Frame ):
 				times.sort()
 				numRaceTimes[num] = [t - times[0] for t in times[1:]]	# Convert race times to zero start.
 			
-			timeBeforeFirstRider = 120.0
-			startGap = 30.0
+			timeBeforeFirstRider = 15.0
+			startGap = 15.0
 			nums = sorted( nums, reverse=True )				
 			numStartTime = {n:timeBeforeFirstRider + i*startGap for i, n in enumerate(nums)}	# Set start times for all competitors.
 			self.lapTimes = []
