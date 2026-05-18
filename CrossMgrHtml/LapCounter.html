@@ -73,7 +73,7 @@ function strToMillis( s ) {
 const lineHeightFactor = 1.2;
 function fitTextToBoundingBox(ctx, text, boxWidth, boxHeight, options = {}) {
     const {
-        fontFamily  = 'Arial',
+        fontFamily  = 'Arlal, sans-serif',
         fontStyle   = '',
         lineHeight  = lineHeightFactor,
         minFontSize = 1,
@@ -260,7 +260,7 @@ function LapCounter( aCanvas ) {
 		dc.fillRect( 0, 0, width, height );
 		
 		function getFontSizeToFit( dc, text, w, h ) {
-			return fitTextToBoundingBox( dc, text, w, h, {'style':'bold'} );
+			return fitTextToBoundingBox( dc, text, w, h, {'fontStyle':'bold'} );
 		}
 		
 		function drawText( dc, label, colour, x, y, w, h ) {

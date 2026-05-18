@@ -224,6 +224,16 @@ def drawLapText( dc, label, colour, x, y, w, h ):
 
 #-----------------------------------------------------------------------
 
+class TTTimer( wx.Timer ):
+	def __init__( self, *args, **kwargs ):
+		self.lapCounter = kwargs.pop( 'lapCounter' )
+		super().__init__( *args, **kwargs )
+		
+	def Notify( self ):
+		mainWin = Utils.getMainWin()
+		if mainWin:
+			wx.CallAfter( mainWin.updateLapCounter )
+
 class LapCounter( wx.Panel ):
 	millis = 333
 	lapCounterCycle = None
@@ -240,6 +250,8 @@ class LapCounter( wx.Panel ):
 		self.timer = wx.Timer( self )
 		self.Bind( wx.EVT_TIMER, self.OnTimer )
 		self.timer.Start( self.millis )
+		
+		self.ttTimer = TTTimer( lapCounter=self)
 		
 		self.flashOn = False
 		self.font = None
@@ -552,6 +564,7 @@ class LapCounter( wx.Panel ):
 		Finisher = Model.Rider.Finisher
 		resultsAll = []
 		topN = TopNTracker( len(rects) )
+		tNextExpected = sys.float_info.max
 		for category in race.getCategories( startWaveOnly=True ):
 			numLaps = category.getNumLaps()
 			if numLaps <= 1:
@@ -573,7 +586,11 @@ class LapCounter( wx.Panel ):
 				for lap in range(max(1, iClosest-1), min(len(rr.interp), iClosest+1)):
 					if rr.interp[lap]:
 						t = rr.raceTimes[lap] + startTime
-						dt = -abs(t - tRace)
+						dt = t - tRace
+						if dt > 0 and t < tNextExpected:
+							tNextExpected = t	# Keep track of the next expected time so we can do a refresh.
+							
+						dt = -abs( dt )
 						if dt > dtBest[0]:	# As the values are negative, do the opposite comparison.
 							dtBest = (dt, t, startTime, rr.num, numLaps - lap, rr)
 						
@@ -631,6 +648,19 @@ class LapCounter( wx.Panel ):
 		if len(spotText) < len(rects):
 			spotText.extend( [''] * (len(rects) - len(spotText)) )
 			
+		# Start a timer to refresh beforeSeconds before the next expected arrival.
+		# This is required to remove stale lap counter info *if* a result
+		# of missed reads.
+		if tNextExpected != sys.float_info.max:
+			beforeSeconds = 10.0
+			tRace = race.curRaceTime()
+			dt = tNextExpected - tRace
+			if dt > 0.0:
+				if dt > beforeSeconds:
+					dt -= beforeSeconds
+				#print( f'Start timer: {dt}s' )
+				self.ttTimer.StartOnce( round(dt * 1000.0) )
+		
 		return spotText
 	
 	def paintTT( self, dc ):		
@@ -642,7 +672,8 @@ class LapCounter( wx.Panel ):
 		
 		rects = self.tessellate()
 		foreground, background = self.foregrounds[0], self.backgrounds[0]
-		for i, text in enumerate(self.getTTSpotText()):
+		
+		for i, text in enumerate(spotText):
 			x, y, w, h = rects[i]
 						
 			dc.SetBrush( wx.Brush(background, wx.SOLID) )
@@ -655,6 +686,7 @@ class LapCounter( wx.Panel ):
 			if text:
 				getFontSizeToFit( dc, text, w, h )
 				drawLapText( dc, text, foreground, x, y, w, h )
+		
 			
 	def OnPaint( self, event ):
 		dc = wx.AutoBufferedPaintDC( self )
