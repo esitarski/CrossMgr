@@ -101,9 +101,8 @@ function onLoad() {
 {% if any(g.isTimeTrial for g in info) %}
 	setIcons( "{{StartListIconSrc}}", 'startlist' );
 	setIcons( "{{CountdownIconSrc}}", 'countdown' );
-{% else %}
-	setIcons( "{{LapCounterIconSrc}}", 'lapcounter' );
 {% end %}
+	setIcons( "{{LapCounterIconSrc}}", 'lapcounter' );
 	setIcons( "{{ResultsCurrentIconSrc}}", 'results_current' );
 	setIcons( "{{ResultsPreviousIconSrc}}", 'results_previous' );
 	setIcons( "{{AnnouncerIconSrc}}", 'announcer' );
