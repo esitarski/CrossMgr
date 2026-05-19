@@ -34,14 +34,18 @@ __Publish and Share the Page with Race Attendees__
 
 That's it!
 
-## Web-based Lap Counters for Mass Start Races
+## Web-based Lap Counters for Mass Start and TT
 
-For Mass Start races, CrossMgr supports automatic Lap Counters for each start waves on course (see [LapCounter][] for details about automatic lap counter features).
+For Mass Start Races and TTs, CrossMgr supports automatic Lap Counters for each start waves on course.
+For TTs, it displays each bib number and the laps-to-go (see [LapCounter][] for details about automatic lap counter features).
 
-A web-based Lap Counter is also available from the web Index page.  The lap counter page receives message from CrossMgr's currently running race and changes accordingly.
-The same URL is used for all races, if you set up you lap counter displayes you  won't need to touch them again when new races start.  The LapCounter web page automatically changes laps exactly the same as the lap counter page in CrossMgr.
+The web-based Lap Counter is available from the web Index page.  The lap counter page receives message from CrossMgr's currently running race and changes accordingly.
+The same URL is used for all races, if you set up you lap counter displayes you  won't need to touch them again when new races start.
+The LapCounter web page automatically changes laps exactly the same as the lap counter page in CrossMgr.
 
-The idea is that you would use a tablet or a computer with an LCD screen as a lap counter.  This device would be connected over wifi to the CrossMgr computer.  The Lap Counter(s) would automatically be flipped during the race.
+You can use a tablet or a computer with an LCD screen as a lap counter.
+This device would be connected over wifi to the CrossMgr computer.
+The Lap Counter(s) automatically be flip during the race.
 
 ### Multiple Monitors
 
