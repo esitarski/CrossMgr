@@ -176,24 +176,27 @@ def LapCounterProperties( *args, **kwargs ):
 #-----------------------------------------------------------------------
 
 textHeightFactor = 1
+fontSizeMin, fontSizeMax = 1, 1000
 
 def getFontSizeToFit( dc, text, w, h ):
-	w, h = max( 1, int(w * 0.9) ), max( 1, int(h * 0.9) )
-	fontSize = h
 	lines = text.split( '\n' )
-	while True:
-		dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
-		extents = [dc.GetTextExtent(line) for line in lines]
-		wText = max( wText for wText, hText in extents )
-		hText = round( extents[0][1] * len(lines) * textHeightFactor )
-		if fontSize == 1:
-			break
-		elif wText > w:
-			fontSize = max( 1, int(fontSize * w / wText) )
-		elif hText > h:
-			fontSize = max( 1, int(fontSize * h / hText) )
-		else:
-			break
+
+	w, h = max( 1, int(w * 0.9) ), max( 1, int(h * 0.9) )
+	
+	refSize = 32
+	dc.SetFont( wx.Font( (0,refSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
+	extents = [dc.GetTextExtent(line) for line in lines]
+	wText = max( wText for wText, hText in extents )
+	hText = round( extents[0][1] * len(lines) * textHeightFactor )
+	
+	if not wText or not hText:
+		return refSize
+	
+	sizeByWidth  = refSize * (w / wText);
+	sizeByHeight = refSize * (h / hText);
+
+	fontSize = round( min(sizeByWidth, sizeByHeight) )
+	dc.SetFont( wx.Font( (0,fontSize), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD ) )
 	return fontSize
 
 def drawText( dc, label, colour, x, y, w, h ):
