@@ -1,9 +1,11 @@
 [TOC]
 
 # Lap Counter and Countdown Timer
-Shows a __lap counter__, or a __countdown timer__ for the race.  The lap counter flashes before it changes to draw attention to itself.
+Shows a __lap counter__, or a __countdown timer__ for the race.  The lap counter flashes before it changes to draw attention to itself (Mass Start).
 
 The Lap Counter is also available on a web page that can be displayed on any computer connected to the CrossMgr wifi.  See [Web][] for details on the web-based Lap Counter.
+
+There is a Lap Counter for Time Trials, but it works differently (see below).
 
 Use:
 
@@ -11,11 +13,8 @@ Use:
 1. Drag the __LapCounter__ screen to separate monitor.
 1. Set up the monitor so the riders can see it.
 
-_Lap Cycle__ cycles through laps for the duration of the race.
-For example, if __Lap Cycle__ is set to 3, the lap counter will show 2, 1, 0, 2, 1, 0 etc. for the duration of the race.  The last 1 will be on the last lap.
-This is useful for Elimination races.
 
-## Lap Counter Function
+## Lap Counter (Mass Start)
 
 The LapCounter function relies on CrossMgr's ability to predict the leader.  Be default, it flips the lap counter 15 seconds before the leaders are expected.  There are a few considerations:
 
@@ -32,6 +31,46 @@ Of course, if the race is 2 laps, just bell the riders on their second lap.
 For Cyclo-cross, MTB and Road races longer than 2 laps, the automatic lap counter works fairly well.  The longer the lap time, the more in advance the lap counter can be flipped.  This also helps to solve the problem with riders arriving early, but can create a problem if some riders are just about to be lapped on their last lap.
 
 If the lap time is short and highly variable, like a criterium (especially with primes) or a track race, the automatic lap counter may not work well.   CrossMgr will by unable to predict the rider's arrival times accurately.
+
+_Lap Cycle__ cycles through laps for the duration of the race (Mass Start only).
+For example, if __Lap Cycle__ is set to 3, the lap counter will show 2, 1, 0, 2, 1, 0 etc. for the duration of the race.  The last 1 will be on the last lap.
+This is useful for Elimination races.
+
+## Lap Counter (Time Trial)
+
+In a multi-lap Time Trial, the Lap Counter works differently than for a Mass Start.
+Rather than showing the laps to go for each Start Wave category, the display shows the individual __Bib__ number and __Laps to Go__ directly underneath.
+In tho way, different riders can be shown different laps to go.
+
+The TT Lap Counter has 6 "spots" which it manages to display the next closest crossing time of oncoming riders.
+The expected crossing time uses the same "predictive analytics" used for the Mass Start lap counter, but applied to each rider individually.
+As with the Mass Start lap counter, laps cannot be shown until the first lap has been completed.  This is because the laps cannot be prediced without any prior data.
+
+As each rider crosses the line, this frees up a "spot"; which is used to display the next closest undisplayed oncoming rider.
+
+A rider may be shown in a different slot on each lap, however, a rider's slot will be fixed on each lap.
+This gives as much time as possible for the rider to observe their laps to go on each lap.
+
+6 "spots" is enough to display individual lap counters as long as there are no more than 6 riders crossing the line in a group together.
+If you have more than 6 riders riding together, some riders may not get a count (you probably should reevaluate your race format at this point anyway).
+
+The TT Lap Counter always refreshes itself at least 10s before the next expected rider.  This ensures that "stale" riders (eg. missed reads, unrecorded DNF)
+do not clutter up the display as the expense of oncoming riders.
+
+The TT Lap Counter works with Manual entry as well as RFID chip reads, but for any multi-lap TT, RFID is recommended.
+It uses the first Foreground and Background for all slots.  If you want to change the colors, change the first one.
+
+The TT Lap Counter also works as a Web Page.  See [Web][] for details on the web-based Lap Counter.
+
+This capability of an individual TT lap counter is unique to CrossMgr and can not be done manually.
+To get a better idea about how it "just works", start CrossMgr, do a __Tools|Simulate Race...__, then select Time Trial.  Press OK on all the dialogs.
+While waiting for the simulated TT to start, change to the __Results__ screen, then open tha __Lap Counter__ from the Windows menu.
+
+While the simulation is running, watch what the Lap Counter does as each riders records their laps.
+For example, in the 3 lap Women's TT, after the first woman has completed 1 lap out of 3, it shows her 1 to go.
+This makes sense.  The women is on her second lap and should see 1-to-go the next time she crosses the line.
+Convince yourself it is doing the right thing.  It all makes sense.
+
 
 ## Countdown Timer Function
 
