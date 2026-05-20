@@ -177,7 +177,15 @@ def toInt( n ):
 		return n
 
 def getRaceResultRet():
-	return { 'success':True, 'explanation':'success', 'raceResults':[], 'licenseLinkTemplate':None, 'isUCIDataride':False, 'pureTeam':False, 'resultsType':0 }
+	return {
+		'success':True,
+		'explanation':'success',
+		'raceResults':[],
+		'licenseLinkTemplate':None,
+		'isUCIDataride':False,
+		'pureTeam':False,
+		'resultsType':SeriesModel.Race.IndividualAndTeamResults,
+	}
 
 def ExtractRaceResultsExcel( raceFileName ):
 	ret = getRaceResultRet()
@@ -415,7 +423,10 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 			
 			# Skip all entries that do not have a first name or last name.
 			if not info['firstName'] and not info['lastName']:
-				continue				
+				continue
+				
+			if not hasattr(rr, 'Team'):
+				ret['resultsType'] = SeriesModel.Race.IndividualResultsOnly
 
 			info['categoryName'] = category.fullname
 			info['laps'] = rr.laps
@@ -1052,7 +1063,6 @@ def GetAllCategoryResultsTeam( raceResults ):
 	return categoryResult, [raceNameToRaceTuple[rn] for rn in raceNames]
 
 def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=False, numPlacesTieBreaker=5 ):
-	
 	# If this is a combined result, return that.
 	if SeriesModel.model.scoreByPoints and not categoryName:
 		return GetAllCategoryResultsTeam( raceResults )
@@ -1101,7 +1111,7 @@ def GetCategoryResultsTeam( categoryName, raceResults, useMostEventsCompleted=Fa
 	
 	if scoreByPoints:
 		# Get the specific pointStructure as a function of the raceName and categoryName.
-		# If no pointStructure is specified by category, use the race one as a default.
+		# If no pointStructure is specified by category, use the race's as a default.
 		pointStructureFromRaceFileName = { r.fileName:r.pointStructure for r in model.races }
 		def getPointStructure( raceFileName, categoryName ):
 			return model.categories[categoryName].pointStructure or pointStructureFromRaceFileName[raceFileName]

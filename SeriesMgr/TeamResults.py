@@ -629,6 +629,7 @@ class TeamResults(wx.Panel):
 		else:
 			with wx.BusyCursor():
 				self.raceResults = model.extractAllRaceResults( adjustForUpgrades=False, isIndividual=False )
+				#self.raceResults = model.extractAllRaceResults()
 			self.fixCategories()
 		
 		if not self.raceResults:
