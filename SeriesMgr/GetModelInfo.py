@@ -411,7 +411,10 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 			continue
 		
 		results = GetResults( category )
-		
+
+		if results and not hasattr( results[0], 'Team' ):
+			ret['resultsType'] = SeriesModel.Race.IndividualResultsOnly
+
 		for pos, rr in enumerate(results,1):
 			if rr.status not in acceptedStatus:
 				continue
@@ -425,9 +428,6 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 			if not info['firstName'] and not info['lastName']:
 				continue
 				
-			if not hasattr(rr, 'Team'):
-				ret['resultsType'] = SeriesModel.Race.IndividualResultsOnly
-
 			info['categoryName'] = category.fullname
 			info['laps'] = rr.laps
 			
