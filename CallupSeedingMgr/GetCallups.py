@@ -5,6 +5,7 @@ from Model import Source
 from Excel import GetExcelReader
 
 RegistrationSheet = 'Registration'
+ConfigSheet = 'Config'
 
 def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, rankTopCount=None, cycleLast=None, callbackfunc=None, callbackupdate=None ):
 
@@ -34,7 +35,7 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, rankTopC
 	sources = []
 	errors = []
 	for sheet in sheet_names:
-		if sheet == RegistrationSheet:
+		if sheet in (RegistrationSheet, ConfigSheet):
 			continue
 		if callbackfunc:
 			callbackfunc( sources + [registration], errors + [registrationErrors] )

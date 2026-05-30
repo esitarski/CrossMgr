@@ -328,7 +328,7 @@ class Result:
 	
 	@property
 	def full_name( self ):
-		return '{} {}'.format( self.first_name, self.last_name )
+		return f'{self.first_name} {self.last_name}'
 	
 	def get_key( self ):
 		if self.cmp_policy == self.ByAbilityPoints:
@@ -350,7 +350,10 @@ class Result:
 		elif self.cmp_policy == self.ByAbilityPosition:
 			return '{}:{}'.format(self.ability or '', self.position or '')
 		elif self.cmp_policy == self.ByPoints:
-			return self.points
+			if self.position and self.points:
+				return f'{self.position} ({self.points})'
+			else:
+				return self.points
 		elif self.cmp_policy == self.ByPosition:
 			return self.position
 		assert False, 'Invalid cmp_policy'

@@ -185,7 +185,7 @@ class MainWin( wx.Frame ):
 		inputBoxSizer.Add( self.sourceList, flag=wx.ALL|wx.EXPAND, border=4 )
 		self.sourceList.InsertColumn(0, "Sheet")
 		self.sourceList.InsertColumn(1, "Data Columns and Derived Information")
-		self.sourceList.InsertColumn(2, "Key Fields")
+		self.sourceList.InsertColumn(2, "Key(s)")
 		self.sourceList.InsertColumn(3, "Rows", wx.LIST_FORMAT_RIGHT)
 		self.sourceList.InsertColumn(4, "Errors/Warnings", wx.LIST_FORMAT_RIGHT)
 		self.sourceList.Bind( wx.EVT_LIST_ITEM_SELECTED, self.onItemSelected )

@@ -93,7 +93,7 @@ def MakeExampleExcel(
 		fit_sheet.write( row, 2, '{} {}'.format(result.last_name.upper(), result.first_name) )
 	
 	if include_uci_points:
-		ws = wb.add_worksheet('UCIPoints')
+		ws = wb.add_worksheet('UCIRank')
 		fit_sheet = FitSheetWrapper( ws )
 		for c, header in enumerate(['Rank', 'UCI ID', 'Name', 'Team Code', 'Age', 'Points']):
 			fit_sheet.write( 0, c, header )

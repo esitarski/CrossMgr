@@ -405,6 +405,8 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 			primePoints[p['winnerBib']] += p.get('points', 0)
 			timeBonus[p['winnerBib']] += p.get('timeBonus', 0.0)
 	
+	toFromFieldsRR = (('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('uci_id', 'UCIID'), ('team', 'Team'))
+	raceFields = { fTo:getattr(race, fFrom, '') for fTo, fFrom in (('raceName', 'name'), ('raceOrganizer', 'organizer')) }
 	raceResults = []
 	for category in race.getCategories( startWaveOnly=False ):
 		if not category.seriesFlag:
@@ -418,25 +420,20 @@ def ExtractRaceResultsCrossMgr( raceFileName ):
 		for pos, rr in enumerate(results,1):
 			if rr.status not in acceptedStatus:
 				continue
-			info = {
-				'raceURL':		raceURL,
-			}
-			for fTo, fFrom in [('firstName', 'FirstName'), ('lastName', 'LastName'), ('license', 'License'), ('uci_id', 'UCIID'), ('team', 'Team')]:
-				info[fTo] = getattr(rr, fFrom, '')
+			info = { fTo:getattr(rr, fFrom, '') for fTo, fFrom in toFromFieldsRR }
 			
 			# Skip all entries that do not have a first name or last name.
 			if not info['firstName'] and not info['lastName']:
 				continue
 				
+			info['raceURL'] = raceURL
 			info['categoryName'] = category.fullname
 			info['laps'] = rr.laps
-			
-			for fTo, fFrom in [('raceName', 'name'), ('raceOrganizer', 'organizer')]:
-				info[fTo] = getattr(race, fFrom, '')
+			info.update( raceFields )
 			
 			raceNum = getattr(race, 'raceNum', '')
 			if raceNum:
-				info['raceName'] = '{}-{}'.format(info['raceName'], raceNum)
+				info['raceName'] = f'{info["raceName"]}-{raceNum}'
 				
 			info['raceFileName'] = raceFileName
 			if race.startTime:
