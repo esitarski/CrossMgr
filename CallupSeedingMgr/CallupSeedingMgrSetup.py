@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools._distutils.core import setup
 import os
 import shutil
 import zipfile
