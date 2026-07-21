@@ -219,7 +219,7 @@ setup = {
 }
 
 with open(os.path.join(pypiDir,'setup.py'), 'w', encoding='utf8') as f:
-	f.write( 'from distutils.core import setup\n' )
+	f.write( 'from setuptools._distutils.core import setup\n' )
 	f.write( 'setup(\n' )
 	for key, value in setup.items():
 		f.write( '    {}={},\n'.format(key, repr(value)) )
