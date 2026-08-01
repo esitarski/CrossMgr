@@ -373,13 +373,17 @@ def UCIExcel( category, fname, startList=False ):
 			return ''
 			
 	def getIRM( rr ):
-		if 'REL' in '{}'.format(rr.pos):
+		if 'REL' in f'{rr.pos}':
 			return 'REL'
 		if rr.status != Finisher:
 			return statusNames[rr.status].replace('DQ', 'DSQ')
 		if rrWinner and rr.laps != rrWinner.laps:
 			return 'LAP'
 		return ''
+	
+	categoryGender = category.gender[1:]
+	if categoryGender not in ('M', 'W'):
+		categoryGender = ''
 	
 	getValue = {
 		'Start Order':	lambda rr: toInt(rr.pos),
@@ -390,7 +394,7 @@ def UCIExcel( category, fname, startList=False ):
 		'First Name':	lambda rr: getattr(rr, 'FirstName', ''),
 		'Country':		lambda rr: getattr(rr, 'NatCode', ''),
 		'Team':			lambda rr: getattr(rr, 'TeamCode', ''),
-		'Gender':		lambda rr: getattr(rr, 'Gender', '')[:1],
+		'Gender':		lambda rr: getattr(rr, 'Gender', categoryGender)[:1],
 		'Result':		getFinishTime,
 		'IRM':			getIRM,
 		'Phase':		lambda rr: 'Final',

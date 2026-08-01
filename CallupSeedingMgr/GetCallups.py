@@ -123,7 +123,7 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, rankTopC
 			break
 		
 	callup_results = []
-	registration_headers = registration.get_ordered_fields()
+	registration_headers = registration.get_ordered_fields( minimal=True )
 	
 	# Also add the team code if there is one.
 	if 'team_code' not in registration_headers:

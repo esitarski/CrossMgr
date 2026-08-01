@@ -632,8 +632,13 @@ class Source:
 		
 		return errors
 	
-	def get_ordered_fields( self ):
-		return tuple(f for f in Result.Fields if f in self.hasField and f not in ('ability','points', 'position', 'row'))
+	def get_ordered_fields( self, minimal=False ):
+		if minimal:
+			include_fields = set( ['bib', 'first_name', 'last_name', 'team', 'uci_id', 'license', 'nation_code', 'category'] )
+			return tuple(f for f in Result.Fields if f in self.hasField and f in include_fields)
+		else:
+			exclude_fields = set( ['ability','points', 'position', 'row'] )
+			return tuple(f for f in Result.Fields if f in self.hasField and f not in exclude_fields)
 	
 	def randomize_positions( self ):
 		positions = list(range( 1, len(self.results)+1 ))
