@@ -48,6 +48,7 @@ class MainWin( wx.Frame ):
 		self.lastUpdateTime = None
 		self.sources = []
 		self.errors = []
+		self.nation_codes = []
 		
 		self.filehistory = wx.FileHistory(16)
 
@@ -235,13 +236,21 @@ class MainWin( wx.Frame ):
 			if i == len(instructions)-1:
 				flag |= wx.BOTTOM
 			mainSizer.Add( wx.StaticText(self, label=instruction), flag=flag, border=8 )
+
+		self.nationCodesLabel = wx.StaticText( self, label=_("Nat Codes") )				
+		self.nationCodes = wx.TextCtrl( self, style=wx.TE_READONLY )
+		horizontalNatSizer = wx.BoxSizer( wx.HORIZONTAL )
+		horizontalNatSizer.Add( self.nationCodesLabel, 0, flag=wx.ALIGN_CENTRE_VERTICAL )
+		horizontalNatSizer.Add( self.nationCodes, 1, flag=wx.LEFT|wx.EXPAND, border=2 )
+		mainSizer.Add( horizontalNatSizer, 0, flag=wx.EXPAND|wx.ALL, border = 4 )
+
 		mainSizer.Add( self.grid, 1, flag=wx.EXPAND|wx.ALL, border = 4 )
 		mainSizer.Add( outputBoxSizer, flag=wx.EXPAND|wx.ALL, border = 4 )
 
 		self.SetSizer( mainSizer )
 
 	def onClose( self, event ):
-			wx.Exit()
+		wx.Exit()
 
  
 	def OnAboutBox(self, e):
@@ -491,7 +500,7 @@ class MainWin( wx.Frame ):
 			labelSave, backgroundColourSave = self.updateButton.GetLabel(), self.updateButton.GetForegroundColour()
 			
 			try:
-				self.registration_headers, self.callup_headers, self.callup_results, self.sources, self.errors = GetCallups(
+				self.registration_headers, self.callup_headers, self.callup_results, self.sources, self.errors, self.nation_codes = GetCallups(
 					self.fname,
 					soundalike = self.getIsSoundalike(),
 					useUciId = self.getUseUciId(),
@@ -518,6 +527,7 @@ class MainWin( wx.Frame ):
 				top_riders=self.getTopRiders(),
 				exclude_unranked=self.excludeUnrankedCB.GetValue(),
 			)
+			self.nationCodes.SetValue( ', '.join(self.nation_codes) )
 		
 		self.GetSizer().Layout()
 		self.lastUpdateTime = datetime.datetime.now()

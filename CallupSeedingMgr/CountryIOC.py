@@ -52,17 +52,23 @@ uci_country_codes['USA'.upper()] = 'USA'
 uci_country_codes['US'.upper()] = 'USA'
 uci_country_codes['United States of America'.upper()] = 'USA'
 uci_country_codes['American'.upper()] = 'USA'
+uci_country_codes['America'.upper()] = 'USA'
+uci_country_codes['Unites States'.upper()] = 'USA'
 
 uci_country_codes['Canadian'.upper()] = 'CAN'
 uci_country_codes['Cdn'.upper()] = 'CAN'
+uci_country_codes['CA'.upper()] = 'CAN'
 
 uci_country_codes['The Netherlands'.upper()] = 'NED'
 uci_country_codes['Dutch'.upper()] = 'NED'
 
 uci_country_codes['Deutschland'.upper()] = 'GER'
+uci_country_codes['DEU'.upper()] = 'GER'
 
 uci_country_codes['Trinidad'.upper()] = 'TTO'
 uci_country_codes['Tobago'.upper()] = 'TTO'
+
+uci_country_codes['Mexique'.upper()] = 'MEX'
 
 ioc_country.pop( '', None )
 uci_country_codes.pop( '', None )

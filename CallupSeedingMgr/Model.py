@@ -3,6 +3,7 @@ import sys
 import datetime
 import random
 import operator
+import unicodedata
 from metaphone import doublemetaphone
 
 import Utils
@@ -368,6 +369,11 @@ header_sub = {
 	'RIDERPOS':		'POSITION',
 	'RIDERPLACE':	'POSITION',
 	
+	'COUNTRY':		'NATION',
+	'UCI ID Number':'UCI ID',
+	
+	'CLUB':			'TEAM',
+	
 	'NUM':			'BIB',
 	'BIBNUMBER':	'BIB',
 	'RIDERBIB':		'BIB',
@@ -394,9 +400,17 @@ header_sub = {
 
 	'TOTALPTS':		'POINTS',
 }
+
+def remove_diacritics(s):
+	# Decompose characters into base + combining marks, then strip the marks
+	return ''.join(
+		c for c in unicodedata.normalize('NFD', s)
+		if unicodedata.category(c) != 'Mn'
+	)
+
 def scrub_header( h ):
 	# For slash-separated headers, only the first word is used.
-	h = reAlpha.sub( '', Utils.removeDiacritic('{}'.format(h).split('/', maxsplit=1)[0]).upper() )
+	h = reAlpha.sub( '', remove_diacritics(f'{h}'.split('/', maxsplit=1)[0]).upper() )
 	return header_sub.get(h, h)
 
 def soundalike_match( s1, s2 ):
@@ -487,7 +501,7 @@ def validate_uci_id( uci_id ):
 	if not uci_id:
 		return
 		
-	uci_id = '{}'.format(uci_id).upper().replace(' ', '')
+	uci_id = f'{uci_id}'.upper().replace(' ', '')
 	
 	if not uci_id.isdigit():
 		raise ValueError( 'uci id "{}" must be all digits'.format(uci_id) )
@@ -590,7 +604,7 @@ class Source:
 				try:
 					validate_uci_id( result.uci_id )
 				except Exception as e:
-					errors.append( '{} - row {} - Warning: {}'.format(self.sheet_name, row_number+1, e) )
+					errors.append( '{} - row {} - Warning: {}  ({}, {})'.format(self.sheet_name, row_number+1, e, result.last_name, result.first_name) )
 			
 			result.row_number = row_number
 			
@@ -618,8 +632,13 @@ class Source:
 		
 		return errors
 	
-	def get_ordered_fields( self ):
-		return tuple(f for f in Result.Fields if f in self.hasField and f not in ('ability','points', 'position', 'row'))
+	def get_ordered_fields( self, minimal=False ):
+		if minimal:
+			include_fields = set( ['bib', 'first_name', 'last_name', 'team', 'uci_id', 'license', 'nation_code', 'category'] )
+			return tuple(f for f in Result.Fields if f in self.hasField and f in include_fields)
+		else:
+			exclude_fields = set( ['ability','points', 'position', 'row'] )
+			return tuple(f for f in Result.Fields if f in self.hasField and f not in exclude_fields)
 	
 	def randomize_positions( self ):
 		positions = list(range( 1, len(self.results)+1 ))

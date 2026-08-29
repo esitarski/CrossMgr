@@ -123,7 +123,7 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, rankTopC
 			break
 		
 	callup_results = []
-	registration_headers = registration.get_ordered_fields()
+	registration_headers = registration.get_ordered_fields( minimal=True )
 	
 	# Also add the team code if there is one.
 	if 'team_code' not in registration_headers:
@@ -148,12 +148,16 @@ def GetCallups( fname, soundalike=True, useUciId=True, useLicense=True, rankTopC
 	
 	callup_headers = list(registration_headers) + [source.sheet_name for source in sources[:-1]]
 	
+	nation_codes = set()
 	for reg in callup_order:
 		row = [getattr(reg, f, '') for f in registration_headers]
+		nation_code = getattr(reg, 'nation_code', None)
+		if nation_code:
+			nation_codes.add( nation_code )
 		row.extend( reg.result_vector[:-1] )
 		callup_results.append( row )
 	
-	return registration_headers, callup_headers, callup_results, sources, errors
+	return registration_headers, callup_headers, callup_results, sources, errors, sorted(nation_codes)
 
 def make_title( title ):
 	t = ' '.join( (w[:1].upper() + w[1:]).replace('Uci','UCI').replace('Id','ID').replace('Of','of') for w in title.split('_') )

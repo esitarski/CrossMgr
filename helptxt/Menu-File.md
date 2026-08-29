@@ -7,9 +7,16 @@
 Creates a new race.  Opens the Property dialog to configure a new race.
 
 ## New Next...
-Creates a new race based on an existing one.  New Next... will keep the same Name, Organizer, Commissaire and other properties and increment the race number.
-After the new race is created, you just need to check the start time, duration and categories.
-This feature allows you to create the next race in the day very quickly.
+Creates a new race based on an existing one.
+
+If the existing race is on the same day as today or in the future,
+New Next... will keep the same Name, Organizer, Commissaire and other properties and increment the race number.
+
+if the existing race is in the past,
+New Next... will just change the race date to today.  It will not increment the race number.
+
+After the new race is created, make sure you check the start time, duration and categories.
+This feature allows you to create the next race in the day very quickly, or to create a new race from a past race on the current day.
 
 ## New from RaceDB...
 Creates a new race based on an Excel file generated from RaceDB.

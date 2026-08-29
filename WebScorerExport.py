@@ -36,28 +36,32 @@ def WebScorerExport( fname ):
 	SyncExcelLink( race )
 	
 	hasField = [False] * len(WebScorerFields)
+	# We know we have Place and Bib, so set the flags.
 	hasField[0] = True
 	hasField[1] = True
 	
 	# Check for what fields are actually filled in.
 	publishCategories = race.getCategories( startWaveOnly = False, uploadOnly = True )
+	hasResults = False
 	for cat in publishCategories:
 		results = GetResults( cat )
-		if not results:
-			continue
+		hasResults |= bool( results )
 		for rr in results:
 			for i, (field, cmgrField) in enumerate(WebScorerFields):
 				if getattr(rr, cmgrField, None):
 					hasField[i] = True
 	
-	if not hasField[2]:
-		return False, _('LastName must be linked to a column in the Excel sheet.')
+	if not hasResults:
+		return False, _('No results to Export.')
 	
-	catDetails = dict( (cd['name'], cd) for cd in GetCategoryDetails() )
+	if not hasField[2]:
+		return False, _('LastName must be defined in the ComMgr Excel sheet.')
+	
+	catDetails = { cd['name']:cd for cd in GetCategoryDetails() }
 	
 	# Filter the fields by what exists in the data.
 	webScorerFields = [WebScorerFields[i][0] for i in range(len(hasField)) if hasField[i]]
-	webScorerToCrossMgr = dict( (ws, cm) for ws, cm in WebScorerFields )
+	webScorerToCrossMgr = { ws:cm for ws, cm in WebScorerFields }
 	
 	hasDistance = False
 	maxLaps = 0
