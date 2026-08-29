@@ -1514,25 +1514,35 @@ class Properties( wx.Panel ):
 		except AttributeError:
 			return ''		
 		
-		gi.raceNum.SetValue( gi.raceNum.GetValue() + 1 )
-		gi.memo.SetValue( '' )
-		if	 gi.scheduledStart.GetValue() == '10:00' and gi.minutes.GetValue() == 40 and gi.raceNum.GetValue() == 2:
-			gi.scheduledStart.SetValue( '11:30' )
-			gi.minutes.SetValue( 50 )
-		elif gi.scheduledStart.GetValue() == '11:30' and gi.minutes.GetValue() == 50 and gi.raceNum.GetValue() == 3:
-			gi.scheduledStart.SetValue( '13:00' )
-			gi.minutes.SetValue( 60 )
+		today = wx.DateTime.Now() 
+		if gi.date.GetValue().Format("%Y-%m-%d") < today.Format("%Y-%m-%d"):
+			# If race occured in the past, just update to today's date.
+			# Do not advance the race number or change the start time.
+			# This supports recurring events better.
+			gi.date.SetValue( today)
 		else:
-			sStr = gi.scheduledStart.GetValue()
-			fields = sStr.split(':')
-			if len(fields) == 2:
-				mins = int(fields[0],10) * 60 + int(fields[1],10)
-				mins += gi.minutes.GetValue()
-				mins += 15	# Add time for a break.
-				if (mins/60) >= 24:
-					mins = 0
-				sNew = '{:02d}:{:02d}:00'.format(int(mins/60), mins%60)
-				gi.scheduledStart.SetValue( sNew )
+			# If the event occurs today, adjace the race number and start time.
+			# Keep the date the same.
+			# This supports advancing to a new race during the day.
+			gi.raceNum.SetValue( gi.raceNum.GetValue() + 1 )
+			gi.memo.SetValue( '' )
+			if	 gi.scheduledStart.GetValue() == '10:00' and gi.minutes.GetValue() == 40 and gi.raceNum.GetValue() == 2:
+				gi.scheduledStart.SetValue( '11:30' )
+				gi.minutes.SetValue( 50 )
+			elif gi.scheduledStart.GetValue() == '11:30' and gi.minutes.GetValue() == 50 and gi.raceNum.GetValue() == 3:
+				gi.scheduledStart.SetValue( '13:00' )
+				gi.minutes.SetValue( 60 )
+			else:
+				sStr = gi.scheduledStart.GetValue()
+				fields = sStr.split(':')
+				if len(fields) == 2:
+					mins = int(fields[0],10) * 60 + int(fields[1],10)
+					mins += gi.minutes.GetValue()
+					mins += 15	# Add time for a break.
+					if (mins/60) >= 24:
+						mins = 0
+					sNew = '{:02d}:{:02d}:00'.format(int(mins/60), mins%60)
+					gi.scheduledStart.SetValue( sNew )
 	
 	def onChanged( self, event ):
 		self.updateFileName()
