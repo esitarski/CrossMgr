@@ -1519,7 +1519,7 @@ class Properties( wx.Panel ):
 			# If race occured in the past, just update to today's date.
 			# Do not advance the race number or change the start time.
 			# This supports recurring events better.
-			gi.date.SetValue( today)
+			gi.date.SetValue( today )
 		else:
 			# If the event occurs today, adjace the race number and start time.
 			# Keep the date the same.
