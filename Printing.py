@@ -3,7 +3,6 @@ import os
 import math
 import getpass
 import Utils
-Utils.initTranslation()
 from  ExportGrid import ExportGrid
 import Primes
 from DNSManager import AutoWidthListCtrl

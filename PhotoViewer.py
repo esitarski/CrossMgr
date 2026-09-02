@@ -443,8 +443,6 @@ class PhotoViewerDialog( wx.Dialog ):
 		self.OnSelChanged()
 	
 if __name__ == '__main__':
-	Utils.initTranslation()
-	
 	race = Model.newRace()
 	race._populate()
 	race.enableUSBCamera = True
