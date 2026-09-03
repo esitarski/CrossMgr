@@ -1247,7 +1247,7 @@ class GeoAnimation(wx.Control):
 					tShow = t.lstrip('0')
 					if tShow.startswith('.'):
 						tShow = '0' + tShow
-					dc.DrawText( tShow, xCur + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0], yCur )
+					dc.DrawText( tShow, round(xCur + dc.GetTextExtent('0' * (len(t) - len(tShow)))[0]), round(yCur) )
 			
 		# Draw the leader board.
 		bannerItems = []
