@@ -63,18 +63,23 @@ def getHelpIndexFolder(): return helpIndexFolder
 # First check enviroment variable.
 lang = os.environ.get('CrossMgrLanguage', None)
 
-# Then check default OS language.
+# If no language there, check the default OS language.
 import locale
 if not lang:
-	try:
+	if isWindows:
 		import ctypes
 		windll = ctypes.windll.kernel32
 		lang = locale.windows_locale[ windll.GetUserDefaultUILanguage() ]
+	else:
+		lang, encoding = locale.getlocale()
+		
+	try:
+		lang = lang[:2]
 	except Exception:
-		lang = locale.getdefaultlocale()[0]
+		pass
 
-# Finally, if that doesn't work, default to English.
-lang = (lang or 'en')[:2]
+# If that doesn't work, default to English.
+lang = lang or 'en'
 
 #-----------------------------------------------------------------------
 # Setup translation.
@@ -85,14 +90,34 @@ from Version import AppVerName
 import gettext
 initTranslationCalled = False
 translate = None
-builtins.__dict__['_'] = translate = lambda s: s
-def initTranslation():
+builtins.__dict__['_'] = translate = lambda s: s	# Initialize the translate function to no-op.
+
+def initTranslation( langIn=None ):
 	global initTranslationCalled
 	global translate
+	global lang
 	
-	if not initTranslationCalled or (lang and not lang.startswith('en')):
-		initTranslationCalled = True
+	if initTranslationCalled:
+		return
+	
+	initTranslationCalled = True
+	
+	if langIn:
+		lang = langIn
+	
+	os.environ['CrossMgrLanguage'] = lang
+	if lang and not lang.startswith('en'):
 		
+		try:
+			translation = gettext.translation( 'messages', localedir=os.path.join(dirName,'CrossMgrLocale'), languages=[lang] )
+			translation.install()
+			builtins.__dict__['_'] = translate = translation.ugettext	# Initialize the translate function to ugettext.
+		except Exception as e:
+			print( f'initTranslation: Exception: {e}' )
+			pass
+		
+		
+		'''
 		try:
 			gettext.install('messages', os.path.join(dirName,'CrossMgrLocale'), unicode=1)
 		except Exception:
@@ -103,17 +128,17 @@ def initTranslation():
 			translation = gettext.translation('messages', os.path.join(dirName,'CrossMgrLocale'), languages=[lang[:2]])
 			translation.install()
 			builtins.__dict__['_'] = translate = translation.ugettext
-		except Exception:
+		except Exception as e:
+			print( f'initTranslation: Exception: {e}' )
 			pass
+		'''
 		
-		# Keep these here for translations.
-		(
-			_('Search'),
-			_('Finisher'), _('DNF'), _('PUL'), _('DNS'), _('DQ'), _('OTL'), _('NP'),
-		)
+	# Keep these here to drive the translations.
+	(
+		_('Search'),
+		_('Finisher'), _('DNF'), _('PUL'), _('DNS'), _('DQ'), _('OTL'), _('NP'),
+	)
 		
-initTranslation()
-
 class SuspendTranslation:
 	''' Temporarily suspend translation. '''
 	def __enter__(self):
