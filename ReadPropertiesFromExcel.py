@@ -26,7 +26,7 @@ def ReadPropertiesFromExcel( reader, raceHasStartTime=False ):
 		('Distance Unit',	'distanceUnit',		's'),
 		('Time Trial',		'isTimeTrial',		'b'),
 		('RFID Option',		'__rfidOption__',	'n'),
-		('Min Possible Lap Time', 'minPossibleLapTime', 'td'),
+		('Min Possible Lap Time', 'minPossibleLapTime', 'td'),	# Time Duration of the form HH:MM:SS.fff (can be float seconds).
 		
 		('Use SFTP',		'useSFTP',			'b'),
 		('FTP Host',		'ftpHost',			's'),
