@@ -22,21 +22,22 @@ def ReadPropertiesFromExcel( reader, raceHasStartTime=False ):
 		('TimeZone',		'timezone',			's'),
 		('Race Discipline',	'discipline',		's'),
 		('Race Number',		'raceNum',			'n'),
-		('Enable RFID',		'enableJChipIntegration',	'b'),
+		('Enable RFID',		'enableJChipIntegration', 'b'),
 		('Distance Unit',	'distanceUnit',		's'),
 		('Time Trial',		'isTimeTrial',		'b'),
 		('RFID Option',		'__rfidOption__',	'n'),
+		('Min Possible Lap Time', 'minPossibleLapTime', 'td'),
 		
 		('Use SFTP',		'useSFTP',			'b'),
 		('FTP Host',		'ftpHost',			's'),
 		('FTP User',		'ftpUser',			's'),
 		('FTP Password',	'ftpPassword',		's'),
 		('FTP Path',		'ftpPath',			's'),
-		('FTP Upload During Race',	'ftpUploadDuringRace',	'b'),
+		('FTP Upload During Race', 'ftpUploadDuringRace', 'b'),
 		
 		('GATrackingID',	'gaTrackingID',		's'),
-		('Road Race Finish Times',	'roadRaceFinishTimes',	'b'),
-		('Estimate Laps Down Finish Time',	'estimateLapsDownFinishTime',	'b'),
+		('Road Race Finish Times', 'roadRaceFinishTimes', 'b'),
+		('Estimate Laps Down Finish Time', 'estimateLapsDownFinishTime', 'b'),
 		('No Data DNS',		'setNoDataDNS',		'b'),
 		('Chip Reader Type','chipReaderType',	'n'),
 		('Win and Out',		'winAndOut',		'b'),
@@ -46,7 +47,7 @@ def ReadPropertiesFromExcel( reader, raceHasStartTime=False ):
 	)
 	# List of fields not to update if the race is underway.
 	# These are left under CrossMgr control.
-	ignoreFields = {'ftpUploadDuringRace', '__rfidOption__'} if raceHasStartTime else set()
+	ignoreFields = {'ftpUploadDuringRace', '__rfidOption__', 'minPossibleLapTime'} if raceHasStartTime else set()
 
 	AttributeFromHeader = { h: a for h, a, t in HeadersFields }
 	FieldType = { a: t for h, a, t in HeadersFields }
@@ -70,7 +71,7 @@ def ReadPropertiesFromExcel( reader, raceHasStartTime=False ):
 			v = row[c]
 			t = FieldType[a]
 			if t == 's':
-				v = '{}'.format('' if v is None else v)
+				v = str('' if v is None else v)
 			elif t == 'b':
 				v = bool(v)
 			elif t == 'n':
@@ -78,6 +79,11 @@ def ReadPropertiesFromExcel( reader, raceHasStartTime=False ):
 					v = int(v)
 				except ValueError:
 					v = 1
+			elif t == 'td':	# Time Duration
+				try:
+					v = Utils.StrToSeconds( str(v) )
+				except ValueError:
+					v = 1.0
 			
 			if a == 'distanceUnit':
 				v = 1 if v and v.lower().startswith('m') else 0
