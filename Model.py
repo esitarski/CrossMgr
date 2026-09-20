@@ -1153,7 +1153,7 @@ class Race:
 	groupByStartWave = True
 	winAndOut = False
 	isTimeTrial = False
-	minPossibleLapTime = 2.0	# Default to 2 seconds to avoid bounce read lap blowup in timed races.
+	minPossibleLapTime = 15.0	# Default to 15 seconds to avoid bounce read lap blowup in timed races.
 	
 	showFullNamesInChart = False
 	showLapTimesInChart = False
