@@ -724,20 +724,21 @@ class OtherProperties( wx.Panel ):
 		
 		vs = wx.BoxSizer( wx.VERTICAL )
 		
-		ms = wx.StaticBoxSizer( wx.VERTICAL, self, _('Play Sounds') )
+		static_box = wx.StaticBox( self, label=_('Play Sounds') )
+		box_sizer = wx.StaticBoxSizer( static_box, wx.VERTICAL )
 
-		self.soundEnter = wx.CheckBox( self, label=_("when Bibs are Entered") )
+		self.soundEnter = wx.CheckBox( static_box, label=_("when Bibs are Entered") )
 		self.soundEnter.SetValue( True )
-		self.soundLeader = wx.CheckBox( self, label=_("to Announce the Leader") )
+		self.soundLeader = wx.CheckBox( static_box, label=_("to Announce the Leader") )
 		self.soundLeader.SetValue( True )
 		
-		ms.Add( self.soundEnter, flag=wx.ALL, border=4 )
-		ms.Add( self.soundLeader, flag=wx.ALL, border=4 )
+		box_sizer.Add( self.soundEnter, flag=wx.ALL, border=4 )
+		box_sizer.Add( self.soundLeader, flag=wx.ALL, border=4 )
 		
 		self.allowManualRFID = wx.CheckBox( self, label=_("Allow Manual RFID Entry") )
 		self.allowManualRFID.SetValue( False )
 		
-		vs.Add( ms, flag=wx.ALL, border=4 )
+		vs.Add( box_sizer, flag=wx.ALL, border=4 )
 		vs.Add( self.allowManualRFID, flag=wx.ALL, border=4 )
 		
 		self.SetSizer( vs )
