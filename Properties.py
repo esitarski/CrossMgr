@@ -1491,7 +1491,7 @@ class Properties( wx.Panel ):
 				path += '.cmnt'
 			
 			if os.path.isfile(path):
-				if not Utils.MessageOKCancel( self, '{}?\n\n{}'.format(_("Replace Existing Template"), path), _('Relace Template') ):
+				if not Utils.MessageOKCancel( self, '{}?\n\n{}'.format(_("Replace Existing Template"), path), _('Replace Template') ):
 					return
 			
 			template = Template.Template( Model.race )

@@ -199,7 +199,7 @@ class Pulled( wx.Panel ):
 		if rider.status not in (Model.Rider.Pulled, Model.Rider.Finisher):
 			return '{}: {}'.format(_('Bib has non-Finisher Status'), Model.Rider.statusNames[rider.status])			
 		if lapsToGo >= laps:
-			return '{}: {}'.format(_('Laps To Go exceeds for Race Laps'), laps )
+			return '{}: {}'.format(_('Laps To Go exceeds Race Laps'), laps )
 		if lapsToGo <= 0:
 			return '{}'.format(_('Laps To Go must be >= 0') )
 		return ''

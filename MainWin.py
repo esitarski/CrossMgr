@@ -983,7 +983,7 @@ class MainWin( wx.Frame ):
 				return None
 				
 			if num in exclude:
-				Utils.MessageOK( self, '{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is choosen already.")), _("Not Available") )
+				Utils.MessageOK( self, '{} {}:\n\n{}'.format(_('Bib'), num, _("This Bib number is chosen already.")), _("Not Available") )
 				continue
 			
 			if mustBeInRace:
@@ -1182,7 +1182,7 @@ class MainWin( wx.Frame ):
 			if not Utils.MessageOKCancel(
 				self,
 				'{}\n\n\t{}\n\n\t{}'.format(
-						_('The Race must be Finished before it can a Restarted.'),
+						_('The Race must be Finished before it can be Restarted.'),
 						_('Finish the Race Now?'),
 						_('Careful - there is no Undo'),
 					),
@@ -3134,7 +3134,7 @@ class MainWin( wx.Frame ):
 				
 				if not Utils.MessageOKCancel( self, '{}.\n\n{}:\n\n\t{}{}\n\n{}'.format(
 						_("The FileName does not match the Event Name format"),
-						_("Going forward, this event will saved as"), eventFileName,
+						_("Going forward, this event will be saved as"), eventFileName,
 						exists,
 						_('To change the File Name, change the event Date, Name or Race Number in Properties/General Properties')
 						),

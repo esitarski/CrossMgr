@@ -360,7 +360,7 @@ class Actions( wx.Panel ):
 						_('This race uses RFID.'),
 						_('An Excel file containing the Bibs and RFID tags is required, and it is either unconfigured or unreadable.'),
 						_('You must have a valid Excel file, or turn off the RFID option in "Properties|RFID" to enter bibs manually.'),
-						_('See CrosMgr Help "RFID" for more details.'),
+						_('See CrossMgr Help "RFID" for more details.'),
 					] ),
 					_('Excel Sheet Read Error'),
 					wx.ICON_ERROR
@@ -374,7 +374,7 @@ class Actions( wx.Panel ):
 						_('This race uses RFID.'),
 						_('The linked Excel file must have a Bib and Tag column.'),
 						_('You must fix your Excel file, or turn off the RFID option in "Properties|RFID".'),
-						_('See CrosMgr Help "RFID" for more details.'),
+						_('See CrossMgr Help "RFID" for more details.'),
 					] ),
 					_('Excel Sheet missing Tag column'),
 					wx.ICON_ERROR

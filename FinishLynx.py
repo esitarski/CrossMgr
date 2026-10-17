@@ -332,7 +332,7 @@ class FinishLynxDialog( wx.Dialog ):
 				return
 			pathname = fileDialog.GetPath()
 			
-		if wx.OK != wx.MessageBox( _('Replace FINISH timess from FinishLynx.  Confirm?'), _('FinishLynx Import Confirm'),  wx.OK|wx.CANCEL|wx.ICON_WARNING, self ):
+		if wx.OK != wx.MessageBox( _('Replace FINISH times from FinishLynx.  Confirm?'), _('FinishLynx Import Confirm'),  wx.OK|wx.CANCEL|wx.ICON_WARNING, self ):
 			return
 			
 		try:
