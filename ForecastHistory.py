@@ -84,26 +84,32 @@ def getExpectedRecorded( tCutoff=0.0 ):
 	expected.sort( key=Entry.key )
 	recorded.sort( key=Entry.key )
 	return expected, recorded, resultsIndex
-	
-# Define columns for recorded and expected grids.
-iRecordedNumCol, iRecordedNoteCol, iRecordedTimeCol, iRecordedGapCol, iRecordedLapCol, iRecordedNameCol, iRecordedWaveCol, iRecordedColMax = range(8)
-recordedColnames = [None] * iRecordedColMax
-recordedColnames[iRecordedNumCol]  = _('Bib')
-recordedColnames[iRecordedNoteCol] = _('Note')
-recordedColnames[iRecordedTimeCol] = _('Time')
-recordedColnames[iRecordedGapCol]  = _('Gap')
-recordedColnames[iRecordedLapCol]  = _('Lap')
-recordedColnames[iRecordedNameCol] = _('Name')
-recordedColnames[iRecordedWaveCol] = _('Wave')
 
+iRecordedNumCol, iRecordedNoteCol, iRecordedTimeCol, iRecordedGapCol, iRecordedLapCol, iRecordedNameCol, iRecordedWaveCol, iRecordedColMax = range(8)
 iExpectedNumCol, iExpectedNoteCol, iExpectedTimeCol, iExpectedLapCol, iExpectedNameCol, iExpectedWaveCol, iExpectedColMax = range(7)
-expectedColnames = [None] * iExpectedColMax
-expectedColnames[iExpectedNumCol]  = _('Bib')
-expectedColnames[iExpectedNoteCol] = _('Note')
-expectedColnames[iExpectedLapCol]  = _('Lap')
-expectedColnames[iExpectedTimeCol] = _('ETA')
-expectedColnames[iExpectedNameCol] = _('Name')
-expectedColnames[iExpectedWaveCol] = _('Wave')
+
+def getColNames():
+	# Define columns for recorded and expected grids.
+	# Do this in a function so the strings get initialized at run time.
+	
+	recordedColnames = [None] * iRecordedColMax
+	recordedColnames[iRecordedNumCol]  = _('Bib')
+	recordedColnames[iRecordedNoteCol] = _('Note')
+	recordedColnames[iRecordedTimeCol] = _('Time')
+	recordedColnames[iRecordedGapCol]  = _('Gap')
+	recordedColnames[iRecordedLapCol]  = _('Lap')
+	recordedColnames[iRecordedNameCol] = _('Name')
+	recordedColnames[iRecordedWaveCol] = _('Wave')
+
+	expectedColnames = [None] * iExpectedColMax
+	expectedColnames[iExpectedNumCol]  = _('Bib')
+	expectedColnames[iExpectedNoteCol] = _('Note')
+	expectedColnames[iExpectedLapCol]  = _('Lap')
+	expectedColnames[iExpectedTimeCol] = _('ETA')
+	expectedColnames[iExpectedNameCol] = _('Name')
+	expectedColnames[iExpectedWaveCol] = _('Wave')
+
+	return recordedColnames, expectedColnames
 
 fontSize = 11
 
@@ -145,6 +151,8 @@ class LabelGrid( wx.Panel ):
 class ForecastHistory( wx.Panel ):
 	def __init__( self, parent, id = wx.ID_ANY, style = 0 ):
 		super().__init__(parent, id, style=style)
+		
+		recordedColnames, expectedColnames = getColNames()
 		
 		self.quickRecorded = None
 		self.quickExpected = None

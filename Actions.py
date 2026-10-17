@@ -201,18 +201,24 @@ class StartRaceAtTime( wx.Dialog ):
 		self.EndModal( wx.ID_CANCEL )
 
 #-------------------------------------------------------------------------------------------
-StartText = '\n'.join(_('Start Race').split(maxsplit=1))
-FinishText = '\n'.join(_('Finish Race').split(maxsplit=1))
-
 class Actions( wx.Panel ):
 	iResetStartClockOnFirstTag = 1
 	iSkipFirstTagRead = 2
 
+	@staticmethod
+	def getStartFinishText():
+		# Initialize this in a function so it can be set after the language is configured.
+		StartText = '\n'.join(_('Start Race').split(maxsplit=1))
+		FinishText = '\n'.join(_('Finish Race').split(maxsplit=1))
+		return StartText, FinishText
+
 	def __init__( self, parent, id = wx.ID_ANY ):
 		super().__init__(parent, id)
 		
+		StartText, FinishText = self.getStartFinishText()
+
 		self.SetBackgroundColour( wx.Colour(255,255,255) )
-		
+				
 		ps = wx.BoxSizer( wx.VERTICAL )
 		self.splitter = wx.SplitterWindow( self, wx.VERTICAL )
 		ps.Add( self.splitter, 1, flag=wx.EXPAND )
@@ -243,7 +249,7 @@ class Actions( wx.Panel ):
 			self.leftPanel,
 			label = _("Chip Timing Options"),
 			majorDimension = 1,
-			choices = Properties.RfidProperties.choices,
+			choices = Properties.RfidProperties.getChoices(),
 			style = wx.RA_SPECIFY_COLS
 		)
 		
@@ -428,6 +434,8 @@ class Actions( wx.Panel ):
 		self.checklist.commit()
 	
 	def refresh( self ):
+		StartText, FinishText = self.getStartFinishText()
+
 		self.clock.Start()
 		self.button.Enable( False )
 		self.startRaceTimeCheckBox.Enable( False )
