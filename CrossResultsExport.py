@@ -45,7 +45,7 @@ def CrossResultsExport( fname ):
 					hasField[i] = True
 	
 	if not hasField[2]:
-		return False, _('"LastName" must be linked to a column in the Excel sheetl')
+		return False, _('"LastName" must be linked to a column in the Excel sheet')
 	
 	# Filter the fields by what exists in the data.
 	crossResultsFields = [CrossResultsFields[i][0] for i in range(len(hasField)) if hasField[i]]

@@ -55,7 +55,7 @@ def WebScorerExport( fname ):
 		return False, _('No results to Export.')
 	
 	if not hasField[2]:
-		return False, _('LastName must be defined in the ComMgr Excel sheet.')
+		return False, _('LastName must be defined in the CrossMgr Excel sheet.')
 	
 	catDetails = { cd['name']:cd for cd in GetCategoryDetails() }
 	
