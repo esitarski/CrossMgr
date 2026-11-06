@@ -555,7 +555,7 @@ class NumKeypad( wx.Panel ):
 					if rank <= 10:
 						# Update the fastest lap times (which may not be the current leader's time).
 						# Handle the case where the rr.raceTimes are not equal to raceTimes[-1].
-						shortestLapTimes =  [min(*p) for p in zip(raceTimes[-1], rr.raceTimes)]
+						shortestLapTimes =  [(a if a < b else b) for a,b in zip(raceTimes[-1], rr.raceTimes)]
 						raceTimes[-1][:len(shortestLapTimes)] = shortestLapTimes
 											
 					# Update the last rider's finish time.
