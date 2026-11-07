@@ -103,21 +103,19 @@ class Database:
 		self.lastTsPhotos = FIFOCacheSet( UpdateSeconds*60 )
 		
 		# Use an RLock to contol database access ourselves.
+		# External connections can still use sqlite locking.
 		self.dbLock = RLock()
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0, check_same_thread=False )
 
 		# Configure database for better performance of large blobs.
-		cmds = '''
+		cmds = [c.strip() for c in '''
+pragma page_size = 65536;
 pragma journal_mode = WAL;
 pragma synchronous = normal;
-pragma temp_store = memory;
-pragma page_size = 32768;
-pragma mmap_size = 30000000000;'''
+'''.split(';')]
 
-		for c in cmds.split(';'):
-			c = c.strip()
-			if c:
-				self.conn.execute( c )
+		for c in filter( lambda c: c, cmds ):
+			self.conn.execute( c )
 		
 		if initTables:
 			with self.dbLock, self.conn:
@@ -232,7 +230,7 @@ pragma mmap_size = 30000000000;'''
 					for trig in tsTriggers:
 						# We can't do an executemany here as each trigger might have different fields.
 						# This isn't critical for performance as triggers are low volume.
-						# Write this out as sorted fields to keep the sql statements consistent so we maximize precompiling sql statements.
+						# Write this out as sorted fields to keep the sql statements consistent so we maximize sql precompiling.
 						if trig:
 							fields, values = zip( *sorted(trig.items()) )
 							self.conn.execute( 'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(fields), ','.join('?'*len(trig))), values )
