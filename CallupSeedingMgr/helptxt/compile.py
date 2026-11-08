@@ -1,7 +1,6 @@
 import markdown
 import glob
 import os
-import codecs
 import zipfile
 import shutil
 from io import StringIO
@@ -33,13 +32,13 @@ def CompileHelp( dir = '.' ):
 				output_format='html5'
 		)
 
-		with codecs.open('markdown.css', 'r', encoding='utf8') as f:
+		with open('markdown.css', 'r', encoding='utf8') as f:
 			style = f.read()
-		with codecs.open('prolog.html', 'r', encoding='utf8') as f:
+		with open('prolog.html', 'r', encoding='utf8') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
-		with codecs.open('epilog.html', 'r', encoding='utf8') as f:
+		with open('epilog.html', 'r', encoding='utf8') as f:
 			epilog = f.read()
 
 		contentDiv = '<div class="content">'
@@ -51,7 +50,7 @@ def CompileHelp( dir = '.' ):
 			if fname.endswith('Links.md'):
 				continue
 			print(fname, '...')
-			with codecs.open(fname, 'r', encoding='utf8') as f:
+			with open(fname, 'r', encoding='utf8') as f:
 				input = StringIO()
 				input.write( links )
 				input.write( f.read() )
@@ -63,7 +62,7 @@ def CompileHelp( dir = '.' ):
 				if htmlSave == html:
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
-			with codecs.open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf8') as f:
+			with open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf8') as f:
 				f.write( prolog )
 				f.write( html )
 				f.write( epilog )
