@@ -10,6 +10,7 @@ from Database import GlobalDatabase
 from AddPhotoHeader import AddPhotoHeader
 import Utils
 import CVUtil
+import ButtonIcons as bi
 
 def _( x ):
 	return x
@@ -133,15 +134,18 @@ class PhotoPanel( wx.Panel ):
 		btnsizer.Add( wx.StaticText(self, label='or Mousewheel'), flag=wx.ALIGN_CENTRE_VERTICAL|wx.LEFT, border=2 )
         
 		self.contrast = wx.ToggleButton( self, label='Contrast')
+		self.contrast.SetBitmap(bi.GetBundle("contrast"))
 		self.contrast.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.contrast, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)		
 
 		self.sharpen = wx.ToggleButton( self, label='Sharpen')
+		self.sharpen.SetBitmap(bi.GetBundle("sharpen"))
 		self.sharpen.Bind( wx.EVT_TOGGLEBUTTON, self.onFilter )
 		btnsizer.Add(self.sharpen, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=2)		
 
 		#btn = wx.BitmapButton(self, bitmap=Utils.getBitmap('edit_icon.png'))
 		btn = wx.Button( self, label='Edit Info' )
+		btn.SetBitmap(bi.GetBundle("edit_info"))
 		btn.SetToolTip( wx.ToolTip('Edit Trigger Info') )
 		btn.Bind( wx.EVT_BUTTON, self.onEdit )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
@@ -154,6 +158,7 @@ class PhotoPanel( wx.Panel ):
 		self.Bind(wx.EVT_MENU, self.onExportClipboard, item)
 		
 		btn = wx.Button( self, label='Export View' )
+		btn.SetBitmap(bi.GetBundle("export_view"))
 		btn.SetToolTip( wx.ToolTip('Export current view (includes zoom)') )
 		btn.Bind( wx.EVT_BUTTON, self.onExportView )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=16)
@@ -165,6 +170,7 @@ class PhotoPanel( wx.Panel ):
 		self.Bind(wx.EVT_MENU, self.onSaveClipboard, item)
 		
 		btn = wx.Button( self, label='Save Photo' )
+		btn.SetBitmap(bi.GetBundle("save_photo"))
 		btn.SetToolTip( wx.ToolTip('Save current photo only') )
 		btn.Bind( wx.EVT_BUTTON, self.onSavePhoto )
 		btnsizer.Add(btn, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=4)
