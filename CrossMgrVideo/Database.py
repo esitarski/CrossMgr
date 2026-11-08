@@ -138,6 +138,7 @@ class Database:
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
 		
+		# Call this first before creating a connection.
 		optimize_embedded_blob_db( self.fname )
 		
 		self.fps = fps
@@ -156,20 +157,6 @@ class Database:
 		# External connections can still use sqlite locking.
 		self.dbLock = RLock()
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0, check_same_thread=False )
-
-		# Set the page size first for large blob performance as it needs to be done before journal_mode.
-		set_page_size( 65536 )
-
-		# Configure database for better performance of large blobs.
-		cmds = [c.strip() for c in '''
-PRAGMA journal_mode=WAL;
-PRAGMA synchronous=NORMAL;
-PRAGMA busy_timeout=5000;
-PRAGMA temp_store=MEMORY;
-'''.split(';')]
-		for c in cmds:
-			if c:
-				self.conn.execute( c )
 		
 		if initTables:
 			with self.dbLock, self.conn:
