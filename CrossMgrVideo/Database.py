@@ -58,6 +58,53 @@ def _createTable( c, table, fields ):
 		if idx:
 			c.execute( 'CREATE INDEX IF NOT EXISTS {}_{}_idx on {} ({} ASC)'.format(table, field, table, field) )
 
+import sqlite3
+import os
+
+def optimize_embedded_blob_db(db_path, target_page_size=65536):
+	"""
+	Optimizes an SQLite database for SD cards and BLOB storage
+	by altering page size, journal modes, and memory settings.
+	"""
+
+	conn = sqlite3.connect( db_path )
+	cursor = conn.cursor()
+
+	try:
+		# 1. Determine current page size
+		cursor.execute("PRAGMA page_size;")
+		current_page_size = cursor.fetchone()[0]
+		# print(f"Current page size: {current_page_size} bytes")
+
+		if current_page_size != target_page_size:
+			# print(f"Changing page size to {target_page_size} bytes to match flash sectors...")
+			cursor.execute(f"PRAGMA page_size = {target_page_size};")
+
+		# 2. Apply persistent structures
+		cursor.execute("PRAGMA journal_mode = WAL;")
+		j_mode = cursor.fetchone()[0]
+		# print(f"Journal mode configured to: {j_mode.upper()}")
+
+		# 3. Apply safety & flash wear-leveling optimizations
+		cursor.execute("PRAGMA synchronous = NORMAL;")
+		cursor.execute("PRAGMA temp_store = MEMORY;")
+
+		# 4. Rebuild the database if the page size changed
+		if current_page_size != target_page_size:
+			# print("Executing VACUUM to apply 64KB layout. Please wait...")
+			cursor.execute("VACUUM;")
+			
+			cursor.execute("PRAGMA page_size;")
+			final_size = cursor.fetchone()[0]
+			# print(f"Success! New structural page size: {final_size} bytes")
+
+	except sqlite3.Error as e:
+		# print(f"An SQLite error occurred: {e}")
+		pass
+		
+	finally:
+		conn.close()
+
 class Database:
 
 	triggerFieldsAll = (
@@ -90,6 +137,9 @@ class Database:
 	
 	def __init__( self, fname=None, initTables=True, fps=30 ):
 		self.fname = (fname or os.path.join( os.path.expanduser("~"), 'CrossMgrVideo.sqlite3' ) )
+		
+		optimize_embedded_blob_db( self.fname )
+		
 		self.fps = fps
 		
 		'''
@@ -107,15 +157,19 @@ class Database:
 		self.dbLock = RLock()
 		self.conn = sqlite3.connect( self.fname, detect_types=sqlite3.PARSE_DECLTYPES, timeout=45.0, check_same_thread=False )
 
+		# Set the page size first for large blob performance as it needs to be done before journal_mode.
+		set_page_size( 65536 )
+
 		# Configure database for better performance of large blobs.
 		cmds = [c.strip() for c in '''
-pragma page_size = 65536;
-pragma journal_mode = WAL;
-pragma synchronous = normal;
+PRAGMA journal_mode=WAL;
+PRAGMA synchronous=NORMAL;
+PRAGMA busy_timeout=5000;
+PRAGMA temp_store=MEMORY;
 '''.split(';')]
-
-		for c in filter( lambda c: c, cmds ):
-			self.conn.execute( c )
+		for c in cmds:
+			if c:
+				self.conn.execute( c )
 		
 		if initTables:
 			with self.dbLock, self.conn:
@@ -227,13 +281,13 @@ pragma synchronous = normal;
 			with self.dbLock, self.conn:
 				if tsTriggers:
 					tsTriggers = self._purgeTriggerWriteDuplicates( tsTriggers )
-					for trig in tsTriggers:
+					for trigger in tsTriggers:
 						# We can't do an executemany here as each trigger might have different fields.
 						# This isn't critical for performance as triggers are low volume.
 						# Write this out as sorted fields to keep the sql statements consistent so we maximize sql precompiling.
-						if trig:
-							fields, values = zip( *sorted(trig.items()) )
-							self.conn.execute( 'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(fields), ','.join('?'*len(trig))), values )
+						if trigger:
+							fields, values = zip( *sorted(trigger.items()) )
+							self.conn.execute( 'INSERT INTO trigger ({}) VALUES ({})'.format(','.join(fields), ','.join('?'*len(trigger))), values )
 
 				if tsJpgs:
 					# Purge photos with the same timestamp.
