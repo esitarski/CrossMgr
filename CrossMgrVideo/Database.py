@@ -67,6 +67,8 @@ def optimize_embedded_blob_db(db_path, target_page_size=65536):
 	by altering page size, journal modes, and memory settings.
 	"""
 
+	is_new_database = not os.path.isfile( db_path )
+
 	conn = sqlite3.connect( db_path )
 	cursor = conn.cursor()
 
@@ -77,7 +79,8 @@ def optimize_embedded_blob_db(db_path, target_page_size=65536):
 		print(f"Current page size: {current_page_size} bytes")
 
 		if current_page_size != target_page_size:
-			print(f"Changing page size to {target_page_size} bytes to match flash sectors...")
+			print(f"Setting page size to {target_page_size} bytes to match flash sectors.")
+			print(f"This will only work for new databases.")
 			cursor.execute(f"PRAGMA page_size = {target_page_size};")
 
 		# 2. Apply persistent structures
@@ -89,16 +92,17 @@ def optimize_embedded_blob_db(db_path, target_page_size=65536):
 		cursor.execute("PRAGMA synchronous = NORMAL;")
 		cursor.execute("PRAGMA temp_store = MEMORY;")
 
-		'''
 		# 4. Rebuild the database if the page size changed
-		if current_page_size != target_page_size:
-			print("Executing VACUUM to apply 64KB layout. Please wait...")
-			cursor.execute("VACUUM;")
-			
-			cursor.execute("PRAGMA page_size;")
-			final_size = cursor.fetchone()[0]
-			print(f"Success! New structural page size: {final_size} bytes")
-		'''
+		if is_new_database:
+			if current_page_size != target_page_size:
+				print("Executing VACUUM to apply 64KB layout. Please wait...")
+				cursor.execute("VACUUM;")
+				
+				cursor.execute("PRAGMA page_size;")
+				final_size = cursor.fetchone()[0]
+				print(f"Success! New structural page size: {final_size} bytes.")
+		else:
+			print("VACUUM not performed on existing database.")
 
 	except sqlite3.Error as e:
 		print(f"An SQLite error occurred: {e}")
