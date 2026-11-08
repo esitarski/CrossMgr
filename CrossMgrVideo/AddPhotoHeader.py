@@ -106,7 +106,7 @@ def AddPhotoHeader( bitmap, bib=None, ts=None, raceSeconds=None, first_name='', 
 	dc = wx.GCDC( dcMemoryNew )
 	bitmap = bitmap_new
 	
-	bibTxt = '{}'.format(bib) if bib else ''
+	bibTxt = f'{bib}' if bib else ''
 	if ts and raceSeconds:
 		tsTxt = '{}  {}'.format( formatTime(raceSeconds), ts.strftime('%Y-%m-%d %H:%M:%S') )
 	elif ts:

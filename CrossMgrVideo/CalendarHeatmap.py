@@ -340,7 +340,7 @@ class CalendarHeatmap(wx.Control):
 				x = self.bodyRect.GetRight() - width
 			dc.DrawText( dText, x, self.bottomLabelRect.GetY() )
 		else:
-			dText = '{}'.format( self.year )
+			dText = f'{self.year}'
 			dc.DrawText( dText, self.bottomLabelRect.GetX(), self.bottomLabelRect.GetY() )
 		
 		backgrounds = [wx.Brush(wx.Colour(200,200,200), wx.SOLID), wx.Brush(wx.Colour(230,230,230), wx.SOLID)]
