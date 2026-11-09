@@ -57,6 +57,10 @@ class ScaledBitmap {
 		this.endX = 0;
 		this.endY = 0;
 		this.sourceRect = [0,0,0,0];
+						
+		this.controlPoints = [];
+		this.controlPointMap = [];
+		this.controlPointDragIndex = null;
 	}
 	
 	getMagRect() {
