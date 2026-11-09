@@ -9,6 +9,8 @@ def intervalsOverlap( a0, a1, b0, b1 ):
 	return a0 <= b1 and b0 <= a1
 
 class ScaledBitmap( wx.Panel ):
+	controlPointRadius = 6
+
 	def __init__( self, parent, id=wx.ID_ANY, size=wx.DefaultSize, style=0, bitmap=None, drawFinishLine=False, inset=False, drawCallback=None ):
 		super().__init__( parent, id, size=size, style=style )
 		self.SetBackgroundStyle( wx.BG_STYLE_PAINT )
@@ -20,6 +22,7 @@ class ScaledBitmap( wx.Panel ):
 		self.resetMagRect()
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
+		self.resetMagRect()
 		if inset:
 			self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
 			self.Bind( wx.EVT_MOTION, self.OnMotion )
@@ -27,12 +30,15 @@ class ScaledBitmap( wx.Panel ):
 			self.Bind( wx.EVT_LEAVE_WINDOW, self.OnLeave )
 	
 	def resetMagRect( self ):
-		# traceback.print_stack()
 		self.xBegin = 0
 		self.yBegin = 0
 		self.xEnd = 0
 		self.yEnd = 0		
 		self.sourceRect = None
+		
+		self.controlPoints = []
+		self.controlPointMap = []
+		self.controlPointDragIndex = None
 	
 	def getMagRect( self ):
 		return wx.Rect( min(self.xBegin, self.xEnd), min(self.yBegin, self.yEnd), abs(self.xEnd-self.xBegin), abs(self.yEnd-self.yBegin) )
@@ -62,14 +68,34 @@ class ScaledBitmap( wx.Panel ):
 	
 	def OnLeftDown( self, event ):
 		self.buttonDown = True
-		self.xBegin, self.yBegin = event.GetX(), event.GetY()
-		self.xEnd, self.yEnd = self.xBegin, self.yBegin
+		
+		x, y = event.GetX(), event.GetY()
+		
+		# Check if the button is on a control point.
+		for i, (xControl, yControl) in enumerate(self.controlPoints):
+			if (
+					(xControl-self.controlPointRadius <= x <= xControl+self.controlPointRadius) and
+					(yControl-self.controlPointRadius <= y <= yControl+self.controlPointRadius)
+				):
+				self.controlPointDragIndex = i
+				self.SetCursor( wx.Cursor(wx.CURSOR_RIGHT_ARROW) )
+				wx.CallAfter( self.Refresh )
+				return	
+		
+		self.xBegin, self.yBegin = x, y
+		self.xEnd, self.yEnd = x, y
 		self.SetCursor( wx.Cursor(wx.CURSOR_MAGNIFIER) )
 		wx.CallAfter( self.Refresh )
 		
 	def OnMotion( self, event ):
 		if self.buttonDown:
-			self.xEnd, self.yEnd = event.GetX(), event.GetY()
+			x, y = event.GetX(), event.GetY()
+			if self.controlPointDragIndex is not None:
+				xattr, yattr = self.controlPointMap[self.controlPointDragIndex]
+				setattr( self, xattr, x )
+				setattr( self, yattr, y )
+			else:
+				self.xEnd, self.yEnd = x, y
 			self.Refresh()
 	
 	def OnLeftUp( self, event ):
@@ -145,6 +171,19 @@ class ScaledBitmap( wx.Panel ):
 		dc.SetBrush( wx.TRANSPARENT_BRUSH )
 		dc.DrawRectangle( insetRect )
 		dc.DrawRectangle( magnifyRect )
+		
+		# Draw control squares on each cornder of the magnifyRect.
+		self.controlPoints = []
+		self.controlPointMap = []
+		for x,y in (
+				(magnifyRect.x, magnifyRect.y),
+				(magnifyRect.x + magnifyRect.width, magnifyRect.y),
+				(magnifyRect.x, magnifyRect.y + magnifyRect.height),
+				(magnifyRect.x + magnifyRect.width, magnifyRect.y + magnifyRect.height)
+			):
+			self.controlPoints.append( (x,y) )
+			self.controlPointMap.append( (['xEnd','xBegin'][x==self.xBegin], ['yEnd','yBegin'][y==self.yBegin]) )
+			dc.DrawRectangle( x-self.controlPointRadius, y-self.controlPointRadius, self.controlPointRadius*2, self.controlPointRadius*2 )
 
 		if intervalsOverlap(magnifyRect.GetLeft(), magnifyRect.GetRight(), insetRect.GetLeft(), insetRect.GetRight()):
 			if not intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom() ):
