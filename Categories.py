@@ -820,6 +820,13 @@ and remove them from other categories.'''),
 	def refresh( self, forceRefresh=False ):
 		self.setGpxDistanceButton.Enable( hasattr(Model.race, 'geoTrack') )
 		
+		distanceUnit = getattr(Model.race, 'distanceUnit', 0)
+		if getattr(self, 'distanceUnit', 0) != distanceUnit:
+			name = _('Distance')
+			unit = ['km', 'miles'][distanceUnit]
+			self.grid.SetColLabelValue( self.iCol['distance'], f'{name}\n({unit})' )
+			self.distanceUnit = distanceUnit
+			
 		if not (forceRefresh or self.isExternalChange() or self.state.changed()):
 			return
 			
@@ -834,11 +841,6 @@ and remove them from other categories.'''),
 			self.grid.ClearGrid()
 			if race is None:
 				return
-			
-			for c in range(self.grid.GetNumberCols()):
-				if self.grid.GetColLabelValue(c).startswith(_('Distance')):
-					self.grid.SetColLabelValue( c, '{}\n({})'.format(_('Distance'), ['km', 'miles'][getattr(race, 'distanceUnit', 0)]) )
-					break
 			
 			categories = race.getAllCategories()
 			
