@@ -552,23 +552,21 @@ class NumKeypad( wx.Panel ):
 					break
 				
 				if rank > 1:
-					# Sneaky! catRaceTimes is a referece to raceTimes[-1]'s values.
-					# Changing catRaceTimes will change raceTimes[-1] values.
-					catRaceTimes = raceTimes[-1]
 					if rank <= 10:
 						# Update the fastest lap times (which may not be the current leader's time).
-						# Handle the case where the rr.raceTimes are not equal to catRaceTimes.
-						shortestLapTimes =  [min(*p) for p in zip(catRaceTimes, rr.raceTimes)]
-						catRaceTimes[:len(shortestLapTimes)] = shortestLapTimes
+						# Handle the case where the rr.raceTimes are not equal to raceTimes[-1].
+						shortestLapTimes =  [(a if a < b else b) for a,b in zip(raceTimes[-1], rr.raceTimes)]
+						raceTimes[-1][:len(shortestLapTimes)] = shortestLapTimes
 											
 					# Update the last rider's finish time.
 					# This may be sooner than the leader if an early bell or if the last rider is lapped.
-					if rr.raceTimes[-1] > catRaceTimes[-1]:
-						catRaceTimes[-1] = rr.raceTimes[-1]
+					if rr.raceTimes[-1] > raceTimes[-1][-1]:
+						raceTimes[-1][-1] = rr.raceTimes[-1]
 					continue
 
-				# Add a copy of the race times.  Set the leader's last time as the current last rider finish.
-				raceTimes.append( rr.raceTimes + [rr.raceTimes[-1]] )
+				# Add a copy of the the leader's race times to the hud.
+				# Set as the leader's finish time as the last rider on course.
+				raceTimes.append( rr.raceTimes + rr.raceTimes[-1:] )
 				
 				# Find the next expected lap arrival.
 				try:

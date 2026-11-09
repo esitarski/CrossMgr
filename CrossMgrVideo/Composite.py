@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 import Utils
 import CVUtil
+import ButtonIcons as bi
 
 def formatTime( ts ):
 	return ts.strftime('%H:%M:%S.%f')[:-3]
@@ -474,7 +475,9 @@ class CompositePanel( wx.Panel):
 		self.trig.Bind( wx.EVT_BUTTON, lambda e: self.composite.SetTriggerTS(self.composite.triggerTS) )
 		
 		self.contrast  = wx.ToggleButton( self, label=('Contrast') )
+		self.contrast.SetBitmap(bi.GetBundle("contrast"))
 		self.sharpen   = wx.ToggleButton( self, label=('Sharpen') )
+		self.sharpen.SetBitmap(bi.GetBundle("sharpen"))
 		self.grayscale = wx.ToggleButton( self, label=('Grayscale') )
 		
 		self.contrast.Bind(		wx.EVT_TOGGLEBUTTON, lambda e: self.composite.SetFilters(contrast=e.IsChecked()) )

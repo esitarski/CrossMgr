@@ -5,7 +5,6 @@ import re
 import base64
 import zipfile
 import shutil
-import codecs
 import datetime
 from io import StringIO
 from contextlib import contextmanager
@@ -34,7 +33,7 @@ def InlineImages( html ):
 		if not match:
 			break
 		fname = match.group(1)
-		with codecs.open(os.path.join('images',fname), 'rb') as f:
+		with open(os.path.join('images',fname), 'rb') as f:
 			b64 = base64.b64encode( f.read() )
 		sReplace = 'src="data:image/{};base64,{}'.format(
 			os.path.splitext(fname)[1][1:],
@@ -64,25 +63,25 @@ def CompileHelp( dir = '.' ):
 				output_format='html5'
 		)
 
-		with codecs.open('markdown.css', 'r', encoding='utf-8') as f:
+		with open('markdown.css', 'r', encoding='utf-8') as f:
 			style = f.read()
-		with codecs.open('prolog.html', 'r', encoding='utf-8') as f:
+		with open('prolog.html', 'r', encoding='utf-8') as f:
 			prolog = f.read()
 			prolog = prolog.replace( '<<<style>>>', style, 1 )
 			del style
-		with codecs.open('epilog.html', 'r', encoding='utf-8') as f:
+		with open('epilog.html', 'r', encoding='utf-8') as f:
 			epilog = f.read().replace('YYYY','{}'.format(datetime.datetime.now().year))
 
 		contentDiv = '<div class="content">'
 		
-		with codecs.open('Links.md', 'r', encoding='utf-8') as f:
+		with open('Links.md', 'r', encoding='utf-8') as f:
 			links = f.read()
 			
 		for fname in glob.glob("./*.md"):
 			if 'Links' in fname:
 				continue
 			print( fname, '...' )
-			with codecs.open(fname, 'r', encoding='utf-8') as f:
+			with open(fname, 'r', encoding='utf-8') as f:
 				input = StringIO()
 				input.write( links )
 				input.write( f.read() )
@@ -95,7 +94,7 @@ def CompileHelp( dir = '.' ):
 					html = contentDiv + '\n' + html
 				html += '\n</div>\n'
 				html = InlineImages( html )
-			with codecs.open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf-8' ) as f:
+			with open( os.path.splitext(fname)[0] + '.html', 'w', encoding='utf-8' ) as f:
 				f.write( prolog )
 				f.write( html )
 				f.write( epilog )
