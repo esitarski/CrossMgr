@@ -21,7 +21,7 @@ from Database import GlobalDatabase
 import Version
 from GetMyIP import GetMyIP
 
-debug = True
+debug = False
 
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrVideoServer(ThreadPoolMixIn, HTTPServer):
