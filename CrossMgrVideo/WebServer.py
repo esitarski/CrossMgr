@@ -21,6 +21,8 @@ from Database import GlobalDatabase
 import Version
 from GetMyIP import GetMyIP
 
+debug = False
+
 from ThreadPoolMixIn import ThreadPoolMixIn
 class CrossMgrVideoServer(ThreadPoolMixIn, HTTPServer):
 	pass
@@ -39,7 +41,7 @@ mainPage = None
 def getMainPage( dateStr=None ):
 	global mainPage
 	
-	if True or not mainPage:
+	if debug or not mainPage:
 		with open( os.path.join(Utils.getHtmlFolder(), 'main.html'), encoding='utf8' ) as f:
 			mainPage = f.read()
 	

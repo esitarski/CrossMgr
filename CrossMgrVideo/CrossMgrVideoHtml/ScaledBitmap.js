@@ -1,3 +1,5 @@
+"use strict";
+
 const contrastColour = 'rgb( 255, 130, 0 )';
 
 function GetScaleRatio( wBitmap, hBitmap, width, height ) {
@@ -31,10 +33,15 @@ function intersectRect( a, b ) {
 class ScaledBitmap {
 	constructor( canvas, image=null, drawFinishLine=false, inset=true, drawCallback=null ) {
 		this.canvas = canvas;
-		this.SetImage( image );
 		this.mouseButtonDown = false;
 		this.background = 'rgb(232,232,232)';
+		
+		this.controlPointRadius = 6;
+		this.controlPointsInfo = [];
+		this.controlPointDragAttrs = [];
+		
 		this.resetMagRect();
+		
 		canvas.addEventListener('resize', this.OnSize.bind(this) );
 
 		this.drawFinishLine = drawFinishLine;
@@ -48,7 +55,7 @@ class ScaledBitmap {
 			canvas.addEventListener('pointercancel', this.OnPointerUp.bind(this), false);
 			canvas.addEventListener('pointerleave', this.OnPointerUp.bind(this), false);
 		}
-		this.Refresh();
+		this.SetImage( image );
 	}
 	
 	resetMagRect() {
@@ -57,10 +64,9 @@ class ScaledBitmap {
 		this.endX = 0;
 		this.endY = 0;
 		this.sourceRect = [0,0,0,0];
-						
-		this.controlPoints = [];
-		this.controlPointMap = [];
-		this.controlPointDragIndex = null;
+
+		this.controlPointDragAttrs.length = 0;
+		this.controlPointsInfo.length = 0;
 	}
 	
 	getMagRect() {
@@ -76,9 +82,24 @@ class ScaledBitmap {
 		if( event.pointerType == 'mouse' && (event.buttons != 1) )	// Ignore all mouse events except for left button.
 			return;
 		
+		// Check if the button is on a control point.
+		if( event.pointerType == 'mouse' && (event.buttons == 1) ) {
+			const x = event.offsetX, y = event.offsetY;
+			for( const cpi of this.controlPointsInfo ) {
+				const [xControl, yControl, xAttr, yAttr] = [...cpi];
+				if( xControl - this.controlPointRadius <= x && x <= xControl + this.controlPointRadius &&
+					yControl - this.controlPointRadius <= y && y <= yControl + this.controlPointRadius ) {
+					this.controlPointDragAttrs = [xAttr, yAttr];
+					this.mouseButtonDown = true;
+					this.canvas.style.cursor = 'move';
+					this.OnPointerMove( event );
+					return;
+				}
+			}
+		}
+		
 		this.eventCache.push( event );
 		if( this.eventCache.length == 1 ) {
-			//console.log( 'OnPointerDown: initializing zoom' );
 			this.beginX = this.endX = this.eventCache[0].offsetX;
 			this.beginY = this.endY = this.eventCache[0].offsetY;
 			this.Refresh();
@@ -87,7 +108,6 @@ class ScaledBitmap {
 			this.canvas.style.cursor = 'zoom-in';
 		}
 		else {
-			//console.log( 'OnPointerDown: pinch zoom point' );
 			this.OnPointerMove( event );
 		}
 	}
@@ -97,16 +117,22 @@ class ScaledBitmap {
 		if( i >= 0 )
 			this.eventCache[i] = event;
 		
+		if( this.mouseButtonDown && this.controlPointDragAttrs.length > 0 ) {
+			const [xAttr, yAttr] = [...this.controlPointDragAttrs];
+			this[xAttr] = event.offsetX;
+			this[yAttr] = event.offsetY;
+			this.Refresh();
+			return;
+		}
+		
 		if( this.eventCache.length == 1 ) {
 			if( this.mouseButtonDown ) {
-				//console.log( 'OnPointerMove: mouse expand zoom' );
 				this.endX   = this.eventCache[0].offsetX;
 				this.endY   = this.eventCache[0].offsetY;
 				this.Refresh();
 			}
 		}
 		else if( this.eventCache.length >= 2 ) {
-			//console.log( 'OnPointerMove: pinch expand zoom' );
 			this.beginX = this.beginY = Number.POSITIVE_INFINITY;
 			this.endX   = this.endY   = Number.NEGATIVE_INFINITY;
 			for( let i = 0; i < this.eventCache.length; ++i ) {
@@ -128,6 +154,7 @@ class ScaledBitmap {
 		if( this.eventCache.length == 0 ) {
 			this.canvas.style.cursor = 'auto';
 			this.mouseButtonDown = false;
+			this.controlPointDragAttrs = [];
 		}
 		else
 			this.OnPointerMove( this.eventCache[0] );
@@ -169,6 +196,8 @@ class ScaledBitmap {
 	}
 	
 	draw( dc, width, height ) {
+		this.controlPointsInfo.length = 0;
+
 		// Clear the canvas.
 		dc.beginPath();
 		dc.rect( 0, 0, width, height );
@@ -216,7 +245,8 @@ class ScaledBitmap {
 		this.sourceRect = sourceRect;
 			
 		const xCenter = sourceRect[0] + sourceRect[2] / 2, yCenter = sourceRect[1] + sourceRect[3] / 2;
-		const isWest = xCenter < this.image.width/2, isNorth = yCenter < this.image.width/2;
+		const isWest = xCenter < this.image.width/2;
+		const isNorth = yCenter < this.image.height/2;
 		let insetRect = this.getInsetRect( width, height, isWest, isNorth );
 		
 		const magRatio = GetScaleRatio( sourceRect[2], sourceRect[3], insetRect[2], insetRect[3] );
@@ -229,13 +259,26 @@ class ScaledBitmap {
 		
 		dc.drawImage( sourceImage, ...sourceRect, ...insetRect );
 
-		// Draw the outlines.
+		// Draw the outlines of the magnification rectangles.
 		dc.strokeStyle = 'rgb(200,200,0)';
 		dc.lineWidth = 2;
 
 		dc.beginPath();
 		dc.rect( ...insetRect );
 		dc.rect( ...magnifyRect );
+		
+		// Draw control squares on each cornder of the magnifyRect.
+		// Keep track of the control squares and the underlying variables they represent.
+		for( const p of [
+				[magnifyRect[0], magnifyRect[1]],
+				[magnifyRect[0] + magnifyRect[2], magnifyRect[1]],
+				[magnifyRect[0], magnifyRect[1] + magnifyRect[3]],
+				[magnifyRect[0] + magnifyRect[2], magnifyRect[1] + magnifyRect[3]]
+			]) {
+			const [x,y] = [...p];
+			this.controlPointsInfo.push( [x, y, x === this.beginX ? 'beginX' : 'endX', y === this.beginY ? 'beginY' : 'endY'] );
+			dc.rect( x-this.controlPointRadius, y-this.controlPointRadius, this.controlPointRadius*2, this.controlPointRadius*2 );
+		}
 		dc.stroke();
 		
 		// Draw the direction lines.
