@@ -127,14 +127,12 @@ class ScaledBitmap {
 		
 		if( this.eventCache.length == 1 ) {
 			if( this.mouseButtonDown ) {
-				//console.log( 'OnPointerMove: mouse expand zoom' );
 				this.endX   = this.eventCache[0].offsetX;
 				this.endY   = this.eventCache[0].offsetY;
 				this.Refresh();
 			}
 		}
 		else if( this.eventCache.length >= 2 ) {
-			//console.log( 'OnPointerMove: pinch expand zoom' );
 			this.beginX = this.beginY = Number.POSITIVE_INFINITY;
 			this.endX   = this.endY   = Number.NEGATIVE_INFINITY;
 			for( let i = 0; i < this.eventCache.length; ++i ) {
@@ -282,7 +280,6 @@ class ScaledBitmap {
 			dc.rect( x-this.controlPointRadius, y-this.controlPointRadius, this.controlPointRadius*2, this.controlPointRadius*2 );
 		}
 		dc.stroke();
-		console.log( `draw: ${this.controlPointsInfo.length}` );
 		
 		// Draw the direction lines.
 		function drawLine( p1, p2 ) {
