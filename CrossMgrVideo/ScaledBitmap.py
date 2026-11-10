@@ -22,7 +22,6 @@ class ScaledBitmap( wx.Panel ):
 		self.resetMagRect()
 		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
-		self.resetMagRect()
 		if inset:
 			self.Bind( wx.EVT_LEFT_DOWN, self.OnLeftDown )
 			self.Bind( wx.EVT_MOTION, self.OnMotion )
