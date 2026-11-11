@@ -37,7 +37,6 @@ class ScaledBitmap {
 		this.background = 'rgb(232,232,232)';
 		
 		this.controlPointRadius = 6;
-		this.controlPointsInfo = [];
 		this.controlPointDragAttrs = [];
 		
 		this.resetMagRect();
@@ -66,7 +65,6 @@ class ScaledBitmap {
 		this.sourceRect = [0,0,0,0];
 
 		this.controlPointDragAttrs.length = 0;
-		this.controlPointsInfo.length = 0;
 	}
 	
 	getMagRect() {
@@ -83,17 +81,21 @@ class ScaledBitmap {
 			return;
 		
 		// Check if the button is on a control point.
-		if( event.pointerType == 'mouse' && (event.buttons == 1) ) {
+		if( event.pointerType == 'mouse' && (event.buttons == 1) &&
+				(this.beginX !== this.endX && this.beginY !== this.endY) ) {
 			const x = event.offsetX, y = event.offsetY;
-			for( const cpi of this.controlPointsInfo ) {
-				const [xControl, yControl, xAttr, yAttr] = [...cpi];
-				if( xControl - this.controlPointRadius <= x && x <= xControl + this.controlPointRadius &&
-					yControl - this.controlPointRadius <= y && y <= yControl + this.controlPointRadius ) {
-					this.controlPointDragAttrs = [xAttr, yAttr];
-					this.mouseButtonDown = true;
-					this.canvas.style.cursor = 'move';
-					this.OnPointerMove( event );
-					return;
+			const cpr = this.controlPointRadius;
+			for( const xAttr of ['beginX', 'endX'] ) {
+				for( const yAttr of ['beginY, endY'] ) {
+					const xControl = this[xAttr], yControl = this[yAttr];
+					if( xControl-cpr <= x && x <= xControl+cpr &&
+						yControl-cpr <= y && y <= yControl+cpr ) {
+						this.controlPointDragAttrs = [xAttr, yAttr];
+						this.mouseButtonDown = true;
+						this.canvas.style.cursor = 'move';
+						this.OnPointerMove( event );
+						return;
+					}
 				}
 			}
 		}
@@ -196,8 +198,6 @@ class ScaledBitmap {
 	}
 	
 	draw( dc, width, height ) {
-		this.controlPointsInfo.length = 0;
-
 		// Clear the canvas.
 		dc.beginPath();
 		dc.rect( 0, 0, width, height );
@@ -267,17 +267,15 @@ class ScaledBitmap {
 		dc.rect( ...insetRect );
 		dc.rect( ...magnifyRect );
 		
-		// Draw control squares on each cornder of the magnifyRect.
-		// Keep track of the control squares and the underlying variables they represent.
-		for( const p of [
-				[magnifyRect[0], magnifyRect[1]],
-				[magnifyRect[0] + magnifyRect[2], magnifyRect[1]],
-				[magnifyRect[0], magnifyRect[1] + magnifyRect[3]],
-				[magnifyRect[0] + magnifyRect[2], magnifyRect[1] + magnifyRect[3]]
+		// Draw control squares on each corner of the magnifyRect.
+		const cpr = this.controlPointRadius;
+		for( const [x,y] of [
+				[this.beginX, this.beginY],
+				[this.beginX, this.endY],
+				[this.endX  , this.beginY],
+				[this.endX  , this.endY]
 			]) {
-			const [x,y] = [...p];
-			this.controlPointsInfo.push( [x, y, x === this.beginX ? 'beginX' : 'endX', y === this.beginY ? 'beginY' : 'endY'] );
-			dc.rect( x-this.controlPointRadius, y-this.controlPointRadius, this.controlPointRadius*2, this.controlPointRadius*2 );
+			dc.rect( x-cpr, y-cpr, cpr*2, cpr*2 );
 		}
 		dc.stroke();
 		

@@ -1,4 +1,5 @@
 import wx
+import itertools
 
 contrastColour = wx.Colour( 255, 130, 0 )
 
@@ -35,7 +36,6 @@ class ScaledBitmap( wx.Panel ):
 		self.yEnd = 0		
 		self.sourceRect = None
 		
-		self.controlPointsInfo = []
 		self.controlPointDragAttrs = None
 	
 	def getMagRect( self ):
@@ -70,15 +70,18 @@ class ScaledBitmap( wx.Panel ):
 		x, y = event.GetX(), event.GetY()
 		
 		# Check if the button is on a control point.
-		for i, (xControl, yControl, xAttr, yAttr) in enumerate(self.controlPointsInfo):
-			if (
-					(xControl-self.controlPointRadius <= x <= xControl+self.controlPointRadius) and
-					(yControl-self.controlPointRadius <= y <= yControl+self.controlPointRadius)
-				):
-				self.controlPointDragAttrs = (xAttr, yAttr)
-				self.SetCursor( wx.Cursor(wx.CURSOR_SIZING) )
-				wx.CallAfter( self.Refresh )
-				return	
+		if self.xBegin != self.xEnd or self.yBegin != self.yEnd :
+			cpr = self.controlPointRadius
+			for xAttr, yAttr in itertools.product( ('xBegin', 'xEnd'), ('yBegin', 'yEnd') ):
+				xControl, yControl = getattr(self, xAttr), getattr(self, yAttr)
+				if (
+						(xControl-cpr <= x <= xControl+cpr) and
+						(yControl-cpr <= y <= yControl+cpr)
+					):
+					self.controlPointDragAttrs = (xAttr, yAttr)
+					self.SetCursor( wx.Cursor(wx.CURSOR_SIZING) )
+					wx.CallAfter( self.Refresh )
+					return	
 		
 		self.xBegin, self.yBegin = x, y
 		self.xEnd, self.yEnd = x, y
@@ -116,9 +119,6 @@ class ScaledBitmap( wx.Panel ):
 	def draw( self, dc, width, height ):
 		dc.SetBackground( self.backgroundBrush )
 		dc.Clear()
-		
-		# Always clear the control points so we can't click on them by accident.
-		self.controlPointsInfo.clear()
 		
 		self.sourceRect = None
 		if not self.bitmap:
@@ -173,15 +173,15 @@ class ScaledBitmap( wx.Panel ):
 		dc.DrawRectangle( insetRect )
 		dc.DrawRectangle( magnifyRect )
 		
-		# Draw control squares on each cornder of the magnifyRect.
+		# Draw control squares on each corner of the magnifyRect.
+		cpr = self.controlPointRadius
 		for x,y in (
-				(magnifyRect.x, magnifyRect.y),
-				(magnifyRect.x + magnifyRect.width, magnifyRect.y),
-				(magnifyRect.x, magnifyRect.y + magnifyRect.height),
-				(magnifyRect.x + magnifyRect.width, magnifyRect.y + magnifyRect.height)
+				(self.xBegin, self.yBegin),
+				(self.xBegin, self.yEnd),
+				(self.xEnd  , self.yBegin),
+				(self.xEnd  , self.yEnd)
 			):
-			self.controlPointsInfo.append( (x,y, ['xBegin','xEnd'][x!=self.xBegin], ['yBegin','yEnd'][y!=self.yBegin]) )
-			dc.DrawRectangle( x-self.controlPointRadius, y-self.controlPointRadius, self.controlPointRadius*2, self.controlPointRadius*2 )
+			dc.DrawRectangle( x-cpr, y-cpr, cpr*2, cpr*2 )
 
 		if intervalsOverlap(magnifyRect.GetLeft(), magnifyRect.GetRight(), insetRect.GetLeft(), insetRect.GetRight()):
 			if not intervalsOverlap(magnifyRect.GetTop(), magnifyRect.GetBottom(), insetRect.GetTop(), insetRect.GetBottom() ):
