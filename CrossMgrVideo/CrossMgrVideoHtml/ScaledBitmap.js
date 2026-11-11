@@ -37,7 +37,6 @@ class ScaledBitmap {
 		this.background = 'rgb(232,232,232)';
 		
 		this.controlPointRadius = 6;
-		this.controlPointsInfo = [];
 		this.controlPointDragAttrs = [];
 		
 		this.resetMagRect();
@@ -59,18 +58,17 @@ class ScaledBitmap {
 	}
 	
 	resetMagRect() {
-		this.beginX = 0;
-		this.beginY = 0;
-		this.endX = 0;
-		this.endY = 0;
+		this.xBegin = 0;
+		this.yBegin = 0;
+		this.xEnd = 0;
+		this.yEnd = 0;
 		this.sourceRect = [0,0,0,0];
 
 		this.controlPointDragAttrs.length = 0;
-		this.controlPointsInfo.length = 0;
 	}
 	
 	getMagRect() {
-		return [Math.min(this.beginX, this.endX), Math.min(this.beginY, this.endY), Math.abs(this.endX-this.beginX), Math.abs(this.endY-this.beginY)];
+		return [Math.min(this.xBegin, this.xEnd), Math.min(this.yBegin, this.yEnd), Math.abs(this.xEnd-this.xBegin), Math.abs(this.yEnd-this.yBegin)];
 	}
 	
 	OnSize( event ) {
@@ -83,25 +81,29 @@ class ScaledBitmap {
 			return;
 		
 		// Check if the button is on a control point.
-		if( event.pointerType == 'mouse' && (event.buttons == 1) ) {
+		if( event.pointerType == 'mouse' && (event.buttons == 1) &&
+				(this.xBegin !== this.xEnd || this.yBegin !== this.yEnd) ) {
 			const x = event.offsetX, y = event.offsetY;
-			for( const cpi of this.controlPointsInfo ) {
-				const [xControl, yControl, xAttr, yAttr] = [...cpi];
-				if( xControl - this.controlPointRadius <= x && x <= xControl + this.controlPointRadius &&
-					yControl - this.controlPointRadius <= y && y <= yControl + this.controlPointRadius ) {
-					this.controlPointDragAttrs = [xAttr, yAttr];
-					this.mouseButtonDown = true;
-					this.canvas.style.cursor = 'move';
-					this.OnPointerMove( event );
-					return;
+			const cpr = this.controlPointRadius;
+			for( const xAttr of ['xBegin', 'xEnd'] ) {
+				for( const yAttr of ['yBegin', 'yEnd'] ) {
+					const xControl = this[xAttr], yControl = this[yAttr];
+					if( xControl-cpr <= x && x <= xControl+cpr &&
+						yControl-cpr <= y && y <= yControl+cpr ) {
+						this.controlPointDragAttrs = [xAttr, yAttr];
+						this.mouseButtonDown = true;
+						this.canvas.style.cursor = 'move';
+						this.OnPointerMove( event );
+						return;
+					}
 				}
 			}
 		}
 		
 		this.eventCache.push( event );
 		if( this.eventCache.length == 1 ) {
-			this.beginX = this.endX = this.eventCache[0].offsetX;
-			this.beginY = this.endY = this.eventCache[0].offsetY;
+			this.xBegin = this.xEnd = this.eventCache[0].offsetX;
+			this.yBegin = this.yEnd = this.eventCache[0].offsetY;
 			this.Refresh();
 			
 			this.mouseButtonDown = (event.pointerType == 'mouse' && (event.buttons == 1));
@@ -127,20 +129,20 @@ class ScaledBitmap {
 		
 		if( this.eventCache.length == 1 ) {
 			if( this.mouseButtonDown ) {
-				this.endX   = this.eventCache[0].offsetX;
-				this.endY   = this.eventCache[0].offsetY;
+				this.xEnd   = this.eventCache[0].offsetX;
+				this.yEnd   = this.eventCache[0].offsetY;
 				this.Refresh();
 			}
 		}
 		else if( this.eventCache.length >= 2 ) {
-			this.beginX = this.beginY = Number.POSITIVE_INFINITY;
-			this.endX   = this.endY   = Number.NEGATIVE_INFINITY;
+			this.xBegin = this.yBegin = Number.POSITIVE_INFINITY;
+			this.xEnd   = this.yEnd   = Number.NEGATIVE_INFINITY;
 			for( let i = 0; i < this.eventCache.length; ++i ) {
 				const offsetX = this.eventCache[i].offsetX, offsetY = this.eventCache[i].offsetY;
-				this.beginX  = Math.min( this.beginX, offsetX );
-				this.beginY  = Math.min( this.beginY, offsetY );
-				this.endX    = Math.max( this.endX,   offsetX );
-				this.endY    = Math.max( this.endY,   offsetY );
+				this.xBegin  = Math.min( this.xBegin, offsetX );
+				this.yBegin  = Math.min( this.yBegin, offsetY );
+				this.xEnd    = Math.max( this.xEnd,   offsetX );
+				this.yEnd    = Math.max( this.yEnd,   offsetY );
 			}
 			this.Refresh();
 		}
@@ -187,17 +189,15 @@ class ScaledBitmap {
 		const xLeft = Math.max(0, (this.canvas.width - destWidth)/2);
 		const yTop = Math.max(0, (this.canvas.height - destHeight)/2);
 
-		this.beginX = xLeft + rect[0] * ratio;
-		this.beginY = yTop + rect[1] * ratio;
-		this.endX = this.beginX + rect[2] * ratio;
-		this.endY = this.beginY + rect[3] * ratio;
+		this.xBegin = xLeft + rect[0] * ratio;
+		this.yBegin = yTop + rect[1] * ratio;
+		this.xEnd = this.xBegin + rect[2] * ratio;
+		this.yEnd = this.yBegin + rect[3] * ratio;
 		
 		this.Refresh();
 	}
 	
 	draw( dc, width, height ) {
-		this.controlPointsInfo.length = 0;
-
 		// Clear the canvas.
 		dc.beginPath();
 		dc.rect( 0, 0, width, height );
@@ -267,17 +267,15 @@ class ScaledBitmap {
 		dc.rect( ...insetRect );
 		dc.rect( ...magnifyRect );
 		
-		// Draw control squares on each cornder of the magnifyRect.
-		// Keep track of the control squares and the underlying variables they represent.
-		for( const p of [
-				[magnifyRect[0], magnifyRect[1]],
-				[magnifyRect[0] + magnifyRect[2], magnifyRect[1]],
-				[magnifyRect[0], magnifyRect[1] + magnifyRect[3]],
-				[magnifyRect[0] + magnifyRect[2], magnifyRect[1] + magnifyRect[3]]
+		// Draw control squares on each corner of the magnifyRect.
+		const cpr = this.controlPointRadius;
+		for( const [x,y] of [
+				[this.xBegin, this.yBegin],
+				[this.xBegin, this.yEnd],
+				[this.xEnd  , this.yBegin],
+				[this.xEnd  , this.yEnd]
 			]) {
-			const [x,y] = [...p];
-			this.controlPointsInfo.push( [x, y, x === this.beginX ? 'beginX' : 'endX', y === this.beginY ? 'beginY' : 'endY'] );
-			dc.rect( x-this.controlPointRadius, y-this.controlPointRadius, this.controlPointRadius*2, this.controlPointRadius*2 );
+			dc.rect( x-cpr, y-cpr, cpr*2, cpr*2 );
 		}
 		dc.stroke();
 		
