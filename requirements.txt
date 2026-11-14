@@ -25,7 +25,7 @@ piexif
 simplejpeg
 virustotal-api
 metaphone
-pyllrp
+pyllrp >= 3.1.4
 grpcio
 protobuf
 pyyaml

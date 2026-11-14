@@ -85,17 +85,18 @@ class ScaledBitmap {
 				(this.xBegin !== this.xEnd || this.yBegin !== this.yEnd) ) {
 			const x = event.offsetX, y = event.offsetY;
 			const cpr = this.controlPointRadius;
-			for( const xAttr of ['xBegin', 'xEnd'] ) {
-				for( const yAttr of ['yBegin', 'yEnd'] ) {
-					const xControl = this[xAttr], yControl = this[yAttr];
-					if( xControl-cpr <= x && x <= xControl+cpr &&
-						yControl-cpr <= y && y <= yControl+cpr ) {
-						this.controlPointDragAttrs = [xAttr, yAttr];
-						this.mouseButtonDown = true;
-						this.canvas.style.cursor = 'move';
-						this.OnPointerMove( event );
-						return;
-					}
+			for( const [xAttr, yAttr] of [
+					['xBegin', 'yBegin'], ['xBegin', 'yEnd'],
+					['xEnd',   'yBegin'], ['xEnd',   'yEnd']
+				]) {
+				const xControl = this[xAttr], yControl = this[yAttr];
+				if( xControl-cpr <= x && x <= xControl+cpr &&
+					yControl-cpr <= y && y <= yControl+cpr ) {
+					this.controlPointDragAttrs = [xAttr, yAttr];
+					this.mouseButtonDown = true;
+					this.canvas.style.cursor = 'move';
+					this.OnPointerMove( event );
+					return;
 				}
 			}
 		}
@@ -270,10 +271,8 @@ class ScaledBitmap {
 		// Draw control squares on each corner of the magnifyRect.
 		const cpr = this.controlPointRadius;
 		for( const [x,y] of [
-				[this.xBegin, this.yBegin],
-				[this.xBegin, this.yEnd],
-				[this.xEnd  , this.yBegin],
-				[this.xEnd  , this.yEnd]
+				[this.xBegin, this.yBegin], [this.xBegin, this.yEnd],
+				[this.xEnd  , this.yBegin], [this.xEnd  , this.yEnd]
 			]) {
 			dc.rect( x-cpr, y-cpr, cpr*2, cpr*2 );
 		}
